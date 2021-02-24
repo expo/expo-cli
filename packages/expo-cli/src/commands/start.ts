@@ -17,6 +17,7 @@ import {
 } from './start/parseStartOptions';
 import { validateDependenciesVersionsAsync } from './start/validateDependenciesVersions';
 import { assertProjectHasExpoExtensionFilesAsync } from './utils/deprecatedExtensionWarnings';
+import { profileMethod } from './utils/profileMethod';
 import { ensureTypeScriptSetupAsync } from './utils/typescript/ensureTypeScriptSetup';
 
 async function action(projectRoot: string, options: NormalizedOptions): Promise<void> {
@@ -25,57 +26,60 @@ async function action(projectRoot: string, options: NormalizedOptions): Promise<
   // Add clean up hooks
   installExitHooks(projectRoot);
 
-  const { exp, pkg } = getConfig(projectRoot, {
+  const { exp, pkg } = profileMethod(getConfig)(projectRoot, {
     skipSDKVersionRequirement: options.webOnly,
   });
 
   // Assert various random things
   // TODO: split up this method
-  await urlOpts.optsAsync(projectRoot, options);
+  await profileMethod(urlOpts.optsAsync)(projectRoot, options);
 
   // TODO: This is useless on mac, check if useless on win32
   const rootPath = path.resolve(projectRoot);
 
   // Optionally open the developer tools UI.
-  await tryOpeningDevToolsAsync(rootPath, {
+  await profileMethod(tryOpeningDevToolsAsync)(rootPath, {
     exp,
     options,
   });
 
   if (Versions.gteSdkVersion(exp, '34.0.0')) {
-    await ensureTypeScriptSetupAsync(projectRoot);
+    await profileMethod(ensureTypeScriptSetupAsync)(projectRoot);
   }
 
   if (!options.webOnly) {
     // TODO: only validate dependencies if starting in managed workflow
-    await validateDependenciesVersionsAsync(projectRoot, exp, pkg);
+    await profileMethod(validateDependenciesVersionsAsync)(projectRoot, exp, pkg);
     // Warn about expo extensions.
     if (!isLegacyImportsEnabled(exp)) {
       // Adds a few seconds in basic projects so we should
       // drop this in favor of the upgrade version as soon as possible.
-      await assertProjectHasExpoExtensionFilesAsync(projectRoot);
+      await profileMethod(assertProjectHasExpoExtensionFilesAsync)(projectRoot);
     }
   }
 
-  const startOptions = parseStartOptions(options, exp);
+  const startOptions = profileMethod(parseStartOptions)(options, exp);
 
-  await Project.startAsync(rootPath, { ...startOptions, exp });
+  await profileMethod(Project.startAsync)(rootPath, { ...startOptions, exp });
 
   // Send to option...
-  const url = await UrlUtils.constructDeepLinkAsync(projectRoot);
-  const recipient = await sendTo.getRecipient(options.sendTo);
+  const url = await profileMethod(
+    UrlUtils.constructDeepLinkAsync,
+    'UrlUtils.constructDeepLinkAsync'
+  )(projectRoot);
+  const recipient = await profileMethod(sendTo.getRecipient)(options.sendTo);
   if (recipient) {
     await sendTo.sendUrlAsync(url, recipient);
   }
 
   // Open project on devices.
-  await urlOpts.handleMobileOptsAsync(projectRoot, options);
+  await profileMethod(urlOpts.handleMobileOptsAsync)(projectRoot, options);
 
   // Present the Terminal UI.
   const isTerminalUIEnabled = !options.nonInteractive && !exp.isDetached;
 
   if (isTerminalUIEnabled) {
-    await TerminalUI.startAsync(projectRoot, startOptions);
+    await profileMethod(TerminalUI.startAsync, 'TerminalUI.startAsync')(projectRoot, startOptions);
   } else {
     if (!exp.isDetached) {
       Log.newLine();

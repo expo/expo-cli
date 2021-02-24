@@ -34,6 +34,7 @@ import wrapAnsi from 'wrap-ansi';
 import { AbortCommandError, SilentError } from './CommandError';
 import { loginOrRegisterAsync } from './accounts';
 import { registerCommands } from './commands';
+import { profileMethod } from './commands/utils/profileMethod';
 import Log from './log';
 import update from './update';
 import urlOpts from './urlOpts';
@@ -333,7 +334,7 @@ Command.prototype.asyncAction = function (asyncFn: Action, skipUpdateCheck: bool
   return this.action(async (...args: any[]) => {
     if (!skipUpdateCheck) {
       try {
-        await checkCliVersionAsync();
+        await profileMethod(checkCliVersionAsync)();
       } catch (e) {}
     }
 
@@ -713,7 +714,7 @@ function runAsync(programName: string) {
       .option('--non-interactive', 'Fail, if an interactive prompt would be required to continue.');
 
     // Load each module found in ./commands by 'registering' it with our commander instance
-    registerCommands(program);
+    profileMethod(registerCommands)(program);
 
     program.on('command:detach', () => {
       Log.warn('To eject your project to ExpoKit (previously "detach"), use `expo eject`.');

@@ -20,6 +20,10 @@ import {
 } from './updatePackageJson';
 import { writeMetroConfig } from './writeMetroConfig';
 
+async function directoryExistsAsync(file: string): Promise<boolean> {
+  return (await fs.stat(file).catch(() => null))?.isDirectory() ?? false;
+}
+
 /**
  *
  * @param projectRoot
@@ -98,7 +102,11 @@ async function cloneNativeDirectoriesAsync({
   let skippedPaths: string[] = [];
   try {
     await extractTemplateAppAsync(templateSpec, tempDir, exp);
-    [copiedPaths, skippedPaths] = copyPathsFromTemplate(projectRoot, tempDir, targetPaths);
+    [copiedPaths, skippedPaths] = await copyPathsFromTemplateAsync(
+      projectRoot,
+      tempDir,
+      targetPaths
+    );
     const results = GitIgnore.mergeGitIgnorePaths(
       path.join(projectRoot, '.gitignore'),
       path.join(tempDir, '.gitignore')
@@ -152,16 +160,16 @@ async function validateBareTemplateExistsAsync(sdkVersion: string): Promise<npmP
   return templateSpec;
 }
 
-function copyPathsFromTemplate(
+async function copyPathsFromTemplateAsync(
   projectRoot: string,
   templatePath: string,
   paths: string[]
-): [string[], string[]] {
+): Promise<[string[], string[]]> {
   const copiedPaths = [];
   const skippedPaths = [];
   for (const targetPath of paths) {
     const projectPath = path.join(projectRoot, targetPath);
-    if (!fs.existsSync(projectPath)) {
+    if (!(await directoryExistsAsync(projectPath))) {
       copiedPaths.push(targetPath);
       fs.copySync(path.join(templatePath, targetPath), projectPath);
     } else {

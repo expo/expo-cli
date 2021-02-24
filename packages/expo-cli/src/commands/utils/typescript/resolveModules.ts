@@ -3,8 +3,6 @@ import { Glob } from 'glob';
 import * as path from 'path';
 import resolveFrom from 'resolve-from';
 
-import Log from '../../../log';
-
 async function fileExistsAsync(file: string): Promise<boolean> {
   return (await stat(file).catch(() => null))?.isFile() ?? false;
 }
@@ -22,8 +20,7 @@ export const baseTSConfigName = 'expo/tsconfig.base';
 export async function queryFirstProjectTypeScriptFileAsync(
   projectRoot: string
 ): Promise<null | string> {
-  Log.time('queryFirstProjectTypeScriptFileAsync');
-  const results = await new Promise<null | string>((resolve, reject) => {
+  return new Promise<null | string>((resolve, reject) => {
     const mg = new Glob(
       '**/*.@(ts|tsx)',
       {
@@ -47,9 +44,6 @@ export async function queryFirstProjectTypeScriptFileAsync(
       resolve(matched);
     });
   });
-  Log.timeEnd('queryFirstProjectTypeScriptFileAsync');
-  // Bail out as soon as a single match is found.
-  return results;
 }
 
 export function resolveBaseTSConfig(projectRoot: string): string | null {
