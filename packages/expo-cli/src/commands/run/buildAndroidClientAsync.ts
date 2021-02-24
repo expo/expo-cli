@@ -4,14 +4,20 @@ import { Android } from '@expo/xdl';
 import ora from 'ora';
 import path from 'path';
 
-type Options = object;
+type Options = {
+  buildVariant: string;
+};
+
+function getGradleTask(buildVariant: string): string {
+  return `install${buildVariant.charAt(0).toUpperCase()}${buildVariant.slice(1)}`;
+}
 
 export default async function buildAndroidClientAsync(
   projectRoot: string,
-  _options: Options
+  options: Options
 ): Promise<void> {
   const devices = await Android.getAllAvailableDevicesAsync();
-  const device = await Android.promptForDeviceAsync(devices);
+  const device = devices.length > 1 ? await Android.promptForDeviceAsync(devices) : devices[0];
   if (!device) {
     return;
   }
@@ -24,7 +30,10 @@ export default async function buildAndroidClientAsync(
     process.platform === 'win32' ? 'gradlew.bat' : 'gradlew'
   );
 
-  await spawnAsync(gradlew, ['installRelease'], { cwd: androidProjectPath, stdio: 'inherit' });
+  await spawnAsync(gradlew, [getGradleTask(options.buildVariant)], {
+    cwd: androidProjectPath,
+    stdio: 'inherit',
+  });
 
   spinner.text = 'Starting the development client...';
   await Android.openProjectAsync({

@@ -1,16 +1,23 @@
 import { Command } from 'commander';
 
+import CommandError from '../../CommandError';
 import prompt from '../../prompts';
 import buildAndroidClientAsync from './buildAndroidClientAsync';
 
 type Options = {
   platform?: string;
+  buildVariant?: string;
 };
 
 async function runAsync(projectRoot: string, options: Options) {
   const platform = options.platform?.toLowerCase() ?? (await promptForPlatformAsync());
   if (platform === 'android') {
-    await buildAndroidClientAsync(projectRoot, {});
+    if (typeof options.buildVariant !== 'string') {
+      throw new CommandError('--build-variant must be a string');
+    }
+    await buildAndroidClientAsync(projectRoot, {
+      buildVariant: options.buildVariant,
+    });
   } else {
     throw new Error('platform not implemented');
   }
@@ -41,5 +48,6 @@ export default function (program: Command) {
     .helpGroup('experimental')
     .description('Build a development client and run it in on a device.')
     .option('-p --platform <platform>', 'Platform: [android|ios]', /^(android|ios)$/i)
+    .option('--build-variant [name]', '(Android) build variant', 'release')
     .asyncActionProjectDir(runAsync);
 }
