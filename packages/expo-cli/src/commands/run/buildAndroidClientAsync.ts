@@ -21,6 +21,10 @@ export default async function buildAndroidClientAsync(
   if (!device) {
     return;
   }
+  const bootedDevice = await Android.attemptToStartEmulatorOrAssertAsync(device);
+  if (!bootedDevice) {
+    return;
+  }
 
   const spinner = ora('Building app ').start();
 

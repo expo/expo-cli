@@ -548,7 +548,7 @@ async function _openUrlAsync({
   return openProject;
 }
 
-async function attemptToStartEmulatorOrAssertAsync(device: Device): Promise<Device | null> {
+export async function attemptToStartEmulatorOrAssertAsync(device: Device): Promise<Device | null> {
   // TODO: Add a light-weight method for checking since a device could disconnect.
 
   if (!(await isDeviceBootedAsync(device))) {
