@@ -56,6 +56,8 @@ const expoManagedVersionedPlugins = [
 const withOptionalPlugins: ConfigPlugin<(StaticPlugin | string)[]> = (config, plugins) => {
   return plugins.reduce((prev, plugin) => {
     return withStaticPlugin(prev, {
+      // hide errors
+      _isLegacyPlugin: true,
       plugin,
       // If a plugin doesn't exist, do nothing.
       fallback: config => config,

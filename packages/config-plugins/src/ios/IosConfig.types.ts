@@ -29,6 +29,7 @@ export type InfoPlist = {
   FacebookAutoInitEnabled?: boolean;
   FacebookAutoLogAppEventsEnabled?: boolean;
   FacebookAdvertiserIDCollectionEnabled?: boolean;
+  UIBackgroundModes?: string[];
   UISupportedInterfaceOrientations?: InterfaceOrientation[];
   GMSApiKey?: string;
   GADApplicationIdentifier?: string;
