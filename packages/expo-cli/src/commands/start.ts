@@ -7,7 +7,6 @@ import Log from '../log';
 import * as sendTo from '../sendTo';
 import urlOpts from '../urlOpts';
 import * as TerminalUI from './start/TerminalUI';
-import { profileMethod } from './utils/profileMethod';
 import { installExitHooks } from './start/installExitHooks';
 import { tryOpeningDevToolsAsync } from './start/openDevTools';
 import {
@@ -18,6 +17,7 @@ import {
 } from './start/parseStartOptions';
 import { validateDependenciesVersionsAsync } from './start/validateDependenciesVersions';
 import { assertProjectHasExpoExtensionFilesAsync } from './utils/deprecatedExtensionWarnings';
+import { profileMethod } from './utils/profileMethod';
 import { ensureTypeScriptSetupAsync } from './utils/typescript/ensureTypeScriptSetup';
 
 async function action(projectRoot: string, options: NormalizedOptions): Promise<void> {
@@ -63,7 +63,10 @@ async function action(projectRoot: string, options: NormalizedOptions): Promise<
   await profileMethod(Project.startAsync)(rootPath, { ...startOptions, exp });
 
   // Send to option...
-  const url = await UrlUtils.constructDeepLinkAsync(projectRoot);
+  const url = await profileMethod(
+    UrlUtils.constructDeepLinkAsync,
+    'UrlUtils.constructDeepLinkAsync'
+  )(projectRoot);
   const recipient = await profileMethod(sendTo.getRecipient)(options.sendTo);
   if (recipient) {
     await sendTo.sendUrlAsync(url, recipient);
