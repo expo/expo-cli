@@ -34,6 +34,7 @@ import wrapAnsi from 'wrap-ansi';
 import { AbortCommandError, SilentError } from './CommandError';
 import { loginOrRegisterAsync } from './accounts';
 import { registerCommands } from './commands';
+import { profileMethod } from './commands/utils/profileMethod';
 import Log from './log';
 import update from './update';
 import urlOpts from './urlOpts';
@@ -48,18 +49,18 @@ ApiV2.setClientName(packageJSON.version);
 
 // The following prototyped functions are not used here, but within in each file found in `./commands`
 // Extending commander to easily add more options to certain command line arguments
-Command.prototype.urlOpts = function () {
+Command.prototype.urlOpts = function() {
   urlOpts.addOptions(this);
   return this;
 };
 
-Command.prototype.allowOffline = function () {
+Command.prototype.allowOffline = function() {
   this.option('--offline', 'Allows this command to run while offline');
   return this;
 };
 
 // Add support for logical command groupings
-Command.prototype.helpGroup = function (name: string) {
+Command.prototype.helpGroup = function(name: string) {
   if (this.commands[this.commands.length - 1]) {
     this.commands[this.commands.length - 1].__helpGroup = name;
   } else {
@@ -69,7 +70,7 @@ Command.prototype.helpGroup = function (name: string) {
 };
 
 // A longer description that will be displayed then the command is used with --help
-Command.prototype.longDescription = function (name: string) {
+Command.prototype.longDescription = function(name: string) {
   if (this.commands[this.commands.length - 1]) {
     this.commands[this.commands.length - 1].__longDescription = name;
   } else {
@@ -95,16 +96,16 @@ function breakSentence(input: string): string {
   return wrapAnsi(input, 72);
 }
 
-Command.prototype.prepareCommands = function () {
+Command.prototype.prepareCommands = function() {
   return this.commands
-    .filter(function (cmd: Command) {
+    .filter(function(cmd: Command) {
       // Display all commands with EXPO_DEBUG, otherwise use the noHelp option.
       if (getenv.boolish('EXPO_DEBUG', false)) {
         return true;
       }
       return !['internal', 'eas'].includes(cmd.__helpGroup);
     })
-    .map(function (cmd: Command, i: number) {
+    .map(function(cmd: Command, i: number) {
       const args = cmd._args.map(humanReadableArgName).join(' ');
 
       const description = cmd._description;
@@ -132,8 +133,8 @@ Command.prototype.prepareCommands = function () {
  */
 
 // @ts-ignore
-Command.prototype.usage = function (str: string) {
-  var args = this._args.map(function (arg: any[]) {
+Command.prototype.usage = function(str: string) {
+  var args = this._args.map(function(arg: any[]) {
     return humanReadableArgName(arg);
   });
 
@@ -152,7 +153,7 @@ Command.prototype.usage = function (str: string) {
   return this;
 };
 
-Command.prototype.helpInformation = function () {
+Command.prototype.helpInformation = function() {
   let desc: string[] = [];
   // Use the long description if available, otherwise use the regular description.
   const description = this.__longDescription ?? this._description;
@@ -264,7 +265,7 @@ function sortHelpGroups(helpGroups: Record<string, string[][]>): Record<string, 
 }
 
 // Extended the help renderer to add a custom format and groupings.
-Command.prototype.commandHelp = function () {
+Command.prototype.commandHelp = function() {
   if (!this.commands.length) {
     return '';
   }
@@ -329,11 +330,11 @@ export type Action = (...args: any[]) => void;
 
 // asyncAction is a wrapper for all commands/actions to be executed after commander is done
 // parsing the command input
-Command.prototype.asyncAction = function (asyncFn: Action, skipUpdateCheck: boolean) {
+Command.prototype.asyncAction = function(asyncFn: Action, skipUpdateCheck: boolean) {
   return this.action(async (...args: any[]) => {
     if (!skipUpdateCheck) {
       try {
-        await checkCliVersionAsync();
+        await profileMethod(checkCliVersionAsync)();
       } catch (e) {}
     }
 
@@ -444,7 +445,7 @@ function formatStackTrace(stacktrace: string, command: string): string {
 // - Attaches the bundling logger
 // - Checks if the project directory is valid or not
 // - Runs AsyncAction with the projectDir as an argument
-Command.prototype.asyncActionProjectDir = function (
+Command.prototype.asyncActionProjectDir = function(
   asyncFn: Action,
   options: { checkConfig?: boolean; skipSDKVersionRequirement?: boolean } = {}
 ) {
@@ -617,9 +618,8 @@ Command.prototype.asyncActionProjectDir = function (
           } else {
             Log.log(
               chalk.green(
-                `Finished building JavaScript bundle in ${
-                  endTime.getTime() - startTime.getTime()
-                }ms.`
+                `Finished building JavaScript bundle in ${endTime.getTime() -
+                  startTime.getTime()}ms.`
               )
             );
           }
@@ -713,7 +713,7 @@ function runAsync(programName: string) {
       .option('--non-interactive', 'Fail, if an interactive prompt would be required to continue.');
 
     // Load each module found in ./commands by 'registering' it with our commander instance
-    registerCommands(program);
+    profileMethod(registerCommands)(program);
 
     program.on('command:detach', () => {
       Log.warn('To eject your project to ExpoKit (previously "detach"), use `expo eject`.');
@@ -825,7 +825,7 @@ async function writePathAsync() {
 
 // This is the entry point of the CLI
 export function run(programName: string) {
-  (async function () {
+  (async function() {
     await Promise.all([writePathAsync(), runAsync(programName)]);
   })().catch(e => {
     Log.error('Uncaught Error', e);
