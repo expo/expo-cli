@@ -10,7 +10,7 @@ import Log from '../../log';
  * @param functionName
  */
 export const profileMethod = <T extends any[], U>(fn: (...args: T) => U, functionName?: string) => {
-  const name = chalk.dim(`[profile] ${functionName ?? (fn.name || 'unknown')}`);
+  const name = chalk.dim(`⏱  [profile] ${functionName ?? (fn.name || 'unknown')}`);
   return (...args: T): U => {
     Log.time(name);
     const results = fn(...args);
