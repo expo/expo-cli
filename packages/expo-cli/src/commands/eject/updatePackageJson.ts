@@ -35,7 +35,12 @@ export async function updatePackageJSONAsync({
   const results = updatePackageJSONDependencies({ projectRoot, pkg, tempDir });
 
   const removedPkgMain = updatePackageJSONEntryPoint({ pkg });
-  await fs.writeFile(path.resolve(projectRoot, 'package.json'), JSON.stringify(pkg, null, 2));
+  await fs.writeFile(
+    path.resolve(projectRoot, 'package.json'),
+    // Add new line to match the format of running yarn.
+    // This prevents the `package.json` from changing when running `prebuild --no-install` multiple times.
+    JSON.stringify(pkg, null, 2) + '\n'
+  );
 
   updatingPackageJsonStep.succeed(
     'Updated package.json and added index.js entry point for iOS and Android.'
