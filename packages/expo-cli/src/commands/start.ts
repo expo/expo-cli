@@ -26,19 +26,19 @@ async function action(projectRoot: string, options: NormalizedOptions): Promise<
   // Add clean up hooks
   installExitHooks(projectRoot);
 
-  const { exp, pkg } = getConfig(projectRoot, {
+  const { exp, pkg } = profileMethod(getConfig)(projectRoot, {
     skipSDKVersionRequirement: options.webOnly,
   });
 
   // Assert various random things
   // TODO: split up this method
-  await urlOpts.optsAsync(projectRoot, options);
+  await profileMethod(urlOpts.optsAsync)(projectRoot, options);
 
   // TODO: This is useless on mac, check if useless on win32
   const rootPath = path.resolve(projectRoot);
 
   // Optionally open the developer tools UI.
-  await tryOpeningDevToolsAsync(rootPath, {
+  await profileMethod(tryOpeningDevToolsAsync)(rootPath, {
     exp,
     options,
   });
