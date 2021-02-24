@@ -236,10 +236,7 @@ export function hashForDependencyMap(deps: DependenciesMap): string {
 
 export function createFileHash(contents: string): string {
   // this doesn't need to be secure, the shorter the better.
-  return crypto
-    .createHash('sha1')
-    .update(contents)
-    .digest('hex');
+  return crypto.createHash('sha1').update(contents).digest('hex');
 }
 
 export function shouldDeleteMainField(main?: any): boolean {
