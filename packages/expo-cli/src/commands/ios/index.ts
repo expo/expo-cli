@@ -5,11 +5,13 @@ import fs from 'fs-extra';
 import * as path from 'path';
 
 import CommandError from '../../CommandError';
+import { authenticateAsync } from '../../appleApi';
 import Log from '../../log';
 import { EjectAsyncOptions, prebuildAsync } from '../eject/prebuildAsync';
 import * as IOSDeploy from './IOSDeploy';
 import * as PlistBuddy from './PlistBuddy';
 import * as XcodeBuild from './XcodeBuild';
+import { configureCodeSigningAsync } from './configureCodeSigning';
 import { Options, resolveOptionsAsync } from './resolveOptionsAsync';
 
 const isMac = process.platform === 'darwin';
@@ -23,6 +25,9 @@ export async function action(projectRoot: string, options: Options) {
     );
     return;
   }
+
+  // const auth = await authenticateAsync();
+  // await configureCodeSigningAsync(projectRoot, auth);
 
   // If the project doesn't have native code, prebuild it...
   if (!fs.existsSync(path.join(projectRoot, 'ios'))) {
