@@ -45,7 +45,7 @@ export async function getAppBinaryPathAsync(
   buildOutput: string,
   scheme: string
 ): Promise<string> {
-  const { output } = await spawnAsync(
+  const { stdout } = await spawnAsync(
     'xcodebuild',
     [
       xcodeProject.isWorkspace ? '-workspace' : '-project',
@@ -61,7 +61,7 @@ export async function getAppBinaryPathAsync(
     ],
     { stdio: 'pipe' }
   );
-  const buildSettings = output.join('');
+  const buildSettings = stdout;
   const { targetBuildDir, executableFolderPath } = getTargetPaths(buildSettings);
 
   assert(executableFolderPath, 'Unable to find the app name');
