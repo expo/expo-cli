@@ -10,6 +10,41 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+## [Wed, 24 Feb 2021 16:05:57 -0800](https://github.com/expo/expo-cli/commit/dd38f7d9c4d218ac6d408c748f2e2f6cde605b7a)
+
+### 🛠 Breaking changes
+
+### 🎉 New features
+
+- [prebuild] Skip overwriting modules that are symlinked ([#3257](https://github.com/expo/expo-cli/issues/3257))
+- [cli] Added method profiler helper function ([#3258](https://github.com/expo/expo-cli/issues/3258))
+- [eject] Added prompt to clear malformed projects ([#3256](https://github.com/expo/expo-cli/issues/3256))
+
+### 🐛 Bug fixes
+
+- [cli] Fix double printing `?` command on web
+- [cli] Use a more focused babel preset for app.config.js ([#3208](https://github.com/expo/expo-cli/issues/3208))
+- [cli] Newline after full log output and skip newline before help output ([#3259](https://github.com/expo/expo-cli/issues/3259))
+- [publish] silence workflow warning in 41 ([#3249](https://github.com/expo/expo-cli/issues/3249))
+- [xdl] fix unhandled JS exception if no foregroundImage defined for adaptive icon ([#3229](https://github.com/expo/expo-cli/issues/3229))
+- [xdl] Update node-forge ([#3252](https://github.com/expo/expo-cli/issues/3252))
+
+### 📦 Packages updated
+
+- @expo/config-plugins@1.0.20
+- @expo/config@3.3.30
+- @expo/dev-server@0.1.56
+- @expo/dev-tools@0.13.84
+- @expo/electron-adapter@0.0.47
+- expo-cli@4.2.1
+- expo-optimize@0.1.78
+- @expo/metro-config@0.1.56
+- @expo/next-adapter@2.1.61
+- expo-pwa@0.0.66
+- uri-scheme@1.0.67
+- @expo/webpack-config@0.12.60
+- @expo/xdl@59.0.24
+
 ## [Fri, 19 Feb 2021 11:46:06 -0800](https://github.com/expo/expo-cli/commit/3aff32603996f381482bc6c3239e6f70bf098b70)
 
 ### 🛠 Breaking changes
@@ -77,7 +112,7 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 📦 Packages updated
 
-- @expo/config-plugins@1.0.18
+  - @expo/config-plugins@1.0.18
 - @expo/config@3.3.28
 - @expo/dev-server@0.1.54
 - @expo/dev-tools@0.13.82
