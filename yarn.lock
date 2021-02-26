@@ -2201,9 +2201,10 @@
     pouchdb-collections "^1.0.1"
     tiny-queue "^0.2.1"
 
-"@expo/xcpretty@./expo-xcpretty-1.0.0-alpha.0.tgz":
-  version "1.0.0-alpha.0"
-  resolved "./expo-xcpretty-1.0.0-alpha.0.tgz#e019e67ced50ef5640e5cd3bfb357cb6e5cd6a2a"
+"@expo/xcpretty@^1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@expo/xcpretty/-/xcpretty-1.0.0.tgz#2306cb05769e403825131062a05a2ef033d7e7ea"
+  integrity sha512-3ShonI6/PC2iBi3D6LB4avHRihOIkKO+4eCCD1rjcsbnXh+RrMreZ9E0cqRwP0BytfzHDv7EUKiLR9Y+j+KiEg==
   dependencies:
     "@babel/code-frame" "7.10.4"
     chalk "^4.1.0"
