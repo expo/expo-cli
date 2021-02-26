@@ -1,4 +1,4 @@
-import { SimControl, Simulator } from '@expo/xdl';
+import { Project, SimControl, Simulator } from '@expo/xdl';
 import chalk from 'chalk';
 import { Command } from 'commander';
 import fs from 'fs-extra';
@@ -56,6 +56,8 @@ export async function action(projectRoot: string, options: Options) {
   );
 
   logPrettyItem(`${chalk.bold`Installing`} on ${props.device.name}`);
+
+  await Project.startAsync(projectRoot, { devClient: true, nonInteractive: true });
 
   if (props.isSimulator) {
     await SimControl.installAsync({ udid: props.device.udid, dir: binaryPath });

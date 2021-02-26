@@ -16,7 +16,7 @@ export async function isInstalledAsync() {
 }
 
 export function installBinaryOnDevice({ bundle, udid }: { bundle: string; udid: string }) {
-  const iosDeployInstallArgs = ['--bundle', bundle, '--id', udid, '--justlaunch'];
+  const iosDeployInstallArgs = ['--bundle', bundle, '--id', udid, '--justlaunch', '--debug'];
 
   const output = spawnSync('ios-deploy', iosDeployInstallArgs, { encoding: 'utf8' });
 

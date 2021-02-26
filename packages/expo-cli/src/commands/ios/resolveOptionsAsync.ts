@@ -79,7 +79,7 @@ export async function resolveOptionsAsync(
     device,
     configuration: options.configuration || 'Debug',
     verbose: log.isDebug,
-    shouldStartBundler: !!options.bundler,
+    shouldStartBundler: false, //!!options.bundler,
     port: options.port ?? getenv.int('RCT_METRO_PORT', 8081),
     terminal: getDefaultUserTerminal(),
     scheme: options.scheme ?? path.basename(xcodeProject.name, path.extname(xcodeProject.name)),
