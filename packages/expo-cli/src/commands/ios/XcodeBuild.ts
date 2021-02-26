@@ -4,14 +4,11 @@ import { SimControl } from '@expo/xdl';
 import chalk from 'chalk';
 import { spawn, SpawnOptionsWithoutStdio } from 'child_process';
 import * as fs from 'fs-extra';
-import ora from 'ora';
-import os from 'os';
 import * as path from 'path';
 
 import CommandError from '../../CommandError';
 import { assert } from '../../assert';
 import Log from '../../log';
-import { forkXCPrettyAsync } from './XCPretty';
 import { ProjectInfo, XcodeConfiguration } from './resolveOptionsAsync';
 
 function getTargetPaths(buildSettings: string) {
@@ -151,10 +148,8 @@ export function buildAsync({
       '-destination',
       `id=${device.udid}`,
     ];
-    const loader = ora();
     Log.log(`▸ ${chalk.bold`Building`}\n  ${chalk.dim(`xcodebuild ${xcodebuildArgs.join(' ')}`)}`);
-    const xcpretty = new ExpoFormatter({ projectRoot });
-    // const xcpretty = verbose ? null : await forkXCPrettyAsync();
+    const formatter = new ExpoFormatter({ projectRoot });
     const buildProcess = spawn(
       'xcodebuild',
       xcodebuildArgs,
@@ -165,8 +160,8 @@ export function buildAsync({
     buildProcess.stdout.on('data', (data: Buffer) => {
       const stringData = data.toString();
       buildOutput += stringData;
-      if (xcpretty) {
-        const lines = xcpretty.pipe(stringData);
+      if (formatter) {
+        const lines = formatter.pipe(stringData);
         for (const line of lines) {
           Log.log(line);
         }
@@ -174,12 +169,8 @@ export function buildAsync({
         // other third-party packages that the user doesn't have control over.
         // TODO: Catch JS bundling errors and throw them clearly.
         // xcpretty.stdin.write(data);
-      } else {
-        if (Log.isDebug) {
-          Log.debug(stringData);
-        } else {
-          loader.start(`Building the app${'.'.repeat(buildOutput.length % 10)}`);
-        }
+      } else if (Log.isDebug) {
+        Log.debug(stringData);
       }
     });
 
@@ -188,11 +179,6 @@ export function buildAsync({
     });
 
     buildProcess.on('close', (code: number) => {
-      if (xcpretty) {
-        // xcpretty.stdin.end();
-      } else {
-        loader.stop();
-      }
       if (code !== 0) {
         const errorLogFilePath = writeErrorLog(projectRoot, buildOutput, errorOutput);
 
@@ -212,7 +198,7 @@ export function buildAsync({
         );
         return;
       }
-      if (!xcpretty) {
+      if (!formatter) {
         Log.log(`▸ ${chalk.bold`Build`} Succeeded`);
       }
       resolve(buildOutput);
