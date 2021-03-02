@@ -250,7 +250,9 @@ export function findNativeTargetByName(
   targetName: string
 ): NativeTargetSectionEntry {
   const nativeTargets = getNativeTargets(project);
-  return nativeTargets.find(([, i]) => i.name === targetName) as NativeTargetSectionEntry;
+  return nativeTargets.find(
+    ([, i]) => i.name === targetName || i.name === `"${targetName}"`
+  ) as NativeTargetSectionEntry;
 }
 
 export function getXCConfigurationListEntries(project: XcodeProject): ConfigurationListEntry[] {
