@@ -34,9 +34,9 @@
   "devDependencies": {
     "@expo/babel-preset-cli": "0.2.18",
     "@expo/package-manager": "0.0.39-alpha.0",
-    "chalk": "^4.0.0",
-    "commander": "2.20.0",
+    "chalk": "^4.1.0",
+    "commander": "^4.0.1",
     "rimraf": "^3.0.2",
-    "update-check": "1.5.3"
+    "update-check": "^1.5.3"
   }
 }

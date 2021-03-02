@@ -1,5 +1,6 @@
 {
   "private": true,
+  "name": "expo-cli-monorepo",
   "workspaces": [
     "packages/*"
   ],
@@ -27,8 +28,8 @@
   },
   "dependencies": {
     "@expo/spawn-async": "^1.5.0",
-    "@types/node": "^12",
     "@types/jest": "^26.0.8",
+    "@types/node": "^12",
     "@vercel/ncc": "^0.27.0",
     "codecov": "^3.6.5",
     "eslint": "^6.6.0",

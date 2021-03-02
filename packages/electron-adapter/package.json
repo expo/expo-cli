@@ -44,21 +44,22 @@
   ],
   "devDependencies": {
     "@expo/babel-preset-cli": "0.2.18",
-    "@expo/webpack-config": "0.12.60",
+    "@expo/webpack-config": "^0.12.60",
+    "electron": "^6.0.12",
     "rimraf": "^3.0.2"
   },
   "publishConfig": {
     "access": "public"
   },
   "peerDependencies": {
-    "@expo/webpack-config": "^0.10.1",
+    "@expo/webpack-config": "^0.12.60",
     "electron": "^6.0.12"
   },
   "dependencies": {
     "@expo/config": "3.3.30",
     "@expo/package-manager": "0.0.39-alpha.0",
     "@expo/spawn-async": "^1.5.0",
-    "chalk": "^4.0.0",
+    "chalk": "^4.1.0",
     "electron-webpack": "^2.7.4",
     "resolve-from": "^5.0.0"
   }

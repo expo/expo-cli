@@ -49,10 +49,13 @@
     "@types/next": "*8.0.6",
     "@types/node-fetch": "^2.5.8",
     "@types/prompts": "^2.0.6",
+    "next": "^8.0.0",
+    "react": "^16.8.1",
+    "react-native-web": "^0.11.7",
     "rimraf": "^3.0.2"
   },
   "peerDependencies": {
-    "next": "^9",
+    "next": "*",
     "react": "^16",
     "react-native-web": "^0.11.7"
   },
@@ -62,7 +65,7 @@
   "dependencies": {
     "@expo/package-manager": "0.0.39-alpha.0",
     "@expo/webpack-config": "0.12.60",
-    "chalk": "^4.0.0",
+    "chalk": "^4.1.0",
     "commander": "^4.0.1",
     "fs-extra": "9.0.0",
     "prompts": "^2.3.2",
