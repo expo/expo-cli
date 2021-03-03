@@ -2,7 +2,7 @@
   "name": "@expo/development-support",
   "version": "59.0.25-alpha.0",
   "description": "Utility library used in Expo CLI and Expo Dev Tools",
-  "main": "build/development-support.js",
+  "main": "build/index.js",
   "files": [
     "build",
     "!**/__integration_tests__/**",

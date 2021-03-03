@@ -1,4 +1,4 @@
-import { PKCS12Utils } from '../../../build/development-support';
+import { PKCS12Utils } from '../../../build';
 
 // https://pkijs.org/examples/PKCS12SimpleExample.html
 // PKCS#12 With Password-Based Integrity Protection And No Privacy Protection
