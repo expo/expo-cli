@@ -9,6 +9,7 @@ const APPLY_EAS_GRADLE = 'apply from: "./eas-build.gradle"';
 function hasApplyLine(content: string, applyLine: string): boolean {
   return (
     content
+      .replace(/\r\n/g, '\n')
       .split('\n')
       // Check for both single and double quotes
       .some(line => line === applyLine || line === applyLine.replace(/"/g, "'"))

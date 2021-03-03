@@ -167,9 +167,13 @@ export function formatApplyLineForBuildGradle(projectRoot: string): string {
     );
   }
 
-  return `apply from: ${JSON.stringify(
-    path.relative(path.join(projectRoot, 'android', 'app'), updatesGradleScriptPath)
-  )}`;
+  const relativePath = path.relative(
+    path.join(projectRoot, 'android', 'app'),
+    updatesGradleScriptPath
+  );
+  const posixPath = process.platform === 'win32' ? relativePath.replace(/\\/g, '/') : relativePath;
+
+  return `apply from: "${posixPath}"`;
 }
 
 export function isBuildGradleConfigured(projectRoot: string, buildGradleContents: string): boolean {
@@ -177,6 +181,7 @@ export function isBuildGradleConfigured(projectRoot: string, buildGradleContents
 
   return (
     buildGradleContents
+      .replace(/\r\n/g, '\n')
       .split('\n')
       // Check for both single and double quotes
       .some(line => line === androidBuildScript || line === androidBuildScript.replace(/"/g, "'"))
