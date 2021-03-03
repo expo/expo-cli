@@ -21,6 +21,7 @@ export enum Config {
   RUNTIME_VERSION = 'EXUpdatesRuntimeVersion',
   SDK_VERSION = 'EXUpdatesSDKVersion',
   UPDATE_URL = 'EXUpdatesURL',
+  RELEASE_CHANNEL = 'EXUpdatesReleaseChannel',
 }
 
 export function getUpdateUrl(
