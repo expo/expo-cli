@@ -1,4 +1,4 @@
-import { Exp, UserSettings } from '@expo/xdl';
+import { Exp, UserSettings } from '@expo/development-support';
 import ora from 'ora';
 
 import { askForSendToAsync } from './askUser';

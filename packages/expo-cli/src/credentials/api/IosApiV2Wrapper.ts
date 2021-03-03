@@ -1,4 +1,4 @@
-import { ApiV2 } from '@expo/xdl';
+import { ApiV2 } from '@expo/development-support';
 
 import * as appleApi from '../../appleApi';
 import { IosAppCredentials, IosDistCredentials, IosPushCredentials } from '../credentials';

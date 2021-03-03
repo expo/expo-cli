@@ -1,4 +1,4 @@
-import { Detach } from '@expo/xdl';
+import { Detach } from '@expo/development-support';
 import { Command } from 'commander';
 
 type Options = {

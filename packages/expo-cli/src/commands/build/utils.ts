@@ -1,4 +1,4 @@
-import { Versions } from '@expo/xdl';
+import { Versions } from '@expo/development-support';
 import chalk from 'chalk';
 import program from 'commander';
 

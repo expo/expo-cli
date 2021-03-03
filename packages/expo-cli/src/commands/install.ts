@@ -1,7 +1,7 @@
 import { getConfig } from '@expo/config';
+import { Versions } from '@expo/development-support';
 import JsonFile from '@expo/json-file';
 import * as PackageManager from '@expo/package-manager';
-import { Versions } from '@expo/xdl';
 import { Command } from 'commander';
 import npmPackageArg from 'npm-package-arg';
 import resolveFrom from 'resolve-from';

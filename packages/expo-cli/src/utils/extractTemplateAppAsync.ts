@@ -1,6 +1,6 @@
 import { BareAppConfig, ExpoConfig } from '@expo/config';
+import { UserSettings } from '@expo/development-support';
 import JsonFile from '@expo/json-file';
-import { UserSettings } from '@expo/xdl';
 import fs from 'fs-extra';
 import merge from 'lodash/merge';
 import Minipass from 'minipass';

@@ -5,6 +5,8 @@
 /packages/dev-tools/.next
 /packages/dev-tools/build
 /packages/dev-tools/fragmentTypes.json
+/packages/development-support/build
+/packages/development-support/caches
 /packages/electron-adapter/build
 /packages/expo-cli/build
 /packages/expo-codemod/build
@@ -26,8 +28,6 @@
 /packages/traveling-fastlane/publishing/darwin/dist
 /packages/traveling-fastlane/publishing/linux/dist
 /packages/uri-scheme/build
-/packages/xdl/build
-/packages/xdl/caches
 package.json
 
 # Generated

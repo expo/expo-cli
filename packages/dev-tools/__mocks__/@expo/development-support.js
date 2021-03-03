@@ -1,6 +1,6 @@
-const xdl = jest.genMockFromModule('@expo/xdl');
+const library = jest.genMockFromModule('@expo/development-support');
 
-xdl.UrlUtils = {
+library.UrlUtils = {
   constructDeepLinkAsync(projectDir) {
     return this.constructManifestUrlAsync(projectDir);
   },
@@ -9,7 +9,7 @@ xdl.UrlUtils = {
   },
 };
 
-xdl.ProjectSettings = {
+library.ProjectSettings = {
   readAsync(projectDir) {
     return Promise.resolve({
       hostType: 'lan',
@@ -20,7 +20,7 @@ xdl.ProjectSettings = {
   },
 };
 
-xdl.ProjectUtils = {
+library.ProjectUtils = {
   readConfigJsonAsync(project) {
     return Promise.resolve({
       name: 'Project Name',
@@ -31,7 +31,7 @@ xdl.ProjectUtils = {
   logError(projectRoot, tag, message, id) {},
 };
 
-xdl.UserSettings = {
+library.UserSettings = {
   readAsync() {
     return Promise.resolve({
       sendTo: 'fake-send-to',
@@ -39,8 +39,8 @@ xdl.UserSettings = {
   },
 };
 
-xdl.Config = {
+library.Config = {
   offline: false,
 };
 
-module.exports = xdl;
+module.exports = library;

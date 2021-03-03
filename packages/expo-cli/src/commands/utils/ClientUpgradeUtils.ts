@@ -1,6 +1,6 @@
 import { getConfig } from '@expo/config';
 import { ExpoConfig } from '@expo/config-types';
-import { Versions } from '@expo/xdl';
+import { Versions } from '@expo/development-support';
 import chalk from 'chalk';
 
 import prompt from '../../prompts';

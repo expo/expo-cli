@@ -9,7 +9,7 @@ import {
   UserManager,
   UserSettings,
   Webpack,
-} from '@expo/xdl';
+} from '@expo/development-support';
 import chalk from 'chalk';
 import openBrowser from 'react-dev-utils/openBrowser';
 import wrapAnsi from 'wrap-ansi';

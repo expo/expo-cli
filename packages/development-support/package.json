@@ -1,8 +1,8 @@
 {
-  "name": "@expo/xdl",
+  "name": "@expo/development-support",
   "version": "59.0.25-alpha.0",
-  "description": "The Expo Development Library",
-  "main": "build/xdl.js",
+  "description": "Utility library used in Expo CLI and Expo Dev Tools",
+  "main": "build/development-support.js",
   "files": [
     "build",
     "!**/__integration_tests__/**",
@@ -23,13 +23,13 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/expo/expo-cli.git",
-    "directory": "packages/xdl"
+    "directory": "packages/development-support"
   },
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/expo/expo-cli/issues"
   },
-  "homepage": "https://github.com/expo/expo-cli/tree/master/packages/xdl#readme",
+  "homepage": "https://github.com/expo/expo-cli/tree/master/packages/development-support#readme",
   "dependencies": {
     "@expo/bunyan": "4.0.0",
     "@expo/config": "3.3.31-alpha.0",

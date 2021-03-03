@@ -1,4 +1,9 @@
-import { Logger, PackagerLogsStream, ProjectSettings, ProjectUtils } from '@expo/xdl';
+import {
+  Logger,
+  PackagerLogsStream,
+  ProjectSettings,
+  ProjectUtils,
+} from '@expo/development-support';
 import base64url from 'base64url';
 import crypto from 'crypto';
 import express from 'express';

@@ -28,12 +28,12 @@
     "subscriptions-transport-ws": "0.9.8"
   },
   "peerDependencies": {
-    "@expo/xdl": "*"
+    "@expo/development-support": "*"
   },
   "devDependencies": {
     "@babel/plugin-proposal-decorators": "^7.8.3",
     "@expo/babel-preset-cli": "0.2.18",
-    "@expo/xdl": "59.0.25-alpha.0",
+    "@expo/development-support": "59.0.25-alpha.0",
     "anser": "^1.4.7",
     "apollo-cache-inmemory": "^1.1.12",
     "apollo-client": "^2.2.8",

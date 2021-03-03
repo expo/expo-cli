@@ -1,4 +1,4 @@
-import { UrlUtils, Webpack } from '@expo/xdl';
+import { UrlUtils, Webpack } from '@expo/development-support';
 import chalk from 'chalk';
 import { Command } from 'commander';
 

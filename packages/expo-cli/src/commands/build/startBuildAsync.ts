@@ -1,5 +1,12 @@
 import { configFilename, getConfig } from '@expo/config';
-import { Analytics, ApiV2, Config, ThirdParty, UserManager, XDLError } from '@expo/xdl';
+import {
+  Analytics,
+  ApiV2,
+  Config,
+  ThirdParty,
+  UserManager,
+  XDLError,
+} from '@expo/development-support';
 import joi from '@hapi/joi';
 import slug from 'slugify';
 

@@ -1,6 +1,6 @@
 import { Device } from '@expo/apple-utils';
 import { getConfig, setCustomConfigPath } from '@expo/config';
-import { Android, Simulator, User, UserManager, Versions } from '@expo/xdl';
+import { Android, Simulator, User, UserManager, Versions } from '@expo/development-support';
 import chalk from 'chalk';
 import CliTable from 'cli-table3';
 import { Command } from 'commander';

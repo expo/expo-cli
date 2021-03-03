@@ -1,5 +1,5 @@
 import { ProjectTarget } from '@expo/config';
-import { Project, UrlUtils } from '@expo/xdl';
+import { Project, UrlUtils } from '@expo/development-support';
 import program, { Command } from 'commander';
 import crypto from 'crypto';
 import fs from 'fs-extra';

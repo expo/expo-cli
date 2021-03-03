@@ -1,4 +1,4 @@
-import { ModuleVersion } from '@expo/xdl';
+import { ModuleVersion } from '@expo/development-support';
 
 const packageJSON = require('../package.json');
 

@@ -1,5 +1,5 @@
 import { ExpoConfig, getConfig, ProjectConfig } from '@expo/config';
-import { RobotUser, User, UserManager, Versions } from '@expo/xdl';
+import { RobotUser, User, UserManager, Versions } from '@expo/development-support';
 import chalk from 'chalk';
 import ora from 'ora';
 import semver from 'semver';

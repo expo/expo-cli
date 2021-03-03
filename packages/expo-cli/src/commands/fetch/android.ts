@@ -1,4 +1,4 @@
-import { AndroidCredentials } from '@expo/xdl';
+import { AndroidCredentials } from '@expo/development-support';
 import assert from 'assert';
 import chalk from 'chalk';
 import * as fs from 'fs-extra';

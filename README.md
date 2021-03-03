@@ -72,6 +72,7 @@
 | [**`@expo/configure-splash-screen`**](./unlinked-packages/configure-splash-screen) | [![badges](https://img.shields.io/npm/v/@expo/configure-splash-screen?color=32cd32&style=flat-square)](https://www.npmjs.com/package/@expo/configure-splash-screen) |
 | [**`@expo/dev-server`**](./packages/dev-server)                                    | [![badges](https://img.shields.io/npm/v/@expo/dev-server?color=32cd32&style=flat-square)](https://www.npmjs.com/package/@expo/dev-server)                           |
 | [**`@expo/dev-tools`**](./packages/dev-tools)                                      | [![badges](https://img.shields.io/npm/v/@expo/dev-tools?color=32cd32&style=flat-square)](https://www.npmjs.com/package/@expo/dev-tools)                             |
+| [**`@expo/development-support`**](./packages/development-support)                  | [![badges](https://img.shields.io/npm/v/@expo/development-support?color=32cd32&style=flat-square)](https://www.npmjs.com/package/@expo/development-support)         |
 | [**`@expo/electron-adapter`**](./packages/electron-adapter)                        | [![badges](https://img.shields.io/npm/v/@expo/electron-adapter?color=32cd32&style=flat-square)](https://www.npmjs.com/package/@expo/electron-adapter)               |
 | [**`expo-cli`**](./packages/expo-cli)                                              | [![badges](https://img.shields.io/npm/v/expo-cli?color=32cd32&style=flat-square)](https://www.npmjs.com/package/expo-cli)                                           |
 | [**`expo-codemod`**](./packages/expo-codemod)                                      | [![badges](https://img.shields.io/npm/v/expo-codemod?color=32cd32&style=flat-square)](https://www.npmjs.com/package/expo-codemod)                                   |
@@ -89,7 +90,6 @@
 | [**`@expo/schemer`**](./packages/schemer)                                          | [![badges](https://img.shields.io/npm/v/@expo/schemer?color=32cd32&style=flat-square)](https://www.npmjs.com/package/@expo/schemer)                                 |
 | [**`uri-scheme`**](./packages/uri-scheme)                                          | [![badges](https://img.shields.io/npm/v/uri-scheme?color=32cd32&style=flat-square)](https://www.npmjs.com/package/uri-scheme)                                       |
 | [**`@expo/webpack-config`**](./packages/webpack-config)                            | [![badges](https://img.shields.io/npm/v/@expo/webpack-config?color=32cd32&style=flat-square)](https://www.npmjs.com/package/@expo/webpack-config)                   |
-| [**`@expo/xdl`**](./packages/xdl)                                                  | [![badges](https://img.shields.io/npm/v/@expo/xdl?color=32cd32&style=flat-square)](https://www.npmjs.com/package/@expo/xdl)                                         |
 
 <!-- Generated with $ node scripts/build-packages-toc.js -->
 

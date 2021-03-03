@@ -1,5 +1,5 @@
-import { ApiV2, User, UserManager } from '@expo/xdl';
-import { ApiV2Error } from '@expo/xdl/build/ApiV2';
+import { ApiV2, User, UserManager } from '@expo/development-support';
+import { ApiV2Error } from '@expo/development-support/build/ApiV2';
 import chalk from 'chalk';
 import program from 'commander';
 import ora from 'ora';

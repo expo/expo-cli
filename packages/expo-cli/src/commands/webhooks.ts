@@ -1,5 +1,5 @@
 import { findConfigFile, getConfig } from '@expo/config';
-import { ApiV2, UserManager } from '@expo/xdl';
+import { ApiV2, UserManager } from '@expo/development-support';
 import chalk from 'chalk';
 import CliTable from 'cli-table3';
 import { Command } from 'commander';

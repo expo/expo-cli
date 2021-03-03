@@ -1,4 +1,4 @@
-import { AndroidCredentials } from '@expo/xdl';
+import { AndroidCredentials } from '@expo/development-support';
 import chalk from 'chalk';
 import commandExists from 'command-exists';
 import fs from 'fs-extra';

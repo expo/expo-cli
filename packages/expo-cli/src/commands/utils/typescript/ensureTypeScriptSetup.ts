@@ -1,6 +1,6 @@
 import { getConfig } from '@expo/config';
+import { Versions } from '@expo/development-support';
 import * as PackageManager from '@expo/package-manager';
-import { Versions } from '@expo/xdl';
 import chalk from 'chalk';
 import program from 'commander';
 import * as fs from 'fs-extra';

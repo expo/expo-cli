@@ -1,4 +1,4 @@
-import { ApiV2 } from '@expo/xdl';
+import { ApiV2 } from '@expo/development-support';
 import forEach from 'lodash/forEach';
 import keyBy from 'lodash/keyBy';
 import omit from 'lodash/omit';

@@ -11,7 +11,7 @@ export default class LogReporter {
     if (event.error instanceof Error) {
       event.error = serializeError(event.error);
     }
-    // TODO(ville): replace xdl.PackagerLogsStream with a reporter to avoid serializing to JSON.
+    // TODO(ville): replace PackagerLogsStream with a reporter to avoid serializing to JSON.
     this.logger.info({ tag: 'metro' }, JSON.stringify(event));
     this.reportEvent(event);
   }

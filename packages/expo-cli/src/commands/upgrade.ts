@@ -5,9 +5,9 @@ import {
   writeConfigJsonAsync,
 } from '@expo/config';
 import { ExpoConfig } from '@expo/config-types';
+import { Android, Project, ProjectSettings, Simulator, Versions } from '@expo/development-support';
 import JsonFile from '@expo/json-file';
 import * as PackageManager from '@expo/package-manager';
-import { Android, Project, ProjectSettings, Simulator, Versions } from '@expo/xdl';
 import chalk from 'chalk';
 import program, { Command } from 'commander';
 import getenv from 'getenv';

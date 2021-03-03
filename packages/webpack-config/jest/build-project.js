@@ -1,7 +1,7 @@
 const path = require('path');
 const process = require('process');
 
-const { Webpack } = require('../../xdl');
+const { Webpack } = require('../../development-support');
 
 async function main(args) {
   const projectRoot = path.resolve(args[0]);

@@ -1,4 +1,4 @@
-import { IosCodeSigning } from '@expo/xdl';
+import { IosCodeSigning } from '@expo/development-support';
 import chalk from 'chalk';
 import dateformat from 'dateformat';
 import fs from 'fs-extra';

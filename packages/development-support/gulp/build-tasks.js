@@ -1,4 +1,4 @@
-const packageJson = require('@expo/xdl/package.json');
+const packageJson = require('@expo/development-support/package.json');
 const axios = require('axios');
 const fse = require('fs-extra');
 const gulp = require('gulp');

@@ -1,5 +1,11 @@
 import { getDefaultTarget } from '@expo/config';
-import { Android, ConnectionStatus, ProjectSettings, Simulator, Webpack } from '@expo/xdl';
+import {
+  Android,
+  ConnectionStatus,
+  ProjectSettings,
+  Simulator,
+  Webpack,
+} from '@expo/development-support';
 import { Command } from 'commander';
 import indentString from 'indent-string';
 import qrcodeTerminal from 'qrcode-terminal';

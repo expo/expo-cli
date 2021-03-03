@@ -1,5 +1,5 @@
+import { ProjectSettings } from '@expo/development-support';
 import spawnAsync from '@expo/spawn-async';
-import { ProjectSettings } from '@expo/xdl';
 import path from 'path';
 import temporary from 'tempy';
 

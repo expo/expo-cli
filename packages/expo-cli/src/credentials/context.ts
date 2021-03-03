@@ -1,5 +1,5 @@
 import { ExpoConfig, getConfig } from '@expo/config';
-import { ApiV2, RobotUser, User, UserManager } from '@expo/xdl';
+import { ApiV2, RobotUser, User, UserManager } from '@expo/development-support';
 import pick from 'lodash/pick';
 
 import { AppleCtx, authenticateAsync } from '../appleApi';

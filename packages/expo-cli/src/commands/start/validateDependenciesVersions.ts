@@ -1,6 +1,6 @@
 import { ExpoConfig, PackageJSONConfig } from '@expo/config';
+import { Versions } from '@expo/development-support';
 import JsonFile from '@expo/json-file';
-import { Versions } from '@expo/xdl';
 import chalk from 'chalk';
 import intersection from 'lodash/intersection';
 import resolveFrom from 'resolve-from';

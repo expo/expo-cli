@@ -1,8 +1,8 @@
 import { BareAppConfig, getConfig } from '@expo/config';
 import { AndroidConfig, IOSConfig } from '@expo/config-plugins';
+import { UserManager, Versions } from '@expo/development-support';
 import plist from '@expo/plist';
 import spawnAsync from '@expo/spawn-async';
-import { UserManager, Versions } from '@expo/xdl';
 import chalk from 'chalk';
 import program, { Command } from 'commander';
 import fs from 'fs-extra';

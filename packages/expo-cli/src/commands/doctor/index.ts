@@ -1,4 +1,4 @@
-import { Doctor } from '@expo/xdl';
+import { Doctor } from '@expo/development-support';
 import { Command } from 'commander';
 
 import Log from '../../log';

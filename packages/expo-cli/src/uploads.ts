@@ -1,4 +1,4 @@
-import { ApiV2, UserManager } from '@expo/xdl';
+import { ApiV2, UserManager } from '@expo/development-support';
 import FormData from 'form-data';
 import fs from 'fs';
 import got, { Progress } from 'got';

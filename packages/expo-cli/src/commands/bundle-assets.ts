@@ -1,4 +1,4 @@
-import { Detach } from '@expo/xdl';
+import { Detach } from '@expo/development-support';
 import chalk from 'chalk';
 import { Command } from 'commander';
 import terminalLink from 'terminal-link';

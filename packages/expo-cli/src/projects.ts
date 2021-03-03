@@ -1,5 +1,5 @@
 import { ExpoConfig, ProjectPrivacy } from '@expo/config';
-import { ApiV2, RobotUser, User } from '@expo/xdl';
+import { ApiV2, RobotUser, User } from '@expo/development-support';
 import ora from 'ora';
 
 import CommandError from './CommandError';

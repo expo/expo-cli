@@ -1,4 +1,4 @@
-import { UserManager } from '@expo/xdl';
+import { UserManager } from '@expo/development-support';
 import chalk from 'chalk';
 
 import Log from './log';

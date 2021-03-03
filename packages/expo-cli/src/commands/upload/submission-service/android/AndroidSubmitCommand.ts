@@ -1,5 +1,5 @@
+import { UserManager } from '@expo/development-support';
 import { Result, result } from '@expo/results';
-import { UserManager } from '@expo/xdl';
 
 import Log from '../../../../log';
 import { isUUID } from '../../../utils/isUUID';

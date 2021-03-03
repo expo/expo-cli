@@ -1,6 +1,5 @@
 import bunyan from '@expo/bunyan';
 import { setCustomConfigPath } from '@expo/config';
-import simpleSpinner from '@expo/simple-spinner';
 import {
   Analytics,
   Api,
@@ -16,7 +15,8 @@ import {
   ProjectSettings,
   ProjectUtils,
   UserManager,
-} from '@expo/xdl';
+} from '@expo/development-support';
+import simpleSpinner from '@expo/simple-spinner';
 import boxen from 'boxen';
 import chalk from 'chalk';
 import program, { Command } from 'commander';

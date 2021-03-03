@@ -1,4 +1,4 @@
-import { XDLError } from '@expo/xdl';
+import { XDLError } from '@expo/development-support';
 import chalk from 'chalk';
 import pickBy from 'lodash/pickBy';
 import os from 'os';

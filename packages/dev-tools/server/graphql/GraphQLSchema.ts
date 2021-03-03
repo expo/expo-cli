@@ -1,5 +1,4 @@
 import { getConfig, writeConfigJsonAsync } from '@expo/config';
-import spawnAsync from '@expo/spawn-async';
 import {
   Android,
   Config,
@@ -13,7 +12,8 @@ import {
   UserManager,
   UserSettings,
   Webpack,
-} from '@expo/xdl';
+} from '@expo/development-support';
+import spawnAsync from '@expo/spawn-async';
 import { makeExecutableSchema } from 'graphql-tools';
 import { $$asyncIterator } from 'iterall';
 

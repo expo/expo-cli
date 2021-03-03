@@ -1,6 +1,6 @@
-# xdl
+# `@expo/development-support`
 
-The Expo Development Library.
+Utility library used in Expo CLI and Expo Dev Tools. (Formerly known as XDL.)
 [Documentation](https://docs.expo.io/workflow/expo-cli/)
 
 If you have problems with the code in this repository, please file issues & bug reports

@@ -1,4 +1,4 @@
-import { Project } from '@expo/xdl';
+import { Project } from '@expo/development-support';
 import ora from 'ora';
 
 import Log from '../../log';

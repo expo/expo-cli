@@ -1,4 +1,4 @@
-import { Project } from '@expo/xdl';
+import { Project } from '@expo/development-support';
 import { graphiqlExpress } from 'apollo-server-express';
 import express from 'express';
 import http from 'http';

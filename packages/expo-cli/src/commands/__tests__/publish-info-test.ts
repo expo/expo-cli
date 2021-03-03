@@ -1,4 +1,4 @@
-import { ApiV2 } from '@expo/xdl';
+import { ApiV2 } from '@expo/development-support';
 import { vol } from 'memfs';
 
 import { mockExpoXDL } from '../../__tests__/mock-utils';

@@ -1,7 +1,7 @@
 import { ExpoConfig } from '@expo/config';
 // @ts-ignore: not typed
 import { DevToolsServer } from '@expo/dev-tools';
-import { UserSettings } from '@expo/xdl';
+import { UserSettings } from '@expo/development-support';
 import chalk from 'chalk';
 
 import Log from '../../log';

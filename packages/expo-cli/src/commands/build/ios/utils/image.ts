@@ -1,4 +1,4 @@
-import { UrlUtils, XDLError } from '@expo/xdl';
+import { UrlUtils, XDLError } from '@expo/development-support';
 import axios from 'axios';
 import fs from 'fs-extra';
 import pick from 'lodash/pick';

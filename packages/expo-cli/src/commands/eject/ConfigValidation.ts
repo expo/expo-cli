@@ -1,5 +1,5 @@
 import { ExpoConfig, getConfig, modifyConfigAsync } from '@expo/config';
-import { UserManager } from '@expo/xdl';
+import { UserManager } from '@expo/development-support';
 import got from 'got';
 
 import CommandError, { SilentError } from '../../CommandError';

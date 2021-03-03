@@ -5,8 +5,8 @@ import {
   PackageJSONConfig,
   ProjectTarget,
 } from '@expo/config';
+import { Project, UserManager } from '@expo/development-support';
 import simpleSpinner from '@expo/simple-spinner';
-import { Project, UserManager } from '@expo/xdl';
 import chalk from 'chalk';
 import { Command } from 'commander';
 import fs from 'fs';

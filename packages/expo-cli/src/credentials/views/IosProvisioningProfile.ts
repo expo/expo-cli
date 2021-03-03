@@ -1,5 +1,5 @@
+import { IosCodeSigning, PKCS12Utils } from '@expo/development-support';
 import plist, { PlistObject } from '@expo/plist';
-import { IosCodeSigning, PKCS12Utils } from '@expo/xdl';
 import chalk from 'chalk';
 import fs from 'fs-extra';
 import ora from 'ora';

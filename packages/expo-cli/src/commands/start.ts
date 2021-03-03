@@ -1,5 +1,5 @@
 import { getConfig, isLegacyImportsEnabled } from '@expo/config';
-import { Project, UrlUtils, Versions } from '@expo/xdl';
+import { Project, UrlUtils, Versions } from '@expo/development-support';
 import chalk from 'chalk';
 import path from 'path';
 
