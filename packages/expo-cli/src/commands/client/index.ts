@@ -117,7 +117,7 @@ export default function (program: Command) {
         if (!isAllowed) {
           throw new CommandError(
             'CLIENT_BUILD_REQUEST_NOT_ALLOWED',
-            `New Expo client build request disallowed. Reason: ${errorMessage}`
+            `New Expo Go build request disallowed. Reason: ${errorMessage}`
           );
         }
 
@@ -188,7 +188,7 @@ export default function (program: Command) {
 
         if (Object.keys(disabledServices).length > 0) {
           Log.newLine();
-          Log.warn('These services will be disabled in your custom Expo client:');
+          Log.warn('These services will be disabled in your custom Expo Go app:');
           const table = new CliTable({ head: ['Service', 'Reason'], style: { head: ['cyan'] } });
           table.push(
             ...Object.keys(disabledServices).map(serviceKey => {
@@ -262,7 +262,7 @@ export default function (program: Command) {
           );
         } else {
           urlOpts.printQRCode(result.statusUrl);
-          Log.log('Your custom Expo client is being built! 🛠');
+          Log.log('Your custom Expo Go app is being built! 🛠');
           Log.log(
             'Open this link on your iOS device (or scan the QR code) to view build logs and install the client:'
           );
@@ -278,7 +278,7 @@ export default function (program: Command) {
     .description('Install Expo Go for iOS on the simulator')
     .option(
       '--latest',
-      `Install the latest version of Expo client, ignoring the current project version.`
+      `Install the latest version of Expo Go, ignoring the current project version.`
     )
     .helpGroup('client')
     .asyncAction(async (command: Command) => {
@@ -306,14 +306,14 @@ export default function (program: Command) {
         ) {
           Log.log('Done!');
         } else {
-          Log.error(`Unable to install Expo client ${latestClient.version} for iOS.`);
+          Log.error(`Unable to install Expo Go ${latestClient.version} for iOS.`);
         }
         return;
       }
 
       if (!currentSdkVersion) {
         Log.log(
-          'Could not find your Expo project. If you run this from a project, we can help pick the right Expo client version!'
+          'Could not find your Expo project. If you run this from a project, we can help pick the right Expo Go version!'
         );
       }
 
@@ -392,7 +392,7 @@ export default function (program: Command) {
     .description('Install Expo Go for Android on a connected device or emulator')
     .option(
       '--latest',
-      `Install the latest version of Expo client, ignore the current project version.`
+      `Install the latest version of Expo Go, ignore the current project version.`
     )
     .helpGroup('client')
     .asyncAction(async (command: Command) => {
@@ -420,7 +420,7 @@ export default function (program: Command) {
         ) {
           Log.log('Done!');
         } else {
-          Log.error(`Unable to install Expo client ${latestClient.version} for Android.`);
+          Log.error(`Unable to install Expo Go ${latestClient.version} for Android.`);
         }
 
         return;
@@ -428,7 +428,7 @@ export default function (program: Command) {
 
       if (!currentSdkVersion) {
         Log.log(
-          'Could not find your Expo project. If you run this from a project, we can help pick the right Expo client version!'
+          'Could not find your Expo project. If you run this from a project, we can help pick the right Expo Go version!'
         );
       }
 

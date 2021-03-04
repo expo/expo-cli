@@ -232,7 +232,7 @@ async function createAndWriteIconsToPathAsync(
     }
   }
 
-  // Remove Expo client notification icon resources
+  // Remove Expo Go notification icon resources
   globSync('**/shell_notification_icon.png', {
     cwd: resPath,
     absolute: true,

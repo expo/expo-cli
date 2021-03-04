@@ -166,7 +166,7 @@ async function _podInstallAsync(workspacePath, isRepoUpdateEnabled) {
 
 /**
  * @param workspacePath optionally provide a path for the unbuilt xcode workspace to create/use.
- * @param expoSourcePath path to expo client app sourcecode (/ios dir from expo/expo repo)
+ * @param expoSourcePath path to Expo Go app sourcecode (/ios dir from expo/expo repo)
  * @param shellAppSdkVersion sdk version for shell app
  */
 async function _createStandaloneContextAsync(args) {
@@ -242,7 +242,7 @@ async function _createStandaloneContextAsync(args) {
  *  @param appleTeamId Apple Developer's account Team ID
  *  @param output specify the output path of the configured archive (ie) /tmp/my-app-archive-build.xcarchive or /tmp/my-app-ios-build.tar.gz
  *  @param type type of artifact to configure (simulator or archive)
- *  @param expoSourcePath path to expo client app sourcecode (/ios dir from expo/expo repo)
+ *  @param expoSourcePath path to Expo Go app sourcecode (/ios dir from expo/expo repo)
  */
 async function configureAndCopyArchiveAsync(args) {
   args = _validateCLIArgs(args);

@@ -285,9 +285,9 @@ export function logOptimizeWarnings({ projectRoot }: { projectRoot: string }): v
 
 /**
  * Warn users if they attempt to publish in a bare project that may also be
- * using Expo client and does not If the developer does not have the Expo
+ * using Expo Go and does not If the developer does not have the Expo
  * package installed then we do not need to warn them as there is no way that
- * it will run in Expo client in development even. We should revisit this with
+ * it will run in Expo Go in development even. We should revisit this with
  * dev client, and possibly also by excluding SDK version for bare
  * expo-updates usage in the future (and then surfacing this as an error in
  * the Expo Go app instead)
@@ -307,7 +307,7 @@ export function logBareWorkflowWarnings(pkg: PackageJSONConfig) {
       'Workflow target',
       `This is a ${chalk.bold(
         'bare workflow'
-      )} project. The resulting publish will only run properly inside of a native build of your project. If you want to publish a version of your app that will run in Expo client, please use ${chalk.bold(
+      )} project. The resulting publish will only run properly inside of a native build of your project. If you want to publish a version of your app that will run in Expo Go, please use ${chalk.bold(
         'expo publish --target managed'
       )}. You can skip this warning by explicitly running ${chalk.bold(
         'expo publish --target bare'

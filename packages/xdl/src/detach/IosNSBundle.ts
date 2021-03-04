@@ -291,7 +291,7 @@ async function _configureInfoPlistAsync(context: AnyStandaloneContext): Promise<
     }
 
     // reset the status bar style to the default gray. this can be removed if we
-    // ever change expo client to use `UIStatusBarStyleDefault` instead of
+    // ever change Expo Go to use `UIStatusBarStyleDefault` instead of
     // `UIStatusBarStyleLightContent`
     if (!extraConfig?.UIStatusBarStyle) {
       infoPlist.UIStatusBarStyle = 'UIStatusBarStyleDefault';
