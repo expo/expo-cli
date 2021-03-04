@@ -27,28 +27,6 @@ class StandaloneBuildFlags {
   static createEmpty = () => {
     return new StandaloneBuildFlags();
   };
-
-  static createIos = (
-    configuration: StandaloneBuildConfiguration,
-    ios?: StandaloneBuildIosFlags
-  ): StandaloneBuildFlags => {
-    const flags = new StandaloneBuildFlags();
-    flags.configuration = configuration;
-    flags.ios = ios;
-    flags.isExpoClientBuild = () => ios?.buildType === 'client';
-    return flags;
-  };
-
-  static createAndroid = (
-    configuration: StandaloneBuildConfiguration,
-    android?: StandaloneBuildAndroidFlags
-  ): StandaloneBuildFlags => {
-    const flags = new StandaloneBuildFlags();
-    flags.configuration = configuration;
-    flags.android = android;
-    flags.isExpoClientBuild = () => false;
-    return flags;
-  };
 }
 
 export default StandaloneBuildFlags;

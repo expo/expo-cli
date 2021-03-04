@@ -82,24 +82,7 @@ class StandaloneContext {
     releaseChannel: string,
     shellAppSdkVersion: string
   ): StandaloneContextService => {
-    const context = new StandaloneContextService(
-      {
-        expoSourcePath,
-        archivePath,
-        manifest,
-        privateConfig,
-        testEnvironment,
-        shellAppSdkVersion,
-      },
-      {
-        url: publishedUrl,
-        releaseChannel: releaseChannel ? releaseChannel : 'default',
-      },
-      build
-    );
-    context.config = manifest;
-
-    return context;
+    throw new Error('createServiceContext is not supported in this version of XDL');
   };
 
   /**
