@@ -1,7 +1,7 @@
-import { Detach } from '@expo/xdl';
 import chalk from 'chalk';
 import { Command } from 'commander';
 import terminalLink from 'terminal-link';
+import { Detach } from 'xdl';
 
 import { SilentError } from '../CommandError';
 import Log from '../log';

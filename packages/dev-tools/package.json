@@ -28,12 +28,11 @@
     "subscriptions-transport-ws": "0.9.8"
   },
   "peerDependencies": {
-    "@expo/xdl": "*"
+    "xdl": "*"
   },
   "devDependencies": {
     "@babel/plugin-proposal-decorators": "^7.8.3",
     "@expo/babel-preset-cli": "0.2.18",
-    "@expo/xdl": "59.0.25",
     "anser": "^1.4.7",
     "apollo-cache-inmemory": "^1.1.12",
     "apollo-client": "^2.2.8",
@@ -64,7 +63,8 @@
     "rimraf": "^3.0.2",
     "slugify": "^1.0.2",
     "ts-node": "^8.6.2",
-    "velocity-react": "^1.4.1"
+    "velocity-react": "^1.4.1",
+    "xdl": "59.0.25"
   },
   "license": "MIT",
   "repository": {

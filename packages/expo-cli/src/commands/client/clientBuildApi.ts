@@ -1,5 +1,5 @@
 import { ExpoConfig } from '@expo/config';
-import { ApiV2, RobotUser, User } from '@expo/xdl';
+import { ApiV2, RobotUser, User } from 'xdl';
 
 export type ClientBuildRequestOptions = {
   user: User | RobotUser | null;

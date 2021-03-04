@@ -1,9 +1,9 @@
-import { Project } from '@expo/xdl';
 import { graphiqlExpress } from 'apollo-server-express';
 import express from 'express';
 import http from 'http';
 import next from 'next';
 import openBrowser from 'react-dev-utils/openBrowser';
+import { Project } from 'xdl';
 
 import { createAuthenticationContextAsync, startGraphQLServer } from './DevToolsServer';
 

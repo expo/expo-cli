@@ -9,7 +9,7 @@ import {
   withExpoVersionedSDKPlugins,
   withStaticPlugin,
 } from '@expo/config-plugins';
-import { UserManager } from '@expo/xdl';
+import { UserManager } from 'xdl';
 
 import Log from '../../log';
 import { getOrPromptForBundleIdentifier, getOrPromptForPackage } from './ConfigValidation';

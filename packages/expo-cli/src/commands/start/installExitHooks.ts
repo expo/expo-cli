@@ -1,5 +1,5 @@
-import { Project } from '@expo/xdl';
 import ora from 'ora';
+import { Project } from 'xdl';
 
 import Log from '../../log';
 

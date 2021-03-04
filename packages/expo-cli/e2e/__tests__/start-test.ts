@@ -1,7 +1,7 @@
 import spawnAsync from '@expo/spawn-async';
-import { ProjectSettings } from '@expo/xdl';
 import path from 'path';
 import temporary from 'tempy';
+import { ProjectSettings } from 'xdl';
 
 import { EXPO_CLI } from '../TestUtils';
 

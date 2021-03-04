@@ -1,5 +1,5 @@
-import { Detach } from '@expo/xdl';
 import { Command } from 'commander';
+import { Detach } from 'xdl';
 
 type Options = {
   platform?: string;

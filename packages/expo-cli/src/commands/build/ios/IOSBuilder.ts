@@ -1,8 +1,8 @@
-import { XDLError } from '@expo/xdl';
 import chalk from 'chalk';
 import pickBy from 'lodash/pickBy';
 import os from 'os';
 import semver from 'semver';
+import { XDLError } from 'xdl';
 
 import CommandError, { ErrorCodes } from '../../../CommandError';
 import * as apple from '../../../appleApi';
