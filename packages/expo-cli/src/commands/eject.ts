@@ -13,7 +13,7 @@ import { learnMore } from './utils/TerminalLink';
 
 async function userWantsToEjectWithoutUpgradingAsync() {
   const answer = await confirmAsync({
-    message: `We recommend upgrading to the latest SDK version before ejecting. SDK 37 introduces support for OTA updates and notifications in ejected projects, and includes many features that make ejecting your project easier. Would you like to continue ejecting anyways?`,
+    message: `We recommend upgrading to the latest SDK version before ejecting. It will be more difficult to upgrade your app after ejecting because you will also be responsible for native iOS and Android related upgrade steps. Continue ejecting?`,
   });
 
   return answer;
@@ -30,7 +30,9 @@ export async function actionAsync(
   }
 ) {
   const { exp } = getConfig(projectDir);
-
+  const currentSdkVersionString = exp.sdkVersion!;
+  const latestSdkVersion = await Versions.newestReleasedSdkVersionAsync();
+  const latestSdkVersionString = latestSdkVersion.version;
   if (options.npm) {
     options.packageManager = 'npm';
   }
@@ -43,11 +45,21 @@ export async function actionAsync(
       );
     }
   } else {
-    Log.debug('Eject Mode: Latest');
-    await ejectAsync(projectDir, {
-      ...options,
-      platforms: platformsFromPlatform(platform),
-    } as EjectAsyncOptions);
+    if (currentSdkVersionString !== latestSdkVersionString) {
+      if (await userWantsToEjectWithoutUpgradingAsync()) {
+        Log.debug('Eject Mode: Latest');
+        await ejectAsync(projectDir, {
+          ...options,
+          platforms: platformsFromPlatform(platform),
+        } as EjectAsyncOptions);
+      }
+    } else {
+      Log.debug('Eject Mode: Latest');
+      await ejectAsync(projectDir, {
+        ...options,
+        platforms: platformsFromPlatform(platform),
+      } as EjectAsyncOptions);
+    }
   }
 }
 
