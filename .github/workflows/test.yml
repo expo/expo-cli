@@ -103,10 +103,9 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
       - name: Test ${{ matrix.package }}
-        run: cd packages/${{ matrix.package }} && yarn test
-        # run: cd packages/${{ matrix.package }} && yarn test --coverage
-        env:
-          CI: true
+        working-directory: packages/${{ matrix.package }}
+        run: yarn test
+        # run: yarn test --coverage
       # - name: Get Test Flag Name
       #   id: cov-flag-name
       #   run: echo "::set-output name=flag::$(echo ${{ matrix.package }} | perl -pe 's/[^a-z]+([a-z])/\U\1/gi;s/^([A-Z])/\l\1/')"
