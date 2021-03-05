@@ -38,14 +38,13 @@ jobs:
           key: v2-${{ github.sha }}-${{ matrix.node }}
   test:
     runs-on: ${{ matrix.os }}
-    continue-on-error: ${{ matrix.experimental }}
+    continue-on-error: ${{ matrix.os == 'windows-latest' }}
     needs: build
     strategy:
       fail-fast: false
       matrix:
         node: ['10', '12']
-        os: ['ubuntu-latest']
-        experimental: [false]
+        os: ['ubuntu-latest', 'windows-latest']
         package:
           [
             electron-adapter,
@@ -68,30 +67,6 @@ jobs:
             webpack-config,
             xdl,
           ]
-        include:
-          - node: '12'
-            os: windows-latest
-            experimental: true
-            package:
-              - electron-adapter
-              - dev-tools
-              - babel-preset-cli
-              - config
-              - config-plugins
-              - dev-server
-              - expo-cli
-              - expo-codemod
-              - image-utils
-              - json-file
-              - metro-config
-              - package-manager
-              - pkcs12
-              - plist
-              - pwa
-              - schemer
-              - uri-scheme
-              - webpack-config
-              - xdl
     name: Test ${{ matrix.package }} with Node ${{ matrix.node }} (${{ matrix.os }})
     steps:
       - uses: actions/cache@v2
