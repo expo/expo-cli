@@ -16,6 +16,7 @@ jobs:
         experimental: [false]
         include:
           - os: windows-latest
+            node: ['10', '12']
             experimental: true
     name: Build with Node ${{ matrix.node }} (${{ matrix.os }})
     steps:
@@ -68,6 +69,7 @@ jobs:
           ]
         include:
           - os: windows-latest
+            node: ['10', '12']
             experimental: true
     name: Test ${{ matrix.package }} with Node ${{ matrix.node }} (${{ matrix.os }})
     steps:
