@@ -30,6 +30,7 @@ jobs:
       - run: yarn install --frozen-lockfile --check-files
       - run: yarn lerna run prepare --stream
       - run: yarn lint --max-warnings=0
+        if: ${{ !matrix.experimental }}
       - uses: actions/cache@v2
         if: ${{ !matrix.experimental }}
         with:
