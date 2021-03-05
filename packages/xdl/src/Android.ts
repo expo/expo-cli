@@ -677,6 +677,10 @@ async function getClientForSDK(sdkVersionString?: string) {
   }
 
   const sdkVersion = (await Versions.sdkVersionsAsync())[sdkVersionString];
+  if (!sdkVersion) {
+    return null;
+  }
+
   return {
     url: sdkVersion.androidClientUrl,
     version: sdkVersion.androidClientVersion,
