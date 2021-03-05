@@ -72,6 +72,26 @@ jobs:
           - node: '12'
             os: windows-latest
             experimental: true
+            package:
+              - electron-adapter
+              - dev-tools
+              - babel-preset-cli
+              - config
+              - config-plugins
+              - dev-server
+              - expo-cli
+              - expo-codemod
+              - image-utils
+              - json-file
+              - metro-config
+              - package-manager
+              - pkcs12
+              - plist
+              - pwa
+              - schemer
+              - uri-scheme
+              - webpack-config
+              - xdl
     name: Test ${{ matrix.package }} with Node ${{ matrix.node }} (${{ matrix.os }})
     steps:
       - uses: actions/cache@v2
