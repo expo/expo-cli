@@ -362,11 +362,14 @@ export async function initGitRepoAsync(
   flags: { silent: boolean; commit: boolean } = { silent: false, commit: true }
 ) {
   // let's see if we're in a git tree
+  let insideGitTree = false;
+
   try {
-    await spawnAsync('git', ['rev-parse', '--is-inside-work-tree'], {
+    const resultPromise = await spawnAsync('git', ['rev-parse', '--is-inside-work-tree'], {
       cwd: root,
     });
-    !flags.silent && Log.log('New project is already inside of a git repo, skipping git init.');
+
+    insideGitTree = resultPromise.stdout.trim() === 'true';
   } catch (e) {
     if (e.errno === 'ENOENT') {
       !flags.silent && Log.warn('Unable to initialize git repo. `git` not in PATH.');
@@ -374,7 +377,28 @@ export async function initGitRepoAsync(
     }
   }
 
-  // not in git tree, so let's init
+  let runGitInit = true;
+
+  if (insideGitTree) {
+    const { answer } = await prompts({
+      type: 'text',
+      name: 'answer',
+      message:
+        "You appear to be creating an Expo app within an existing Git work tree. Do you still want to run 'git init' within your new project folder? [y/n]",
+      initial: 'n',
+    });
+
+    runGitInit = answer.trim() === 'y';
+  }
+
+  if (!runGitInit) {
+    !flags.silent &&
+      insideGitTree &&
+      Log.log('New project is already inside of a git repo, skipping git init.');
+    return false;
+  }
+
+  // not in git tree or user has opted in, so let's init
   try {
     await spawnAsync('git', ['init'], { cwd: root });
     !flags.silent && Log.log('Initialized a git repository.');
