@@ -671,6 +671,10 @@ async function getClientForSDK(sdkVersionString?: string) {
   }
 
   const sdkVersion = (await Versions.sdkVersionsAsync())[sdkVersionString];
+  if (!sdkVersion) {
+    return null;
+  }
+
   return {
     url: sdkVersion.iosClientUrl,
     version: sdkVersion.iosClientVersion,
