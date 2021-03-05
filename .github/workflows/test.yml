@@ -17,7 +17,7 @@ jobs:
         include:
           - os: windows-latest
             experimental: true
-    name: Build with Node ${{ matrix.node }}
+    name: Build with Node ${{ matrix.node }} (${{ matrix.os }})
     steps:
       - uses: actions/checkout@v2
         with:
@@ -69,7 +69,7 @@ jobs:
         include:
           - os: windows-latest
             experimental: true
-    name: Test ${{ matrix.package }} on Node ${{ matrix.node }}
+    name: Test ${{ matrix.package }} with Node ${{ matrix.node }} (${{ matrix.os }})
     steps:
       - uses: actions/cache@v2
         with:
