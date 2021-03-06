@@ -20,6 +20,12 @@ const INTERNAL_CALLSITES_REGEX = new RegExp(
     '/node_modules/react-devtools-core/.+\\.js$',
     '/node_modules/react-refresh/.+\\.js$',
     '/node_modules/scheduler/.+\\.js$',
+    // Metro replaces `require()` with a different method,
+    // we want to omit this method from the stack trace.
+    // This is akin to most React tooling.
+    '/metro/.*/polyfills/require.js$',
+    // Ignore the log forwarder used in the Expo Go app
+    '/expo/build/environment/react-native-logs.fx.js$',
   ].join('|')
 );
 
