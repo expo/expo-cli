@@ -26,6 +26,7 @@ const INTERNAL_CALLSITES_REGEX = new RegExp(
     '/metro/.*/polyfills/require.js$',
     // Ignore the log forwarder used in the Expo Go app
     '/expo/build/environment/react-native-logs.fx.js$',
+    '/expo/build/logs/RemoteConsole.js$',
   ].join('|')
 );
 
