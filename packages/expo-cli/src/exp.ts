@@ -1,5 +1,6 @@
 import bunyan from '@expo/bunyan';
 import { setCustomConfigPath } from '@expo/config';
+import { INTERNAL_CALLSITES_REGEX } from '@expo/metro-config';
 import simpleSpinner from '@expo/simple-spinner';
 import {
   Analytics,
@@ -38,6 +39,7 @@ import { profileMethod } from './commands/utils/profileMethod';
 import Log from './log';
 import update from './update';
 import urlOpts from './urlOpts';
+import { matchFileNameOrURLFromStackTrace } from './utils/matchFileNameOrURLFromStackTrace';
 
 // We use require() to exclude package.json from TypeScript's analysis since it lives outside the
 // src directory and would change the directory structure of the emitted files under the build
@@ -538,17 +540,27 @@ Command.prototype.asyncActionProjectDir = function (
 
       for (let i = 0; i <= lastFrameIndexToLog; i++) {
         const line = stackFrames[i];
+
         if (!line) {
-          continue;
-        } else if (line.match(/react-native\/.*YellowBox.js/)) {
           continue;
         }
 
-        if (line.startsWith('node_modules')) {
-          nestedLogFn('- ' + line);
-        } else {
-          nestedLogFn('* ' + line);
+        let isCollapsed = false;
+        const fileNameOrUrl = matchFileNameOrURLFromStackTrace(line);
+        if (fileNameOrUrl) {
+          // Use the same regex we use in Metro config to filter out traces:
+          isCollapsed = INTERNAL_CALLSITES_REGEX.test(fileNameOrUrl);
+
+          // Unless the user is in debug mode, skip printing the collapsed files.
+          if (!Log.isDebug && isCollapsed) {
+            continue;
+          }
         }
+
+        // If a file is collapsed, print it with dim styling.
+        const style = isCollapsed ? chalk.dim : (message: string) => message;
+        // Use the `at` prefix to match Node.js
+        nestedLogFn(style('at ' + line));
       }
 
       if (unloggedFrames > 0) {

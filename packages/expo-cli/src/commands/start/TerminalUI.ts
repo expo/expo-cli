@@ -1,6 +1,5 @@
 import {
   Android,
-  Exp,
   Project,
   ProjectSettings,
   Prompts,
@@ -16,7 +15,7 @@ import wrapAnsi from 'wrap-ansi';
 
 import { loginOrRegisterIfLoggedOutAsync } from '../../accounts';
 import Log from '../../log';
-import { promptEmailAsync, selectAsync } from '../../prompts';
+import { selectAsync } from '../../prompts';
 import urlOpts from '../../urlOpts';
 import { openInEditorAsync } from '../utils/openInEditorAsync';
 
@@ -79,7 +78,6 @@ const printUsageAsync = async (
     [],
     ['d', `open developer tools`],
     ['shift+d', `toggle auto opening developer tools on startup`, currentToggle],
-    !options.webOnly && ['e', `share the app link by email`],
     [],
   ]);
 };
@@ -97,7 +95,6 @@ const printBasicUsageAsync = async (options: Pick<StartOptions, 'webOnly'> = {})
     [],
     ['d', `open developer tools`],
     ['shift+d', `toggle auto opening developer tools on startup`, currentToggle],
-    !options.webOnly && ['e', `share the app link by email`],
     [],
   ]);
 };
@@ -233,9 +230,6 @@ export async function startAsync(projectRoot: string, options: StartOptions) {
           });
           printHelp();
           break;
-        case 'e':
-          Log.log(chalk.red` ${BLT} Sending a URL is not supported in web-only mode`);
-          break;
       }
     } else {
       switch (key) {
@@ -285,9 +279,6 @@ export async function startAsync(projectRoot: string, options: StartOptions) {
           printHelp();
           break;
         }
-        case 'e':
-          await sendEmailAsync(projectRoot);
-          break;
       }
     }
 
@@ -377,45 +368,5 @@ Please reload the project in Expo Go for the change to take effect.`
         Log.log('Trying to open the project in your editor...');
         await openInEditorAsync(projectRoot);
     }
-  }
-}
-
-async function sendEmailAsync(projectRoot: string): Promise<void> {
-  const lanAddress = await UrlUtils.constructDeepLinkAsync(projectRoot, {
-    hostType: 'lan',
-  });
-  const defaultRecipient = await UserSettings.getAsync('sendTo', null);
-
-  Log.addNewLineIfNone();
-
-  Prompts.pauseInteractions();
-
-  let recipient: string;
-  try {
-    recipient = await promptEmailAsync({
-      message: `Email address ${chalk.dim(`(ESC to cancel)`)}`,
-      initial: defaultRecipient ?? undefined,
-    });
-  } catch {
-    Prompts.resumeInteractions();
-    printHelp();
-    return;
-  }
-
-  Prompts.resumeInteractions();
-
-  Log.log(`Sending ${lanAddress} to ${recipient}...`);
-
-  let sent = false;
-  try {
-    await Exp.sendAsync(recipient, lanAddress);
-    sent = true;
-    Log.log(`Sent link successfully.`);
-  } catch (err) {
-    Log.log(`Could not send link. ${err}`);
-  }
-  printHelp();
-  if (sent) {
-    await UserSettings.setAsync('sendTo', recipient);
   }
 }
