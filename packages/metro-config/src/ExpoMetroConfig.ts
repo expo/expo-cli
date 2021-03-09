@@ -10,7 +10,7 @@ import resolveFrom from 'resolve-from';
 export const EXPO_DEBUG = boolish('EXPO_DEBUG', false);
 
 // Import only the types here, the values will be imported from the project, at runtime.
-const INTERNAL_CALLSITES_REGEX = new RegExp(
+export const INTERNAL_CALLSITES_REGEX = new RegExp(
   [
     '/Libraries/Renderer/implementations/.+\\.js$',
     '/Libraries/BatchedBridge/MessageQueue\\.js$',

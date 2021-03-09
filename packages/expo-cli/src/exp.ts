@@ -1,5 +1,6 @@
 import bunyan from '@expo/bunyan';
 import { setCustomConfigPath } from '@expo/config';
+import { INTERNAL_CALLSITES_REGEX } from '@expo/metro-config';
 import simpleSpinner from '@expo/simple-spinner';
 import {
   Analytics,
@@ -378,6 +379,27 @@ Command.prototype.asyncAction = function (asyncFn: Action, skipUpdateCheck: bool
   });
 };
 
+/**
+ *
+ * @param traceLine
+ */
+function matchFileNameOrURLFromStackTrace(traceMessage: string): string | null {
+  if (!traceMessage.includes(' in ')) return null;
+  const traceLine = traceMessage.split(' in ')[0]?.trim();
+  // Is URL
+  // "http://127.0.0.1:19000/index.bundle?platform=ios&dev=true&hot=false&minify=false:110910:3 in global code"
+  if (traceLine.match(/https?:\/\//g)) {
+    const [url, params] = traceLine.split('?');
+
+    const paramsWithoutLocation = params.replace(/:(\d+)/g, '').trim();
+    return `${url}?${paramsWithoutLocation}`;
+  }
+
+  // "node_modules/react-native/Libraries/LogBox/LogBox.js:117:10 in registerWarning"
+  // "somn.js:1:0 in <global>"
+  return traceLine.replace(/:(\d+)/g, '').trim();
+}
+
 function getStringBetweenParens(value: string): string {
   const regExp = /\(([^)]+)\)/;
   const matches = regExp.exec(value);
@@ -538,17 +560,24 @@ Command.prototype.asyncActionProjectDir = function (
 
       for (let i = 0; i <= lastFrameIndexToLog; i++) {
         const line = stackFrames[i];
+
         if (!line) {
-          continue;
-        } else if (line.match(/react-native\/.*YellowBox.js/)) {
           continue;
         }
 
-        if (line.startsWith('node_modules')) {
-          nestedLogFn('- ' + line);
-        } else {
-          nestedLogFn('* ' + line);
+        let isCollapsed = false;
+        const fileNameOrUrl = matchFileNameOrURLFromStackTrace(line);
+        if (fileNameOrUrl) {
+          // Use the same regex we use in Metro config to filter out traces:
+          isCollapsed = INTERNAL_CALLSITES_REGEX.test(fileNameOrUrl);
+
+          if (!Log.isDebug && isCollapsed) {
+            continue;
+          }
         }
+
+        const style = isCollapsed ? chalk.dim : (message: string) => message;
+        nestedLogFn(style('at ' + line));
       }
 
       if (unloggedFrames > 0) {
