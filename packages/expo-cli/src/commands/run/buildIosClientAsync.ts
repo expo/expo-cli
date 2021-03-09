@@ -1,10 +1,11 @@
 import { IOSConfig } from '@expo/config-plugins';
 import spawnAsync from '@expo/spawn-async';
+import { Formatter } from '@expo/xcpretty';
 import { SimControl, Simulator, UrlUtils } from '@expo/xdl';
-import ora from 'ora';
 import path from 'path';
 
 import CommandError from '../../CommandError';
+import Log from '../../log';
 
 type Options = {
   scheme?: string;
@@ -31,9 +32,10 @@ export default async function buildIosClientAsync(
     udid = device.udid;
   }
 
-  const spinner = ora('Building app ').start();
+  Log.log('Building app...');
 
-  await spawnAsync(
+  const formatter = new Formatter({ projectRoot });
+  const promise = spawnAsync(
     'xcodebuild',
     [
       '-workspace',
@@ -45,15 +47,24 @@ export default async function buildIosClientAsync(
       '-destination',
       `id=${udid}`,
     ],
-    { stdio: 'inherit' }
+    { stdio: ['inherit', 'pipe', 'pipe'] }
   );
+  promise.child.stdout?.on('data', data => {
+    for (const line of formatter.pipe(data.toString())) {
+      Log.log(line);
+    }
+  });
+  promise.child.stderr?.on('data', data => {
+    for (const line of formatter.pipe(data.toString())) {
+      Log.warn(line);
+    }
+  });
+  await promise;
 
-  spinner.text = 'Starting the development client...';
+  Log.log('Starting the development client...');
   await Simulator.ensureSimulatorOpenAsync();
   const url = await UrlUtils.constructDeepLinkAsync(projectRoot, {
     hostType: 'localhost',
   });
   await SimControl.openURLAsync({ udid, url });
-
-  spinner.succeed();
 }
