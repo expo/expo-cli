@@ -9,7 +9,7 @@ import {
   stopReactNativeServerAsync,
 } from './start/startLegacyReactNativeServerAsync';
 
-export { startAsync, stopAsync } from './start/startAsync';
+export { startAsync, stopAsync, broadcastMessage } from './start/startAsync';
 
 /**
  * @deprecated Use `ProjectSettings.setPackagerInfoAsync`

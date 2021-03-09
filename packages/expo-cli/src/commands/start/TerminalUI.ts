@@ -16,7 +16,7 @@ import wrapAnsi from 'wrap-ansi';
 
 import { loginOrRegisterIfLoggedOutAsync } from '../../accounts';
 import Log from '../../log';
-import { promptEmailAsync } from '../../prompts';
+import { promptEmailAsync, selectAsync } from '../../prompts';
 import urlOpts from '../../urlOpts';
 import { openInEditorAsync } from '../utils/openInEditorAsync';
 
@@ -73,7 +73,8 @@ const printUsageAsync = async (
     ['o', `open project code in your editor`],
     ['c', `show project QR`],
     ['p', `toggle build mode`, devMode],
-    ['r', `restart bundler`],
+    ['r', `reload app`],
+    ['m', `open dev menu`],
     ['shift+r', `restart and clear cache`],
     [],
     ['d', `open developer tools`],
@@ -330,6 +331,30 @@ export async function startAsync(projectRoot: string, options: StartOptions) {
         logCommandsTable([['d', `open developer tools now`]]);
         break;
       }
+      case 'm': {
+        Project.broadcastMessage('sendDevCommand', { name: 'devMenu' });
+        break;
+      }
+      case 'M': {
+        Prompts.pauseInteractions();
+        try {
+          const value = await selectAsync({
+            message: 'Dev menu',
+            choices: [
+              { title: 'Reload App', value: 'reload' },
+              { title: 'Toggle Menu', value: 'devMenu' },
+              { title: 'Toggle Inspector', value: 'toggleInspector' },
+              // { title: 'Toggle Performance Monitor', value: 'togglePerformance' },
+              // { title: 'Disable Remote Debugging', value: 'disableRemoteDebugging' },
+            ],
+          });
+          Project.broadcastMessage('sendDevCommand', { name: value });
+        } finally {
+          Prompts.resumeInteractions();
+          printHelp();
+        }
+        break;
+      }
       case 'p': {
         Log.clear();
         const projectSettings = await ProjectSettings.readAsync(projectRoot);
@@ -345,17 +370,9 @@ Please reload the project in Expo Go for the change to take effect.`
         break;
       }
       case 'r':
-      case 'R': {
-        Log.clear();
-        const reset = key === 'R';
-        if (reset) {
-          Log.log('Restarting Metro bundler and clearing cache...');
-        } else {
-          Log.log('Restarting Metro bundler...');
-        }
-        Project.startAsync(projectRoot, { ...options, reset });
+        // @ts-ignore
+        Project.broadcastMessage('reload', null);
         break;
-      }
       case 'o':
         Log.log('Trying to open the project in your editor...');
         await openInEditorAsync(projectRoot);

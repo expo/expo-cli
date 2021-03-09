@@ -19,6 +19,13 @@ import {
 } from './startLegacyReactNativeServerAsync';
 
 let serverInstance: Server | null = null;
+let messageSocket: any | null = null;
+
+export function broadcastMessage(method: string, params?: Record<string, any> | undefined) {
+  if (messageSocket) {
+    messageSocket.broadcast(method, params);
+  }
+}
 
 export async function startAsync(
   projectRoot: string,
@@ -37,7 +44,7 @@ export async function startAsync(
     DevSession.startSession(projectRoot, exp, 'web');
     return exp;
   } else if (shouldUseDevServer(exp) || options.devClient) {
-    serverInstance = await startDevServerAsync(projectRoot, options);
+    [serverInstance, , messageSocket] = await startDevServerAsync(projectRoot, options);
     DevSession.startSession(projectRoot, exp, 'native');
   } else {
     await startExpoServerAsync(projectRoot);
