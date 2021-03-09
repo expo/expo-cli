@@ -19,6 +19,7 @@ export type EjectAsyncOptions = {
   install?: boolean;
   packageManager?: 'npm' | 'yarn';
   platforms: ModPlatform[];
+  skipDependencyUpdate?: string[];
 };
 
 export type PrebuildResults = {
@@ -59,6 +60,7 @@ export async function prebuildAsync(
     pkg,
     tempDir,
     platforms,
+    skipDependencyUpdate: options.skipDependencyUpdate ?? [],
   });
 
   // Install node modules
