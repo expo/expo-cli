@@ -10,6 +10,43 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+## [Tue, 9 Mar 2021 11:17:38 -0800](https://github.com/expo/expo-cli/commit/7f66dad2ed570e2d001ea47ed6aabebd16ec8bfe)
+
+### 🛠 Breaking changes
+
+- [cli] Delete e (send to) command from terminal ui ([#3274](https://github.com/expo/expo-cli/issues/3274))
+
+### 🎉 New features
+
+- [cli] Unify terminal stack trace logs ([#3275](https://github.com/expo/expo-cli/issues/3275))
+- [cli] Collapse first frame if it's useless ([#3276](https://github.com/expo/expo-cli/issues/3276))
+- [cli][xdl] Rename Expo client to Expo Go wherever it makes sense
+
+### 🐛 Bug fixes
+
+- [cli] Remove Slack link from README
+- [config-plugins] eas build:configure fixes for Windows ([#3266](https://github.com/expo/expo-cli/issues/3266))
+- [config-plugins] Add release channel key to updates modules
+- [config-plugins] Support quote marks in target name in pbxproj ([#3264](https://github.com/expo/expo-cli/issues/3264))
+- [metro-config] Use relative asset registry path ([#3273](https://github.com/expo/expo-cli/issues/3273))
+- [xdl] Fix launching Android and iOS from terminal UI in unversioned apps
+
+### 📦 Packages updated
+
+- @expo/config-plugins@1.0.21
+- @expo/config@3.3.31
+- @expo/dev-server@0.1.57
+- @expo/dev-tools@0.13.85
+- @expo/electron-adapter@0.0.48
+- expo-cli@4.3.0
+- expo-optimize@0.1.79
+- @expo/metro-config@0.1.57
+- @expo/next-adapter@2.1.62
+- expo-pwa@0.0.67
+- uri-scheme@1.0.68
+- @expo/webpack-config@0.12.61
+- @expo/xdl@59.0.25
+
 ## [Wed, 24 Feb 2021 16:05:57 -0800](https://github.com/expo/expo-cli/commit/dd38f7d9c4d218ac6d408c748f2e2f6cde605b7a)
 
 ### 🛠 Breaking changes
