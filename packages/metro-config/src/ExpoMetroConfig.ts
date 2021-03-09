@@ -17,13 +17,17 @@ export const INTERNAL_CALLSITES_REGEX = new RegExp(
     '/Libraries/YellowBox/.+\\.js$',
     '/Libraries/LogBox/.+\\.js$',
     '/Libraries/Core/Timers/.+\\.js$',
-    '/node_modules/react-devtools-core/.+\\.js$',
-    '/node_modules/react-refresh/.+\\.js$',
-    '/node_modules/scheduler/.+\\.js$',
+    'node_modules/react-devtools-core/.+\\.js$',
+    'node_modules/react-refresh/.+\\.js$',
+    'node_modules/scheduler/.+\\.js$',
     // Metro replaces `require()` with a different method,
     // we want to omit this method from the stack trace.
     // This is akin to most React tooling.
     '/metro/.*/polyfills/require.js$',
+    // Hide frames related to a fast refresh.
+    '/metro/.*/lib/bundle-modules/.+\\.js$',
+    'node_modules/eventemitter3/index.js',
+    'node_modules/event-target-shim/dist/.+\\.js$',
     // Ignore the log forwarder used in the Expo Go app
     '/expo/build/environment/react-native-logs.fx.js$',
     '/expo/build/logs/RemoteConsole.js$',
