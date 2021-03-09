@@ -551,12 +551,15 @@ Command.prototype.asyncActionProjectDir = function (
           // Use the same regex we use in Metro config to filter out traces:
           isCollapsed = INTERNAL_CALLSITES_REGEX.test(fileNameOrUrl);
 
+          // Unless the user is in debug mode, skip printing the collapsed files.
           if (!Log.isDebug && isCollapsed) {
             continue;
           }
         }
 
+        // If a file is collapsed, print it with dim styling.
         const style = isCollapsed ? chalk.dim : (message: string) => message;
+        // Use the `at` prefix to match Node.js
         nestedLogFn(style('at ' + line));
       }
 
