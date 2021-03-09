@@ -69,14 +69,14 @@ const printUsageAsync = async (
     isMac && ['shift+i', `select a simulator`],
     ['w', `open web`],
     [],
+    ['r', `reload app`],
+    ['m', `toggle menu`],
+    ['shift+m', `more tools`],
     ['o', `open project code in your editor`],
     ['c', `show project QR`],
     ['p', `toggle build mode`, devMode],
-    ['r', `reload app`],
-    ['m', `open dev menu`],
-    ['shift+r', `restart and clear cache`],
     [],
-    ['d', `open developer tools`],
+    ['d', `show developer tools`],
     ['shift+d', `toggle auto opening developer tools on startup`, currentToggle],
     [],
   ]);
@@ -93,7 +93,9 @@ const printBasicUsageAsync = async (options: Pick<StartOptions, 'webOnly'> = {})
     isMac && ['i', `open iOS simulator`],
     ['w', `open web`],
     [],
-    ['d', `open developer tools`],
+    ['r', `reload app`],
+    ['m', `toggle menu`],
+    ['d', `show developer tools`],
     ['shift+d', `toggle auto opening developer tools on startup`, currentToggle],
     [],
   ]);
@@ -319,27 +321,32 @@ export async function startAsync(projectRoot: string, options: StartOptions) {
         await UserSettings.setAsync('openDevToolsAtStartup', enabled);
         const currentToggle = enabled ? 'enabled' : 'disabled';
         Log.log(`Auto opening developer tools on startup: ${chalk.bold(currentToggle)}`);
-        logCommandsTable([['d', `open developer tools now`]]);
+        logCommandsTable([['d', `show developer tools now`]]);
         break;
       }
       case 'm': {
-        Project.broadcastMessage('sendDevCommand', { name: 'devMenu' });
+        Log.log(`${BLT} Toggling dev menu`);
+        Project.broadcastMessage('devMenu');
         break;
       }
       case 'M': {
         Prompts.pauseInteractions();
         try {
           const value = await selectAsync({
-            message: 'Dev menu',
+            // Options match: Chrome > View > Developer
+            message: 'Developer',
             choices: [
+              { title: 'Inspect Elements', value: 'toggleElementInspector' },
+              { title: 'Performance Monitor', value: 'togglePerformanceMonitor' },
+              { title: 'Developer Menu', value: 'toggleDevMenu' },
               { title: 'Reload App', value: 'reload' },
-              { title: 'Toggle Menu', value: 'devMenu' },
-              { title: 'Toggle Inspector', value: 'toggleInspector' },
-              // { title: 'Toggle Performance Monitor', value: 'togglePerformance' },
-              // { title: 'Disable Remote Debugging', value: 'disableRemoteDebugging' },
+              // TODO: Maybe a "View Source" option to open code.
+              // { title: 'Toggle Remote Debugging', value: 'toggleRemoteDebugging' },
             ],
           });
           Project.broadcastMessage('sendDevCommand', { name: value });
+        } catch {
+          // do nothing
         } finally {
           Prompts.resumeInteractions();
           printHelp();
@@ -361,8 +368,8 @@ Please reload the project in Expo Go for the change to take effect.`
         break;
       }
       case 'r':
-        // @ts-ignore
-        Project.broadcastMessage('reload', null);
+        Log.log(`${BLT} Reloading app`);
+        Project.broadcastMessage('reload');
         break;
       case 'o':
         Log.log('Trying to open the project in your editor...');

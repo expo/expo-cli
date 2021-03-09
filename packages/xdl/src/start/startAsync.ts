@@ -21,7 +21,17 @@ import {
 let serverInstance: Server | null = null;
 let messageSocket: any | null = null;
 
-export function broadcastMessage(method: string, params?: Record<string, any> | undefined) {
+/**
+ * Sends a message over web sockets to any connected device,
+ * does nothing when the dev server is not running.
+ *
+ * @param method name of the command. In RN projects `reload`, and `devMenu` are available. In Expo Go, `sendDevCommand` is available.
+ * @param params
+ */
+export function broadcastMessage(
+  method: 'reload' | 'devMenu' | 'sendDevCommand',
+  params?: Record<string, any> | undefined
+) {
   if (messageSocket) {
     messageSocket.broadcast(method, params);
   }
