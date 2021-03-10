@@ -1,5 +1,5 @@
 import { ExpoConfig, isLegacyImportsEnabled } from '@expo/config';
-import { Project, ProjectSettings } from '@expo/xdl';
+import { Project, ProjectSettings, Versions } from '@expo/xdl';
 
 import Log from '../../log';
 import { URLOptions } from '../../urlOpts';
@@ -149,6 +149,11 @@ export function parseStartOptions(
     // See: https://docs.expo.io/bare/using-expo-client
     startOpts.target = options.devClient ? 'bare' : 'managed';
     Log.debug('Using target: ', startOpts.target);
+  }
+
+  if (Versions.gteSdkVersion(exp, '41.0.0')) {
+    // The SDK 41 client has web socket support.
+    startOpts.isWebSocketsEnabled = true;
   }
 
   return startOpts;

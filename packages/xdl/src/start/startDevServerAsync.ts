@@ -8,6 +8,7 @@ import { getManifestHandler } from './ManifestHandler';
 import { getFreePortAsync } from './getFreePortAsync';
 
 export type StartOptions = {
+  isWebSocketsEnabled?: boolean;
   devClient?: boolean;
   reset?: boolean;
   nonInteractive?: boolean;

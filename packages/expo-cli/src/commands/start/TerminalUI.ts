@@ -27,6 +27,7 @@ const BLT = `\u203A`;
 const { bold: b, italic: i, underline: u } = chalk;
 
 type StartOptions = {
+  isWebSocketsEnabled?: boolean;
   devClient?: boolean;
   reset?: boolean;
   nonInteractive?: boolean;
@@ -52,7 +53,7 @@ export async function shouldOpenDevToolsOnStartupAsync() {
 
 const printUsageAsync = async (
   projectRoot: string,
-  options: Pick<StartOptions, 'webOnly' | 'devClient'> = {}
+  options: Pick<StartOptions, 'webOnly' | 'devClient' | 'isWebSocketsEnabled'> = {}
 ) => {
   const { dev } = await ProjectSettings.readAsync(projectRoot);
   const openDevToolsAtStartup = await shouldOpenDevToolsOnStartupAsync();
@@ -69,12 +70,15 @@ const printUsageAsync = async (
     isMac && ['shift+i', `select a simulator`],
     ['w', `open web`],
     [],
-    ['r', `reload app`],
-    ['m', `toggle menu`],
-    !options.devClient && ['shift+m', `more tools`],
+    !!options.isWebSocketsEnabled && ['r', `reload app`],
+    !!options.isWebSocketsEnabled && ['m', `toggle menu`],
+    !!options.isWebSocketsEnabled && !options.devClient && ['shift+m', `more tools`],
     ['o', `open project code in your editor`],
     ['c', `show project QR`],
     ['p', `toggle build mode`, devMode],
+    // TODO: Drop with SDK 40
+    !options.isWebSocketsEnabled && ['r', `restart bundler`],
+    !options.isWebSocketsEnabled && ['shift+r', `restart and clear cache`],
     [],
     ['d', `show developer tools`],
     ['shift+d', `toggle auto opening developer tools on startup`, currentToggle],
@@ -82,7 +86,9 @@ const printUsageAsync = async (
   ]);
 };
 
-const printBasicUsageAsync = async (options: Pick<StartOptions, 'webOnly'> = {}) => {
+const printBasicUsageAsync = async (
+  options: Pick<StartOptions, 'webOnly' | 'isWebSocketsEnabled'> = {}
+) => {
   const isMac = process.platform === 'darwin';
   const openDevToolsAtStartup = await shouldOpenDevToolsOnStartupAsync();
   const currentToggle = openDevToolsAtStartup ? 'enabled' : 'disabled';
@@ -93,8 +99,8 @@ const printBasicUsageAsync = async (options: Pick<StartOptions, 'webOnly'> = {})
     isMac && ['i', `open iOS simulator`],
     ['w', `open web`],
     [],
-    ['r', `reload app`],
-    ['m', `toggle menu`],
+    !!options.isWebSocketsEnabled && ['r', `reload app`],
+    !!options.isWebSocketsEnabled && ['m', `toggle menu`],
     ['d', `show developer tools`],
     ['shift+d', `toggle auto opening developer tools on startup`, currentToggle],
     [],
@@ -325,38 +331,42 @@ export async function startAsync(projectRoot: string, options: StartOptions) {
         break;
       }
       case 'm': {
-        Log.log(`${BLT} Toggling dev menu`);
-        Project.broadcastMessage('devMenu');
+        if (options.isWebSocketsEnabled) {
+          Log.log(`${BLT} Toggling dev menu`);
+          Project.broadcastMessage('devMenu');
+        }
         break;
       }
       case 'M': {
-        // "More tools" is disabled in dev client for now because standard RN projects don't have hooks for it.
-        // In the future if the dev client package supports `sendDevCommand` then we can enable it.
-        if (options.devClient) {
-          return;
-        }
+        if (options.isWebSocketsEnabled) {
+          // "More tools" is disabled in dev client for now because standard RN projects don't have hooks for it.
+          // In the future if the dev client package supports `sendDevCommand` then we can enable it.
+          if (options.devClient) {
+            return;
+          }
 
-        Prompts.pauseInteractions();
-        try {
-          const value = await selectAsync({
-            // Options match: Chrome > View > Developer
-            message: 'Developer',
-            choices: [
-              { title: 'Inspect Elements', value: 'toggleElementInspector' },
-              { title: 'Performance Monitor', value: 'togglePerformanceMonitor' },
-              { title: 'Developer Menu', value: 'toggleDevMenu' },
-              { title: 'Reload App', value: 'reload' },
-              // TODO: Maybe a "View Source" option to open code.
-              // Toggling Remote JS Debugging is pretty rough, so leaving it disabled.
-              // { title: 'Toggle Remote Debugging', value: 'toggleRemoteDebugging' },
-            ],
-          });
-          Project.broadcastMessage('sendDevCommand', { name: value });
-        } catch {
-          // do nothing
-        } finally {
-          Prompts.resumeInteractions();
-          printHelp();
+          Prompts.pauseInteractions();
+          try {
+            const value = await selectAsync({
+              // Options match: Chrome > View > Developer
+              message: 'Developer',
+              choices: [
+                { title: 'Inspect Elements', value: 'toggleElementInspector' },
+                { title: 'Performance Monitor', value: 'togglePerformanceMonitor' },
+                { title: 'Developer Menu', value: 'toggleDevMenu' },
+                { title: 'Reload App', value: 'reload' },
+                // TODO: Maybe a "View Source" option to open code.
+                // Toggling Remote JS Debugging is pretty rough, so leaving it disabled.
+                // { title: 'Toggle Remote Debugging', value: 'toggleRemoteDebugging' },
+              ],
+            });
+            Project.broadcastMessage('sendDevCommand', { name: value });
+          } catch {
+            // do nothing
+          } finally {
+            Prompts.resumeInteractions();
+            printHelp();
+          }
         }
         break;
       }
@@ -375,8 +385,23 @@ Please reload the project in Expo Go for the change to take effect.`
         break;
       }
       case 'r':
-        Log.log(`${BLT} Reloading app`);
-        Project.broadcastMessage('reload');
+        if (options.isWebSocketsEnabled) {
+          Log.log(`${BLT} Reloading app`);
+          Project.broadcastMessage('reload');
+        } else {
+          // [SDK 40]: Restart bundler
+          Log.clear();
+          Project.startAsync(projectRoot, { ...options, reset: false });
+          Log.log('Restarting Metro bundler...');
+        }
+        break;
+      case 'R':
+        if (!options.isWebSocketsEnabled) {
+          // [SDK 40]: Restart bundler with cache
+          Log.clear();
+          Project.startAsync(projectRoot, { ...options, reset: true });
+          Log.log('Restarting Metro bundler and clearing cache...');
+        }
         break;
       case 'o':
         Log.log('Trying to open the project in your editor...');
