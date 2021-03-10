@@ -28,6 +28,7 @@ const { bold: b, italic: i, underline: u } = chalk;
 
 type StartOptions = {
   isWebSocketsEnabled?: boolean;
+  isRemoteReloadingEnabled?: boolean;
   devClient?: boolean;
   reset?: boolean;
   nonInteractive?: boolean;
@@ -53,7 +54,10 @@ export async function shouldOpenDevToolsOnStartupAsync() {
 
 const printUsageAsync = async (
   projectRoot: string,
-  options: Pick<StartOptions, 'webOnly' | 'devClient' | 'isWebSocketsEnabled'> = {}
+  options: Pick<
+    StartOptions,
+    'webOnly' | 'devClient' | 'isWebSocketsEnabled' | 'isRemoteReloadingEnabled'
+  > = {}
 ) => {
   const { dev } = await ProjectSettings.readAsync(projectRoot);
   const openDevToolsAtStartup = await shouldOpenDevToolsOnStartupAsync();
@@ -70,15 +74,15 @@ const printUsageAsync = async (
     isMac && ['shift+i', `select a simulator`],
     ['w', `open web`],
     [],
-    (!!options.isWebSocketsEnabled || !!options.webOnly) && ['r', `reload app`],
+    !!options.isRemoteReloadingEnabled && ['r', `reload app`],
     !!options.isWebSocketsEnabled && ['m', `toggle menu in Expo Go`],
     !!options.isWebSocketsEnabled && !options.devClient && ['shift+m', `more Expo Go tools`],
     ['o', `open project code in your editor`],
     ['c', `show project QR`],
     ['p', `toggle build mode`, devMode],
     // TODO: Drop with SDK 40
-    !options.isWebSocketsEnabled && ['r', `restart bundler`],
-    !options.isWebSocketsEnabled && ['shift+r', `restart and clear cache`],
+    !options.isRemoteReloadingEnabled && ['r', `restart bundler`],
+    !options.isRemoteReloadingEnabled && ['shift+r', `restart and clear cache`],
     [],
     ['d', `show developer tools`],
     ['shift+d', `toggle auto opening developer tools on startup`, currentToggle],
@@ -87,7 +91,7 @@ const printUsageAsync = async (
 };
 
 const printBasicUsageAsync = async (
-  options: Pick<StartOptions, 'webOnly' | 'isWebSocketsEnabled'> = {}
+  options: Pick<StartOptions, 'webOnly' | 'isWebSocketsEnabled' | 'isRemoteReloadingEnabled'> = {}
 ) => {
   const isMac = process.platform === 'darwin';
   const openDevToolsAtStartup = await shouldOpenDevToolsOnStartupAsync();
@@ -99,7 +103,7 @@ const printBasicUsageAsync = async (
     isMac && ['i', `open iOS simulator`],
     ['w', `open web`],
     [],
-    (!!options.isWebSocketsEnabled || !!options.webOnly) && ['r', `reload app`],
+    !!options.isRemoteReloadingEnabled && ['r', `reload app`],
     !!options.isWebSocketsEnabled && ['m', `toggle menu in Expo Go`],
     ['d', `show developer tools`],
     ['shift+d', `toggle auto opening developer tools on startup`, currentToggle],
@@ -385,7 +389,7 @@ Please reload the project in Expo Go for the change to take effect.`
         break;
       }
       case 'r':
-        if (options.isWebSocketsEnabled || !!options.webOnly) {
+        if (options.isRemoteReloadingEnabled) {
           Log.log(`${BLT} Reloading apps`);
           // Send reload requests over the metro dev server
           Project.broadcastMessage('reload');
@@ -399,7 +403,7 @@ Please reload the project in Expo Go for the change to take effect.`
         }
         break;
       case 'R':
-        if (!options.isWebSocketsEnabled) {
+        if (!options.isRemoteReloadingEnabled) {
           // [SDK 40]: Restart bundler with cache
           Log.clear();
           Project.startAsync(projectRoot, { ...options, reset: true });

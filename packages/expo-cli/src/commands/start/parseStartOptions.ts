@@ -151,9 +151,12 @@ export function parseStartOptions(
     Log.debug('Using target: ', startOpts.target);
   }
 
-  if (!startOpts.webOnly && Versions.gteSdkVersion(exp, '41.0.0')) {
-    // The SDK 41 client has web socket support.
-    startOpts.isWebSocketsEnabled = true;
+  // The SDK 41 client has web socket support.
+  if (Versions.gteSdkVersion(exp, '41.0.0')) {
+    startOpts.isRemoteReloadingEnabled = true;
+    if (!startOpts.webOnly) {
+      startOpts.isWebSocketsEnabled = true;
+    }
   }
 
   return startOpts;
