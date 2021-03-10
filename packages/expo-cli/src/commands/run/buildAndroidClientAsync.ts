@@ -10,8 +10,12 @@ type Options = {
   buildVariant: string;
 };
 
+function capitalize(name: string) {
+  return name.charAt(0).toUpperCase() + name.slice(1);
+}
+
 function getGradleTask(buildVariant: string): string {
-  return `install${buildVariant.charAt(0).toUpperCase()}${buildVariant.slice(1)}`;
+  return `install${capitalize(buildVariant)}`;
 }
 
 export default async function buildAndroidClientAsync(
