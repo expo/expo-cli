@@ -469,9 +469,9 @@ export async function installExpoOnSimulatorAsync({
   Logger.notifications.info({ code: NotificationCode.STOP_LOADING });
 
   if (version) {
-    Logger.global.info(`Installing Expo client ${version} on ${simulator.name}`);
+    Logger.global.info(`Installing Expo Go ${version} on ${simulator.name}`);
   } else {
-    Logger.global.info(`Installing Expo client on ${simulator.name}`);
+    Logger.global.info(`Installing Expo Go on ${simulator.name}`);
   }
 
   Logger.notifications.info({ code: NotificationCode.START_LOADING });
@@ -486,7 +486,7 @@ export async function installExpoOnSimulatorAsync({
 
 export async function uninstallExpoAppFromSimulatorAsync({ udid }: { udid?: string } = {}) {
   try {
-    Logger.global.info('Uninstalling Expo client from iOS simulator.');
+    Logger.global.info('Uninstalling Expo Go from iOS simulator.');
     await SimControl.uninstallAsync({ udid, bundleIdentifier: 'host.exp.Exponent' });
   } catch (e) {
     if (!e.message?.includes('No devices are booted.')) {
@@ -647,7 +647,7 @@ async function ensureExpoClientInstalledAsync(
       hasPromptedToUpgrade[simulator.udid] = true;
       const confirm = await Prompts.confirmAsync({
         initial: true,
-        message: `Expo client on ${simulator.name} is outdated, would you like to upgrade?`,
+        message: `Expo Go on ${simulator.name} is outdated, would you like to upgrade?`,
       });
       if (confirm) {
         // TODO: Is there any downside to skipping the uninstall step?
@@ -671,6 +671,10 @@ async function getClientForSDK(sdkVersionString?: string) {
   }
 
   const sdkVersion = (await Versions.sdkVersionsAsync())[sdkVersionString];
+  if (!sdkVersion) {
+    return null;
+  }
+
   return {
     url: sdkVersion.iosClientUrl,
     version: sdkVersion.iosClientVersion,

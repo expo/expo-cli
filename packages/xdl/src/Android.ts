@@ -425,9 +425,9 @@ export async function installExpoAsync({
   Logger.notifications.info({ code: NotificationCode.STOP_LOADING });
 
   if (version) {
-    Logger.global.info(`Installing Expo client ${version} on device`);
+    Logger.global.info(`Installing Expo Go ${version} on device`);
   } else {
-    Logger.global.info(`Installing Expo client on device`);
+    Logger.global.info(`Installing Expo Go on device`);
   }
   Logger.notifications.info({ code: NotificationCode.START_LOADING });
   warningTimer = setWarningTimer();
@@ -451,7 +451,7 @@ export async function isDeviceBootedAsync({
 }
 
 export async function uninstallExpoAsync(device: Device): Promise<string | undefined> {
-  Logger.global.info('Uninstalling Expo client from Android device.');
+  Logger.global.info('Uninstalling Expo Go from Android device.');
 
   // we need to check if its installed, else we might bump into "Failure [DELETE_FAILED_INTERNAL_ERROR]"
   const isInstalled = await _isExpoInstalledAsync(device);
@@ -463,7 +463,7 @@ export async function uninstallExpoAsync(device: Device): Promise<string | undef
     return await getAdbOutputAsync(adbPidArgs(device.pid, 'uninstall', 'host.exp.exponent'));
   } catch (e) {
     Logger.global.error(
-      'Could not uninstall Expo client from your device, please uninstall Expo client manually and try again.'
+      'Could not uninstall Expo Go from your device, please uninstall Expo Go manually and try again.'
     );
     throw e;
   }
@@ -518,7 +518,7 @@ async function _openUrlAsync({
   url: string;
   applicationId: string;
 }) {
-  // NOTE(brentvatne): temporary workaround! launch expo client first, then
+  // NOTE(brentvatne): temporary workaround! launch Expo Go first, then
   // launch the project!
   // https://github.com/expo/expo/issues/7772
   // adb shell monkey -p host.exp.exponent -c android.intent.category.LAUNCHER 1
@@ -625,7 +625,7 @@ async function openUrlAsync({
         hasPromptedToUpgrade[promptKey] = true;
         const confirm = await Prompts.confirmAsync({
           initial: true,
-          message: `Expo client on ${device.name} (${device.type}) is outdated, would you like to upgrade?`,
+          message: `Expo Go on ${device.name} (${device.type}) is outdated, would you like to upgrade?`,
         });
         if (confirm) {
           await uninstallExpoAsync(device);
@@ -677,6 +677,10 @@ async function getClientForSDK(sdkVersionString?: string) {
   }
 
   const sdkVersion = (await Versions.sdkVersionsAsync())[sdkVersionString];
+  if (!sdkVersion) {
+    return null;
+  }
+
   return {
     url: sdkVersion.androidClientUrl,
     version: sdkVersion.androidClientVersion,

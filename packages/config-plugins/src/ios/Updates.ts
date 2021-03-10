@@ -21,6 +21,7 @@ export enum Config {
   RUNTIME_VERSION = 'EXUpdatesRuntimeVersion',
   SDK_VERSION = 'EXUpdatesSDKVersion',
   UPDATE_URL = 'EXUpdatesURL',
+  RELEASE_CHANNEL = 'EXUpdatesReleaseChannel',
 }
 
 export function getUpdateUrl(
@@ -123,7 +124,8 @@ function formatConfigurationScriptPath(projectRoot: string): string {
     );
   }
 
-  return path.relative(path.join(projectRoot, 'ios'), buildScriptPath);
+  const relativePath = path.relative(path.join(projectRoot, 'ios'), buildScriptPath);
+  return process.platform === 'win32' ? relativePath.replace(/\\/g, '/') : relativePath;
 }
 
 interface ShellScriptBuildPhase {

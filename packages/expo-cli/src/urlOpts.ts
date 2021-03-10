@@ -28,10 +28,10 @@ function addOptions(program: Command) {
       'Experimental: Starts the bundler for use with the expo-development-client'
     )
     .option('--scheme <scheme>', 'Custom URI protocol to use with a dev client')
-    .option('-a, --android', 'Opens your app in Expo client on a connected Android device')
+    .option('-a, --android', 'Opens your app in Expo Go on a connected Android device')
     .option(
       '-i, --ios',
-      'Opens your app in Expo client in a currently running iOS simulator on your computer'
+      'Opens your app in Expo Go in a currently running iOS simulator on your computer'
     )
     .option('-w, --web', 'Opens your app in a web browser')
     .option(
