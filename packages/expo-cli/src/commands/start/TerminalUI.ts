@@ -356,8 +356,8 @@ export async function startAsync(projectRoot: string, options: StartOptions) {
               message: `Expo Go tools ${chalk.dim`(native only)`}`,
               choices: [
                 { title: 'Inspect elements', value: 'toggleElementInspector' },
-                { title: 'Performance monitor', value: 'togglePerformanceMonitor' },
-                { title: 'Developer menu', value: 'toggleDevMenu' },
+                { title: 'Toggle performance monitor', value: 'togglePerformanceMonitor' },
+                { title: 'Toggle developer menu', value: 'toggleDevMenu' },
                 { title: 'Reload app', value: 'reload' },
                 // TODO: Maybe a "View Source" option to open code.
                 // Toggling Remote JS Debugging is pretty rough, so leaving it disabled.
