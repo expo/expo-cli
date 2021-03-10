@@ -129,10 +129,11 @@ const printServerInfo = async (
     return;
   }
   Log.newLine();
-  const url = await UrlUtils.constructDeepLinkAsync(projectRoot);
-  urlOpts.printQRCode(url);
   const wrapLength = process.stdout.columns || 80;
   const item = (text: string): string => ` ${BLT} ` + wrapAnsi(text, wrapLength).trimStart();
+  const url = await UrlUtils.constructDeepLinkAsync(projectRoot);
+
+  urlOpts.printQRCode(url);
   Log.nested(item(`Waiting on ${u(url)}`));
   // Log.newLine();
   // TODO: if dev client, change this message!
@@ -141,7 +142,7 @@ const printServerInfo = async (
   await printBasicUsageAsync(options);
   Webpack.printConnectionInstructions(projectRoot);
   printHelp();
-  Log.newLine();
+  Log.addNewLineIfNone();
 };
 
 export function openDeveloperTools(url: string) {

@@ -6,10 +6,22 @@ import { spawn, SpawnOptionsWithoutStdio } from 'child_process';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 
-import CommandError from '../../CommandError';
-import { assert } from '../../assert';
-import Log from '../../log';
+import CommandError from '../../../CommandError';
+import { assert } from '../../../assert';
+import Log from '../../../log';
 import { ProjectInfo, XcodeConfiguration } from './resolveOptionsAsync';
+
+export type BuildProps = {
+  projectRoot: string;
+  isSimulator: boolean;
+  xcodeProject: ProjectInfo;
+  device: Pick<SimControl.XCTraceDevice, 'name' | 'udid'>;
+  configuration: XcodeConfiguration;
+  shouldStartBundler: boolean;
+  terminal?: string;
+  port: number;
+  scheme: string;
+};
 
 function getTargetPaths(buildSettings: string) {
   try {
@@ -106,19 +118,6 @@ function getProcessOptions({
   };
 }
 
-export type BuildProps = {
-  projectRoot: string;
-  isSimulator: boolean;
-  xcodeProject: ProjectInfo;
-  device: Pick<SimControl.XCTraceDevice, 'name' | 'udid'>;
-  configuration: XcodeConfiguration;
-  verbose: boolean;
-  shouldStartBundler: boolean;
-  terminal?: string;
-  port: number;
-  scheme: string;
-};
-
 function moduleNameFromPath(modulePath: string) {
   if (modulePath.startsWith('@')) {
     const [org, packageName] = modulePath.split('/');
@@ -145,11 +144,15 @@ class ExpoFormatter extends Formatter {
     return !filePath.match(/node_modules/) && !filePath.match(/\/ios\/Pods\//);
   }
 
-  // formatCompile(fileName: string, filePath: string): string {
-  //   const moduleName = getNodeModuleName(filePath);
-  //   const moduleNameTag = moduleName ? chalk.dim(`(${moduleName})`) : undefined;
-  //   return ['\u203A', 'Compiling', fileName, moduleNameTag].filter(Boolean).join(' ');
-  // }
+  formatCompile(fileName: string, filePath: string): string {
+    const moduleName = getNodeModuleName(filePath);
+    const moduleNameTag = moduleName ? chalk.dim(`(${moduleName})`) : undefined;
+    return ['\u203A', 'Compiling', fileName, moduleNameTag].filter(Boolean).join(' ');
+  }
+}
+
+export function logPrettyItem(message: string) {
+  Log.log(`${chalk.whiteBright`\u203A`} ${message}`);
 }
 
 export function buildAsync({
@@ -158,7 +161,6 @@ export function buildAsync({
   device,
   configuration,
   scheme,
-  verbose,
   shouldStartBundler,
   terminal,
   port,
@@ -174,7 +176,9 @@ export function buildAsync({
       '-destination',
       `id=${device.udid}`,
     ];
-    Log.log(`▸ ${chalk.bold`Building`}\n  ${chalk.dim(`xcodebuild ${xcodebuildArgs.join(' ')}`)}`);
+    logPrettyItem(
+      `${chalk.bold`Building`}\n  ${chalk.dim(`xcodebuild ${xcodebuildArgs.join(' ')}`)}`
+    );
     const formatter = new ExpoFormatter({ projectRoot });
     const buildProcess = spawn(
       'xcodebuild',
@@ -183,7 +187,8 @@ export function buildAsync({
     );
     let buildOutput = '';
     let errorOutput = '';
-    buildProcess.stdout.on('data', (data: Buffer) => {
+
+    const pipeData = (data: Buffer) => {
       const stringData = data.toString();
       buildOutput += stringData;
       if (formatter) {
@@ -198,9 +203,11 @@ export function buildAsync({
       } else if (Log.isDebug) {
         Log.debug(stringData);
       }
-    });
+    };
+    buildProcess.stdout.on('data', pipeData);
 
     buildProcess.stderr.on('data', (data: Buffer) => {
+      // pipeData(data);
       errorOutput += data;
     });
 
@@ -210,16 +217,11 @@ export function buildAsync({
 
         reject(
           new CommandError(
-            `
-              Failed to build iOS project.
-              "xcodebuild" exited with error code ${code}. To debug build
-              logs further, consider building your app with Xcode.app, by opening
-              ${xcodeProject.name}.\n\n
-            ` +
-              buildOutput +
-              '\n\n' +
-              errorOutput +
-              `\n\nBuild logs written to ${chalk.underline(errorLogFilePath)}`
+            `Failed to build iOS project. "xcodebuild" exited with error code ${code}.\nTo debug build logs further, consider building your app with Xcode.app, by opening ${xcodeProject.name}.\n\n` +
+              //   buildOutput +
+              //   '\n\n' +
+              //   errorOutput +
+              `Build logs written to ${chalk.underline(errorLogFilePath)}`
           )
         );
         return;

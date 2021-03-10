@@ -2,8 +2,7 @@ import getenv from 'getenv';
 import { sync as globSync } from 'glob';
 import * as path from 'path';
 
-import CommandError from '../../CommandError';
-import log from '../../log';
+import CommandError from '../../../CommandError';
 import * as XcodeBuild from './XcodeBuild';
 import { resolveDeviceAsync } from './resolveDeviceAsync';
 
@@ -12,9 +11,13 @@ export type XcodeConfiguration = 'Debug' | 'Release';
 export type Options = {
   device?: string | boolean;
   port?: number;
-  bundler?: boolean;
   scheme?: string;
   configuration?: XcodeConfiguration;
+};
+
+export type ProjectInfo = {
+  isWorkspace: boolean;
+  name: string;
 };
 
 const ignoredPaths = ['**/@(Carthage|Pods|node_modules)/**'];
@@ -29,11 +32,6 @@ function findXcodeProjectPaths(
     ignore: ignoredPaths,
   });
 }
-
-export type ProjectInfo = {
-  isWorkspace: boolean;
-  name: string;
-};
 
 function resolveXcodeProject(projectRoot: string): ProjectInfo {
   let paths = findXcodeProjectPaths(projectRoot, 'xcworkspace');
@@ -78,8 +76,7 @@ export async function resolveOptionsAsync(
     xcodeProject,
     device,
     configuration: options.configuration || 'Debug',
-    verbose: log.isDebug,
-    shouldStartBundler: false, //!!options.bundler,
+    shouldStartBundler: false,
     port: options.port ?? getenv.int('RCT_METRO_PORT', 8081),
     terminal: getDefaultUserTerminal(),
     scheme: options.scheme ?? path.basename(xcodeProject.name, path.extname(xcodeProject.name)),

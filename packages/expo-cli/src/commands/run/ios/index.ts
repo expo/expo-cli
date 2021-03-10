@@ -1,22 +1,20 @@
 import { Project, SimControl, Simulator } from '@expo/xdl';
 import chalk from 'chalk';
-import { Command } from 'commander';
 import fs from 'fs-extra';
 import * as path from 'path';
 
-import CommandError from '../../CommandError';
-import { authenticateAsync } from '../../appleApi';
-import Log from '../../log';
-import { EjectAsyncOptions, prebuildAsync } from '../eject/prebuildAsync';
+import CommandError from '../../../CommandError';
+import Log from '../../../log';
+import { EjectAsyncOptions, prebuildAsync } from '../../eject/prebuildAsync';
+import * as TerminalUI from '../../start/TerminalUI';
 import * as IOSDeploy from './IOSDeploy';
 import * as PlistBuddy from './PlistBuddy';
 import * as XcodeBuild from './XcodeBuild';
-import { configureCodeSigningAsync } from './configureCodeSigning';
 import { Options, resolveOptionsAsync } from './resolveOptionsAsync';
 
 const isMac = process.platform === 'darwin';
 
-export async function action(projectRoot: string, options: Options) {
+export async function actionAsync(projectRoot: string, options: Options) {
   if (!isMac) {
     // TODO: Prompt to use EAS?
 
@@ -26,9 +24,6 @@ export async function action(projectRoot: string, options: Options) {
     return;
   }
 
-  // const auth = await authenticateAsync();
-  // await configureCodeSigningAsync(projectRoot, auth);
-
   // If the project doesn't have native code, prebuild it...
   if (!fs.existsSync(path.join(projectRoot, 'ios'))) {
     await prebuildAsync(projectRoot, {
@@ -36,7 +31,7 @@ export async function action(projectRoot: string, options: Options) {
       platforms: ['ios'],
     } as EjectAsyncOptions);
   } else {
-    // TODO: Ensure the pods are in sync
+    // TODO: Ensure the pods are in sync -- https://github.com/expo/expo/pull/11593
   }
 
   const props = await resolveOptionsAsync(projectRoot, options);
@@ -55,17 +50,28 @@ export async function action(projectRoot: string, options: Options) {
     props.scheme
   );
 
-  logPrettyItem(`${chalk.bold`Installing`} on ${props.device.name}`);
+  XcodeBuild.logPrettyItem(`${chalk.bold`Installing`} on ${props.device.name}`);
 
-  await Project.startAsync(projectRoot, { devClient: true, nonInteractive: true });
+  // This basically means don't use the Client app.
+  const devClient = true;
+  await Project.startAsync(projectRoot, { devClient });
+  await TerminalUI.startAsync(projectRoot, {
+    devClient,
+  });
 
   if (props.isSimulator) {
     await SimControl.installAsync({ udid: props.device.udid, dir: binaryPath });
     await openInSimulatorAsync({ binaryPath, device: props.device });
   } else {
     IOSDeploy.installBinaryOnDevice({ bundle: binaryPath, udid: props.device.udid });
-    logPrettyItem(`${chalk.bold`Installed`} on ${props.device.name}`);
+    XcodeBuild.logPrettyItem(`${chalk.bold`Installed`} on ${props.device.name}`);
   }
+
+  Log.nested(
+    `\nLogs for your project will appear in the browser console. ${chalk.dim(
+      `Press Ctrl+C to exit.`
+    )}`
+  );
 }
 
 async function openInSimulatorAsync({
@@ -78,7 +84,9 @@ async function openInSimulatorAsync({
   const builtInfoPlistPath = path.join(binaryPath, 'Info.plist');
   const bundleID = await PlistBuddy.getBundleIdentifierAsync(builtInfoPlistPath);
 
-  logPrettyItem(`${chalk.bold`Opening`} on ${device.name} ${chalk.dim(`(${bundleID})`)}`);
+  XcodeBuild.logPrettyItem(
+    `${chalk.bold`Opening`} on ${device.name} ${chalk.dim(`(${bundleID})`)}`
+  );
 
   const result = await SimControl.openBundleIdAsync({
     udid: device.udid,
@@ -92,25 +100,4 @@ async function openInSimulatorAsync({
       `Failed to launch the app on simulator ${device.name} (${device.udid}). Error in "osascript" command: ${result.stderr}`
     );
   }
-}
-
-// Matches the current XCPretty formatter
-function logPrettyItem(message: string) {
-  Log.log(`${chalk.cyan`▸`} ${message}`);
-}
-
-export default function (program: Command) {
-  program
-    .command('ios [path]')
-    .description('Build the iOS app binary')
-    .helpGroup('core')
-    .option('-d, --device [device]', 'Device name or UDID to build the app on')
-    .option('--no-bundler', 'Skip starting the Metro bundler.')
-    .option('-p, --port [port]', 'Port to start the Metro bundler on. Default: 8081')
-    .option('--scheme [scheme]', 'Scheme to build')
-    .option(
-      '--configuration [configuration]',
-      'Xcode configuration to use. Debug or Release. Default: Debug'
-    )
-    .asyncActionProjectDir(action, { checkConfig: false });
 }
