@@ -358,7 +358,7 @@ export async function startAsync(projectRoot: string, options: StartOptions) {
                 { title: 'Inspect elements', value: 'toggleElementInspector' },
                 { title: 'Performance monitor', value: 'togglePerformanceMonitor' },
                 { title: 'Developer menu', value: 'toggleDevMenu' },
-                { title: 'Reload native app', value: 'reload' },
+                { title: 'Reload app', value: 'reload' },
                 // TODO: Maybe a "View Source" option to open code.
                 // Toggling Remote JS Debugging is pretty rough, so leaving it disabled.
                 // { title: 'Toggle Remote Debugging', value: 'toggleRemoteDebugging' },
