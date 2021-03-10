@@ -60,7 +60,7 @@ export async function prebuildAsync(
     pkg,
     tempDir,
     platforms,
-    skipDependencyUpdate: options.skipDependencyUpdate ?? [],
+    skipDependencyUpdate: options.skipDependencyUpdate,
   });
 
   // Install node modules

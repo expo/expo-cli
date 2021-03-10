@@ -44,7 +44,7 @@ export async function createNativeProjectsFromTemplateAsync({
   pkg: PackageJSONConfig;
   tempDir: string;
   platforms: ModPlatform[];
-  skipDependencyUpdate: string[];
+  skipDependencyUpdate?: string[];
 }): Promise<
   { hasNewProjectFiles: boolean; needsPodInstall: boolean } & DependenciesModificationResults
 > {

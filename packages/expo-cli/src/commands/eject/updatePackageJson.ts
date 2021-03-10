@@ -24,7 +24,7 @@ export async function updatePackageJSONAsync({
   projectRoot: string;
   tempDir: string;
   pkg: PackageJSONConfig;
-  skipDependencyUpdate: string[];
+  skipDependencyUpdate?: string[];
 }): Promise<DependenciesModificationResults> {
   // NOTE(brentvatne): Removing spaces between steps for now, add back when
   // there is some additional context for steps
@@ -75,16 +75,16 @@ export async function updatePackageJSONAsync({
  * - The same applies to expo-updates -- since some native project configuration may depend on the
  *   version, we should always use the version of expo-updates in the template.
  */
-function updatePackageJSONDependencies({
+export function updatePackageJSONDependencies({
   projectRoot,
   tempDir,
   pkg,
-  skipDependencyUpdate,
+  skipDependencyUpdate = [],
 }: {
   projectRoot: string;
   tempDir: string;
   pkg: PackageJSONConfig;
-  skipDependencyUpdate: string[];
+  skipDependencyUpdate?: string[];
 }): DependenciesModificationResults {
   if (!pkg.devDependencies) {
     pkg.devDependencies = {};

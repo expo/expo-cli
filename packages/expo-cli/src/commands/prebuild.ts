@@ -50,7 +50,7 @@ export default function (program: Command) {
     .option('--npm', 'Use npm to install dependencies. (default when Yarn is not installed)')
     .option('-p, --platform [platform]', 'Platforms to sync: ios, android, all. Default: all')
     .option(
-      '--skip-dependency-update [dependencies]',
+      '--skip-dependency-update <dependencies>',
       'Preserves versions of listed packages in package.json (comma separated list)'
     )
     .asyncActionProjectDir(actionAsync);
