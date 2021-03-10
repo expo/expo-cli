@@ -4,6 +4,8 @@ import { Android } from '@expo/xdl';
 import ora from 'ora';
 import path from 'path';
 
+import { prebuildAsync } from '../eject/prebuildAsync';
+
 type Options = {
   buildVariant: string;
 };
@@ -28,7 +30,18 @@ export default async function buildAndroidClientAsync(
 
   const spinner = ora('Building app ').start();
 
-  const androidProjectPath = await AndroidConfig.Paths.getProjectPathOrThrowAsync(projectRoot);
+  let androidProjectPath;
+  try {
+    androidProjectPath = await AndroidConfig.Paths.getProjectPathOrThrowAsync(projectRoot);
+  } catch {
+    // If the project doesn't have native code, prebuild it...
+    await prebuildAsync(projectRoot, {
+      install: true,
+      platforms: ['android'],
+    });
+    androidProjectPath = await AndroidConfig.Paths.getProjectPathOrThrowAsync(projectRoot);
+  }
+
   const gradlew = path.join(
     androidProjectPath,
     process.platform === 'win32' ? 'gradlew.bat' : 'gradlew'
