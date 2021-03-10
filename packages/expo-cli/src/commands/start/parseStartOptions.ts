@@ -151,7 +151,7 @@ export function parseStartOptions(
     Log.debug('Using target: ', startOpts.target);
   }
 
-  if (Versions.gteSdkVersion(exp, '41.0.0')) {
+  if (!startOpts.webOnly && Versions.gteSdkVersion(exp, '41.0.0')) {
     // The SDK 41 client has web socket support.
     startOpts.isWebSocketsEnabled = true;
   }
