@@ -7,6 +7,7 @@ import CommandError from '../../../CommandError';
 import Log from '../../../log';
 import { EjectAsyncOptions, prebuildAsync } from '../../eject/prebuildAsync';
 import * as TerminalUI from '../../start/TerminalUI';
+import { installExitHooks } from '../../start/installExitHooks';
 import * as IOSDeploy from './IOSDeploy';
 import * as PlistBuddy from './PlistBuddy';
 import * as XcodeBuild from './XcodeBuild';
@@ -51,6 +52,9 @@ export async function actionAsync(projectRoot: string, options: Options) {
   );
 
   XcodeBuild.logPrettyItem(`${chalk.bold`Installing`} on ${props.device.name}`);
+
+  // Add clean up hooks
+  installExitHooks(projectRoot);
 
   // This basically means don't use the Client app.
   const devClient = true;

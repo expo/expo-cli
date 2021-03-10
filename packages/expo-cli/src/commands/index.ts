@@ -13,7 +13,7 @@ const COMMANDS = [
   require('./fetch'),
   require('./init'),
   require('./install'),
-  require('./ios'),
+  require('./run'),
   require('./login'),
   require('./logout'),
   require('./prebuild'),

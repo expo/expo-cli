@@ -1,8 +1,8 @@
 import { SimControl, Simulator } from '@expo/xdl';
 import chalk from 'chalk';
 
-import CommandError from '../../CommandError';
-import prompt from '../../prompts';
+import CommandError from '../../../CommandError';
+import prompt from '../../../prompts';
 
 async function getSimulatorsAsync(): Promise<SimControl.SimulatorDevice[]> {
   const simulatorDeviceInfo = await SimControl.listAsync('devices');

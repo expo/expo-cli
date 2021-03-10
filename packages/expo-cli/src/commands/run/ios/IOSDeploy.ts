@@ -3,8 +3,8 @@ import chalk from 'chalk';
 import { spawnSync } from 'child_process';
 import wrapAnsi from 'wrap-ansi';
 
-import CommandError, { SilentError } from '../../CommandError';
-import log from '../../log';
+import CommandError, { SilentError } from '../../../CommandError';
+import log from '../../../log';
 
 export async function isInstalledAsync() {
   try {

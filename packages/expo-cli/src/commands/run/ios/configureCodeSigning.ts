@@ -3,7 +3,7 @@ import { compileModsAsync } from '@expo/config-plugins';
 import { CodeSigningSettings, withCodeSigning } from '@expo/config-plugins/build/ios/CodeSigning';
 import { UserManager } from '@expo/xdl';
 
-import { AppleCtx, ensureBundleIdExistsAsync } from '../../appleApi';
+import { AppleCtx, ensureBundleIdExistsAsync } from '../../../appleApi';
 
 export async function configureCodeSigningAsync(projectRoot: string, auth: AppleCtx) {
   // let config: ExpoConfig;
