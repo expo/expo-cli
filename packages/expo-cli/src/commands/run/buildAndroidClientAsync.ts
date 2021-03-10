@@ -4,6 +4,7 @@ import { Android } from '@expo/xdl';
 import ora from 'ora';
 import path from 'path';
 
+import Log from '../../log';
 import { prebuildAsync } from '../eject/prebuildAsync';
 
 type Options = {
@@ -32,7 +33,7 @@ export default async function buildAndroidClientAsync(
     return;
   }
 
-  const spinner = ora('Building app ').start();
+  Log.log('Building app...');
 
   let androidProjectPath;
   try {
@@ -56,12 +57,17 @@ export default async function buildAndroidClientAsync(
     stdio: 'inherit',
   });
 
-  spinner.text = 'Starting the development client...';
-  await Android.openProjectAsync({
-    projectRoot,
-    shouldPrompt: false,
-    devClient: true,
-  });
+  const spinner = ora('Starting the development client...').start();
+  try {
+    await Android.openProjectAsync({
+      projectRoot,
+      shouldPrompt: false,
+      devClient: true,
+    });
+  } catch (error) {
+    spinner.fail();
+    throw error;
+  }
 
   spinner.succeed();
 }
