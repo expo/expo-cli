@@ -51,6 +51,16 @@ export function getDefaultConfig(
 
   const reactNativePath = path.dirname(resolveFrom(projectRoot, 'react-native/package.json'));
 
+  try {
+    // Set the `EXPO_METRO_CACHE_KEY_VERSION` variable for use in the custom babel transformer.
+    // This hack is used because there doesn't appear to be anyway to resolve
+    // `babel-preset-fbjs` relative to the project root later (in `metro-expo-babel-transformer`).
+    const babelPresetFbjsPath = resolveFrom(projectRoot, 'babel-preset-fbjs/package.json');
+    process.env.EXPO_METRO_CACHE_KEY_VERSION = String(require(babelPresetFbjsPath).version);
+  } catch {
+    // noop -- falls back to a hardcoded value.
+  }
+
   let hashAssetFilesPath;
   try {
     hashAssetFilesPath = resolveFrom(projectRoot, 'expo-asset/tools/hashAssetFiles');
@@ -168,7 +178,8 @@ export function getDefaultConfig(
     },
     transformer: {
       allowOptionalDependencies: true,
-      babelTransformerPath: require.resolve('metro-react-native-babel-transformer'),
+      // A custom transformer that uses `babel-preset-expo` by default for projects.
+      babelTransformerPath: require.resolve('./metro-expo-babel-transformer'),
       assetRegistryPath: 'react-native/Libraries/Image/AssetRegistry',
       assetPlugins: hashAssetFilesPath ? [hashAssetFilesPath] : undefined,
     },
