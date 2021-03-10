@@ -52,7 +52,7 @@ export async function shouldOpenDevToolsOnStartupAsync() {
 
 const printUsageAsync = async (
   projectRoot: string,
-  options: Pick<StartOptions, 'webOnly'> = {}
+  options: Pick<StartOptions, 'webOnly' | 'devClient'> = {}
 ) => {
   const { dev } = await ProjectSettings.readAsync(projectRoot);
   const openDevToolsAtStartup = await shouldOpenDevToolsOnStartupAsync();
@@ -71,7 +71,7 @@ const printUsageAsync = async (
     [],
     ['r', `reload app`],
     ['m', `toggle menu`],
-    ['shift+m', `more tools`],
+    !options.devClient && ['shift+m', `more tools`],
     ['o', `open project code in your editor`],
     ['c', `show project QR`],
     ['p', `toggle build mode`, devMode],
@@ -330,6 +330,12 @@ export async function startAsync(projectRoot: string, options: StartOptions) {
         break;
       }
       case 'M': {
+        // "More tools" is disabled in dev client for now because standard RN projects don't have hooks for it.
+        // In the future if the dev client package supports `sendDevCommand` then we can enable it.
+        if (options.devClient) {
+          return;
+        }
+
         Prompts.pauseInteractions();
         try {
           const value = await selectAsync({
@@ -341,6 +347,7 @@ export async function startAsync(projectRoot: string, options: StartOptions) {
               { title: 'Developer Menu', value: 'toggleDevMenu' },
               { title: 'Reload App', value: 'reload' },
               // TODO: Maybe a "View Source" option to open code.
+              // Toggling Remote JS Debugging is pretty rough, so leaving it disabled.
               // { title: 'Toggle Remote Debugging', value: 'toggleRemoteDebugging' },
             ],
           });
