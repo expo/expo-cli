@@ -70,7 +70,7 @@ const printUsageAsync = async (
     isMac && ['shift+i', `select a simulator`],
     ['w', `open web`],
     [],
-    !!options.isWebSocketsEnabled && ['r', `reload app in Expo Go`],
+    (!!options.isWebSocketsEnabled || !!options.webOnly) && ['r', `reload app`],
     !!options.isWebSocketsEnabled && ['m', `toggle menu in Expo Go`],
     !!options.isWebSocketsEnabled && !options.devClient && ['shift+m', `more Expo Go tools`],
     ['o', `open project code in your editor`],
@@ -99,7 +99,7 @@ const printBasicUsageAsync = async (
     isMac && ['i', `open iOS simulator`],
     ['w', `open web`],
     [],
-    !!options.isWebSocketsEnabled && ['r', `reload app in Expo Go`],
+    (!!options.isWebSocketsEnabled || !!options.webOnly) && ['r', `reload app`],
     !!options.isWebSocketsEnabled && ['m', `toggle menu in Expo Go`],
     ['d', `show developer tools`],
     ['shift+d', `toggle auto opening developer tools on startup`, currentToggle],
@@ -354,7 +354,7 @@ export async function startAsync(projectRoot: string, options: StartOptions) {
                 { title: 'Inspect elements', value: 'toggleElementInspector' },
                 { title: 'Performance monitor', value: 'togglePerformanceMonitor' },
                 { title: 'Developer menu', value: 'toggleDevMenu' },
-                { title: 'Reload app', value: 'reload' },
+                { title: 'Reload native app', value: 'reload' },
                 // TODO: Maybe a "View Source" option to open code.
                 // Toggling Remote JS Debugging is pretty rough, so leaving it disabled.
                 // { title: 'Toggle Remote Debugging', value: 'toggleRemoteDebugging' },
@@ -385,10 +385,13 @@ Please reload the project in Expo Go for the change to take effect.`
         break;
       }
       case 'r':
-        if (options.isWebSocketsEnabled) {
-          Log.log(`${BLT} Reloading connected apps`);
+        if (options.isWebSocketsEnabled || !!options.webOnly) {
+          Log.log(`${BLT} Reloading apps`);
+          // Send reload requests over the metro dev server
           Project.broadcastMessage('reload');
-        } else {
+          // Send reload requests over the webpack dev server
+          Webpack.broadcastMessage('content-changed');
+        } else if (!options.webOnly) {
           // [SDK 40]: Restart bundler
           Log.clear();
           Project.startAsync(projectRoot, { ...options, reset: false });
