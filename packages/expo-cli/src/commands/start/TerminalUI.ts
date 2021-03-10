@@ -70,8 +70,8 @@ const printUsageAsync = async (
     isMac && ['shift+i', `select a simulator`],
     ['w', `open web`],
     [],
-    !!options.isWebSocketsEnabled && ['r', `reload app`],
-    !!options.isWebSocketsEnabled && ['m', `toggle menu`],
+    !!options.isWebSocketsEnabled && ['r', `reload native app`],
+    !!options.isWebSocketsEnabled && ['m', `toggle native menu`],
     !!options.isWebSocketsEnabled && !options.devClient && ['shift+m', `more tools`],
     ['o', `open project code in your editor`],
     ['c', `show project QR`],
@@ -99,8 +99,8 @@ const printBasicUsageAsync = async (
     isMac && ['i', `open iOS simulator`],
     ['w', `open web`],
     [],
-    !!options.isWebSocketsEnabled && ['r', `reload app`],
-    !!options.isWebSocketsEnabled && ['m', `toggle menu`],
+    !!options.isWebSocketsEnabled && ['r', `reload native app`],
+    !!options.isWebSocketsEnabled && ['m', `toggle native menu`],
     ['d', `show developer tools`],
     ['shift+d', `toggle auto opening developer tools on startup`, currentToggle],
     [],
@@ -332,7 +332,7 @@ export async function startAsync(projectRoot: string, options: StartOptions) {
       }
       case 'm': {
         if (options.isWebSocketsEnabled) {
-          Log.log(`${BLT} Toggling dev menu`);
+          Log.log(`${BLT} Toggling native dev menu`);
           Project.broadcastMessage('devMenu');
         }
         break;
@@ -349,12 +349,12 @@ export async function startAsync(projectRoot: string, options: StartOptions) {
           try {
             const value = await selectAsync({
               // Options match: Chrome > View > Developer
-              message: 'Developer',
+              message: 'More tools',
               choices: [
-                { title: 'Inspect Elements', value: 'toggleElementInspector' },
-                { title: 'Performance Monitor', value: 'togglePerformanceMonitor' },
-                { title: 'Developer Menu', value: 'toggleDevMenu' },
-                { title: 'Reload App', value: 'reload' },
+                { title: 'Inspect elements', value: 'toggleElementInspector' },
+                { title: 'Performance monitor', value: 'togglePerformanceMonitor' },
+                { title: 'Native developer menu', value: 'toggleDevMenu' },
+                { title: 'Reload native app', value: 'reload' },
                 // TODO: Maybe a "View Source" option to open code.
                 // Toggling Remote JS Debugging is pretty rough, so leaving it disabled.
                 // { title: 'Toggle Remote Debugging', value: 'toggleRemoteDebugging' },
@@ -386,7 +386,7 @@ Please reload the project in Expo Go for the change to take effect.`
       }
       case 'r':
         if (options.isWebSocketsEnabled) {
-          Log.log(`${BLT} Reloading app`);
+          Log.log(`${BLT} Reloading connected native apps`);
           Project.broadcastMessage('reload');
         } else {
           // [SDK 40]: Restart bundler
