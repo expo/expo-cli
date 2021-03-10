@@ -43,6 +43,14 @@ function readIsLegacyImportsEnabled(projectRoot: string): boolean {
   return isLegacyImportsEnabled(config.exp);
 }
 
+function getProjectBabelConfigFile(projectRoot: string): string | undefined {
+  return (
+    resolveFrom.silent(projectRoot, './babel.config.js') ||
+    resolveFrom.silent(projectRoot, './.babelrc') ||
+    resolveFrom.silent(projectRoot, './.babelrc.js')
+  );
+}
+
 export function getDefaultConfig(
   projectRoot: string,
   options: DefaultConfigOptions = {}
@@ -122,6 +130,9 @@ export function getDefaultConfig(
       ? getBareExtensions([], sourceExtsConfig)
       : getManagedExtensions([], sourceExtsConfig);
 
+  const babelConfigPath = getProjectBabelConfigFile(projectRoot);
+  const isCustomBabelConfigDefined = !!babelConfigPath;
+
   if (EXPO_DEBUG) {
     console.log();
     console.log(`Expo Metro config:`);
@@ -129,6 +140,7 @@ export function getDefaultConfig(
     console.log(`- Legacy: ${isLegacy}`);
     console.log(`- Extensions: ${sourceExts.join(', ')}`);
     console.log(`- React Native: ${reactNativePath}`);
+    console.log(`- Babel config: ${babelConfigPath || 'babel-preset-expo (default)'}`);
     console.log();
   }
   const {
@@ -178,8 +190,12 @@ export function getDefaultConfig(
     },
     transformer: {
       allowOptionalDependencies: true,
-      // A custom transformer that uses `babel-preset-expo` by default for projects.
-      babelTransformerPath: require.resolve('./metro-expo-babel-transformer'),
+      babelTransformerPath: isCustomBabelConfigDefined
+        ? // If the user defined a babel config file in their project,
+          // then use the default transformer.
+          require.resolve('metro-react-native-babel-transformer')
+        : // Otherwise, use a custom transformer that uses `babel-preset-expo` by default for projects.
+          require.resolve('./metro-expo-babel-transformer'),
       assetRegistryPath: 'react-native/Libraries/Image/AssetRegistry',
       assetPlugins: hashAssetFilesPath ? [hashAssetFilesPath] : undefined,
     },
