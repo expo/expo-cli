@@ -9,6 +9,7 @@ import * as path from 'path';
 import CommandError from '../../../CommandError';
 import { assert } from '../../../assert';
 import Log from '../../../log';
+import { ExpoLogFormatter } from './ExpoLogFormatter';
 import { ProjectInfo, XcodeConfiguration } from './resolveOptionsAsync';
 
 export type BuildProps = {
@@ -113,42 +114,14 @@ function getProcessOptions({
     env: {
       ...process.env,
       RCT_TERMINAL: terminal,
+      // Always skip launching the packager from a build script.
+      // The script is used for people building their project directly from Xcode.
+      // This essentially means "› Running script 'Start Packager'" does nothing.
       RCT_NO_LAUNCH_PACKAGER: 'true',
+
+      // FORCE_BUNDLING: '0'
     },
   };
-}
-
-function moduleNameFromPath(modulePath: string) {
-  if (modulePath.startsWith('@')) {
-    const [org, packageName] = modulePath.split('/');
-    if (org && packageName) {
-      return [org, packageName].join('/');
-    }
-    return modulePath;
-  }
-  const [packageName] = modulePath.split('/');
-  return packageName ? packageName : modulePath;
-}
-
-function getNodeModuleName(filePath: string): string | null {
-  // '/Users/evanbacon/Documents/GitHub/lab/yolo5/node_modules/react-native-reanimated/ios/Nodes/REACallFuncNode.m'
-  const [, modulePath] = filePath.split('/node_modules/');
-  if (modulePath) {
-    return moduleNameFromPath(modulePath);
-  }
-  return null;
-}
-class ExpoFormatter extends Formatter {
-  shouldShowCompileWarning(filePath: string, lineNumber?: string, columnNumber?: string): boolean {
-    if (Log.isDebug) return true;
-    return !filePath.match(/node_modules/) && !filePath.match(/\/ios\/Pods\//);
-  }
-
-  formatCompile(fileName: string, filePath: string): string {
-    const moduleName = getNodeModuleName(filePath);
-    const moduleNameTag = moduleName ? chalk.dim(`(${moduleName})`) : undefined;
-    return ['\u203A', 'Compiling', fileName, moduleNameTag].filter(Boolean).join(' ');
-  }
 }
 
 export function logPrettyItem(message: string) {
@@ -176,10 +149,18 @@ export function buildAsync({
       '-destination',
       `id=${device.udid}`,
     ];
+
+    if (!Log.isDebug) {
+      xcodebuildArgs.push(
+        // Help keep the error logs clean (80% less logs for base projects).
+        '-hideShellScriptEnvironment'
+      );
+    }
+
     logPrettyItem(
       `${chalk.bold`Building`}\n  ${chalk.dim(`xcodebuild ${xcodebuildArgs.join(' ')}`)}`
     );
-    const formatter = new ExpoFormatter({ projectRoot });
+    const formatter = new ExpoLogFormatter({ projectRoot });
     const buildProcess = spawn(
       'xcodebuild',
       xcodebuildArgs,
@@ -196,10 +177,6 @@ export function buildAsync({
         for (const line of lines) {
           Log.log(line);
         }
-        // TODO: Make the default mode skip warnings about React-Core and
-        // other third-party packages that the user doesn't have control over.
-        // TODO: Catch JS bundling errors and throw them clearly.
-        // xcpretty.stdin.write(data);
       } else if (Log.isDebug) {
         Log.debug(stringData);
       }
@@ -207,7 +184,7 @@ export function buildAsync({
     buildProcess.stdout.on('data', pipeData);
 
     buildProcess.stderr.on('data', (data: Buffer) => {
-      // pipeData(data);
+      pipeData(data);
       errorOutput += data;
     });
 
@@ -218,9 +195,9 @@ export function buildAsync({
         reject(
           new CommandError(
             `Failed to build iOS project. "xcodebuild" exited with error code ${code}.\nTo debug build logs further, consider building your app with Xcode.app, by opening ${xcodeProject.name}.\n\n` +
-              //   buildOutput +
-              //   '\n\n' +
-              //   errorOutput +
+              // buildOutput +
+              // '\n\n' +
+              // errorOutput +
               `Build logs written to ${chalk.underline(errorLogFilePath)}`
           )
         );
