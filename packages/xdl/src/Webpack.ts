@@ -112,6 +112,12 @@ async function clearWebCacheAsync(projectRoot: string, mode: string): Promise<vo
   } catch {}
 }
 
+export async function broadcastMessage(message: 'content-changed' | string, data?: any) {
+  if (webpackDevServerInstance && webpackDevServerInstance instanceof WebpackDevServer) {
+    webpackDevServerInstance.sockWrite(webpackDevServerInstance.sockets, message, data);
+  }
+}
+
 export async function startAsync(
   projectRoot: string,
   options: CLIWebOptions = {},
