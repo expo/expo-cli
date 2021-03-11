@@ -18,6 +18,7 @@ import * as ProvisioningProfile from './ProvisioningProfile';
 import * as RequiresFullScreen from './RequiresFullScreen';
 import * as Scheme from './Scheme';
 import * as SplashScreen from './SplashScreen';
+import * as StatusBar from './StatusBar';
 import * as Updates from './Updates';
 import * as UserInterfaceStyle from './UserInterfaceStyle';
 import * as UsesNonExemptEncryption from './UsesNonExemptEncryption';
@@ -40,6 +41,7 @@ export {
   Icons,
   Locales,
   SplashScreen,
+  StatusBar,
   InfoPlist,
   ExpoPlist,
   Name,
