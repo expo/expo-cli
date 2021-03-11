@@ -3,7 +3,7 @@ import path from 'path';
 
 import { ConfigPlugin, XcodeProject } from '../Plugin.types';
 import { withXcodeProject } from '../plugins/ios-plugins';
-import { getSourceRoot } from './Paths';
+import { getAppDelegate, getSourceRoot } from './Paths';
 import { addResourceFileToGroup, getProjectName } from './utils/Xcodeproj';
 
 /**
@@ -16,7 +16,9 @@ import { addResourceFileToGroup, getProjectName } from './utils/Xcodeproj';
  */
 export const withSwiftBridgingHeader: ConfigPlugin = config => {
   return withXcodeProject(config, config => {
-    if (!getExistingBridgingHeaderFile({ project: config.modResults })) {
+    // Only create a bridging header if using objective-c
+    const isObjc = getAppDelegate(config.modRequest.projectRoot).language === 'objc';
+    if (isObjc && !getExistingBridgingHeaderFile({ project: config.modResults })) {
       const projectName = getProjectName(config.modRequest.projectRoot);
       const bridgingHeader = createBridgingHeaderFileName(projectName);
       config.modResults = createBridgingHeaderFile({
