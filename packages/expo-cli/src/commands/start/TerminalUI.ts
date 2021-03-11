@@ -299,6 +299,10 @@ export async function startAsync(projectRoot: string, options: StartOptions) {
       case CTRL_D: {
         // @ts-ignore: Argument of type '"SIGINT"' is not assignable to parameter of type '"disconnect"'.
         process.emit('SIGINT');
+        // Prevent terminal UI from accepting commands while the process is closing.
+        // Without this, fast typers will close the server then start typing their
+        // next command and have a bunch of unrelated things pop up.
+        Prompts.pauseInteractions();
         break;
       }
       case CTRL_L: {
