@@ -6,6 +6,10 @@ import { withXcodeProject } from '../plugins/ios-plugins';
 import { getAppDelegate, getSourceRoot } from './Paths';
 import { addResourceFileToGroup, getProjectName } from './utils/Xcodeproj';
 
+const templateBridgingHeader = `//
+//  Use this file to import your target's public headers that you would like to expose to Swift.
+//`;
+
 /**
  * Ensure a Swift bridging header is created for the project.
  * This helps fix problems related to using modules that are written in Swift (lottie, FBSDK).
@@ -86,10 +90,6 @@ export function linkBridgingHeaderFile({
 
   return project;
 }
-
-const templateBridgingHeader = `//
-//  Use this file to import your target's public headers that you would like to expose to Swift.
-//`;
 
 export function createBridgingHeaderFile({
   projectRoot,
