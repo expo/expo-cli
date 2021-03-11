@@ -65,11 +65,11 @@ class CustomParser extends Parser {
   }
 
   parse(text: string): void | string {
-    if (!this.checkMetroError(text)) {
-      // Only parse against all regex if we aren't collecting metro error logs,
-      // this helps to reduce regex complexity.
-      return super.parse(text);
+    const results = this.checkMetroError(text);
+    if (results) {
+      return results;
     }
+    return super.parse(text);
   }
 
   // Error for the build script wrapper in expo-updates that catches metro bundler errors.
@@ -77,7 +77,7 @@ class CustomParser extends Parser {
   // Metro will fail to generate the JS bundle, and throw an error that should be caught here.
   checkMetroError(text: string) {
     // In expo-updates, we wrap the bundler script and add regex around the error message so we can present it nicely to the user.
-    switchRegex(text, [
+    return switchRegex(text, [
       [
         /@build-script-error-begin/m,
         () => {
@@ -113,8 +113,6 @@ class CustomParser extends Parser {
         },
       ],
     ]);
-
-    return this.isCollectingMetroError;
   }
 }
 
