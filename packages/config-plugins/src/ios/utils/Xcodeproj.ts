@@ -59,11 +59,17 @@ export function getHackyProjectName(projectRoot: string, config: ExpoConfig): st
 // TODO(brentvatne): I couldn't figure out how to do this with an existing
 // higher level function exposed by the xcode library, but we should find out how to do
 // that and replace this with it
-export function addResourceFileToGroup(
-  filepath: string,
-  groupName: string,
-  project: XcodeProject
-): XcodeProject {
+export function addResourceFileToGroup({
+  filepath,
+  groupName,
+  isBuildFile,
+  project,
+}: {
+  filepath: string;
+  groupName: string;
+  isBuildFile?: boolean;
+  project: XcodeProject;
+}): XcodeProject {
   const group = pbxGroupByPath(project, groupName);
   if (!group) {
     throw Error(`Xcode PBXGroup with name "${groupName}" could not be found in the Xcode project.`);
@@ -84,7 +90,9 @@ export function addResourceFileToGroup(
   file.uuid = project.generateUuid();
   file.fileRef = project.generateUuid();
   project.addToPbxFileReferenceSection(file);
-  project.addToPbxBuildFileSection(file);
+  if (isBuildFile) {
+    project.addToPbxBuildFileSection(file);
+  }
   project.addToPbxResourcesBuildPhase(file);
 
   group.children.push({
