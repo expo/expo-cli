@@ -1,4 +1,5 @@
-import { Formatter } from '@expo/xcpretty';
+import { Formatter, Parser } from '@expo/xcpretty';
+import { switchRegex } from '@expo/xcpretty/build/switchRegex';
 import chalk from 'chalk';
 
 import Log from '../../../log';
@@ -24,8 +25,116 @@ function getNodeModuleName(filePath: string): string | null {
   return null;
 }
 
-// TODO: Catch JS bundling errors and throw them clearly.
-export class ExpoLogFormatter extends Formatter {
+const ERROR = '❌ ';
+
+class ErrorCollectionFormatter extends Formatter {
+  // Count the errors
+  public errors: string[] = [];
+
+  formatCompileError(
+    fileName: string,
+    filePathAndLocation: string,
+    reason: string,
+    line: string,
+    cursor: string
+  ): string {
+    const results = super.formatCompileError(fileName, filePathAndLocation, reason, line, cursor);
+    this.errors.push(results);
+    return results;
+  }
+
+  formatError(message: string): string {
+    const results = super.formatError(message);
+    this.errors.push(results);
+    return results;
+  }
+
+  formatFileMissingError(reason: string, filePath: string): string {
+    const results = super.formatFileMissingError(reason, filePath);
+    this.errors.push(results);
+    return results;
+  }
+}
+
+class CustomParser extends Parser {
+  private isCollectingMetroError = false;
+  private metroError: string[] = [];
+
+  constructor(public formatter: ExpoLogFormatter) {
+    super(formatter);
+  }
+
+  parse(text: string): void | string {
+    if (!this.checkMetroError(text)) {
+      // Only parse against all regex if we aren't collecting metro error logs,
+      // this helps to reduce regex complexity.
+      return super.parse(text);
+    }
+  }
+
+  // Error for the build script wrapper in expo-updates that catches metro bundler errors.
+  // This can be repro'd by importing a file that doesn't exist, then building.
+  // Metro will fail to generate the JS bundle, and throw an error that should be caught here.
+  checkMetroError(text: string) {
+    // In expo-updates, we wrap the bundler script and add regex around the error message so we can present it nicely to the user.
+    switchRegex(text, [
+      [
+        /@build-script-error-begin/m,
+        () => {
+          this.isCollectingMetroError = true;
+        },
+      ],
+      [
+        /@build-script-error-end/m,
+        () => {
+          const results = this.metroError.join('\n');
+          // Reset the metro collection error array (should never need this).
+          this.isCollectingMetroError = false;
+          this.metroError = [];
+          return this.formatter.formatMetroAssetCollectionError(results);
+        },
+      ],
+      [
+        null,
+        () => {
+          // Collect all the lines in the metro build error
+          if (this.isCollectingMetroError) {
+            let results = text;
+            if (!this.metroError.length) {
+              const match = text.match(
+                /Error loading assets JSON from Metro.*steps correctly.((.|\n)*)/m
+              );
+              if (match && match[1]) {
+                results = match[1].trim();
+              }
+            }
+            this.metroError.push(results);
+          }
+        },
+      ],
+    ]);
+
+    return this.isCollectingMetroError;
+  }
+}
+
+export class ExpoLogFormatter extends ErrorCollectionFormatter {
+  constructor(props: { projectRoot: string }) {
+    super(props);
+    this.parser = new CustomParser(this);
+  }
+
+  formatMetroAssetCollectionError(errorContents: string): string {
+    const results = `\n${chalk.red(
+      ERROR +
+        // Provide proper attribution.
+        'Metro encountered an error:\n' +
+        errorContents
+    )}\n`;
+    this.errors.push(results);
+    return results;
+  }
+
   shouldShowCompileWarning(filePath: string, lineNumber?: string, columnNumber?: string): boolean {
     if (Log.isDebug) return true;
     return !filePath.match(/node_modules/) && !filePath.match(/\/ios\/Pods\//);

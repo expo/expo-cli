@@ -1,5 +1,4 @@
 import spawnAsync from '@expo/spawn-async';
-import { Formatter } from '@expo/xcpretty';
 import { SimControl } from '@expo/xdl';
 import chalk from 'chalk';
 import { spawn, SpawnOptionsWithoutStdio } from 'child_process';
@@ -172,13 +171,10 @@ export function buildAsync({
     const pipeData = (data: Buffer) => {
       const stringData = data.toString();
       buildOutput += stringData;
-      if (formatter) {
-        const lines = formatter.pipe(stringData);
-        for (const line of lines) {
-          Log.log(line);
-        }
-      } else if (Log.isDebug) {
-        Log.debug(stringData);
+
+      const lines = formatter.pipe(stringData);
+      for (const line of lines) {
+        Log.log(line);
       }
     };
     buildProcess.stdout.on('data', pipeData);
@@ -190,21 +186,36 @@ export function buildAsync({
 
     buildProcess.on('close', (code: number) => {
       if (code !== 0) {
+        // Determine if the logger found any errors;
+        const wasErrorPresented = !!formatter.errors.length;
+
         const errorLogFilePath = writeErrorLog(projectRoot, buildOutput, errorOutput);
 
+        const errorTitle = `Failed to build iOS project. "xcodebuild" exited with error code ${code}.`;
+
+        if (wasErrorPresented) {
+          // This has a flaw, if the user is missing a file, and there is a script error, only the missing file error will be shown.
+          // They will only see the script error if they fix the missing file and rerun.
+          // The flaw can be fixed by catching script errors in the custom logger.
+          reject(new CommandError(errorTitle));
+          return;
+        }
+
+        // Show all the log info because often times the error is coming from a shell script,
+        // that invoked a node script, that started metro, which threw an error.
+        // To help make the logs a bit easier to read, we add `-hideShellScriptEnvironment` to the build command.
+        // TODO: Catch shell script errors in expo logger and present them.
+        // TODO: Skip printing all info if expo logger caught an error.
         reject(
           new CommandError(
-            `Failed to build iOS project. "xcodebuild" exited with error code ${code}.\nTo debug build logs further, consider building your app with Xcode.app, by opening ${xcodeProject.name}.\n\n` +
-              // buildOutput +
-              // '\n\n' +
-              // errorOutput +
+            `${errorTitle}\nTo debug build logs further, consider building your app with Xcode.app, by opening ${xcodeProject.name}.\n\n` +
+              buildOutput +
+              '\n\n' +
+              errorOutput +
               `Build logs written to ${chalk.underline(errorLogFilePath)}`
           )
         );
         return;
-      }
-      if (!formatter) {
-        Log.log(`▸ ${chalk.bold`Build`} Succeeded`);
       }
       resolve(buildOutput);
     });
