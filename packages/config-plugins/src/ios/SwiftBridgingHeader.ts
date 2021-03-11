@@ -8,7 +8,8 @@ import { addResourceFileToGroup, getProjectName } from './utils/Xcodeproj';
 
 const templateBridgingHeader = `//
 //  Use this file to import your target's public headers that you would like to expose to Swift.
-//`;
+//
+`;
 
 /**
  * Ensure a Swift bridging header is created for the project.
@@ -20,31 +21,61 @@ const templateBridgingHeader = `//
  */
 export const withSwiftBridgingHeader: ConfigPlugin = config => {
   return withXcodeProject(config, config => {
-    // Only create a bridging header if using objective-c
-    const isObjc = getAppDelegate(config.modRequest.projectRoot).language === 'objc';
-    if (isObjc && !getExistingBridgingHeaderFile({ project: config.modResults })) {
-      const projectName = getProjectName(config.modRequest.projectRoot);
-      const bridgingHeader = createBridgingHeaderFileName(projectName);
-      config.modResults = createBridgingHeaderFile({
-        project: config.modResults,
-        projectName,
-        projectRoot: config.modRequest.projectRoot,
-        bridgingHeader,
-      });
-      config.modResults = linkBridgingHeaderFile({
-        project: config.modResults,
-        bridgingHeader: path.join(projectName, bridgingHeader),
-      });
-    }
+    config.modResults = ensureSwiftBridgingHeaderSetup({
+      project: config.modResults,
+      projectRoot: config.modRequest.projectRoot,
+    });
     return config;
   });
 };
 
-export function createBridgingHeaderFileName(projectName: string): string {
+export function ensureSwiftBridgingHeaderSetup({
+  projectRoot,
+  project,
+}: {
+  projectRoot: string;
+  project: XcodeProject;
+}) {
+  // Only create a bridging header if using objective-c
+  if (shouldCreateSwiftBridgingHeader({ projectRoot, project })) {
+    const projectName = getProjectName(projectRoot);
+    const bridgingHeader = createBridgingHeaderFileName(projectName);
+    // Ensure a bridging header is created in the Xcode project.
+    project = createBridgingHeaderFile({
+      project,
+      projectName,
+      projectRoot,
+      bridgingHeader,
+    });
+    // Designate the newly created file as the Swift bridging header in the Xcode project.
+    project = linkBridgingHeaderFile({
+      project,
+      bridgingHeader: path.join(projectName, bridgingHeader),
+    });
+  }
+  return project;
+}
+
+function shouldCreateSwiftBridgingHeader({
+  projectRoot,
+  project,
+}: {
+  projectRoot: string;
+  project: XcodeProject;
+}): boolean {
+  // Only create a bridging header if the project is using in Objective C (AppDelegate is written in Objc).
+  const isObjc = getAppDelegate(projectRoot).language === 'objc';
+  return isObjc && !getDesignatedSwiftBridgingHeaderFileReference({ project });
+}
+
+/**
+ * @returns String matching the default name used when Xcode automatically creates a bridging header file.
+ */
+function createBridgingHeaderFileName(projectName: string): string {
   return `${projectName}-Bridging-Header.h`;
 }
 
-export function getExistingBridgingHeaderFile({
+export function getDesignatedSwiftBridgingHeaderFileReference({
   project,
 }: {
   project: XcodeProject;
@@ -108,6 +139,8 @@ export function createBridgingHeaderFile({
     fs.writeFileSync(bridgingHeaderProjectPath, templateBridgingHeader, 'utf8');
   }
 
+  // This is non-standard, Xcode generates the bridging header in `/ios` which is kinda annoying.
+  // Instead, this'll generate the default header in the application code folder `/ios/myproject/`.
   const filePath = `${projectName}/${bridgingHeader}`;
   // Ensure the file is linked with Xcode resource files
   if (!project.hasFile(filePath)) {
