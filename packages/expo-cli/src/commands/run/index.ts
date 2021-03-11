@@ -44,7 +44,7 @@ async function promptForPlatformAsync(): Promise<'android' | 'ios'> {
 
 export default function (program: Command) {
   program
-    .command('run [path]')
+    .command('run:android [path]')
     .helpGroup('experimental')
     .description('Build a development client and run it in on a device.')
     .option('-p --platform <platform>', 'Platform: [android|ios]', /^(android|ios)$/i)
