@@ -19,10 +19,12 @@ export async function updatePackageJSONAsync({
   projectRoot,
   tempDir,
   pkg,
+  skipDependencyUpdate,
 }: {
   projectRoot: string;
   tempDir: string;
   pkg: PackageJSONConfig;
+  skipDependencyUpdate?: string[];
 }): Promise<DependenciesModificationResults> {
   // NOTE(brentvatne): Removing spaces between steps for now, add back when
   // there is some additional context for steps
@@ -32,7 +34,12 @@ export async function updatePackageJSONAsync({
 
   updatePackageJSONScripts({ pkg });
 
-  const results = updatePackageJSONDependencies({ projectRoot, pkg, tempDir });
+  const results = updatePackageJSONDependencies({
+    projectRoot,
+    pkg,
+    tempDir,
+    skipDependencyUpdate,
+  });
 
   const removedPkgMain = updatePackageJSONEntryPoint({ pkg });
   await fs.writeFile(
@@ -68,14 +75,16 @@ export async function updatePackageJSONAsync({
  * - The same applies to expo-updates -- since some native project configuration may depend on the
  *   version, we should always use the version of expo-updates in the template.
  */
-function updatePackageJSONDependencies({
+export function updatePackageJSONDependencies({
   projectRoot,
   tempDir,
   pkg,
+  skipDependencyUpdate = [],
 }: {
   projectRoot: string;
   tempDir: string;
   pkg: PackageJSONConfig;
+  skipDependencyUpdate?: string[];
 }): DependenciesModificationResults {
   if (!pkg.devDependencies) {
     pkg.devDependencies = {};
@@ -96,13 +105,19 @@ function updatePackageJSONDependencies({
   for (const dependenciesKey of requiredDependencies) {
     if (
       // If the local package.json defined the dependency that we want to overwrite...
-      pkg.dependencies?.[dependenciesKey] &&
-      // Then ensure it isn't symlinked (i.e. the user has a custom version in their yarn workspace).
-      isModuleSymlinked({ projectRoot, moduleId: dependenciesKey, isSilent: true })
+      pkg.dependencies?.[dependenciesKey]
     ) {
-      // If the package is in the project's package.json and it's symlinked, then skip overwriting it.
-      symlinkedPackages.push(dependenciesKey);
-      continue;
+      if (
+        // Then ensure it isn't symlinked (i.e. the user has a custom version in their yarn workspace).
+        isModuleSymlinked({ projectRoot, moduleId: dependenciesKey, isSilent: true })
+      ) {
+        // If the package is in the project's package.json and it's symlinked, then skip overwriting it.
+        symlinkedPackages.push(dependenciesKey);
+        continue;
+      }
+      if (skipDependencyUpdate.includes(dependenciesKey)) {
+        continue;
+      }
     }
     combinedDependencies[dependenciesKey] = defaultDependencies[dependenciesKey];
   }
