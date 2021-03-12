@@ -1,6 +1,7 @@
 import { ExpoConfig } from '@expo/config-types';
 import * as path from 'path';
 import xcode, {
+  PBXFile,
   PBXGroup,
   PBXNativeTarget,
   PBXProject,
@@ -56,12 +57,26 @@ export function getHackyProjectName(projectRoot: string, config: ExpoConfig): st
   }
 }
 
-// TODO(brentvatne): I couldn't figure out how to do this with an existing
-// higher level function exposed by the xcode library, but we should find out how to do
-// that and replace this with it
+function createProjectFileForGroup({ filepath, group }: { filepath: string; group: PBXGroup }) {
+  const file = new pbxFile(filepath);
+
+  const conflictingFile = group.children.find(child => child.comment === file.basename);
+  if (conflictingFile) {
+    // This can happen when a file like the GoogleService-Info.plist needs to be added and the eject command is run twice.
+    // Not much we can do here since it might be a conflicting file.
+    return null;
+  }
+  return file;
+}
+
+/**
+ * Add a resource file (ex: `SplashScreen.storyboard`, `Images.xcassets`) to an Xcode project.
+ * This is akin to creating a new code file in Xcode with `⌘+n`.
+ */
 export function addResourceFileToGroup({
   filepath,
   groupName,
+  // Should add to `PBXBuildFile Section`
   isBuildFile,
   project,
 }: {
@@ -70,14 +85,64 @@ export function addResourceFileToGroup({
   isBuildFile?: boolean;
   project: XcodeProject;
 }): XcodeProject {
-  const group = pbxGroupByPath(project, groupName);
-  if (!group) {
-    throw Error(`Xcode PBXGroup with name "${groupName}" could not be found in the Xcode project.`);
-  }
-  const file = new pbxFile(filepath);
+  return addFileToGroupAndLink({
+    filepath,
+    groupName,
+    project,
+    addFileToProject({ project, file }) {
+      project.addToPbxFileReferenceSection(file);
+      if (isBuildFile) {
+        project.addToPbxBuildFileSection(file);
+      }
+      project.addToPbxResourcesBuildPhase(file);
+    },
+  });
+}
 
-  const conflictingFile = group.children.find(child => child.comment === file.basename);
-  if (conflictingFile) {
+/**
+ * Add a build source file (ex: `AppDelegate.m`, `ViewController.swift`) to an Xcode project.
+ * This is akin to creating a new code file in Xcode with `⌘+n`.
+ */
+export function addBuildSourceFileToGroup({
+  filepath,
+  groupName,
+  project,
+}: {
+  filepath: string;
+  groupName: string;
+  project: XcodeProject;
+}): XcodeProject {
+  return addFileToGroupAndLink({
+    filepath,
+    groupName,
+    project,
+    addFileToProject({ project, file }) {
+      project.addToPbxFileReferenceSection(file);
+      project.addToPbxBuildFileSection(file);
+      project.addToPbxSourcesBuildPhase(file);
+    },
+  });
+}
+
+// TODO(brentvatne): I couldn't figure out how to do this with an existing
+// higher level function exposed by the xcode library, but we should find out how to do
+// that and replace this with it
+export function addFileToGroupAndLink({
+  filepath,
+  groupName,
+  project,
+  addFileToProject,
+}: {
+  filepath: string;
+  groupName: string;
+  project: XcodeProject;
+  addFileToProject: (props: { file: PBXFile; project: XcodeProject }) => void;
+}): XcodeProject {
+  const group = pbxGroupByPathOrAssert(project, groupName);
+
+  const file = createProjectFileForGroup({ filepath, group });
+
+  if (!file) {
     // This can happen when a file like the GoogleService-Info.plist needs to be added and the eject command is run twice.
     // Not much we can do here since it might be a conflicting file.
     addWarningIOS(
@@ -89,11 +154,8 @@ export function addResourceFileToGroup({
 
   file.uuid = project.generateUuid();
   file.fileRef = project.generateUuid();
-  project.addToPbxFileReferenceSection(file);
-  if (isBuildFile) {
-    project.addToPbxBuildFileSection(file);
-  }
-  project.addToPbxResourcesBuildPhase(file);
+
+  addFileToProject({ project, file });
 
   group.children.push({
     value: file.fileRef,
@@ -173,7 +235,7 @@ function findGroupInsideGroup(
   return null;
 }
 
-function pbxGroupByPath(project: XcodeProject, path: string): null | PBXGroup {
+function pbxGroupByPathOrAssert(project: XcodeProject, path: string): PBXGroup {
   const { firstProject } = project.getFirstProject();
 
   let group = project.getPBXGroupByKey(firstProject.mainGroup);
@@ -184,11 +246,15 @@ function pbxGroupByPath(project: XcodeProject, path: string): null | PBXGroup {
     if (nextGroup) {
       group = nextGroup;
     } else {
-      return null;
+      break;
     }
   }
 
-  return group ?? null;
+  if (!group) {
+    throw Error(`Xcode PBXGroup with name "${path}" could not be found in the Xcode project.`);
+  }
+
+  return group;
 }
 
 export function ensureGroupRecursively(project: XcodeProject, filepath: string): PBXGroup | null {
