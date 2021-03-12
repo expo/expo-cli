@@ -27,6 +27,7 @@ export const withExpoIOSPlugins: ConfigPlugin<{
 
   return withPlugins(config, [
     [IOSConfig.BundleIdentifier.withBundleIdentifier, { bundleIdentifier }],
+    IOSConfig.SwiftBridgingHeader.withSwiftBridgingHeader,
     IOSConfig.Google.withGoogle,
     IOSConfig.Name.withDisplayName,
     // IOSConfig.Name.withName,
