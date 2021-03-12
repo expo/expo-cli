@@ -10,6 +10,7 @@ import * as TerminalUI from '../../start/TerminalUI';
 import { installExitHooks } from '../../start/installExitHooks';
 import * as IOSDeploy from './IOSDeploy';
 import * as PlistBuddy from './PlistBuddy';
+import maybePromptToSyncPodsAsync from './Podfile';
 import * as XcodeBuild from './XcodeBuild';
 import { Options, resolveOptionsAsync } from './resolveOptionsAsync';
 
@@ -32,6 +33,7 @@ export async function runIosActionAsync(projectRoot: string, options: Options) {
       platforms: ['ios'],
     } as EjectAsyncOptions);
   } else {
+    await maybePromptToSyncPodsAsync(projectRoot);
     // TODO: Ensure the pods are in sync -- https://github.com/expo/expo/pull/11593
   }
 

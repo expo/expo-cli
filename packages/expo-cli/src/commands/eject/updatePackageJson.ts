@@ -8,7 +8,7 @@ import Log from '../../log';
 import * as CreateApp from '../utils/CreateApp';
 import { isModuleSymlinked } from '../utils/isModuleSymlinked';
 
-type DependenciesMap = { [key: string]: string | number };
+export type DependenciesMap = { [key: string]: string | number };
 
 export type DependenciesModificationResults = {
   hasNewDependencies: boolean;
@@ -146,7 +146,7 @@ function updatePackageJSONDependencies({
  *
  * @param dependencies - ideally an object of type {[key]: string} - if not then this will error.
  */
-function createDependenciesMap(dependencies: any): DependenciesMap {
+export function createDependenciesMap(dependencies: any): DependenciesMap {
   if (typeof dependencies !== 'object') {
     throw new Error(`Dependency map is invalid, expected object but got ${typeof dependencies}`);
   } else if (!dependencies) {
