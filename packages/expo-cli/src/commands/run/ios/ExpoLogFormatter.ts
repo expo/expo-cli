@@ -4,6 +4,8 @@ import chalk from 'chalk';
 
 import Log from '../../../log';
 
+const ERROR = '❌ ';
+
 function moduleNameFromPath(modulePath: string) {
   if (modulePath.startsWith('@')) {
     const [org, packageName] = modulePath.split('/');
@@ -23,37 +25,6 @@ function getNodeModuleName(filePath: string): string | null {
     return moduleNameFromPath(modulePath);
   }
   return null;
-}
-
-const ERROR = '❌ ';
-
-class ErrorCollectionFormatter extends Formatter {
-  // Count the errors
-  public errors: string[] = [];
-
-  formatCompileError(
-    fileName: string,
-    filePathAndLocation: string,
-    reason: string,
-    line: string,
-    cursor: string
-  ): string {
-    const results = super.formatCompileError(fileName, filePathAndLocation, reason, line, cursor);
-    this.errors.push(results);
-    return results;
-  }
-
-  formatError(message: string): string {
-    const results = super.formatError(message);
-    this.errors.push(results);
-    return results;
-  }
-
-  formatFileMissingError(reason: string, filePath: string): string {
-    const results = super.formatFileMissingError(reason, filePath);
-    this.errors.push(results);
-    return results;
-  }
 }
 
 class CustomParser extends Parser {
@@ -116,7 +87,7 @@ class CustomParser extends Parser {
   }
 }
 
-export class ExpoLogFormatter extends ErrorCollectionFormatter {
+export class ExpoLogFormatter extends Formatter {
   constructor(props: { projectRoot: string }) {
     super(props);
     this.parser = new CustomParser(this);
@@ -142,5 +113,11 @@ export class ExpoLogFormatter extends ErrorCollectionFormatter {
     const moduleName = getNodeModuleName(filePath);
     const moduleNameTag = moduleName ? chalk.dim(`(${moduleName})`) : undefined;
     return ['\u203A', 'Compiling', fileName, moduleNameTag].filter(Boolean).join(' ');
+  }
+
+  finish() {
+    Log.log(
+      `\nBuild completed with ${this.errors.length} errors, and ${this.warnings.length} warnings\n`
+    );
   }
 }

@@ -185,6 +185,7 @@ export function buildAsync({
     });
 
     buildProcess.on('close', (code: number) => {
+      formatter.finish();
       if (code !== 0) {
         // Determine if the logger found any errors;
         const wasErrorPresented = !!formatter.errors.length;
