@@ -8,6 +8,8 @@ import { getManifestHandler } from './ManifestHandler';
 import { getFreePortAsync } from './getFreePortAsync';
 
 export type StartOptions = {
+  isWebSocketsEnabled?: boolean;
+  isRemoteReloadingEnabled?: boolean;
   devClient?: boolean;
   reset?: boolean;
   nonInteractive?: boolean;
@@ -41,7 +43,7 @@ export async function startDevServerAsync(projectRoot: string, startOptions: Sta
     options.maxWorkers = startOptions.maxWorkers;
   }
 
-  const { server, middleware } = await runMetroDevServerAsync(projectRoot, options);
+  const { server, middleware, messageSocket } = await runMetroDevServerAsync(projectRoot, options);
   middleware.use(getManifestHandler(projectRoot));
-  return server;
+  return [server, middleware, messageSocket];
 }

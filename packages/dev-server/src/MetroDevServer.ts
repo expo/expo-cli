@@ -28,11 +28,18 @@ export type BundleOutput = {
   map: string;
   assets: readonly BundleAssetWithFileHashes[];
 };
+export type MessageSocket = {
+  broadcast: (method: string, params?: Record<string, any> | undefined) => void;
+};
 
 export async function runMetroDevServerAsync(
   projectRoot: string,
   options: MetroDevServerOptions
-): Promise<{ server: http.Server; middleware: any }> {
+): Promise<{
+  server: http.Server;
+  middleware: any;
+  messageSocket: MessageSocket;
+}> {
   const Metro = importMetroFromProject(projectRoot);
 
   const reporter = new LogReporter(options.logger);
@@ -57,12 +64,13 @@ export async function runMetroDevServerAsync(
 
   const serverInstance = await Metro.runServer(metroConfig, { hmrEnabled: true });
 
-  const { eventsSocket } = attachToServer(serverInstance);
+  const { messageSocket, eventsSocket } = attachToServer(serverInstance);
   reporter.reportEvent = eventsSocket.reportEvent;
 
   return {
     server: serverInstance,
     middleware,
+    messageSocket,
   };
 }
 
