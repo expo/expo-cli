@@ -1,6 +1,6 @@
 import { Command } from 'commander';
 
-import { actionAsync as iosActionAsync } from './ios';
+import { runIosActionAsync } from './ios/runIos';
 
 export default function (program: Command) {
   program
@@ -15,5 +15,5 @@ export default function (program: Command) {
       '--configuration <configuration>',
       'Xcode configuration to use. Debug or Release. Default: Debug'
     )
-    .asyncActionProjectDir(iosActionAsync, { checkConfig: false });
+    .asyncActionProjectDir(runIosActionAsync, { checkConfig: false });
 }

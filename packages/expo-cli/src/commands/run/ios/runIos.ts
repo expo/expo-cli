@@ -15,7 +15,7 @@ import { Options, resolveOptionsAsync } from './resolveOptionsAsync';
 
 const isMac = process.platform === 'darwin';
 
-export async function actionAsync(projectRoot: string, options: Options) {
+export async function runIosActionAsync(projectRoot: string, options: Options) {
   if (!isMac) {
     // TODO: Prompt to use EAS?
 
