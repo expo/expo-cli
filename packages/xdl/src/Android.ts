@@ -548,7 +548,7 @@ async function _openUrlAsync({
   return openProject;
 }
 
-async function attemptToStartEmulatorOrAssertAsync(device: Device): Promise<Device | null> {
+export async function attemptToStartEmulatorOrAssertAsync(device: Device): Promise<Device | null> {
   // TODO: Add a light-weight method for checking since a device could disconnect.
 
   if (!(await isDeviceBootedAsync(device))) {
@@ -995,7 +995,7 @@ function nameStyleForDevice(device: Device) {
   return (text: string) => chalk.bold(chalk.gray(text));
 }
 
-async function promptForDeviceAsync(devices: Device[]): Promise<Device | null> {
+export async function promptForDeviceAsync(devices: Device[]): Promise<Device | null> {
   // TODO: provide an option to add or download more simulators
 
   // Pause interactions on the TerminalUI
