@@ -1,6 +1,6 @@
-import { UrlUtils, Webpack } from '@expo/xdl';
 import chalk from 'chalk';
 import { Command } from 'commander';
+import { UrlUtils, Webpack } from 'xdl';
 
 import CommandError from '../../CommandError';
 import Log from '../../log';

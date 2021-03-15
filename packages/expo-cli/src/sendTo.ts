@@ -1,5 +1,5 @@
-import { Exp, UserSettings } from '@expo/xdl';
 import ora from 'ora';
+import { Exp, UserSettings } from 'xdl';
 
 import { askForSendToAsync } from './askUser';
 import Log from './log';

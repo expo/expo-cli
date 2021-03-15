@@ -1,5 +1,5 @@
-import { ApiV2 } from '@expo/xdl';
 import keyBy from 'lodash/keyBy';
+import { ApiV2 } from 'xdl';
 
 import { AndroidCredentials, FcmCredentials, Keystore } from '../credentials';
 import ApiClient from './AndroidApiV2Wrapper';

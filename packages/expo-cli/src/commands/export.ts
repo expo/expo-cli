@@ -1,9 +1,9 @@
 import { ProjectTarget } from '@expo/config';
-import { Project, UrlUtils } from '@expo/xdl';
 import program, { Command } from 'commander';
 import crypto from 'crypto';
 import fs from 'fs-extra';
 import path from 'path';
+import { Project, UrlUtils } from 'xdl';
 
 import CommandError, { SilentError } from '../CommandError';
 import Log from '../log';

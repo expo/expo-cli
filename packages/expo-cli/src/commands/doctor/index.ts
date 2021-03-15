@@ -1,5 +1,5 @@
-import { Doctor } from '@expo/xdl';
 import { Command } from 'commander';
+import { Doctor } from 'xdl';
 
 import Log from '../../log';
 import { warnUponCmdExe } from './windows';

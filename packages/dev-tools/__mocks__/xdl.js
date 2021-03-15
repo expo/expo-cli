@@ -1,4 +1,4 @@
-const xdl = jest.genMockFromModule('@expo/xdl');
+const xdl = jest.genMockFromModule('xdl');
 
 xdl.UrlUtils = {
   constructDeepLinkAsync(projectDir) {
