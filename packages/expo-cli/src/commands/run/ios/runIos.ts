@@ -1,6 +1,4 @@
 import { Project, SimControl, Simulator } from '@expo/xdl';
-// @ts-ignore
-import bplist from 'bplist-parser';
 import chalk from 'chalk';
 import fs from 'fs-extra';
 import * as path from 'path';
@@ -13,7 +11,9 @@ import { installExitHooks } from '../../start/installExitHooks';
 import * as IOSDeploy from './IOSDeploy';
 import maybePromptToSyncPodsAsync from './Podfile';
 import * as XcodeBuild from './XcodeBuild';
+import { parseBinaryPlistAsync } from './binaryPlist';
 import { Options, resolveOptionsAsync } from './resolveOptionsAsync';
+
 const isMac = process.platform === 'darwin';
 
 export async function runIosActionAsync(projectRoot: string, options: Options) {
@@ -97,7 +97,7 @@ async function openInSimulatorAsync({
 }) {
   const builtInfoPlistPath = path.join(binaryPath, 'Info.plist');
   // TODO: Replace with bplist-parser
-  const { CFBundleIdentifier: bundleID } = bplist.parse(builtInfoPlistPath);
+  const { CFBundleIdentifier: bundleID } = await parseBinaryPlistAsync(builtInfoPlistPath);
   let pid: string | null = null;
   XcodeBuild.logPrettyItem(
     `${chalk.bold`Opening`} on ${device.name} ${chalk.dim(`(${bundleID})`)}`
