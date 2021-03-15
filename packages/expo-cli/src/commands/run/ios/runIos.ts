@@ -1,4 +1,6 @@
 import { Project, SimControl, Simulator } from '@expo/xdl';
+// @ts-ignore
+import bplist from 'bplist-parser';
 import chalk from 'chalk';
 import fs from 'fs-extra';
 import * as path from 'path';
@@ -9,11 +11,9 @@ import { EjectAsyncOptions, prebuildAsync } from '../../eject/prebuildAsync';
 import * as TerminalUI from '../../start/TerminalUI';
 import { installExitHooks } from '../../start/installExitHooks';
 import * as IOSDeploy from './IOSDeploy';
-import * as PlistBuddy from './PlistBuddy';
 import maybePromptToSyncPodsAsync from './Podfile';
 import * as XcodeBuild from './XcodeBuild';
 import { Options, resolveOptionsAsync } from './resolveOptionsAsync';
-
 const isMac = process.platform === 'darwin';
 
 export async function runIosActionAsync(projectRoot: string, options: Options) {
@@ -67,7 +67,15 @@ export async function runIosActionAsync(projectRoot: string, options: Options) {
 
   if (props.isSimulator) {
     await SimControl.installAsync({ udid: props.device.udid, dir: binaryPath });
-    await openInSimulatorAsync({ binaryPath, device: props.device });
+
+    const { pid } = await openInSimulatorAsync({
+      binaryPath,
+      device: props.device,
+    });
+
+    // if (pid) {
+    //   LLDB.attachNativeDebugger('foobar', pid);
+    // }
   } else {
     IOSDeploy.installBinaryOnDevice({ bundle: binaryPath, udid: props.device.udid });
     XcodeBuild.logPrettyItem(`${chalk.bold`Installed`} on ${props.device.name}`);
@@ -88,8 +96,9 @@ async function openInSimulatorAsync({
   device: XcodeBuild.BuildProps['device'];
 }) {
   const builtInfoPlistPath = path.join(binaryPath, 'Info.plist');
-  const bundleID = await PlistBuddy.getBundleIdentifierAsync(builtInfoPlistPath);
-
+  // TODO: Replace with bplist-parser
+  const { CFBundleIdentifier: bundleID } = bplist.parse(builtInfoPlistPath);
+  let pid: string | null = null;
   XcodeBuild.logPrettyItem(
     `${chalk.bold`Opening`} on ${device.name} ${chalk.dim(`(${bundleID})`)}`
   );
@@ -100,10 +109,16 @@ async function openInSimulatorAsync({
   });
 
   if (result.status === 0) {
+    if (result.stdout) {
+      const pidRegExp = new RegExp(`${bundleID}:\\s?(\\d+)`);
+      const pidMatch = result.stdout.match(pidRegExp);
+      pid = pidMatch?.[1] ?? null;
+    }
     await Simulator.activateSimulatorWindowAsync();
   } else {
     throw new CommandError(
       `Failed to launch the app on simulator ${device.name} (${device.udid}). Error in "osascript" command: ${result.stderr}`
     );
   }
+  return { bundleIdentifier: bundleID, pid };
 }

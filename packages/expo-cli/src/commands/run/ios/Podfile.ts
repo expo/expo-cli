@@ -62,7 +62,6 @@ function hasNewDependenciesSinceLastBuild(projectRoot: string, packageChecksums:
     return true;
   }
   const { dependencies, devDependencies } = JsonFile.read(tempPkgJsonPath);
-
   // Only change the dependencies if the normalized hash changes, this helps to reduce meaningless changes.
   const hasNewDependencies = packageChecksums.dependencies !== dependencies;
   const hasNewDevDependencies = packageChecksums.devDependencies !== devDependencies;
@@ -81,7 +80,6 @@ async function hasPackageJsonDependencyListChangedAsync(projectRoot: string) {
   const pkg = getPackageJson(projectRoot);
 
   const packages = createPackageChecksums(pkg);
-
   const hasNewDependencies = hasNewDependenciesSinceLastBuild(projectRoot, packages);
 
   // Cache package.json
@@ -134,6 +132,11 @@ async function promptToInstallPodsAsync(projectRoot: string, missingPods?: strin
   //       message: 'Sync CocoaPods?',
   //     })
   //   ) {
-  await installCocoaPodsAsync(projectRoot);
+  try {
+    await installCocoaPodsAsync(projectRoot);
+  } catch (error) {
+    fs.removeSync(path.join(getTempPrebuildFolder(projectRoot), 'cached-packages.json'));
+    throw error;
+  }
   //   }
 }

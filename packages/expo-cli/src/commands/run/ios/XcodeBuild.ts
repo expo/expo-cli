@@ -149,12 +149,13 @@ export function buildAsync({
       `id=${device.udid}`,
     ];
 
-    if (!Log.isDebug) {
-      xcodebuildArgs.push(
-        // Help keep the error logs clean (80% less logs for base projects).
-        '-hideShellScriptEnvironment'
-      );
-    }
+    // if (!Log.isDebug) {
+    // TODO: Malformed xcodebuild results: "PLATFORM_NAME" variable was not generated in build output. Please report this issue and run your project with Xcode instead.
+    //   xcodebuildArgs.push(
+    //     // Help keep the error logs clean (80% less logs for base projects).
+    //     '-hideShellScriptEnvironment'
+    //   );
+    // }
 
     logPrettyItem(
       `${chalk.bold`Building`}\n  ${chalk.dim(`xcodebuild ${xcodebuildArgs.join(' ')}`)}`
