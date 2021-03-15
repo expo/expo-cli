@@ -1,4 +1,4 @@
-import { getConfig } from '@expo/config';
+import { ExpoConfig, getConfig } from '@expo/config';
 import JsonFile from '@expo/json-file';
 import fs from 'fs-extra';
 import { sync as globSync } from 'glob';
@@ -11,6 +11,7 @@ import { isDirectory, regexFileAsync } from './ExponentTools';
 import * as IosPlist from './IosPlist';
 import * as IosWorkspace from './IosWorkspace';
 import logger from './Logger';
+import StandaloneBuildFlags from './StandaloneBuildFlags';
 import StandaloneContext from './StandaloneContext';
 
 const SERVICE_CONTEXT_PROJECT_NAME = 'exponent-view-template';
@@ -59,8 +60,60 @@ async function prepareDetachedBuildIosAsync(projectDir: string, args: any) {
   if (config && config.exp.name !== SERVICE_CONTEXT_PROJECT_NAME) {
     return prepareDetachedUserContextIosAsync(projectDir, config.exp, args);
   } else {
-    throw new Error('Service context is not supported in this version of XDL');
+    return prepareDetachedServiceContextIosAsync(projectDir, args);
   }
+}
+
+async function prepareDetachedServiceContextIosAsync(projectDir: string, args: any) {
+  // service context
+  // TODO: very brittle hack: the paths here are hard coded to match the single workspace
+  // path generated inside IosShellApp. When we support more than one path, this needs to
+  // be smarter.
+  const expoRootDir = path.join(projectDir, '..', '..');
+  const workspaceSourcePath = path.join(projectDir, 'ios');
+  const buildFlags = StandaloneBuildFlags.createIos('Release', { workspaceSourcePath });
+  // @ts-ignore missing 9th argument
+  const context = StandaloneContext.createServiceContext(
+    expoRootDir,
+    null,
+    null,
+    null,
+    /* testEnvironment */ 'none',
+    buildFlags,
+    null,
+    null
+  );
+  const { iosProjectDirectory, supportingDirectory } = IosWorkspace.getPaths(context);
+  const expoKitVersion = await _getIosExpoKitVersionThrowErrorAsync(iosProjectDirectory);
+
+  // use prod api keys if available
+  const prodApiKeys = await _readDefaultApiKeysAsync(
+    path.join(context.data.expoSourcePath, '__internal__', 'keys.json')
+  );
+
+  const { exp } = getConfig(expoRootDir, { skipSDKVersionRequirement: true });
+
+  await IosPlist.modifyAsync(supportingDirectory, 'EXBuildConstants', constantsConfig => {
+    // verify that we are actually in a service context and not a misconfigured project
+    const contextType = constantsConfig.STANDALONE_CONTEXT_TYPE;
+    if (contextType !== 'service') {
+      throw new Error(
+        'Unable to configure a project which has no app.json and also no STANDALONE_CONTEXT_TYPE.'
+      );
+    }
+    constantsConfig.EXPO_RUNTIME_VERSION = expoKitVersion;
+    constantsConfig.API_SERVER_ENDPOINT =
+      process.env.ENVIRONMENT === 'staging'
+        ? 'https://staging.exp.host/--/api/v2/'
+        : 'https://exp.host/--/api/v2/';
+    if (prodApiKeys) {
+      constantsConfig.DEFAULT_API_KEYS = prodApiKeys;
+    }
+    if (exp && exp.sdkVersion) {
+      constantsConfig.TEMPORARY_SDK_VERSION = exp.sdkVersion;
+    }
+    return constantsConfig;
+  });
 }
 
 async function _readDefaultApiKeysAsync(jsonFilePath: string) {
@@ -78,7 +131,7 @@ async function _readDefaultApiKeysAsync(jsonFilePath: string) {
   return null;
 }
 
-async function prepareDetachedUserContextIosAsync(projectDir: string, exp: any, args: any) {
+async function prepareDetachedUserContextIosAsync(projectDir: string, exp: ExpoConfig, args: any) {
   const context = StandaloneContext.createUserContext(projectDir, exp);
   const { iosProjectDirectory, supportingDirectory } = IosWorkspace.getPaths(context);
 

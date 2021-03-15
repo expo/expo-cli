@@ -1,7 +1,5 @@
 import path from 'path';
 
-import { StandaloneContextUser } from './StandaloneContext';
-
 /**
  *  paths returned:
  *    iosProjectDirectory - root directory of an (uncompiled) xcworkspace and obj-c source tree
@@ -12,7 +10,7 @@ import { StandaloneContextUser } from './StandaloneContext';
  *    intermediatesDirectory - temporary spot to write whatever files are needed during the
  *      detach/build process but can be discarded afterward.
  */
-function getPaths(context: StandaloneContextUser) {
+function getPaths(context: any) {
   let iosProjectDirectory;
   let projectName;
   let supportingDirectory;
@@ -32,6 +30,15 @@ function getPaths(context: StandaloneContextUser) {
     projectRootDirectory = context.data.projectPath;
     iosProjectDirectory = path.join(context.data.projectPath, 'ios');
     supportingDirectory = path.join(iosProjectDirectory, projectName, 'Supporting');
+  } else if (context.type === 'service') {
+    projectRootDirectory = path.dirname(context.build.ios.workspaceSourcePath);
+    iosProjectDirectory = context.build.ios.workspaceSourcePath;
+    if (context.data.archivePath) {
+      // compiled archive has a flat NSBundle
+      supportingDirectory = context.data.archivePath;
+    } else {
+      supportingDirectory = path.join(iosProjectDirectory, projectName, 'Supporting');
+    }
   } else {
     throw new Error(`Unsupported StandaloneContext type: ${context.type}`);
   }
