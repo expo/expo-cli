@@ -1,10 +1,11 @@
 import chalk from 'chalk';
 import fs from 'fs-extra';
 import * as path from 'path';
-import { Project, SimControl, Simulator } from 'xdl';
+import { Project, ProjectSettings, SimControl, Simulator, UrlUtils, UserSettings } from 'xdl';
 
 import CommandError from '../../../CommandError';
 import Log from '../../../log';
+import { getDevClientSchemeAsync } from '../../../schemes';
 import { EjectAsyncOptions, prebuildAsync } from '../../eject/prebuildAsync';
 import * as TerminalUI from '../../start/TerminalUI';
 import { installExitHooks } from '../../start/installExitHooks';
@@ -61,6 +62,14 @@ export async function runIosActionAsync(projectRoot: string, options: Options) {
 
   // This basically means don't use the Client app.
   const devClient = true;
+  try {
+    await ProjectSettings.setAsync(projectRoot, {
+      devClient,
+      scheme: await getDevClientSchemeAsync(projectRoot),
+    });
+  } catch {
+    // TODO: add a scheme automatically.
+  }
   await Project.startAsync(projectRoot, { devClient });
   await TerminalUI.startAsync(projectRoot, {
     devClient,

@@ -134,7 +134,7 @@ function logCommandsTable(ui: (false | string[])[]) {
 
 const printServerInfo = async (
   projectRoot: string,
-  options: Pick<StartOptions, 'webOnly'> = {}
+  options: Pick<StartOptions, 'webOnly' | 'isWebSocketsEnabled' | 'isRemoteReloadingEnabled'> = {}
 ) => {
   if (options.webOnly) {
     Webpack.printConnectionInstructions(projectRoot);

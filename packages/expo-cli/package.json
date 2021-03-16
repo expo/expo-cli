@@ -64,7 +64,6 @@
     "rimraf": "^3.0.2"
   },
   "dependencies": {
-    "@expo/xcpretty": "^1.0.2",
     "@expo/apple-utils": "0.0.0-alpha.17",
     "@expo/bunyan": "4.0.0",
     "@expo/config": "3.3.31",
@@ -77,6 +76,7 @@
     "@expo/results": "^1.0.0",
     "@expo/simple-spinner": "1.0.2",
     "@expo/spawn-async": "1.5.0",
+    "@expo/xcpretty": "^1.0.2",
     "@hapi/joi": "^17.1.1",
     "babel-runtime": "6.26.0",
     "base32.js": "0.1.0",
@@ -92,6 +92,7 @@
     "find-up": "^5.0.0",
     "find-yarn-workspace-root": "~2.0.0",
     "form-data": "^2.3.2",
+    "freeport-async": "^2.0.0",
     "fs-extra": "9.0.0",
     "getenv": "0.7.0",
     "glob": "7.1.6",
