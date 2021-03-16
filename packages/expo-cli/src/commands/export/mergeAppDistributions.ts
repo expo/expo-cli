@@ -3,10 +3,9 @@ import JsonFile from '@expo/json-file';
 import fs from 'fs-extra';
 import path from 'path';
 import semver from 'semver';
+import { Project, XDLError } from 'xdl';
 
-import logger from '../Logger';
-import XDLError from '../XDLError';
-import { writeArtifactSafelyAsync } from '../tools/ArtifactUtils';
+import Log from '../../log';
 
 type SelfHostedIndex = ExpoAppManifest & {
   dependencies: string[];
@@ -80,7 +79,7 @@ export async function mergeAppDistributions(
   const getSortedIndex = (indexes: SelfHostedIndex[]) => {
     return indexes.sort((index1: SelfHostedIndex, index2: SelfHostedIndex) => {
       if (semver.eq(index1.sdkVersion, index2.sdkVersion)) {
-        logger.global.error(
+        Log.error(
           `Encountered multiple index.json with the same SDK version ${index1.sdkVersion}. This could result in undefined behavior.`
         );
       }
@@ -92,14 +91,14 @@ export async function mergeAppDistributions(
   const sortedIosIndexes = getSortedIndex(iosIndexes);
 
   // Save the json arrays to disk
-  await writeArtifactSafelyAsync(
+  await Project.writeArtifactSafelyAsync(
     projectRoot,
     null,
     path.join(outputDir, 'android-index.json'),
     JSON.stringify(sortedAndroidIndexes)
   );
 
-  await writeArtifactSafelyAsync(
+  await Project.writeArtifactSafelyAsync(
     projectRoot,
     null,
     path.join(outputDir, 'ios-index.json'),

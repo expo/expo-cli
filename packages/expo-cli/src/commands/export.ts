@@ -3,11 +3,13 @@ import program, { Command } from 'commander';
 import crypto from 'crypto';
 import fs from 'fs-extra';
 import path from 'path';
-import { Project, UrlUtils } from 'xdl';
+import { UrlUtils } from 'xdl';
 
 import CommandError, { SilentError } from '../CommandError';
 import Log from '../log';
 import prompt from '../prompts';
+import { exportAppAsync } from './export/exportAppAsync';
+import { mergeAppDistributions } from './export/mergeAppDistributions';
 import * as CreateApp from './utils/CreateApp';
 import { downloadAndDecompressAsync } from './utils/Tar';
 
@@ -88,8 +90,7 @@ async function exportFilesAsync(
       target: options.target,
     },
   };
-
-  return await Project.exportAppAsync(
+  return await exportAppAsync(
     projectRoot,
     options.publicUrl!,
     options.assetUrl,
@@ -99,7 +100,7 @@ async function exportFilesAsync(
   );
 }
 
-async function mergeSourceDirectoriesAsync(
+async function mergeSourceDirectoriresAsync(
   projectRoot: string,
   mergeSrcDirs: string[],
   options: Pick<Options, 'mergeSrcUrl' | 'mergeSrcDir' | 'outputDir'>
@@ -111,7 +112,7 @@ async function mergeSourceDirectoriesAsync(
   Log.nested(`Starting project merge of ${srcDirs} into ${options.outputDir}`);
 
   // Merge app distributions
-  await Project.mergeAppDistributions(
+  await mergeAppDistributions(
     projectRoot,
     [...mergeSrcDirs, options.outputDir], // merge stuff in srcDirs and outputDir together
     options.outputDir
@@ -199,7 +200,7 @@ export async function action(projectRoot: string, options: Options) {
   // add any local src dirs to be merged
   mergeSrcDirs.push(...options.mergeSrcDir);
 
-  await mergeSourceDirectoriesAsync(projectRoot, mergeSrcDirs, options);
+  await mergeSourceDirectoriresAsync(projectRoot, mergeSrcDirs, options);
 
   Log.log(`Export was successful. Your exported files can be found in ${options.outputDir}`);
 }
