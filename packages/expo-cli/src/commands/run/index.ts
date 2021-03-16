@@ -27,9 +27,8 @@ export default function (program: Command) {
     .asyncActionProjectDir(runAndroidAsync);
   program
     .command('run:ios [path]')
-    .description('Run the iOS app binary')
-    .helpGroup('internal')
-    // .helpGroup('core')
+    .description('Run the iOS app binary locally')
+    .helpGroup('experimental')
     .option('-d, --device [device]', 'Device name or UDID to build the app on')
     .option('-p, --port <port>', 'Port to start the Metro bundler on. Default: 8081')
     .option('--scheme <scheme>', 'Scheme to build')
