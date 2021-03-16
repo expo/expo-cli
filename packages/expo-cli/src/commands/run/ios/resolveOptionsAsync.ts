@@ -1,8 +1,9 @@
+import getenv from 'getenv';
 import { sync as globSync } from 'glob';
 import * as path from 'path';
 
 import CommandError from '../../../CommandError';
-import { resolvePortAsync } from '../utils/getFreePortAsync';
+// import { resolvePortAsync } from '../utils/getFreePortAsync';
 import * as XcodeBuild from './XcodeBuild';
 import { resolveDeviceAsync } from './resolveDeviceAsync';
 
@@ -77,7 +78,8 @@ export async function resolveOptionsAsync(
     device,
     configuration: options.configuration || 'Debug',
     shouldStartBundler: false,
-    port: await resolvePortAsync(options.port),
+    port: options.port ?? getenv.int('RCT_METRO_PORT', 8081),
+    // port: await resolvePortAsync(options.port),
     terminal: getDefaultUserTerminal(),
     scheme: options.scheme ?? path.basename(xcodeProject.name, path.extname(xcodeProject.name)),
   };

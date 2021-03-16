@@ -1,14 +1,11 @@
 import chalk from 'chalk';
 import fs from 'fs-extra';
 import * as path from 'path';
-import { Project, ProjectSettings, SimControl, Simulator, UrlUtils, UserSettings } from 'xdl';
+import { SimControl, Simulator } from 'xdl';
 
 import CommandError from '../../../CommandError';
 import Log from '../../../log';
-import { getDevClientSchemeAsync } from '../../../schemes';
 import { EjectAsyncOptions, prebuildAsync } from '../../eject/prebuildAsync';
-import * as TerminalUI from '../../start/TerminalUI';
-import { installExitHooks } from '../../start/installExitHooks';
 import * as IOSDeploy from './IOSDeploy';
 import maybePromptToSyncPodsAsync from './Podfile';
 import * as SimLogs from './SimLogs';
@@ -57,26 +54,16 @@ export async function runIosActionAsync(projectRoot: string, options: Options) {
 
   XcodeBuild.logPrettyItem(`${chalk.bold`Installing`} on ${props.device.name}`);
 
-  // Add clean up hooks
-  installExitHooks(projectRoot);
-
-  // This basically means don't use the Client app.
-  const devClient = true;
-  try {
-    await ProjectSettings.setAsync(projectRoot, {
-      devClient,
-      scheme: await getDevClientSchemeAsync(projectRoot),
-    });
-  } catch {
-    // TODO: add a scheme automatically.
-  }
-  await Project.startAsync(projectRoot, { devClient });
-  await TerminalUI.startAsync(projectRoot, {
-    devClient,
-  });
+  // startBundlerAsync(projectRoot);
 
   if (props.isSimulator) {
     await SimControl.installAsync({ udid: props.device.udid, dir: binaryPath });
+
+    // Since we don't actually use the pid, we can start observing logs before launching on the simulator.
+    const imageName = getImageNameFromBinary(binaryPath);
+    if (imageName) {
+      SimLogs.streamLogs({ pid: imageName, udid: props.device.udid });
+    }
 
     const bundleIdentifier = await getBundleIdentifierForBinaryAsync(binaryPath);
 
@@ -84,12 +71,6 @@ export async function runIosActionAsync(projectRoot: string, options: Options) {
       bundleIdentifier,
       device: props.device,
     });
-
-    const imageName = getImageNameFromBinary(binaryPath);
-
-    if (imageName) {
-      SimLogs.streamLogs({ pid: imageName, udid: props.device.udid });
-    }
   } else {
     IOSDeploy.installBinaryOnDevice({ bundle: binaryPath, udid: props.device.udid });
     XcodeBuild.logPrettyItem(`${chalk.bold`Installed`} on ${props.device.name}`);
