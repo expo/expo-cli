@@ -1,7 +1,7 @@
 import { getConfig } from '@expo/config';
-import { Versions } from '@expo/xdl';
 import chalk from 'chalk';
 import { Command } from 'commander';
+import { Versions } from 'xdl';
 
 import CommandError from '../CommandError';
 import Log from '../log';

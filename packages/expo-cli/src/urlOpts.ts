@@ -1,8 +1,8 @@
 import { getDefaultTarget } from '@expo/config';
-import { Android, ConnectionStatus, ProjectSettings, Simulator, Webpack } from '@expo/xdl';
 import { Command } from 'commander';
 import indentString from 'indent-string';
 import qrcodeTerminal from 'qrcode-terminal';
+import { Android, ConnectionStatus, ProjectSettings, Simulator, Webpack } from 'xdl';
 
 import CommandError, { AbortCommandError } from './CommandError';
 import Log from './log';

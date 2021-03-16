@@ -319,7 +319,7 @@ async function createHostInfoAsync(): Promise<HostInfo> {
   return {
     host,
     server: 'xdl',
-    serverVersion: require('@expo/xdl/package.json').version,
+    serverVersion: require('xdl/package.json').version,
     serverDriver: Config.developerTool,
     serverOS: os.platform(),
     serverOSVersion: os.release(),

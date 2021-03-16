@@ -9,7 +9,7 @@ import {
   withExpoVersionedSDKPlugins,
   withStaticPlugin,
 } from '@expo/config-plugins';
-import { UserManager } from '@expo/xdl';
+import { UserManager } from 'xdl';
 
 import Log from '../../log';
 import { getOrPromptForBundleIdentifier, getOrPromptForPackage } from './ConfigValidation';
@@ -27,6 +27,7 @@ export const expoManagedPlugins = [
   'expo-contacts',
   'expo-image-picker',
   'expo-file-system',
+  'expo-ads-facebook',
   'expo-location',
   'expo-media-library',
   // 'expo-notifications',

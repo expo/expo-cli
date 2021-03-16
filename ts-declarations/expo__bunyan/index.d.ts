@@ -42,7 +42,7 @@ declare module '@expo/bunyan' {
     trace(obj: Object, ...params: any[]): void;
 
     /**
-     * For @expo/xdl
+     * For xdl
      */
     trace(...params: any[]): void;
 
@@ -71,7 +71,7 @@ declare module '@expo/bunyan' {
     debug(obj: Object, ...params: any[]): void;
 
     /**
-     * For @expo/xdl
+     * For xdl
      */
     debug(...params: any[]): void;
 
@@ -100,7 +100,7 @@ declare module '@expo/bunyan' {
     info(obj: Object, ...params: any[]): void;
 
     /**
-     * For @expo/xdl
+     * For xdl
      */
     info(...params: any[]): void;
 
@@ -129,7 +129,7 @@ declare module '@expo/bunyan' {
     warn(obj: Object, ...params: any[]): void;
 
     /**
-     * For @expo/xdl
+     * For xdl
      */
     warn(...params: any[]): void;
 
@@ -158,7 +158,7 @@ declare module '@expo/bunyan' {
     error(obj: Object, ...params: any[]): void;
 
     /**
-     * For @expo/xdl
+     * For xdl
      */
     error(...params: any[]): void;
 
@@ -187,7 +187,7 @@ declare module '@expo/bunyan' {
     fatal(obj: Object, ...params: any[]): void;
 
     /**
-     * For @expo/xdl
+     * For xdl
      */
     fatal(...params: any[]): void;
   }

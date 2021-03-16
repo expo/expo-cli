@@ -1,5 +1,5 @@
 import { ExpoConfig, isLegacyImportsEnabled } from '@expo/config';
-import { Project, ProjectSettings, Versions } from '@expo/xdl';
+import { Project, ProjectSettings, Versions } from 'xdl';
 
 import Log from '../../log';
 import { URLOptions } from '../../urlOpts';

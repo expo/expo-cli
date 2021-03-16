@@ -7,7 +7,6 @@ import {
 import { ExpoConfig } from '@expo/config-types';
 import JsonFile from '@expo/json-file';
 import * as PackageManager from '@expo/package-manager';
-import { Android, Project, ProjectSettings, Simulator, Versions } from '@expo/xdl';
 import chalk from 'chalk';
 import program, { Command } from 'commander';
 import getenv from 'getenv';
@@ -18,6 +17,7 @@ import ora from 'ora';
 import resolveFrom from 'resolve-from';
 import semver from 'semver';
 import terminalLink from 'terminal-link';
+import { Android, Project, ProjectSettings, Simulator, Versions } from 'xdl';
 
 import CommandError from '../CommandError';
 import Log from '../log';

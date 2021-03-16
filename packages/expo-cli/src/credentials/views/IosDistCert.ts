@@ -1,9 +1,9 @@
-import { IosCodeSigning } from '@expo/xdl';
 import chalk from 'chalk';
 import dateformat from 'dateformat';
 import fs from 'fs-extra';
 import ora from 'ora';
 import terminalLink from 'terminal-link';
+import { IosCodeSigning } from 'xdl';
 
 import CommandError from '../../CommandError';
 import { DistCert, DistCertInfo, DistCertManager, isDistCert } from '../../appleApi';

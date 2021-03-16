@@ -22,7 +22,7 @@ const COMMANDS = [
   require('./publish-modify'),
   require('./push-creds'),
   require('./register'),
-  require('./run/run'),
+  require('./run'),
   require('./send'),
   require('./start'),
   require('./upgrade'),

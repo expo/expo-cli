@@ -77,7 +77,6 @@
     "@expo/results": "^1.0.0",
     "@expo/simple-spinner": "1.0.2",
     "@expo/spawn-async": "1.5.0",
-    "@expo/xdl": "59.0.25",
     "@hapi/joi": "^17.1.1",
     "babel-runtime": "6.26.0",
     "base32.js": "0.1.0",
@@ -121,7 +120,8 @@
     "untildify": "3.0.3",
     "uuid": "^8.0.0",
     "wrap-ansi": "^7.0.0",
-    "xcode": "^3.0.1"
+    "xcode": "^3.0.1",
+    "xdl": "59.0.25"
   },
   "gitHead": "613642fe06827cc231405784b099cf71c29072df"
 }

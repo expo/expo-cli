@@ -1,9 +1,9 @@
-import { AndroidCredentials as Android } from '@expo/xdl';
 import chalk from 'chalk';
 import fs from 'fs-extra';
 import os from 'os';
 import path from 'path';
 import { v4 as uuid } from 'uuid';
+import { AndroidCredentials as Android } from 'xdl';
 
 import Log from '../../log';
 import { AppLookupParams } from '../api/IosApi';
