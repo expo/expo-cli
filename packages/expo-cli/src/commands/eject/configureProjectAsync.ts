@@ -27,6 +27,7 @@ export const expoManagedPlugins = [
   'expo-contacts',
   'expo-image-picker',
   'expo-file-system',
+  'expo-ads-facebook',
   'expo-location',
   'expo-media-library',
   // 'expo-notifications',
