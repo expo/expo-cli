@@ -36,13 +36,13 @@ const dependencyMap: { [key: string]: string[] } = {
 };
 
 async function generateFilesAsync({
-  projectDir,
+  projectRoot,
   staticPath,
   options,
   answer,
   templateFolder,
 }: {
-  projectDir: string;
+  projectRoot: string;
   staticPath: string;
   options: Options;
   answer: string[];
@@ -52,7 +52,7 @@ async function generateFilesAsync({
 
   for (const file of answer) {
     if (Object.keys(dependencyMap).includes(file)) {
-      const projectFilePath = path.resolve(projectDir, file);
+      const projectFilePath = path.resolve(projectRoot, file);
       // copy the file from template
       promises.push(
         fs.copy(
@@ -63,7 +63,7 @@ async function generateFilesAsync({
       );
 
       if (file in dependencyMap) {
-        const packageManager = PackageManager.createForProject(projectDir, { log: Log.log });
+        const packageManager = PackageManager.createForProject(projectRoot, { log: Log.log });
         for (const dependency of dependencyMap[file]) {
           promises.push(packageManager.addDevAsync(dependency));
         }
@@ -71,7 +71,7 @@ async function generateFilesAsync({
     } else {
       const fileName = path.basename(file);
       const src = path.resolve(templateFolder, fileName);
-      const dest = path.resolve(projectDir, staticPath, fileName);
+      const dest = path.resolve(projectRoot, staticPath, fileName);
       if (await fs.pathExists(src)) {
         promises.push(fs.copy(src, dest, { overwrite: true, recursive: true }));
       } else {
@@ -82,10 +82,10 @@ async function generateFilesAsync({
   await Promise.all(promises);
 }
 
-export async function action(projectDir: string = './', options: Options = { force: false }) {
+export async function action(projectRoot: string = './', options: Options = { force: false }) {
   // Get the static path (defaults to 'web/')
   // Doesn't matter if expo is installed or which mode is used.
-  const { exp } = getConfig(projectDir, {
+  const { exp } = getConfig(projectRoot, {
     skipSDKVersionRequirement: true,
   });
 
@@ -103,7 +103,7 @@ export async function action(projectDir: string = './', options: Options = { for
   const values = [];
 
   for (const file of allFiles) {
-    const localProjectFile = path.resolve(projectDir, file);
+    const localProjectFile = path.resolve(projectRoot, file);
     const exists = fs.existsSync(localProjectFile);
 
     values.push({
@@ -125,7 +125,7 @@ export async function action(projectDir: string = './', options: Options = { for
     return;
   }
 
-  await maybeWarnToCommitAsync(projectDir);
+  await maybeWarnToCommitAsync(projectRoot);
 
   const { answer } = await prompts({
     type: 'multiselect',
@@ -142,7 +142,13 @@ export async function action(projectDir: string = './', options: Options = { for
     Log.log('\n\u203A Exiting with no change...\n');
     return;
   }
-  await generateFilesAsync({ projectDir, staticPath, options, answer, templateFolder });
+  await generateFilesAsync({
+    projectRoot,
+    staticPath,
+    options,
+    answer,
+    templateFolder,
+  });
 }
 
 export default function (program: Command) {

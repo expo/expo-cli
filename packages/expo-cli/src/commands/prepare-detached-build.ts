@@ -6,8 +6,8 @@ type Options = {
   skipXcodeConfig: boolean;
 };
 
-async function action(projectDir: string, options: Options) {
-  await Detach.prepareDetachedBuildAsync(projectDir, options);
+async function action(projectRoot: string, options: Options) {
+  await Detach.prepareDetachedBuildAsync(projectRoot, options);
 }
 
 export default function (program: Command) {

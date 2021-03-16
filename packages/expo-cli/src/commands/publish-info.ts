@@ -32,8 +32,8 @@ export default (program: any) => {
     .option('-s, --sdk-version <version>', 'Filter by SDK version e.g. 35.0.0')
     .option('-r, --raw', 'Produce some raw output.')
     .asyncActionProjectDir(
-      async (projectDir: string, options: HistoryOptions) => {
-        const result = await getPublishHistoryAsync(projectDir, options);
+      async (projectRoot: string, options: HistoryOptions) => {
+        const result = await getPublishHistoryAsync(projectRoot, options);
 
         if (options.raw) {
           Log.log(JSON.stringify(result));
@@ -91,12 +91,12 @@ export default (program: any) => {
     .option('--publish-id <publish-id>', 'Publication id. (Required)')
     .option('-r, --raw', 'Produce some raw output.')
     .asyncActionProjectDir(
-      async (projectDir: string, options: DetailOptions) => {
+      async (projectRoot: string, options: DetailOptions) => {
         if (!options.publishId) {
           throw new Error('--publish-id must be specified.');
         }
 
-        const detail = await getPublicationDetailAsync(projectDir, options);
+        const detail = await getPublicationDetailAsync(projectRoot, options);
         await printPublicationDetailAsync(detail, options);
       },
       { checkConfig: true }

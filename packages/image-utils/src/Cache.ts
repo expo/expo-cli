@@ -49,7 +49,7 @@ export async function getImageFromCacheAsync(
 ): Promise<null | Buffer> {
   try {
     return await readFile(resolve(cacheKeys[cacheKey], fileName));
-  } catch (_) {
+  } catch {
     return null;
   }
 }

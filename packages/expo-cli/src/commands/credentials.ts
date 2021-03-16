@@ -21,9 +21,9 @@ export default function (program: CommanderStatic) {
     .helpGroup('credentials')
     .option('-p --platform <platform>', 'Platform: [android|ios]', /^(android|ios)$/i)
     .asyncActionProjectDir(
-      async (projectDir: string, options: Options) => {
+      async (projectRoot: string, options: Options) => {
         const context = new Context();
-        await context.init(projectDir, {
+        await context.init(projectRoot, {
           nonInteractive: options.parent?.nonInteractive,
         });
         let mainpage;

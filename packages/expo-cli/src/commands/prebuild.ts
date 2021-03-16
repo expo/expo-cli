@@ -7,7 +7,7 @@ import { EjectAsyncOptions, prebuildAsync } from './eject/prebuildAsync';
 import { learnMore } from './utils/TerminalLink';
 
 export async function actionAsync(
-  projectDir: string,
+  projectRoot: string,
   {
     platform,
     skipDependencyUpdate,
@@ -25,9 +25,9 @@ export async function actionAsync(
   const platforms = platformsFromPlatform(platform);
 
   // Clear the native folders before syncing
-  await clearNativeFolder(projectDir, platforms);
+  await clearNativeFolder(projectRoot, platforms);
 
-  await prebuildAsync(projectDir, {
+  await prebuildAsync(projectRoot, {
     ...options,
     skipDependencyUpdate: skipDependencyUpdate ? skipDependencyUpdate.split(',') : [],
     platforms,
