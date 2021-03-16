@@ -116,8 +116,6 @@ export class ExpoLogFormatter extends Formatter {
   }
 
   finish() {
-    Log.log(
-      `\nBuild completed with ${this.errors.length} errors, and ${this.warnings.length} warnings\n`
-    );
+    Log.log(`\n\u203A ${this.errors.length} error(s), and ${this.warnings.length} warning(s)\n`);
   }
 }
