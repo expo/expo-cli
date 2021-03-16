@@ -44,7 +44,14 @@ type SimLog = {
    * 0
    */
   activityIdentifier: number;
-  subsystem: '' | 'com.apple.network' | 'com.apple.TCC';
+  subsystem:
+    | ''
+    | 'com.apple.network'
+    | 'com.facebook.react.log'
+    | 'com.apple.TCC'
+    | 'com.apple.CoreTelephony'
+    | 'com.apple.WebKit'
+    | 'com.apple.runningboard';
   category: '' | 'access' | 'connection';
   //   "threadID" : 4892623,
   //   "senderImageUUID" : "C5384B45-5DAF-315D-B984-9E30E9AF4B3A",
@@ -100,6 +107,33 @@ function isNetworkLog(simLog: SimLog): boolean {
   );
 }
 
+function isReactLog(simLog: SimLog): boolean {
+  return simLog.subsystem === 'com.facebook.react.log' && simLog.source?.file === 'RCTLog.mm';
+}
+
+// It's not clear what these are but they aren't very useful.
+// (The connection to service on pid 0 named com.apple.commcenter.coretelephony.xpc was invalidated)
+// We can add them later if need.
+function isCoreTelephonyLog(simLog: SimLog): boolean {
+  // [CoreTelephony] Updating selectors failed with: Error Domain=NSCocoaErrorDomain Code=4099
+  // "The connection to service on pid 0 named com.apple.commcenter.coretelephony.xpc was invalidated." UserInfo={NSDebugDescription=The connection to service on pid 0 named com.apple.commcenter.coretelephony.xpc was invalidated.}
+  return simLog.subsystem === 'com.apple.CoreTelephony';
+}
+
+// https://stackoverflow.com/a/65313219/4047926
+function isWebKitLog(simLog: SimLog): boolean {
+  // [WebKit] 0x1143ca500 - ProcessAssertion: Failed to acquire RBS Background assertion 'WebProcess Background Assertion' for process with PID 27084, error: Error Domain=RBSAssertionErrorDomain Code=3 "Target is not running or required target
+  // entitlement is missing" UserInfo={RBSAssertionAttribute=<RBSDomainAttribute| domain:"com.apple.webkit" name:"Background" sourceEnvironment:"(null)">, NSLocalizedFailureReason=Target is not running or required target entitlement is missing}
+  return simLog.subsystem === 'com.apple.WebKit';
+}
+
+// Similar to WebKit logs
+function isRunningBoardServicesLog(simLog: SimLog): boolean {
+  // [RunningBoardServices] Error acquiring assertion: <Error Domain=RBSAssertionErrorDomain Code=3 "Target is not running or required target entitlement is missing" UserInfo={RBSAssertionAttribute=<RBSDomainAttribute| domain:"com.apple.webkit"
+  // name:"Background" sourceEnvironment:"(null)">, NSLocalizedFailureReason=Target is not running or required target entitlement is missing}>
+  return simLog.subsystem === 'com.apple.runningboard';
+}
+
 function formatMessage(simLog: SimLog): string {
   // TODO: Maybe change "TCC" to "Consent" or "System".
   const category = chalk.gray(`[${simLog.source?.image ?? simLog.subsystem}]`);
@@ -107,6 +141,8 @@ function formatMessage(simLog: SimLog): string {
   return wrapAnsi(category + ' ' + message, process.stdout.columns || 80);
 }
 
+// The primary purpose of this module is to surface logs related to fatal app crashes.
+// Everything else should come through the native React logger.
 export function streamLogs({ pid, udid }: { pid: string; udid?: string }): void {
   // xcrun simctl spawn booted log stream --process --style json
   forks[pid] = spawn('xcrun', [
@@ -140,8 +176,15 @@ export function streamLogs({ pid, udid }: { pid: string; udid?: string }): void 
     let hasLogged = false;
 
     if (simLog.messageType === 'Error') {
-      // Hide all networking errors
-      if (!isNetworkLog(simLog)) {
+      if (
+        // Hide all networking errors which are mostly useless.
+        !isNetworkLog(simLog) &&
+        // Showing React errors will result in duplicate messages.
+        !isReactLog(simLog) &&
+        !isCoreTelephonyLog(simLog) &&
+        !isWebKitLog(simLog) &&
+        !isRunningBoardServicesLog(simLog)
+      ) {
         hasLogged = true;
         // Sim: This app has crashed because it attempted to access privacy-sensitive data without a usage description.  The app's Info.plist must contain an NSCameraUsageDescription key with a string value explaining to the user how the app uses this data.
         Log.nestedError(formatMessage(simLog));
