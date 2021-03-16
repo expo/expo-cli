@@ -13,7 +13,7 @@ import Analytics from '../Analytics';
 import ApiV2 from '../ApiV2';
 import Config from '../Config';
 import * as EmbeddedAssets from '../EmbeddedAssets';
-import { shouldUseDevServer } from '../Env';
+import { isDebug, shouldUseDevServer } from '../Env';
 import logger from '../Logger';
 import { publishAssetsAsync } from '../ProjectAssets';
 import * as Sentry from '../Sentry';
@@ -47,6 +47,13 @@ export async function publishAsync(
   options.target = options.target ?? getDefaultTarget(projectRoot);
   const target = options.target;
   const user = await UserManager.ensureLoggedInAsync();
+
+  if (isDebug()) {
+    console.log();
+    console.log('Publish Assets:');
+    console.log(`- Asset target: ${target}`);
+    console.log();
+  }
 
   Analytics.logEvent('Publish', {
     projectRoot,

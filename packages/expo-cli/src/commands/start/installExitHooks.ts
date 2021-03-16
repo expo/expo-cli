@@ -1,18 +1,15 @@
-import { Project } from '@expo/xdl';
 import ora from 'ora';
+import { Project } from 'xdl';
 
-import Log from './log';
+import Log from '../../log';
 
-export function installExitHooks(
-  projectRoot: string,
-  onStop: (projectRoot: string) => Promise<void> = Project.stopAsync
-): void {
+export function installExitHooks(projectRoot: string): void {
   const killSignals: ['SIGINT', 'SIGTERM'] = ['SIGINT', 'SIGTERM'];
   for (const signal of killSignals) {
     process.on(signal, () => {
       const spinner = ora({ text: 'Stopping server', color: 'white' }).start();
       Log.setSpinner(spinner);
-      onStop(projectRoot)
+      Project.stopAsync(projectRoot)
         .then(() => {
           spinner.stopAndPersist({ text: 'Stopped server', symbol: `\u203A` });
           process.exit();

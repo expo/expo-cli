@@ -9,7 +9,7 @@ import {
   withExpoVersionedSDKPlugins,
   withStaticPlugin,
 } from '@expo/config-plugins';
-import { UserManager } from '@expo/xdl';
+import { UserManager } from 'xdl';
 
 import Log from '../../log';
 import { getOrPromptForBundleIdentifier, getOrPromptForPackage } from './ConfigValidation';
@@ -27,6 +27,7 @@ export const expoManagedPlugins = [
   'expo-contacts',
   'expo-image-picker',
   'expo-file-system',
+  'expo-ads-facebook',
   'expo-location',
   'expo-media-library',
   // 'expo-notifications',
@@ -56,6 +57,8 @@ const expoManagedVersionedPlugins = [
 const withOptionalPlugins: ConfigPlugin<(StaticPlugin | string)[]> = (config, plugins) => {
   return plugins.reduce((prev, plugin) => {
     return withStaticPlugin(prev, {
+      // hide errors
+      _isLegacyPlugin: true,
       plugin,
       // If a plugin doesn't exist, do nothing.
       fallback: config => config,

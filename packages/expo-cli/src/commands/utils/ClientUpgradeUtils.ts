@@ -1,7 +1,7 @@
 import { getConfig } from '@expo/config';
 import { ExpoConfig } from '@expo/config-types';
-import { Versions } from '@expo/xdl';
 import chalk from 'chalk';
+import { Versions } from 'xdl';
 
 import prompt from '../../prompts';
 import { findProjectRootAsync } from './ProjectUtils';

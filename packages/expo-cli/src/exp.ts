@@ -1,6 +1,20 @@
 import bunyan from '@expo/bunyan';
 import { setCustomConfigPath } from '@expo/config';
+import { INTERNAL_CALLSITES_REGEX } from '@expo/metro-config';
 import simpleSpinner from '@expo/simple-spinner';
+import boxen from 'boxen';
+import chalk from 'chalk';
+import program, { Command } from 'commander';
+import fs from 'fs';
+import getenv from 'getenv';
+import leven from 'leven';
+import findLastIndex from 'lodash/findLastIndex';
+import ora from 'ora';
+import path from 'path';
+import ProgressBar from 'progress';
+import stripAnsi from 'strip-ansi';
+import url from 'url';
+import wrapAnsi from 'wrap-ansi';
 import {
   Analytics,
   Api,
@@ -16,27 +30,16 @@ import {
   ProjectSettings,
   ProjectUtils,
   UserManager,
-} from '@expo/xdl';
-import boxen from 'boxen';
-import chalk from 'chalk';
-import program, { Command } from 'commander';
-import fs from 'fs';
-import getenv from 'getenv';
-import leven from 'leven';
-import findLastIndex from 'lodash/findLastIndex';
-import ora from 'ora';
-import path from 'path';
-import ProgressBar from 'progress';
-import stripAnsi from 'strip-ansi';
-import url from 'url';
-import wrapAnsi from 'wrap-ansi';
+} from 'xdl';
 
 import { AbortCommandError, SilentError } from './CommandError';
 import { loginOrRegisterAsync } from './accounts';
 import { registerCommands } from './commands';
+import { profileMethod } from './commands/utils/profileMethod';
 import Log from './log';
 import update from './update';
 import urlOpts from './urlOpts';
+import { matchFileNameOrURLFromStackTrace } from './utils/matchFileNameOrURLFromStackTrace';
 
 // We use require() to exclude package.json from TypeScript's analysis since it lives outside the
 // src directory and would change the directory structure of the emitted files under the build
@@ -333,7 +336,7 @@ Command.prototype.asyncAction = function (asyncFn: Action, skipUpdateCheck: bool
   return this.action(async (...args: any[]) => {
     if (!skipUpdateCheck) {
       try {
-        await checkCliVersionAsync();
+        await profileMethod(checkCliVersionAsync)();
       } catch (e) {}
     }
 
@@ -537,17 +540,27 @@ Command.prototype.asyncActionProjectDir = function (
 
       for (let i = 0; i <= lastFrameIndexToLog; i++) {
         const line = stackFrames[i];
+
         if (!line) {
-          continue;
-        } else if (line.match(/react-native\/.*YellowBox.js/)) {
           continue;
         }
 
-        if (line.startsWith('node_modules')) {
-          nestedLogFn('- ' + line);
-        } else {
-          nestedLogFn('* ' + line);
+        let isCollapsed = false;
+        const fileNameOrUrl = matchFileNameOrURLFromStackTrace(line);
+        if (fileNameOrUrl) {
+          // Use the same regex we use in Metro config to filter out traces:
+          isCollapsed = INTERNAL_CALLSITES_REGEX.test(fileNameOrUrl);
+
+          // Unless the user is in debug mode, skip printing the collapsed files.
+          if (!Log.isDebug && isCollapsed) {
+            continue;
+          }
         }
+
+        // If a file is collapsed, print it with dim styling.
+        const style = isCollapsed ? chalk.dim : (message: string) => message;
+        // Use the `at` prefix to match Node.js
+        nestedLogFn(style('at ' + line));
       }
 
       if (unloggedFrames > 0) {
@@ -713,7 +726,7 @@ function runAsync(programName: string) {
       .option('--non-interactive', 'Fail, if an interactive prompt would be required to continue.');
 
     // Load each module found in ./commands by 'registering' it with our commander instance
-    registerCommands(program);
+    profileMethod(registerCommands)(program);
 
     program.on('command:detach', () => {
       Log.warn('To eject your project to ExpoKit (previously "detach"), use `expo eject`.');

@@ -1,8 +1,8 @@
 import { getDefaultTarget } from '@expo/config';
-import { Android, ConnectionStatus, ProjectSettings, Simulator, Webpack } from '@expo/xdl';
 import { Command } from 'commander';
 import indentString from 'indent-string';
 import qrcodeTerminal from 'qrcode-terminal';
+import { Android, ConnectionStatus, ProjectSettings, Simulator, Webpack } from 'xdl';
 
 import CommandError, { AbortCommandError } from './CommandError';
 import Log from './log';
@@ -28,10 +28,10 @@ function addOptions(program: Command) {
       'Experimental: Starts the bundler for use with the expo-development-client'
     )
     .option('--scheme <scheme>', 'Custom URI protocol to use with a dev client')
-    .option('-a, --android', 'Opens your app in Expo client on a connected Android device')
+    .option('-a, --android', 'Opens your app in Expo Go on a connected Android device')
     .option(
       '-i, --ios',
-      'Opens your app in Expo client in a currently running iOS simulator on your computer'
+      'Opens your app in Expo Go in a currently running iOS simulator on your computer'
     )
     .option('-w, --web', 'Opens your app in a web browser')
     .option(
@@ -76,11 +76,11 @@ async function optsAsync(projectDir: string, options: any) {
     const defaultTarget = getDefaultTarget(projectDir);
     if (defaultTarget !== 'bare') {
       Log.warn(
-        `\nOption ${Log.chalk.cyan(
+        `\nOption ${Log.chalk.bold(
           '--dev-client'
-        )} can only be used in bare workflow apps. Run ${Log.chalk.cyan(
+        )} can only be used in bare workflow apps. Run ${Log.chalk.bold(
           'expo eject'
-        )} and try again\n`
+        )} and try again.\n`
       );
       throw new AbortCommandError();
     }

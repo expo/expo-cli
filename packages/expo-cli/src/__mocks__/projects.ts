@@ -1,6 +1,6 @@
 import { ProjectPrivacy } from '@expo/config';
-import { RobotUser, User } from '@expo/xdl';
 import { v4 as uuidv4 } from 'uuid';
+import { RobotUser, User } from 'xdl';
 
 const { getProjectOwner: actualGetProjectOwner } = jest.requireActual('../projects');
 

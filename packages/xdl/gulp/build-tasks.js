@@ -1,4 +1,3 @@
-const packageJson = require('@expo/xdl/package.json');
 const axios = require('axios');
 const fse = require('fs-extra');
 const gulp = require('gulp');
@@ -8,6 +7,7 @@ const plumber = require('gulp-plumber');
 const sourcemaps = require('gulp-sourcemaps');
 const path = require('path');
 const rimraf = require('rimraf');
+const packageJson = require('xdl/package.json');
 
 const paths = {
   source: {

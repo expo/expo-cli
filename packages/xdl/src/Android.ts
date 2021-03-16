@@ -1,4 +1,5 @@
-import { getConfig, readExpRcAsync } from '@expo/config';
+import { ExpoConfig, getConfig, readExpRcAsync } from '@expo/config';
+import { AndroidConfig } from '@expo/config-plugins';
 import spawnAsync from '@expo/spawn-async';
 import chalk from 'chalk';
 import child_process from 'child_process';
@@ -311,25 +312,35 @@ async function _isDeviceAuthorizedAsync(device: Device): Promise<boolean> {
   return device.isAuthorized;
 }
 
-// Expo installed
-async function _isExpoInstalledAsync(device: Device) {
+async function isInstalledAsync(device: Device, androidPackage: string): Promise<boolean> {
   const packages = await getAdbOutputAsync(
-    adbPidArgs(device.pid, 'shell', 'pm', 'list', 'packages', '-f')
+    adbPidArgs(device.pid, 'shell', 'pm', 'list', 'packages', androidPackage)
   );
 
   const lines = packages.split(/\r?\n/);
   for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    if (line.includes('host.exp.exponent.test')) {
-      continue;
-    }
-
-    if (line.includes('host.exp.exponent')) {
+    const line = lines[i].trim();
+    if (line === `package:${androidPackage}`) {
       return true;
     }
   }
-
   return false;
+}
+
+// Expo installed
+async function _isExpoInstalledAsync(device: Device) {
+  return await isInstalledAsync(device, 'host.exp.exponent');
+}
+
+async function ensureDevClientInstalledAsync(device: Device, applicationId: string): Promise<void> {
+  if (!(await isInstalledAsync(device, applicationId))) {
+    throw new Error(
+      `The development client (${applicationId}) for this project is not installed. ` +
+        `Please build and install the client on the simulator first.\n${learnMore(
+          'https://docs.expo.io/clients/distribution-for-android/'
+        )}`
+    );
+  }
 }
 
 async function getExpoVersionAsync(device: Device): Promise<string | null> {
@@ -414,9 +425,9 @@ export async function installExpoAsync({
   Logger.notifications.info({ code: NotificationCode.STOP_LOADING });
 
   if (version) {
-    Logger.global.info(`Installing Expo client ${version} on device`);
+    Logger.global.info(`Installing Expo Go ${version} on device`);
   } else {
-    Logger.global.info(`Installing Expo client on device`);
+    Logger.global.info(`Installing Expo Go on device`);
   }
   Logger.notifications.info({ code: NotificationCode.START_LOADING });
   warningTimer = setWarningTimer();
@@ -440,7 +451,7 @@ export async function isDeviceBootedAsync({
 }
 
 export async function uninstallExpoAsync(device: Device): Promise<string | undefined> {
-  Logger.global.info('Uninstalling Expo client from Android device.');
+  Logger.global.info('Uninstalling Expo Go from Android device.');
 
   // we need to check if its installed, else we might bump into "Failure [DELETE_FAILED_INTERNAL_ERROR]"
   const isInstalled = await _isExpoInstalledAsync(device);
@@ -452,7 +463,7 @@ export async function uninstallExpoAsync(device: Device): Promise<string | undef
     return await getAdbOutputAsync(adbPidArgs(device.pid, 'uninstall', 'host.exp.exponent'));
   } catch (e) {
     Logger.global.error(
-      'Could not uninstall Expo client from your device, please uninstall Expo client manually and try again.'
+      'Could not uninstall Expo Go from your device, please uninstall Expo Go manually and try again.'
     );
     throw e;
   }
@@ -498,8 +509,16 @@ export async function upgradeExpoAsync(options?: {
   }
 }
 
-async function _openUrlAsync({ pid, url }: { pid: string; url: string }) {
-  // NOTE(brentvatne): temporary workaround! launch expo client first, then
+async function _openUrlAsync({
+  pid,
+  url,
+  applicationId,
+}: {
+  pid: string;
+  url: string;
+  applicationId: string;
+}) {
+  // NOTE(brentvatne): temporary workaround! launch Expo Go first, then
   // launch the project!
   // https://github.com/expo/expo/issues/7772
   // adb shell monkey -p host.exp.exponent -c android.intent.category.LAUNCHER 1
@@ -509,7 +528,7 @@ async function _openUrlAsync({ pid, url }: { pid: string; url: string }) {
       'shell',
       'monkey',
       '-p',
-      'host.exp.exponent',
+      applicationId,
       '-c',
       'android.intent.category.LAUNCHER',
       '1'
@@ -529,7 +548,7 @@ async function _openUrlAsync({ pid, url }: { pid: string; url: string }) {
   return openProject;
 }
 
-async function attemptToStartEmulatorOrAssertAsync(device: Device): Promise<Device | null> {
+export async function attemptToStartEmulatorOrAssertAsync(device: Device): Promise<Device | null> {
   // TODO: Add a light-weight method for checking since a device could disconnect.
 
   if (!(await isDeviceBootedAsync(device))) {
@@ -561,11 +580,17 @@ async function openUrlAsync({
   device,
   isDetached = false,
   sdkVersion,
+  devClient = false,
+  exp,
+  projectRoot,
 }: {
   url: string;
   isDetached?: boolean;
   device: Device;
   sdkVersion?: string;
+  devClient?: boolean;
+  exp?: ExpoConfig;
+  projectRoot: string;
 }): Promise<void> {
   try {
     const bootedDevice = await attemptToStartEmulatorOrAssertAsync(device);
@@ -575,7 +600,20 @@ async function openUrlAsync({
     device = bootedDevice;
 
     let installedExpo = false;
-    if (!isDetached) {
+    let clientApplicationId = 'host.exp.exponent';
+    if (devClient) {
+      const applicationId = await AndroidConfig.Package.getApplicationIdAsync(projectRoot);
+      if (!applicationId) {
+        // TODO(ville): possibly need to compare Gradle project with app.json/config.ts
+        // and show a helpful error message, if there's a mismatch.
+        throw new Error(
+          `Could not find applicationId in ${AndroidConfig.Paths.getAppBuildGradle(projectRoot)}`
+        );
+      } else {
+        clientApplicationId = applicationId;
+      }
+      await ensureDevClientInstalledAsync(device, clientApplicationId);
+    } else if (!isDetached) {
       let shouldInstall = !(await _isExpoInstalledAsync(device));
       const promptKey = device.pid ?? 'unknown';
       if (
@@ -587,7 +625,7 @@ async function openUrlAsync({
         hasPromptedToUpgrade[promptKey] = true;
         const confirm = await Prompts.confirmAsync({
           initial: true,
-          message: `Expo client on ${device.name} (${device.type}) is outdated, would you like to upgrade?`,
+          message: `Expo Go on ${device.name} (${device.type}) is outdated, would you like to upgrade?`,
         });
         if (confirm) {
           await uninstallExpoAsync(device);
@@ -600,10 +638,7 @@ async function openUrlAsync({
         await installExpoAsync({ device, ...androidClient });
         installedExpo = true;
       }
-    }
-    // process.exit(0);
 
-    if (!isDetached) {
       _lastUrl = url;
       // _checkExpoUpToDateAsync(); // let this run in background
     }
@@ -611,7 +646,7 @@ async function openUrlAsync({
     Logger.global.info(`Opening ${chalk.underline(url)} on ${chalk.bold(device.name)}`);
 
     try {
-      await _openUrlAsync({ pid: device.pid!, url });
+      await _openUrlAsync({ pid: device.pid!, url, applicationId: clientApplicationId });
     } catch (e) {
       if (isDetached) {
         e.message = `Error running app. Have you installed the app already using Android Studio? Since you are detached you must build manually. ${e.message}`;
@@ -642,6 +677,10 @@ async function getClientForSDK(sdkVersionString?: string) {
   }
 
   const sdkVersion = (await Versions.sdkVersionsAsync())[sdkVersionString];
+  if (!sdkVersion) {
+    return null;
+  }
+
   return {
     url: sdkVersion.androidClientUrl,
     version: sdkVersion.androidClientVersion,
@@ -651,9 +690,11 @@ async function getClientForSDK(sdkVersionString?: string) {
 export async function openProjectAsync({
   projectRoot,
   shouldPrompt,
+  devClient = false,
 }: {
   projectRoot: string;
   shouldPrompt?: boolean;
+  devClient?: boolean;
 }): Promise<{ success: true; url: string } | { success: false; error: string }> {
   try {
     await startAdbReverseAsync(projectRoot);
@@ -677,6 +718,9 @@ export async function openProjectAsync({
       device,
       isDetached: !!exp.isDetached,
       sdkVersion: exp.sdkVersion,
+      devClient,
+      exp,
+      projectRoot,
     });
     return { success: true, url: projectUrl };
   } catch (e) {
@@ -711,7 +755,7 @@ export async function openWebProjectAsync({
       return { success: false, error: 'escaped' };
     }
 
-    await openUrlAsync({ url: projectUrl, device, isDetached: true });
+    await openUrlAsync({ url: projectUrl, device, isDetached: true, projectRoot });
     return { success: true, url: projectUrl };
   } catch (e) {
     Logger.global.error(`Couldn't open the web project on Android: ${e.message}`);
@@ -951,7 +995,7 @@ function nameStyleForDevice(device: Device) {
   return (text: string) => chalk.bold(chalk.gray(text));
 }
 
-async function promptForDeviceAsync(devices: Device[]): Promise<Device | null> {
+export async function promptForDeviceAsync(devices: Device[]): Promise<Device | null> {
   // TODO: provide an option to add or download more simulators
 
   // Pause interactions on the TerminalUI

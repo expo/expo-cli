@@ -1,10 +1,10 @@
 import { getConfig } from '@expo/config';
 import JsonFile from '@expo/json-file';
 import * as PackageManager from '@expo/package-manager';
-import { Versions } from '@expo/xdl';
 import { Command } from 'commander';
 import npmPackageArg from 'npm-package-arg';
 import resolveFrom from 'resolve-from';
+import { Versions } from 'xdl';
 
 import CommandError, { SilentError } from '../CommandError';
 import Log from '../log';

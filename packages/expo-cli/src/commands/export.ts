@@ -1,9 +1,9 @@
-import { getDefaultTarget, ProjectTarget } from '@expo/config';
-import { UrlUtils } from '@expo/xdl';
+import { ProjectTarget } from '@expo/config';
 import program, { Command } from 'commander';
 import crypto from 'crypto';
 import fs from 'fs-extra';
 import path from 'path';
+import { UrlUtils } from 'xdl';
 
 import CommandError, { SilentError } from '../CommandError';
 import Log from '../log';
@@ -87,7 +87,7 @@ async function exportFilesAsync(
     isDev: options.dev,
     publishOptions: {
       resetCache: !!options.clear,
-      target: options.target ?? getDefaultTarget(projectRoot),
+      target: options.target,
     },
   };
   return await exportAppAsync(

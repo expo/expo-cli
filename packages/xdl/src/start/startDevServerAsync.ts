@@ -8,6 +8,8 @@ import { getManifestHandler } from './ManifestHandler';
 import { getFreePortAsync } from './getFreePortAsync';
 
 export type StartOptions = {
+  isWebSocketsEnabled?: boolean;
+  isRemoteReloadingEnabled?: boolean;
   devClient?: boolean;
   reset?: boolean;
   nonInteractive?: boolean;
@@ -31,6 +33,8 @@ export async function startDevServerAsync(projectRoot: string, startOptions: Sta
   const options: MetroDevServerOptions = {
     port,
     logger: ProjectUtils.getLogger(projectRoot),
+    // @deprecated
+    target: startOptions.target,
   };
   if (startOptions.reset) {
     options.resetCache = true;
@@ -38,13 +42,8 @@ export async function startDevServerAsync(projectRoot: string, startOptions: Sta
   if (startOptions.maxWorkers != null) {
     options.maxWorkers = startOptions.maxWorkers;
   }
-  if (startOptions.target) {
-    // EXPO_TARGET is used by @expo/metro-config to determine the target when getDefaultConfig is
-    // called from metro.config.js.
-    process.env.EXPO_TARGET = startOptions.target;
-  }
 
-  const { server, middleware } = await runMetroDevServerAsync(projectRoot, options);
+  const { server, middleware, messageSocket } = await runMetroDevServerAsync(projectRoot, options);
   middleware.use(getManifestHandler(projectRoot));
-  return server;
+  return [server, middleware, messageSocket];
 }

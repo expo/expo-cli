@@ -19,6 +19,23 @@ import {
 } from './startLegacyReactNativeServerAsync';
 
 let serverInstance: Server | null = null;
+let messageSocket: any | null = null;
+
+/**
+ * Sends a message over web sockets to any connected device,
+ * does nothing when the dev server is not running.
+ *
+ * @param method name of the command. In RN projects `reload`, and `devMenu` are available. In Expo Go, `sendDevCommand` is available.
+ * @param params
+ */
+export function broadcastMessage(
+  method: 'reload' | 'devMenu' | 'sendDevCommand',
+  params?: Record<string, any> | undefined
+) {
+  if (messageSocket) {
+    messageSocket.broadcast(method, params);
+  }
+}
 
 export async function startAsync(
   projectRoot: string,
@@ -37,7 +54,7 @@ export async function startAsync(
     DevSession.startSession(projectRoot, exp, 'web');
     return exp;
   } else if (shouldUseDevServer(exp) || options.devClient) {
-    serverInstance = await startDevServerAsync(projectRoot, options);
+    [serverInstance, , messageSocket] = await startDevServerAsync(projectRoot, options);
     DevSession.startSession(projectRoot, exp, 'native');
   } else {
     await startExpoServerAsync(projectRoot);
@@ -55,11 +72,6 @@ export async function startAsync(
     }
   }
   return exp;
-}
-
-export async function stopWebOnlyAsync(projectRoot: string): Promise<void> {
-  DevSession.stopSession();
-  await Webpack.stopAsync(projectRoot);
 }
 
 async function stopInternalAsync(projectRoot: string): Promise<void> {

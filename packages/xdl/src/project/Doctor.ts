@@ -354,7 +354,6 @@ async function _validateReactNativeVersionAsync(
       return WARNING;
     }
   }
-
   return NO_ISSUES;
 }
 
@@ -432,13 +431,7 @@ async function validateAsync(
 }
 
 export async function validateExpoServersAsync(projectRoot: string): Promise<number> {
-  const domains = [
-    'expo.io',
-    'expo.fyi',
-    'expo.dev',
-    'static.expo.dev',
-    // 'exp.host', - This is causing some intermittent false errors
-  ];
+  const domains = ['expo.io', 'expo.fyi', 'expo.dev', 'static.expo.dev', 'exp.host'];
   const attempts = await Promise.all(
     domains.map(async domain => ({
       domain,

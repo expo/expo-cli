@@ -8,6 +8,7 @@ const packageName = 'expo-ads-admob';
 
 export const withAdMob: ConfigPlugin = config => {
   return withStaticPlugin(config, {
+    _isLegacyPlugin: true,
     plugin: packageName,
     // If the static plugin isn't found, use the unversioned one.
     fallback: withUnversionedAdMob,

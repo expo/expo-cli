@@ -1,5 +1,4 @@
 import { getDefaultTarget } from '@expo/config';
-import { EmbeddedAssets, Env, Project, ProjectAssets, UserManager, XDLError } from '@expo/xdl';
 import assert from 'assert';
 import crypto from 'crypto';
 import fs from 'fs-extra';
@@ -9,6 +8,7 @@ import readLastLines from 'read-last-lines';
 import semver from 'semver';
 import urljoin from 'url-join';
 import { v1 as uuidv1, v4 as uuidv4 } from 'uuid';
+import { EmbeddedAssets, Env, Project, ProjectAssets, UserManager, XDLError } from 'xdl';
 
 import Log from '../../log';
 
@@ -66,6 +66,13 @@ export async function exportAppAsync(
   const absoluteOutputDir = path.resolve(process.cwd(), outputDir);
   const defaultTarget = getDefaultTarget(projectRoot);
   const target = options.publishOptions?.target ?? defaultTarget;
+
+  if (Log.isDebug) {
+    Log.newLine();
+    Log.log('Export Assets:');
+    Log.log(`- Asset target: ${target}`);
+    Log.newLine();
+  }
 
   // build the bundles
   // make output dirs if not exists

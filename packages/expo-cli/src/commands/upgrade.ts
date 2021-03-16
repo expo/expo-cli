@@ -1,8 +1,12 @@
-import { getConfig, readConfigJsonAsync, writeConfigJsonAsync } from '@expo/config';
+import {
+  getConfig,
+  isLegacyImportsEnabled,
+  readConfigJsonAsync,
+  writeConfigJsonAsync,
+} from '@expo/config';
 import { ExpoConfig } from '@expo/config-types';
 import JsonFile from '@expo/json-file';
 import * as PackageManager from '@expo/package-manager';
-import { Android, Project, ProjectSettings, Simulator, Versions } from '@expo/xdl';
 import chalk from 'chalk';
 import program, { Command } from 'commander';
 import getenv from 'getenv';
@@ -13,11 +17,13 @@ import ora from 'ora';
 import resolveFrom from 'resolve-from';
 import semver from 'semver';
 import terminalLink from 'terminal-link';
+import { Android, Project, ProjectSettings, Simulator, Versions } from 'xdl';
 
 import CommandError from '../CommandError';
 import Log from '../log';
 import { confirmAsync, selectAsync } from '../prompts';
 import { findProjectRootAsync } from './utils/ProjectUtils';
+import { assertProjectHasExpoExtensionFilesAsync } from './utils/deprecatedExtensionWarnings';
 import maybeBailOnGitStatusAsync from './utils/maybeBailOnGitStatusAsync';
 
 type DependencyList = Record<string, string>;
@@ -659,6 +665,11 @@ export async function upgradeAsync(
     } catch {}
 
     clearingCacheStep.succeed('Cleared packager cache.');
+  }
+
+  // Warn about extensions out of sync. Remove after dropping support for SDK 41
+  if (!isLegacyImportsEnabled(exp)) {
+    await assertProjectHasExpoExtensionFilesAsync(projectRoot, true);
   }
 
   Log.newLine();

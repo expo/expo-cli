@@ -42,10 +42,12 @@ export function printInstructions(
   {
     appName,
     urls,
+    shouldPrintHelp,
     showInDevtools,
   }: {
     appName: string;
     urls: Urls;
+    shouldPrintHelp?: boolean;
     showInDevtools: boolean;
   }
 ) {
@@ -70,7 +72,9 @@ export function printInstructions(
   message += '\n';
 
   message += `\n \u203A Press ${chalk.bold(`w`)} ${divider} open in the browser`;
-  message += `\n \u203A Press ${chalk.bold(`?`)} ${divider} show all commands`;
+  if (shouldPrintHelp) {
+    message += `\n \u203A Press ${chalk.bold(`?`)} ${divider} show all commands`;
+  }
 
   log(projectRoot, message, showInDevtools);
 }
@@ -150,6 +154,7 @@ export default function createWebpackCompiler({
       printInstructions(projectRoot, {
         appName,
         urls,
+        shouldPrintHelp: true,
         showInDevtools: isFirstCompile,
       });
     }

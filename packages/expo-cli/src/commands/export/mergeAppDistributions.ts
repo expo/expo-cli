@@ -1,9 +1,9 @@
 import { ExpoAppManifest } from '@expo/config';
 import JsonFile from '@expo/json-file';
-import { Project, XDLError } from '@expo/xdl';
 import fs from 'fs-extra';
 import path from 'path';
 import semver from 'semver';
+import { Project, XDLError } from 'xdl';
 
 import Log from '../../log';
 

@@ -1,4 +1,3 @@
-import { Logger, PackagerLogsStream, ProjectSettings, ProjectUtils } from '@expo/xdl';
 import base64url from 'base64url';
 import crypto from 'crypto';
 import express from 'express';
@@ -7,6 +6,7 @@ import * as graphql from 'graphql';
 import http from 'http';
 import path from 'path';
 import { SubscriptionServer } from 'subscriptions-transport-ws';
+import { Logger, PackagerLogsStream, ProjectSettings, ProjectUtils } from 'xdl';
 // @ts-ignore
 
 import AsyncIterableRingBuffer from './graphql/AsyncIterableRingBuffer';
