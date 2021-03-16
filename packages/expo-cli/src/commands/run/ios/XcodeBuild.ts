@@ -1,9 +1,9 @@
 import spawnAsync from '@expo/spawn-async';
-import { SimControl } from '@expo/xdl';
 import chalk from 'chalk';
 import { spawn, SpawnOptionsWithoutStdio } from 'child_process';
 import * as fs from 'fs-extra';
 import * as path from 'path';
+import { SimControl } from 'xdl';
 
 import CommandError from '../../../CommandError';
 import { assert } from '../../../assert';

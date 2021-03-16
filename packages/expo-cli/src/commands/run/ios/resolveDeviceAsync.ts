@@ -1,5 +1,5 @@
-import { SimControl, Simulator } from '@expo/xdl';
 import chalk from 'chalk';
+import { SimControl, Simulator } from 'xdl';
 
 import CommandError from '../../../CommandError';
 import prompt from '../../../prompts';

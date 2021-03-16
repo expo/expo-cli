@@ -1,7 +1,7 @@
 import { getConfig } from '@expo/config';
 import { compileModsAsync } from '@expo/config-plugins';
 import { CodeSigningSettings, withCodeSigning } from '@expo/config-plugins/build/ios/CodeSigning';
-import { UserManager } from '@expo/xdl';
+import { UserManager } from 'xdl';
 
 import { AppleCtx, ensureBundleIdExistsAsync } from '../../../appleApi';
 

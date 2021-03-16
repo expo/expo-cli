@@ -1,7 +1,7 @@
-import { Project, SimControl, Simulator } from '@expo/xdl';
 import chalk from 'chalk';
 import fs from 'fs-extra';
 import * as path from 'path';
+import { Project, SimControl, Simulator } from 'xdl';
 
 import CommandError from '../../../CommandError';
 import Log from '../../../log';
@@ -14,6 +14,7 @@ import * as SimLogs from './SimLogs';
 import * as XcodeBuild from './XcodeBuild';
 import { parseBinaryPlistAsync } from './binaryPlist';
 import { Options, resolveOptionsAsync } from './resolveOptionsAsync';
+
 const isMac = process.platform === 'darwin';
 
 export async function runIosActionAsync(projectRoot: string, options: Options) {
