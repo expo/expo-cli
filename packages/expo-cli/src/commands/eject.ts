@@ -20,7 +20,7 @@ async function userWantsToEjectWithoutUpgradingAsync() {
 }
 
 export async function actionAsync(
-  projectDir: string,
+  projectRoot: string,
   {
     platform,
     ...options
@@ -29,7 +29,7 @@ export async function actionAsync(
     platform?: string;
   }
 ) {
-  const { exp } = getConfig(projectDir);
+  const { exp } = getConfig(projectRoot);
 
   if (options.npm) {
     options.packageManager = 'npm';
@@ -44,7 +44,7 @@ export async function actionAsync(
     }
   } else {
     Log.debug('Eject Mode: Latest');
-    await ejectAsync(projectDir, {
+    await ejectAsync(projectRoot, {
       ...options,
       platforms: platformsFromPlatform(platform),
     } as EjectAsyncOptions);

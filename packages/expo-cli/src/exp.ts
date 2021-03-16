@@ -452,13 +452,13 @@ Command.prototype.asyncActionProjectDir = function (
   options: { checkConfig?: boolean; skipSDKVersionRequirement?: boolean } = {}
 ) {
   this.option('--config [file]', 'Specify a path to app.json or app.config.js');
-  return this.asyncAction(async (projectDir: string, ...args: any[]) => {
+  return this.asyncAction(async (projectRoot: string, ...args: any[]) => {
     const opts = args[0];
 
-    if (!projectDir) {
-      projectDir = process.cwd();
+    if (!projectRoot) {
+      projectRoot = process.cwd();
     } else {
-      projectDir = path.resolve(process.cwd(), projectDir);
+      projectRoot = path.resolve(process.cwd(), projectRoot);
     }
 
     if (opts.config) {
@@ -489,7 +489,7 @@ Command.prototype.asyncActionProjectDir = function (
         process.exit(1);
         // throw new Error(`File at provided config path does not exist: ${pathToConfig}`);
       }
-      setCustomConfigPath(projectDir, pathToConfig);
+      setCustomConfigPath(projectRoot, pathToConfig);
     }
 
     const logLines = (msg: any, logFn: (...args: any[]) => void) => {
@@ -598,7 +598,7 @@ Command.prototype.asyncActionProjectDir = function (
     let bar: ProgressBar | null;
     // eslint-disable-next-line no-new
     new PackagerLogsStream({
-      projectRoot: projectDir,
+      projectRoot,
       onStartBuildBundle: () => {
         bar = new ProgressBar('Building JavaScript bundle [:bar] :percent', {
           width: 64,
@@ -650,7 +650,7 @@ Command.prototype.asyncActionProjectDir = function (
     });
 
     // needed for validation logging to function
-    ProjectUtils.attachLoggerStream(projectDir, {
+    ProjectUtils.attachLoggerStream(projectRoot, {
       stream: {
         write: (chunk: LogRecord) => {
           if (chunk.tag === 'device') {
@@ -670,13 +670,13 @@ Command.prototype.asyncActionProjectDir = function (
     // This is relevant for command such as `send`
     if (
       options.checkConfig &&
-      (await ProjectSettings.getCurrentStatusAsync(projectDir)) !== 'running'
+      (await ProjectSettings.getCurrentStatusAsync(projectRoot)) !== 'running'
     ) {
       const spinner = ora('Making sure project is set up correctly...').start();
       Log.setSpinner(spinner);
       // validate that this is a good projectDir before we try anything else
 
-      const status = await Doctor.validateWithoutNetworkAsync(projectDir, {
+      const status = await Doctor.validateWithoutNetworkAsync(projectRoot, {
         skipSDKVersionRequirement: options.skipSDKVersionRequirement,
       });
       if (status === Doctor.FATAL) {
@@ -689,7 +689,7 @@ Command.prototype.asyncActionProjectDir = function (
     // the existing CLI modules only pass one argument to this function, so skipProjectValidation
     // will be undefined in most cases. we can explicitly pass a truthy value here to avoid validation (eg for init)
 
-    return asyncFn(projectDir, ...args);
+    return asyncFn(projectRoot, ...args);
   });
 };
 

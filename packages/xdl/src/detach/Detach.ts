@@ -50,7 +50,7 @@ async function _getIosExpoKitVersionThrowErrorAsync(iosProjectDirectory: string)
 async function readNullableConfigJsonAsync(projectDir: string) {
   try {
     return getConfig(projectDir);
-  } catch (_) {
+  } catch {
     return null;
   }
 }

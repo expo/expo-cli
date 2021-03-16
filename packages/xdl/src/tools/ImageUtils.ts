@@ -16,7 +16,7 @@ async function getImageDimensionsAsync(
 ): Promise<{ width: number; height: number } | null> {
   try {
     return await _getImageDimensionsAsync(projectDirname, basename);
-  } catch (_) {}
+  } catch {}
   return null;
 }
 

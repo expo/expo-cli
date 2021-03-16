@@ -72,7 +72,7 @@ function parsePaths(
       ['./index', './src/index'],
       getPlatformExtensions(env.platform ?? 'web')
     );
-  } catch (_) {
+  } catch {
     // ignore the error
   }
 
