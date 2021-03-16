@@ -10,10 +10,10 @@ import * as TerminalUI from '../../start/TerminalUI';
 import { installExitHooks } from '../../start/installExitHooks';
 import * as IOSDeploy from './IOSDeploy';
 import maybePromptToSyncPodsAsync from './Podfile';
+import * as SimLogs from './SimLogs';
 import * as XcodeBuild from './XcodeBuild';
 import { parseBinaryPlistAsync } from './binaryPlist';
 import { Options, resolveOptionsAsync } from './resolveOptionsAsync';
-
 const isMac = process.platform === 'darwin';
 
 export async function runIosActionAsync(projectRoot: string, options: Options) {
@@ -73,9 +73,11 @@ export async function runIosActionAsync(projectRoot: string, options: Options) {
       device: props.device,
     });
 
-    // if (pid) {
-    //   LLDB.attachNativeDebugger('foobar', pid);
-    // }
+    const imageName = path.basename(binaryPath).split('.')[0];
+
+    if (imageName) {
+      SimLogs.streamLogs({ pid: imageName, udid: props.device.udid });
+    }
   } else {
     IOSDeploy.installBinaryOnDevice({ bundle: binaryPath, udid: props.device.udid });
     XcodeBuild.logPrettyItem(`${chalk.bold`Installed`} on ${props.device.name}`);
