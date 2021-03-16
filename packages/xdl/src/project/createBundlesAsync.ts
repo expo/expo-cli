@@ -1,4 +1,4 @@
-import { Platform } from '@expo/config';
+import { getConfig, isLegacyImportsEnabled, Platform } from '@expo/config';
 import { bundleAsync, BundleOutput } from '@expo/dev-server';
 import axios from 'axios';
 import chalk from 'chalk';
@@ -71,6 +71,13 @@ export async function createBundlesAsync(
     }
   }
 
+  const isLegacy = isLegacyImportsEnabled(
+    getConfig(projectRoot, { skipSDKVersionRequirement: true }).exp
+  );
+  // If not legacy, delete the target option to prevent warnings from being thrown.
+  if (!isLegacy) {
+    delete publishOptions.target;
+  }
   const platforms: Platform[] = ['android', 'ios'];
   const [android, ios] = await bundleAsync(
     projectRoot,
