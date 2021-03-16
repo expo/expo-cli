@@ -330,9 +330,9 @@ export type Action = (...args: any[]) => void;
 
 // asyncAction is a wrapper for all commands/actions to be executed after commander is done
 // parsing the command input
-Command.prototype.asyncAction = function (asyncFn: Action, skipUpdateCheck: boolean) {
+Command.prototype.asyncAction = function (asyncFn: Action) {
   return this.action(async (...args: any[]) => {
-    if (!skipUpdateCheck) {
+    if (process.env.EAS_BUILD !== '1') {
       try {
         await profileMethod(checkCliVersionAsync)();
       } catch (e) {}
