@@ -100,7 +100,7 @@ async function exportFilesAsync(
 }
 
 async function mergeSourceDirectoriesAsync(
-  projectDir: string,
+  projectRoot: string,
   mergeSrcDirs: string[],
   options: Pick<Options, 'mergeSrcUrl' | 'mergeSrcDir' | 'outputDir'>
 ): Promise<void> {
@@ -112,7 +112,7 @@ async function mergeSourceDirectoriesAsync(
 
   // Merge app distributions
   await Project.mergeAppDistributions(
-    projectDir,
+    projectRoot,
     [...mergeSrcDirs, options.outputDir], // merge stuff in srcDirs and outputDir together
     options.outputDir
   );
@@ -122,7 +122,7 @@ async function mergeSourceDirectoriesAsync(
 }
 
 export async function collectMergeSourceUrlsAsync(
-  projectDir: string,
+  projectRoot: string,
   mergeSrcUrl: string[]
 ): Promise<string[]> {
   // Merge src dirs/urls into a multimanifest if specified
@@ -131,7 +131,7 @@ export async function collectMergeSourceUrlsAsync(
   // src urls were specified to merge in, so download and decompress them
   if (mergeSrcUrl.length > 0) {
     // delete .tmp if it exists and recreate it anew
-    const tmpFolder = path.resolve(projectDir, '.tmp');
+    const tmpFolder = path.resolve(projectRoot, '.tmp');
     await fs.remove(tmpFolder);
     await fs.ensureDir(tmpFolder);
 

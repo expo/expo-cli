@@ -159,18 +159,18 @@ function padEnd(str: string, width: number): string {
   return str + Array(len + 1).join(' ');
 }
 
-async function action(projectDir: string, command: Command) {
+async function action(incomingProjectRoot: string, command: Command) {
   const options = parseOptions(command);
 
   // Resolve the name, and projectRoot
   let projectRoot: string;
-  if (!projectDir && options.yes) {
+  if (!incomingProjectRoot && options.yes) {
     projectRoot = path.resolve(process.cwd());
     const folderName = path.basename(projectRoot);
     assertValidName(folderName);
     await assertFolderEmptyAsync(projectRoot, folderName);
   } else {
-    projectRoot = await resolveProjectRootAsync(projectDir || options.name);
+    projectRoot = await resolveProjectRootAsync(incomingProjectRoot || options.name);
   }
 
   let resolvedTemplate: string | null = options.template ?? null;

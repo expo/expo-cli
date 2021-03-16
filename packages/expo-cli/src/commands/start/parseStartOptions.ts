@@ -108,8 +108,8 @@ export function parseRawArguments(options: RawStartOptions, rawArgs: string[]): 
   return opts;
 }
 
-async function cacheOptionsAsync(projectDir: string, options: NormalizedOptions): Promise<void> {
-  await ProjectSettings.setAsync(projectDir, {
+async function cacheOptionsAsync(projectRoot: string, options: NormalizedOptions): Promise<void> {
+  await ProjectSettings.setAsync(projectRoot, {
     devClient: options.devClient,
     scheme: options.scheme,
     dev: options.dev,

@@ -28,7 +28,7 @@ export default function (program: Command) {
     )
     .asyncActionProjectDir(
       async (
-        projectDir: string,
+        projectRoot: string,
         options: { releaseChannel?: string; publishId?: string }
       ): Promise<void> => {
         if (!options.releaseChannel) {
@@ -39,7 +39,7 @@ export default function (program: Command) {
         }
         try {
           const result = await setPublishToChannelAsync(
-            projectDir,
+            projectRoot,
             options as { releaseChannel: string; publishId: string }
           );
           const tableString = table.printTableJson(
@@ -65,7 +65,7 @@ export default function (program: Command) {
     .option('-p, --platform <ios|android>', 'The platform to rollback.')
     .asyncActionProjectDir(
       async (
-        projectDir: string,
+        projectRoot: string,
         options: {
           releaseChannel?: string;
           sdkVersion?: string;
@@ -79,7 +79,7 @@ export default function (program: Command) {
           );
         }
         if (!options.releaseChannel || !options.sdkVersion) {
-          const usage = await getUsageAsync(projectDir);
+          const usage = await getUsageAsync(projectRoot);
           throw new Error(usage);
         }
         if (options.platform) {
@@ -89,14 +89,14 @@ export default function (program: Command) {
             );
           }
         }
-        await rollbackPublicationFromChannelAsync(projectDir, options as RollbackOptions);
+        await rollbackPublicationFromChannelAsync(projectRoot, options as RollbackOptions);
       },
       { checkConfig: true }
     );
 }
-async function getUsageAsync(projectDir: string): Promise<string> {
+async function getUsageAsync(projectRoot: string): Promise<string> {
   try {
-    return await _getUsageAsync(projectDir);
+    return await _getUsageAsync(projectRoot);
   } catch (e) {
     Log.warn(e);
     // couldn't print out warning for some reason
@@ -104,9 +104,9 @@ async function getUsageAsync(projectDir: string): Promise<string> {
   }
 }
 
-async function _getUsageAsync(projectDir: string): Promise<string> {
+async function _getUsageAsync(projectRoot: string): Promise<string> {
   const allPlatforms = ['ios', 'android'];
-  const publishesResult = await getPublishHistoryAsync(projectDir, {
+  const publishesResult = await getPublishHistoryAsync(projectRoot, {
     releaseChannel: 'default', // not specifying a channel will return most recent publishes but this is not neccesarily the most recent entry in a channel (user could have set an older publish to top of the channel)
     count: allPlatforms.length,
   });
@@ -124,7 +124,7 @@ async function _getUsageAsync(projectDir: string): Promise<string> {
       const detailOptions = {
         publishId: publication.publicationId,
       };
-      return await getPublicationDetailAsync(projectDir, detailOptions);
+      return await getPublicationDetailAsync(projectRoot, detailOptions);
     })
   );
 
