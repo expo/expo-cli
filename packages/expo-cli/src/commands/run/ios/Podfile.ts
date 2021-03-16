@@ -6,12 +6,7 @@ import { safeLoad } from 'js-yaml';
 import * as path from 'path';
 
 import Log from '../../../log';
-import { confirmAsync } from '../../../prompts';
-import {
-  createDependenciesMap,
-  DependenciesMap,
-  hashForDependencyMap,
-} from '../../eject/updatePackageJson';
+import { hashForDependencyMap } from '../../eject/updatePackageJson';
 import { installCocoaPodsAsync } from '../../utils/CreateApp';
 
 const CHECKSUM_KEY = 'SPEC CHECKSUMS';
@@ -127,16 +122,11 @@ async function promptToInstallPodsAsync(projectRoot: string, missingPods?: strin
         .join(', ')}. Did you forget to run "${chalk.bold('pod install')}" ?`
     );
   }
-  //   if (
-  //     await confirmAsync({
-  //       message: 'Sync CocoaPods?',
-  //     })
-  //   ) {
+
   try {
     await installCocoaPodsAsync(projectRoot);
   } catch (error) {
     fs.removeSync(path.join(getTempPrebuildFolder(projectRoot), 'cached-packages.json'));
     throw error;
   }
-  //   }
 }

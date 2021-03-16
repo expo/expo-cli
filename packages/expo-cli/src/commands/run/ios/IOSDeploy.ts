@@ -30,7 +30,7 @@ export function installBinaryOnDevice({ bundle, udid }: { bundle: string; udid: 
 export async function assertInstalledAsync() {
   if (!(await isInstalledAsync())) {
     // Controlled error message.
-    const error = `You must install ${chalk.cyan`ios-deploy`} before we can install iOS apps on connected devices. Please install it and try again or build the app onto a simulator.`;
+    const error = `Cannot install iOS apps on devices without ${chalk.bold`ios-deploy`} installed globally. Please install it with ${chalk.bold`brew install ios-deploy`} and try again, or build the app with a simulator.`;
     log.warn(wrapAnsi(error, process.stdout.columns || 80));
     throw new SilentError(error);
   }

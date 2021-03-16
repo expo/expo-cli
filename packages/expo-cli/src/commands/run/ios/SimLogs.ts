@@ -53,23 +53,10 @@ type SimLog = {
     | 'com.apple.WebKit'
     | 'com.apple.runningboard';
   category: '' | 'access' | 'connection';
-  //   "threadID" : 4892623,
-  //   "senderImageUUID" : "C5384B45-5DAF-315D-B984-9E30E9AF4B3A",
-  //   "backtrace" : {
-  //     "frames" : [
-  //       {
-  //         "imageOffset" : 677763,
-  //         "imageUUID" : "C5384B45-5DAF-315D-B984-9E30E9AF4B3A"
-  //       }
-  //     ]
-  //   },
-  //   "bootUUID" : "",
-  //   "processImagePath" : "\/Users\/evanbacon\/Library\/Developer\/CoreSimulator\/Devices\/AE226061-B435-4AFD-A6CF-01AD00CE40D3\/data\/Containers\/Bundle\/Application\/A6412127-9D3C-4169-896A-C27D155E7F10\/yolo8.app\/yolo8",
   /**
    * "2021-03-15 15:36:28.004331-0700"
    */
   timestamp: string;
-  //   "senderImagePath" : "\/Applications\/Xcode.app\/Contents\/Developer\/Platforms\/iPhoneOS.platform\/Library\/Developer\/CoreSimulator\/Profiles\/Runtimes\/iOS.simruntime\/Contents\/Resources\/RuntimeRoot\/System\/Library\/Frameworks\/CFNetwork.framework\/CFNetwork",
   /**
    * 706567072091713
    */
@@ -78,14 +65,10 @@ type SimLog = {
    * "Default"
    */
   messageType: 'Default' | 'Error';
-  //   "processImageUUID" : "0A4AC852-7CF1-3D33-9136-4F4D9CE8080F",
   /**
    * 15192
    */
   processID: number;
-  //   "senderProgramCounter" : 677763,
-  //   "parentActivityIdentifier" : 0,
-  //   "timezoneName" : ""
 };
 
 function parseMessageJson(data: Buffer) {
@@ -212,6 +195,13 @@ export function streamLogs({ pid, udid }: { pid: string; udid?: string }): void 
   installExitHooks();
 }
 
+export async function detachStream(pid: string) {
+  if (forks[pid]) {
+    await killProcess(forks[pid]);
+    delete forks[pid];
+  }
+}
+
 function installExitHooks(): void {
   const killSignals: ['SIGINT', 'SIGTERM'] = ['SIGINT', 'SIGTERM'];
   for (const signal of killSignals) {
@@ -221,16 +211,9 @@ function installExitHooks(): void {
   }
 }
 
-export async function detachStream(pid: string) {
-  if (forks[pid]) {
-    await killProcess(forks[pid]);
-    delete forks[pid];
-  }
-}
-
-export async function killProcess(childProcess: ChildProcessWithoutNullStreams): Promise<void> {
+async function killProcess(childProcess: ChildProcessWithoutNullStreams): Promise<void> {
   if (childProcess) {
-    return new Promise<void>((resolve, reject) => {
+    return new Promise<void>(resolve => {
       childProcess.on('close', resolve);
       childProcess.kill();
     });

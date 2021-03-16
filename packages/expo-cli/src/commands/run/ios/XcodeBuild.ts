@@ -117,7 +117,6 @@ function getProcessOptions({
       // The script is used for people building their project directly from Xcode.
       // This essentially means "› Running script 'Start Packager'" does nothing.
       RCT_NO_LAUNCH_PACKAGER: 'true',
-
       // FORCE_BUNDLING: '0'
     },
   };
@@ -169,7 +168,7 @@ export function buildAsync({
     let buildOutput = '';
     let errorOutput = '';
 
-    const pipeData = (data: Buffer) => {
+    buildProcess.stdout.on('data', (data: Buffer) => {
       const stringData = data.toString();
       buildOutput += stringData;
 
@@ -177,21 +176,19 @@ export function buildAsync({
       for (const line of lines) {
         Log.log(line);
       }
-    };
-    buildProcess.stdout.on('data', pipeData);
+    });
 
     buildProcess.stderr.on('data', (data: Buffer) => {
-      pipeData(data);
-      errorOutput += data;
+      const stringData = data instanceof Buffer ? data.toString() : data;
+      errorOutput += stringData;
     });
 
     buildProcess.on('close', (code: number) => {
       formatter.finish();
+      const logFilePath = writeBuildLogs(projectRoot, buildOutput, errorOutput);
       if (code !== 0) {
         // Determine if the logger found any errors;
         const wasErrorPresented = !!formatter.errors.length;
-
-        const errorLogFilePath = writeErrorLog(projectRoot, buildOutput, errorOutput);
 
         const errorTitle = `Failed to build iOS project. "xcodebuild" exited with error code ${code}.`;
 
@@ -205,16 +202,13 @@ export function buildAsync({
 
         // Show all the log info because often times the error is coming from a shell script,
         // that invoked a node script, that started metro, which threw an error.
-        // To help make the logs a bit easier to read, we add `-hideShellScriptEnvironment` to the build command.
-        // TODO: Catch shell script errors in expo logger and present them.
-        // TODO: Skip printing all info if expo logger caught an error.
         reject(
           new CommandError(
-            `${errorTitle}\nTo debug build logs further, consider building your app with Xcode.app, by opening ${xcodeProject.name}.\n\n` +
+            `${errorTitle}\nTo view more error logs, try building the app with Xcode directly, by opening ${xcodeProject.name}.\n\n` +
               buildOutput +
               '\n\n' +
               errorOutput +
-              `Build logs written to ${chalk.underline(errorLogFilePath)}`
+              `Build logs written to ${chalk.underline(logFilePath)}`
           )
         );
         return;
@@ -224,55 +218,22 @@ export function buildAsync({
   });
 }
 
-function writeErrorLog(projectRoot: string, buildOutput: string, errorOutput: string) {
+function writeBuildLogs(projectRoot: string, buildOutput: string, errorOutput: string) {
   const output =
-    '# Build output\n\n```\n' +
+    '# Build output\n\n```log\n' +
     buildOutput +
-    '\n```\n\n# Error output\n\n```\n' +
+    '\n```\n\n# Error output\n\n```log\n' +
     errorOutput +
     '\n```\n';
-  const errorLogFilePath = getErrorLogFilePath(projectRoot);
+  const logFilePath = getErrorLogFilePath(projectRoot);
 
-  fs.writeFileSync(errorLogFilePath, output);
-  return errorLogFilePath;
+  fs.writeFileSync(logFilePath, output);
+  return logFilePath;
 }
 
 function getErrorLogFilePath(projectRoot: string): string {
-  const filename = 'xcodebuild-error.log';
+  const filename = 'xcodebuild.md';
   const folder = path.join(projectRoot, '.expo');
   fs.ensureDirSync(folder);
   return path.join(folder, filename);
-}
-
-/**
- * Optimally format milliseconds
- *
- * @example `1h 2m 3s`
- * @example `5m 18s`
- * @example `40s`
- * @param duration
- */
-export function formatMilliseconds(duration: number) {
-  const portions: string[] = [];
-
-  const msInHour = 1000 * 60 * 60;
-  const hours = Math.trunc(duration / msInHour);
-  if (hours > 0) {
-    portions.push(hours + 'h');
-    duration = duration - hours * msInHour;
-  }
-
-  const msInMinute = 1000 * 60;
-  const minutes = Math.trunc(duration / msInMinute);
-  if (minutes > 0) {
-    portions.push(minutes + 'm');
-    duration = duration - minutes * msInMinute;
-  }
-
-  const seconds = Math.trunc(duration / 1000);
-  if (seconds > 0) {
-    portions.push(seconds + 's');
-  }
-
-  return portions.join(' ');
 }

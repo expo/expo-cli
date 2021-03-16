@@ -69,12 +69,14 @@ export async function runIosActionAsync(projectRoot: string, options: Options) {
   if (props.isSimulator) {
     await SimControl.installAsync({ udid: props.device.udid, dir: binaryPath });
 
-    const { pid } = await openInSimulatorAsync({
-      binaryPath,
+    const bundleIdentifier = await getBundleIdentifierForBinaryAsync(binaryPath);
+
+    await openInSimulatorAsync({
+      bundleIdentifier,
       device: props.device,
     });
 
-    const imageName = path.basename(binaryPath).split('.')[0];
+    const imageName = getImageNameFromBinary(binaryPath);
 
     if (imageName) {
       SimLogs.streamLogs({ pid: imageName, udid: props.device.udid });
@@ -91,29 +93,36 @@ export async function runIosActionAsync(projectRoot: string, options: Options) {
   );
 }
 
+function getImageNameFromBinary(binaryPath: string): string {
+  return path.basename(binaryPath).split('.')[0];
+}
+
+async function getBundleIdentifierForBinaryAsync(binaryPath: string): Promise<string> {
+  const builtInfoPlistPath = path.join(binaryPath, 'Info.plist');
+  const { CFBundleIdentifier } = await parseBinaryPlistAsync(builtInfoPlistPath);
+  return CFBundleIdentifier;
+}
+
 async function openInSimulatorAsync({
-  binaryPath,
+  bundleIdentifier,
   device,
 }: {
-  binaryPath: string;
+  bundleIdentifier: string;
   device: XcodeBuild.BuildProps['device'];
 }) {
-  const builtInfoPlistPath = path.join(binaryPath, 'Info.plist');
-  // TODO: Replace with bplist-parser
-  const { CFBundleIdentifier: bundleID } = await parseBinaryPlistAsync(builtInfoPlistPath);
   let pid: string | null = null;
   XcodeBuild.logPrettyItem(
-    `${chalk.bold`Opening`} on ${device.name} ${chalk.dim(`(${bundleID})`)}`
+    `${chalk.bold`Opening`} on ${device.name} ${chalk.dim(`(${bundleIdentifier})`)}`
   );
 
   const result = await SimControl.openBundleIdAsync({
     udid: device.udid,
-    bundleIdentifier: bundleID,
+    bundleIdentifier,
   });
 
   if (result.status === 0) {
     if (result.stdout) {
-      const pidRegExp = new RegExp(`${bundleID}:\\s?(\\d+)`);
+      const pidRegExp = new RegExp(`${bundleIdentifier}:\\s?(\\d+)`);
       const pidMatch = result.stdout.match(pidRegExp);
       pid = pidMatch?.[1] ?? null;
     }
@@ -123,5 +132,5 @@ async function openInSimulatorAsync({
       `Failed to launch the app on simulator ${device.name} (${device.udid}). Error in "osascript" command: ${result.stderr}`
     );
   }
-  return { bundleIdentifier: bundleID, pid };
+  return { pid };
 }
