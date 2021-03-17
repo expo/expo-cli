@@ -5,6 +5,7 @@ import { clearNativeFolder } from './eject/clearNativeFolder';
 import { platformsFromPlatform } from './eject/platformOptions';
 import { EjectAsyncOptions, prebuildAsync } from './eject/prebuildAsync';
 import { learnMore } from './utils/TerminalLink';
+import maybeBailOnGitStatusAsync from './utils/maybeBailOnGitStatusAsync';
 
 export async function actionAsync(
   projectRoot: string,
@@ -27,6 +28,7 @@ export async function actionAsync(
   const platforms = platformsFromPlatform(platform);
 
   if (reset) {
+    if (await maybeBailOnGitStatusAsync()) return;
     // Clear the native folders before syncing
     await clearNativeFolder(projectRoot, platforms);
   }
