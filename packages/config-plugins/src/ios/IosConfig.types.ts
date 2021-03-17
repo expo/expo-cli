@@ -35,6 +35,7 @@ export type InfoPlist = {
   GADApplicationIdentifier?: string;
   UIUserInterfaceStyle?: InterfaceStyle;
   UIRequiresFullScreen?: boolean;
+  SKAdNetworkItems?: { SKAdNetworkIdentifier: string }[];
   branch_key?: { live?: string };
 };
 
