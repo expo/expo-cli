@@ -2,6 +2,7 @@ import { ExpoConfig } from '@expo/config-types';
 import { JSONObject } from '@expo/json-file';
 import { XcodeProject } from 'xcode';
 
+import { Properties } from './android';
 import { AndroidManifest } from './android/Manifest';
 import * as AndroidPaths from './android/Paths';
 import { ResourceXML } from './android/Resources';
@@ -89,6 +90,10 @@ export interface ModConfig {
      * Modify the `android/settings.gradle` as a string.
      */
     settingsGradle?: Mod<AndroidPaths.GradleProjectFile>;
+    /**
+     * Modify the `android/gradle.properties` as a `Properties.PropertiesItem[]`.
+     */
+    gradleProperties?: Mod<Properties.PropertiesItem[]>;
   };
   ios?: {
     /**
