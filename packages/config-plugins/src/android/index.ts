@@ -17,6 +17,7 @@ import * as Package from './Package';
 import * as Paths from './Paths';
 import * as Permissions from './Permissions';
 import * as PrimaryColor from './PrimaryColor';
+import * as Properties from './Properties';
 import * as RootViewBackgroundColor from './RootViewBackgroundColor';
 import * as Scheme from './Scheme';
 import * as SplashScreen from './SplashScreen';
@@ -25,6 +26,7 @@ import * as Styles from './Styles';
 import * as Updates from './Updates';
 import * as UserInterfaceStyle from './UserInterfaceStyle';
 import * as Version from './Version';
+
 export {
   AllowBackup,
   EasBuild,
@@ -45,6 +47,7 @@ export {
   Paths,
   Permissions,
   PrimaryColor,
+  Properties,
   RootViewBackgroundColor,
   Scheme,
   SplashScreen,
