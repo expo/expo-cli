@@ -2,8 +2,8 @@ import chalk from 'chalk';
 import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
 import path from 'path';
 import wrapAnsi from 'wrap-ansi';
-import { SimControl } from 'xdl';
 
+import * as SimControl from './SimControl';
 import { Logger } from './xdl';
 
 const forks: Record<string, ChildProcessWithoutNullStreams> = {};
