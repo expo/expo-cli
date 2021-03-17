@@ -10,11 +10,13 @@ export async function actionAsync(
   projectRoot: string,
   {
     platform,
+    reset,
     skipDependencyUpdate,
     ...options
   }: EjectAsyncOptions & {
     npm?: boolean;
     platform?: string;
+    reset?: boolean;
     skipDependencyUpdate?: string;
   }
 ) {
@@ -24,8 +26,10 @@ export async function actionAsync(
 
   const platforms = platformsFromPlatform(platform);
 
-  // Clear the native folders before syncing
-  await clearNativeFolder(projectRoot, platforms);
+  if (reset) {
+    // Clear the native folders before syncing
+    await clearNativeFolder(projectRoot, platforms);
+  }
 
   await prebuildAsync(projectRoot, {
     ...options,
@@ -47,6 +51,7 @@ export default function (program: Command) {
     )
     .helpGroup('eject')
     .option('--no-install', 'Skip installing npm packages and CocoaPods.')
+    .option('--reset', 'Delete the native folders and regenerate them before applying changes')
     .option('--npm', 'Use npm to install dependencies. (default when Yarn is not installed)')
     .option('-p, --platform [platform]', 'Platforms to sync: ios, android, all. Default: all')
     .option(
