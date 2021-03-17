@@ -166,6 +166,9 @@ export interface ExpoConfig {
   extra?: {
     [k: string]: any;
   };
+  /**
+   * @deprecated Use a `metro.config.js` file instead. [Learn more](https://docs.expo.io/guides/customizing-metro/)
+   */
   packagerOpts?: {
     [k: string]: any;
   };

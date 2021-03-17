@@ -43,8 +43,8 @@ function addOptions(program: Command) {
     .option('--localhost', 'Same as --host localhost');
 }
 
-async function optsAsync(projectDir: string, options: any) {
-  const opts = await ProjectSettings.readAsync(projectDir);
+async function optsAsync(projectRoot: string, options: any) {
+  const opts = await ProjectSettings.readAsync(projectRoot);
 
   if ([options.host, options.lan, options.localhost, options.tunnel].filter(i => i).length > 1) {
     throw new CommandError(
@@ -73,7 +73,7 @@ async function optsAsync(projectDir: string, options: any) {
 
   // Prevent using --dev-client in a managed app.
   if (options.devClient) {
-    const defaultTarget = getDefaultTarget(projectDir);
+    const defaultTarget = getDefaultTarget(projectRoot);
     if (defaultTarget !== 'bare') {
       Log.warn(
         `\nOption ${Log.chalk.bold(
@@ -91,13 +91,13 @@ async function optsAsync(projectDir: string, options: any) {
     opts.scheme = options.scheme ?? null;
   } else if (options.devClient) {
     // Attempt to find the scheme or warn the user how to setup a custom scheme
-    opts.scheme = await getDevClientSchemeAsync(projectDir);
+    opts.scheme = await getDevClientSchemeAsync(projectRoot);
   } else {
     // Ensure this is reset when users don't use `--scheme` or `--dev-client`
     opts.scheme = null;
   }
 
-  await ProjectSettings.setAsync(projectDir, opts);
+  await ProjectSettings.setAsync(projectRoot, opts);
 
   return opts;
 }

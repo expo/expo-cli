@@ -39,7 +39,7 @@ export async function isAvailableAsync(): Promise<boolean> {
   }
   try {
     return !!(await findSharpBinAsync());
-  } catch (_) {
+  } catch {
     return false;
   }
 }
@@ -159,7 +159,7 @@ export async function findSharpInstanceAsync(): Promise<any | null> {
     const sharp = require('sharp');
     _sharpInstance = sharp;
     return sharp;
-  } catch (_) {}
+  } catch {}
 
   // Attempt to resolve the sharp instance used by the global CLI
   let sharpCliPath;
@@ -176,7 +176,7 @@ export async function findSharpInstanceAsync(): Promise<any | null> {
     try {
       // attempt to require the global sharp package
       _sharpInstance = require(sharpPath);
-    } catch (_) {}
+    } catch {}
   }
 
   return _sharpInstance;

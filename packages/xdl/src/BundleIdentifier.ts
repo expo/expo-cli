@@ -107,11 +107,11 @@ function missingBundleIdentifierMessage(configDescription: string): string {
 }
 
 async function updateAppJsonConfigAsync(
-  projectDir: string,
+  projectRoot: string,
   exp: ExpoConfig,
   newBundleIdentifier: string
 ): Promise<void> {
-  const paths = getConfigFilePaths(projectDir);
+  const paths = getConfigFilePaths(projectRoot);
   assert(paths.staticConfigPath, "Can't update dynamic configs");
 
   const rawStaticConfig = (await JsonFile.readAsync(paths.staticConfigPath)) as any;
@@ -129,13 +129,13 @@ async function updateAppJsonConfigAsync(
  * It will return false if the value in static config is different than "ios.bundleIdentifier" in ExpoConfig
  */
 async function hasBundleIdentifierInStaticConfigAsync(
-  projectDir: string,
+  projectRoot: string,
   exp: ExpoConfig
 ): Promise<boolean> {
   if (!exp.ios?.bundleIdentifier) {
     return false;
   }
-  const paths = getConfigFilePaths(projectDir);
+  const paths = getConfigFilePaths(projectRoot);
   if (!paths.staticConfigPath) {
     return false;
   }

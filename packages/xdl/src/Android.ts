@@ -880,11 +880,11 @@ const splashScreenDPIConstraints: readonly DPIConstraint[] = [
 /**
  * Checks whether `resizeMode` is set to `native` and if `true` analyzes provided images for splashscreen
  * providing `Logger` feedback upon problems.
- * @param projectDir - directory of the expo project
+ * @param projectRoot - directory of the expo project
  * @since SDK33
  */
-export async function checkSplashScreenImages(projectDir: string): Promise<void> {
-  const { exp } = getConfig(projectDir);
+export async function checkSplashScreenImages(projectRoot: string): Promise<void> {
+  const { exp } = getConfig(projectRoot);
 
   // return before SDK33
   if (!Versions.gteSdkVersion(exp, '33.0.0')) {
@@ -907,7 +907,7 @@ export async function checkSplashScreenImages(projectDir: string): Promise<void>
     );
     return;
   }
-  const generalSplashImage = await getImageDimensionsAsync(projectDir, generalSplashImagePath);
+  const generalSplashImage = await getImageDimensionsAsync(projectRoot, generalSplashImagePath);
   if (!generalSplashImage) {
     Logger.global.warn(
       `Couldn't read dimensions of provided splash image '${chalk.italic(
@@ -922,7 +922,7 @@ export async function checkSplashScreenImages(projectDir: string): Promise<void>
   for (const { dpi, sizeMultiplier } of splashScreenDPIConstraints) {
     const imageRelativePath = androidSplash?.[dpi];
     if (imageRelativePath) {
-      const splashImage = await getImageDimensionsAsync(projectDir, imageRelativePath);
+      const splashImage = await getImageDimensionsAsync(projectRoot, imageRelativePath);
       if (!splashImage) {
         Logger.global.warn(
           `Couldn't read dimensions of provided splash image '${chalk.italic(
