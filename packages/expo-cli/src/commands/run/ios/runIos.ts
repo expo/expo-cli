@@ -6,11 +6,11 @@ import { SimControl, Simulator } from 'xdl';
 import CommandError from '../../../CommandError';
 import Log from '../../../log';
 import { EjectAsyncOptions, prebuildAsync } from '../../eject/prebuildAsync';
+import { parseBinaryPlistAsync } from '../utils/binaryPlist';
 import * as IOSDeploy from './IOSDeploy';
 import maybePromptToSyncPodsAsync from './Podfile';
 import * as SimLogs from './SimLogs';
 import * as XcodeBuild from './XcodeBuild';
-import { parseBinaryPlistAsync } from './binaryPlist';
 import { Options, resolveOptionsAsync } from './resolveOptionsAsync';
 
 const isMac = process.platform === 'darwin';
