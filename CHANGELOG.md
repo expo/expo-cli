@@ -10,6 +10,56 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+## [Thu, 18 Mar 2021 12:11:59 -0700](https://github.com/expo/expo-cli/commit/10162d5800ed830d9bbce56973e8f063e1d69c7c)
+
+### 🛠 Breaking changes
+
+### 🎉 New features
+
+- [cli] Added devClient option to mobile options ([#3301](https://github.com/expo/expo-cli/issues/3301))
+- [cli] Added socket controls ([#3280](https://github.com/expo/expo-cli/issues/3280))
+- [cli] skip update check when EAS_BUILD=1 ([#3290](https://github.com/expo/expo-cli/issues/3290))
+- [config-plugins] Added withGradleProperties mod ([#3298](https://github.com/expo/expo-cli/issues/3298))
+- [config-plugins] Created withSwiftBridgingHeader ([#3284](https://github.com/expo/expo-cli/issues/3284))
+- [config-plugins] add expo-ads-facebook to list of auto plugins ([#3289](https://github.com/expo/expo-cli/issues/3289))
+- [doctor] Re-enable checking reachability of exp.host domain ([#3285](https://github.com/expo/expo-cli/issues/3285))
+- [eject] preserve expo dev client scripts ([#3300](https://github.com/expo/expo-cli/issues/3300))
+- [expo-cli] skip updating dependencies in package.json in `expo prebuild` ([#3278](https://github.com/expo/expo-cli/issues/3278))
+- [init] Change template project default branch from master to main ([#3297](https://github.com/expo/expo-cli/issues/3297))
+- [logs] Improve errors thrown by invariant ([#3281](https://github.com/expo/expo-cli/issues/3281))
+- [logs] Mute regenerator runtime and setimmediate stack traces ([#3294](https://github.com/expo/expo-cli/issues/3294))
+- [prebuild] Added clean flag to prebuild ([#3295](https://github.com/expo/expo-cli/issues/3295))
+- [run] Add a command to build and run on Android ([#3239](https://github.com/expo/expo-cli/issues/3239))
+- [run] Added debug simctl logger ([#3293](https://github.com/expo/expo-cli/issues/3293))
+
+### 🐛 Bug fixes
+
+- Pause interactions after stopping ([#3286](https://github.com/expo/expo-cli/issues/3286))
+
+### 🧹 Chores
+
+- Move export code from xdl to expo-cli ([#3233](https://github.com/expo/expo-cli/issues/3233))
+- Refactor projectDir -> projectRoot ([#3292](https://github.com/expo/expo-cli/issues/3292))
+- Remove unused detach code from XDL and rename the package ([#3268](https://github.com/expo/expo-cli/issues/3268))
+- updated getenv dependencies to 1.0.0 ([#3299](https://github.com/expo/expo-cli/issues/3299))
+
+### 📦 Packages updated
+
+- @expo/config-plugins@1.0.22
+- @expo/config@3.3.32
+- @expo/dev-server@0.1.58
+- @expo/dev-tools@0.13.86
+- @expo/electron-adapter@0.0.49
+- expo-cli@4.3.1
+- expo-optimize@0.1.80
+- @expo/image-utils@0.3.11
+- @expo/metro-config@0.1.58
+- @expo/next-adapter@2.1.63
+- expo-pwa@0.0.68
+- uri-scheme@1.0.69
+- @expo/webpack-config@0.12.62
+- xdl@59.0.26
+
 ## [Tue, 9 Mar 2021 11:17:38 -0800](https://github.com/expo/expo-cli/commit/7f66dad2ed570e2d001ea47ed6aabebd16ec8bfe)
 
 ### 🛠 Breaking changes
