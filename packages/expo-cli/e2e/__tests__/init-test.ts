@@ -26,12 +26,12 @@ test('init', async () => {
     { cwd, env: { ...process.env, YARN_CACHE_FOLDER: path.join(cwd, 'yarn-cache') } }
   );
   expect(stdout).toMatch(`Your project is ready!`);
+
   const projectRoot = path.join(cwd, 'hello-world');
   const appJson = await JsonFile.readAsync(path.join(projectRoot, 'app.json'));
   expect(appJson).toHaveProperty(['expo', 'name'], 'hello-world');
   expect(appJson).toHaveProperty(['expo', 'slug'], 'hello-world');
-  const { stdout: gitBranch } = await spawnAsync('git', ['rev-parse', '--abbrev-ref', 'HEAD'], {
-    cwd: projectRoot,
-  });
-  expect(gitBranch.trimEnd()).toBe('main');
+
+  const { stdout: gitBranch } = await spawnAsync('git', ['status'], { cwd: projectRoot });
+  expect(gitBranch).toBe('On branch main\nnothing to commit, working tree clean\n');
 });
