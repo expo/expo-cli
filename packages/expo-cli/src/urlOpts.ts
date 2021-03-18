@@ -108,7 +108,7 @@ function printQRCode(url: string) {
 
 async function handleMobileOptsAsync(
   projectRoot: string,
-  options: Pick<URLOptions, 'ios' | 'android' | 'web'> & { webOnly?: boolean }
+  options: Pick<URLOptions, 'devClient' | 'ios' | 'android' | 'web'> & { webOnly?: boolean }
 ) {
   await Promise.all([
     (async () => {
@@ -116,7 +116,7 @@ async function handleMobileOptsAsync(
         if (options.webOnly) {
           await Android.openWebProjectAsync({ projectRoot });
         } else {
-          await Android.openProjectAsync({ projectRoot });
+          await Android.openProjectAsync({ projectRoot, devClient: options.devClient ?? false });
         }
       }
     })(),
@@ -125,7 +125,11 @@ async function handleMobileOptsAsync(
         if (options.webOnly) {
           await Simulator.openWebProjectAsync({ projectRoot, shouldPrompt: false });
         } else {
-          await Simulator.openProjectAsync({ projectRoot, shouldPrompt: false });
+          await Simulator.openProjectAsync({
+            projectRoot,
+            devClient: options.devClient ?? false,
+            shouldPrompt: false,
+          });
         }
       }
     })(),
