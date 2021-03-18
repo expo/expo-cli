@@ -32,6 +32,9 @@ test('init', async () => {
   expect(appJson).toHaveProperty(['expo', 'name'], 'hello-world');
   expect(appJson).toHaveProperty(['expo', 'slug'], 'hello-world');
 
-  const { stdout: gitBranch } = await spawnAsync('git', ['status'], { cwd: projectRoot });
+  const { stdout: gitBranch } = await spawnAsync('git', ['status'], {
+    cwd: projectRoot,
+    stdio: ['pipe', 'pipe', 'inherit'],
+  });
   expect(gitBranch).toBe('On branch main\nnothing to commit, working tree clean\n');
 });
