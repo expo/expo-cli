@@ -575,6 +575,8 @@ async function openUrlInSimulatorSafeAsync({
     if (devClient) {
       bundleIdentifier = await configureBundleIdentifierAsync(projectRoot, exp);
       await assertDevClientInstalledAsync(simulator, bundleIdentifier);
+      // stream logs before opening the client.
+      await streamLogsAsync({ udid: simulator.udid, bundleIdentifier });
     } else if (!isDetached) {
       await ensureExpoClientInstalledAsync(simulator, sdkVersion);
       _lastUrl = url;
@@ -726,10 +728,6 @@ export async function openProjectAsync({
   });
 
   if (result.success) {
-    if (devClient) {
-      await streamLogsAsync({ udid: device.udid, bundleIdentifier: result.bundleIdentifier });
-    }
-
     await activateSimulatorWindowAsync();
 
     return {
@@ -753,6 +751,7 @@ export async function streamLogsAsync({
     udid,
     bundleIdentifier
   );
+
   if (imageName) {
     // Attach simulator log observer
     SimControlLogs.streamLogs({ pid: imageName, udid });
