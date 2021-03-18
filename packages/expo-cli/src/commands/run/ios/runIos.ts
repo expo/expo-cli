@@ -9,7 +9,6 @@ import { EjectAsyncOptions, prebuildAsync } from '../../eject/prebuildAsync';
 import { parseBinaryPlistAsync } from '../utils/binaryPlist';
 import * as IOSDeploy from './IOSDeploy';
 import maybePromptToSyncPodsAsync from './Podfile';
-import * as SimLogs from './SimLogs';
 import * as XcodeBuild from './XcodeBuild';
 import { Options, resolveOptionsAsync } from './resolveOptionsAsync';
 
@@ -59,12 +58,6 @@ export async function runIosActionAsync(projectRoot: string, options: Options) {
   if (props.isSimulator) {
     await SimControl.installAsync({ udid: props.device.udid, dir: binaryPath });
 
-    // Since we don't actually use the pid, we can start observing logs before launching on the simulator.
-    const imageName = getImageNameFromBinary(binaryPath);
-    if (imageName) {
-      SimLogs.streamLogs({ pid: imageName, udid: props.device.udid });
-    }
-
     const bundleIdentifier = await getBundleIdentifierForBinaryAsync(binaryPath);
 
     await openInSimulatorAsync({
@@ -81,10 +74,6 @@ export async function runIosActionAsync(projectRoot: string, options: Options) {
       `Press Ctrl+C to exit.`
     )}`
   );
-}
-
-function getImageNameFromBinary(binaryPath: string): string {
-  return path.basename(binaryPath).split('.')[0];
 }
 
 async function getBundleIdentifierForBinaryAsync(binaryPath: string): Promise<string> {
@@ -104,6 +93,11 @@ async function openInSimulatorAsync({
   XcodeBuild.logPrettyItem(
     `${chalk.bold`Opening`} on ${device.name} ${chalk.dim(`(${bundleIdentifier})`)}`
   );
+
+  await Simulator.streamLogsAsync({
+    udid: device.udid,
+    bundleIdentifier,
+  });
 
   const result = await SimControl.openBundleIdAsync({
     udid: device.udid,

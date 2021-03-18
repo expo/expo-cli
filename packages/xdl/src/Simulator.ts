@@ -727,14 +727,7 @@ export async function openProjectAsync({
 
   if (result.success) {
     if (devClient) {
-      const imageName = await SimControlLogs.getImageNameFromBundleIdentifierAsync(
-        device.udid,
-        result.bundleIdentifier
-      );
-      if (imageName) {
-        // Attach simulator log observer
-        SimControlLogs.streamLogs({ pid: imageName, udid: device.udid });
-      }
+      await streamLogsAsync({ udid: device.udid, bundleIdentifier: result.bundleIdentifier });
     }
 
     await activateSimulatorWindowAsync();
@@ -747,6 +740,23 @@ export async function openProjectAsync({
     };
   }
   return { success: result.success, error: result.msg };
+}
+
+export async function streamLogsAsync({
+  bundleIdentifier,
+  udid,
+}: {
+  bundleIdentifier: string;
+  udid: string;
+}) {
+  const imageName = await SimControlLogs.getImageNameFromBundleIdentifierAsync(
+    udid,
+    bundleIdentifier
+  );
+  if (imageName) {
+    // Attach simulator log observer
+    SimControlLogs.streamLogs({ pid: imageName, udid });
+  }
 }
 
 export async function openWebProjectAsync({
