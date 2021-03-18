@@ -389,6 +389,7 @@ export async function initGitRepoAsync(
     }
     return true;
   } catch (e) {
+    Log.debug('git error:', e);
     // no-op -- this is just a convenience and we don't care if it fails
     return false;
   }
