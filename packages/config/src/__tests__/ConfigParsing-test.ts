@@ -109,7 +109,7 @@ describe(getConfig, () => {
       expect(exp.name).toBe('rewrote+ts-config-test');
       expect(exp._internal).toStrictEqual({
         dynamicConfigPath: 'ts/app.config.ts',
-        isDebug: false,
+        isDebug: true,
         packageJsonPath: 'ts/package.json',
         projectRoot: 'ts',
         staticConfigPath: null,
@@ -132,7 +132,7 @@ describe(getConfig, () => {
       expect(exp.slug).toBe('someslug+config');
       expect(exp._internal).toStrictEqual({
         dynamicConfigPath: 'js/app.config.js',
-        isDebug: false,
+        isDebug: true,
         packageJsonPath: 'js/package.json',
         projectRoot: 'js',
         staticConfigPath: 'js/app.json',
@@ -209,7 +209,7 @@ describe(getConfig, () => {
 
       expect(exp._internal).toStrictEqual({
         dynamicConfigPath: null,
-        isDebug: false,
+        isDebug: true,
         packageJsonPath: 'custom-location-json/package.json',
         projectRoot: 'custom-location-json',
         staticConfigPath: 'custom-location-json/src/app.staging.json',
