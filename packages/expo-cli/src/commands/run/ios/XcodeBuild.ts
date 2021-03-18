@@ -132,7 +132,6 @@ export function buildAsync({
   device,
   configuration,
   scheme,
-  shouldStartBundler,
   terminal,
   port,
 }: BuildProps): Promise<string> {
@@ -163,7 +162,7 @@ export function buildAsync({
     const buildProcess = spawn(
       'xcodebuild',
       xcodebuildArgs,
-      getProcessOptions({ packager: shouldStartBundler, terminal, port })
+      getProcessOptions({ packager: false, terminal, port })
     );
     let buildOutput = '';
     let errorOutput = '';

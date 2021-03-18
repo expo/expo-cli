@@ -14,6 +14,7 @@ export type Options = {
   port?: number;
   scheme?: string;
   configuration?: XcodeConfiguration;
+  bundler?: boolean;
 };
 
 export type ProjectInfo = {
@@ -71,15 +72,18 @@ export async function resolveOptionsAsync(
 
   const isSimulator = !('deviceType' in device);
 
+  const port = options.port ?? getenv.int('RCT_METRO_PORT', 8081);
+  process.env.RCT_METRO_PORT = String(port);
+  // port: await resolvePortAsync(options.port),
+
   return {
     projectRoot,
     isSimulator,
     xcodeProject,
     device,
     configuration: options.configuration || 'Debug',
-    shouldStartBundler: false,
-    port: options.port ?? getenv.int('RCT_METRO_PORT', 8081),
-    // port: await resolvePortAsync(options.port),
+    shouldStartBundler: options.bundler ?? false,
+    port,
     terminal: getDefaultUserTerminal(),
     scheme: options.scheme ?? path.basename(xcodeProject.name, path.extname(xcodeProject.name)),
   };

@@ -11,6 +11,7 @@ import * as IOSDeploy from './IOSDeploy';
 import maybePromptToSyncPodsAsync from './Podfile';
 import * as XcodeBuild from './XcodeBuild';
 import { Options, resolveOptionsAsync } from './resolveOptionsAsync';
+import { startBundlerAsync } from './startBundlerAsync';
 
 const isMac = process.platform === 'darwin';
 
@@ -53,7 +54,9 @@ export async function runIosActionAsync(projectRoot: string, options: Options) {
 
   XcodeBuild.logPrettyItem(`${chalk.bold`Installing`} on ${props.device.name}`);
 
-  // startBundlerAsync(projectRoot);
+  if (props.shouldStartBundler) {
+    await startBundlerAsync(projectRoot);
+  }
 
   if (props.isSimulator) {
     await SimControl.installAsync({ udid: props.device.udid, dir: binaryPath });
@@ -63,17 +66,20 @@ export async function runIosActionAsync(projectRoot: string, options: Options) {
     await openInSimulatorAsync({
       bundleIdentifier,
       device: props.device,
+      shouldStartBundler: props.shouldStartBundler,
     });
   } else {
     IOSDeploy.installBinaryOnDevice({ bundle: binaryPath, udid: props.device.udid });
     XcodeBuild.logPrettyItem(`${chalk.bold`Installed`} on ${props.device.name}`);
   }
 
-  Log.nested(
-    `\nLogs for your project will appear in the browser console. ${chalk.dim(
-      `Press Ctrl+C to exit.`
-    )}`
-  );
+  if (props.shouldStartBundler) {
+    Log.nested(
+      `\nLogs for your project will appear in the browser console. ${chalk.dim(
+        `Press Ctrl+C to exit.`
+      )}`
+    );
+  }
 }
 
 async function getBundleIdentifierForBinaryAsync(binaryPath: string): Promise<string> {
@@ -85,19 +91,23 @@ async function getBundleIdentifierForBinaryAsync(binaryPath: string): Promise<st
 async function openInSimulatorAsync({
   bundleIdentifier,
   device,
+  shouldStartBundler,
 }: {
   bundleIdentifier: string;
   device: XcodeBuild.BuildProps['device'];
+  shouldStartBundler?: boolean;
 }) {
   let pid: string | null = null;
   XcodeBuild.logPrettyItem(
     `${chalk.bold`Opening`} on ${device.name} ${chalk.dim(`(${bundleIdentifier})`)}`
   );
 
-  await Simulator.streamLogsAsync({
-    udid: device.udid,
-    bundleIdentifier,
-  });
+  if (shouldStartBundler) {
+    await Simulator.streamLogsAsync({
+      udid: device.udid,
+      bundleIdentifier,
+    });
+  }
 
   const result = await SimControl.openBundleIdAsync({
     udid: device.udid,
