@@ -128,7 +128,7 @@ export async function installNodeDependenciesAsync(
           throw error;
         }
       }
-      const config: any = yamlString ? yaml.safeLoad(yamlString) : {};
+      const config = yamlString ? yaml.safeLoad(yamlString) : {};
       config.nodeLinker = 'node-modules';
       !flags.silent &&
         Log.warn(

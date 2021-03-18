@@ -3,7 +3,6 @@ import { sync as globSync } from 'glob';
 import * as path from 'path';
 
 import CommandError from '../../../CommandError';
-// import { resolvePortAsync } from '../utils/getFreePortAsync';
 import * as XcodeBuild from './XcodeBuild';
 import { resolveDeviceAsync } from './resolveDeviceAsync';
 
@@ -74,7 +73,6 @@ export async function resolveOptionsAsync(
 
   const port = options.port ?? getenv.int('RCT_METRO_PORT', 8081);
   process.env.RCT_METRO_PORT = String(port);
-  // port: await resolvePortAsync(options.port),
 
   return {
     projectRoot,
