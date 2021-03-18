@@ -184,7 +184,10 @@ export function streamLogs({ pid, udid }: { pid: string; udid: string }): void {
       }
     } else {
       // If the source has a file (i.e. not a system log).
-      if (simLog.source?.file) {
+      if (
+        simLog.source?.file ||
+        simLog.eventMessage.includes('Terminating app due to uncaught exception')
+      ) {
         hasLogged = true;
         Logger.global.info(formatMessage(simLog));
       }
