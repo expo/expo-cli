@@ -36,7 +36,7 @@
   "dependencies": {
     "@expo/config": "3.3.31",
     "chalk": "^4.1.0",
-    "getenv": "^0.7.0",
+    "getenv": "^1.0.0",
     "metro-react-native-babel-transformer": "^0.59.0"
   },
   "devDependencies": {
