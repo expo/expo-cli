@@ -182,9 +182,12 @@ export function streamLogs({ pid, udid }: { pid: string; udid: string }): void {
         // Sim: This app has crashed because it attempted to access privacy-sensitive data without a usage description.  The app's Info.plist must contain an NSCameraUsageDescription key with a string value explaining to the user how the app uses this data.
         Logger.global.error(formatMessage(simLog));
       }
-    } else {
+    } else if (simLog.eventMessage) {
       // If the source has a file (i.e. not a system log).
-      if (simLog.source?.file) {
+      if (
+        simLog.source?.file ||
+        simLog.eventMessage.includes('Terminating app due to uncaught exception')
+      ) {
         hasLogged = true;
         Logger.global.info(formatMessage(simLog));
       }
