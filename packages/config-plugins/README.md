@@ -258,6 +258,8 @@ The following default mods are provided by the mod compiler for common file mani
 - `mods.android.mainActivity` -- Modify the `android/app/src/main/<package>/MainActivity.java` as a string.
 - `mods.android.appBuildGradle` -- Modify the `android/app/build.gradle` as a string.
 - `mods.android.projectBuildGradle` -- Modify the `android/build.gradle` as a string.
+- `mods.android.settingsGradle` -- Modify the `android/settings.gradle` as a string.
+- `mods.android.gradleProperties` -- Modify the `android/gradle.properties` as a `Properties.PropertiesItem[]`.
 
 After the mods are resolved, the contents of each mod will be written to disk. Custom default mods can be added to support new native files.
 For example, you can create a mod to support the `GoogleServices-Info.plist`, and pass it to other mods.
@@ -282,6 +284,7 @@ Instead you should use the helper mods provided by `@expo/config-plugins`:
   - `withProjectBuildGradle`
   - `withAppBuildGradle`
   - `withSettingsGradle`
+  - `withGradleProperties`
 
 A mod plugin gets passed a `config` object with additional properties `modResults` and `modRequest` added to it.
 

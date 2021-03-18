@@ -15,6 +15,7 @@ import Logger from './Logger';
 import NotificationCode from './NotificationCode';
 import * as Prompts from './Prompts';
 import * as SimControl from './SimControl';
+import * as SimControlLogs from './SimControlLogs';
 import * as UrlUtils from './UrlUtils';
 import UserSettings from './UserSettings';
 import * as Versions from './Versions';
@@ -551,7 +552,7 @@ async function openUrlInSimulatorSafeAsync({
   devClient?: boolean;
   exp?: ExpoConfig;
   projectRoot: string;
-}): Promise<{ success: true } | { success: false; msg: string }> {
+}): Promise<{ success: true; bundleIdentifier: string } | { success: false; msg: string }> {
   if (!(await isSimulatorInstalledAsync())) {
     return {
       success: false,
@@ -569,9 +570,10 @@ async function openUrlInSimulatorSafeAsync({
     };
   }
 
+  let bundleIdentifier = 'host.exp.Exponent';
   try {
     if (devClient) {
-      const bundleIdentifier = await configureBundleIdentifierAsync(projectRoot, exp);
+      bundleIdentifier = await configureBundleIdentifierAsync(projectRoot, exp);
       await assertDevClientInstalledAsync(simulator, bundleIdentifier);
     } else if (!isDetached) {
       await ensureExpoClientInstalledAsync(simulator, sdkVersion);
@@ -611,6 +613,7 @@ async function openUrlInSimulatorSafeAsync({
 
   return {
     success: true,
+    bundleIdentifier,
   };
 }
 
@@ -689,7 +692,10 @@ export async function openProjectAsync({
   projectRoot: string;
   shouldPrompt?: boolean;
   devClient?: boolean;
-}): Promise<{ success: true; url: string } | { success: false; error: string }> {
+}): Promise<
+  | { success: true; url: string; udid: string; bundleIdentifier: string }
+  | { success: false; error: string }
+> {
   const projectUrl = await UrlUtils.constructDeepLinkAsync(projectRoot, {
     hostType: 'localhost',
   });
@@ -720,8 +726,25 @@ export async function openProjectAsync({
   });
 
   if (result.success) {
+    if (devClient) {
+      const imageName = await SimControlLogs.getImageNameFromBundleIdentifierAsync(
+        device.udid,
+        result.bundleIdentifier
+      );
+      if (imageName) {
+        // Attach simulator log observer
+        SimControlLogs.streamLogs({ pid: imageName, udid: device.udid });
+      }
+    }
+
     await activateSimulatorWindowAsync();
-    return { success: true, url: projectUrl };
+
+    return {
+      success: true,
+      url: projectUrl,
+      udid: device.udid,
+      bundleIdentifier: result.bundleIdentifier,
+    };
   }
   return { success: result.success, error: result.msg };
 }
