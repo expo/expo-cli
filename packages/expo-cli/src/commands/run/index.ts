@@ -20,7 +20,7 @@ async function runAndroidAsync(projectRoot: string, options: Options) {
 export default function (program: Command) {
   program
     .command('run:android [path]')
-    .helpGroup('experimental')
+    .helpGroup('internal')
     .description('Build a development client and run it in on a device.')
     .option('--build-variant [name]', '(Android) build variant', 'release')
     .asyncActionProjectDir(runAndroidAsync);
