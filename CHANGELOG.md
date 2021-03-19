@@ -8,6 +8,8 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🎉 New features
 
+### 🧹 Chores
+
 ### 🐛 Bug fixes
 
 ## [Fri, 19 Mar 2021 10:26:48 -0700](https://github.com/expo/expo-cli/commit/c4b3c767269e6e5efd1abd9fa3b72b066eed2a00)
