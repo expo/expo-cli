@@ -227,7 +227,7 @@ export async function facebookReactNativeVersionToExpoVersionAsync(
     );
   }
 
-  const sdkVersions = await sdkVersionsAsync();
+  const sdkVersions = await releasedSdkVersionsAsync();
   let currentSdkVersion: string | null = null;
 
   for (const [version, { facebookReactNativeVersion }] of Object.entries(sdkVersions)) {
