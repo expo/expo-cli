@@ -20,7 +20,7 @@ export function parsePropertiesFile(contents: string): PropertiesItem[] {
     if (!line) {
       propertiesList.push({ type: 'empty' });
     } else if (line.startsWith('#')) {
-      propertiesList.push({ type: 'comment', value: lines[i].trimStart().substring(1) });
+      propertiesList.push({ type: 'comment', value: line.substring(1).trimStart() });
     } else {
       const eok = line.indexOf('=');
       const key = line.slice(0, eok);
