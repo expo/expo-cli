@@ -10,6 +10,30 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+## [Fri, 19 Mar 2021 10:26:48 -0700](https://github.com/expo/expo-cli/commit/c4b3c767269e6e5efd1abd9fa3b72b066eed2a00)
+
+### 🐛 Bug fixes
+
+- [cli] hide run:android
+- [xdl] facebookReactNativeVersionToExpoVersionAsync: only map to released versions ([#3305](https://github.com/expo/expo-cli/issues/3305))
+- [xdl] show uncaught exceptions ([#3302](https://github.com/expo/expo-cli/issues/3302))
+
+### 📦 Packages updated
+
+- @expo/config-plugins@1.0.23
+- @expo/config@3.3.33
+- @expo/dev-server@0.1.59
+- @expo/dev-tools@0.13.87
+- @expo/electron-adapter@0.0.50
+- expo-cli@4.3.2
+- expo-optimize@0.1.81
+- @expo/metro-config@0.1.59
+- @expo/next-adapter@2.1.64
+- expo-pwa@0.0.69
+- uri-scheme@1.0.70
+- @expo/webpack-config@0.12.63
+- xdl@59.0.27
+
 ## [Thu, 18 Mar 2021 12:11:59 -0700](https://github.com/expo/expo-cli/commit/10162d5800ed830d9bbce56973e8f063e1d69c7c)
 
 ### 🛠 Breaking changes
