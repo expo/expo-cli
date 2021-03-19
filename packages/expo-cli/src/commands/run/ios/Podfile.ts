@@ -33,13 +33,6 @@ export function getDependenciesFromPodfileLock(podfileLockPath: string) {
   return Object.keys(safeLoad(checksumTail)[CHECKSUM_KEY] || {});
 }
 
-async function getAutolinkedIOSDependenciesAsync(
-  projectRoot: string
-): Promise<{ name: string; podspecPath: string }[]> {
-  // TODO: Get this somehow -- possibly via https://github.com/expo/expo/pull/11593
-  return [];
-}
-
 function getTempPrebuildFolder(projectRoot: string) {
   return path.join(projectRoot, '.expo', 'prebuild');
 }
