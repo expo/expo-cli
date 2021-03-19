@@ -3,8 +3,8 @@ import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
 import path from 'path';
 import wrapAnsi from 'wrap-ansi';
 
+import Logger from './Logger';
 import * as SimControl from './SimControl';
-import { Logger } from './xdl';
 
 const forks: Record<string, ChildProcessWithoutNullStreams> = {};
 
@@ -127,6 +127,41 @@ function formatMessage(simLog: SimLog): string {
   return wrapAnsi(category + ' ' + message, process.stdout.columns || 80);
 }
 
+export function onMessage(simLog: SimLog) {
+  let hasLogged = false;
+
+  if (simLog.messageType === 'Error') {
+    if (
+      // Hide all networking errors which are mostly useless.
+      !isNetworkLog(simLog) &&
+      // Showing React errors will result in duplicate messages.
+      !isReactLog(simLog) &&
+      !isCoreTelephonyLog(simLog) &&
+      !isWebKitLog(simLog) &&
+      !isRunningBoardServicesLog(simLog)
+    ) {
+      hasLogged = true;
+      // Sim: This app has crashed because it attempted to access privacy-sensitive data without a usage description.  The app's Info.plist must contain an NSCameraUsageDescription key with a string value explaining to the user how the app uses this data.
+      Logger.global.error(formatMessage(simLog));
+    }
+  } else if (simLog.eventMessage) {
+    // If the source has a file (i.e. not a system log).
+    if (
+      simLog.source?.file ||
+      simLog.eventMessage.includes('Terminating app due to uncaught exception')
+    ) {
+      hasLogged = true;
+      Logger.global.info(formatMessage(simLog));
+    }
+  }
+
+  if (!hasLogged) {
+    Logger.global.debug(formatMessage(simLog));
+  } else {
+    // console.log('DATA:', JSON.stringify(simLog));
+  }
+}
+
 // The primary purpose of this module is to surface logs related to fatal app crashes.
 // Everything else should come through the native React logger.
 export function streamLogs({ pid, udid }: { pid: string; udid: string }): void {
@@ -166,38 +201,7 @@ export function streamLogs({ pid, udid }: { pid: string; udid: string }): void {
       return;
     }
 
-    let hasLogged = false;
-
-    if (simLog.messageType === 'Error') {
-      if (
-        // Hide all networking errors which are mostly useless.
-        !isNetworkLog(simLog) &&
-        // Showing React errors will result in duplicate messages.
-        !isReactLog(simLog) &&
-        !isCoreTelephonyLog(simLog) &&
-        !isWebKitLog(simLog) &&
-        !isRunningBoardServicesLog(simLog)
-      ) {
-        hasLogged = true;
-        // Sim: This app has crashed because it attempted to access privacy-sensitive data without a usage description.  The app's Info.plist must contain an NSCameraUsageDescription key with a string value explaining to the user how the app uses this data.
-        Logger.global.error(formatMessage(simLog));
-      }
-    } else if (simLog.eventMessage) {
-      // If the source has a file (i.e. not a system log).
-      if (
-        simLog.source?.file ||
-        simLog.eventMessage.includes('Terminating app due to uncaught exception')
-      ) {
-        hasLogged = true;
-        Logger.global.info(formatMessage(simLog));
-      }
-    }
-
-    if (!hasLogged) {
-      Logger.global.debug(formatMessage(simLog));
-    } else {
-      // console.log('DATA:', simLog);
-    }
+    onMessage(simLog);
   });
 
   childProcess.on('error', ({ message }) => {
