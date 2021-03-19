@@ -192,6 +192,7 @@ export async function isSimulatorBootedAsync({
 export async function installAsync(options: { udid: string; dir: string }): Promise<any> {
   return simctlAsync(['install', deviceUDIDOrBooted(options.udid), options.dir]);
 }
+
 export async function uninstallAsync(options: {
   udid?: string;
   bundleIdentifier: string;
