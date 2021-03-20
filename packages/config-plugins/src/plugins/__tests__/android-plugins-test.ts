@@ -45,6 +45,6 @@ describe(withGradleProperties, () => {
     await evalModsAsync(config, { projectRoot, platforms: ['android'] });
 
     const contents = fs.readFileSync(path.join(projectRoot, 'android/gradle.properties'), 'utf8');
-    expect(contents.endsWith('# expo-test\n\nfoo=bar\n\n# end-expo-test\n')).toBe(true);
+    expect(contents.endsWith('# expo-test\n\nfoo=bar\n\n# end-expo-test')).toBe(true);
   });
 });
