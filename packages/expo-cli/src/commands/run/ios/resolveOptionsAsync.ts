@@ -74,6 +74,12 @@ export async function resolveOptionsAsync(
   const port = options.port ?? getenv.int('RCT_METRO_PORT', 8081);
   process.env.RCT_METRO_PORT = String(port);
 
+  const configuration = options.configuration || 'Debug';
+  // This optimization skips resetting the Metro cache needlessly.
+  // The cache is reset in `../node_modules/react-native/scripts/react-native-xcode.sh` when the
+  // project is running in Debug and built onto a physical device. It seems that this is done because
+  // the script is run from Xcode and unaware of the CLI instance.
+  const shouldSkipInitialBundling = configuration === 'Debug' && !isSimulator;
   return {
     projectRoot,
     isSimulator,
@@ -81,6 +87,7 @@ export async function resolveOptionsAsync(
     device,
     configuration: options.configuration || 'Debug',
     shouldStartBundler: options.bundler ?? false,
+    shouldSkipInitialBundling,
     port,
     terminal: getDefaultUserTerminal(),
     scheme: options.scheme ?? path.basename(xcodeProject.name, path.extname(xcodeProject.name)),
