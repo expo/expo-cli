@@ -55,6 +55,9 @@ export async function getDevelopmentTeamAsync(projectRoot: string): Promise<stri
 
   Log.log(`\u203A Signing and building iOS app with: ${id.codeSigningInfo}`);
 
+  IOSConfig.ProvisioningProfile.configureAutoCodeSigningForPbxproj(projectRoot, {
+    appleTeamId: id.appleTeamId!,
+  });
   return id.appleTeamId!;
 }
 
