@@ -8,7 +8,7 @@ import Log from '../../log';
 import { confirmAsync } from '../../prompts';
 import * as CreateApp from '../utils/CreateApp';
 
-async function directoryExistsAsync(file: string): Promise<boolean> {
+export async function directoryExistsAsync(file: string): Promise<boolean> {
   return (await fs.stat(file).catch(() => null))?.isDirectory() ?? false;
 }
 
