@@ -34,7 +34,8 @@ export function parsePropertiesFile(contents: string): PropertiesItem[] {
 
 export function propertiesListToString(props: PropertiesItem[]): string {
   let output = '';
-  for (const prop of props) {
+  for (let i = 0; i < props.length; i++) {
+    const prop = props[i];
     if (prop.type === 'empty') {
       output += '';
     } else if (prop.type === 'comment') {
@@ -45,7 +46,9 @@ export function propertiesListToString(props: PropertiesItem[]): string {
       // @ts-ignore: assertion
       throw new Error(`Invalid properties type "${prop.type}"`);
     }
-    output += '\n';
+    if (i < props.length - 1) {
+      output += '\n';
+    }
   }
   return output;
 }
