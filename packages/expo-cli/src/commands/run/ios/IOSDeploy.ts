@@ -8,6 +8,7 @@ import wrapAnsi from 'wrap-ansi';
 
 import CommandError, { SilentError } from '../../../CommandError';
 import Log from '../../../log';
+import { confirmAsync } from '../../../prompts';
 
 /**
  * Get the app_delta folder for faster subsequent rebuilds on devices.
@@ -68,9 +69,27 @@ export function installBinaryOnDevice({
 
 export async function assertInstalledAsync() {
   if (!(await isInstalledAsync())) {
+    if (
+      await confirmAsync({
+        message: `Required package ${chalk.cyan`ios-deploy`} is not installed, would you like to try installing it with homebrew?`,
+      })
+    ) {
+      try {
+        await brewInstallAsync();
+        return;
+      } catch (error) {
+        Log.error(`Failed to install ${chalk.bold`ios-deploy`} with homebrew: ${error.message}`);
+      }
+    }
     // Controlled error message.
     const error = `Cannot install iOS apps on devices without ${chalk.bold`ios-deploy`} installed globally. Please install it with ${chalk.bold`brew install ios-deploy`} and try again, or build the app with a simulator.`;
     Log.warn(wrapAnsi(error, process.stdout.columns || 80));
     throw new SilentError(error);
   }
+}
+
+async function brewInstallAsync() {
+  await spawnAsync('brew', ['install', 'ios-deploy'], {
+    stdio: 'inherit',
+  });
 }
