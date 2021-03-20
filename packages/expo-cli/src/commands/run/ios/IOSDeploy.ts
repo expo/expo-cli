@@ -68,6 +68,7 @@ export function installBinaryOnDevice({
 
 export async function assertInstalledAsync() {
   if (!(await isInstalledAsync())) {
+    // TODO: auto install globally
     // Controlled error message.
     const error = `Cannot install iOS apps on devices without ${chalk.bold`ios-deploy`} installed globally. Please install it with ${chalk.bold`brew install ios-deploy`} and try again, or build the app with a simulator.`;
     Log.warn(wrapAnsi(error, process.stdout.columns || 80));

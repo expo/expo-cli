@@ -367,3 +367,14 @@ export function isNotComment([key]:
   | NativeTargetSectionEntry): boolean {
   return !key.endsWith(`_comment`);
 }
+
+export function getDevelopmentTeamForProject(projectRoot: string) {
+  const project = getPbxproj(projectRoot);
+  const [, nativeTarget] = findFirstNativeTarget(project);
+
+  return getBuildConfigurationForId(project, nativeTarget.buildConfigurationList)
+    .filter(([, item]: ConfigurationSectionEntry) => item.buildSettings.PRODUCT_NAME)
+    .map(([, item]: ConfigurationSectionEntry) => {
+      return [item.buildSettings.DEVELOPMENT_TEAM, item.buildSettings.PROVISIONING_PROFILE];
+    });
+}
