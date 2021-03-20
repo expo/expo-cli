@@ -8,7 +8,7 @@ import * as SimControl from './SimControl';
 
 const forks: Record<string, ChildProcessWithoutNullStreams> = {};
 
-type SimLog = {
+export type SimControlLog = {
   /**
    * 258753568922927108
    */
@@ -54,8 +54,9 @@ type SimLog = {
     | 'com.apple.TCC'
     | 'com.apple.CoreTelephony'
     | 'com.apple.WebKit'
-    | 'com.apple.runningboard';
-  category: '' | 'access' | 'connection';
+    | 'com.apple.runningboard'
+    | string;
+  category: '' | 'access' | 'connection' | 'plugin';
   /**
    * "2021-03-15 15:36:28.004331-0700"
    */
@@ -77,7 +78,7 @@ type SimLog = {
 function parseMessageJson(data: Buffer) {
   const stringData = data.toString();
   try {
-    return JSON.parse(stringData) as SimLog;
+    return JSON.parse(stringData) as SimControlLog;
   } catch (e) {
     Logger.global.debug('Failed to parse simctl JSON message:\n' + stringData);
   }
@@ -85,7 +86,7 @@ function parseMessageJson(data: Buffer) {
 }
 
 // There are a lot of networking logs in RN that aren't relevant to the user.
-function isNetworkLog(simLog: SimLog): boolean {
+function isNetworkLog(simLog: SimControlLog): boolean {
   return (
     simLog.subsystem === 'com.apple.network' ||
     simLog.category === 'connection' ||
@@ -93,41 +94,41 @@ function isNetworkLog(simLog: SimLog): boolean {
   );
 }
 
-function isReactLog(simLog: SimLog): boolean {
+function isReactLog(simLog: SimControlLog): boolean {
   return simLog.subsystem === 'com.facebook.react.log' && simLog.source?.file === 'RCTLog.mm';
 }
 
 // It's not clear what these are but they aren't very useful.
 // (The connection to service on pid 0 named com.apple.commcenter.coretelephony.xpc was invalidated)
 // We can add them later if need.
-function isCoreTelephonyLog(simLog: SimLog): boolean {
+function isCoreTelephonyLog(simLog: SimControlLog): boolean {
   // [CoreTelephony] Updating selectors failed with: Error Domain=NSCocoaErrorDomain Code=4099
   // "The connection to service on pid 0 named com.apple.commcenter.coretelephony.xpc was invalidated." UserInfo={NSDebugDescription=The connection to service on pid 0 named com.apple.commcenter.coretelephony.xpc was invalidated.}
   return simLog.subsystem === 'com.apple.CoreTelephony';
 }
 
 // https://stackoverflow.com/a/65313219/4047926
-function isWebKitLog(simLog: SimLog): boolean {
+function isWebKitLog(simLog: SimControlLog): boolean {
   // [WebKit] 0x1143ca500 - ProcessAssertion: Failed to acquire RBS Background assertion 'WebProcess Background Assertion' for process with PID 27084, error: Error Domain=RBSAssertionErrorDomain Code=3 "Target is not running or required target
   // entitlement is missing" UserInfo={RBSAssertionAttribute=<RBSDomainAttribute| domain:"com.apple.webkit" name:"Background" sourceEnvironment:"(null)">, NSLocalizedFailureReason=Target is not running or required target entitlement is missing}
   return simLog.subsystem === 'com.apple.WebKit';
 }
 
 // Similar to WebKit logs
-function isRunningBoardServicesLog(simLog: SimLog): boolean {
+function isRunningBoardServicesLog(simLog: SimControlLog): boolean {
   // [RunningBoardServices] Error acquiring assertion: <Error Domain=RBSAssertionErrorDomain Code=3 "Target is not running or required target entitlement is missing" UserInfo={RBSAssertionAttribute=<RBSDomainAttribute| domain:"com.apple.webkit"
   // name:"Background" sourceEnvironment:"(null)">, NSLocalizedFailureReason=Target is not running or required target entitlement is missing}>
   return simLog.subsystem === 'com.apple.runningboard';
 }
 
-function formatMessage(simLog: SimLog): string {
+function formatMessage(simLog: SimControlLog): string {
   // TODO: Maybe change "TCC" to "Consent" or "System".
   const category = chalk.gray(`[${simLog.source?.image ?? simLog.subsystem}]`);
   const message = simLog.eventMessage;
   return wrapAnsi(category + ' ' + message, process.stdout.columns || 80);
 }
 
-export function onMessage(simLog: SimLog) {
+export function onMessage(simLog: SimControlLog) {
   let hasLogged = false;
 
   if (simLog.messageType === 'Error') {

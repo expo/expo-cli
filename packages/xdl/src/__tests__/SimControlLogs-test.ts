@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 
 import Logger from '../Logger';
-import { onMessage } from '../SimControlLogs';
+import { onMessage, SimControlLog } from '../SimControlLogs';
 
 jest.mock('../Logger');
 
@@ -44,5 +44,33 @@ _performCoordinatedPresentOrDismiss:animated:] + 519
 5   UIKitCore                           0x00007fff23f775b8 -[UIViewController
 _presentViewController:animated:completion:] + 179
 6   UIKit<…>`);
+  });
+  // Seems to be related to AVFoundation
+  it(`logs AddInstanceForFactory error`, () => {
+    const message: SimControlLog = {
+      traceID: 29504432492515332,
+      eventMessage:
+        'AddInstanceForFactory: No factory registered for id <CFUUID 0x60000312c980> F8BB1C28-BAE8-11D6-9C31-00039315CD46',
+      eventType: 'logEvent',
+      source: {
+        symbol: 'CFPlugInAddInstanceForFactory.cold.1',
+        line: 0,
+        image: 'CoreFoundation',
+        file: '',
+      },
+      formatString: 'AddInstanceForFactory: No factory registered for id %{public}@',
+      activityIdentifier: 0,
+      subsystem: 'com.apple.CFBundle',
+      category: 'plugin',
+      timestamp: '2021-03-19 14:37:42.743207-0700',
+      machTimestamp: 1048638912471001,
+      messageType: 'Error',
+      processID: 98499,
+    };
+
+    Logger.global.error = jest.fn();
+    onMessage(message);
+
+    expect(Logger.global.error).toHaveBeenCalled();
   });
 });

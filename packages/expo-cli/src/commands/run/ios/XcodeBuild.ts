@@ -17,6 +17,7 @@ export type BuildProps = {
   xcodeProject: ProjectInfo;
   device: Pick<SimControl.XCTraceDevice, 'name' | 'udid'>;
   configuration: XcodeConfiguration;
+  shouldSkipInitialBundling: boolean;
   shouldStartBundler: boolean;
   terminal?: string;
   port: number;
@@ -92,18 +93,22 @@ function getPlatformName(buildOutput: string) {
 
 function getProcessOptions({
   packager,
+  shouldSkipInitialBundling,
   terminal,
   port,
 }: {
   packager: boolean;
+  shouldSkipInitialBundling?: boolean;
   terminal: string | undefined;
   port: number;
 }): SpawnOptionsWithoutStdio {
+  const SKIP_BUNDLING = shouldSkipInitialBundling ? '1' : undefined;
   if (packager) {
     return {
       env: {
         ...process.env,
         RCT_TERMINAL: terminal,
+        SKIP_BUNDLING,
         RCT_METRO_PORT: port.toString(),
       },
     };
@@ -113,6 +118,7 @@ function getProcessOptions({
     env: {
       ...process.env,
       RCT_TERMINAL: terminal,
+      SKIP_BUNDLING,
       // Always skip launching the packager from a build script.
       // The script is used for people building their project directly from Xcode.
       // This essentially means "› Running script 'Start Packager'" does nothing.
@@ -132,6 +138,7 @@ export function buildAsync({
   device,
   configuration,
   scheme,
+  shouldSkipInitialBundling,
   terminal,
   port,
 }: BuildProps): Promise<string> {
@@ -162,7 +169,7 @@ export function buildAsync({
     const buildProcess = spawn(
       'xcodebuild',
       xcodebuildArgs,
-      getProcessOptions({ packager: false, terminal, port })
+      getProcessOptions({ packager: false, shouldSkipInitialBundling, terminal, port })
     );
     let buildOutput = '';
     let errorOutput = '';

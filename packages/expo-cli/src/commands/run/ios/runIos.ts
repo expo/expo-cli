@@ -37,7 +37,6 @@ export async function runIosActionAsync(projectRoot: string, options: Options) {
   }
 
   const props = await resolveOptionsAsync(projectRoot, options);
-
   if (!props.isSimulator) {
     // Assert as early as possible
     await IOSDeploy.assertInstalledAsync();
@@ -57,11 +56,10 @@ export async function runIosActionAsync(projectRoot: string, options: Options) {
   if (props.shouldStartBundler) {
     await startBundlerAsync(projectRoot);
   }
+  const bundleIdentifier = await getBundleIdentifierForBinaryAsync(binaryPath);
 
   if (props.isSimulator) {
     await SimControl.installAsync({ udid: props.device.udid, dir: binaryPath });
-
-    const bundleIdentifier = await getBundleIdentifierForBinaryAsync(binaryPath);
 
     await openInSimulatorAsync({
       bundleIdentifier,
@@ -69,7 +67,11 @@ export async function runIosActionAsync(projectRoot: string, options: Options) {
       shouldStartBundler: props.shouldStartBundler,
     });
   } else {
-    IOSDeploy.installBinaryOnDevice({ bundle: binaryPath, udid: props.device.udid });
+    IOSDeploy.installBinaryOnDevice({
+      bundle: binaryPath,
+      appDeltaDirectory: IOSDeploy.getAppDeltaDirectory(bundleIdentifier),
+      udid: props.device.udid,
+    });
     XcodeBuild.logPrettyItem(`${chalk.bold`Installed`} on ${props.device.name}`);
   }
 
