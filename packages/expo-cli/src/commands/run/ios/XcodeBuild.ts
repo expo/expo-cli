@@ -9,7 +9,7 @@ import CommandError from '../../../CommandError';
 import { assert } from '../../../assert';
 import Log from '../../../log';
 import { ExpoLogFormatter } from './ExpoLogFormatter';
-import { getDevelopmentTeamAsync } from './getDevelopmentTeamAsync';
+import { ensureDeviceIsCodeSignedForDeploymentAsync } from './developmentCodeSigning';
 import { ProjectInfo, XcodeConfiguration } from './resolveOptionsAsync';
 
 export type BuildProps = {
@@ -156,7 +156,7 @@ export async function buildAsync({
   ];
 
   if (!isSimulator) {
-    const developmentTeamId = await getDevelopmentTeamAsync(projectRoot);
+    const developmentTeamId = await ensureDeviceIsCodeSignedForDeploymentAsync(projectRoot);
     if (developmentTeamId) {
       args.push(
         `DEVELOPMENT_TEAM=${developmentTeamId}`,
