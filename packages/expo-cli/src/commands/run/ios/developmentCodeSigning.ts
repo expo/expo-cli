@@ -96,7 +96,7 @@ async function selectCertificateSigningIdentityAsync(ids: string[]) {
     Log.addNewLineIfNone();
     Log.log(
       `\u203A Your computer requires some additional setup before you can build onto physical iOS devices. ${learnMore(
-        'https://expo.fyi/setup-dev-code-signing-certificates'
+        'https://expo.fyi/setup-xcode-signing'
       )}`
     );
     Log.newLine();
