@@ -45,31 +45,4 @@ function setProvisioningProfileForPbxproj(
   fs.writeFileSync(project.filepath, project.writeSync());
 }
 
-function configureAutoCodeSigningForPbxproj(
-  projectRoot: string,
-  { targetName, appleTeamId }: Omit<ProvisioningProfileSettings, 'profileName'>
-): void {
-  const project = getPbxproj(projectRoot);
-  const [nativeTargetId, nativeTarget] = targetName
-    ? findNativeTargetByName(project, targetName)
-    : findFirstNativeTarget(project);
-
-  getBuildConfigurationForId(project, nativeTarget.buildConfigurationList)
-    .filter(([, item]: ConfigurationSectionEntry) => item.buildSettings.PRODUCT_NAME)
-    .forEach(([, item]: ConfigurationSectionEntry) => {
-      item.buildSettings.DEVELOPMENT_TEAM = appleTeamId;
-      item.buildSettings.CODE_SIGN_IDENTITY = '"Apple Development"';
-      item.buildSettings.CODE_SIGN_STYLE = 'Automatic';
-    });
-
-  Object.entries(getProjectSection(project))
-    .filter(isNotComment)
-    .forEach(([, item]: ProjectSectionEntry) => {
-      item.attributes.TargetAttributes[nativeTargetId].DevelopmentTeam = appleTeamId;
-      item.attributes.TargetAttributes[nativeTargetId].ProvisioningStyle = 'Automatic';
-    });
-
-  fs.writeFileSync(project.filepath, project.writeSync());
-}
-
-export { setProvisioningProfileForPbxproj, configureAutoCodeSigningForPbxproj };
+export { setProvisioningProfileForPbxproj };
