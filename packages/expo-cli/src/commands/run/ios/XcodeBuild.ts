@@ -9,6 +9,7 @@ import CommandError from '../../../CommandError';
 import { assert } from '../../../assert';
 import Log from '../../../log';
 import { ExpoLogFormatter } from './ExpoLogFormatter';
+import { ensureDeviceIsCodeSignedForDeploymentAsync } from './developmentCodeSigning';
 import { ProjectInfo, XcodeConfiguration } from './resolveOptionsAsync';
 
 export type BuildProps = {
@@ -132,43 +133,54 @@ export function logPrettyItem(message: string) {
   Log.log(`${chalk.whiteBright`\u203A`} ${message}`);
 }
 
-export function buildAsync({
+export async function buildAsync({
   projectRoot,
   xcodeProject,
   device,
   configuration,
+  isSimulator,
   scheme,
   shouldSkipInitialBundling,
   terminal,
   port,
 }: BuildProps): Promise<string> {
+  const args = [
+    xcodeProject.isWorkspace ? '-workspace' : '-project',
+    xcodeProject.name,
+    '-configuration',
+    configuration,
+    '-scheme',
+    scheme,
+    '-destination',
+    `id=${device.udid}`,
+  ];
+
+  if (!isSimulator) {
+    const developmentTeamId = await ensureDeviceIsCodeSignedForDeploymentAsync(projectRoot);
+    if (developmentTeamId) {
+      args.push(
+        `DEVELOPMENT_TEAM=${developmentTeamId}`,
+        '-allowProvisioningUpdates',
+        '-allowProvisioningDeviceRegistration'
+      );
+    }
+  }
+  // if (!Log.isDebug) {
+  // TODO: Malformed xcodebuild results: "PLATFORM_NAME" variable was not generated in build output. Please report this issue and run your project with Xcode instead.
+  //   xcodebuildArgs.push(
+  //     // Help keep the error logs clean (80% less logs for base projects).
+  //     '-hideShellScriptEnvironment'
+  //   );
+  // }
+
+  logPrettyItem(chalk.bold`Building`);
+  Log.debug('  ' + chalk.dim(`xcodebuild ${args.join(' ')}`));
+  const formatter = new ExpoLogFormatter({ projectRoot });
+
   return new Promise(async (resolve, reject) => {
-    const xcodebuildArgs = [
-      xcodeProject.isWorkspace ? '-workspace' : '-project',
-      xcodeProject.name,
-      '-configuration',
-      configuration,
-      '-scheme',
-      scheme,
-      '-destination',
-      `id=${device.udid}`,
-    ];
-
-    // if (!Log.isDebug) {
-    // TODO: Malformed xcodebuild results: "PLATFORM_NAME" variable was not generated in build output. Please report this issue and run your project with Xcode instead.
-    //   xcodebuildArgs.push(
-    //     // Help keep the error logs clean (80% less logs for base projects).
-    //     '-hideShellScriptEnvironment'
-    //   );
-    // }
-
-    logPrettyItem(
-      `${chalk.bold`Building`}\n  ${chalk.dim(`xcodebuild ${xcodebuildArgs.join(' ')}`)}`
-    );
-    const formatter = new ExpoLogFormatter({ projectRoot });
     const buildProcess = spawn(
       'xcodebuild',
-      xcodebuildArgs,
+      args,
       getProcessOptions({ packager: false, shouldSkipInitialBundling, terminal, port })
     );
     let buildOutput = '';

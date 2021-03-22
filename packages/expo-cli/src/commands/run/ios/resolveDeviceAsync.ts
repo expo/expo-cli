@@ -2,6 +2,7 @@ import chalk from 'chalk';
 import { SimControl, Simulator } from 'xdl';
 
 import CommandError from '../../../CommandError';
+import Log from '../../../log';
 import prompt from '../../../prompts';
 
 async function getSimulatorsAsync(): Promise<SimControl.SimulatorDevice[]> {
@@ -54,6 +55,7 @@ export async function resolveDeviceAsync(
         return choices.filter((choice: any) => regex.test(choice.title));
       },
     });
+    Log.log(chalk.dim`\u203A Using --device ${value}`);
     const device = devices.find(device => device.udid === value)!;
     const isSimulator = !('deviceType' in device);
     if (isSimulator) {
