@@ -95,9 +95,7 @@
     "url-join": "4.0.0",
     "uuid": "3.3.2",
     "webpack": "4.43.0",
-    "webpack-dev-server": "3.11.0",
-    "xcode": "^2.1.0",
-    "xmldom": "0.1.27"
+    "webpack-dev-server": "3.11.0"
   },
   "devDependencies": {
     "@babel/core": "^7.4.5",
