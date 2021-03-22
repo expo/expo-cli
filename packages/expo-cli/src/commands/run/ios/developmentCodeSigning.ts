@@ -15,14 +15,28 @@ import * as Security from '../utils/Security';
  * @param projectRoot
  * @returns
  */
-function getCodeSigningInfoForPbxproj(
-  projectRoot: string
-): { developmentTeam?: string; provisioningProfile?: string } {
-  // TODO: Test
-  const info = IOSConfig.XcodeUtils.getDevelopmentTeamForProject(projectRoot);
-  const developmentTeam = info.find(([developerTeamId]) => developerTeamId) as string | undefined;
-  const provisioningProfile = info.find(([, profile]) => profile) as string | undefined;
-  return { developmentTeam, provisioningProfile };
+export function getCodeSigningInfoForPbxproj(projectRoot: string) {
+  const project = IOSConfig.XcodeUtils.getPbxproj(projectRoot);
+  const [, nativeTarget] = IOSConfig.XcodeUtils.findFirstNativeTarget(project);
+
+  const developmentTeams: string[] = [];
+  const provisioningProfiles: string[] = [];
+
+  IOSConfig.XcodeUtils.getBuildConfigurationForId(project, nativeTarget.buildConfigurationList)
+    .filter(
+      ([, item]: IOSConfig.XcodeUtils.ConfigurationSectionEntry) => item.buildSettings.PRODUCT_NAME
+    )
+    .forEach(([, item]: IOSConfig.XcodeUtils.ConfigurationSectionEntry) => {
+      const { DEVELOPMENT_TEAM, PROVISIONING_PROFILE } = item.buildSettings;
+      if (typeof DEVELOPMENT_TEAM === 'string') {
+        developmentTeams.push(DEVELOPMENT_TEAM);
+      }
+      if (typeof PROVISIONING_PROFILE === 'string') {
+        provisioningProfiles.push(PROVISIONING_PROFILE);
+      }
+    });
+
+  return { developmentTeams, provisioningProfiles };
 }
 
 /**
@@ -63,13 +77,13 @@ export async function ensureDeviceIsCodeSignedForDeploymentAsync(
   projectRoot: string
 ): Promise<string | null> {
   // Check if the app already has a development team defined.
-  const { developmentTeam, provisioningProfile } = getCodeSigningInfoForPbxproj(projectRoot);
-  if (developmentTeam) {
-    Log.log(chalk.dim`\u203A Auto signing app using team: ${developmentTeam}`);
+  const { developmentTeams, provisioningProfiles } = getCodeSigningInfoForPbxproj(projectRoot);
+  if (developmentTeams.length) {
+    Log.log(chalk.dim`\u203A Auto signing app using team: ${developmentTeams[0]}`);
     return null;
   }
 
-  if (provisioningProfile) {
+  if (provisioningProfiles.length) {
     // it works but it's unclear why...
     return null;
   }
