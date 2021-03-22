@@ -102,7 +102,7 @@ async function selectCertificateSigningIdentityAsync(ids: string[]) {
 
   //  One ID available 🤝 Program is not interactive
   //
-  //    using the the available first option.
+  //    using the the first available option.
   //
   if (ids.length === 1 || program.nonInteractive) {
     return resolveCertificateSigningInfoAsync(ids[0]);
