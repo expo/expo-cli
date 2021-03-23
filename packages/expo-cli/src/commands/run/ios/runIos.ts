@@ -6,6 +6,7 @@ import { SimControl, Simulator } from 'xdl';
 import CommandError from '../../../CommandError';
 import Log from '../../../log';
 import { EjectAsyncOptions, prebuildAsync } from '../../eject/prebuildAsync';
+import { profileMethod } from '../../utils/profileMethod';
 import { parseBinaryPlistAsync } from '../utils/binaryPlist';
 import * as IOSDeploy from './IOSDeploy';
 import maybePromptToSyncPodsAsync from './Podfile';
@@ -42,21 +43,19 @@ export async function runIosActionAsync(projectRoot: string, options: Options) {
     await IOSDeploy.assertInstalledAsync();
   }
 
-  const buildOutput = await XcodeBuild.buildAsync(props);
+  const buildOutput = await profileMethod(XcodeBuild.buildAsync, 'XcodeBuild.buildAsync')(props);
 
-  const binaryPath = await XcodeBuild.getAppBinaryPathAsync(
-    props.xcodeProject,
-    props.configuration,
-    buildOutput,
-    props.scheme
-  );
+  const binaryPath = await profileMethod(
+    XcodeBuild.getAppBinaryPath,
+    'XcodeBuild.getAppBinaryPath'
+  )(buildOutput);
 
   XcodeBuild.logPrettyItem(`${chalk.bold`Installing`} on ${props.device.name}`);
 
   if (props.shouldStartBundler) {
     await startBundlerAsync(projectRoot);
   }
-  const bundleIdentifier = await getBundleIdentifierForBinaryAsync(binaryPath);
+  const bundleIdentifier = await profileMethod(getBundleIdentifierForBinaryAsync)(binaryPath);
 
   if (props.isSimulator) {
     await SimControl.installAsync({ udid: props.device.udid, dir: binaryPath });

@@ -6,7 +6,6 @@ import * as path from 'path';
 import { SimControl } from 'xdl';
 
 import CommandError from '../../../CommandError';
-import { assert } from '../../../assert';
 import Log from '../../../log';
 import { ExpoLogFormatter } from './ExpoLogFormatter';
 import { ensureDeviceIsCodeSignedForDeploymentAsync } from './developmentCodeSigning';
@@ -25,71 +24,71 @@ export type BuildProps = {
   scheme: string;
 };
 
-function getTargetPaths(buildSettings: string) {
-  try {
-    const settings = JSON.parse(buildSettings);
-    for (const setting of settings) {
-      const { WRAPPER_EXTENSION, TARGET_BUILD_DIR, EXECUTABLE_FOLDER_PATH } = setting.buildSettings;
-      if (WRAPPER_EXTENSION === 'app') {
-        return {
-          targetBuildDir: TARGET_BUILD_DIR,
-          executableFolderPath: EXECUTABLE_FOLDER_PATH,
-        };
-      }
-    }
+type XcodeSDKName = 'iphoneos' | 'iphonesimulator';
 
-    return {};
+export async function getProjectBuildSettings(
+  xcodeProject: ProjectInfo,
+  configuration: XcodeConfiguration,
+  sdkName: XcodeSDKName,
+  scheme: string
+) {
+  const args = [
+    xcodeProject.isWorkspace ? '-workspace' : '-project',
+    xcodeProject.name,
+    '-scheme',
+    scheme,
+    '-sdk',
+    sdkName,
+    // getPlatformName(buildOutput),
+    '-configuration',
+    configuration,
+    '-showBuildSettings',
+    '-json',
+  ];
+  Log.debug(`  xcodebuild ${args.join(' ')}`);
+  const { stdout } = await spawnAsync('xcodebuild', args, { stdio: 'pipe' });
+  try {
+    return JSON.parse(stdout);
   } catch (error) {
     // This can fail if the xcodebuild command throws a simulator error:
     // 2021-01-24 14:22:43.802 xcodebuild[73087:14664906]  DVTAssertions: Warning in /Library/Caches/com.apple.xbs/Sources/DVTiOSFrameworks/DVTiOSFrameworks-17705/DTDeviceKitBase/DTDKRemoteDeviceData.m:371
     Log.warn(error.message);
     if (error.message.match(/in JSON at position/)) {
-      Log.log(chalk.dim(buildSettings));
+      Log.log(chalk.dim(stdout));
     }
     return {};
   }
 }
 
-export async function getAppBinaryPathAsync(
-  xcodeProject: ProjectInfo,
-  configuration: XcodeConfiguration,
-  buildOutput: string,
-  scheme: string
-): Promise<string> {
-  const { stdout } = await spawnAsync(
-    'xcodebuild',
-    [
-      xcodeProject.isWorkspace ? '-workspace' : '-project',
-      xcodeProject.name,
-      '-scheme',
-      scheme,
-      '-sdk',
-      getPlatformName(buildOutput),
-      '-configuration',
-      configuration,
-      '-showBuildSettings',
-      '-json',
-    ],
-    { stdio: 'pipe' }
+/**
+ *
+ * @returns '/Users/evanbacon/Library/Developer/Xcode/DerivedData/myapp-gpgjqjodrxtervaufttwnsgimhrx/Build/Products/Debug-iphonesimulator/myapp.app'
+ */
+export function getAppBinaryPath(buildOutput: string) {
+  // Matches what's used in "Bundle React Native code and images" script.
+  // Requires that `-hideShellScriptEnvironment` is not included in the build command (extra logs).
+  const CONFIGURATION_BUILD_DIR = extractEnvVariableFromBuild(
+    buildOutput,
+    'CONFIGURATION_BUILD_DIR'
   );
-  const buildSettings = stdout;
-  const { targetBuildDir, executableFolderPath } = getTargetPaths(buildSettings);
-
-  assert(executableFolderPath, 'Unable to find the app name');
-  assert(targetBuildDir, 'Unable to find the target build directory');
-
-  return path.join(targetBuildDir, executableFolderPath);
+  const UNLOCALIZED_RESOURCES_FOLDER_PATH = extractEnvVariableFromBuild(
+    buildOutput,
+    'UNLOCALIZED_RESOURCES_FOLDER_PATH'
+  );
+  return path.join(CONFIGURATION_BUILD_DIR, UNLOCALIZED_RESOURCES_FOLDER_PATH);
 }
 
-function getPlatformName(buildOutput: string) {
+function extractEnvVariableFromBuild(buildOutput: string, variableName: string) {
   // Xcode can sometimes escape `=` with a backslash or put the value in quotes
-  const platformNameMatch = /export PLATFORM_NAME\\?="?(\w+)"?$/m.exec(buildOutput);
-  if (!platformNameMatch || !platformNameMatch.length) {
+  const reg = new RegExp(`export ${variableName}\\\\?=(.*)$`, 'm');
+  const matched = reg.exec(buildOutput);
+
+  if (!matched || !matched.length) {
     throw new CommandError(
-      `Malformed xcodebuild results: "PLATFORM_NAME" variable was not generated in build output. Please report this issue and run your project with Xcode instead.`
+      `Malformed xcodebuild results: "${variableName}" variable was not generated in build output. Please report this issue and run your project with Xcode instead.`
     );
   }
-  return platformNameMatch[1];
+  return matched[1];
 }
 
 function getProcessOptions({
@@ -165,16 +164,9 @@ export async function buildAsync({
       );
     }
   }
-  // if (!Log.isDebug) {
-  // TODO: Malformed xcodebuild results: "PLATFORM_NAME" variable was not generated in build output. Please report this issue and run your project with Xcode instead.
-  //   xcodebuildArgs.push(
-  //     // Help keep the error logs clean (80% less logs for base projects).
-  //     '-hideShellScriptEnvironment'
-  //   );
-  // }
 
   logPrettyItem(chalk.bold`Building`);
-  Log.debug('  ' + chalk.dim(`xcodebuild ${args.join(' ')}`));
+  Log.debug(`  xcodebuild ${args.join(' ')}`);
   const formatter = new ExpoLogFormatter({ projectRoot });
 
   return new Promise(async (resolve, reject) => {
