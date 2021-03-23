@@ -23,7 +23,7 @@ export function writeMetroConfig({
    * hashAssetFiles plugin manually.
    */
 
-  const updatingMetroConfigStep = CreateApp.logNewSection('Adding Metro bundler configuration');
+  const updatingMetroConfigStep = CreateApp.logNewSection('Adding Metro bundler config');
 
   try {
     const sourceConfigPath = path.join(tempDir, 'metro.config.js');
@@ -34,7 +34,7 @@ export function writeMetroConfig({
       const contents = createFileHash(fs.readFileSync(targetConfigPath, 'utf8'));
       const targetContents = createFileHash(fs.readFileSync(sourceConfigPath, 'utf8'));
       if (contents !== targetContents) {
-        throw new CommandError('Existing Metro configuration found; not overwriting.');
+        throw new CommandError('Existing Metro config found; not overwriting.');
       } else {
         // Nothing to change, hide the step and exit.
         updatingMetroConfigStep.stop();
