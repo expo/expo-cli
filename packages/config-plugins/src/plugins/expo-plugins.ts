@@ -76,12 +76,14 @@ export const withExpoAndroidPlugins: ConfigPlugin<{
     // AndroidManifest.xml
     AndroidConfig.Package.withPackageManifest,
     AndroidConfig.AllowBackup.withAllowBackup,
+    // Note: The withAndroidIntentFilters plugin must appear before the withScheme
+    // plugin or withScheme will override the output of withAndroidIntentFilters.
+    AndroidConfig.IntentFilters.withAndroidIntentFilters,
     AndroidConfig.Scheme.withScheme,
     AndroidConfig.Orientation.withOrientation,
     AndroidConfig.Permissions.withPermissions,
     AndroidConfig.UserInterfaceStyle.withUiModeManifest,
     AndroidConfig.GoogleMapsApiKey.withGoogleMapsApiKey,
-    AndroidConfig.IntentFilters.withAndroidIntentFilters,
 
     // MainActivity.*
     AndroidConfig.UserInterfaceStyle.withUiModeMainActivity,
