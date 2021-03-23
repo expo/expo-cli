@@ -4,6 +4,7 @@ const COMMANDS = [
   require('./build'),
   require('./bundle-assets'),
   require('./client'),
+  require('./config/config'),
   require('./credentials'),
   require('./customize'),
   require('./diagnostics'),
