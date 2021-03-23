@@ -7,6 +7,7 @@ import * as Env from './Env';
 import { ConnectionType } from './User';
 
 export type UserSettingsData = {
+  developmentCodeSigningId?: string;
   appleId?: string;
   accessToken?: string;
   auth?: UserData | null;
@@ -18,6 +19,7 @@ export type UserSettingsData = {
 };
 
 export type UserData = {
+  developmentCodeSigningId?: string;
   appleId?: string;
   userId?: string;
   username?: string;
