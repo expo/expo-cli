@@ -93,7 +93,7 @@ export async function prebuildAsync(
   if (WarningAggregator.hasWarningsAndroid() || WarningAggregator.hasWarningsIOS()) {
     configSyncingStep.stopAndPersist({
       symbol: '⚠️ ',
-      text: chalk.red('Config synced with warnings that should be fixed:'),
+      text: chalk.yellow('Config synced with warnings that should be fixed:'),
     });
     logConfigWarningsAndroid();
     logConfigWarningsIOS();
