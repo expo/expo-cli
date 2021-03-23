@@ -2,12 +2,22 @@ import { IOSConfig } from '@expo/config-plugins';
 import chalk from 'chalk';
 import program from 'commander';
 import * as fs from 'fs-extra';
+import { UserSettings } from 'xdl';
 
 import CommandError from '../../../CommandError';
 import Log from '../../../log';
 import { selectAsync } from '../../../prompts';
 import { learnMore } from '../../utils/TerminalLink';
 import * as Security from '../utils/Security';
+
+async function getLastDeveloperCodeSigningIdAsync() {
+  const { developmentCodeSigningId } = await UserSettings.readAsync();
+  return developmentCodeSigningId;
+}
+
+async function setLastDeveloperCodeSigningIdAsync(id: string) {
+  await UserSettings.setAsync('developmentCodeSigningId', id).catch(() => {});
+}
 
 /**
  * Find the development team and provisioning profile that's currently in use by the Xcode project.
@@ -84,7 +94,7 @@ export async function ensureDeviceIsCodeSignedForDeploymentAsync(
   }
 
   if (provisioningProfiles.length) {
-    // it works but it's unclear why...
+    // this indicates that the user has manual code signing setup (possibly for production).
     return null;
   }
 
@@ -101,6 +111,24 @@ export async function ensureDeviceIsCodeSignedForDeploymentAsync(
     appleTeamId: id.appleTeamId!,
   });
   return id.appleTeamId!;
+}
+
+/**
+ * Sort the code signing items so the last selected item (user's default) is the first suggested.
+ */
+async function sortDefaultIdToBeginningAsync(
+  identities: Security.CertificateSigningInfo[]
+): Promise<[Security.CertificateSigningInfo[], string | undefined]> {
+  const lastSelected = await getLastDeveloperCodeSigningIdAsync();
+
+  if (lastSelected) {
+    let iterations = 0;
+    while (identities[0].signingCertificateId !== lastSelected && iterations < identities.length) {
+      identities.push(identities.shift()!);
+      iterations++;
+    }
+  }
+  return [identities, lastSelected];
 }
 
 async function selectCertificateSigningIdentityAsync(ids: string[]) {
@@ -124,16 +152,31 @@ async function selectCertificateSigningIdentityAsync(ids: string[]) {
     return Security.resolveCertificateSigningInfoAsync(ids[0]);
   }
 
-  const identities = await Security.resolveIdentitiesAsync(ids);
+  // Get identities and sort by the one that the user is most likely to choose.
+  const [identities, preferred] = await sortDefaultIdToBeginningAsync(
+    await Security.resolveIdentitiesAsync(ids)
+  );
 
   const index = await selectAsync({
     message: 'Development team for signing the app',
-    choices: identities.map((value, i) => ({
-      // Formatted like: `650 Industries, Inc. (A1BCDEF234) - Apple Development: Evan Bacon (AA00AABB0A)`
-      title: [value.appleTeamName, `(${value.appleTeamId}) -`, value.codeSigningInfo].join(' '),
-      value: i,
-    })),
+    choices: identities.map((value, i) => {
+      const format =
+        value.signingCertificateId === preferred ? chalk.bold : (message: string) => message;
+      return {
+        // Formatted like: `650 Industries, Inc. (A1BCDEF234) - Apple Development: Evan Bacon (AA00AABB0A)`
+        title: format(
+          [value.appleTeamName, `(${value.appleTeamId}) -`, value.codeSigningInfo].join(' ')
+        ),
+        value: i,
+      };
+    }),
   });
-  // TODO: Maybe cache and reuse selected option across new apps?
-  return identities[index];
+
+  const selected = identities[index];
+
+  // Store the last used value and suggest it as the first value
+  // next time the user has to select a code signing identity.
+  await setLastDeveloperCodeSigningIdAsync(selected.signingCertificateId);
+
+  return selected;
 }
