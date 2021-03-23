@@ -46,22 +46,22 @@ export function writeMetroConfig({
       pkg.metro ||
       fs.existsSync(path.join(projectRoot, 'rn-cli.config.js'))
     ) {
-      throw new CommandError('Existing Metro configuration found; not overwriting.');
+      throw new CommandError('Existing Metro config found; not overwriting.');
     }
 
     fs.copySync(sourceConfigPath, targetConfigPath);
-    updatingMetroConfigStep.succeed('Added Metro bundler configuration.');
+    updatingMetroConfigStep.succeed('Added Metro config.');
   } catch (e) {
     updatingMetroConfigStep.stopAndPersist({
       symbol: '⚠️ ',
-      text: chalk.yellow('Metro bundler configuration not applied:'),
+      text: chalk.yellow('Metro config not applied:'),
     });
     Log.nested(`\u203A ${e.message}`);
     Log.nested(
-      `\u203A You will need to add the ${chalk.bold(
-        'hashAssetFiles'
-      )} plugin to your Metro configuration.\n  ${Log.chalk.dim(
-        learnMore('https://docs.expo.io/bare/installing-updates/')
+      `\u203A You will need to extend the default ${chalk.bold(
+        '@expo/metro-config'
+      )} in your Metro config.\n  ${Log.chalk.dim(
+        learnMore('https://docs.expo.io/guides/customizing-metro')
       )}`
     );
     Log.newLine();
