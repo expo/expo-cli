@@ -3,6 +3,7 @@ import chalk from 'chalk';
 import fs from 'fs-extra';
 import path from 'path';
 
+import CommandError from '../../CommandError';
 import Log from '../../log';
 import * as CreateApp from '../utils/CreateApp';
 import { learnMore } from '../utils/TerminalLink';
@@ -33,7 +34,7 @@ export function writeMetroConfig({
       const contents = createFileHash(fs.readFileSync(targetConfigPath, 'utf8'));
       const targetContents = createFileHash(fs.readFileSync(sourceConfigPath, 'utf8'));
       if (contents !== targetContents) {
-        throw new Error('Existing Metro configuration found; not overwriting.');
+        throw new CommandError('Existing Metro configuration found; not overwriting.');
       } else {
         // Nothing to change, hide the step and exit.
         updatingMetroConfigStep.stop();
@@ -45,7 +46,7 @@ export function writeMetroConfig({
       pkg.metro ||
       fs.existsSync(path.join(projectRoot, 'rn-cli.config.js'))
     ) {
-      throw new Error('Existing Metro configuration found; not overwriting.');
+      throw new CommandError('Existing Metro configuration found; not overwriting.');
     }
 
     fs.copySync(sourceConfigPath, targetConfigPath);
