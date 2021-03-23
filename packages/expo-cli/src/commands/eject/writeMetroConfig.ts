@@ -54,7 +54,7 @@ export function writeMetroConfig({
   } catch (e) {
     updatingMetroConfigStep.stopAndPersist({
       symbol: '⚠️ ',
-      text: chalk.yellow('Metro config not applied:'),
+      text: chalk.yellow('Skipped Metro config updates:'),
     });
     Log.nested(`\u203A ${e.message}`);
     Log.nested(
