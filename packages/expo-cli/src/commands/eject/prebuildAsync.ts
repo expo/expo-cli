@@ -81,20 +81,24 @@ export async function prebuildAsync(
   }
 
   // Apply Expo config to native projects
-  const applyingAndroidConfigStep = CreateApp.logNewSection('Config syncing');
+  const configSyncingStep = CreateApp.logNewSection('Config syncing');
+  // Prevent the spinner from clashing with the debug traces
+  if (Log.isDebug) {
+    configSyncingStep.stop();
+  }
   const managedConfig = await configureProjectAsync({
     projectRoot,
     platforms,
   });
   if (WarningAggregator.hasWarningsAndroid() || WarningAggregator.hasWarningsIOS()) {
-    applyingAndroidConfigStep.stopAndPersist({
+    configSyncingStep.stopAndPersist({
       symbol: '⚠️ ',
       text: chalk.red('Config synced with warnings that should be fixed:'),
     });
     logConfigWarningsAndroid();
     logConfigWarningsIOS();
   } else {
-    applyingAndroidConfigStep.succeed('Config synced');
+    configSyncingStep.succeed('Config synced');
   }
 
   // Install CocoaPods
