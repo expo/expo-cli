@@ -165,7 +165,7 @@ export async function buildAsync({
     }
   }
 
-  logPrettyItem(chalk.bold`Building`);
+  logPrettyItem(chalk.bold`Planning build`);
   Log.debug(`  xcodebuild ${args.join(' ')}`);
   const formatter = new ExpoLogFormatter({ projectRoot });
 
