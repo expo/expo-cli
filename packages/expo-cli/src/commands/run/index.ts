@@ -1,30 +1,16 @@
 import { Command } from 'commander';
 
-import CommandError from '../../CommandError';
-import buildAndroidClientAsync from './buildAndroidClientAsync';
+import { runAndroidActionAsync } from './android/runAndroid';
 import { runIosActionAsync } from './ios/runIos';
-
-type Options = {
-  platform?: string;
-  buildVariant?: string;
-};
-
-async function runAndroidAsync(projectRoot: string, options: Options) {
-  if (typeof options.buildVariant !== 'string') {
-    throw new CommandError('--build-variant must be a string');
-  }
-  await buildAndroidClientAsync(projectRoot, {
-    buildVariant: options.buildVariant,
-  });
-}
 
 export default function (program: Command) {
   program
     .command('run:android [path]')
     .helpGroup('internal')
-    .description('Build a development client and run it in on a device.')
+    .description('Run the Android app binary locally')
+    .option('-d, --device [device]', 'Device name to build the app on')
     .option('--build-variant [name]', '(Android) build variant', 'release')
-    .asyncActionProjectDir(runAndroidAsync);
+    .asyncActionProjectDir(runAndroidActionAsync);
   program
     .command('run:ios [path]')
     .description('Run the iOS app binary locally')
