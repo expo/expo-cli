@@ -1,10 +1,10 @@
 import { getConfig } from '@expo/config';
-import ora from 'ora';
 import { ApiV2, UserManager } from 'xdl';
 
 import Log from '../../log';
 import { getProjectOwner } from '../../projects';
 import { confirmAsync } from '../../prompts';
+import { ora } from '../../utils/ora';
 import * as table from './cli-table';
 
 export type HistoryOptions = {

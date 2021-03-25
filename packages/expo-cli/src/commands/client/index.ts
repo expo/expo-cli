@@ -4,7 +4,6 @@ import chalk from 'chalk';
 import CliTable from 'cli-table3';
 import { Command } from 'commander';
 import fs from 'fs-extra';
-import ora from 'ora';
 import path from 'path';
 import { Android, Simulator, User, UserManager, Versions } from 'xdl';
 
@@ -21,6 +20,7 @@ import { SetupIosPush } from '../../credentials/views/SetupIosPush';
 import Log from '../../log';
 import { confirmAsync, promptEmailAsync } from '../../prompts';
 import urlOpts from '../../urlOpts';
+import { ora } from '../../utils/ora';
 import * as ClientUpgradeUtils from '../utils/ClientUpgradeUtils';
 import { createClientBuildRequest, getExperienceName, isAllowedToBuild } from './clientBuildApi';
 import generateBundleIdentifier from './generateBundleIdentifier';

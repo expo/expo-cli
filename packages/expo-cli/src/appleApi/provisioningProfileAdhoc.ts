@@ -1,7 +1,7 @@
 import { Device, Profile, ProfileState, ProfileType, RequestContext } from '@expo/apple-utils';
-import ora from 'ora';
 
 import CommandError from '../CommandError';
+import { ora } from '../utils/ora';
 import { AppleCtx, getRequestContext } from './authenticate';
 import { getBundleIdForIdentifierAsync, getProfilesForBundleIdAsync } from './bundleId';
 import { getDistributionCertificateAync } from './distributionCert';

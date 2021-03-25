@@ -3,12 +3,12 @@ import chalk from 'chalk';
 import CliTable from 'cli-table3';
 import { Command } from 'commander';
 import crypto from 'crypto';
-import ora from 'ora';
 import { ApiV2, UserManager } from 'xdl';
 
 import CommandError, { ErrorCodes } from '../CommandError';
 import { assert } from '../assert';
 import Log from '../log';
+import { ora } from '../utils/ora';
 
 const SECRET_MIN_LENGTH = 16;
 const SECRET_MAX_LENGTH = 1000;
