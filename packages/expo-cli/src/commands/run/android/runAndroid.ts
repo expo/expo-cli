@@ -42,7 +42,7 @@ export async function runAndroidActionAsync(projectRoot: string, options: Option
 
   await Gradle.spawnGradleTaskAsync({ androidProjectPath, buildVariant: options.buildVariant });
 
-  const spinner = ora('Starting the development client...').start().stopAndPersist();
+  ora('Starting the development client...').start().stopAndPersist();
 
   await Android.openProjectAsync({
     projectRoot,
