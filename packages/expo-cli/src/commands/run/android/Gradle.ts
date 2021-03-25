@@ -24,8 +24,17 @@ export async function spawnGradleTaskAsync({
 }) {
   const gradlew = resolveGradleWPath(androidProjectPath);
   const task = getGradleTask(buildVariant);
-  Log.debug(`  ${gradlew} ${task}`);
-  await spawnAsync(gradlew, [task], {
+  const args = [
+    task,
+    // ignore linting errors
+    '-x',
+    'lint',
+    // igonore tests
+    '-x',
+    'test',
+  ];
+  Log.debug(`  ${gradlew} ${args.join(' ')}`);
+  await spawnAsync(gradlew, args, {
     cwd: androidProjectPath,
     stdio: 'inherit',
   });
