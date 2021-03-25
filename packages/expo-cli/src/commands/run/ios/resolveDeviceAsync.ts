@@ -41,7 +41,10 @@ export async function resolveDeviceAsync(
   const spinner = ora(
     `🔍 Finding ${device === true ? 'devices' : `device ${chalk.cyan(device)}`}`
   ).start();
-  const devices = await getBuildDestinationsAsync().catch(() => []);
+  const devices: (
+    | SimControl.SimulatorDevice
+    | SimControl.XCTraceDevice
+  )[] = await getBuildDestinationsAsync().catch(() => []);
   spinner.stop();
 
   if (device === true) {
