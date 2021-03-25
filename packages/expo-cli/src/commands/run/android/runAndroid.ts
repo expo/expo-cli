@@ -1,11 +1,12 @@
 import { AndroidConfig } from '@expo/config-plugins';
 import { Android } from 'xdl';
 
-import Log from '../../log';
-import { ora } from '../../utils/ora';
-import { prebuildAsync } from '../eject/prebuildAsync';
-import * as Gradle from './android/Gradle';
-import { resolveDeviceAsync } from './android/resolveDeviceAsync';
+import CommandError from '../../../CommandError';
+import Log from '../../../log';
+import { ora } from '../../../utils/ora';
+import { prebuildAsync } from '../../eject/prebuildAsync';
+import * as Gradle from './Gradle';
+import { resolveDeviceAsync } from './resolveDeviceAsync';
 
 type Options = {
   buildVariant: string;
@@ -25,10 +26,11 @@ async function resolveAndroidProjectPathAsync(projectRoot: string): Promise<stri
   }
 }
 
-export default async function buildAndroidClientAsync(
-  projectRoot: string,
-  options: Options
-): Promise<void> {
+export async function runAndroidActionAsync(projectRoot: string, options: Options) {
+  if (typeof options.buildVariant !== 'string') {
+    throw new CommandError('--build-variant must be a string');
+  }
+
   const bootedDevice = await resolveDeviceAsync(options.device);
   if (!bootedDevice) {
     return;

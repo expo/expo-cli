@@ -85,7 +85,7 @@ export async function resolveDeviceAsync(
   });
 
   if (!resolved) {
-    throw new CommandError(`No device UDID or name matching ${device}`);
+    throw new CommandError(`No device UDID or name matching "${device}"`);
   }
 
   const isSimulator = !('deviceType' in resolved);
