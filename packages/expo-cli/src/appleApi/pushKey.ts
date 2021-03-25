@@ -1,10 +1,10 @@
 import { Keys } from '@expo/apple-utils';
 import chalk from 'chalk';
 import dateformat from 'dateformat';
-import ora from 'ora';
 
 import CommandError from '../CommandError';
 import Log from '../log';
+import { ora } from '../utils/ora';
 import { AppleCtx, getRequestContext } from './authenticate';
 
 export type PushKeyInfo = {

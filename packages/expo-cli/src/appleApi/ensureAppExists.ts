@@ -1,7 +1,7 @@
 import { BundleId, CapabilityType, CapabilityTypeOption } from '@expo/apple-utils';
 import chalk from 'chalk';
-import ora from 'ora';
 
+import { ora } from '../utils/ora';
 import { AppleCtx, getRequestContext } from './authenticate';
 import { assertContractMessagesAsync } from './contractMessages';
 

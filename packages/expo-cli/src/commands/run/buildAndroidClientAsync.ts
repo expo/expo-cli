@@ -1,10 +1,10 @@
 import { AndroidConfig } from '@expo/config-plugins';
 import spawnAsync from '@expo/spawn-async';
-import ora from 'ora';
 import path from 'path';
 import { Android } from 'xdl';
 
 import Log from '../../log';
+import { ora } from '../../utils/ora';
 import { prebuildAsync } from '../eject/prebuildAsync';
 
 type Options = {

@@ -1,7 +1,7 @@
-import ora from 'ora';
 import { Project } from 'xdl';
 
 import Log from '../../log';
+import { ora } from '../../utils/ora';
 
 export function installExitHooks(projectRoot: string): void {
   const killSignals: ['SIGINT', 'SIGTERM'] = ['SIGINT', 'SIGTERM'];

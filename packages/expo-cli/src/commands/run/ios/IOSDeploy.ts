@@ -3,7 +3,7 @@ import chalk from 'chalk';
 import { spawn } from 'child_process';
 import program from 'commander';
 import fs from 'fs-extra';
-import ora, { Ora } from 'ora';
+import { Ora } from 'ora';
 import os from 'os';
 import path from 'path';
 import wrapAnsi from 'wrap-ansi';
@@ -11,6 +11,7 @@ import wrapAnsi from 'wrap-ansi';
 import CommandError, { SilentError } from '../../../CommandError';
 import Log from '../../../log';
 import { confirmAsync } from '../../../prompts';
+import { ora } from '../../../utils/ora';
 
 /**
  * Get the app_delta folder for faster subsequent rebuilds on devices.

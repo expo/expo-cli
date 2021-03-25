@@ -1,6 +1,5 @@
 import chalk from 'chalk';
 import program from 'commander';
-import ora from 'ora';
 import openBrowser from 'react-dev-utils/openBrowser';
 import { ApiV2, User, UserManager } from 'xdl';
 import { ApiV2Error } from 'xdl/build/ApiV2';
@@ -9,6 +8,7 @@ import CommandError, { SilentError } from './CommandError';
 import { assert } from './assert';
 import Log from './log';
 import promptNew, { confirmAsync, Question as NewQuestion, selectAsync } from './prompts';
+import { ora } from './utils/ora';
 import { nonEmptyInput } from './validators';
 
 UserManager.initialize();

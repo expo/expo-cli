@@ -9,7 +9,6 @@ import fs from 'fs';
 import getenv from 'getenv';
 import leven from 'leven';
 import findLastIndex from 'lodash/findLastIndex';
-import ora from 'ora';
 import path from 'path';
 import ProgressBar from 'progress';
 import stripAnsi from 'strip-ansi';
@@ -40,6 +39,7 @@ import Log from './log';
 import update from './update';
 import urlOpts from './urlOpts';
 import { matchFileNameOrURLFromStackTrace } from './utils/matchFileNameOrURLFromStackTrace';
+import { ora } from './utils/ora';
 
 // We use require() to exclude package.json from TypeScript's analysis since it lives outside the
 // src directory and would change the directory structure of the emitted files under the build
