@@ -1,28 +1,33 @@
 import { getConfig, ProjectConfig } from '@expo/config';
 import { Command } from 'commander';
 
+import CommandError from '../../CommandError';
 import Log from '../../log';
 import { getModdedConfigAsync, logConfig } from '../eject/configureProjectAsync';
 import { profileMethod } from '../utils/profileMethod';
 
 type Options = {
-  modded: boolean;
-  manifest: boolean;
+  type?: string;
   full: boolean;
 };
 
 async function actionAsync(projectRoot: string, options: Options) {
   let config: ProjectConfig;
-  if (options.modded) {
+
+  if (options.type === 'prebuild') {
     config = await getModdedConfigAsync({
       projectRoot,
       platforms: ['ios', 'android'],
     });
-  } else if (options.manifest) {
+  } else if (options.type === 'public') {
     config = getConfig(projectRoot, {
       skipSDKVersionRequirement: true,
       isPublicConfig: true,
     });
+  } else if (options.type) {
+    throw new CommandError(
+      `Invalid option: --type ${options.type}. Valid options are: public, prebuild`
+    );
   } else {
     config = getConfig(projectRoot, {
       skipSDKVersionRequirement: true,
@@ -39,8 +44,7 @@ export default function (program: Command) {
     .command('config [path]')
     .description('Show the project config')
     .helpGroup('info')
-    .option('--modded', 'Print the modded config used in prebuild')
-    .option('--manifest', 'Print the public config used for publishing')
+    .option('-t, --type <type>', 'Type of config to show. Options: public, prebuild')
     .option('--full', 'Include all project config data')
     .asyncActionProjectDir(profileMethod(actionAsync));
 }

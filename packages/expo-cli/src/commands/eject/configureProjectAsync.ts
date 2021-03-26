@@ -120,7 +120,7 @@ export async function getModdedConfigAsync({
 }
 
 export function logConfig(config: ExpoConfig | ProjectConfig) {
-  const isObjStr = (str: string): boolean => str.test(/^\w+: {/g);
+  const isObjStr = (str: string): boolean => /^\w+: {/g.test(str);
   Log.log(
     util.inspect(config, {
       colors: true,
