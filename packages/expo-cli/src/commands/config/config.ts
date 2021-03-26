@@ -15,12 +15,12 @@ async function actionAsync(projectRoot: string, options: Options) {
   let config: ProjectConfig;
 
   if (options.type === 'prebuild') {
-    config = await getModdedConfigAsync({
+    config = await profileMethod(getModdedConfigAsync)({
       projectRoot,
       platforms: ['ios', 'android'],
     });
   } else if (options.type === 'public') {
-    config = getConfig(projectRoot, {
+    config = profileMethod(getConfig)(projectRoot, {
       skipSDKVersionRequirement: true,
       isPublicConfig: true,
     });
@@ -29,7 +29,7 @@ async function actionAsync(projectRoot: string, options: Options) {
       `Invalid option: --type ${options.type}. Valid options are: public, prebuild`
     );
   } else {
-    config = getConfig(projectRoot, {
+    config = profileMethod(getConfig)(projectRoot, {
       skipSDKVersionRequirement: true,
     });
   }
