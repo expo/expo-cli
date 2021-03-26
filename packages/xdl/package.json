@@ -74,7 +74,6 @@
     "package-json": "6.4.0",
     "pascal-case": "2.0.1",
     "pretty-bytes": "^5.3.0",
-    "probe-image-size": "~6.0.0",
     "progress": "2.0.3",
     "prompts": "^2.3.2",
     "raven": "2.6.3",

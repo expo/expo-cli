@@ -1,5 +1,3 @@
-import { Android } from 'xdl';
-
 import { Context } from '../../credentials';
 import { runCredentialsManager } from '../../credentials/route';
 import {
@@ -11,6 +9,7 @@ import { SetupAndroidKeystore } from '../../credentials/views/SetupAndroidKeysto
 import { getOrPromptForPackage } from '../eject/ConfigValidation';
 import BaseBuilder from './BaseBuilder';
 import BuildError from './BuildError';
+import { checkSplashScreenImages } from './checkSplashScreenImages';
 import { Platform, PLATFORMS } from './constants';
 import * as utils from './utils';
 
@@ -25,7 +24,7 @@ export default class AndroidBuilder extends BaseBuilder {
     });
 
     // Check SplashScreen images sizes
-    await Android.checkSplashScreenImages(this.projectDir);
+    await checkSplashScreenImages(this.projectDir);
 
     // Check the status of any current builds
     await this.checkForBuildInProgress();
