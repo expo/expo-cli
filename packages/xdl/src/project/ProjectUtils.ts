@@ -1,7 +1,6 @@
 import path from 'path';
 
-import Analytics from '../Analytics';
-import Logger, { Log, LogStream } from '../Logger';
+import { Analytics, Log, Logger, LogStream } from '../internal';
 
 const MAX_MESSAGE_LENGTH = 200;
 const _projectRootToLogger: { [projectRoot: string]: Log } = {};

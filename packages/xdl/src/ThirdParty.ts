@@ -1,7 +1,6 @@
 import axios, { AxiosRequestConfig } from 'axios';
 
-import * as Versions from './Versions';
-import XDLError from './XDLError';
+import { Versions, XDLError } from './internal';
 
 export async function getManifest(
   publicUrl: string,

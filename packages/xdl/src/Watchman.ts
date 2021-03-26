@@ -3,7 +3,7 @@ import fs from 'fs-extra';
 import pTimeout from 'p-timeout';
 import path from 'path';
 
-import * as Binaries from './Binaries';
+import { Binaries } from './internal';
 
 const WAIT_FOR_WATCHMAN_VERSION_MS = 3000;
 

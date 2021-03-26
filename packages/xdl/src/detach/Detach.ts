@@ -4,15 +4,17 @@ import fs from 'fs-extra';
 import { sync as globSync } from 'glob';
 import path from 'path';
 
-import * as EmbeddedAssets from '../EmbeddedAssets';
-import * as UrlUtils from '../UrlUtils';
-import * as AssetBundle from './AssetBundle';
-import { isDirectory, regexFileAsync } from './ExponentTools';
-import * as IosPlist from './IosPlist';
-import * as IosWorkspace from './IosWorkspace';
-import logger from './Logger';
-import StandaloneBuildFlags from './StandaloneBuildFlags';
-import StandaloneContext from './StandaloneContext';
+import {
+  AssetBundle,
+  EmbeddedAssets,
+  ExponentTools,
+  IosPlist,
+  IosWorkspace,
+  LoggerDetach as logger,
+  StandaloneBuildFlags,
+  StandaloneContext,
+  UrlUtils,
+} from '../internal';
 
 const SERVICE_CONTEXT_PROJECT_NAME = 'exponent-view-template';
 
@@ -139,11 +141,11 @@ async function prepareDetachedUserContextIosAsync(projectDir: string, exp: ExpoC
   // These files cause @providesModule naming collisions
   // but are not available until after `pod install` has run.
   const podsDirectory = path.join(iosProjectDirectory, 'Pods');
-  if (!isDirectory(podsDirectory)) {
+  if (!ExponentTools.isDirectory(podsDirectory)) {
     throw new Error(`Can't find directory ${podsDirectory}, make sure you've run pod install.`);
   }
   const rnPodDirectory = path.join(podsDirectory, 'React');
-  if (isDirectory(rnPodDirectory)) {
+  if (ExponentTools.isDirectory(rnPodDirectory)) {
     const rnFilesToDelete = globSync('**/*.@(js|json)', {
       absolute: true,
       cwd: rnPodDirectory,
@@ -194,7 +196,7 @@ export async function prepareDetachedBuildAsync(projectDir: string, args: any) {
     if (expoBuildConstantsMatches && expoBuildConstantsMatches.length) {
       const expoBuildConstants = expoBuildConstantsMatches[0];
       const devUrl = await UrlUtils.constructManifestUrlAsync(projectDir);
-      await regexFileAsync(
+      await ExponentTools.regexFileAsync(
         /DEVELOPMENT_URL = "[^"]*";/,
         `DEVELOPMENT_URL = "${devUrl}";`,
         expoBuildConstants

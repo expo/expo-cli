@@ -1,13 +1,14 @@
-import * as ProjectSettings from './ProjectSettings';
-import XDLError from './XDLError';
-import { assertValidProjectRoot } from './project/errors';
-import { startTunnelsAsync, stopTunnelsAsync } from './start/ngrok';
-import { StartOptions } from './start/startDevServerAsync';
-import { startExpoServerAsync } from './start/startLegacyExpoServerAsync';
 import {
+  assertValidProjectRoot,
+  ProjectSettings,
+  startExpoServerAsync,
+  StartOptions,
   startReactNativeServerAsync,
+  startTunnelsAsync,
   stopReactNativeServerAsync,
-} from './start/startLegacyReactNativeServerAsync';
+  stopTunnelsAsync,
+  XDLError,
+} from './internal';
 
 export { startAsync, stopAsync, broadcastMessage } from './start/startAsync';
 
@@ -45,8 +46,13 @@ export {
   startReactNativeServerAsync,
   stopReactNativeServerAsync,
 };
-export { PublishedProjectResult, publishAsync } from './project/publishAsync';
-export { createBundlesAsync } from './project/createBundlesAsync';
-export { runHook, prepareHooks } from './project/runHook';
-export { getPublishExpConfigAsync, PublishOptions } from './project/getPublishExpConfigAsync';
-export { writeArtifactSafelyAsync } from './tools/ArtifactUtils';
+export {
+  PublishedProjectResult,
+  publishAsync,
+  prepareHooks,
+  runHook,
+  createBundlesAsync,
+  getPublishExpConfigAsync,
+  PublishOptions,
+  writeArtifactSafelyAsync,
+} from './internal';

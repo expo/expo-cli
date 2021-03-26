@@ -2,7 +2,7 @@ import { ExpoConfig } from '@expo/config';
 import getenv from 'getenv';
 import os from 'os';
 
-import * as Versions from './Versions';
+import { Versions } from './internal';
 
 export function home(): string {
   return os.homedir();

@@ -9,15 +9,17 @@ import split from 'split';
 import treekill from 'tree-kill';
 import { promisify } from 'util';
 
-import * as ProjectSettings from '../ProjectSettings';
-import * as UrlUtils from '../UrlUtils';
-import * as Versions from '../Versions';
-import * as Watchman from '../Watchman';
-import * as ProjectUtils from '../project/ProjectUtils';
-import { assertValidProjectRoot } from '../project/errors';
-import { delayAsync } from '../utils/delayAsync';
-import { getFreePortAsync } from './getFreePortAsync';
-import { StartOptions } from './startDevServerAsync';
+import {
+  assertValidProjectRoot,
+  delayAsync,
+  getFreePortAsync,
+  ProjectSettings,
+  ProjectUtils,
+  StartDevServerOptions,
+  UrlUtils,
+  Versions,
+  Watchman,
+} from '../internal';
 
 const treekillAsync = promisify<number, string>(treekill);
 
@@ -123,7 +125,7 @@ export async function startReactNativeServerAsync({
   verbose = true,
 }: {
   projectRoot: string;
-  options: StartOptions;
+  options: StartDevServerOptions;
   exp?: ExpoConfig;
   verbose?: boolean;
 }): Promise<void> {

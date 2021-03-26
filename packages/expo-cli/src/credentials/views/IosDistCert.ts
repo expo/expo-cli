@@ -2,7 +2,7 @@ import chalk from 'chalk';
 import dateformat from 'dateformat';
 import fs from 'fs-extra';
 import terminalLink from 'terminal-link';
-import { IosCodeSigning } from 'xdl';
+import { PKCS12Utils } from 'xdl';
 
 import CommandError from '../../CommandError';
 import { DistCert, DistCertInfo, DistCertManager, isDistCert } from '../../appleApi';
@@ -399,10 +399,8 @@ function formatDistCert(
   let serialNumber = distCert.distCertSerialNumber;
   try {
     if (!serialNumber) {
-      serialNumber = IosCodeSigning.findP12CertSerialNumber(
-        distCert.certP12,
-        distCert.certPassword
-      );
+      serialNumber =
+        PKCS12Utils.findP12CertSerialNumber(distCert.certP12, distCert.certPassword) ?? undefined;
     }
   } catch (error) {
     serialNumber = chalk.red('invalid serial number');
@@ -516,10 +514,8 @@ async function promptForDistCert(ctx: Context): Promise<DistCert | null> {
 
 async function _getDistCertWithSerial(distCert: DistCert): Promise<DistCert> {
   try {
-    distCert.distCertSerialNumber = IosCodeSigning.findP12CertSerialNumber(
-      distCert.certP12,
-      distCert.certPassword
-    );
+    distCert.distCertSerialNumber =
+      PKCS12Utils.findP12CertSerialNumber(distCert.certP12, distCert.certPassword) ?? undefined;
   } catch (error) {
     Log.warn('Unable to access certificate serial number.');
     Log.warn('Make sure that certificate and password are correct.');

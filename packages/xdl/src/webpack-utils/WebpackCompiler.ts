@@ -93,7 +93,7 @@ export function printPreviewNotice(projectRoot: string, showInDevtools: boolean)
   );
 }
 
-export default function createWebpackCompiler({
+export function createWebpackCompiler({
   projectRoot,
   appName,
   config,

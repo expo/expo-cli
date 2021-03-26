@@ -5,8 +5,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import { Readable } from 'stream';
 
-import XDLError from '../XDLError';
-import LoggerDetach, { pipeOutputToLogger } from './Logger';
+import { LoggerDetach, pipeOutputToLogger, XDLError } from '../internal';
 
 async function saveUrlToPathAsync(url: string, path: string, timeout = 20000) {
   const response = await axios.get(url, { responseType: 'stream', timeout });

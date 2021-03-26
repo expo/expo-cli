@@ -2,7 +2,7 @@
   "name": "xdl",
   "version": "59.0.27",
   "description": "The Expo Development Library",
-  "main": "build/xdl.js",
+  "main": "build/index.js",
   "files": [
     "build",
     "!**/__integration_tests__/**",
@@ -12,7 +12,7 @@
   ],
   "scripts": {
     "start": "yarn run prepare && yarn run watch",
-    "build": "tsc --emitDeclarationOnly && gulp build",
+    "build": "tsc",
     "prepare": "yarn run clean && yarn run build",
     "prepack": "gulp caches",
     "clean": "rimraf build ./tsconfig.tsbuildinfo",

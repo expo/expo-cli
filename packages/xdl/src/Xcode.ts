@@ -1,6 +1,6 @@
 import spawnAsync from '@expo/spawn-async';
 
-import Logger from './Logger';
+import { Logger } from './internal';
 
 // Based on the RN docs (Aug 2020).
 export const minimumVersion = 9.4;

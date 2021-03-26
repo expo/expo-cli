@@ -3,8 +3,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import uuid from 'uuid';
 
-import * as Env from './Env';
-import { ConnectionType } from './User';
+import { ConnectionType, Env } from './internal';
 
 export type UserSettingsData = {
   developmentCodeSigningId?: string;

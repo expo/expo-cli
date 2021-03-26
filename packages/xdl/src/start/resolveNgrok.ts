@@ -6,9 +6,7 @@ import requireg from 'requireg';
 import resolveFrom from 'resolve-from';
 import semver from 'semver';
 
-import Logger from '../Logger';
-import { confirmAsync } from '../Prompts';
-import { delayAsync } from '../utils/delayAsync';
+import { delayAsync, Logger, Prompts } from '../internal';
 
 const NGROK_REQUIRED_VERSION = '^2.4.3';
 const EXPO_DEBUG = getenv.boolish('EXPO_DEBUG', false);
@@ -54,7 +52,7 @@ export async function resolveNgrokAsync(
       }
       const answer =
         autoInstall ||
-        (await confirmAsync({
+        (await Prompts.confirmAsync({
           message: `The package ${packageName} is required to use tunnels, would you like to install it globally?`,
           initial: true,
         }));

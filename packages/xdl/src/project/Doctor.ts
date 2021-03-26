@@ -6,11 +6,7 @@ import isReachable from 'is-reachable';
 import resolveFrom from 'resolve-from';
 import semver from 'semver';
 
-import Config from '../Config';
-import * as Versions from '../Versions';
-import * as Watchman from '../Watchman';
-import * as ExpSchema from './ExpSchema';
-import * as ProjectUtils from './ProjectUtils';
+import { Config, ExpSchema, ProjectUtils, Versions, Watchman } from '../internal';
 
 export const NO_ISSUES = 0;
 export const WARNING = 1;

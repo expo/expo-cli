@@ -1,7 +1,7 @@
 import fs from 'fs-extra';
 import path from 'path';
 
-import logger from '../Logger';
+import { Logger as logger } from '../internal';
 
 export async function writeArtifactSafelyAsync(
   projectRoot: string,

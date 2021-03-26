@@ -2,8 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import probeImageSize from 'probe-image-size';
 
-import { spawnAsyncThrowError } from '../detach/ExponentTools';
-import LoggerDetach from '../detach/Logger';
+import { ExponentTools, LoggerDetach } from '../internal';
 
 /**
  * @param {string} projectDirname
@@ -53,7 +52,7 @@ async function _resizeImageWithSipsAsync(
   iconFilename: string,
   destinationIconPath: string
 ) {
-  return spawnAsyncThrowError('sips', ['-Z', iconSizePx.toFixed(), iconFilename], {
+  return ExponentTools.spawnAsyncThrowError('sips', ['-Z', iconSizePx.toFixed(), iconFilename], {
     stdio: ['ignore', 'ignore', 'inherit'], // only stderr
     cwd: destinationIconPath,
   });

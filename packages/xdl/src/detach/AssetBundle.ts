@@ -5,8 +5,7 @@ import path from 'path';
 import url from 'url';
 import urlJoin from 'url-join';
 
-import { saveUrlToPathAsync } from './ExponentTools';
-import { AnyStandaloneContext } from './StandaloneContext';
+import { AnyStandaloneContext, ExponentTools } from '../internal';
 
 const EXPO_DOMAINS = ['expo.io', 'exp.host', 'expo.test', 'localhost'];
 export const DEFAULT_CDN_HOST = 'https://d1wp6m56sqw74a.cloudfront.net';
@@ -38,7 +37,9 @@ async function downloadAssetAsync(urlResolver: UrlResolver, dest: string, asset:
       ? asset.substring(prefixLength, extensionIndex)
       : asset.substring(prefixLength);
   console.log(urlResolver(hash));
-  await pRetry(() => saveUrlToPathAsync(urlResolver(hash), path.join(dest, asset)), { retries: 3 });
+  await pRetry(() => ExponentTools.saveUrlToPathAsync(urlResolver(hash), path.join(dest, asset)), {
+    retries: 3,
+  });
 }
 
 function createAssetsUrlResolver(

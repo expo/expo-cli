@@ -1,22 +1,25 @@
 import { ExpoConfig, getConfig } from '@expo/config';
 import { Server } from 'http';
 
-import Analytics from '../Analytics';
-import * as Android from '../Android';
-import Config from '../Config';
-import * as DevSession from '../DevSession';
-import { shouldUseDevServer } from '../Env';
-import * as ProjectSettings from '../ProjectSettings';
-import * as Webpack from '../Webpack';
-import * as ProjectUtils from '../project/ProjectUtils';
-import { assertValidProjectRoot } from '../project/errors';
-import { startTunnelsAsync, stopTunnelsAsync } from './ngrok';
-import { startDevServerAsync, StartOptions } from './startDevServerAsync';
-import { startExpoServerAsync, stopExpoServerAsync } from './startLegacyExpoServerAsync';
 import {
+  Analytics,
+  Android,
+  assertValidProjectRoot,
+  Config,
+  DevSession,
+  Env,
+  ProjectSettings,
+  ProjectUtils,
+  startDevServerAsync,
+  StartDevServerOptions,
+  startExpoServerAsync,
   startReactNativeServerAsync,
+  startTunnelsAsync,
+  stopExpoServerAsync,
   stopReactNativeServerAsync,
-} from './startLegacyReactNativeServerAsync';
+  stopTunnelsAsync,
+  Webpack,
+} from '../internal';
 
 let serverInstance: Server | null = null;
 let messageSocket: any | null = null;
@@ -39,7 +42,10 @@ export function broadcastMessage(
 
 export async function startAsync(
   projectRoot: string,
-  { exp = getConfig(projectRoot).exp, ...options }: StartOptions & { exp?: ExpoConfig } = {},
+  {
+    exp = getConfig(projectRoot).exp,
+    ...options
+  }: StartDevServerOptions & { exp?: ExpoConfig } = {},
   verbose: boolean = true
 ): Promise<ExpoConfig> {
   assertValidProjectRoot(projectRoot);
@@ -53,7 +59,7 @@ export async function startAsync(
     await Webpack.restartAsync(projectRoot, options);
     DevSession.startSession(projectRoot, exp, 'web');
     return exp;
-  } else if (shouldUseDevServer(exp) || options.devClient) {
+  } else if (Env.shouldUseDevServer(exp) || options.devClient) {
     [serverInstance, , messageSocket] = await startDevServerAsync(projectRoot, options);
     DevSession.startSession(projectRoot, exp, 'native');
   } else {

@@ -1,6 +1,6 @@
 import getenv from 'getenv';
 
-import * as Env from './Env';
+import { Env } from './internal';
 
 interface ApiConfig {
   scheme: string;

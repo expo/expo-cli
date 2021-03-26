@@ -10,19 +10,21 @@ import ProgressBar from 'progress';
 import prompts from 'prompts';
 import semver from 'semver';
 
-import Analytics from './Analytics';
-import * as Binaries from './Binaries';
-import { isDebug } from './Env';
-import Logger from './Logger';
-import NotificationCode from './NotificationCode';
-import * as ProjectSettings from './ProjectSettings';
-import * as Prompts from './Prompts';
-import * as UrlUtils from './UrlUtils';
-import * as Versions from './Versions';
-import { getUrlAsync as getWebpackUrlAsync } from './Webpack';
-import { learnMore } from './logs/TerminalLink';
-import { getImageDimensionsAsync } from './tools/ImageUtils';
-import { downloadApkAsync } from './utils/downloadApkAsync';
+import {
+  Analytics,
+  Binaries,
+  downloadApkAsync,
+  Env,
+  ImageUtils,
+  learnMore,
+  Logger,
+  NotificationCode,
+  ProjectSettings,
+  Prompts,
+  UrlUtils,
+  Versions,
+  Webpack,
+} from './internal';
 
 export type Device = {
   pid?: string;
@@ -292,7 +294,7 @@ export async function getAdbOutputAsync(args: string[]): Promise<string> {
     _isAdbOwner = alreadyRunning === false;
   }
 
-  if (isDebug()) {
+  if (Env.isDebug()) {
     Logger.global.info([adb, ...args].join(' '));
   }
   try {
@@ -788,7 +790,7 @@ export async function openWebProjectAsync({
   try {
     await startAdbReverseAsync(projectRoot);
 
-    const projectUrl = await getWebpackUrlAsync(projectRoot);
+    const projectUrl = await Webpack.getUrlAsync(projectRoot);
     if (projectUrl === null) {
       return {
         success: false,
@@ -956,7 +958,10 @@ export async function checkSplashScreenImages(projectRoot: string): Promise<void
     );
     return;
   }
-  const generalSplashImage = await getImageDimensionsAsync(projectRoot, generalSplashImagePath);
+  const generalSplashImage = await ImageUtils.getImageDimensionsAsync(
+    projectRoot,
+    generalSplashImagePath
+  );
   if (!generalSplashImage) {
     Logger.global.warn(
       `Couldn't read dimensions of provided splash image '${chalk.italic(
@@ -971,7 +976,7 @@ export async function checkSplashScreenImages(projectRoot: string): Promise<void
   for (const { dpi, sizeMultiplier } of splashScreenDPIConstraints) {
     const imageRelativePath = androidSplash?.[dpi];
     if (imageRelativePath) {
-      const splashImage = await getImageDimensionsAsync(projectRoot, imageRelativePath);
+      const splashImage = await ImageUtils.getImageDimensionsAsync(projectRoot, imageRelativePath);
       if (!splashImage) {
         Logger.global.warn(
           `Couldn't read dimensions of provided splash image '${chalk.italic(

@@ -12,11 +12,7 @@ import minimatch from 'minimatch';
 import path from 'path';
 import urljoin from 'url-join';
 
-import ApiV2 from './ApiV2';
-import logger from './Logger';
-import UserManager from './User';
-import * as ExpSchema from './project/ExpSchema';
-import * as ProjectUtils from './project/ProjectUtils';
+import { ApiV2, ExpSchema, Logger as logger, ProjectUtils, UserManager } from './internal';
 
 const EXPO_CDN = 'https://d1wp6m56sqw74a.cloudfront.net';
 

@@ -1,5 +1,4 @@
-import ApiV2 from './ApiV2';
-import UserManager from './User';
+import { ApiV2, UserManager } from './internal';
 
 export async function sendAsync(recipient: string, url_: string, allowUnauthed: boolean = true) {
   const user = await UserManager.ensureLoggedInAsync();
