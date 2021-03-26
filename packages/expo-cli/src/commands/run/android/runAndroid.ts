@@ -1,16 +1,26 @@
 import { AndroidConfig } from '@expo/config-plugins';
+import fs from 'fs';
+import path from 'path';
 import { Android } from 'xdl';
 
 import CommandError from '../../../CommandError';
 import Log from '../../../log';
-import { ora } from '../../../utils/ora';
 import { prebuildAsync } from '../../eject/prebuildAsync';
-import * as Gradle from './Gradle';
 import { resolveDeviceAsync } from './resolveDeviceAsync';
+import { spawnGradleAsync } from './spawnGradleAsync';
 
 type Options = {
-  buildVariant: string;
+  variant: string;
   device?: boolean | string;
+};
+
+export type AndroidRunOptions = Omit<Options, 'device'> & {
+  apkVariantDirectory: string;
+  packageName: string;
+  mainActivity: string;
+  device: Android.Device;
+  variantFolder: string;
+  appName: string;
 };
 
 async function resolveAndroidProjectPathAsync(projectRoot: string): Promise<string> {
@@ -26,28 +36,88 @@ async function resolveAndroidProjectPathAsync(projectRoot: string): Promise<stri
   }
 }
 
-export async function runAndroidActionAsync(projectRoot: string, options: Options) {
-  if (typeof options.buildVariant !== 'string') {
-    throw new CommandError('--build-variant must be a string');
+async function resolveOptionsAsync(
+  projectRoot: string,
+  options: Options
+): Promise<AndroidRunOptions> {
+  if (typeof options.variant !== 'string') {
+    throw new CommandError('--variant must be a string');
+  }
+  const device = await resolveDeviceAsync(options.device);
+  if (!device) {
+    throw new CommandError('Cannot resolve an Android device');
   }
 
-  const bootedDevice = await resolveDeviceAsync(options.device);
-  if (!bootedDevice) {
-    return;
+  const filePath = await AndroidConfig.Paths.getAndroidManifestAsync(projectRoot);
+  const androidManifest = await AndroidConfig.Manifest.readAndroidManifestAsync(filePath);
+
+  // Assert MainActivity defined.
+  await AndroidConfig.Manifest.getMainActivityOrThrow(androidManifest);
+  const mainActivity = 'MainActivity';
+  const packageName = androidManifest.manifest.$.package;
+
+  if (!packageName) {
+    throw new CommandError(`Could not find package name in AndroidManifest.xml at "${filePath}"`);
   }
+  const variant = options.variant.toLowerCase();
+  const apkDirectory = Android.getAPKDirectory(projectRoot);
+  const apkVariantDirectory = path.join(apkDirectory, variant);
+
+  return {
+    ...options,
+    device,
+    mainActivity,
+    packageName,
+    apkVariantDirectory,
+    variantFolder: variant,
+    appName: 'app',
+  };
+}
+
+export async function runAndroidActionAsync(projectRoot: string, options: Options) {
+  const props = await resolveOptionsAsync(projectRoot, options);
 
   Log.log('Building app...');
 
   const androidProjectPath = await resolveAndroidProjectPathAsync(projectRoot);
 
-  await Gradle.spawnGradleTaskAsync({ androidProjectPath, buildVariant: options.buildVariant });
+  await spawnGradleAsync({ androidProjectPath, variant: options.variant });
 
-  ora('Starting the development client...').start().stopAndPersist();
+  const apkFile = await getInstallApkNameAsync(props.device, props);
+  Log.debug(`Installing: ${apkFile}`);
+  const binaryPath = path.join(props.apkVariantDirectory, apkFile);
+  await Android.installOnDeviceAsync(props.device, { binaryPath });
+  // For now, just open the app with a matching package name
+  await Android.openAppAsync(props.device, props);
+}
 
-  await Android.openProjectAsync({
-    projectRoot,
-    device: bootedDevice,
-    shouldPrompt: false,
-    devClient: true,
-  });
+async function getInstallApkNameAsync(
+  device: Android.Device,
+  {
+    appName,
+    variantFolder,
+    apkVariantDirectory,
+  }: Pick<AndroidRunOptions, 'appName' | 'variantFolder' | 'apkVariantDirectory'>
+) {
+  const availableCPUs = await Android.getDeviceABIsAsync(device);
+  availableCPUs.push(Android.DeviceABI.universal);
+
+  Log.debug('Supported ABIs: ' + availableCPUs.join(', '));
+  Log.debug('Searching for APK: ' + apkVariantDirectory);
+
+  // Check for cpu specific builds first
+  for (const availableCPU of availableCPUs) {
+    const apkName = `${appName}-${availableCPU}-${variantFolder}.apk`;
+    if (fs.existsSync(path.join(apkVariantDirectory, apkName))) {
+      return apkName;
+    }
+  }
+
+  // Otherwise use the default apk named after the variant: app-debug.apk
+  const apkName = `${appName}-${variantFolder}.apk`;
+  if (fs.existsSync(path.join(apkVariantDirectory, apkName))) {
+    return apkName;
+  }
+
+  throw new CommandError(`Failed to resolve APK build file in folder "${apkVariantDirectory}"`);
 }

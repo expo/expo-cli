@@ -9,7 +9,7 @@ export default function (program: Command) {
     .helpGroup('internal')
     .description('Run the Android app binary locally')
     .option('-d, --device [device]', 'Device name to build the app on')
-    .option('--build-variant [name]', '(Android) build variant', 'release')
+    .option('--variant [name]', '(Android) build variant', 'debug')
     .asyncActionProjectDir(runAndroidActionAsync);
   program
     .command('run:ios [path]')
