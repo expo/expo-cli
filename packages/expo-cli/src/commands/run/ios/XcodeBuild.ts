@@ -67,28 +67,41 @@ export async function getProjectBuildSettings(
 export function getAppBinaryPath(buildOutput: string) {
   // Matches what's used in "Bundle React Native code and images" script.
   // Requires that `-hideShellScriptEnvironment` is not included in the build command (extra logs).
+
+  // Like `\=/Users/evanbacon/Library/Developer/Xcode/DerivedData/Exponent-anpuosnglkxokahjhfszejloqfvo/Build/Products/Debug-iphonesimulator`
   const CONFIGURATION_BUILD_DIR = extractEnvVariableFromBuild(
     buildOutput,
     'CONFIGURATION_BUILD_DIR'
+  ).sort(
+    // Longer name means more suffixes, we want the shortest possible one to be first.
+    // Massive projects (like Expo Go) can sometimes print multiple different sets of environment variables.
+    // This can become an issue with some
+    (a, b) => a.length - b.length
   );
+  // Like `Exponent.app`
   const UNLOCALIZED_RESOURCES_FOLDER_PATH = extractEnvVariableFromBuild(
     buildOutput,
     'UNLOCALIZED_RESOURCES_FOLDER_PATH'
   );
-  return path.join(CONFIGURATION_BUILD_DIR, UNLOCALIZED_RESOURCES_FOLDER_PATH);
+  return path.join(
+    // Use the shortest defined env variable (usually there's just one).
+    CONFIGURATION_BUILD_DIR[0],
+    // Use the last defined env variable.
+    UNLOCALIZED_RESOURCES_FOLDER_PATH[UNLOCALIZED_RESOURCES_FOLDER_PATH.length - 1]
+  );
 }
 
 function extractEnvVariableFromBuild(buildOutput: string, variableName: string) {
   // Xcode can sometimes escape `=` with a backslash or put the value in quotes
-  const reg = new RegExp(`export ${variableName}\\\\?=(.*)$`, 'm');
-  const matched = reg.exec(buildOutput);
+  const reg = new RegExp(`export ${variableName}\\\\?=(.*)$`, 'mg');
+  const matched = [...buildOutput.matchAll(reg)];
 
   if (!matched || !matched.length) {
     throw new CommandError(
       `Malformed xcodebuild results: "${variableName}" variable was not generated in build output. Please report this issue and run your project with Xcode instead.`
     );
   }
-  return matched[1];
+  return matched.map(value => value[1]).filter(Boolean) as string[];
 }
 
 function getProcessOptions({
@@ -165,7 +178,7 @@ export async function buildAsync({
     }
   }
 
-  logPrettyItem(chalk.bold`Building`);
+  logPrettyItem(chalk.bold`Planning build`);
   Log.debug(`  xcodebuild ${args.join(' ')}`);
   const formatter = new ExpoLogFormatter({ projectRoot });
 

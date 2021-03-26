@@ -3,11 +3,11 @@ import chalk from 'chalk';
 import fs from 'fs-extra';
 import getenv from 'getenv';
 import yaml from 'js-yaml';
-import ora from 'ora';
 import * as path from 'path';
 import semver from 'semver';
 
 import Log from '../../log';
+import { ora } from '../../utils/ora';
 
 export function validateName(name?: string): string | true {
   if (typeof name !== 'string' || name === '') {

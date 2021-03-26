@@ -25,7 +25,7 @@ import { getUrlAsync as getWebpackUrlAsync } from './Webpack';
 import { learnMore } from './logs/TerminalLink';
 import { getImageDimensionsAsync } from './tools/ImageUtils';
 
-type Device = {
+export type Device = {
   pid?: string;
   name: string;
   type: 'emulator' | 'device';
@@ -138,7 +138,7 @@ async function isBootAnimationCompleteAsync(pid?: string): Promise<boolean> {
   }
 }
 
-async function startEmulatorAsync(device: Device): Promise<Device> {
+async function startEmulatorAsync(device: Pick<Device, 'name'>): Promise<Device> {
   Logger.global.info(`\u203A Attempting to open emulator: ${device.name}`);
 
   // Start a process to open an emulator
@@ -691,10 +691,12 @@ export async function openProjectAsync({
   projectRoot,
   shouldPrompt,
   devClient = false,
+  device,
 }: {
   projectRoot: string;
   shouldPrompt?: boolean;
   devClient?: boolean;
+  device?: Device;
 }): Promise<{ success: true; url: string } | { success: false; error: string }> {
   try {
     await startAdbReverseAsync(projectRoot);
@@ -704,13 +706,22 @@ export async function openProjectAsync({
       skipSDKVersionRequirement: true,
     });
 
-    const devices = await getAllAvailableDevicesAsync();
-    let device: Device | null = devices[0];
-    if (shouldPrompt) {
-      device = await promptForDeviceAsync(devices);
-    }
-    if (!device) {
-      return { success: false, error: 'escaped' };
+    if (device) {
+      const booted = await attemptToStartEmulatorOrAssertAsync(device);
+      if (!booted) {
+        return { success: false, error: 'escaped' };
+      }
+      device = booted;
+    } else {
+      const devices = await getAllAvailableDevicesAsync();
+      let booted: Device | null = devices[0];
+      if (shouldPrompt) {
+        booted = await promptForDeviceAsync(devices);
+      }
+      if (!booted) {
+        return { success: false, error: 'escaped' };
+      }
+      device = booted;
     }
 
     await openUrlAsync({

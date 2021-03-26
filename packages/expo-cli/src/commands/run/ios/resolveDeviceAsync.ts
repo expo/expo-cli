@@ -1,9 +1,11 @@
 import chalk from 'chalk';
+import ora from 'ora';
 import { SimControl, Simulator } from 'xdl';
 
 import CommandError from '../../../CommandError';
 import Log from '../../../log';
 import prompt from '../../../prompts';
+import { profileMethod } from '../../utils/profileMethod';
 
 async function getSimulatorsAsync(): Promise<SimControl.SimulatorDevice[]> {
   const simulatorDeviceInfo = await SimControl.listAsync('devices');
@@ -13,11 +15,15 @@ async function getSimulatorsAsync(): Promise<SimControl.SimulatorDevice[]> {
 }
 
 async function getBuildDestinationsAsync() {
-  const devices = (await SimControl.listDevicesAsync()).filter(device => {
+  const devices = (
+    await profileMethod(SimControl.listDevicesAsync, 'SimControl.listDevicesAsync')()
+  ).filter(device => {
     return device.deviceType === 'device';
   });
 
-  const simulators = await Simulator.sortDefaultDeviceToBeginningAsync(await getSimulatorsAsync());
+  const simulators = await Simulator.sortDefaultDeviceToBeginningAsync(
+    await profileMethod(getSimulatorsAsync)()
+  );
 
   return [...devices, ...simulators];
 }
@@ -26,10 +32,20 @@ export async function resolveDeviceAsync(
   device: string | boolean | undefined
 ): Promise<SimControl.SimulatorDevice | SimControl.XCTraceDevice> {
   if (!device) {
-    return await Simulator.ensureSimulatorOpenAsync();
+    return await profileMethod(
+      Simulator.ensureSimulatorOpenAsync,
+      'Simulator.ensureSimulatorOpenAsync'
+    )();
   }
 
-  const devices = await getBuildDestinationsAsync();
+  const spinner = ora(
+    `🔍 Finding ${device === true ? 'devices' : `device ${chalk.cyan(device)}`}`
+  ).start();
+  const devices: (
+    | SimControl.SimulatorDevice
+    | SimControl.XCTraceDevice
+  )[] = await getBuildDestinationsAsync().catch(() => []);
+  spinner.stop();
 
   if (device === true) {
     // --device with no props after
@@ -69,7 +85,7 @@ export async function resolveDeviceAsync(
   });
 
   if (!resolved) {
-    throw new CommandError(`No device UDID or name matching ${device}`);
+    throw new CommandError(`No device UDID or name matching "${device}"`);
   }
 
   const isSimulator = !('deviceType' in resolved);

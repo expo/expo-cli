@@ -3,6 +3,7 @@ import chalk from 'chalk';
 import fs from 'fs-extra';
 import path from 'path';
 
+import CommandError from '../../CommandError';
 import Log from '../../log';
 import * as CreateApp from '../utils/CreateApp';
 import { learnMore } from '../utils/TerminalLink';
@@ -22,7 +23,7 @@ export function writeMetroConfig({
    * hashAssetFiles plugin manually.
    */
 
-  const updatingMetroConfigStep = CreateApp.logNewSection('Adding Metro bundler configuration');
+  const updatingMetroConfigStep = CreateApp.logNewSection('Adding Metro bundler config');
 
   try {
     const sourceConfigPath = path.join(tempDir, 'metro.config.js');
@@ -33,7 +34,7 @@ export function writeMetroConfig({
       const contents = createFileHash(fs.readFileSync(targetConfigPath, 'utf8'));
       const targetContents = createFileHash(fs.readFileSync(sourceConfigPath, 'utf8'));
       if (contents !== targetContents) {
-        throw new Error('Existing Metro configuration found; not overwriting.');
+        throw new CommandError('Existing Metro config found; not overwriting.');
       } else {
         // Nothing to change, hide the step and exit.
         updatingMetroConfigStep.stop();
@@ -45,22 +46,22 @@ export function writeMetroConfig({
       pkg.metro ||
       fs.existsSync(path.join(projectRoot, 'rn-cli.config.js'))
     ) {
-      throw new Error('Existing Metro configuration found; not overwriting.');
+      throw new CommandError('Existing Metro config found; not overwriting.');
     }
 
     fs.copySync(sourceConfigPath, targetConfigPath);
-    updatingMetroConfigStep.succeed('Added Metro bundler configuration.');
+    updatingMetroConfigStep.succeed('Added Metro config.');
   } catch (e) {
     updatingMetroConfigStep.stopAndPersist({
       symbol: '⚠️ ',
-      text: chalk.yellow('Metro bundler configuration not applied:'),
+      text: chalk.yellow('Skipped Metro config updates:'),
     });
     Log.nested(`\u203A ${e.message}`);
     Log.nested(
-      `\u203A You will need to add the ${chalk.bold(
-        'hashAssetFiles'
-      )} plugin to your Metro configuration.\n  ${Log.chalk.dim(
-        learnMore('https://docs.expo.io/bare/installing-updates/')
+      `\u203A You will need to extend the default ${chalk.bold(
+        '@expo/metro-config'
+      )} in your Metro config.\n  ${Log.chalk.dim(
+        learnMore('https://docs.expo.io/guides/customizing-metro')
       )}`
     );
     Log.newLine();

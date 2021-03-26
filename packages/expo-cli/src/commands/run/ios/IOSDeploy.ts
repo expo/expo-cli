@@ -1,7 +1,9 @@
 import spawnAsync from '@expo/spawn-async';
 import chalk from 'chalk';
-import { spawnSync } from 'child_process';
+import { spawn } from 'child_process';
+import program from 'commander';
 import fs from 'fs-extra';
+import { Ora } from 'ora';
 import os from 'os';
 import path from 'path';
 import wrapAnsi from 'wrap-ansi';
@@ -9,6 +11,7 @@ import wrapAnsi from 'wrap-ansi';
 import CommandError, { SilentError } from '../../../CommandError';
 import Log from '../../../log';
 import { confirmAsync } from '../../../prompts';
+import { ora } from '../../../utils/ora';
 
 /**
  * Get the app_delta folder for faster subsequent rebuilds on devices.
@@ -33,16 +36,14 @@ export async function isInstalledAsync() {
   }
 }
 
-export function installBinaryOnDevice({
-  bundle,
-  appDeltaDirectory,
-  udid,
-}: {
+export async function installOnDeviceAsync(props: {
   bundle: string;
   appDeltaDirectory?: string;
   udid: string;
-}) {
-  const iosDeployInstallArgs = [
+  deviceName: string;
+}): Promise<void> {
+  const { bundle, appDeltaDirectory, udid, deviceName } = props;
+  const args = [
     '--bundle',
     bundle,
     '--id',
@@ -52,19 +53,129 @@ export function installBinaryOnDevice({
     '--no-wifi',
   ];
   if (appDeltaDirectory) {
-    iosDeployInstallArgs.push('--app_deltas', appDeltaDirectory);
+    args.push('--app_deltas', appDeltaDirectory);
   }
   // TODO: Attach LLDB debugger for native logs
   // '--debug'
 
-  Log.debug(`  ios-deploy ${iosDeployInstallArgs.join(' ')}`);
-  const output = spawnSync('ios-deploy', iosDeployInstallArgs, { encoding: 'utf8' });
+  Log.debug(`  ios-deploy ${args.join(' ')}`);
 
-  if (output.error) {
+  let indicator: Ora | undefined;
+  let copyingFileCount = 0;
+  let currentPhase: string | undefined;
+  const output = await spawnIOSDeployAsync(args, message => {
+    const loadingMatch = message.match(/\[(.*?)\] (.*)/m);
+    if (loadingMatch) {
+      const progress = tryParsingNumericValue(loadingMatch[1]);
+      const message = loadingMatch[2];
+      if (indicator) {
+        indicator.text = `${chalk.bold(currentPhase)} ${progress}%`;
+      }
+      if (message.startsWith('Copying ')) {
+        copyingFileCount++;
+      }
+      return;
+    }
+    // Install, Debug, Uninstall
+    const phaseMatch = message.match(/------\s(\w+) phase\s------/m);
+    if (phaseMatch) {
+      let phase = phaseMatch[1]?.trim?.();
+      // Remap name
+      phase = PhaseNameMap[phase] ?? phase;
+
+      if (indicator) {
+        if (currentPhase === 'Installing') {
+          const copiedMessage = chalk.gray`Copied ${copyingFileCount} file(s)`;
+          // Emulate Xcode copy file count, this helps us know if app deltas are working.
+          indicator.succeed(`${chalk.bold('Installed')} ${copiedMessage}`);
+        } else {
+          indicator.succeed();
+        }
+      }
+      indicator = ora(phase).start();
+      currentPhase = phase;
+      return;
+    }
+    Log.debug(message);
+  });
+
+  if (output.code !== 0) {
+    if (indicator) {
+      indicator.fail();
+    }
+    // Allow users to unlock their phone and try the launch over again.
+    if (output.error.includes('The device is locked')) {
+      // Get the app name from the binary path.
+      const appName = path.basename(bundle).split('.')[0] ?? 'app';
+      if (
+        !program.nonInteractive &&
+        (await confirmAsync({
+          message: `Cannot launch ${appName} because the device is locked. Unlock ${deviceName} to continue...`,
+        }))
+      ) {
+        return installOnDeviceAsync(props);
+      } else {
+        throw new CommandError(
+          `Cannot launch ${appName} on ${deviceName} because the device is locked.`
+        );
+      }
+    }
     throw new CommandError(
-      `Failed to install the app on device. Error in "ios-deploy" command: ${output.error.message}`
+      `Failed to install the app on device. Error in "ios-deploy" command: ${output.error}`
     );
+  } else {
+    if (indicator) {
+      if (currentPhase === 'Launching') {
+        indicator.succeed(`${chalk.bold`Launched`} ${chalk.gray(`on ${deviceName}`)}`);
+      } else {
+        indicator.succeed();
+      }
+    }
   }
+}
+
+const PhaseNameMap: Record<string, string> = {
+  Install: 'Installing',
+  Debug: 'Launching',
+  Uninstall: 'Uninstalling',
+};
+
+function tryParsingNumericValue(str?: string): number | null {
+  try {
+    return parseInt(str?.match(/\d+/)?.[0] ?? '-1', 10);
+  } catch {
+    return -1;
+  }
+}
+
+function spawnIOSDeployAsync(args: string[], onStdout: (message: string) => void) {
+  return new Promise<{ output: string; error: string; code: number }>(async (resolve, reject) => {
+    const fork = spawn('ios-deploy', args);
+    let output = '';
+    let errorOutput = '';
+    fork.stdout.on('data', (data: Buffer) => {
+      const stringData = data.toString().split(os.EOL);
+      for (let line of stringData) {
+        line = line.trim();
+        if (!line) continue;
+        if (line.match(/Error: /)) {
+          errorOutput = line;
+        } else {
+          output += line;
+          onStdout(line);
+        }
+      }
+    });
+
+    fork.stderr.on('data', (data: Buffer) => {
+      const stringData = data instanceof Buffer ? data.toString() : data;
+      errorOutput += stringData;
+    });
+
+    fork.on('close', (code: number) => {
+      resolve({ output, error: errorOutput, code });
+    });
+  });
 }
 
 export async function assertInstalledAsync() {

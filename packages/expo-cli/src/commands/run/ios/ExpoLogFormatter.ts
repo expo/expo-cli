@@ -112,7 +112,7 @@ export class ExpoLogFormatter extends Formatter {
   formatCompile(fileName: string, filePath: string): string {
     const moduleName = getNodeModuleName(filePath);
     const moduleNameTag = moduleName ? chalk.dim(`(${moduleName})`) : undefined;
-    return ['\u203A', 'Compiling', fileName, moduleNameTag].filter(Boolean).join(' ');
+    return ['\u203A', chalk.bold('Compiling'), fileName, moduleNameTag].filter(Boolean).join(' ');
   }
 
   finish() {

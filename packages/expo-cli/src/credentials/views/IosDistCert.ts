@@ -1,7 +1,6 @@
 import chalk from 'chalk';
 import dateformat from 'dateformat';
 import fs from 'fs-extra';
-import ora from 'ora';
 import terminalLink from 'terminal-link';
 import { IosCodeSigning } from 'xdl';
 
@@ -9,6 +8,7 @@ import CommandError from '../../CommandError';
 import { DistCert, DistCertInfo, DistCertManager, isDistCert } from '../../appleApi';
 import Log from '../../log';
 import prompt, { confirmAsync, Question } from '../../prompts';
+import { ora } from '../../utils/ora';
 import { displayIosUserCredentials } from '../actions/list';
 import { askForUserProvided, CredentialSchema } from '../actions/promptForCredentials';
 import { AppLookupParams, getAppLookupParams } from '../api/IosApi';
