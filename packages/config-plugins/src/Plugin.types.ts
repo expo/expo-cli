@@ -7,6 +7,7 @@ import { AndroidManifest } from './android/Manifest';
 import * as AndroidPaths from './android/Paths';
 import { ResourceXML } from './android/Resources';
 import { ExpoPlist, InfoPlist } from './ios/IosConfig.types';
+import { AppDelegateProjectFile } from './ios/Paths';
 
 type OptionalPromise<T> = Promise<T> | T;
 
@@ -115,7 +116,7 @@ export interface ModConfig {
     /**
      * Modify the `ios/<name>/AppDelegate.m` as a string (dangerous)
      */
-    appDelegate?: Mod<XcodeProject>;
+    appDelegate?: Mod<AppDelegateProjectFile>;
   };
 }
 
