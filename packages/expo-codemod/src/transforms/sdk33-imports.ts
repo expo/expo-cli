@@ -116,7 +116,7 @@ export default function transform(fileInfo: FileInfo, api: API, options: object)
     .forEach(path => {
       const importedName = path.node.imported.name;
       const local = path.node.local;
-      importedModules.set(importedName, local);
+      importedModules.set(importedName, local ?? null);
       j(path).remove();
     });
 
@@ -170,7 +170,7 @@ export default function transform(fileInfo: FileInfo, api: API, options: object)
     }
   }
 
-  const emptyImports = expoImports.filter(path => path.node.specifiers.length === 0);
+  const emptyImports = expoImports.filter(path => path.node.specifiers?.length === 0);
   emptyImports.remove();
   // If the first node has been modified or deleted, reattach the comments
   const firstNode = getFirstNode();
@@ -186,7 +186,7 @@ function findNonNamespaceImports(j: JSCodeshift, root: any, sourceName: string) 
     const node = path.node as ImportDeclaration;
     return (
       node.source.value === sourceName &&
-      node.specifiers.some(
+      node.specifiers?.some(
         specifier =>
           specifier.type === 'ImportSpecifier' || specifier.type === 'ImportDefaultSpecifier'
       )

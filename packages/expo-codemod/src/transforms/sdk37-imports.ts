@@ -28,7 +28,7 @@ export default function transform(fileInfo: FileInfo, api: API, options: object)
     .forEach(path => {
       const importedName = path.node.imported.name;
       const local = path.node.local;
-      importedModules.set(importedName, local);
+      importedModules.set(importedName, local ?? null);
       j(path).remove();
     });
 
@@ -67,7 +67,7 @@ export default function transform(fileInfo: FileInfo, api: API, options: object)
     expoImports.insertAfter(newImport);
   }
 
-  const emptyImports = expoImports.filter(path => path.node.specifiers.length === 0);
+  const emptyImports = expoImports.filter(path => path.node.specifiers?.length === 0);
   emptyImports.remove();
   // If the first node has been modified or deleted, reattach the comments
   const firstNode = getFirstNode();
