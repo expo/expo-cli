@@ -1,4 +1,4 @@
-import { getAssetSchemasAsync } from '../ExpSchema';
+import { ExpSchema } from '../../internal';
 
 describe(`getAssetSchemasAsync return array of strings including some known values`, () => {
   test.each([
@@ -11,7 +11,7 @@ describe(`getAssetSchemasAsync return array of strings including some known valu
       ['icon', 'notification.icon', 'splash.image', 'ios.splash.xib', 'android.splash.xxhdpi'],
     ],
   ])('for SDK %s', async (sdkVersion, expectedAssetsPaths) => {
-    const schemas = await getAssetSchemasAsync(sdkVersion);
+    const schemas = await ExpSchema.getAssetSchemasAsync(sdkVersion);
     expect(schemas.every(field => typeof field === 'string')).toBe(true);
     for (const el of expectedAssetsPaths) {
       expect(schemas).toContain(el);
