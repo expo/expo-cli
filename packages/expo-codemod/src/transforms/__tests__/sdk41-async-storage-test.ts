@@ -1,6 +1,6 @@
 import { defineInlineTest } from 'jscodeshift/dist/testUtils';
 
-import transform from '../sdk41-imports';
+import transform from '../sdk41-async-storage';
 
 defineInlineTest(
   transform,
