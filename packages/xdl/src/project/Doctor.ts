@@ -301,6 +301,21 @@ async function _validateReactNativeVersionAsync(
     }
     ProjectUtils.clearNotification(projectRoot, 'doctor-no-react-native-in-package-json');
 
+    if (
+      Versions.gteSdkVersion(exp, '41.0.0') &&
+      pkg.dependencies?.['@react-native-community/async-storage']
+    ) {
+      ProjectUtils.logWarning(
+        projectRoot,
+        'expo',
+        `@react-native-community/async-storage has been renamed. To upgrade:\n- remove @react-native-community/async-storage from package.json\n- run "expo install @react-native-async-storage/async-storage"\n- run "npx expo-codemod sdk41-async-storage src" to rename imports`,
+        'doctor-legacy-async-storage'
+      );
+      return WARNING;
+    } else {
+      ProjectUtils.clearNotification(projectRoot, 'doctor-legacy-async-storage');
+    }
+
     if (!exp.isDetached) {
       return NO_ISSUES;
 
