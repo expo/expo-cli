@@ -10,8 +10,6 @@ import {
   XDLError,
 } from './internal';
 
-export { startAsync, stopAsync, broadcastMessage } from './start/startAsync';
-
 /**
  * @deprecated Use `ProjectSettings.setPackagerInfoAsync`
  * @param projectRoot
@@ -47,12 +45,15 @@ export {
   stopReactNativeServerAsync,
 };
 export {
-  PublishedProjectResult,
-  publishAsync,
-  prepareHooks,
-  runHook,
+  broadcastMessage,
   createBundlesAsync,
   getPublishExpConfigAsync,
+  prepareHooks,
+  publishAsync,
+  PublishedProjectResult,
   PublishOptions,
+  runHook,
+  startAsync,
+  stopAsync,
   writeArtifactSafelyAsync,
 } from './internal';

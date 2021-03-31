@@ -85,8 +85,8 @@ export { delayAsync } from './utils/delayAsync';
 export { downloadApkAsync } from './utils/downloadApkAsync';
 export * as BundleIdentifier from './BundleIdentifier';
 export * as FsCache from './tools/FsCache';
-export * as WebpackCompiler from './webpack-utils/WebpackCompiler';
 export * as WebpackEnvironment from './webpack-utils/WebpackEnvironment';
+export * as WebpackCompiler from './webpack-utils/WebpackCompiler';
 export { default as LoggerDetach, pipeOutputToLogger } from './detach/Logger';
 export { default as StandaloneBuildFlags } from './detach/StandaloneBuildFlags';
 export * as AssetBundle from './detach/AssetBundle';
@@ -100,5 +100,6 @@ export {
   startDevServerAsync,
   StartOptions as StartDevServerOptions,
 } from './start/startDevServerAsync';
+export { startAsync, stopAsync, broadcastMessage } from './start/startAsync';
 export * as ManifestHandler from './start/ManifestHandler';
 export { getFreePortAsync } from './start/getFreePortAsync';
