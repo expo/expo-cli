@@ -2,7 +2,6 @@ import { ExpoConfig } from '@expo/config-types';
 import fs from 'fs-extra';
 import path from 'path';
 
-import { WarningAggregator } from '..';
 import { ConfigPlugin, InfoPlist } from '../Plugin.types';
 import { withDangerousMod } from '../plugins/core-plugins';
 import { createInfoPlistPlugin, withAppDelegate } from '../plugins/ios-plugins';
@@ -101,46 +100,18 @@ export function removeGoogleMapsAppDelegateInit(src: string): MergeResults {
  * @param googleMapsPath '../node_modules/react-native-maps'
  * @returns
  */
-export function addMapsCocoaPods(
-  src: string,
-  useGoogleMaps: boolean,
-  googleMapsPath: string | null
-): MergeResults {
-  const newSrc = [];
-  if (useGoogleMaps) {
-    if (googleMapsPath) {
-      newSrc.push(`  pod 'react-native-google-maps', path: '${googleMapsPath}'`);
-    } else {
-      // Not sure when this could ever happen.
-      WarningAggregator.addWarningIOS(
-        'react-native-maps',
-        'Failed to resolve react-native-maps module for project. Ensure react-native-maps is installed, or disable Google Maps for iOS by removing the `ios.config.googleMapsApiKey` value from your Expo config.'
-      );
-    }
-  }
-  newSrc.push(
-    `  post_install do |installer|`,
-    `    installer.pods_project.targets.each do |target|`,
-    `      next unless target.name == 'react-native-google-maps'`,
-    ` `,
-    `      target.build_configurations.each do |config|`,
-    `        config.build_settings['CLANG_ENABLE_MODULES'] = 'No'`,
-    `      end`,
-    `    end`,
-    `  end`
-  );
-
+export function addMapsCocoaPods(src: string, googleMapsPath: string): MergeResults {
   return mergeContents({
     tag: 'react-native-maps',
     src,
-    newSrc: newSrc.join('\n'),
+    newSrc: `  pod 'react-native-google-maps', path: '${googleMapsPath}'`,
     anchor: /use_react_native/,
     offset: 1,
     comment: '#',
   });
 }
 
-function removeMapsCocoaPods(src: string): MergeResults {
+export function removeMapsCocoaPods(src: string): MergeResults {
   return removeContents({
     tag: 'react-native-maps',
     src,
@@ -161,13 +132,14 @@ const withMapsCocoaPods: ConfigPlugin<{ useGoogleMaps: boolean }> = (config, { u
       // Only add the block if react-native-maps is installed in the project (best effort).
       // Generally prebuild runs after a yarn install so this should always work as expected.
       const googleMapsPath = isReactNativeMapsInstalled(config.modRequest.projectRoot);
-      if (googleMapsPath) {
+      if (googleMapsPath && useGoogleMaps) {
         // Make the pod path relative to the ios folder.
-        const googleMapsPodPath = googleMapsPath
-          ? path.relative(config.modRequest.platformProjectRoot, googleMapsPath)
-          : null;
+        const googleMapsPodPath = path.relative(
+          config.modRequest.platformProjectRoot,
+          googleMapsPath
+        );
         try {
-          results = addMapsCocoaPods(contents, useGoogleMaps, googleMapsPodPath);
+          results = addMapsCocoaPods(contents, googleMapsPodPath);
         } catch (error) {
           if (error.code === 'ERR_NO_MATCH') {
             throw new Error(
@@ -180,7 +152,7 @@ const withMapsCocoaPods: ConfigPlugin<{ useGoogleMaps: boolean }> = (config, { u
         // If the package is no longer installed, then remove the block.
         results = removeMapsCocoaPods(contents);
       }
-      if (results.didMerge) {
+      if (results.didMerge || results.didClear) {
         await fs.writeFile(filePath, results.contents);
       }
       return config;
