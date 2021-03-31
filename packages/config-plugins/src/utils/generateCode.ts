@@ -25,44 +25,64 @@ export type MergeResults = {
 /**
  * Merge the contents of two files together and add a generated header.
  *
- * @param targetContents contents of the existing file
+ * @param src contents of the existing file
  * @param sourceContents contents of the extra file
  */
-export function mergeContents(
-  targetContents: string,
-  sourceContents: string,
-  tag: string,
-  anchor: string | RegExp,
-  offset: number,
-  comment: string
-): MergeResults {
-  const header = createGeneratedHeaderComment(sourceContents, tag, comment);
-  if (!targetContents.includes(header)) {
+export function mergeContents({
+  src,
+  newSrc,
+  tag,
+  anchor,
+  offset,
+  comment,
+}: {
+  src: string;
+  newSrc: string;
+  tag: string;
+  anchor: string | RegExp;
+  offset: number;
+  comment: string;
+}): MergeResults {
+  const header = createGeneratedHeaderComment(newSrc, tag, comment);
+  if (!src.includes(header)) {
     // Ensure the old generated contents are removed.
-    const sanitizedTarget = removeGeneratedContents(targetContents, tag);
+    const sanitizedTarget = removeGeneratedContents(src, tag);
     return {
-      contents: addLines(sanitizedTarget ?? targetContents, anchor, offset, [
+      contents: addLines(sanitizedTarget ?? src, anchor, offset, [
         header,
-        ...sourceContents.split('\n'),
+        ...newSrc.split('\n'),
         `${comment} @generated end ${tag}`,
       ]),
       didMerge: true,
       didClear: !!sanitizedTarget,
     };
   }
-  return { contents: targetContents, didClear: false, didMerge: false };
+  return { contents: src, didClear: false, didMerge: false };
+}
+
+export function removeContents({ src, tag }: { src: string; tag: string }): MergeResults {
+  // Ensure the old generated contents are removed.
+  const sanitizedTarget = removeGeneratedContents(src, tag);
+  return {
+    contents: sanitizedTarget ?? src,
+    didMerge: false,
+    didClear: !!sanitizedTarget,
+  };
 }
 
 function addLines(content: string, find: string | RegExp, offset: number, toAdd: string[]) {
   const lines = content.split('\n');
 
   let lineIndex = lines.findIndex(line => line.match(find));
-
+  if (lineIndex < 0) {
+    const error = new Error(`Failed to match "${find}" in contents:\n${content}`);
+    // @ts-ignore
+    error.code = 'ERR_NO_MATCH';
+    throw error;
+  }
   for (const newLine of toAdd) {
-    if (!content.includes(newLine)) {
-      lines.splice(lineIndex + offset, 0, newLine);
-      lineIndex++;
-    }
+    lines.splice(lineIndex + offset, 0, newLine);
+    lineIndex++;
   }
 
   return lines.join('\n');
@@ -92,7 +112,8 @@ export function createGeneratedHeaderComment(
 ): string {
   const hashKey = createHash(contents);
 
-  return `${comment} @generated begin ${tag} (DO NOT MODIFY) ${hashKey}`;
+  // Everything after the `${tag} ` is unversioned and can be freely modified without breaking changes.
+  return `${comment} @generated begin ${tag} - expo prebuild (DO NOT MODIFY) ${hashKey}`;
 }
 
 export function createHash(gitIgnore: string): string {
