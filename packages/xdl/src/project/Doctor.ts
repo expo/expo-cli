@@ -301,7 +301,10 @@ async function _validateReactNativeVersionAsync(
     }
     ProjectUtils.clearNotification(projectRoot, 'doctor-no-react-native-in-package-json');
 
-    if (pkg.dependencies?.['@react-native-community/async-storage']) {
+    if (
+      Versions.gteSdkVersion(exp, '41.0.0') &&
+      pkg.dependencies?.['@react-native-community/async-storage']
+    ) {
       ProjectUtils.logWarning(
         projectRoot,
         'expo',
