@@ -10,6 +10,7 @@ import * as Google from './Google';
 import * as Icons from './Icons';
 import { ExpoPlist, InfoPlist } from './IosConfig.types';
 import * as Locales from './Locales';
+import * as Maps from './Maps';
 import * as Name from './Name';
 import * as Orientation from './Orientation';
 import * as Paths from './Paths';
@@ -39,6 +40,7 @@ export {
   Entitlements,
   Facebook,
   Google,
+  Maps,
   Icons,
   Locales,
   SplashScreen,

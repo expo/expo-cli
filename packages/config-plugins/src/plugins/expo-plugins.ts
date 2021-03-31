@@ -29,6 +29,7 @@ export const withExpoIOSPlugins: ConfigPlugin<{
     [IOSConfig.BundleIdentifier.withBundleIdentifier, { bundleIdentifier }],
     IOSConfig.SwiftBridgingHeader.withSwiftBridgingHeader,
     IOSConfig.Google.withGoogle,
+    IOSConfig.Maps.withMaps,
     IOSConfig.Name.withDisplayName,
     // IOSConfig.Name.withName,
     IOSConfig.Orientation.withOrientation,

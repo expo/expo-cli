@@ -1,0 +1,40 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`addMapsCocoaPods adds maps pods to Podfile 1`] = `
+"
+require_relative '../node_modules/react-native/scripts/react_native_pods'
+require_relative '../node_modules/react-native-unimodules/cocoapods.rb'
+require_relative '../node_modules/@react-native-community/cli-platform-ios/native_modules'
+
+platform :ios, '11.0'
+
+target 'myapp' do
+  use_unimodules!
+  config = use_native_modules!
+
+# @generated begin react-native-maps (DO NOT MODIFY) sync-5c87ad4d9ddfb7bd69df4fc0cf28e520c23ac94b
+  pod 'GoogleMaps'
+  pod 'Google-Maps-iOS-Utils'
+    installer.pods_project.targets.each do |target|
+      next unless target.name == 'react-native-google-maps'
+      target.build_configurations.each do |config|
+        config.build_settings['CLANG_ENABLE_MODULES'] = 'No'
+      end
+    end
+# @generated end react-native-maps
+  use_react_native!(:path => config[\\"reactNativePath\\"])
+
+  # Uncomment the code below to enable Flipper.
+  #
+  # You should not install Flipper in CI environments when creating release
+  # builds, this will lead to significantly slower build times.
+  #
+  # Note that if you have use_frameworks! enabled, Flipper will not work.
+  #
+  #  use_flipper!
+  #  post_install do |installer|
+  #    flipper_post_install(installer)
+  #  end
+end
+"
+`;

@@ -6,6 +6,7 @@ import xcode from 'xcode';
 
 import { ExportedConfig } from '../../Plugin.types';
 import { withBranch } from '../../ios/Branch';
+import { PodfileBasic } from '../../ios/__tests__/fixtures/Podfile';
 import { getDirFromFS } from '../../ios/__tests__/utils/getDirFromFS';
 import { readXMLAsync } from '../../utils/XML';
 import {
@@ -55,6 +56,7 @@ describe('built-in plugins', () => {
     vol.fromJSON(
       {
         ...rnFixture,
+        'ios/Podfile': PodfileBasic,
         'config/GoogleService-Info.plist': 'noop',
         'config/google-services.json': '{}',
         './icons/foreground.png': icon,
@@ -294,6 +296,7 @@ describe('built-in plugins', () => {
       'ios/ReactNativeProject/ReactNativeProject-Bridging-Header.h',
       'ios/ReactNativeProject/ReactNativeProject.entitlements',
       'ios/ReactNativeProject.xcodeproj/project.pbxproj',
+      'ios/Podfile',
       'android/app/src/main/java/com/bacon/todo/MainActivity.java',
       'android/app/src/main/java/com/bacon/todo/MainApplication.java',
       'android/app/src/main/AndroidManifest.xml',
