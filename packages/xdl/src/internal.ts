@@ -46,6 +46,7 @@ export * as ThirdParty from './ThirdParty';
 export * as UrlUtils from './UrlUtils';
 export {
   default as UserManager,
+  UserManagerInstance,
   RobotUser,
   User,
   ConnectionType,

@@ -4,10 +4,7 @@ import { copyFileSync, ensureDirSync } from 'fs-extra';
 import path from 'path';
 import temporary from 'tempy';
 
-import { publishAsync } from '../Project';
-import UserManager from '../User';
-import { LogRecord } from '../logs/PackagerLogsStream';
-import { attachLoggerStream } from '../project/ProjectUtils';
+import { LogRecord, ProjectUtils, publishAsync, UserManager } from '../internal';
 
 jest.dontMock('fs');
 jest.dontMock('resolve-from');
@@ -106,7 +103,7 @@ describe('publishAsync', () => {
       );
     }
     await spawnAsync('yarnpkg', [], { cwd: projectRoot });
-    attachLoggerStream(projectRoot, {
+    ProjectUtils.attachLoggerStream(projectRoot, {
       stream: {
         write: (chunk: LogRecord) => {
           if (!/bundle_transform_progressed/.test(chunk.msg)) {

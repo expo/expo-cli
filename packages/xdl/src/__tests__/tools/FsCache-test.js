@@ -1,4 +1,4 @@
-import { Cacher } from '../../tools/FsCache';
+import { FsCache } from '../../internal';
 
 jest.mock('analytics-node');
 
@@ -7,7 +7,7 @@ const path = require('path');
 
 describe('Cacher', () => {
   it('works without a bootstrap file', async () => {
-    const dateCacher = new Cacher(
+    const dateCacher = new FsCache.Cacher(
       async () => {
         return new Date();
       },
@@ -37,7 +37,7 @@ describe('Cacher', () => {
   xit('works with a bootstrap file', async () => {
     const expected = JSON.parse(await fs.readFile(path.join(__dirname, 'xdl/package.json')));
 
-    const failCacher = new Cacher(
+    const failCacher = new FsCache.Cacher(
       () => {
         throw new Error('lol this never succeeds');
       },

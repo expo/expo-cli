@@ -1,13 +1,12 @@
 import chalk from 'chalk';
 
-import Logger from '../Logger';
-import { onMessage, SimControlLog } from '../SimControlLogs';
+import { Logger, SimControlLogs } from '../internal';
 
 jest.mock('../Logger');
 
-describe(onMessage, () => {
+describe(SimControlLogs.onMessage, () => {
   it(`logs uncaught exception`, () => {
-    onMessage({
+    SimControlLogs.onMessage({
       traceID: 28814574828650500,
       eventMessage:
         "*** Terminating app due to uncaught exception 'NSInvalidArgumentException', reason: 'Application tried to present modally a view controller <UIViewController: 0x7f87d8516df0> that is already being presented by <UIViewController: 0x7f87da2181f0>.'\n*** First throw call stack:\n(\n\t0   CoreFoundation                      0x00007fff20421af6 __exceptionPreprocess + 242\n\t1   libobjc.A.dylib                     0x00007fff20177e78 objc_exception_throw + 48\n\t2   UIKitCore                           0x00007fff23f76c49 -[UIViewController _presentViewController:withAnimationController:completion:] + 6016\n\t3   UIKitCore                           0x00007fff23f7765a __63-[UIViewController _presentViewController:animated:completion:]_block_invoke + 98\n\t4   UIKitCore                           0x00007fff23f77990 -[UIViewController _performCoordinatedPresentOrDismiss:animated:] + 519\n\t5   UIKitCore                           0x00007fff23f775b8 -[UIViewController _presentViewController:animated:completion:] + 179\n\t6   UIKit<…>",
@@ -47,7 +46,7 @@ _presentViewController:animated:completion:] + 179
   });
   // Seems to be related to AVFoundation
   it(`logs AddInstanceForFactory error`, () => {
-    const message: SimControlLog = {
+    const message: SimControlLogs = {
       traceID: 29504432492515332,
       eventMessage:
         'AddInstanceForFactory: No factory registered for id <CFUUID 0x60000312c980> F8BB1C28-BAE8-11D6-9C31-00039315CD46',
@@ -69,7 +68,7 @@ _presentViewController:animated:completion:] + 179
     };
 
     Logger.global.error = jest.fn();
-    onMessage(message);
+    SimControlLogs.onMessage(message);
 
     expect(Logger.global.error).toHaveBeenCalled();
   });

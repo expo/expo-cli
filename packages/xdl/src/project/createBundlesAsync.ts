@@ -3,8 +3,8 @@ import { bundleAsync, BundleOutput } from '@expo/dev-server';
 import axios from 'axios';
 import chalk from 'chalk';
 
-import { ErrorCode } from '../ErrorCode';
 import {
+  ErrorCode,
   learnMore,
   Logger as logger,
   ProjectUtils,
