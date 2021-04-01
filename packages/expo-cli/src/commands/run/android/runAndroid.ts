@@ -65,7 +65,7 @@ async function resolveOptionsAsync(
     throw new CommandError(`Could not find package name in AndroidManifest.xml at "${filePath}"`);
   }
 
-  let port = await resolvePortAsync(options.port);
+  let port = await resolvePortAsync(projectRoot, options.port);
   options.bundler = !!port;
   if (!port) {
     // Skip bundling if the port is null

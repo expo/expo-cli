@@ -70,11 +70,14 @@ function getDefaultUserTerminal(): string | undefined {
   return TERM;
 }
 
-export async function resolvePortAsync(defaultPort?: number): Promise<number | null> {
+export async function resolvePortAsync(
+  projectRoot: string,
+  defaultPort?: number
+): Promise<number | null> {
   const port = defaultPort ?? getenv.int('RCT_METRO_PORT', 8081);
 
   // Only check the port when the bundler is running.
-  const resolvedPort = await choosePortAsync(port);
+  const resolvedPort = await choosePortAsync(projectRoot, port);
   if (resolvedPort == null) {
     Log.log('\u203A Skipping dev server');
     // Skip bundling if the port is null
@@ -95,7 +98,7 @@ export async function resolveOptionsAsync(
 
   const isSimulator = !('deviceType' in device);
 
-  let port = await resolvePortAsync(options.port);
+  let port = await resolvePortAsync(projectRoot, options.port);
   // Skip bundling if the port is null
   options.bundler = !!port;
   if (!port) {

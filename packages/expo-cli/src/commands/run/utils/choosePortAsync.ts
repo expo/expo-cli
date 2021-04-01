@@ -1,3 +1,4 @@
+import chalk from 'chalk';
 import freeportAsync from 'freeport-async';
 import isRoot from 'is-root';
 
@@ -5,7 +6,10 @@ import Log from '../../../log';
 import { confirmAsync } from '../../../prompts';
 import { getRunningProcess } from './getRunningProcess';
 
-export async function choosePortAsync(defaultPort: number): Promise<number | null> {
+export async function choosePortAsync(
+  projectRoot: string,
+  defaultPort: number
+): Promise<number | null> {
   try {
     const port = await freeportAsync(defaultPort);
     if (port === defaultPort) {
@@ -14,13 +18,23 @@ export async function choosePortAsync(defaultPort: number): Promise<number | nul
 
     const isRestricted = process.platform !== 'win32' && defaultPort < 1024 && !isRoot();
 
-    const message = isRestricted
-      ? `Admin permissions are required to run a server on a port below 1024.`
-      : `Port ${defaultPort} is busy`;
+    let message = isRestricted
+      ? `Admin permissions are required to run a server on a port below 1024`
+      : `Port ${chalk.bold(defaultPort)} is`;
 
     const runningProcess = isRestricted ? null : getRunningProcess(defaultPort);
 
-    Log.log('\u203A ' + message + (runningProcess ? ` running: ${runningProcess}` : ''));
+    if (runningProcess) {
+      const pidTag = chalk.gray(`(pid ${runningProcess.pid})`);
+      if (runningProcess.directory === projectRoot) {
+        message += ` running this app in another window`;
+      } else {
+        message += ` running: ${chalk.cyan(runningProcess.command)}`;
+      }
+      message += '\n' + chalk.gray(`  ${runningProcess.directory} ${pidTag}`);
+    }
+
+    Log.log(`\u203A ${message}`);
     const change = await confirmAsync({
       message: `Use ${port} instead?`,
       initial: true,

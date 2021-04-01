@@ -38,17 +38,18 @@ function getDirectoryOfProcessById(processId: string): string {
   ).trim();
 }
 
-export function getRunningProcess(port: number) {
+export function getRunningProcess(
+  port: number
+): { pid: string; directory: string; command: string } | null {
   try {
     // 63828
-    const processId = getPID(port);
+    const pid = getPID(port);
     // /Users/evanbacon/Documents/GitHub/lab/myapp
-    const directory = getDirectoryOfProcessById(processId);
+    const directory = getDirectoryOfProcessById(pid);
     // /Users/evanbacon/Documents/GitHub/lab/myapp/package.json
-    const command = getProcessCommand(processId, directory);
-
+    const command = getProcessCommand(pid, directory);
     // TODO: Have a better message for reusing another process.
-    return chalk.cyan(command) + '\n' + chalk.gray(`  in ${directory} (pid ${processId})`);
+    return { pid, directory, command };
   } catch {
     return null;
   }
