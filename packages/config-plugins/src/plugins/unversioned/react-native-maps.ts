@@ -1,3 +1,5 @@
+import resolveFrom from 'resolve-from';
+
 import { ConfigPlugin } from '../../Plugin.types';
 import { withGoogleMapsApiKey } from '../../android/GoogleMapsApiKey';
 import { withPermissions } from '../../android/Permissions';
@@ -34,7 +36,13 @@ export const withMaps: ConfigPlugin = config => {
 const withUnversionedMaps: ConfigPlugin = createRunOncePlugin(config => {
   config = withGoogleMapsApiKey(config);
   config = withMapsIOS(config);
-  config = withDefaultLocationPermissions(config);
+  // Only add location permissions if react-native-maps is installed.
+  if (
+    config._internal?.projectRoot &&
+    resolveFrom.silent(config._internal?.projectRoot!, 'react-native-maps')
+  ) {
+    config = withDefaultLocationPermissions(config);
+  }
   return config;
 }, packageName);
 
