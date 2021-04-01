@@ -34,7 +34,6 @@ export { createBundlesAsync, printBundleSizes } from './project/createBundlesAsy
 export { getPublishExpConfigAsync, PublishOptions } from './project/getPublishExpConfigAsync';
 export { runHook, prepareHooks, LoadedHook } from './project/runHook';
 export { writeArtifactSafelyAsync } from './tools/ArtifactUtils';
-export * as Project from './Project';
 export * as ProjectAssets from './ProjectAssets';
 export * as ProjectSettings from './ProjectSettings';
 export * as Prompts from './Prompts';
@@ -103,3 +102,4 @@ export {
 export { startAsync, stopAsync, broadcastMessage } from './start/startAsync';
 export * as ManifestHandler from './start/ManifestHandler';
 export { getFreePortAsync } from './start/getFreePortAsync';
+export * as Project from './Project';
