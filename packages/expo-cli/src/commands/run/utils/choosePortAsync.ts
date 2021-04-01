@@ -36,7 +36,7 @@ export async function choosePortAsync(
 
     Log.log(`\u203A ${message}`);
     const change = await confirmAsync({
-      message: `Use ${port} instead?`,
+      message: `Use port ${port} instead?`,
       initial: true,
     });
     return change ? port : null;
