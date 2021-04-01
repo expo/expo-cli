@@ -81,6 +81,7 @@ export {
 } from './start/startLegacyReactNativeServerAsync';
 export * as ExpSchema from './project/ExpSchema';
 export { delayAsync } from './utils/delayAsync';
+export { choosePortAsync } from './utils/choosePortAsync';
 export { downloadApkAsync } from './utils/downloadApkAsync';
 export * as BundleIdentifier from './BundleIdentifier';
 export * as FsCache from './tools/FsCache';

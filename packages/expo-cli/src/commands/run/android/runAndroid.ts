@@ -1,4 +1,5 @@
 import { AndroidConfig } from '@expo/config-plugins';
+import chalk from 'chalk';
 import fs from 'fs';
 import path from 'path';
 import { Android } from 'xdl';
@@ -6,12 +7,16 @@ import { Android } from 'xdl';
 import CommandError from '../../../CommandError';
 import Log from '../../../log';
 import { prebuildAsync } from '../../eject/prebuildAsync';
+import { startBundlerAsync } from '../ios/startBundlerAsync';
+import { resolvePortAsync } from '../utils/resolvePortAsync';
 import { resolveDeviceAsync } from './resolveDeviceAsync';
 import { spawnGradleAsync } from './spawnGradleAsync';
 
 type Options = {
   variant: string;
   device?: boolean | string;
+  port?: number;
+  bundler?: boolean;
 };
 
 export type AndroidRunOptions = Omit<Options, 'device'> & {
@@ -59,12 +64,22 @@ async function resolveOptionsAsync(
   if (!packageName) {
     throw new CommandError(`Could not find package name in AndroidManifest.xml at "${filePath}"`);
   }
+
+  let port = await resolvePortAsync(projectRoot, options.port);
+  options.bundler = !!port;
+  if (!port) {
+    // Skip bundling if the port is null
+    // any random number
+    port = 8081;
+  }
+
   const variant = options.variant.toLowerCase();
   const apkDirectory = Android.getAPKDirectory(projectRoot);
   const apkVariantDirectory = path.join(apkDirectory, variant);
 
   return {
     ...options,
+    port,
     device,
     mainActivity,
     packageName,
@@ -77,18 +92,32 @@ async function resolveOptionsAsync(
 export async function runAndroidActionAsync(projectRoot: string, options: Options) {
   const props = await resolveOptionsAsync(projectRoot, options);
 
-  Log.log('Building app...');
+  Log.log('\u203A Building app...');
 
   const androidProjectPath = await resolveAndroidProjectPathAsync(projectRoot);
 
   await spawnGradleAsync({ androidProjectPath, variant: options.variant });
 
+  if (props.bundler) {
+    await startBundlerAsync(projectRoot);
+  }
+
   const apkFile = await getInstallApkNameAsync(props.device, props);
-  Log.debug(`Installing: ${apkFile}`);
+  Log.debug(`\u203A Installing: ${apkFile}`);
+
   const binaryPath = path.join(props.apkVariantDirectory, apkFile);
   await Android.installOnDeviceAsync(props.device, { binaryPath });
   // For now, just open the app with a matching package name
   await Android.openAppAsync(props.device, props);
+
+  if (props.bundler) {
+    // TODO: unify logs
+    Log.nested(
+      `\nLogs for your project will appear in the browser console. ${chalk.dim(
+        `Press Ctrl+C to exit.`
+      )}`
+    );
+  }
 }
 
 async function getInstallApkNameAsync(
