@@ -12,6 +12,69 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+## [Thu, 1 Apr 2021 14:25:44 -0700](https://github.com/expo/expo-cli/commit/4bbb35de0096a6369d38e5369c1120cead620ae4)
+
+### 🎉 New features
+
+- Activate android emulator window ([#3345](https://github.com/expo/expo-cli/issues/3345))
+- Created unversioned react-native-maps plugin ([#3343](https://github.com/expo/expo-cli/issues/3343))
+- Add migration from @react-native-community/async-storage ([#3342](https://github.com/expo/expo-cli/issues/3342))
+- Run built APK on device ([#3338](https://github.com/expo/expo-cli/issues/3338))
+- Added expo config command to expo-cli ([#3323](https://github.com/expo/expo-cli/issues/3323))
+- Added device selection prop to run:android ([#3331](https://github.com/expo/expo-cli/issues/3331))
+- Pipe ora output to stdout in non-interactive mode ([#3329](https://github.com/expo/expo-cli/issues/3329))
+- Sort code signing identities by last selected ([#3321](https://github.com/expo/expo-cli/issues/3321))
+- Allow single platform for dev client schemes ([#3309](https://github.com/expo/expo-cli/issues/3309))
+- Improve single platform dev client ([#3337](https://github.com/expo/expo-cli/issues/3337))
+- Improve running in a project with single platform ([#3336](https://github.com/expo/expo-cli/issues/3336))
+- Code signing xcode projects automatically in development ([#3317](https://github.com/expo/expo-cli/issues/3317))
+- Auto install ios-deploy ([#3308](https://github.com/expo/expo-cli/issues/3308))
+- Improved device deployment ([#3306](https://github.com/expo/expo-cli/issues/3306))
+- Created ios command ([#3303](https://github.com/expo/expo-cli/issues/3303))
+
+### 🧹 Chores
+
+- Remove gulp and build with tsc from xdl ([#3334](https://github.com/expo/expo-cli/issues/3334))
+- Create cocoapods dep check file sooner ([#3346](https://github.com/expo/expo-cli/issues/3346))
+- Improve bplist parsing ([#3330](https://github.com/expo/expo-cli/issues/3330))
+- Updated metro config warning to reflect SDK 41 by default. ([#3325](https://github.com/expo/expo-cli/issues/3325))
+- Added spinner for device searching ([#3328](https://github.com/expo/expo-cli/issues/3328))
+- Improve IOSDeploy logging ([#3326](https://github.com/expo/expo-cli/issues/3326))
+- Remove -showBuildSettings usages ([#3318](https://github.com/expo/expo-cli/issues/3318))
+- Update xmldom and xcode dependencies ([#3314](https://github.com/expo/expo-cli/issues/3314))
+- Remove windows extraction binary ([#3165](https://github.com/expo/expo-cli/issues/3165))
+
+### 🐛 Bug fixes
+
+- Prevent removing existing schemes from AndroidManifest.xml ([#3324](https://github.com/expo/expo-cli/issues/3324))
+- Fix a bug where an IntentFilter could be overridden by the Scheme plugin. ([#3319](https://github.com/expo/expo-cli/issues/3319))
+- Fix broken debug spinner ([#3322](https://github.com/expo/expo-cli/issues/3322))
+
+### 📦 Packages updated
+
+- @expo/babel-preset-cli@0.2.19
+- @expo/config-plugins@1.0.24
+- @expo/config@3.3.34
+- @expo/dev-server@0.1.60
+- @expo/dev-tools@0.13.88
+- @expo/electron-adapter@0.0.51
+- expo-cli@4.3.3
+- expo-codemod@1.0.31
+- expo-optimize@0.1.82
+- @expo/image-utils@0.3.12
+- @expo/json-file@8.2.28
+- @expo/metro-config@0.1.60
+- @expo/next-adapter@2.1.65
+- @expo/osascript@2.0.25
+- @expo/package-manager@0.0.39
+- @expo/plist@0.0.12
+- pod-install@0.1.19
+- expo-pwa@0.0.70
+- @expo/schemer@1.3.27
+- uri-scheme@1.0.71
+- @expo/webpack-config@0.12.64
+- xdl@59.0.28
+
 ## [Fri, 19 Mar 2021 10:26:48 -0700](https://github.com/expo/expo-cli/commit/c4b3c767269e6e5efd1abd9fa3b72b066eed2a00)
 
 ### 🐛 Bug fixes
