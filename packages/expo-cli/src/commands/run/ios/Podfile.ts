@@ -64,7 +64,7 @@ function createPackageChecksums(pkg: PackageJSONConfig): PackageChecksums {
   };
 }
 
-async function hasPackageJsonDependencyListChangedAsync(projectRoot: string) {
+export async function hasPackageJsonDependencyListChangedAsync(projectRoot: string) {
   const pkg = getPackageJson(projectRoot);
 
   const packages = createPackageChecksums(pkg);
