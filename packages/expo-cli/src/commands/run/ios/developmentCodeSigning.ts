@@ -38,10 +38,16 @@ export function getCodeSigningInfoForPbxproj(projectRoot: string) {
     )
     .forEach(([, item]: IOSConfig.XcodeUtils.ConfigurationSectionEntry) => {
       const { DEVELOPMENT_TEAM, PROVISIONING_PROFILE } = item.buildSettings;
-      if (typeof DEVELOPMENT_TEAM === 'string') {
+      if (
+        typeof DEVELOPMENT_TEAM === 'string' &&
+        // If the user selects "Team: none" in Xcode, it'll be an empty string.
+        !!DEVELOPMENT_TEAM &&
+        // xcode package sometimes reads an empty string as a quoted empty string.
+        DEVELOPMENT_TEAM !== '""'
+      ) {
         developmentTeams.push(DEVELOPMENT_TEAM);
       }
-      if (typeof PROVISIONING_PROFILE === 'string') {
+      if (typeof PROVISIONING_PROFILE === 'string' && !!PROVISIONING_PROFILE) {
         provisioningProfiles.push(PROVISIONING_PROFILE);
       }
     });
