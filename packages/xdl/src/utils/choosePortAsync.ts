@@ -2,16 +2,17 @@ import chalk from 'chalk';
 import freeportAsync from 'freeport-async';
 import isRoot from 'is-root';
 
-import Log from '../../../log';
-import { confirmAsync } from '../../../prompts';
+import { confirmAsync } from '../Prompts';
+import { Logger } from '../xdl';
 import { getRunningProcess } from './getRunningProcess';
 
 export async function choosePortAsync(
   projectRoot: string,
-  defaultPort: number
+  defaultPort: number,
+  host?: string
 ): Promise<number | null> {
   try {
-    const port = await freeportAsync(defaultPort);
+    const port = await freeportAsync(defaultPort, { hostnames: [host ?? null] });
     if (port === defaultPort) {
       return port;
     }
@@ -34,7 +35,7 @@ export async function choosePortAsync(
       message += '\n' + chalk.gray(`  ${runningProcess.directory} ${pidTag}`);
     }
 
-    Log.log(`\u203A ${message}`);
+    Logger.global.info(`\u203A ${message}`);
     const change = await confirmAsync({
       message: `Use port ${port} instead?`,
       initial: true,
@@ -44,7 +45,7 @@ export async function choosePortAsync(
     if (error.code === 'ABORTED') {
       throw error;
     } else if (error.code === 'NON_INTERACTIVE') {
-      Log.warn(error.message);
+      Logger.global.warn(error.message);
       return null;
     }
     throw error;

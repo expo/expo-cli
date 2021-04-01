@@ -1,10 +1,8 @@
-import getenv from 'getenv';
 import { sync as globSync } from 'glob';
 import * as path from 'path';
 
 import CommandError from '../../../CommandError';
-import Log from '../../../log';
-import { choosePortAsync } from '../utils/choosePortAsync';
+import { resolvePortAsync } from '../utils/resolvePortAsync';
 import * as XcodeBuild from './XcodeBuild';
 import { resolveDeviceAsync } from './resolveDeviceAsync';
 
@@ -68,25 +66,6 @@ function getDefaultUserTerminal(): string | undefined {
   }
 
   return TERM;
-}
-
-export async function resolvePortAsync(
-  projectRoot: string,
-  defaultPort?: number
-): Promise<number | null> {
-  const port = defaultPort ?? getenv.int('RCT_METRO_PORT', 8081);
-
-  // Only check the port when the bundler is running.
-  const resolvedPort = await choosePortAsync(projectRoot, port);
-  if (resolvedPort == null) {
-    Log.log('\u203A Skipping dev server');
-    // Skip bundling if the port is null
-  } else {
-    // Use the new or resolved port
-    process.env.RCT_METRO_PORT = String(resolvedPort);
-  }
-
-  return resolvedPort;
 }
 
 export async function resolveOptionsAsync(

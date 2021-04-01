@@ -6,7 +6,7 @@ import fs from 'fs-extra';
 import getenv from 'getenv';
 import http from 'http';
 import * as path from 'path';
-import { choosePort, prepareUrls, Urls } from 'react-dev-utils/WebpackDevServerUtils';
+import { prepareUrls, Urls } from 'react-dev-utils/WebpackDevServerUtils';
 import formatWebpackMessages from 'react-dev-utils/formatWebpackMessages';
 import openBrowser from 'react-dev-utils/openBrowser';
 import webpack from 'webpack';
@@ -20,6 +20,7 @@ import XDLError from './XDLError';
 import ip from './ip';
 import { learnMore } from './logs/TerminalLink';
 import * as ProjectUtils from './project/ProjectUtils';
+import { choosePortAsync } from './utils/choosePortAsync';
 import { DEFAULT_PORT, HOST, isDebugModeEnabled } from './webpack-utils/WebpackEnvironment';
 import createWebpackCompiler, { printInstructions } from './webpack-utils/createWebpackCompiler';
 
@@ -164,6 +165,7 @@ export async function startAsync(
 
   const config = await createWebpackConfigAsync(env, fullOptions);
   const port = await getAvailablePortAsync({
+    projectRoot,
     defaultPort: options.port,
   });
 
@@ -425,20 +427,25 @@ async function getProtocolAsync(projectRoot: string): Promise<'http' | 'https'> 
   return https === true ? 'https' : 'http';
 }
 
-async function getAvailablePortAsync(
-  options: { host?: string; defaultPort?: number } = {}
-): Promise<number> {
+async function getAvailablePortAsync(options: {
+  host?: string;
+  defaultPort?: number;
+  projectRoot: string;
+}): Promise<number> {
   try {
     const defaultPort =
       'defaultPort' in options && options.defaultPort ? options.defaultPort : DEFAULT_PORT;
-    const port = await choosePort(
-      'host' in options && options.host ? options.host : HOST,
-      defaultPort
+    const port = await choosePortAsync(
+      options.projectRoot,
+      defaultPort,
+      'host' in options && options.host ? options.host : HOST
     );
-    if (!port) throw new Error(`Port ${defaultPort} not available.`);
-    else return port;
+    if (!port) {
+      throw new Error(`Port ${defaultPort} not available.`);
+    }
+    return port;
   } catch (error) {
-    throw new XDLError('NO_PORT_FOUND', 'No available port found: ' + error.message);
+    throw new XDLError('NO_PORT_FOUND', error.message);
   }
 }
 
