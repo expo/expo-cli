@@ -9,6 +9,7 @@ export default function (program: Command) {
     .helpGroup('internal')
     .description('Run the Android app binary locally')
     .option('-d, --device [device]', 'Device name to build the app on')
+    .option('-p, --port <port>', 'Port to start the Metro bundler on. Default: 8081')
     .option('--variant [name]', '(Android) build variant', 'debug')
     .asyncActionProjectDir(runAndroidActionAsync);
   program
