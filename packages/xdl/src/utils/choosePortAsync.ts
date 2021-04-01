@@ -2,8 +2,8 @@ import chalk from 'chalk';
 import freeportAsync from 'freeport-async';
 import isRoot from 'is-root';
 
+import Logger from '../Logger';
 import { confirmAsync } from '../Prompts';
-import { Logger } from '../xdl';
 import { getRunningProcess } from './getRunningProcess';
 
 export async function choosePortAsync(
