@@ -90,7 +90,7 @@ function addLines(content: string, find: string | RegExp, offset: number, toAdd:
 
 /**
  * Removes the generated section from a file, returns null when nothing can be removed.
- * This sways heavily towards not removing lines unless it's certain that modifications were not made to the gitignore manually.
+ * This sways heavily towards not removing lines unless it's certain that modifications were not made manually.
  *
  * @param src
  */
