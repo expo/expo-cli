@@ -105,8 +105,8 @@ export function addMapsCocoaPods(src: string, googleMapsPath: string): MergeResu
     tag: 'react-native-maps',
     src,
     newSrc: `  pod 'react-native-google-maps', path: '${googleMapsPath}'`,
-    anchor: /use_react_native/,
-    offset: 1,
+    anchor: /use_native_modules/,
+    offset: 0,
     comment: '#',
   });
 }
