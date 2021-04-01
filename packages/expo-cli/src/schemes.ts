@@ -1,10 +1,12 @@
 import { AndroidConfig, IOSConfig } from '@expo/config-plugins';
 import plist from '@expo/plist';
 import * as fs from 'fs-extra';
-import * as path from 'path';
 
 import { AbortCommandError } from './CommandError';
-import { directoryExistsAsync } from './commands/eject/clearNativeFolder';
+import {
+  hasRequiredAndroidFilesAsync,
+  hasRequiredIOSFilesAsync,
+} from './commands/eject/clearNativeFolder';
 import Log from './log';
 
 async function getSchemesForIosAsync(projectRoot: string) {
@@ -37,8 +39,8 @@ function intersecting<T>(a: T[], b: T[]): T[] {
 
 export async function getDevClientSchemeAsync(projectRoot: string): Promise<string> {
   const [hasIos, hasAndroid] = await Promise.all([
-    directoryExistsAsync(path.join(projectRoot, 'ios')),
-    directoryExistsAsync(path.join(projectRoot, 'android')),
+    hasRequiredIOSFilesAsync(projectRoot),
+    hasRequiredAndroidFilesAsync(projectRoot),
   ]);
 
   const [ios, android] = await Promise.all([
