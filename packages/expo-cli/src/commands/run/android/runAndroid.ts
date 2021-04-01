@@ -7,8 +7,8 @@ import { Android } from 'xdl';
 import CommandError from '../../../CommandError';
 import Log from '../../../log';
 import { prebuildAsync } from '../../eject/prebuildAsync';
-import { resolvePortAsync } from '../ios/resolveOptionsAsync';
 import { startBundlerAsync } from '../ios/startBundlerAsync';
+import { resolvePortAsync } from '../utils/resolvePortAsync';
 import { resolveDeviceAsync } from './resolveDeviceAsync';
 import { spawnGradleAsync } from './spawnGradleAsync';
 
