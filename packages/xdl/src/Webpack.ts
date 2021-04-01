@@ -12,16 +12,18 @@ import openBrowser from 'react-dev-utils/openBrowser';
 import webpack from 'webpack';
 import WebpackDevServer from 'webpack-dev-server';
 
-import Logger from './Logger';
-import * as ProjectSettings from './ProjectSettings';
-import * as UrlUtils from './UrlUtils';
-import * as Versions from './Versions';
-import XDLError from './XDLError';
-import ip from './ip';
-import { learnMore } from './logs/TerminalLink';
-import * as ProjectUtils from './project/ProjectUtils';
-import { DEFAULT_PORT, HOST, isDebugModeEnabled } from './webpack-utils/WebpackEnvironment';
-import createWebpackCompiler, { printInstructions } from './webpack-utils/createWebpackCompiler';
+import {
+  ip,
+  learnMore,
+  Logger,
+  ProjectSettings,
+  ProjectUtils,
+  UrlUtils,
+  Versions,
+  WebpackCompiler,
+  WebpackEnvironment,
+  XDLError,
+} from './internal';
 
 const WEBPACK_LOG_TAG = 'expo';
 
@@ -92,7 +94,7 @@ let devServerInfo: {
 
 export function printConnectionInstructions(projectRoot: string, options = {}) {
   if (!devServerInfo) return;
-  printInstructions(projectRoot, {
+  WebpackCompiler.printInstructions(projectRoot, {
     appName: devServerInfo.appName,
     urls: devServerInfo.urls,
     showInDevtools: false,
@@ -196,7 +198,7 @@ export async function startAsync(
 
   const server: DevServer = await new Promise(resolve => {
     // Create a webpack compiler that is configured with custom messages.
-    const compiler = createWebpackCompiler({
+    const compiler = WebpackCompiler.createWebpackCompiler({
       projectRoot,
       appName,
       config,
@@ -207,7 +209,7 @@ export async function startAsync(
     });
     const server = new WebpackDevServer(compiler, config.devServer);
     // Launch WebpackDevServer.
-    server.listen(port, HOST, error => {
+    server.listen(port, WebpackEnvironment.HOST, error => {
       if (error) {
         ProjectUtils.logError(projectRoot, WEBPACK_LOG_TAG, error.message);
       }
@@ -430,9 +432,11 @@ async function getAvailablePortAsync(
 ): Promise<number> {
   try {
     const defaultPort =
-      'defaultPort' in options && options.defaultPort ? options.defaultPort : DEFAULT_PORT;
+      'defaultPort' in options && options.defaultPort
+        ? options.defaultPort
+        : WebpackEnvironment.DEFAULT_PORT;
     const port = await choosePort(
-      'host' in options && options.host ? options.host : HOST,
+      'host' in options && options.host ? options.host : WebpackEnvironment.HOST,
       defaultPort
     );
     if (!port) throw new Error(`Port ${defaultPort} not available.`);
@@ -565,7 +569,7 @@ function applyEnvironmentVariables(config: WebpackConfiguration): WebpackConfigu
   // Use EXPO_DEBUG_WEB=true to enable debugging features for cases where the prod build
   // has errors that aren't caught in development mode.
   // Related: https://github.com/expo/expo-cli/issues/614
-  if (isDebugModeEnabled() && config.mode === 'production') {
+  if (WebpackEnvironment.isDebugModeEnabled() && config.mode === 'production') {
     console.log(chalk.bgYellow.black('Bundling the project in debug mode.'));
 
     const output = config.output || {};

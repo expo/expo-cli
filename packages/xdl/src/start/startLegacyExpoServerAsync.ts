@@ -3,13 +3,15 @@ import axios from 'axios';
 import express from 'express';
 import { AddressInfo } from 'net';
 
-import * as ConnectionStatus from '../ConnectionStatus';
-import * as ProjectSettings from '../ProjectSettings';
-import * as Doctor from '../project/Doctor';
-import * as ProjectUtils from '../project/ProjectUtils';
-import { assertValidProjectRoot } from '../project/errors';
-import { getManifestHandler } from './ManifestHandler';
-import { getFreePortAsync } from './getFreePortAsync';
+import {
+  assertValidProjectRoot,
+  ConnectionStatus,
+  Doctor,
+  getFreePortAsync,
+  ManifestHandler,
+  ProjectSettings,
+  ProjectUtils,
+} from '../internal';
 
 type ConsoleLogLevel = 'info' | 'warn' | 'error' | 'debug';
 
@@ -95,7 +97,7 @@ export async function startExpoServerAsync(projectRoot: string): Promise<void> {
     throw new Error(`Couldn't start project. Please fix the errors and restart the project.`);
   }
   // Serve the manifest.
-  const manifestHandler = getManifestHandler(projectRoot);
+  const manifestHandler = ManifestHandler.getManifestHandler(projectRoot);
   app.get('/', manifestHandler);
   app.get('/manifest', manifestHandler);
   app.get('/index.exp', manifestHandler);

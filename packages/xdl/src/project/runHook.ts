@@ -2,8 +2,7 @@ import { ExpoConfig, Hook, HookArguments, HookType } from '@expo/config';
 import decache from 'decache';
 import resolveFrom from 'resolve-from';
 
-import logger from '../Logger';
-import XDLError from '../XDLError';
+import { Logger as logger, XDLError } from '../internal';
 
 export type LoadedHook = Hook & {
   _fn: (input: HookArguments) => any;

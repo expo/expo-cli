@@ -2,17 +2,21 @@ import { readExpRcAsync } from '@expo/config';
 import * as path from 'path';
 import { promisify } from 'util';
 
-import * as Android from '../Android';
-import Config from '../Config';
-import * as ProjectSettings from '../ProjectSettings';
-import * as UrlUtils from '../UrlUtils';
-import UserManager, { ANONYMOUS_USERNAME } from '../User';
-import UserSettings from '../UserSettings';
-import XDLError from '../XDLError';
-import * as Logger from '../project/ProjectUtils';
-import { assertValidProjectRoot } from '../project/errors';
-import { delayAsync } from '../utils/delayAsync';
-import { NgrokOptions, resolveNgrokAsync } from './resolveNgrok';
+import {
+  Android,
+  ANONYMOUS_USERNAME,
+  assertValidProjectRoot,
+  Config,
+  delayAsync,
+  NgrokOptions,
+  ProjectSettings,
+  ProjectUtils,
+  resolveNgrokAsync,
+  UrlUtils,
+  UserManager,
+  UserSettings,
+  XDLError,
+} from '../internal';
 
 function getNgrokConfigPath() {
   return path.join(UserSettings.dotExpoHomeDirectory(), 'ngrok.yml');
@@ -73,7 +77,7 @@ async function connectToNgrokAsync(
           try {
             process.kill(ngrokPid, 'SIGKILL');
           } catch (e) {
-            Logger.logDebug(projectRoot, 'expo', `Couldn't kill ngrok with PID ${ngrokPid}`);
+            ProjectUtils.logDebug(projectRoot, 'expo', `Couldn't kill ngrok with PID ${ngrokPid}`);
           }
         } else {
           await ngrokKillAsync();
@@ -111,7 +115,7 @@ export async function startTunnelsAsync(
   const expoServerPort = packagerInfo.expoServerPort;
   await stopTunnelsAsync(projectRoot);
   if (await Android.startAdbReverseAsync(projectRoot)) {
-    Logger.logInfo(
+    ProjectUtils.logInfo(
       projectRoot,
       'expo',
       'Successfully ran `adb reverse`. Localhost URLs should work on the connected Android device.'
@@ -183,7 +187,7 @@ export async function startTunnelsAsync(
 
       startedTunnelsSuccessfully = true;
 
-      Logger.logWithLevel(
+      ProjectUtils.logWithLevel(
         projectRoot,
         'info',
         {
@@ -195,7 +199,7 @@ export async function startTunnelsAsync(
 
       ngrok.addListener('statuschange', (status: string) => {
         if (status === 'reconnecting') {
-          Logger.logError(
+          ProjectUtils.logError(
             projectRoot,
             'expo',
             'We noticed your tunnel is having issues. ' +
@@ -204,7 +208,7 @@ export async function startTunnelsAsync(
               'or switch Host to LAN.'
           );
         } else if (status === 'online') {
-          Logger.logInfo(projectRoot, 'expo', 'Tunnel connected.');
+          ProjectUtils.logInfo(projectRoot, 'expo', 'Tunnel connected.');
         }
       });
     })(),
@@ -231,7 +235,11 @@ export async function stopTunnelsAsync(projectRoot: string): Promise<void> {
     try {
       process.kill(packagerInfo.ngrokPid);
     } catch (e) {
-      Logger.logDebug(projectRoot, 'expo', `Couldn't kill ngrok with PID ${packagerInfo.ngrokPid}`);
+      ProjectUtils.logDebug(
+        projectRoot,
+        'expo',
+        `Couldn't kill ngrok with PID ${packagerInfo.ngrokPid}`
+      );
     }
   } else {
     // Ngrok is running from the current process. Kill using ngrok api.

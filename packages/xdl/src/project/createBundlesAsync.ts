@@ -3,19 +3,19 @@ import { bundleAsync, BundleOutput } from '@expo/dev-server';
 import axios from 'axios';
 import chalk from 'chalk';
 
-import { ErrorCode } from '../ErrorCode';
-import logger from '../Logger';
-import * as UrlUtils from '../UrlUtils';
-import XDLError from '../XDLError';
-import * as TableText from '../logs/TableText';
-import { learnMore } from '../logs/TerminalLink';
 import {
+  ErrorCode,
+  learnMore,
+  Logger as logger,
+  ProjectUtils,
+  PublishOptions,
+  resolveEntryPoint,
   startReactNativeServerAsync,
   stopReactNativeServerAsync,
-} from '../start/startLegacyReactNativeServerAsync';
-import { resolveEntryPoint } from '../tools/resolveEntryPoint';
-import * as ProjectUtils from './ProjectUtils';
-import { PublishOptions } from './getPublishExpConfigAsync';
+  TableText,
+  UrlUtils,
+  XDLError,
+} from '../internal';
 
 const MINIMUM_BUNDLE_SIZE = 500;
 

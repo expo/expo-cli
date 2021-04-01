@@ -6,12 +6,7 @@ import QueryString from 'querystring';
 import resolveFrom from 'resolve-from';
 import url from 'url';
 
-import Config from './Config';
-import * as ProjectSettings from './ProjectSettings';
-import * as Versions from './Versions';
-import XDLError from './XDLError';
-import ip from './ip';
-import * as ProjectUtils from './project/ProjectUtils';
+import { Config, ip, ProjectSettings, ProjectUtils, Versions, XDLError } from './internal';
 
 interface URLOptions extends Omit<ProjectSettings.ProjectSettings, 'urlRandomness'> {
   urlType: null | 'exp' | 'http' | 'no-protocol' | 'redirect' | 'custom';

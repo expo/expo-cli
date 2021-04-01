@@ -4,14 +4,17 @@ import FormData from 'form-data';
 import fs from 'fs-extra';
 import path from 'path';
 
-import { MAX_BODY_LENGTH, MAX_CONTENT_LENGTH } from './ApiV2';
-import Config from './Config';
-import * as ConnectionStatus from './ConnectionStatus';
-import * as Extract from './Extract';
-import * as Session from './Session';
-import UserManager from './User';
-import UserSettings from './UserSettings';
-import XDLError from './XDLError';
+import {
+  API_V2_MAX_BODY_LENGTH,
+  API_V2_MAX_CONTENT_LENGTH,
+  Config,
+  ConnectionStatus,
+  Extract,
+  Session,
+  UserManager,
+  UserSettings,
+  XDLError,
+} from './internal';
 
 const TIMER_DURATION = 30000;
 const TIMEOUT = 3600000;
@@ -77,8 +80,8 @@ async function _callMethodAsync(
     url,
     method,
     headers,
-    maxContentLength: MAX_CONTENT_LENGTH,
-    maxBodyLength: MAX_BODY_LENGTH,
+    maxContentLength: API_V2_MAX_CONTENT_LENGTH,
+    maxBodyLength: API_V2_MAX_BODY_LENGTH,
   };
 
   if (requestBody) {

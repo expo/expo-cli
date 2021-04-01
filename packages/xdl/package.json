@@ -2,7 +2,7 @@
   "name": "xdl",
   "version": "59.0.27",
   "description": "The Expo Development Library",
-  "main": "build/xdl.js",
+  "main": "build/index.js",
   "files": [
     "build",
     "!**/__integration_tests__/**",
@@ -12,11 +12,11 @@
   ],
   "scripts": {
     "start": "yarn run prepare && yarn run watch",
-    "build": "tsc --emitDeclarationOnly && gulp build",
+    "build": "tsc",
     "prepare": "yarn run clean && yarn run build",
-    "prepack": "gulp caches",
+    "prepack": "node scripts/updateCaches.js",
     "clean": "rimraf build ./tsconfig.tsbuildinfo",
-    "watch": "concurrently \"tsc --emitDeclarationOnly --watch\" \"gulp watch\"",
+    "watch": "tsc --watch",
     "test": "jest --config jest/unit-test-config.js",
     "integration-tests": "jest --config jest/integration-test-config.js"
   },
@@ -120,14 +120,6 @@
     "@types/uuid": "^3.4.4",
     "@types/webpack": "4.41.18",
     "@types/webpack-dev-server": "3.11.0",
-    "concurrently": "^4.1.0",
-    "gulp": "^4.0.0",
-    "gulp-babel": "^8.0.0",
-    "gulp-changed": "^1.3.1",
-    "gulp-cli": "^1.2.2",
-    "gulp-plumber": "^1.1.0",
-    "gulp-shell": "^0.5.2",
-    "gulp-sourcemaps": "^1.6.0",
     "memfs": "^3.2.0",
     "rimraf": "^3.0.2"
   },

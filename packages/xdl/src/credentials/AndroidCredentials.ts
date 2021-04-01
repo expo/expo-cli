@@ -1,10 +1,9 @@
 import spawnAsync, { SpawnResult } from '@expo/spawn-async';
-import chalk from 'chalk';
 import crypto from 'crypto';
 import fs from 'fs-extra';
 import uuidv4 from 'uuid/v4';
 
-import logger from '../Logger';
+import { Logger as logger } from '../internal';
 
 const log = logger.global;
 
@@ -22,7 +21,7 @@ export type KeystoreInfo = {
   keyAlias: string;
 };
 
-export async function exportCertBinary(
+async function exportCertBinary(
   {
     keystorePath,
     keystorePassword,
@@ -143,23 +142,7 @@ export async function logKeystoreHashes(keystoreInfo: KeystoreInfo, linePrefix: 
   }
 }
 
-export function logKeystoreCredentials(
-  {
-    keystorePassword,
-    keyAlias,
-    keyPassword,
-  }: Pick<Keystore, 'keystorePassword' | 'keyAlias' | 'keyPassword'>,
-  title: string = 'Keystore credentials',
-  linePrefix: string = ''
-) {
-  log.info(`${linePrefix}${title}
-${linePrefix}    Keystore password: ${chalk.bold(keystorePassword)}
-${linePrefix}    Key alias:         ${chalk.bold(keyAlias)}
-${linePrefix}    Key password:      ${chalk.bold(keyPassword)}
-  `);
-}
-
-export async function createKeystore(
+async function createKeystore(
   { keystorePath, keystorePassword, keyAlias, keyPassword }: KeystoreInfo,
   androidPackage: string
 ): Promise<SpawnResult> {

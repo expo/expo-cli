@@ -3,9 +3,12 @@ import os from 'os';
 import path from 'path';
 import uuid from 'uuid';
 
-import ApiV2 from '../ApiV2';
-import GlobalUserManager, { UserManagerInstance } from '../User';
-import UserSettings from '../UserSettings';
+import {
+  ApiV2,
+  UserManager as GlobalUserManager,
+  UserManagerInstance,
+  UserSettings,
+} from '../internal';
 
 jest.mock('../ApiV2', () => ({
   clientForUser: jest.fn(),

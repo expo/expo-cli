@@ -12,6 +12,7 @@ module.exports = () => ({
     require('@babel/preset-typescript'),
   ],
   plugins: [
+    require('@babel/plugin-proposal-export-namespace-from'),
     require('@babel/plugin-proposal-class-properties'),
     [
       require('@babel/plugin-transform-modules-commonjs'),
