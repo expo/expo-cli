@@ -1,6 +1,6 @@
 {
   "name": "expo-optimize",
-  "version": "0.1.81",
+  "version": "0.1.82",
   "main": "build",
   "preferGlobal": true,
   "keywords": [
@@ -33,10 +33,10 @@
     "clean": "rimraf ./build/"
   },
   "devDependencies": {
-    "@expo/babel-preset-cli": "0.2.18",
-    "@expo/config": "3.3.33",
-    "@expo/image-utils": "0.3.11",
-    "@expo/json-file": "8.2.28-alpha.0",
+    "@expo/babel-preset-cli": "0.2.19",
+    "@expo/config": "3.3.34",
+    "@expo/image-utils": "0.3.12",
+    "@expo/json-file": "8.2.28",
     "chalk": "^4.0.0",
     "commander": "2.20.0",
     "cross-spawn": "6.0.5",

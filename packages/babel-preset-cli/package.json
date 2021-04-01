@@ -1,6 +1,6 @@
 {
   "name": "@expo/babel-preset-cli",
-  "version": "0.2.18",
+  "version": "0.2.19",
   "description": "The Babel preset for Expo CLI packages",
   "main": "index.js",
   "scripts": {

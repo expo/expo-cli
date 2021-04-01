@@ -1,6 +1,6 @@
 {
   "name": "expo-cli",
-  "version": "4.3.2",
+  "version": "4.3.3",
   "description": "The command-line tool for creating and publishing Expo apps",
   "preferGlobal": true,
   "main": "build/exp.js",
@@ -43,7 +43,7 @@
   "devDependencies": {
     "@babel/cli": "^7.8.4",
     "@babel/core": "^7.9.0",
-    "@expo/babel-preset-cli": "0.2.18",
+    "@expo/babel-preset-cli": "0.2.19",
     "@types/command-exists": "^1.2.0",
     "@types/dateformat": "^3.0.0",
     "@types/form-data": "^2.2.0",
@@ -68,13 +68,13 @@
   "dependencies": {
     "@expo/apple-utils": "0.0.0-alpha.17",
     "@expo/bunyan": "4.0.0",
-    "@expo/config": "3.3.33",
-    "@expo/config-plugins": "1.0.23",
-    "@expo/dev-tools": "0.13.87",
-    "@expo/json-file": "8.2.28-alpha.0",
-    "@expo/osascript": "2.0.24",
-    "@expo/package-manager": "0.0.39-alpha.0",
-    "@expo/plist": "0.0.11",
+    "@expo/config": "3.3.34",
+    "@expo/config-plugins": "1.0.24",
+    "@expo/dev-tools": "0.13.88",
+    "@expo/json-file": "8.2.28",
+    "@expo/osascript": "2.0.25",
+    "@expo/package-manager": "0.0.39",
+    "@expo/plist": "0.0.12",
     "@expo/results": "^1.0.0",
     "@expo/simple-spinner": "1.0.2",
     "@expo/spawn-async": "1.5.0",
@@ -126,7 +126,7 @@
     "uuid": "^8.0.0",
     "wrap-ansi": "^7.0.0",
     "xcode": "^3.0.1",
-    "xdl": "59.0.27"
+    "xdl": "59.0.28"
   },
   "gitHead": "613642fe06827cc231405784b099cf71c29072df"
 }
