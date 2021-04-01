@@ -36,6 +36,10 @@ Object {
         "name": "expo-updates",
         "version": "UNVERSIONED",
       },
+      "react-native-maps": Object {
+        "name": "react-native-maps",
+        "version": "UNVERSIONED",
+      },
     },
     "projectRoot": "/app",
   },
