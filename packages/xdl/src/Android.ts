@@ -561,7 +561,7 @@ function getUnixPID(port: number | string) {
     .trim();
 }
 
-export async function activateEmulatorWindowAsync(device: Device) {
+export async function activateEmulatorWindowAsync(device: Pick<Device, 'type' | 'pid'>) {
   if (
     // only mac is supported for now.
     process.platform !== 'darwin' ||
@@ -590,7 +590,7 @@ export async function activateEmulatorWindowAsync(device: Device) {
 }
 
 export async function openAppAsync(
-  device: Pick<Device, 'pid'>,
+  device: Pick<Device, 'pid' | 'type'>,
   {
     packageName,
     mainActivity,
@@ -620,6 +620,8 @@ export async function openAppAsync(
   if (openProject.includes(CANT_START_ACTIVITY_ERROR)) {
     throw new Error(openProject.substring(openProject.indexOf('Error: ')));
   }
+
+  await activateEmulatorWindowAsync(device);
 
   return openProject;
 }
