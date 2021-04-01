@@ -25,8 +25,12 @@ export type MergeResults = {
 /**
  * Merge the contents of two files together and add a generated header.
  *
- * @param src contents of the existing file
- * @param sourceContents contents of the extra file
+ * @param src contents of the original file
+ * @param newSrc new contents to merge into the original file
+ * @param identifier used to update and remove merges
+ * @param anchor regex to where the merge should begin
+ * @param offset line offset to start merging at (<1 for behind the anchor)
+ * @param comment comment style `//` or `#`
  */
 export function mergeContents({
   src,
@@ -116,8 +120,8 @@ export function createGeneratedHeaderComment(
   return `${comment} @generated begin ${tag} - expo prebuild (DO NOT MODIFY) ${hashKey}`;
 }
 
-export function createHash(gitIgnore: string): string {
+export function createHash(src: string): string {
   // this doesn't need to be secure, the shorter the better.
-  const hash = crypto.createHash('sha1').update(gitIgnore).digest('hex');
+  const hash = crypto.createHash('sha1').update(src).digest('hex');
   return `sync-${hash}`;
 }
