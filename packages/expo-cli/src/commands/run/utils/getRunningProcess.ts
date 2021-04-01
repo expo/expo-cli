@@ -1,4 +1,3 @@
-import chalk from 'chalk';
 import { execFileSync, execSync, ExecSyncOptionsWithStringEncoding } from 'child_process';
 import * as path from 'path';
 
