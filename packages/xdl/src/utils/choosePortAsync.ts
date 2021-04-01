@@ -30,7 +30,7 @@ export async function choosePortAsync(
       if (runningProcess.directory === projectRoot) {
         message += ` running this app in another window`;
       } else {
-        message += ` running: ${chalk.cyan(runningProcess.command)}`;
+        message += ` running ${chalk.cyan(runningProcess.command)} in another window`;
       }
       message += '\n' + chalk.gray(`  ${runningProcess.directory} ${pidTag}`);
     }
