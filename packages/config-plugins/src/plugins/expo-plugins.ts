@@ -13,6 +13,7 @@ import withFacebook from './unversioned/expo-facebook';
 import withNotifications from './unversioned/expo-notifications';
 import withSplashScreen from './unversioned/expo-splash-screen';
 import withUpdates from './unversioned/expo-updates';
+import withMaps from './unversioned/react-native-maps';
 
 /**
  * Config plugin to apply all of the custom Expo iOS config plugins we support by default.
@@ -30,7 +31,6 @@ export const withExpoIOSPlugins: ConfigPlugin<{
     IOSConfig.SwiftBridgingHeader.withSwiftBridgingHeader,
     IOSConfig.Google.withGoogle,
     IOSConfig.Name.withDisplayName,
-    // IOSConfig.Name.withName,
     IOSConfig.Orientation.withOrientation,
     IOSConfig.RequiresFullScreen.withRequiresFullScreen,
     IOSConfig.Scheme.withScheme,
@@ -83,7 +83,6 @@ export const withExpoAndroidPlugins: ConfigPlugin<{
     AndroidConfig.Orientation.withOrientation,
     AndroidConfig.Permissions.withPermissions,
     AndroidConfig.UserInterfaceStyle.withUiModeManifest,
-    AndroidConfig.GoogleMapsApiKey.withGoogleMapsApiKey,
 
     // MainActivity.*
     AndroidConfig.UserInterfaceStyle.withUiModeMainActivity,
@@ -112,6 +111,7 @@ export const withExpoVersionedSDKPlugins: ConfigPlugin<{ expoUsername: string | 
   { expoUsername }
 ) => {
   return withPlugins(config, [
+    withMaps,
     withAdMob,
     withAppleAuthentication,
     withNotifications,

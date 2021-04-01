@@ -9,21 +9,28 @@ import FormData from 'form-data';
 import fs from 'fs-extra';
 import path from 'path';
 
-import Analytics from '../Analytics';
-import ApiV2 from '../ApiV2';
-import Config from '../Config';
-import * as EmbeddedAssets from '../EmbeddedAssets';
-import { isDebug, shouldUseDevServer } from '../Env';
-import logger from '../Logger';
-import { publishAssetsAsync } from '../ProjectAssets';
-import * as Sentry from '../Sentry';
-import UserManager, { User } from '../User';
-import XDLError from '../XDLError';
-import * as ExponentTools from '../detach/ExponentTools';
-import * as Doctor from './Doctor';
-import { createBundlesAsync, printBundleSizes } from './createBundlesAsync';
-import { getPublishExpConfigAsync, PublishOptions } from './getPublishExpConfigAsync';
-import { LoadedHook, prepareHooks, runHook } from './runHook';
+import {
+  Analytics,
+  ApiV2,
+  Config,
+  createBundlesAsync,
+  Doctor,
+  EmbeddedAssets,
+  Env,
+  ExponentTools,
+  getPublishExpConfigAsync,
+  LoadedHook,
+  Logger as logger,
+  prepareHooks,
+  printBundleSizes,
+  ProjectAssets,
+  PublishOptions,
+  runHook,
+  Sentry,
+  User,
+  UserManager,
+  XDLError,
+} from '../internal';
 
 export interface PublishedProjectResult {
   /**
@@ -48,7 +55,7 @@ export async function publishAsync(
   const target = options.target;
   const user = await UserManager.ensureLoggedInAsync();
 
-  if (isDebug()) {
+  if (Env.isDebug()) {
     console.log();
     console.log('Publish Assets:');
     console.log(`- Asset target: ${target}`);
@@ -79,12 +86,12 @@ export async function publishAsync(
   // TODO: refactor this out to a function, throw error if length doesn't match
   const validPostPublishHooks: LoadedHook[] = prepareHooks(hooks, 'postPublish', projectRoot);
   const bundles = await createBundlesAsync(projectRoot, options, {
-    useDevServer: shouldUseDevServer(exp),
+    useDevServer: Env.shouldUseDevServer(exp),
   });
 
   printBundleSizes(bundles);
 
-  await publishAssetsAsync({ projectRoot, exp, bundles });
+  await ProjectAssets.publishAssetsAsync({ projectRoot, exp, bundles });
 
   const androidBundle = bundles.android.code;
   const iosBundle = bundles.ios.code;

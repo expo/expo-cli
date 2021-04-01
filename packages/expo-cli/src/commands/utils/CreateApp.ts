@@ -8,6 +8,7 @@ import semver from 'semver';
 
 import Log from '../../log';
 import { ora } from '../../utils/ora';
+import { hasPackageJsonDependencyListChangedAsync } from '../run/ios/Podfile';
 
 export function validateName(name?: string): string | true {
   if (typeof name !== 'string' || name === '') {
@@ -202,6 +203,8 @@ export async function installCocoaPodsAsync(projectRoot: string) {
 
   try {
     await packageManager.installAsync();
+    // Create cached list for later
+    await hasPackageJsonDependencyListChangedAsync(projectRoot).catch(() => null);
     step.succeed('Installed pods and initialized Xcode workspace.');
     return true;
   } catch (e) {

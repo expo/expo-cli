@@ -17,7 +17,9 @@ import assert from 'assert';
 import chalk from 'chalk';
 import { prompt } from 'prompts';
 
-import { logInfo, logWarning } from './project/ProjectUtils';
+import { ProjectUtils } from './internal';
+
+const { logInfo, logWarning } = ProjectUtils;
 
 enum BundleIdentiferSource {
   XcodeProject,

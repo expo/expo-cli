@@ -6,11 +6,7 @@ import os from 'os';
 import path from 'path';
 import uuid from 'uuid';
 
-import {
-  getManifestResponseAsync,
-  getSignedManifestStringAsync,
-  getUnsignedManifestString,
-} from '../ManifestHandler';
+import { ManifestHandler } from '../../internal';
 
 const actualFs = jest.requireActual('fs') as typeof fs;
 jest.mock('fs');
@@ -61,7 +57,7 @@ describe('getSignedManifestStringAsync', () => {
         data: { data: { response: mockSignedManifestResponse } },
       })
     );
-    const manifestString = await getSignedManifestStringAsync(mockManifest, {
+    const manifestString = await ManifestHandler.getSignedManifestStringAsync(mockManifest, {
       sessionSecret: 'SECRET',
     });
     expect(manifestString).toBe(mockSignedManifestResponse);
@@ -97,7 +93,7 @@ describe('getSignedManifestStringAsync', () => {
 
 describe('getUnsignedManifestString', () => {
   it('returns a stringified manifest with the same shape a server-signed manifest', () => {
-    expect(getUnsignedManifestString(mockManifest)).toMatchSnapshot();
+    expect(ManifestHandler.getUnsignedManifestString(mockManifest)).toMatchSnapshot();
   });
 });
 
@@ -167,7 +163,7 @@ describe('getManifestResponseAsync', () => {
     process.env.REACT_NATIVE_TEST_VALUE = 'true';
     process.env.EXPO_APPLE_PASSWORD = 'my-password';
 
-    const res = await getManifestResponseAsync({
+    const res = await ManifestHandler.getManifestResponseAsync({
       projectRoot: '/alpha',
       host: '127.0.0.1:19000',
       platform: 'ios',

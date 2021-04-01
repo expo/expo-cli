@@ -10,12 +10,11 @@ import { Urls } from 'react-dev-utils/WebpackDevServerUtils';
 import formatWebpackMessages from 'react-dev-utils/formatWebpackMessages';
 import webpack from 'webpack';
 
-import * as ProjectUtils from '../project/ProjectUtils';
-import { logEnvironmentInfo, shouldWebpackClearLogs } from './WebpackEnvironment';
+import { ProjectUtils, WebpackEnvironment } from '../internal';
 
 const CONSOLE_TAG = 'expo';
 
-const SHOULD_CLEAR_CONSOLE = shouldWebpackClearLogs();
+const SHOULD_CLEAR_CONSOLE = WebpackEnvironment.shouldWebpackClearLogs();
 
 function log(projectRoot: string, message: string, showInDevtools = true) {
   if (showInDevtools) {
@@ -93,7 +92,7 @@ export function printPreviewNotice(projectRoot: string, showInDevtools: boolean)
   );
 }
 
-export default function createWebpackCompiler({
+export function createWebpackCompiler({
   projectRoot,
   appName,
   config,
@@ -147,7 +146,7 @@ export default function createWebpackCompiler({
     const isSuccessful = !messages.errors.length && !messages.warnings.length;
 
     if (isSuccessful) {
-      logEnvironmentInfo(projectRoot, CONSOLE_TAG, config);
+      WebpackEnvironment.logEnvironmentInfo(projectRoot, CONSOLE_TAG, config);
     }
 
     if (isSuccessful && !isFirstCompile && !nonInteractive) {
@@ -202,7 +201,7 @@ export function printSuccessMessages({
 }) {
   log(projectRoot, chalk.bold.cyan(`Compiled successfully!`));
   printPreviewNotice(projectRoot, isFirstCompile);
-  logEnvironmentInfo(projectRoot, CONSOLE_TAG, config);
+  WebpackEnvironment.logEnvironmentInfo(projectRoot, CONSOLE_TAG, config);
 
   if (!nonInteractive || isFirstCompile) {
     printInstructions(projectRoot, {

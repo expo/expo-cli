@@ -1,6 +1,6 @@
 import freeportAsync from 'freeport-async';
 
-import XDLError from '../XDLError';
+import { XDLError } from '../internal';
 
 export async function getFreePortAsync(rangeStart: number) {
   const port = await freeportAsync(rangeStart, { hostnames: [null, 'localhost'] });

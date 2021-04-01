@@ -8,21 +8,23 @@ import ProgressBar from 'progress';
 import prompts from 'prompts';
 import semver from 'semver';
 
-import Analytics from './Analytics';
-import Api from './Api';
-import { configureBundleIdentifierAsync } from './BundleIdentifier';
-import Logger from './Logger';
-import NotificationCode from './NotificationCode';
-import * as Prompts from './Prompts';
-import * as SimControl from './SimControl';
-import * as SimControlLogs from './SimControlLogs';
-import * as UrlUtils from './UrlUtils';
-import UserSettings from './UserSettings';
-import * as Versions from './Versions';
-import { getUrlAsync as getWebpackUrlAsync } from './Webpack';
-import * as Xcode from './Xcode';
-import { learnMore } from './logs/TerminalLink';
-import { delayAsync } from './utils/delayAsync';
+import {
+  Analytics,
+  Api,
+  BundleIdentifier,
+  delayAsync,
+  learnMore,
+  Logger,
+  NotificationCode,
+  Prompts,
+  SimControl,
+  SimControlLogs,
+  UrlUtils,
+  UserSettings,
+  Versions,
+  Webpack,
+  Xcode,
+} from './internal';
 
 let _lastUrl: string | null = null;
 let _lastUdid: string | null = null;
@@ -573,7 +575,7 @@ async function openUrlInSimulatorSafeAsync({
   let bundleIdentifier = 'host.exp.Exponent';
   try {
     if (devClient) {
-      bundleIdentifier = await configureBundleIdentifierAsync(projectRoot, exp);
+      bundleIdentifier = await BundleIdentifier.configureBundleIdentifierAsync(projectRoot, exp);
       await assertDevClientInstalledAsync(simulator, bundleIdentifier);
       // stream logs before opening the client.
       await streamLogsAsync({ udid: simulator.udid, bundleIdentifier });
@@ -765,7 +767,7 @@ export async function openWebProjectAsync({
   shouldPrompt: boolean;
   projectRoot: string;
 }): Promise<{ success: true; url: string } | { success: false; error: string }> {
-  const projectUrl = await getWebpackUrlAsync(projectRoot);
+  const projectUrl = await Webpack.getUrlAsync(projectRoot);
   if (projectUrl === null) {
     return {
       success: false,

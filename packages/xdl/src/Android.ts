@@ -1,5 +1,6 @@
 import { ExpoConfig, getConfig, readExpRcAsync } from '@expo/config';
 import { AndroidConfig } from '@expo/config-plugins';
+import * as osascript from '@expo/osascript';
 import spawnAsync from '@expo/spawn-async';
 import chalk from 'chalk';
 import child_process, { execFileSync } from 'child_process';
@@ -10,19 +11,21 @@ import ProgressBar from 'progress';
 import prompts from 'prompts';
 import semver from 'semver';
 
-import Analytics from './Analytics';
-import * as Binaries from './Binaries';
-import { isDebug } from './Env';
-import Logger from './Logger';
-import NotificationCode from './NotificationCode';
-import * as ProjectSettings from './ProjectSettings';
-import * as Prompts from './Prompts';
-import * as UrlUtils from './UrlUtils';
-import * as Versions from './Versions';
-import { getUrlAsync as getWebpackUrlAsync } from './Webpack';
-import { learnMore } from './logs/TerminalLink';
-import { getImageDimensionsAsync } from './tools/ImageUtils';
-import { downloadApkAsync } from './utils/downloadApkAsync';
+import {
+  Analytics,
+  Binaries,
+  downloadApkAsync,
+  Env,
+  ImageUtils,
+  learnMore,
+  Logger,
+  NotificationCode,
+  ProjectSettings,
+  Prompts,
+  UrlUtils,
+  Versions,
+  Webpack,
+} from './internal';
 
 export type Device = {
   pid?: string;
@@ -292,7 +295,7 @@ export async function getAdbOutputAsync(args: string[]): Promise<string> {
     _isAdbOwner = alreadyRunning === false;
   }
 
-  if (isDebug()) {
+  if (Env.isDebug()) {
     Logger.global.info([adb, ...args].join(' '));
   }
   try {
@@ -551,8 +554,45 @@ async function _openUrlAsync({
   return openProject;
 }
 
+function getUnixPID(port: number | string) {
+  return execFileSync('lsof', [`-i:${port}`, '-P', '-t', '-sTCP:LISTEN'], {
+    encoding: 'utf8',
+    stdio: ['pipe', 'pipe', 'ignore'],
+  })
+    .split('\n')[0]
+    .trim();
+}
+
+export async function activateEmulatorWindowAsync(device: Pick<Device, 'type' | 'pid'>) {
+  if (
+    // only mac is supported for now.
+    process.platform !== 'darwin' ||
+    // can only focus emulators
+    device.type !== 'emulator'
+  ) {
+    return;
+  }
+
+  // Google Emulator ID: `emulator-5554` -> `5554`
+  const androidPid = device.pid!.match(/-(\d+)/)?.[1];
+  if (!androidPid) {
+    return;
+  }
+  // Unix PID
+  const pid = getUnixPID(androidPid);
+
+  try {
+    await osascript.execAsync(`
+  tell application "System Events"
+    set frontmost of the first process whose unix id is ${pid} to true
+  end tell`);
+  } catch {
+    // noop -- this feature is very specific and subject to failure.
+  }
+}
+
 export async function openAppAsync(
-  device: Pick<Device, 'pid'>,
+  device: Pick<Device, 'pid' | 'type'>,
   {
     packageName,
     mainActivity,
@@ -582,6 +622,8 @@ export async function openAppAsync(
   if (openProject.includes(CANT_START_ACTIVITY_ERROR)) {
     throw new Error(openProject.substring(openProject.indexOf('Error: ')));
   }
+
+  await activateEmulatorWindowAsync(device);
 
   return openProject;
 }
@@ -635,6 +677,9 @@ async function openUrlAsync({
     if (!bootedDevice) {
       return;
     }
+
+    await activateEmulatorWindowAsync(bootedDevice);
+
     device = bootedDevice;
 
     let installedExpo = false;
@@ -788,7 +833,7 @@ export async function openWebProjectAsync({
   try {
     await startAdbReverseAsync(projectRoot);
 
-    const projectUrl = await getWebpackUrlAsync(projectRoot);
+    const projectUrl = await Webpack.getUrlAsync(projectRoot);
     if (projectUrl === null) {
       return {
         success: false,
@@ -956,7 +1001,10 @@ export async function checkSplashScreenImages(projectRoot: string): Promise<void
     );
     return;
   }
-  const generalSplashImage = await getImageDimensionsAsync(projectRoot, generalSplashImagePath);
+  const generalSplashImage = await ImageUtils.getImageDimensionsAsync(
+    projectRoot,
+    generalSplashImagePath
+  );
   if (!generalSplashImage) {
     Logger.global.warn(
       `Couldn't read dimensions of provided splash image '${chalk.italic(
@@ -971,7 +1019,7 @@ export async function checkSplashScreenImages(projectRoot: string): Promise<void
   for (const { dpi, sizeMultiplier } of splashScreenDPIConstraints) {
     const imageRelativePath = androidSplash?.[dpi];
     if (imageRelativePath) {
-      const splashImage = await getImageDimensionsAsync(projectRoot, imageRelativePath);
+      const splashImage = await ImageUtils.getImageDimensionsAsync(projectRoot, imageRelativePath);
       if (!splashImage) {
         Logger.global.warn(
           `Couldn't read dimensions of provided splash image '${chalk.italic(

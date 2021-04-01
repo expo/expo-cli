@@ -23,11 +23,7 @@ export async function clearNativeFolder(projectRoot: string, folders: string[]) 
   }
 }
 
-async function isAndroidProjectValidAsync(projectRoot: string) {
-  // Only perform the check if the native folder is present.
-  if (!(await directoryExistsAsync(path.join(projectRoot, 'android')))) {
-    return true;
-  }
+export async function hasRequiredAndroidFilesAsync(projectRoot: string) {
   try {
     await Promise.all([
       AndroidConfig.Paths.getAppBuildGradleAsync(projectRoot),
@@ -41,11 +37,15 @@ async function isAndroidProjectValidAsync(projectRoot: string) {
   }
 }
 
-async function isIOSProjectValidAsync(projectRoot: string) {
+async function isAndroidProjectValidAsync(projectRoot: string) {
   // Only perform the check if the native folder is present.
-  if (!(await directoryExistsAsync(path.join(projectRoot, 'ios')))) {
+  if (!(await directoryExistsAsync(path.join(projectRoot, 'android')))) {
     return true;
   }
+  return hasRequiredAndroidFilesAsync(projectRoot);
+}
+
+export async function hasRequiredIOSFilesAsync(projectRoot: string) {
   try {
     // If any of the following required files are missing, then the project is malformed.
     await Promise.all([
@@ -58,6 +58,14 @@ async function isIOSProjectValidAsync(projectRoot: string) {
   } catch {
     return false;
   }
+}
+
+async function isIOSProjectValidAsync(projectRoot: string) {
+  // Only perform the check if the native folder is present.
+  if (!(await directoryExistsAsync(path.join(projectRoot, 'ios')))) {
+    return true;
+  }
+  return hasRequiredIOSFilesAsync(projectRoot);
 }
 
 export async function promptToClearMalformedNativeProjectsAsync(projectRoot: string) {

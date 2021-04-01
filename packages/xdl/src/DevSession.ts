@@ -1,10 +1,6 @@
 import os from 'os';
 
-import ApiV2Client from './ApiV2';
-import Config from './Config';
-import logger from './Logger';
-import * as UrlUtils from './UrlUtils';
-import UserManager from './User';
+import { ApiV2 as ApiV2Client, Config, Logger as logger, UrlUtils, UserManager } from './internal';
 
 const UPDATE_FREQUENCY_SECS = 20;
 

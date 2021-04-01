@@ -22,32 +22,12 @@ export const withGoogleServicesFile: ConfigPlugin = config => {
   });
 };
 
-export function getGoogleMapsApiKey(config: Pick<ExpoConfig, 'ios'>) {
-  return config.ios?.config?.googleMapsApiKey ?? null;
-}
-
 export function getGoogleSignInReservedClientId(config: Pick<ExpoConfig, 'ios'>) {
   return config.ios?.config?.googleSignIn?.reservedClientId ?? null;
 }
 
 export function getGoogleServicesFile(config: Pick<ExpoConfig, 'ios'>) {
   return config.ios?.googleServicesFile ?? null;
-}
-
-export function setGoogleMapsApiKey(
-  config: Pick<ExpoConfig, 'ios'>,
-  { GMSApiKey, ...infoPlist }: InfoPlist
-): InfoPlist {
-  const apiKey = getGoogleMapsApiKey(config);
-
-  if (apiKey === null) {
-    return infoPlist;
-  }
-
-  return {
-    ...infoPlist,
-    GMSApiKey: apiKey,
-  };
 }
 
 export function setGoogleSignInReservedClientId(
@@ -64,7 +44,6 @@ export function setGoogleSignInReservedClientId(
 }
 
 export function setGoogleConfig(config: Pick<ExpoConfig, 'ios'>, infoPlist: InfoPlist): InfoPlist {
-  infoPlist = setGoogleMapsApiKey(config, infoPlist);
   infoPlist = setGoogleSignInReservedClientId(config, infoPlist);
   return infoPlist;
 }

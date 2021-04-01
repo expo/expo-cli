@@ -3,8 +3,7 @@ import spawnAsync, { SpawnOptions, SpawnResult } from '@expo/spawn-async';
 import chalk from 'chalk';
 import path from 'path';
 
-import Logger from './Logger';
-import XDLError from './XDLError';
+import { Logger, XDLError } from './internal';
 
 type DeviceState = 'Shutdown' | 'Booted';
 

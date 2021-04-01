@@ -6,19 +6,22 @@ import http from 'http';
 import os from 'os';
 import { URL } from 'url';
 
-import Analytics from '../Analytics';
-import ApiV2 from '../ApiV2';
-import Config from '../Config';
-import { resolveGoogleServicesFile, resolveManifestAssets } from '../ProjectAssets';
-import * as ProjectSettings from '../ProjectSettings';
-import * as UrlUtils from '../UrlUtils';
-import UserManager, { ANONYMOUS_USERNAME } from '../User';
-import UserSettings from '../UserSettings';
-import * as Versions from '../Versions';
-import { learnMore } from '../logs/TerminalLink';
-import * as Doctor from '../project/Doctor';
-import * as ProjectUtils from '../project/ProjectUtils';
-import { resolveEntryPoint } from '../tools/resolveEntryPoint';
+import {
+  Analytics,
+  ANONYMOUS_USERNAME,
+  ApiV2,
+  Config,
+  Doctor,
+  learnMore,
+  ProjectAssets,
+  ProjectSettings,
+  ProjectUtils,
+  resolveEntryPoint,
+  UrlUtils,
+  UserManager,
+  UserSettings,
+  Versions,
+} from '../internal';
 
 interface HostInfo {
   host: string;
@@ -222,7 +225,7 @@ export async function getManifestResponseAsync({
   manifest.logUrl = await UrlUtils.constructLogUrlAsync(projectRoot, hostname);
   manifest.hostUri = await UrlUtils.constructHostUriAsync(projectRoot, hostname);
   // Resolve all assets and set them on the manifest as URLs
-  await resolveManifestAssets({
+  await ProjectAssets.resolveManifestAssets({
     projectRoot,
     manifest: manifest as ExpoAppManifest,
     async resolver(path) {
@@ -230,7 +233,7 @@ export async function getManifestResponseAsync({
     },
   });
   // The server normally inserts this but if we're offline we'll do it here
-  await resolveGoogleServicesFile(projectRoot, manifest);
+  await ProjectAssets.resolveGoogleServicesFile(projectRoot, manifest);
 
   // Create the final string
   let manifestString;
