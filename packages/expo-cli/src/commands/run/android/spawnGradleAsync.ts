@@ -29,7 +29,7 @@ export async function spawnGradleAsync({
     // ignore linting errors
     '-x',
     'lint',
-    // igonore tests
+    // ignore tests
     '-x',
     'test',
     '--configure-on-demand',
