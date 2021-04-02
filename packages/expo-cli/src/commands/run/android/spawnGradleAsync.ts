@@ -29,10 +29,15 @@ export async function spawnGradleAsync({
     // ignore linting errors
     '-x',
     'lint',
-    // igonore tests
+    // ignore tests
     '-x',
     'test',
+    '--configure-on-demand',
   ];
+  if (Log.isProfiling) {
+    // Generate a profile under `/android/app/build/reports/profile`
+    args.push('--profile');
+  }
   Log.debug(`  ${gradlew} ${args.join(' ')}`);
   await spawnAsync(gradlew, args, {
     cwd: androidProjectPath,
