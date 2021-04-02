@@ -90,11 +90,11 @@ async function resolveOptionsAsync(
 }
 
 export async function runAndroidActionAsync(projectRoot: string, options: Options) {
+  const androidProjectPath = await resolveAndroidProjectPathAsync(projectRoot);
+
   const props = await resolveOptionsAsync(projectRoot, options);
 
   Log.log('\u203A Building app...');
-
-  const androidProjectPath = await resolveAndroidProjectPathAsync(projectRoot);
 
   await spawnGradleAsync({ androidProjectPath, variant: options.variant });
 
