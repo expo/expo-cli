@@ -9,7 +9,7 @@ import Log from '../../../log';
 import { hashForDependencyMap } from '../../eject/updatePackageJson';
 import { installCocoaPodsAsync } from '../../utils/CreateApp';
 
-const CHECKSUM_KEY = 'SPEC CHECKSUMS';
+const EXTERNAL_SOURCES_KEY = 'EXTERNAL SOURCES';
 
 export function getDependenciesFromPodfileLock(podfileLockPath: string) {
   Log.debug(`Reading ${podfileLockPath}`);
@@ -22,15 +22,15 @@ export function getDependenciesFromPodfileLock(podfileLockPath: string) {
         'npx pod-install'
       )}"?`
     );
-    return [];
+    return {};
   }
 
   // Previous portions of the lock file could be invalid yaml.
   // Only parse parts that are valid
-  const tail = fileContent.split(CHECKSUM_KEY).slice(1);
-  const checksumTail = CHECKSUM_KEY + tail;
+  const tail = fileContent.split(EXTERNAL_SOURCES_KEY).slice(1);
+  const checksumTail = EXTERNAL_SOURCES_KEY + tail;
 
-  return Object.keys(safeLoad(checksumTail)[CHECKSUM_KEY] || {});
+  return safeLoad(checksumTail)[EXTERNAL_SOURCES_KEY] || {};
 }
 
 function getTempPrebuildFolder(projectRoot: string) {

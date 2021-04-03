@@ -2223,10 +2223,10 @@
     pouchdb-collections "^1.0.1"
     tiny-queue "^0.2.1"
 
-"@expo/xcpretty@^1.0.4":
-  version "1.0.4"
-  resolved "https://registry.yarnpkg.com/@expo/xcpretty/-/xcpretty-1.0.4.tgz#c4141b43b89bd9b38271713076e7470aa3970aa0"
-  integrity sha512-BoFozOEqC291gKUls9ke0PQRQ3dbvEKxg97R5XshLU86s2Lms1s1YZc1P2vUFoO4QeKIc5xyGAFG6UB+PUN9+Q==
+"@expo/xcpretty@~2.0.0":
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/@expo/xcpretty/-/xcpretty-2.0.0.tgz#6613ec19093c90e77e203e92b5f335cc13f55c8e"
+  integrity sha512-bukgcPcsiZq7dYxpSVPQ/qvSDrwpUVSkgEf8NQJS9UcClPakgpM+e5XIzYWe2WXLmHtskVJUPruoEX6zWUm8LA==
   dependencies:
     "@babel/code-frame" "7.10.4"
     chalk "^4.1.0"
