@@ -8,6 +8,7 @@ import { SimControl } from 'xdl';
 import CommandError from '../../../CommandError';
 import Log from '../../../log';
 import { ExpoLogFormatter } from './ExpoLogFormatter';
+import { getDependenciesFromPodfileLock } from './Podfile';
 import { ensureDeviceIsCodeSignedForDeploymentAsync } from './developmentCodeSigning';
 import { ProjectInfo, XcodeConfiguration } from './resolveOptionsAsync';
 
@@ -180,7 +181,13 @@ export async function buildAsync({
 
   logPrettyItem(chalk.bold`Planning build`);
   Log.debug(`  xcodebuild ${args.join(' ')}`);
-  const formatter = new ExpoLogFormatter({ projectRoot });
+  const podfileLock = path.join(projectRoot, 'ios', 'Podfile.lock');
+  const appName = xcodeProject.name.match(/.*\/(.*)\.\w+/)?.[1] || '';
+  const formatter = new ExpoLogFormatter({
+    projectRoot,
+    appName,
+    podfile: getDependenciesFromPodfileLock(podfileLock),
+  });
 
   return new Promise(async (resolve, reject) => {
     const buildProcess = spawn(

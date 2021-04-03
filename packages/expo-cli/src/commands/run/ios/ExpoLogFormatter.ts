@@ -1,10 +1,22 @@
-import { Formatter, Parser } from '@expo/xcpretty';
+import { FileOperation, Formatter, Parser } from '@expo/xcpretty';
 import { switchRegex } from '@expo/xcpretty/build/switchRegex';
 import chalk from 'chalk';
+import findUp from 'find-up';
+import path from 'path';
 
 import Log from '../../../log';
 
 const ERROR = '❌ ';
+
+const cachedPackages: Record<string, any> = {};
+
+function packageJsonForPath(filePath: string): any {
+  const packageJson = findUp.sync('package.json', { cwd: filePath });
+  if (packageJson) {
+    return require(packageJson);
+  }
+  return null;
+}
 
 function moduleNameFromPath(modulePath: string) {
   if (modulePath.startsWith('@')) {
@@ -87,9 +99,18 @@ class CustomParser extends Parser {
   }
 }
 
+type CustomProps = {
+  projectRoot: string;
+  podfile: Record<string, Record<string, string>>;
+  appName: string;
+};
+
 export class ExpoLogFormatter extends Formatter {
-  constructor(props: { projectRoot: string }) {
+  private nativeProjectRoot: string;
+
+  constructor(public props: CustomProps) {
     super(props);
+    this.nativeProjectRoot = path.join(props.projectRoot, 'ios');
     this.parser = new CustomParser(this);
   }
 
@@ -105,14 +126,97 @@ export class ExpoLogFormatter extends Formatter {
   }
 
   shouldShowCompileWarning(filePath: string, lineNumber?: string, columnNumber?: string): boolean {
-    if (Log.isDebug) return true;
+    if (Log.isDebug) {
+      return true;
+    }
     return !filePath.match(/node_modules/) && !filePath.match(/\/ios\/Pods\//);
   }
 
-  formatCompile(fileName: string, filePath: string): string {
-    const moduleName = getNodeModuleName(filePath);
-    const moduleNameTag = moduleName ? chalk.dim(`(${moduleName})`) : undefined;
-    return ['\u203A', chalk.bold('Compiling'), fileName, moduleNameTag].filter(Boolean).join(' ');
+  getFileOperationTitle(type: FileOperation['type']): string {
+    switch (type) {
+      case 'Analyze':
+        return 'Analyzing';
+      case 'GenerateDSYMFile':
+        return `Generating debug`;
+      case 'Ld':
+        return 'Linking';
+      case 'Libtool':
+        return 'Building lib';
+      case 'ProcessPCH':
+        return 'Precompiling';
+      case 'ProcessInfoPlistFile':
+        return 'Processing';
+      case 'CodeSign':
+        return 'Signing';
+      case 'Touch':
+        return 'Creating';
+      case 'CompileC':
+      case 'CompileSwift':
+      case 'CompileXIB':
+      case 'CompileStoryboard':
+        return 'Compiling';
+      default:
+        // Unknown file operation
+        return '';
+    }
+  }
+
+  formatFileOperation(props: FileOperation): string {
+    const title = this.getFileOperationTitle(props.type);
+    const moduleNameTag = this.getPkgName(props.filePath, props.target);
+    return Formatter.format(
+      title,
+      [moduleNameTag, Formatter.formatBreadCrumb(props.fileName, props.target, props.project)]
+        .filter(Boolean)
+        .join(' ')
+    );
+  }
+
+  formatPhaseScriptExecution(scriptName: string, target?: string, project?: string): string {
+    const moduleNameTag = this.getPkgName('', target);
+
+    return Formatter.format(
+      'Running script',
+      [moduleNameTag, Formatter.formatBreadCrumb(scriptName, target, project)]
+        .filter(Boolean)
+        .join(' ')
+    );
+  }
+
+  private getPkgName(filePath: string, target?: string): string | null {
+    let moduleName = getNodeModuleName(filePath);
+    if (!moduleName) {
+      if (target === this.props.appName || target === `Pods-${this.props.appName}`) {
+        moduleName = '';
+      } else {
+        const pkg = this.packageJsonForProject(target);
+        if (pkg) {
+          moduleName = pkg.name;
+        }
+      }
+    }
+    return moduleName ? chalk.cyan(`${moduleName}`) : null;
+  }
+
+  private packageJsonForProject(project?: string): any {
+    if (!project) {
+      return null;
+    }
+
+    if (project in cachedPackages) {
+      return cachedPackages[project];
+    }
+
+    const filePath = Object.values(this.props.podfile[project] || {})[0] ?? null;
+    if (!filePath) {
+      return null;
+    }
+
+    const pkg = packageJsonForPath(path.join(this.nativeProjectRoot, filePath as string));
+    if (pkg) {
+      cachedPackages[project] = pkg;
+    }
+    return pkg ?? null;
   }
 
   finish() {

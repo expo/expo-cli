@@ -78,7 +78,7 @@
     "@expo/results": "^1.0.0",
     "@expo/simple-spinner": "1.0.2",
     "@expo/spawn-async": "1.5.0",
-    "@expo/xcpretty": "^1.0.4",
+    "@expo/xcpretty": "~2.0.0",
     "@hapi/joi": "^17.1.1",
     "babel-runtime": "6.26.0",
     "base32.js": "0.1.0",
