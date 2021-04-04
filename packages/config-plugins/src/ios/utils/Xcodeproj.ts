@@ -293,11 +293,15 @@ export function getPbxproj(projectRoot: string): XcodeProject {
  * @param project
  */
 export function getProductName(project: XcodeProject): string {
-  let productName = project.productName;
+  let productName = '$(TARGET_NAME)';
+  try {
+    // If the product name is numeric, this will fail (it's a getter).
+    productName = project.productName;
+  } catch {}
 
   if (productName === '$(TARGET_NAME)') {
     const targetName = project.getFirstTarget()?.firstTarget?.productName;
-    productName = targetName ?? project.productName;
+    productName = targetName ?? productName;
   }
 
   return productName;
