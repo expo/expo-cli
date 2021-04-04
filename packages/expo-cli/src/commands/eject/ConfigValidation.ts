@@ -12,7 +12,7 @@ const noBundleIdMessage = `Your project must have a \`bundleIdentifier\` set in 
 const noPackageMessage = `Your project must have a \`package\` set in the Expo config (app.json or app.config.js).\nSee https://expo.fyi/android-package`;
 
 export function validateBundleId(value: string): boolean {
-  return /^[a-zA-Z0-9\-.]+$/.test(value);
+  return /^[a-zA-Z0-9-.]+$/.test(value);
 }
 
 function validatePackage(value: string): boolean {
