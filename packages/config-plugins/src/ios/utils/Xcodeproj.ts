@@ -293,11 +293,18 @@ export function getPbxproj(projectRoot: string): XcodeProject {
  * @param project
  */
 export function getProductName(project: XcodeProject): string {
-  let productName = project.productName;
+  let productName = '$(TARGET_NAME)';
+  try {
+    // If the product name is numeric, this will fail (it's a getter).
+    // If the bundle identifier' final component is only numeric values, then the PRODUCT_NAME
+    // will be a numeric value, this results in a bug where the product name isn't useful,
+    // i.e. `com.bacon.001` -> `1` -- in this case, use the first target name.
+    productName = project.productName;
+  } catch {}
 
   if (productName === '$(TARGET_NAME)') {
     const targetName = project.getFirstTarget()?.firstTarget?.productName;
-    productName = targetName ?? project.productName;
+    productName = targetName ?? productName;
   }
 
   return productName;
