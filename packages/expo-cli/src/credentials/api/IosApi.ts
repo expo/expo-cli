@@ -1,3 +1,4 @@
+import assert from 'assert';
 import forEach from 'lodash/forEach';
 import keyBy from 'lodash/keyBy';
 import omit from 'lodash/omit';
@@ -5,7 +6,6 @@ import pick from 'lodash/pick';
 import { ApiV2 } from 'xdl';
 
 import * as appleApi from '../../appleApi';
-import { assert } from '../../assert';
 import {
   IosAppCredentials,
   IosCredentials,

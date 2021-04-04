@@ -1,4 +1,5 @@
-import { assert } from '../../assert';
+import assert from 'assert';
+
 import prompts, { confirmAsync } from '../../prompts';
 import { displayAndroidCredentials, displayIosCredentials } from '../actions/list';
 import { AppLookupParams } from '../api/IosApi';
