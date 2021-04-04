@@ -219,7 +219,7 @@ export async function startAsync(projectRoot: string, options: StartOptions) {
         case 'A':
         case 'a':
           Log.clear();
-          Log.log('Opening the web project in Chrome on Android...');
+          Log.log(`${BLT} Opening the web project in Chrome on Android...`);
           await Android.openWebProjectAsync({
             projectRoot,
             shouldPrompt: !options.nonInteractive && key === 'A',
@@ -229,7 +229,7 @@ export async function startAsync(projectRoot: string, options: StartOptions) {
         case 'i':
         case 'I':
           Log.clear();
-          Log.log('Opening the web project in Safari on iOS...');
+          Log.log(`${BLT} Opening the web project in Safari on iOS...`);
           await Simulator.openWebProjectAsync({
             projectRoot,
             shouldPrompt: !options.nonInteractive && key === 'I',
@@ -257,7 +257,7 @@ export async function startAsync(projectRoot: string, options: StartOptions) {
           break;
         case 'a': {
           Log.clear();
-          Log.log('Opening on Android...');
+          Log.log(`${BLT} Opening on Android...`);
           await Android.openProjectAsync({ projectRoot, devClient: options.devClient ?? false });
           printHelp();
           break;
@@ -283,7 +283,7 @@ export async function startAsync(projectRoot: string, options: StartOptions) {
           // const shouldPrompt =
           //   !options.nonInteractive && (key === 'I' || !(await Simulator.isSimulatorBootedAsync()));
 
-          Log.log('Opening on iOS...');
+          Log.log(`${BLT} Opening on iOS...`);
           await Simulator.openProjectAsync({
             projectRoot,
             shouldPrompt: false,
@@ -315,7 +315,7 @@ export async function startAsync(projectRoot: string, options: StartOptions) {
         break;
       }
       case 'w': {
-        Log.log('Attempting to open the project in a web browser...');
+        Log.log(`${BLT} Open in the web browser...`);
         await Webpack.openAsync(projectRoot);
         await printServerInfo(projectRoot, options);
         break;
@@ -416,7 +416,7 @@ Please reload the project in Expo Go for the change to take effect.`
         }
         break;
       case 'o':
-        Log.log('Trying to open the project in your editor...');
+        Log.log(`${BLT} Opening the editor...`);
         await openInEditorAsync(projectRoot);
     }
   }
