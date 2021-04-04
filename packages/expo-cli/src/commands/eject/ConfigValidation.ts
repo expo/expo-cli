@@ -11,8 +11,8 @@ import { isUrlAvailableAsync } from '../utils/url';
 const noBundleIdMessage = `Your project must have a \`bundleIdentifier\` set in the Expo config (app.json or app.config.js).\nSee https://expo.fyi/bundle-identifier`;
 const noPackageMessage = `Your project must have a \`package\` set in the Expo config (app.json or app.config.js).\nSee https://expo.fyi/android-package`;
 
-function validateBundleId(value: string): boolean {
-  return /^[a-zA-Z][a-zA-Z0-9\-.]+$/.test(value);
+export function validateBundleId(value: string): boolean {
+  return /^[a-zA-Z0-9-.]+$/.test(value);
 }
 
 function validatePackage(value: string): boolean {
