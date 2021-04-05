@@ -143,8 +143,8 @@ async function selectCertificateSigningIdentityAsync(ids: string[]) {
     // TODO: We can probably do this too.
     Log.addNewLineIfNone();
     Log.log(
-      `\u203A Your computer requires some additional setup before you can build onto physical iOS devices. ${learnMore(
-        'https://expo.fyi/setup-xcode-signing'
+      `\u203A Your computer requires some additional setup before you can build onto physical iOS devices.\n  ${chalk.bold(
+        learnMore('https://expo.fyi/setup-xcode-signing')
       )}`
     );
     Log.newLine();
