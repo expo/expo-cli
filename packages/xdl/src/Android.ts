@@ -139,7 +139,7 @@ async function isBootAnimationCompleteAsync(pid?: string): Promise<boolean> {
 }
 
 async function startEmulatorAsync(device: Pick<Device, 'name'>): Promise<Device> {
-  Logger.global.info(`\u203A Attempting to open emulator: ${device.name}`);
+  Logger.global.info(`\u203A Opening emulator ${chalk.bold(device.name)}`);
 
   // Start a process to open an emulator
   const emulatorProcess = child_process.spawn(
