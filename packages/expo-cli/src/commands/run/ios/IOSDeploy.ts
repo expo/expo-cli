@@ -7,10 +7,10 @@ import { Ora } from 'ora';
 import os from 'os';
 import path from 'path';
 import wrapAnsi from 'wrap-ansi';
+import { Prompts } from 'xdl';
 
 import CommandError, { SilentError } from '../../../CommandError';
 import Log from '../../../log';
-import { confirmAsync } from '../../../prompts';
 import { ora } from '../../../utils/ora';
 
 /**
@@ -109,7 +109,7 @@ export async function installOnDeviceAsync(props: {
       const appName = path.basename(bundle).split('.')[0] ?? 'app';
       if (
         !program.nonInteractive &&
-        (await confirmAsync({
+        (await Prompts.confirmAsync({
           message: `Cannot launch ${appName} because the device is locked. Unlock ${deviceName} to continue...`,
         }))
       ) {
@@ -181,7 +181,7 @@ function spawnIOSDeployAsync(args: string[], onStdout: (message: string) => void
 export async function assertInstalledAsync() {
   if (!(await isInstalledAsync())) {
     if (
-      await confirmAsync({
+      await Prompts.confirmAsync({
         message: `Required package ${chalk.cyan`ios-deploy`} is not installed, would you like to try installing it with homebrew?`,
       })
     ) {
