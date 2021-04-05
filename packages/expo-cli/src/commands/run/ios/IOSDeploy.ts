@@ -111,6 +111,7 @@ export async function installOnDeviceAsync(props: {
         !program.nonInteractive &&
         (await Prompts.confirmAsync({
           message: `Cannot launch ${appName} because the device is locked. Unlock ${deviceName} to continue...`,
+          initial: true,
         }))
       ) {
         return installOnDeviceAsync(props);
@@ -183,6 +184,7 @@ export async function assertInstalledAsync() {
     if (
       await Prompts.confirmAsync({
         message: `Required package ${chalk.cyan`ios-deploy`} is not installed, would you like to try installing it with homebrew?`,
+        initial: true,
       })
     ) {
       try {
