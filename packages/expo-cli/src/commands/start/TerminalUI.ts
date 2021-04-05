@@ -218,7 +218,9 @@ export async function startAsync(projectRoot: string, options: StartOptions) {
       switch (key) {
         case 'A':
         case 'a':
-          Log.clear();
+          if (key === 'A') {
+            Log.clear();
+          }
           Log.log(`${BLT} Opening the web project in Chrome on Android...`);
           await Android.openWebProjectAsync({
             projectRoot,
@@ -228,7 +230,9 @@ export async function startAsync(projectRoot: string, options: StartOptions) {
           break;
         case 'i':
         case 'I':
-          Log.clear();
+          if (key === 'I') {
+            Log.clear();
+          }
           Log.log(`${BLT} Opening the web project in Safari on iOS...`);
           await Simulator.openWebProjectAsync({
             projectRoot,
@@ -256,7 +260,6 @@ export async function startAsync(projectRoot: string, options: StartOptions) {
           printHelp();
           break;
         case 'a': {
-          Log.clear();
           Log.log(`${BLT} Opening on Android...`);
           await Android.openProjectAsync({ projectRoot, devClient: options.devClient ?? false });
           printHelp();
@@ -272,8 +275,6 @@ export async function startAsync(projectRoot: string, options: StartOptions) {
           printHelp();
           break;
         case 'i': {
-          Log.clear();
-
           // note(brentvatne): temporarily remove logic for picking the
           // simulator until we have parity for Android. this also ensures that we
           // don't interfere with the default user flow until more users have tested
