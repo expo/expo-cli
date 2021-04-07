@@ -9,7 +9,7 @@
   With this module in place, we can fix these circular dependency problems by
   changing the order in this file.
 */
-export * from './Utils';
+export { Semaphore } from './utils/Semaphore';
 export * as Env from './Env';
 export { default as Config } from './Config';
 export * as Xcode from './Xcode';
