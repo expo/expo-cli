@@ -1,7 +1,10 @@
 import Segment from 'analytics-node';
+import internalIp from 'internal-ip';
 import os from 'os';
 
-import * as ip from './ip';
+function getIpAddress() {
+  return internalIp.v4.sync() || '127.0.0.1';
+}
 
 const PLATFORM_TO_ANALYTICS_PLATFORM: { [platform: string]: string } = {
   darwin: 'Mac',
@@ -65,7 +68,7 @@ export class AnalyticsClient {
   private getContext() {
     const platform = PLATFORM_TO_ANALYTICS_PLATFORM[os.platform()] || os.platform();
     const context = {
-      ip: ip.address(),
+      ip: getIpAddress(),
       device: {
         model: platform,
         brand: platform,
