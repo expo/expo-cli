@@ -1,3 +1,4 @@
+import { Config } from '@expo/api';
 import { configFilename, ExpoConfig, getConfig, PackageJSONConfig } from '@expo/config';
 import Schemer, { SchemerError, ValidationError } from '@expo/schemer';
 import spawnAsync from '@expo/spawn-async';
@@ -7,7 +8,7 @@ import isReachable from 'is-reachable';
 import resolveFrom from 'resolve-from';
 import semver from 'semver';
 
-import { Config, ExpSchema, ProjectUtils, Versions, Watchman } from '../internal';
+import { ExpSchema, ProjectUtils, Versions, Watchman } from '../internal';
 import { learnMore } from '../logs/TerminalLink';
 
 export const NO_ISSUES = 0;

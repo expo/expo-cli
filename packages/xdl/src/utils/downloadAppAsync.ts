@@ -1,8 +1,9 @@
+import { UserSettings } from '@expo/api';
 import axios, { AxiosRequestConfig, Canceler } from 'axios';
 import fs from 'fs-extra';
 import path from 'path';
 
-import { Extract, UserSettings } from '../internal';
+import { Extract } from '../internal';
 
 const TIMER_DURATION = 30000;
 const TIMEOUT = 3600000;

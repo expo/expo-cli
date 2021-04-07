@@ -1,3 +1,4 @@
+import { Config } from '@expo/api';
 import { ExpoConfig, getConfig } from '@expo/config';
 import joi from '@hapi/joi';
 import assert from 'assert';
@@ -6,7 +7,7 @@ import QueryString from 'querystring';
 import resolveFrom from 'resolve-from';
 import url from 'url';
 
-import { Config, ip, ProjectSettings, ProjectUtils, Versions, XDLError } from './internal';
+import { ip, ProjectSettings, ProjectUtils, Versions, XDLError } from './internal';
 
 interface URLOptions extends Omit<ProjectSettings.ProjectSettings, 'urlRandomness'> {
   urlType: null | 'exp' | 'http' | 'no-protocol' | 'redirect' | 'custom';
