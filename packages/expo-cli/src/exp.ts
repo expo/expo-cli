@@ -16,7 +16,6 @@ import url from 'url';
 import wrapAnsi from 'wrap-ansi';
 import {
   Analytics,
-  Api,
   ApiV2,
   Binaries,
   Config,
@@ -46,7 +45,6 @@ import { ora } from './utils/ora';
 // directory
 const packageJSON = require('../package.json');
 
-Api.setClientName(packageJSON.version);
 ApiV2.setClientName(packageJSON.version);
 
 // The following prototyped functions are not used here, but within in each file found in `./commands`

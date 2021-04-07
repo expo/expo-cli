@@ -87,7 +87,6 @@
     "cli-table3": "^0.6.0",
     "command-exists": "^1.2.8",
     "commander": "2.17.1",
-    "concat-stream": "1.6.2",
     "dateformat": "3.0.3",
     "env-editor": "^0.4.1",
     "envinfo": "7.5.0",

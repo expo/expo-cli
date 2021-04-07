@@ -19,12 +19,7 @@ export { default as NotificationCode } from './NotificationCode';
 export { learnMore } from './logs/TerminalLink';
 export { default as Analytics } from './Analytics';
 export * as Android from './Android';
-export { default as Api } from './Api';
-export {
-  default as ApiV2,
-  MAX_BODY_LENGTH as API_V2_MAX_BODY_LENGTH,
-  MAX_CONTENT_LENGTH as API_V2_MAX_CONTENT_LENGTH,
-} from './ApiV2';
+export { default as ApiV2 } from './ApiV2';
 export * as Binaries from './Binaries';
 export * as EmbeddedAssets from './EmbeddedAssets';
 export { ErrorCode } from './ErrorCode';
@@ -83,6 +78,7 @@ export * as ExpSchema from './project/ExpSchema';
 export { delayAsync } from './utils/delayAsync';
 export { choosePortAsync } from './utils/choosePortAsync';
 export { downloadApkAsync } from './utils/downloadApkAsync';
+export { downloadAppAsync } from './utils/downloadAppAsync';
 export * as BundleIdentifier from './BundleIdentifier';
 export * as FsCache from './tools/FsCache';
 export * as WebpackEnvironment from './webpack-utils/WebpackEnvironment';
