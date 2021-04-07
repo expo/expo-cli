@@ -53,6 +53,7 @@ export async function startAsync(
     projectRoot,
     developerTool: Config.developerTool,
     sdkVersion: exp.sdkVersion ?? null,
+    // integrations go here
   });
 
   if (options.webOnly) {

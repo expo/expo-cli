@@ -47,6 +47,7 @@ export class AnalyticsClient {
         event: name,
         properties,
         context: this.getContext(),
+        // inegrations go here
       });
     }
   }
