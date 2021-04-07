@@ -1,3 +1,4 @@
+import { ExpoConfig } from '@expo/config-types';
 import camelCase from 'lodash/camelCase';
 import isEmpty from 'lodash/isEmpty';
 import snakeCase from 'lodash/snakeCase';
@@ -287,6 +288,33 @@ export class UserManagerInstance {
       throw new XDLError('USER_ACCOUNT_ERROR', 'This action is not supported for normal users.');
     }
     return user;
+  }
+
+  /**
+   * Used in expo-constants to generate the `id` property statically for an app in custom managed workflow.
+   * This `id` is used for legacy Expo services AuthSession proxy and Expo notifications device ID.
+   *
+   * @param manifest
+   * @returns
+   */
+  async getProjectCurrentFullNameAsync(manifest: ExpoConfig): Promise<string> {
+    const username = await this.getProjectAccountNameAsync(manifest);
+    return `@${username}/${manifest.slug}`;
+  }
+
+  async getProjectAccountNameAsync(manifest: ExpoConfig): Promise<string> {
+    // TODO: Must match what's generated in Expo Go.
+    if (manifest.owner) {
+      return manifest.owner;
+    } else if (process.env.EAS_BUILD_USERNAME) {
+      return process.env.EAS_BUILD_USERNAME;
+    } else if (!Config.offline) {
+      const username = await this.getCurrentUsernameAsync();
+      if (username) {
+        return username;
+      }
+    }
+    return ANONYMOUS_USERNAME;
   }
 
   async getCurrentUsernameAsync(): Promise<string | null> {
