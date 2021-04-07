@@ -3,7 +3,7 @@ import axios, { AxiosRequestConfig, Canceler } from 'axios';
 import fs from 'fs-extra';
 import path from 'path';
 
-import { Extract } from '../internal';
+import { extractTarAsync } from './extractTarAsync';
 
 const TIMER_DURATION = 30000;
 const TIMEOUT = 3600000;
@@ -82,7 +82,7 @@ export async function downloadAppAsync(
     const dotExpoHomeDirectory = UserSettings.dotExpoHomeDirectory();
     const tmpPath = path.join(dotExpoHomeDirectory, 'tmp-download-file');
     await _downloadAsync(url, tmpPath, progressFunction);
-    await Extract.extractAsync(tmpPath, outputPath);
+    await extractTarAsync(tmpPath, outputPath);
     fs.removeSync(tmpPath);
   } else {
     await _downloadAsync(url, outputPath, progressFunction, retryFunction);

@@ -1,3 +1,4 @@
+export { downloadAppAsync } from './utils/downloadAppAsync';
 export * as ConnectionStatus from './ConnectionStatus';
 export { default as Analytics } from './Analytics';
 export { default as Config } from './Config';

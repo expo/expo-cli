@@ -1,7 +1,7 @@
 import spawnAsync from '@expo/spawn-async';
 import tar from 'tar';
 
-export async function extractAsync(archive: string, dir: string): Promise<void> {
+export async function extractTarAsync(archive: string, dir: string): Promise<void> {
   try {
     if (process.platform !== 'win32') {
       await spawnAsync('tar', ['-xf', archive, '-C', dir], {

@@ -1,8 +1,8 @@
-import { UserSettings } from '@expo/api';
+import { downloadAppAsync, UserSettings } from '@expo/api';
 import fs from 'fs-extra';
 import path from 'path';
 
-import { downloadAppAsync, Versions } from '../internal';
+import { Versions } from '../internal';
 
 function _apkCacheDirectory() {
   const dotExpoHomeDirectory = UserSettings.dotExpoHomeDirectory();
