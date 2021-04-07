@@ -11,9 +11,9 @@ import semver from 'semver';
 
 import {
   Analytics,
-  Api,
   BundleIdentifier,
   delayAsync,
+  downloadAppAsync,
   learnMore,
   Logger,
   NotificationCode,
@@ -434,7 +434,7 @@ export async function _downloadSimulatorAppAsync(
 
   fs.mkdirpSync(dir);
   try {
-    await Api.downloadAsync(url, dir, { extract: true }, downloadProgressCallback);
+    await downloadAppAsync(url, dir, { extract: true }, downloadProgressCallback);
   } catch (e) {
     fs.removeSync(dir);
     throw e;
