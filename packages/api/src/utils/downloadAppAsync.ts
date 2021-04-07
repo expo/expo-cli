@@ -1,8 +1,8 @@
-import { UserSettings } from '@expo/api';
 import axios, { AxiosRequestConfig, Canceler } from 'axios';
 import fs from 'fs-extra';
 import path from 'path';
 
+import UserSettings from '../UserSettings';
 import { extractTarAsync } from './extractTarAsync';
 
 const TIMER_DURATION = 30000;
