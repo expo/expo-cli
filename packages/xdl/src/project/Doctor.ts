@@ -1,12 +1,14 @@
 import { configFilename, ExpoConfig, getConfig, PackageJSONConfig } from '@expo/config';
 import Schemer, { SchemerError, ValidationError } from '@expo/schemer';
 import spawnAsync from '@expo/spawn-async';
+import { execSync } from 'child_process';
 import getenv from 'getenv';
 import isReachable from 'is-reachable';
 import resolveFrom from 'resolve-from';
 import semver from 'semver';
 
 import { Config, ExpSchema, ProjectUtils, Versions, Watchman } from '../internal';
+import { learnMore } from '../logs/TerminalLink';
 
 export const NO_ISSUES = 0;
 export const WARNING = 1;
@@ -34,8 +36,7 @@ async function _checkNpmVersionAsync(projectRoot: string) {
       }
     } catch (e) {}
 
-    const npmVersionResponse = await spawnAsync('npm', ['--version']);
-    const npmVersion = npmVersionResponse.stdout.trim();
+    const npmVersion = execSync('npm --version', { stdio: 'pipe' }).toString().trim();
 
     if (
       semver.lt(npmVersion, MIN_NPM_VERSION) ||
@@ -122,7 +123,9 @@ async function validateWithSchema(
     if (e instanceof SchemerError) {
       schemaErrorMessage = `Error: Problem${
         e.errors.length > 1 ? 's' : ''
-      } validating fields in ${configName}. See https://docs.expo.io/workflow/configuration/`;
+      } validating fields in ${configName}. ${learnMore(
+        'https://docs.expo.io/workflow/configuration/'
+      )}`;
       schemaErrorMessage += e.errors.map(formatValidationError).join('');
     }
   }
@@ -134,7 +137,7 @@ async function validateWithSchema(
       if (e instanceof SchemerError) {
         assetsErrorMessage = `Error: Problem${
           e.errors.length > 1 ? '' : 's'
-        } validating asset fields in ${configName}. See ${Config.helpUrl}`;
+        } validating asset fields in ${configName}. ${learnMore('https://docs.expo.io/')}`;
         assetsErrorMessage += e.errors.map(formatValidationError).join('');
       }
     }
@@ -328,7 +331,7 @@ async function _validateReactNativeVersionAsync(
       ProjectUtils.logWarning(
         projectRoot,
         'expo',
-        `Warning: Not using the Expo fork of react-native. See ${Config.helpUrl}.`,
+        `Warning: Not using the Expo fork of react-native. ${learnMore('https://docs.expo.io/')}`,
         'doctor-not-using-expo-fork'
       );
       return WARNING;
