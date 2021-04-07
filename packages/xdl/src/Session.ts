@@ -1,6 +1,5 @@
+import { UserSettings } from '@expo/api';
 import slugid from 'slugid';
-
-import { UserSettings } from './internal';
 
 function _newIdentifier(type = 'c') {
   return type + '-' + slugid.v4();

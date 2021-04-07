@@ -1,4 +1,4 @@
-import { ApiV2 } from 'xdl';
+import { ApiV2 } from '@expo/api';
 
 import { AndroidCredentials, Keystore } from '../credentials';
 

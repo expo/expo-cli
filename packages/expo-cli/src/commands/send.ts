@@ -1,6 +1,7 @@
+import { UserSettings } from '@expo/api';
 import chalk from 'chalk';
 import { Command } from 'commander';
-import { UrlUtils, UserSettings } from 'xdl';
+import { UrlUtils } from 'xdl';
 
 import { askForSendToAsync } from '../askUser';
 import Log from '../log';

@@ -1,6 +1,6 @@
+import { UserManager } from '@expo/api';
 import chalk from 'chalk';
 import { Command } from 'commander';
-import { UserManager } from 'xdl';
 
 import Log from '../log';
 

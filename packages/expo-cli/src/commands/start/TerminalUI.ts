@@ -1,17 +1,8 @@
+import { UserManager, UserSettings } from '@expo/api';
 import chalk from 'chalk';
 import openBrowser from 'react-dev-utils/openBrowser';
 import wrapAnsi from 'wrap-ansi';
-import {
-  Android,
-  Project,
-  ProjectSettings,
-  Prompts,
-  Simulator,
-  UrlUtils,
-  UserManager,
-  UserSettings,
-  Webpack,
-} from 'xdl';
+import { Android, Project, ProjectSettings, Prompts, Simulator, UrlUtils, Webpack } from 'xdl';
 
 import { loginOrRegisterIfLoggedOutAsync } from '../../accounts';
 import Log from '../../log';

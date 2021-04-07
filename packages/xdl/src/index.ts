@@ -4,14 +4,10 @@ if (process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test') {
   installSourceMapSupport();
 }
 export {
-  Analytics,
   Android,
   Api,
-  ApiV2,
   Binaries,
-  Config,
   AndroidCredentials,
-  ConnectionStatus,
   Detach,
   Doctor,
   Env,
@@ -36,10 +32,6 @@ export {
   Simulator,
   ThirdParty,
   UrlUtils,
-  UserManager,
-  User,
-  RobotUser,
-  UserSettings,
   Versions,
   Webpack,
   XDLError,

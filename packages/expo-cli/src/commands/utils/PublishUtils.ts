@@ -1,5 +1,5 @@
+import { ApiV2, UserManager } from '@expo/api';
 import { getConfig } from '@expo/config';
-import { ApiV2, UserManager } from 'xdl';
 
 import Log from '../../log';
 import { getProjectOwner } from '../../projects';

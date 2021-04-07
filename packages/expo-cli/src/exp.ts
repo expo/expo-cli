@@ -1,3 +1,4 @@
+import { Analytics, ApiV2, Config, UserManager } from '@expo/api';
 import bunyan from '@expo/bunyan';
 import { setCustomConfigPath } from '@expo/config';
 import { INTERNAL_CALLSITES_REGEX } from '@expo/metro-config';
@@ -15,11 +16,8 @@ import stripAnsi from 'strip-ansi';
 import url from 'url';
 import wrapAnsi from 'wrap-ansi';
 import {
-  Analytics,
   Api,
-  ApiV2,
   Binaries,
-  Config,
   Doctor,
   Logger,
   LogRecord,
@@ -28,7 +26,6 @@ import {
   PackagerLogsStream,
   ProjectSettings,
   ProjectUtils,
-  UserManager,
 } from 'xdl';
 
 import { AbortCommandError, SilentError } from './CommandError';
@@ -358,7 +355,7 @@ Command.prototype.asyncAction = function (asyncFn: Action) {
         Log.error(err.message);
       } else if (err._isApiError) {
         Log.error(chalk.red(err.message));
-      } else if (err.isXDLError) {
+      } else if (err.isXDLError || err.isAuthError) {
         Log.error(err.message);
       } else if (err.isJsonFileError || err.isConfigError || err.isPackageManagerError) {
         if (err.code === 'EJSONEMPTY') {

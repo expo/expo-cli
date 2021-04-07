@@ -3,7 +3,8 @@ import fs from 'fs-extra';
 import path from 'path';
 import uuid from 'uuid';
 
-import { ConnectionType, Env } from './internal';
+import * as Env from './Env';
+import { UserData } from './User';
 
 export type UserSettingsData = {
   developmentCodeSigningId?: string;
@@ -15,15 +16,6 @@ export type UserSettingsData = {
   PATH?: string;
   sendTo?: string;
   uuid?: string;
-};
-
-export type UserData = {
-  developmentCodeSigningId?: string;
-  appleId?: string;
-  userId?: string;
-  username?: string;
-  currentConnection?: ConnectionType;
-  sessionSecret?: string;
 };
 
 const SETTINGS_FILE_NAME = 'state.json';

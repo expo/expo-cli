@@ -1,11 +1,10 @@
+import { Analytics, Config } from '@expo/api';
 import { ExpoConfig, getConfig } from '@expo/config';
 import { Server } from 'http';
 
 import {
-  Analytics,
   Android,
   assertValidProjectRoot,
-  Config,
   DevSession,
   Env,
   ProjectSettings,

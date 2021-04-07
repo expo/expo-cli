@@ -1,4 +1,4 @@
-import { User } from 'xdl';
+import { User } from '@expo/api';
 
 interface MockProject {
   projectRoot: string;

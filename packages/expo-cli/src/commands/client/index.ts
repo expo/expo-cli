@@ -1,3 +1,4 @@
+import { User, UserManager } from '@expo/api';
 import { Device } from '@expo/apple-utils';
 import { getConfig, setCustomConfigPath } from '@expo/config';
 import chalk from 'chalk';
@@ -5,7 +6,7 @@ import CliTable from 'cli-table3';
 import { Command } from 'commander';
 import fs from 'fs-extra';
 import path from 'path';
-import { Android, Simulator, User, UserManager, Versions } from 'xdl';
+import { Android, Simulator, Versions } from 'xdl';
 
 import CommandError from '../../CommandError';
 import * as appleApi from '../../appleApi';

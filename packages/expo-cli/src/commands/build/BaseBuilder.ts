@@ -1,8 +1,9 @@
+import { RobotUser, User, UserManager } from '@expo/api';
 import { ExpoConfig, getConfig, ProjectConfig } from '@expo/config';
 import chalk from 'chalk';
 import ora from 'ora';
 import semver from 'semver';
-import { RobotUser, User, UserManager, Versions } from 'xdl';
+import { Versions } from 'xdl';
 
 import Log from '../../log';
 import { getProjectOwner } from '../../projects';

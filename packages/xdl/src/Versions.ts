@@ -1,3 +1,4 @@
+import { ApiV2 as ApiV2Client, UserManager } from '@expo/api';
 import { ExpoConfig } from '@expo/config';
 import { JSONObject } from '@expo/json-file';
 import getenv from 'getenv';
@@ -5,7 +6,7 @@ import pickBy from 'lodash/pickBy';
 import path from 'path';
 import semver from 'semver';
 
-import { ApiV2 as ApiV2Client, FsCache, UserManager, XDLError } from './internal';
+import { FsCache, XDLError } from './internal';
 
 export type SDKVersion = {
   androidExpoViewUrl?: string;

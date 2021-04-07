@@ -1,4 +1,5 @@
-import { Exp, UserSettings } from 'xdl';
+import { UserSettings } from '@expo/api';
+import { Exp } from 'xdl';
 
 import { askForSendToAsync } from './askUser';
 import Log from './log';

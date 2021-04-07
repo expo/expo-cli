@@ -1,5 +1,5 @@
+import { ApiV2 } from '@expo/api';
 import { vol } from 'memfs';
-import { ApiV2 } from 'xdl';
 
 import { mockExpoXDL } from '../../__tests__/mock-utils';
 import { createTestProject } from '../../__tests__/project-utils';

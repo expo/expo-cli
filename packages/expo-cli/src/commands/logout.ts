@@ -1,5 +1,5 @@
+import { UserManager } from '@expo/api';
 import { Command } from 'commander';
-import { UserManager } from 'xdl';
 
 import CommandError from '../CommandError';
 import Log from '../log';

@@ -1,3 +1,4 @@
+import { Analytics, ANONYMOUS_USERNAME, ApiV2, Config, UserManager, UserSettings } from '@expo/api';
 import { ExpoAppManifest, ExpoConfig, getConfig } from '@expo/config';
 import { JSONObject } from '@expo/json-file';
 import chalk from 'chalk';
@@ -7,10 +8,6 @@ import os from 'os';
 import { URL } from 'url';
 
 import {
-  Analytics,
-  ANONYMOUS_USERNAME,
-  ApiV2,
-  Config,
   Doctor,
   learnMore,
   ProjectAssets,
@@ -18,8 +15,6 @@ import {
   ProjectUtils,
   resolveEntryPoint,
   UrlUtils,
-  UserManager,
-  UserSettings,
   Versions,
 } from '../internal';
 

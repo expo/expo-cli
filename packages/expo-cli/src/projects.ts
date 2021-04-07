@@ -1,5 +1,5 @@
+import { ApiV2, RobotUser, User } from '@expo/api';
 import { ExpoConfig, ProjectPrivacy } from '@expo/config';
-import { ApiV2, RobotUser, User } from 'xdl';
 
 import CommandError from './CommandError';
 import Log from './log';

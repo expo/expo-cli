@@ -1,0 +1,54 @@
+{
+  "name": "@expo/api",
+  "version": "1.0.0",
+  "description": "A module for interacting with the expo.io API",
+  "main": "build/index.js",
+  "scripts": {
+    "watch": "tsc --watch",
+    "build": "tsc",
+    "prepare": "yarn run clean && yarn build",
+    "clean": "rimraf build ./tsconfig.tsbuildinfo",
+    "lint": "eslint .",
+    "test": "jest",
+    "integration-tests": "jest --config jest/integration-test-config.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/expo/expo-cli.git",
+    "directory": "packages/api"
+  },
+  "keywords": [
+    "json"
+  ],
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/expo/expo-cli/issues"
+  },
+  "homepage": "https://github.com/expo/expo-cli/tree/master/packages/api#readme",
+  "files": [
+    "build",
+    "!**/__integration_tests__/**"
+  ],
+  "dependencies": {
+    "@expo/json-file": "^8.2.28",
+    "fs-extra": "9.0.0",
+    "uuid": "3.3.2",
+    "internal-ip": "4.3.0",
+    "lodash": "^4.17.19",
+    "getenv": "^1.0.0",
+    "concat-stream": "1.6.2",
+    "axios": "0.21.1",
+    "analytics-node": "3.5.0",
+    "form-data": "^2.3.2"
+  },
+  "devDependencies": {
+    "@types/fs-extra": "^9.0.1",
+    "@types/uuid": "^3.4.4",
+    "@types/form-data": "^2.2.0",
+    "@types/analytics-node": "^3.1.1",
+    "@types/concat-stream": "^1.6.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

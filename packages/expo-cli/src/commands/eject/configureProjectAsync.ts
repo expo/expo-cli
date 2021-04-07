@@ -1,3 +1,4 @@
+import { UserManager } from '@expo/api';
 import { ExpoConfig, getConfig, ProjectConfig } from '@expo/config';
 import {
   compileModsAsync,
@@ -10,7 +11,6 @@ import {
   withStaticPlugin,
 } from '@expo/config-plugins';
 import util from 'util';
-import { UserManager } from 'xdl';
 
 import Log from '../../log';
 import { getOrPromptForBundleIdentifier, getOrPromptForPackage } from './ConfigValidation';

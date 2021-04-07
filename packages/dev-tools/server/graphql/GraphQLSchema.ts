@@ -1,10 +1,10 @@
+import { Config, UserManager, UserSettings } from '@expo/api';
 import { getConfig, writeConfigJsonAsync } from '@expo/config';
 import spawnAsync from '@expo/spawn-async';
 import { makeExecutableSchema } from 'graphql-tools';
 import { $$asyncIterator } from 'iterall';
 import {
   Android,
-  Config,
   Exp,
   Logger,
   Project,
@@ -12,8 +12,6 @@ import {
   ProjectUtils,
   Simulator,
   UrlUtils,
-  UserManager,
-  UserSettings,
   Webpack,
 } from 'xdl';
 

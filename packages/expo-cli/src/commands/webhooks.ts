@@ -1,9 +1,9 @@
+import { ApiV2, UserManager } from '@expo/api';
 import { findConfigFile, getConfig } from '@expo/config';
 import chalk from 'chalk';
 import CliTable from 'cli-table3';
 import { Command } from 'commander';
 import crypto from 'crypto';
-import { ApiV2, UserManager } from 'xdl';
 
 import CommandError, { ErrorCodes } from '../CommandError';
 import { assert } from '../assert';

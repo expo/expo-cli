@@ -1,3 +1,4 @@
+import { ApiV2 } from '@expo/api';
 import { getConfig } from '@expo/config';
 import { JSONObject } from '@expo/json-file';
 import Schemer from '@expo/schemer';
@@ -6,7 +7,7 @@ import { boolish } from 'getenv';
 import schemaDerefSync from 'json-schema-deref-sync';
 import path from 'path';
 
-import { ApiV2, FsCache } from '../internal';
+import { FsCache } from '../internal';
 
 export type Schema = any;
 export type AssetSchema = {

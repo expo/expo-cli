@@ -1,3 +1,4 @@
+import { Analytics, ApiV2, Config, User, UserManager } from '@expo/api';
 import {
   ExpoAppManifest,
   ExpoConfig,
@@ -10,9 +11,6 @@ import fs from 'fs-extra';
 import path from 'path';
 
 import {
-  Analytics,
-  ApiV2,
-  Config,
   createBundlesAsync,
   Doctor,
   EmbeddedAssets,
@@ -27,8 +25,6 @@ import {
   PublishOptions,
   runHook,
   Sentry,
-  User,
-  UserManager,
   XDLError,
 } from '../internal';
 

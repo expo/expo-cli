@@ -1,20 +1,17 @@
+import { ANONYMOUS_USERNAME, Config, UserManager, UserSettings } from '@expo/api';
 import { readExpRcAsync } from '@expo/config';
 import * as path from 'path';
 import { promisify } from 'util';
 
 import {
   Android,
-  ANONYMOUS_USERNAME,
   assertValidProjectRoot,
-  Config,
   delayAsync,
   NgrokOptions,
   ProjectSettings,
   ProjectUtils,
   resolveNgrokAsync,
   UrlUtils,
-  UserManager,
-  UserSettings,
   XDLError,
 } from '../internal';
 

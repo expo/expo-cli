@@ -1,3 +1,4 @@
+import { Analytics, UserSettings } from '@expo/api';
 import { ExpoConfig, getConfig } from '@expo/config';
 import * as osascript from '@expo/osascript';
 import spawnAsync from '@expo/spawn-async';
@@ -9,7 +10,6 @@ import prompts from 'prompts';
 import semver from 'semver';
 
 import {
-  Analytics,
   Api,
   BundleIdentifier,
   delayAsync,
@@ -20,7 +20,6 @@ import {
   SimControl,
   SimControlLogs,
   UrlUtils,
-  UserSettings,
   Versions,
   Webpack,
   Xcode,

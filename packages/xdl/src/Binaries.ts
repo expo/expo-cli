@@ -1,8 +1,9 @@
+import { UserSettings } from '@expo/api';
 import fs from 'fs-extra';
 import hasbin from 'hasbin';
 import path from 'path';
 
-import { UserSettings, XDLError } from './internal';
+import { XDLError } from './internal';
 
 export const OSX_SOURCE_PATH = path.join(__dirname, '..', 'binaries', 'osx');
 

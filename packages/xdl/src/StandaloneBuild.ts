@@ -1,6 +1,5 @@
+import { ApiV2 as ApiV2Client, UserManager } from '@expo/api';
 import { Platform } from '@expo/config';
-
-import { ApiV2 as ApiV2Client, UserManager } from './internal';
 
 interface StandaloneBuildParams {
   platform: Platform;

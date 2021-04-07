@@ -1,4 +1,4 @@
-import { UserSettings } from 'xdl';
+import { UserSettings } from '@expo/api';
 
 import Log from './log';
 import { promptEmailAsync } from './prompts';

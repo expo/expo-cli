@@ -3,7 +3,7 @@ import HashIds from 'hashids';
 import path from 'path';
 import uuid from 'uuid';
 
-import { ApiV2 as ApiV2Client, User, UserManagerInstance } from '../internal';
+import { ApiV2 as ApiV2Client, User, UserManagerInstance, UserSettings } from '../';
 
 const _makeShortId = (salt: string, minLength = 10) => {
   const hashIds = new HashIds(salt, minLength);
@@ -12,7 +12,7 @@ const _makeShortId = (salt: string, minLength = 10) => {
 
 // Note: these tests are actually calling the API,
 // in the unit test "User-test.ts" the API is mocked and the same tests are executed.
-describe.skip('UserManager', () => {
+describe.skip('User Sessions', () => {
   let userForTest: User;
   let userForTestPassword: string;
 
@@ -56,26 +56,12 @@ describe.skip('UserManager', () => {
     }
   });
 
-  it('should make available a global, shared UserManager singleton', () => {
-    const { default: UserManager } = require('../User');
-    expect(UserManager).toBeDefined();
-    expect(UserManager.initialize).toBeDefined();
-  });
-
-  it('should not have a currently logged in user', async () => {
-    const UserManager = _newTestUserManager();
-    try {
-      await UserManager.ensureLoggedInAsync();
-    } catch (e) {
-      expect(e.message).toEqual('Not logged in');
-    }
-  });
-
-  it('should login successfully', async () => {
+  it('should login successfully, and persist a session token upon login', async () => {
     const UserManager = _newTestUserManager();
     await UserManager.loginAsync('user-pass', {
       username: userForTest.username,
       password: userForTestPassword,
+      // testSession: true,
     });
 
     const user = await UserManager.getCurrentUserAsync();
@@ -83,48 +69,40 @@ describe.skip('UserManager', () => {
     if (!user) {
       return;
     }
+    // expect session to be cached
     expect(user.username).toBe(userForTest.username);
-    expect(user.sessionSecret).not.toBeFalsy();
+    expect(user.sessionSecret).not.toBe(undefined);
+
+    // expect session to be in state.json
+    const auth = await UserSettings.getAsync('auth', null);
+    expect(auth?.sessionSecret).not.toBe(undefined);
   });
 
-  it('should use cached user after first run of getCurrentUserAsync() instead of making call to www', async () => {
+  it('should remove a session token upon logout', async () => {
     const UserManager = _newTestUserManager();
     await UserManager.loginAsync('user-pass', {
       username: userForTest.username,
       password: userForTestPassword,
     });
 
-    // Spy on getProfileAsync
-    const _getProfileSpy = jest.fn(UserManager._getProfileAsync);
-    UserManager._getProfileAsync = _getProfileSpy;
+    await UserManager.logoutAsync();
 
-    await UserManager.getCurrentUserAsync();
-
-    expect(_getProfileSpy).not.toHaveBeenCalled();
+    // expect session to be removed
+    const auth = await UserSettings.getAsync('auth', null);
+    expect(auth?.sessionSecret).toBe(undefined);
   });
 
-  it('should correctly use lock to prevent getting session twice, simulatenously', async () => {
+  it('should use the session token with API v2 requests', async () => {
     const UserManager = _newTestUserManager();
     await UserManager.loginAsync('user-pass', {
       username: userForTest.username,
       password: userForTestPassword,
     });
 
-    UserManager._currentUser = null;
-
-    // Spy on getProfileAsync
-    const _getProfileSpy = jest.fn(UserManager._getProfileAsync);
-    UserManager._getProfileAsync = _getProfileSpy;
-
-    const [first, second] = await Promise.all([
-      UserManager.getCurrentUserAsync(),
-      UserManager.getCurrentUserAsync(),
-    ]);
-
-    expect(_getProfileSpy).toHaveBeenCalledTimes(1);
-
-    // This shouldn't have changed, but just double check it
-    expect(first).toEqual(second);
+    const user = await UserManager.getCurrentUserAsync();
+    const api = ApiV2Client.clientForUser(user);
+    const response = await api.getAsync('auth/userInfo', {}, {}, true);
+    expect(response.status).toBe(200);
   });
 });
 

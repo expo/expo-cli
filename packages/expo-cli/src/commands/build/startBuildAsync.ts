@@ -1,7 +1,8 @@
+import { Analytics, ApiV2, Config, UserManager } from '@expo/api';
 import { configFilename, getConfig } from '@expo/config';
 import joi from '@hapi/joi';
 import slug from 'slugify';
-import { Analytics, ApiV2, Config, ThirdParty, UserManager, XDLError } from 'xdl';
+import { ThirdParty, XDLError } from 'xdl';
 
 export type BuildCreatedResult = {
   id: string;

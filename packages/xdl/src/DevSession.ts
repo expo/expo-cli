@@ -1,6 +1,7 @@
+import { ApiV2 as ApiV2Client, Config, UserManager } from '@expo/api';
 import os from 'os';
 
-import { ApiV2 as ApiV2Client, Config, Logger as logger, UrlUtils, UserManager } from './internal';
+import { Logger as logger, UrlUtils } from './internal';
 
 const UPDATE_FREQUENCY_SECS = 20;
 

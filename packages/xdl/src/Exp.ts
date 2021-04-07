@@ -1,4 +1,4 @@
-import { ApiV2, UserManager } from './internal';
+import { ApiV2, UserManager } from '@expo/api';
 
 export async function sendAsync(recipient: string, url_: string, allowUnauthed: boolean = true) {
   const user = await UserManager.ensureLoggedInAsync();

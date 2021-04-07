@@ -1,3 +1,4 @@
+import { ApiV2, UserManager } from '@expo/api';
 import { ExpoAppManifest, ExpoConfig } from '@expo/config';
 import { BundleAssetWithFileHashes, BundleOutput } from '@expo/dev-server';
 import assert from 'assert';
@@ -12,7 +13,7 @@ import minimatch from 'minimatch';
 import path from 'path';
 import urljoin from 'url-join';
 
-import { ApiV2, ExpSchema, Logger as logger, ProjectUtils, UserManager } from './internal';
+import { ExpSchema, Logger as logger, ProjectUtils } from './internal';
 
 const EXPO_CDN = 'https://d1wp6m56sqw74a.cloudfront.net';
 

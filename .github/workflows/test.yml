@@ -36,6 +36,7 @@ jobs:
         node: ['10', '12']
         package:
           [
+            api,
             electron-adapter,
             dev-tools,
             babel-preset-cli,

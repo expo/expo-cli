@@ -1,3 +1,4 @@
+import { UserManager } from '@expo/api';
 import { getDefaultTarget } from '@expo/config';
 import assert from 'assert';
 import crypto from 'crypto';
@@ -8,7 +9,7 @@ import readLastLines from 'read-last-lines';
 import semver from 'semver';
 import urljoin from 'url-join';
 import { v1 as uuidv1, v4 as uuidv4 } from 'uuid';
-import { EmbeddedAssets, Env, Project, ProjectAssets, UserManager, XDLError } from 'xdl';
+import { EmbeddedAssets, Env, Project, ProjectAssets, XDLError } from 'xdl';
 
 import Log from '../../log';
 

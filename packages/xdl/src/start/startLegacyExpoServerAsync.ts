@@ -1,3 +1,4 @@
+import { ConnectionStatus } from '@expo/api';
 import { readExpRcAsync } from '@expo/config';
 import axios from 'axios';
 import express from 'express';
@@ -5,7 +6,6 @@ import { AddressInfo } from 'net';
 
 import {
   assertValidProjectRoot,
-  ConnectionStatus,
   Doctor,
   getFreePortAsync,
   ManifestHandler,

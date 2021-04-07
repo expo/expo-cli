@@ -1,3 +1,4 @@
+import { UserManager } from '@expo/api';
 import {
   getConfig,
   getDefaultTarget,
@@ -10,7 +11,7 @@ import chalk from 'chalk';
 import { Command } from 'commander';
 import fs from 'fs';
 import path from 'path';
-import { Project, UserManager } from 'xdl';
+import { Project } from 'xdl';
 
 import CommandError from '../CommandError';
 import Log from '../log';

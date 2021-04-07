@@ -1,3 +1,4 @@
+import { UserManager } from '@expo/api';
 import { BareAppConfig, getConfig } from '@expo/config';
 import { AndroidConfig, IOSConfig } from '@expo/config-plugins';
 import plist from '@expo/plist';
@@ -10,7 +11,7 @@ import pacote from 'pacote';
 import path from 'path';
 import stripAnsi from 'strip-ansi';
 import terminalLink from 'terminal-link';
-import { UserManager, Versions } from 'xdl';
+import { Versions } from 'xdl';
 
 import CommandError, { SilentError } from '../CommandError';
 import Log from '../log';

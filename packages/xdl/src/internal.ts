@@ -11,20 +11,13 @@
 */
 export * from './Utils';
 export * as Env from './Env';
-export { default as Config } from './Config';
 export * as Xcode from './Xcode';
-export * as ConnectionStatus from './ConnectionStatus';
 export { default as Logger, Log, LogStream } from './Logger';
 export { default as NotificationCode } from './NotificationCode';
 export { learnMore } from './logs/TerminalLink';
-export { default as Analytics } from './Analytics';
 export * as Android from './Android';
 export { default as Api } from './Api';
-export {
-  default as ApiV2,
-  MAX_BODY_LENGTH as API_V2_MAX_BODY_LENGTH,
-  MAX_CONTENT_LENGTH as API_V2_MAX_CONTENT_LENGTH,
-} from './ApiV2';
+
 export * as Binaries from './Binaries';
 export * as EmbeddedAssets from './EmbeddedAssets';
 export { ErrorCode } from './ErrorCode';
@@ -43,15 +36,6 @@ export * as Simulator from './Simulator';
 export * as StandaloneBuild from './StandaloneBuild';
 export * as ThirdParty from './ThirdParty';
 export * as UrlUtils from './UrlUtils';
-export {
-  default as UserManager,
-  UserManagerInstance,
-  RobotUser,
-  User,
-  ConnectionType,
-  ANONYMOUS_USERNAME,
-} from './User';
-export { default as UserSettings, UserData } from './UserSettings';
 export * as Versions from './Versions';
 export * as Webpack from './Webpack';
 export { default as XDLError } from './XDLError';

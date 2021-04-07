@@ -2,16 +2,29 @@ import camelCase from 'lodash/camelCase';
 import isEmpty from 'lodash/isEmpty';
 import snakeCase from 'lodash/snakeCase';
 
-import {
-  Analytics,
-  ApiV2 as ApiV2Client,
-  Config,
-  Logger,
-  Semaphore,
-  UserData,
-  UserSettings,
-  XDLError,
-} from './internal';
+import Analytics from './Analytics';
+import ApiV2Client from './ApiV2';
+import Config from './Config';
+import { Semaphore } from './Semaphore';
+import UserSettings from './UserSettings';
+
+export class AuthError extends Error {
+  readonly name = 'AuthError';
+  readonly isAuthError = true;
+
+  constructor(public code: string, message: string) {
+    super(message);
+  }
+}
+
+export type UserData = {
+  developmentCodeSigningId?: string;
+  appleId?: string;
+  userId?: string;
+  username?: string;
+  currentConnection?: ConnectionType;
+  sessionSecret?: string;
+};
 
 export type User = {
   kind: 'user';
@@ -120,7 +133,7 @@ export class UserManagerInstance {
         otp: loginArgs.otp,
       });
       if (loginResp.error) {
-        throw new XDLError('INVALID_USERNAME_PASSWORD', loginResp['error_description']);
+        throw new AuthError('INVALID_USERNAME_PASSWORD', loginResp['error_description']);
       }
       const user = await this._getProfileAsync({
         currentConnection: 'Username-Password-Authentication',
@@ -166,7 +179,7 @@ export class UserManagerInstance {
       return registeredUser;
     } catch (e) {
       console.error(e);
-      throw new XDLError('REGISTRATION_ERROR', 'Error registering user: ' + e.message);
+      throw new AuthError('REGISTRATION_ERROR', 'Error registering user: ' + e.message);
     }
   }
 
@@ -177,7 +190,7 @@ export class UserManagerInstance {
    */
   async ensureLoggedInAsync(): Promise<User | RobotUser> {
     if (Config.offline) {
-      throw new XDLError('NETWORK_REQUIRED', "Can't verify user without network access");
+      throw new AuthError('NETWORK_REQUIRED', "Can't verify user without network access");
     }
 
     let user = await this.getCurrentUserAsync({ silent: true });
@@ -185,7 +198,7 @@ export class UserManagerInstance {
       user = await this._interactiveAuthenticationCallbackAsync();
     }
     if (!user) {
-      throw new XDLError('NOT_LOGGED_IN', 'Not logged in');
+      throw new AuthError('NOT_LOGGED_IN', 'Not logged in');
     }
     return user;
   }
@@ -252,8 +265,9 @@ export class UserManagerInstance {
         });
       } catch (e) {
         if (!(options && options.silent)) {
-          Logger.global.warn('Fetching the user profile failed');
-          Logger.global.warn(e);
+          // TODO: Custom logger?
+          console.warn('Fetching the user profile failed');
+          console.warn(e);
         }
         if (e.code === 'UNAUTHORIZED_ERROR') {
           return null;
@@ -272,7 +286,7 @@ export class UserManagerInstance {
   async getCurrentUserOnlyAsync(): Promise<User | null> {
     const user = await this.getCurrentUserAsync();
     if (user && user.kind !== 'user') {
-      throw new XDLError('ROBOT_ACCOUNT_ERROR', 'This action is not supported for robot users.');
+      throw new AuthError('ROBOT_ACCOUNT_ERROR', 'This action is not supported for robot users.');
     }
     return user;
   }
@@ -284,7 +298,7 @@ export class UserManagerInstance {
   async getCurrentRobotUserOnlyAsync(): Promise<RobotUser | null> {
     const user = await this.getCurrentUserAsync();
     if (user && user.kind !== 'robot') {
-      throw new XDLError('USER_ACCOUNT_ERROR', 'This action is not supported for normal users.');
+      throw new AuthError('USER_ACCOUNT_ERROR', 'This action is not supported for normal users.');
     }
     return user;
   }
@@ -327,7 +341,7 @@ export class UserManagerInstance {
     }
 
     if (currentUser?.kind === 'robot') {
-      throw new XDLError('ROBOT_ACCOUNT_ERROR', 'This action is not available for robot users');
+      throw new AuthError('ROBOT_ACCOUNT_ERROR', 'This action is not available for robot users');
     }
 
     const api = ApiV2Client.clientForUser(currentUser);
@@ -350,7 +364,7 @@ export class UserManagerInstance {
    */
   async logoutAsync(): Promise<void> {
     if (this._currentUser?.kind === 'robot') {
-      throw new XDLError('ROBOT_ACCOUNT_ERROR', 'This action is not available for robot users');
+      throw new AuthError('ROBOT_ACCOUNT_ERROR', 'This action is not available for robot users');
     }
 
     // Only send logout events events for users without access tokens

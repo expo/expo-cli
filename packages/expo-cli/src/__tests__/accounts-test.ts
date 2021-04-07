@@ -1,4 +1,4 @@
-import { ApiV2 } from 'xdl';
+import { ApiV2 } from '@expo/api';
 
 import { _retryUsernamePasswordAuthWithOTPAsync, UserSecondFactorDeviceMethod } from '../accounts';
 import { jester } from '../credentials/__tests__/fixtures/mocks-constants';
