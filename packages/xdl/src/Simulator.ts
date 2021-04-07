@@ -2,6 +2,7 @@ import { ExpoConfig, getConfig } from '@expo/config';
 import * as osascript from '@expo/osascript';
 import spawnAsync from '@expo/spawn-async';
 import chalk from 'chalk';
+import { execSync } from 'child_process';
 import fs from 'fs-extra';
 import path from 'path';
 import ProgressBar from 'progress';
@@ -25,6 +26,7 @@ import {
   Webpack,
   Xcode,
 } from './internal';
+import { profileMethod } from './utils/profileMethod';
 
 let _lastUrl: string | null = null;
 let _lastUdid: string | null = null;
@@ -48,11 +50,11 @@ export async function ensureXcodeInstalledAsync(): Promise<boolean> {
     const confirm = await Prompts.confirmAsync({ initial: true, message });
     if (confirm) {
       Logger.global.info(`Going to the App Store, re-run Expo when Xcode is finished installing.`);
-      await Xcode.openAppStoreAsync(Xcode.appStoreId);
+      Xcode.openAppStore(Xcode.appStoreId);
     }
   };
 
-  const version = await Xcode.getXcodeVersionAsync();
+  const version = profileMethod(Xcode.getXcodeVersion)();
   if (!version) {
     // Almost certainly Xcode isn't installed.
     await promptToOpenAppStoreAsync(
@@ -78,7 +80,7 @@ export async function ensureXcodeInstalledAsync(): Promise<boolean> {
   return true;
 }
 
-async function ensureXcodeCommandLineToolsInstalledAsync(): Promise<boolean> {
+export async function ensureXcodeCommandLineToolsInstalledAsync(): Promise<boolean> {
   if (!(await ensureXcodeInstalledAsync())) {
     // Need Xcode to install the CLI afaict
     return false;
@@ -125,6 +127,17 @@ async function ensureXcodeCommandLineToolsInstalledAsync(): Promise<boolean> {
 
 class TimeoutError extends Error {}
 
+async function getSimulatorAppIdAsync(): Promise<string | null> {
+  let result;
+  try {
+    result = (await osascript.execAsync('id of app "Simulator"')).trim();
+  } catch {
+    // This error may occur in CI where the users intends to install just the simulators but no Xcode.
+    return null;
+  }
+  return result;
+}
+
 // Simulator installed
 export async function isSimulatorInstalledAsync() {
   // Check to ensure Xcode and its CLI are installed and up to date.
@@ -133,14 +146,11 @@ export async function isSimulatorInstalledAsync() {
   }
   // TODO: extract into ensureSimulatorInstalled method
 
-  let result;
-  try {
-    result = (await osascript.execAsync('id of app "Simulator"')).trim();
-  } catch (e) {
+  const result = await getSimulatorAppIdAsync();
+  if (!result) {
     // This error may occur in CI where the users intends to install just the simulators but no Xcode.
-    console.error(
-      "Can't determine id of Simulator app; the Simulator is most likely not installed on this machine. Run `sudo xcode-select -s /Applications/Xcode.app`",
-      e
+    Logger.global.error(
+      "Can't determine id of Simulator app; the Simulator is most likely not installed on this machine. Run `sudo xcode-select -s /Applications/Xcode.app`"
     );
     return false;
   }
@@ -149,7 +159,7 @@ export async function isSimulatorInstalledAsync() {
     result !== 'com.apple.CoreSimulator.SimulatorTrampoline'
   ) {
     // TODO: FYI
-    console.warn(
+    Logger.global.warn(
       "Simulator is installed but is identified as '" + result + "'; don't know what that is."
     );
     return false;
@@ -162,7 +172,7 @@ export async function isSimulatorInstalledAsync() {
     if (e.isXDLError) {
       Logger.global.error(e.toString());
     } else {
-      console.warn(`Unable to run simctl: ${e.toString()}`);
+      Logger.global.warn(`Unable to run simctl: ${e.toString()}`);
       Logger.global.error(
         'xcrun may not be configured correctly. Try running `sudo xcode-select --reset` and running this again.'
       );
@@ -203,9 +213,7 @@ export async function ensureSimulatorOpenAsync(
     if (simulatorOpenedByApp?.udid) {
       udid = simulatorOpenedByApp.udid;
     } else {
-      udid =
-        (await _getDefaultSimulatorDeviceUDIDAsync()) ??
-        (await getFirstAvailableDeviceAsync()).udid;
+      udid = _getDefaultSimulatorDeviceUDID() ?? (await getFirstAvailableDeviceAsync()).udid;
     }
   }
 
@@ -258,13 +266,12 @@ export async function isSimulatorBootedAsync({
   }
 }
 
-async function _getDefaultSimulatorDeviceUDIDAsync() {
+function _getDefaultSimulatorDeviceUDID() {
   try {
-    const { stdout: defaultDeviceUDID } = await spawnAsync('defaults', [
-      'read',
-      'com.apple.iphonesimulator',
-      'CurrentDeviceUDID',
-    ]);
+    const defaultDeviceUDID = execSync(
+      `defaults read com.apple.iphonesimulator CurrentDeviceUDID`,
+      { stdio: 'pipe' }
+    ).toString();
     return defaultDeviceUDID.trim();
   } catch (e) {
     return null;
@@ -304,7 +311,10 @@ async function waitForActionAsync<T>({
 }
 
 async function waitForSimulatorAppToStart(): Promise<boolean> {
-  return waitForActionAsync<boolean>({ action: SimControl.isSimulatorAppRunningAsync });
+  return waitForActionAsync<boolean>({
+    interval: 50,
+    action: SimControl.isSimulatorAppRunningAsync,
+  });
 }
 
 async function waitForDeviceToBootAsync({
@@ -700,6 +710,13 @@ export async function openProjectAsync({
   | { success: true; url: string; udid: string; bundleIdentifier: string }
   | { success: false; error: string }
 > {
+  if (!(await isSimulatorInstalledAsync())) {
+    return {
+      success: false,
+      error: 'Unable to verify Xcode and Simulator installation.',
+    };
+  }
+
   const projectUrl = await UrlUtils.constructDeepLinkAsync(projectRoot, {
     hostType: 'localhost',
   });
@@ -767,6 +784,13 @@ export async function openWebProjectAsync({
   shouldPrompt: boolean;
   projectRoot: string;
 }): Promise<{ success: true; url: string } | { success: false; error: string }> {
+  if (!(await isSimulatorInstalledAsync())) {
+    return {
+      success: false,
+      error: 'Unable to verify Xcode and Simulator installation.',
+    };
+  }
+
   const projectUrl = await Webpack.getUrlAsync(projectRoot);
   if (projectUrl === null) {
     return {
@@ -809,7 +833,7 @@ export async function sortDefaultDeviceToBeginningAsync(
   devices: SimControl.SimulatorDevice[]
 ): Promise<SimControl.SimulatorDevice[]> {
   const defaultUdid =
-    (await _getDefaultSimulatorDeviceUDIDAsync()) ?? (await getFirstAvailableDeviceAsync()).udid;
+    _getDefaultSimulatorDeviceUDID() ?? (await getFirstAvailableDeviceAsync()).udid;
   if (defaultUdid) {
     let iterations = 0;
     while (devices[0].udid !== defaultUdid && iterations < devices.length) {
