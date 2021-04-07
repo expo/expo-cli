@@ -19,7 +19,6 @@ interface XDLConfig {
   validation: {
     reactNativeVersionWarnings: boolean;
   };
-  helpUrl: string;
   offline: boolean;
 }
 
@@ -83,7 +82,6 @@ const config: XDLConfig = {
   validation: {
     reactNativeVersionWarnings: true,
   },
-  helpUrl: 'https://docs.expo.io/',
   offline: false,
 };
 
