@@ -297,12 +297,12 @@ export class UserManagerInstance {
    * @param manifest
    * @returns
    */
-  async getUserProjectIdAsync(manifest: ExpoConfig): Promise<string> {
-    const username = await this.getIdUsernameAsync(manifest);
+  async getProjectCurrentFullNameAsync(manifest: ExpoConfig): Promise<string> {
+    const username = await this.getProjectAccountNameAsync(manifest);
     return `@${username}/${manifest.slug}`;
   }
 
-  async getIdUsernameAsync(manifest: ExpoConfig): Promise<string> {
+  async getProjectAccountNameAsync(manifest: ExpoConfig): Promise<string> {
     // TODO: Must match what's generated in Expo Go.
     if (manifest.owner) {
       return manifest.owner;
