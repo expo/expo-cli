@@ -200,7 +200,6 @@ export async function getManifestResponseAsync({
   const hostInfo = await createHostInfoAsync();
   const [projectSettings, bundleUrlPackagerOpts] = await getPackagerOptionsAsync(projectRoot);
   // Mutate the manifest
-  manifest.xde = true; // deprecated
   manifest.developer = {
     tool: Config.developerTool,
     projectRoot,
