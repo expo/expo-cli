@@ -1,8 +1,7 @@
-import { ApiV2, User, UserManager } from '@expo/api';
+import { ApiV2, ApiV2Error, User, UserManager } from '@expo/api';
 import chalk from 'chalk';
 import program from 'commander';
 import openBrowser from 'react-dev-utils/openBrowser';
-import { ApiV2Error } from 'xdl/build/ApiV2';
 
 import CommandError, { SilentError } from './CommandError';
 import { assert } from './assert';
