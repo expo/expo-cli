@@ -9,15 +9,13 @@
   With this module in place, we can fix these circular dependency problems by
   changing the order in this file.
 */
-export * from './Utils';
+export { Semaphore } from './utils/Semaphore';
 export * as Env from './Env';
 export * as Xcode from './Xcode';
 export { default as Logger, Log, LogStream } from './Logger';
 export { default as NotificationCode } from './NotificationCode';
 export { learnMore } from './logs/TerminalLink';
 export * as Android from './Android';
-export { default as Api } from './Api';
-
 export * as Binaries from './Binaries';
 export * as EmbeddedAssets from './EmbeddedAssets';
 export { ErrorCode } from './ErrorCode';
@@ -67,6 +65,7 @@ export * as ExpSchema from './project/ExpSchema';
 export { delayAsync } from './utils/delayAsync';
 export { choosePortAsync } from './utils/choosePortAsync';
 export { downloadApkAsync } from './utils/downloadApkAsync';
+export { downloadAppAsync } from './utils/downloadAppAsync';
 export * as BundleIdentifier from './BundleIdentifier';
 export * as FsCache from './tools/FsCache';
 export * as WebpackEnvironment from './webpack-utils/WebpackEnvironment';

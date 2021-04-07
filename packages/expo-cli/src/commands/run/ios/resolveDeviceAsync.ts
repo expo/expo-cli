@@ -31,6 +31,9 @@ async function getBuildDestinationsAsync() {
 export async function resolveDeviceAsync(
   device: string | boolean | undefined
 ): Promise<SimControl.SimulatorDevice | SimControl.XCTraceDevice> {
+  if (!(await profileMethod(Simulator.ensureXcodeCommandLineToolsInstalledAsync)())) {
+    throw new CommandError('Unable to verify Xcode and Simulator installation.');
+  }
   if (!device) {
     return await profileMethod(
       Simulator.ensureSimulatorOpenAsync,

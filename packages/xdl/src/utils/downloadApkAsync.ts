@@ -2,7 +2,7 @@ import { UserSettings } from '@expo/api';
 import fs from 'fs-extra';
 import path from 'path';
 
-import { Api, Versions } from '../internal';
+import { downloadAppAsync, Versions } from '../internal';
 
 function _apkCacheDirectory() {
   const dotExpoHomeDirectory = UserSettings.dotExpoHomeDirectory();
@@ -27,6 +27,6 @@ export async function downloadApkAsync(
     return apkPath;
   }
 
-  await Api.downloadAsync(url, apkPath, undefined, downloadProgressCallback);
+  await downloadAppAsync(url, apkPath, undefined, downloadProgressCallback);
   return apkPath;
 }

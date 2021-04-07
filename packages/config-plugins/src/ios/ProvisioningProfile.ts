@@ -22,9 +22,17 @@ function setProvisioningProfileForPbxproj(
   { targetName, profileName, appleTeamId }: ProvisioningProfileSettings
 ): void {
   const project = getPbxproj(projectRoot);
-  const [nativeTargetId, nativeTarget] = targetName
+  const target = targetName
     ? findNativeTargetByName(project, targetName)
     : findFirstNativeTarget(project);
+
+  if (!target && targetName) {
+    throw new Error(`Unable to find a target named ${targetName}.`);
+  } else if (!target) {
+    throw new Error(`Unable to find any targets in this Xcode project.`);
+  }
+
+  const [nativeTargetId, nativeTarget] = target;
 
   getBuildConfigurationForId(project, nativeTarget.buildConfigurationList)
     .filter(([, item]: ConfigurationSectionEntry) => item.buildSettings.PRODUCT_NAME)
