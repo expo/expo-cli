@@ -17,7 +17,7 @@ export * as ConnectionStatus from './ConnectionStatus';
 export { default as Logger, Log, LogStream } from './Logger';
 export { default as NotificationCode } from './NotificationCode';
 export { learnMore } from './logs/TerminalLink';
-export { default as Analytics } from './Analytics';
+export { default as Analytics, AnalyticsUnified } from './Analytics';
 export * as Android from './Android';
 export { default as ApiV2 } from './ApiV2';
 export * as Binaries from './Binaries';

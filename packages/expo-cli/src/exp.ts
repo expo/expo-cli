@@ -29,6 +29,7 @@ import {
   ProjectUtils,
   UserManager,
 } from 'xdl';
+import { AnalyticsUnified } from 'xdl/build/Analytics';
 
 import { AbortCommandError, SilentError } from './CommandError';
 import { loginOrRegisterAsync } from './accounts';
@@ -693,11 +694,15 @@ Command.prototype.asyncActionProjectDir = function (
 
 function runAsync(programName: string) {
   try {
+    const unifiedApiKey =
+      process.env.NODE_ENV === 'production' // should i be using getenv?
+        ? 'u4e9dmCiNpwIZTXuyZPOJE7KjCMowdx5'
+        : 'Q3hdBJCQ6ugs42gmWyxcvAV2tRgr3tZd';
     // Setup analytics
     Analytics.setSegmentNodeKey('vGu92cdmVaggGA26s3lBX6Y5fILm8SQ7');
-    Analytics.unifiedClient.setSegmentNodeKey('u4e9dmCiNpwIZTXuyZPOJE7KjCMowdx5');
+    AnalyticsUnified.setSegmentNodeKey(unifiedApiKey);
     Analytics.setVersionName(packageJSON.version);
-    Analytics.unifiedClient.setVersionName(packageJSON.version);
+    AnalyticsUnified.setVersionName(packageJSON.version);
     _registerLogs();
 
     UserManager.setInteractiveAuthenticationCallback(loginOrRegisterAsync);

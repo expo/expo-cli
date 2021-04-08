@@ -13,12 +13,12 @@ let _userId: string | undefined;
 let _userTraits: any;
 
 export class AnalyticsClient {
-  public get Version(): string {
-    return this.version ?? '';
+  private segmentNodeInstance: Segment | undefined;
+  private version: string | undefined;
+  private userIdentifyCalled: boolean = false;
+  public get Version() {
+    return this.version;
   }
-  protected segmentNodeInstance: Segment | undefined;
-  protected version: string | undefined;
-  protected userIdentifyCalled: boolean = false;
 
   public flush() {
     if (this.segmentNodeInstance) {
@@ -54,7 +54,7 @@ export class AnalyticsClient {
     }
   }
 
-  protected ensureUserIdentified() {
+  private ensureUserIdentified() {
     if (this.segmentNodeInstance && !this.userIdentifyCalled && _userId) {
       this.segmentNodeInstance.identify({
         userId: _userId,
@@ -65,7 +65,7 @@ export class AnalyticsClient {
     }
   }
 
-  protected getContext() {
+  private getContext() {
     const platform = PLATFORM_TO_ANALYTICS_PLATFORM[os.platform()] || os.platform();
     const context = {
       ip: ip.address(),
@@ -90,15 +90,8 @@ export class AnalyticsClient {
   }
 }
 
-class XDLClient extends AnalyticsClient {
-  unifiedClient: AnalyticsClient;
-  constructor(unifiedClient: AnalyticsClient) {
-    super();
-    this.unifiedClient = unifiedClient;
-  }
-}
+const defaultClient = new AnalyticsClient();
 
-const unifiedClient = new AnalyticsClient();
-const xdlClient = new XDLClient(unifiedClient);
+export const AnalyticsUnified = new AnalyticsClient();
 
-export default xdlClient;
+export default defaultClient;

@@ -3,6 +3,7 @@ import { Server } from 'http';
 
 import {
   Analytics,
+  AnalyticsUnified,
   Android,
   assertValidProjectRoot,
   Config,
@@ -49,12 +50,12 @@ export async function startAsync(
   verbose: boolean = true
 ): Promise<ExpoConfig> {
   assertValidProjectRoot(projectRoot);
-  Analytics.unifiedClient.logEvent('dau', {
+  AnalyticsUnified.logEvent('dau', {
     organization: exp.owner,
     project: exp.name,
     action: 'expo start',
     source: 'expo cli',
-    source_version: Analytics.unifiedClient.Version,
+    source_version: AnalyticsUnified.Version,
   });
   Analytics.logEvent('Start Project', {
     projectRoot,
