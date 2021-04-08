@@ -62,7 +62,7 @@ export type RobotUser = {
   accessToken?: string;
 };
 
-export type LegacyUser = {
+type LegacyUser = {
   kind: 'legacyUser';
   username: string;
   userMetadata: {
@@ -71,16 +71,16 @@ export type LegacyUser = {
   };
 };
 
-export type UserOrLegacyUser = User | LegacyUser;
+type UserOrLegacyUser = User | LegacyUser;
 
-export type ConnectionType =
+type ConnectionType =
   | 'Access-Token-Authentication'
   | 'Username-Password-Authentication'
   | 'facebook'
   | 'google-oauth2'
   | 'github';
 
-export type RegistrationData = {
+type RegistrationData = {
   username: string;
   password: string;
   email?: string;

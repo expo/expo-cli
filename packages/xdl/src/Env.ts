@@ -1,27 +1,14 @@
 import { ExpoConfig } from '@expo/config';
-import getenv from 'getenv';
-import os from 'os';
+import { boolish, string } from 'getenv';
 
 import { Versions } from './internal';
 
-export function home(): string {
-  return os.homedir();
-}
-
 export function isDebug(): boolean {
-  return getenv.boolish('EXPO_DEBUG', false);
-}
-
-export function isStaging(): boolean {
-  return getenv.boolish('EXPO_STAGING', false);
-}
-
-export function isLocal(): boolean {
-  return getenv.boolish('EXPO_LOCAL', false);
+  return boolish('EXPO_DEBUG', false);
 }
 
 export function maySkipManifestValidation(): boolean {
-  return !!getenv.string('EXPO_SKIP_MANIFEST_VALIDATION_TOKEN');
+  return !!string('EXPO_SKIP_MANIFEST_VALIDATION_TOKEN');
 }
 
 /**
@@ -30,5 +17,5 @@ export function maySkipManifestValidation(): boolean {
  * compatibility with SDK39 and older).
  */
 export function shouldUseDevServer(exp: ExpoConfig) {
-  return Versions.gteSdkVersion(exp, '40.0.0') || getenv.boolish('EXPO_USE_DEV_SERVER', false);
+  return Versions.gteSdkVersion(exp, '40.0.0') || boolish('EXPO_USE_DEV_SERVER', false);
 }

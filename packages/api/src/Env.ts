@@ -1,4 +1,4 @@
-import getenv from 'getenv';
+import { boolish } from 'getenv';
 import os from 'os';
 
 export function home(): string {
@@ -6,13 +6,13 @@ export function home(): string {
 }
 
 export function isDebug(): boolean {
-  return getenv.boolish('EXPO_DEBUG', false);
+  return boolish('EXPO_DEBUG', false);
 }
 
 export function isStaging(): boolean {
-  return getenv.boolish('EXPO_STAGING', false);
+  return boolish('EXPO_STAGING', false);
 }
 
 export function isLocal(): boolean {
-  return getenv.boolish('EXPO_LOCAL', false);
+  return boolish('EXPO_LOCAL', false);
 }
