@@ -695,7 +695,9 @@ function runAsync(programName: string) {
   try {
     // Setup analytics
     Analytics.setSegmentNodeKey('vGu92cdmVaggGA26s3lBX6Y5fILm8SQ7');
+    Analytics.unifiedClient.setSegmentNodeKey('u4e9dmCiNpwIZTXuyZPOJE7KjCMowdx5');
     Analytics.setVersionName(packageJSON.version);
+    Analytics.unifiedClient.setVersionName(packageJSON.version);
     _registerLogs();
 
     UserManager.setInteractiveAuthenticationCallback(loginOrRegisterAsync);

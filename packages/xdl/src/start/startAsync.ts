@@ -49,11 +49,17 @@ export async function startAsync(
   verbose: boolean = true
 ): Promise<ExpoConfig> {
   assertValidProjectRoot(projectRoot);
+  Analytics.unifiedClient.logEvent('dau', {
+    organization: exp.owner,
+    project: exp.name,
+    action: 'expo start',
+    source: 'expo cli',
+    source_version: Analytics.unifiedClient.Version,
+  });
   Analytics.logEvent('Start Project', {
     projectRoot,
     developerTool: Config.developerTool,
     sdkVersion: exp.sdkVersion ?? null,
-    // integrations go here
   });
 
   if (options.webOnly) {
