@@ -7,43 +7,37 @@ interface ApiConfig {
   host: string;
   port: number | null;
 }
+
 interface XDLConfig {
   api: ApiConfig;
   developerTool: string;
   offline: boolean;
 }
 
-type Environment = 'local' | 'staging' | 'production';
-
-const apiConfig: { [env in Environment]: ApiConfig } = {
-  local: {
-    scheme: 'http',
-    host: 'localhost',
-    port: 3000,
-  },
-  staging: {
-    scheme: getenv.string('XDL_SCHEME', 'https'),
-    host: 'staging.exp.host',
-    port: getenv.int('XDL_PORT', 0) || null,
-  },
-  production: {
-    scheme: getenv.string('XDL_SCHEME', 'https'),
-    host: getenv.string('XDL_HOST', 'exp.host'),
-    port: getenv.int('XDL_PORT', 0) || null,
-  },
-};
-
-let api: ApiConfig;
-if (Env.isLocal()) {
-  api = apiConfig.local;
-} else if (Env.isStaging()) {
-  api = apiConfig.staging;
-} else {
-  api = apiConfig.production;
+function getAPI(): ApiConfig {
+  if (Env.isLocal()) {
+    return {
+      scheme: 'http',
+      host: 'localhost',
+      port: 3000,
+    };
+  } else if (Env.isStaging()) {
+    return {
+      scheme: getenv.string('XDL_SCHEME', 'https'),
+      host: 'staging.exp.host',
+      port: getenv.int('XDL_PORT', 0) || null,
+    };
+  } else {
+    return {
+      scheme: getenv.string('XDL_SCHEME', 'https'),
+      host: getenv.string('XDL_HOST', 'exp.host'),
+      port: getenv.int('XDL_PORT', 0) || null,
+    };
+  }
 }
 
 const config: XDLConfig = {
-  api,
+  api: getAPI(),
   developerTool: 'expo-cli',
   offline: false,
 };
