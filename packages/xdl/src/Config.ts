@@ -11,7 +11,6 @@ interface ApiConfig {
 interface XDLConfig {
   api: ApiConfig;
   developerTool: string;
-  offline: boolean;
 }
 
 function getAPI(): ApiConfig {
@@ -39,7 +38,6 @@ function getAPI(): ApiConfig {
 const config: XDLConfig = {
   api: getAPI(),
   developerTool: 'expo-cli',
-  offline: false,
 };
 
 export default config;

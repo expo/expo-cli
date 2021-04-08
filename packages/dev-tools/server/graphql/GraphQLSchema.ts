@@ -4,7 +4,7 @@ import { makeExecutableSchema } from 'graphql-tools';
 import { $$asyncIterator } from 'iterall';
 import {
   Android,
-  Config,
+  ConnectionStatus,
   Exp,
   Logger,
   Project,
@@ -458,7 +458,7 @@ const resolvers = {
   },
   ProjectSettings: {
     hostType(projectSettings) {
-      if (Config.offline && projectSettings.hostType === 'tunnel') {
+      if (ConnectionStatus.isOffline() && projectSettings.hostType === 'tunnel') {
         return 'lan';
       } else {
         return projectSettings.hostType;
