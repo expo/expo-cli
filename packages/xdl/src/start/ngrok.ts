@@ -6,7 +6,6 @@ import {
   Android,
   ANONYMOUS_USERNAME,
   assertValidProjectRoot,
-  Config,
   delayAsync,
   NgrokOptions,
   ProjectSettings,
@@ -17,6 +16,12 @@ import {
   UserSettings,
   XDLError,
 } from '../internal';
+
+const NGROK_CONFIG = {
+  authToken: '5W1bR67GNbWcXqmxZzBG1_56GezNeaX6sSRvn8npeQ8',
+  authTokenPublicId: '5W1bR67GNbWcXqmxZzBG1',
+  domain: 'exp.direct',
+};
 
 function getNgrokConfigPath() {
   return path.join(UserSettings.dotExpoHomeDirectory(), 'ngrok.yml');
@@ -140,7 +145,7 @@ export async function startTunnelsAsync(
         projectRoot,
         ngrok,
         {
-          authtoken: Config.ngrok.authToken,
+          authtoken: NGROK_CONFIG.authToken,
           port: expoServerPort,
           proto: 'http',
         },
@@ -152,7 +157,7 @@ export async function startTunnelsAsync(
             randomness,
             UrlUtils.domainify(username),
             UrlUtils.domainify(packageShortName),
-            Config.ngrok.domain,
+            NGROK_CONFIG.domain,
           ].join('.');
         },
         packagerInfo.ngrokPid
@@ -161,7 +166,7 @@ export async function startTunnelsAsync(
         projectRoot,
         ngrok,
         {
-          authtoken: Config.ngrok.authToken,
+          authtoken: NGROK_CONFIG.authToken,
           port: packagerInfo.packagerPort,
           proto: 'http',
         },
@@ -174,7 +179,7 @@ export async function startTunnelsAsync(
             randomness,
             UrlUtils.domainify(username),
             UrlUtils.domainify(packageShortName),
-            Config.ngrok.domain,
+            NGROK_CONFIG.domain,
           ].join('.');
         },
         packagerInfo.ngrokPid

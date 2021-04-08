@@ -277,97 +277,96 @@ async function _validateReactNativeVersionAsync(
   sdkVersions: Versions.SDKVersions,
   sdkVersion: string
 ): Promise<number> {
-  if (Config.validation.reactNativeVersionWarnings) {
-    let reactNative = null;
+  let reactNative = null;
 
-    if (pkg.dependencies?.['react-native']) {
-      reactNative = pkg.dependencies['react-native'];
-    } else if (pkg.devDependencies?.['react-native']) {
-      reactNative = pkg.devDependencies['react-native'];
-    } else if (pkg.peerDependencies?.['react-native']) {
-      reactNative = pkg.peerDependencies['react-native'];
-    }
+  if (pkg.dependencies?.['react-native']) {
+    reactNative = pkg.dependencies['react-native'];
+  } else if (pkg.devDependencies?.['react-native']) {
+    reactNative = pkg.devDependencies['react-native'];
+  } else if (pkg.peerDependencies?.['react-native']) {
+    reactNative = pkg.peerDependencies['react-native'];
+  }
 
-    // react-native is required
-    if (!reactNative) {
-      ProjectUtils.logError(
-        projectRoot,
-        'expo',
-        `Error: Can't find react-native in package.json dependencies`,
-        'doctor-no-react-native-in-package-json'
-      );
-      return ERROR;
-    }
-    ProjectUtils.clearNotification(projectRoot, 'doctor-no-react-native-in-package-json');
+  // react-native is required
+  if (!reactNative) {
+    ProjectUtils.logError(
+      projectRoot,
+      'expo',
+      `Error: Can't find react-native in package.json dependencies`,
+      'doctor-no-react-native-in-package-json'
+    );
+    return ERROR;
+  }
+  ProjectUtils.clearNotification(projectRoot, 'doctor-no-react-native-in-package-json');
 
+  if (
+    Versions.gteSdkVersion(exp, '41.0.0') &&
+    pkg.dependencies?.['@react-native-community/async-storage']
+  ) {
+    ProjectUtils.logWarning(
+      projectRoot,
+      'expo',
+      `@react-native-community/async-storage has been renamed. To upgrade:\n- remove @react-native-community/async-storage from package.json\n- run "expo install @react-native-async-storage/async-storage"\n- run "npx expo-codemod sdk41-async-storage src" to rename imports`,
+      'doctor-legacy-async-storage'
+    );
+    return WARNING;
+  } else {
+    ProjectUtils.clearNotification(projectRoot, 'doctor-legacy-async-storage');
+  }
+
+  if (!exp.isDetached) {
+    return NO_ISSUES;
+
+    // (TODO-2017-07-20): Validate the react-native version if it uses
+    // officially published package rather than Expo fork. Expo fork of
+    // react-native was required before CRNA. We now only run the react-native
+    // validation of the version if we are using the fork. We should probably
+    // validate the version here as well such that it matches with the
+    // react-native version compatible with the selected SDK.
+  }
+
+  // Expo fork of react-native is required
+  if (!/expo\/react-native/.test(reactNative)) {
+    ProjectUtils.logWarning(
+      projectRoot,
+      'expo',
+      `Warning: Not using the Expo fork of react-native. ${learnMore('https://docs.expo.io/')}`,
+      'doctor-not-using-expo-fork'
+    );
+    return WARNING;
+  }
+  ProjectUtils.clearNotification(projectRoot, 'doctor-not-using-expo-fork');
+
+  try {
+    const reactNativeTag = reactNative.match(/sdk-\d+\.\d+\.\d+/)[0];
+    const sdkVersionObject = sdkVersions[sdkVersion];
+
+    // TODO: Want to be smarter about this. Maybe warn if there's a newer version.
     if (
-      Versions.gteSdkVersion(exp, '41.0.0') &&
-      pkg.dependencies?.['@react-native-community/async-storage']
+      semver.major(Versions.parseSdkVersionFromTag(reactNativeTag)) !==
+      semver.major(Versions.parseSdkVersionFromTag(sdkVersionObject['expoReactNativeTag']))
     ) {
       ProjectUtils.logWarning(
         projectRoot,
         'expo',
-        `@react-native-community/async-storage has been renamed. To upgrade:\n- remove @react-native-community/async-storage from package.json\n- run "expo install @react-native-async-storage/async-storage"\n- run "npx expo-codemod sdk41-async-storage src" to rename imports`,
-        'doctor-legacy-async-storage'
-      );
-      return WARNING;
-    } else {
-      ProjectUtils.clearNotification(projectRoot, 'doctor-legacy-async-storage');
-    }
-
-    if (!exp.isDetached) {
-      return NO_ISSUES;
-
-      // (TODO-2017-07-20): Validate the react-native version if it uses
-      // officially published package rather than Expo fork. Expo fork of
-      // react-native was required before CRNA. We now only run the react-native
-      // validation of the version if we are using the fork. We should probably
-      // validate the version here as well such that it matches with the
-      // react-native version compatible with the selected SDK.
-    }
-
-    // Expo fork of react-native is required
-    if (!/expo\/react-native/.test(reactNative)) {
-      ProjectUtils.logWarning(
-        projectRoot,
-        'expo',
-        `Warning: Not using the Expo fork of react-native. ${learnMore('https://docs.expo.io/')}`,
-        'doctor-not-using-expo-fork'
+        `Warning: Invalid version of react-native for sdkVersion ${sdkVersion}. Use github:expo/react-native#${sdkVersionObject['expoReactNativeTag']}`,
+        'doctor-invalid-version-of-react-native'
       );
       return WARNING;
     }
-    ProjectUtils.clearNotification(projectRoot, 'doctor-not-using-expo-fork');
+    ProjectUtils.clearNotification(projectRoot, 'doctor-invalid-version-of-react-native');
 
-    try {
-      const reactNativeTag = reactNative.match(/sdk-\d+\.\d+\.\d+/)[0];
-      const sdkVersionObject = sdkVersions[sdkVersion];
-
-      // TODO: Want to be smarter about this. Maybe warn if there's a newer version.
-      if (
-        semver.major(Versions.parseSdkVersionFromTag(reactNativeTag)) !==
-        semver.major(Versions.parseSdkVersionFromTag(sdkVersionObject['expoReactNativeTag']))
-      ) {
-        ProjectUtils.logWarning(
-          projectRoot,
-          'expo',
-          `Warning: Invalid version of react-native for sdkVersion ${sdkVersion}. Use github:expo/react-native#${sdkVersionObject['expoReactNativeTag']}`,
-          'doctor-invalid-version-of-react-native'
-        );
-        return WARNING;
-      }
-      ProjectUtils.clearNotification(projectRoot, 'doctor-invalid-version-of-react-native');
-
-      ProjectUtils.clearNotification(projectRoot, 'doctor-malformed-version-of-react-native');
-    } catch (e) {
-      ProjectUtils.logWarning(
-        projectRoot,
-        'expo',
-        `Warning: ${reactNative} is not a valid version. Version must be in the form of sdk-x.y.z. Please update your package.json file.`,
-        'doctor-malformed-version-of-react-native'
-      );
-      return WARNING;
-    }
+    ProjectUtils.clearNotification(projectRoot, 'doctor-malformed-version-of-react-native');
+  } catch (e) {
+    ProjectUtils.logWarning(
+      projectRoot,
+      'expo',
+      `Warning: ${reactNative} is not a valid version. Version must be in the form of sdk-x.y.z. Please update your package.json file.`,
+      'doctor-malformed-version-of-react-native'
+    );
+    return WARNING;
   }
+
   return NO_ISSUES;
 }
 
