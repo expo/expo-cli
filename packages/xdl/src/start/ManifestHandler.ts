@@ -11,6 +11,7 @@ import {
   ANONYMOUS_USERNAME,
   ApiV2,
   Config,
+  ConnectionStatus,
   Doctor,
   learnMore,
   ProjectAssets,
@@ -249,7 +250,7 @@ export async function getManifestResponseAsync({
           `Please request access from an admin of @${manifest.owner} or change the "owner" field to an account you belong to.\n` +
           learnMore('https://docs.expo.io/versions/latest/config/app/#owner')
       );
-      Config.offline = true;
+      ConnectionStatus.setIsOffline(true);
       manifestString = await getManifestStringAsync(manifest, hostInfo.host, acceptSignature);
     } else if (error.code === 'ENOTFOUND') {
       // Got a DNS error, i.e. can't access exp.host, warn and enable offline mode.
@@ -259,7 +260,7 @@ export async function getManifestResponseAsync({
           error.hostname || 'exp.host'
         }.`
       );
-      Config.offline = true;
+      ConnectionStatus.setIsOffline(true);
       manifestString = await getManifestStringAsync(manifest, hostInfo.host, acceptSignature);
     } else {
       throw error;
@@ -303,12 +304,12 @@ async function getManifestStringAsync(
   acceptSignature?: string | string[]
 ): Promise<string> {
   const currentSession = await UserManager.getSessionAsync();
-  if (!currentSession || Config.offline) {
+  if (!currentSession || ConnectionStatus.isOffline()) {
     manifest.id = `@${ANONYMOUS_USERNAME}/${manifest.slug}-${hostUUID}`;
   }
   if (!acceptSignature) {
     return JSON.stringify(manifest);
-  } else if (!currentSession || Config.offline) {
+  } else if (!currentSession || ConnectionStatus.isOffline()) {
     return getUnsignedManifestString(manifest);
   } else {
     return await getSignedManifestStringAsync(manifest, currentSession);
