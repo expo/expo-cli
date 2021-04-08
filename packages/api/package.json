@@ -44,6 +44,7 @@
     "form-data": "^2.3.2"
   },
   "devDependencies": {
+    "@types/tar": "^4.0.4",
     "@types/fs-extra": "^9.0.1",
     "@types/uuid": "^3.4.4",
     "@types/form-data": "^2.2.0",
