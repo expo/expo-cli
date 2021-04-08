@@ -19,6 +19,7 @@ import {
   ApiV2,
   Binaries,
   Config,
+  ConnectionStatus,
   Doctor,
   Logger,
   LogRecord,
@@ -341,7 +342,7 @@ Command.prototype.asyncAction = function (asyncFn: Action) {
     try {
       const options = args[args.length - 1];
       if (options.offline) {
-        Config.offline = true;
+        ConnectionStatus.setIsOffline(true);
       }
 
       await asyncFn(...args);

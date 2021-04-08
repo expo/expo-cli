@@ -6,7 +6,15 @@ import QueryString from 'querystring';
 import resolveFrom from 'resolve-from';
 import url from 'url';
 
-import { Config, ip, ProjectSettings, ProjectUtils, Versions, XDLError } from './internal';
+import {
+  Config,
+  ConnectionStatus,
+  ip,
+  ProjectSettings,
+  ProjectUtils,
+  Versions,
+  XDLError,
+} from './internal';
 
 interface URLOptions extends Omit<ProjectSettings.ProjectSettings, 'urlRandomness'> {
   urlType: null | 'exp' | 'http' | 'no-protocol' | 'redirect' | 'custom';
@@ -337,7 +345,7 @@ export async function constructUrlAsync(
   } else if (opts.hostType === 'localhost' || requestHostname === 'localhost') {
     hostname = '127.0.0.1';
     port = isPackager ? packagerInfo.packagerPort : packagerInfo.expoServerPort;
-  } else if (opts.hostType === 'lan' || Config.offline) {
+  } else if (opts.hostType === 'lan' || ConnectionStatus.isOffline()) {
     if (process.env.EXPO_PACKAGER_HOSTNAME) {
       hostname = process.env.EXPO_PACKAGER_HOSTNAME.trim();
     } else if (process.env.REACT_NATIVE_PACKAGER_HOSTNAME) {

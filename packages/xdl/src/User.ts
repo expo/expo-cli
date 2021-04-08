@@ -7,6 +7,7 @@ import {
   Analytics,
   ApiV2 as ApiV2Client,
   Config,
+  ConnectionStatus,
   Logger,
   Semaphore,
   UserData,
@@ -177,7 +178,7 @@ export class UserManagerInstance {
    * If there are any issues with the login, this method throws.
    */
   async ensureLoggedInAsync(): Promise<User | RobotUser> {
-    if (Config.offline) {
+    if (ConnectionStatus.isOffline()) {
       throw new XDLError('NETWORK_REQUIRED', "Can't verify user without network access");
     }
 
@@ -227,7 +228,7 @@ export class UserManagerInstance {
         return currentUser;
       }
 
-      if (Config.offline) {
+      if (ConnectionStatus.isOffline()) {
         return null;
       }
 
@@ -308,7 +309,7 @@ export class UserManagerInstance {
       return manifest.owner;
     } else if (process.env.EAS_BUILD_USERNAME) {
       return process.env.EAS_BUILD_USERNAME;
-    } else if (!Config.offline) {
+    } else if (!ConnectionStatus.isOffline()) {
       const username = await this.getCurrentUsernameAsync();
       if (username) {
         return username;

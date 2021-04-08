@@ -19,7 +19,6 @@ interface XDLConfig {
   validation: {
     reactNativeVersionWarnings: boolean;
   };
-  offline: boolean;
 }
 
 type Environment = 'local' | 'staging' | 'production';
@@ -82,7 +81,6 @@ const config: XDLConfig = {
   validation: {
     reactNativeVersionWarnings: true,
   },
-  offline: false,
 };
 
 export default config;
