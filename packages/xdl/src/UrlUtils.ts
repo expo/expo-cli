@@ -7,7 +7,6 @@ import resolveFrom from 'resolve-from';
 import url from 'url';
 
 import {
-  Config,
   ConnectionStatus,
   ip,
   ProjectSettings,

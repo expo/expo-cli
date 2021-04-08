@@ -6,7 +6,6 @@ import snakeCase from 'lodash/snakeCase';
 import {
   Analytics,
   ApiV2 as ApiV2Client,
-  Config,
   ConnectionStatus,
   Logger,
   Semaphore,
