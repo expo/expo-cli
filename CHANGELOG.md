@@ -6,6 +6,8 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🛠 Breaking changes
 
+- Remove deprecated property `xde` from the manifest ([#3366](https://github.com/expo/expo-cli/pull/3366))
+
 ### 🎉 New features
 
 ### 🧹 Chores
@@ -288,7 +290,7 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 📦 Packages updated
 
-  - @expo/config-plugins@1.0.18
+- @expo/config-plugins@1.0.18
 - @expo/config@3.3.28
 - @expo/dev-server@0.1.54
 - @expo/dev-tools@0.13.82
