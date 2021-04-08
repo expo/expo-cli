@@ -9,11 +9,6 @@ interface ApiConfig {
 }
 interface XDLConfig {
   api: ApiConfig;
-  ngrok: {
-    authToken: string;
-    authTokenPublicId: string;
-    domain: string;
-  };
   developerTool: string;
   offline: boolean;
 }
@@ -49,11 +44,6 @@ if (Env.isLocal()) {
 
 const config: XDLConfig = {
   api,
-  ngrok: {
-    authToken: '5W1bR67GNbWcXqmxZzBG1_56GezNeaX6sSRvn8npeQ8',
-    authTokenPublicId: '5W1bR67GNbWcXqmxZzBG1',
-    domain: 'exp.direct',
-  },
   developerTool: 'expo-cli',
   offline: false,
 };
