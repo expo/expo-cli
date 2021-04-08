@@ -90,12 +90,8 @@ export class AnalyticsClient {
   }
 }
 
-const unifiedApiKey =
-  process.env.NODE_ENV === 'production' // should i be using getenv?
-    ? 'u4e9dmCiNpwIZTXuyZPOJE7KjCMowdx5'
-    : 'Q3hdBJCQ6ugs42gmWyxcvAV2tRgr3tZd';
 const AnalyticsUnified = new AnalyticsClient();
-AnalyticsUnified.setSegmentNodeKey(unifiedApiKey);
+AnalyticsUnified.setSegmentNodeKey('u4e9dmCiNpwIZTXuyZPOJE7KjCMowdx5');
 export { AnalyticsUnified };
 
 const defaultClient = new AnalyticsClient();
