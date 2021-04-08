@@ -2,11 +2,9 @@ import { ExpoConfig } from '@expo/config';
 import axios from 'axios';
 import fs from 'fs-extra';
 import { vol } from 'memfs';
-import os from 'os';
 import path from 'path';
-import uuid from 'uuid';
 
-import { ManifestHandler } from '../../internal';
+import { ManifestHandler, UserSettings } from '../../internal';
 
 const actualFs = jest.requireActual('fs') as typeof fs;
 jest.mock('fs');
@@ -98,17 +96,8 @@ describe('getUnsignedManifestString', () => {
 });
 
 describe('getManifestResponseAsync', () => {
-  // for some reason, tempy fails with memfs in XDL
-  const expoDir = path.join(os.tmpdir(), `.expo-${uuid.v4()}`);
-
   beforeAll(() => {
-    process.env.__UNSAFE_EXPO_HOME_DIRECTORY = expoDir;
-    fs.mkdirpSync(expoDir);
-  });
-
-  afterAll(() => {
-    process.env.__UNSAFE_EXPO_HOME_DIRECTORY = '';
-    fs.removeSync(expoDir);
+    fs.removeSync(UserSettings.userSettingsFile());
   });
 
   beforeEach(() => {

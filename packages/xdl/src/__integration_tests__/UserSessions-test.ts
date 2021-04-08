@@ -1,6 +1,5 @@
 import fs from 'fs-extra';
 import HashIds from 'hashids';
-import path from 'path';
 import uuid from 'uuid';
 
 import { ApiV2 as ApiV2Client, User, UserManagerInstance, UserSettings } from '../internal';
@@ -17,11 +16,7 @@ describe.skip('User Sessions', () => {
   let userForTestPassword: string;
 
   beforeAll(async () => {
-    process.env.__UNSAFE_EXPO_HOME_DIRECTORY = path.join(
-      '/',
-      'tmp',
-      `.expo-${_makeShortId(uuid.v1())}`
-    );
+    fs.removeSync(UserSettings.userSettingsFile());
 
     const UserManager = _newTestUserManager();
 
@@ -44,9 +39,7 @@ describe.skip('User Sessions', () => {
   });
 
   afterAll(async () => {
-    if (process.env.__UNSAFE_EXPO_HOME_DIRECTORY) {
-      fs.removeSync(process.env.__UNSAFE_EXPO_HOME_DIRECTORY);
-    }
+    fs.removeSync(UserSettings.userSettingsFile());
 
     const api = ApiV2Client.clientForUser(userForTest);
     try {
