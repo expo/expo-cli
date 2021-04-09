@@ -46,7 +46,6 @@
   "devDependencies": {
     "@expo/babel-preset-cli": "0.2.19",
     "@types/fs-extra": "^9.0.1",
-    "@types/next": "*8.0.6",
     "@types/node-fetch": "^2.5.8",
     "@types/prompts": "^2.0.6",
     "rimraf": "^3.0.2"
@@ -54,7 +53,7 @@
   "peerDependencies": {
     "next": "^9",
     "react": "^16",
-    "react-native-web": "^0.11.7"
+    "react-native-web": "^0.13.12"
   },
   "publishConfig": {
     "access": "public"
