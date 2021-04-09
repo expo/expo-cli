@@ -91,7 +91,6 @@ export class AnalyticsClient {
 }
 
 const AnalyticsUnified = new AnalyticsClient();
-AnalyticsUnified.setSegmentNodeKey('u4e9dmCiNpwIZTXuyZPOJE7KjCMowdx5');
 export { AnalyticsUnified };
 
 const defaultClient = new AnalyticsClient();

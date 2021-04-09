@@ -50,7 +50,7 @@ export async function startAsync(
   verbose: boolean = true
 ): Promise<ExpoConfig> {
   assertValidProjectRoot(projectRoot);
-  AnalyticsUnified.logEvent('dau', {
+  AnalyticsUnified.logEvent('action', {
     organization: exp.owner,
     project: exp.name,
     action: 'expo start',
