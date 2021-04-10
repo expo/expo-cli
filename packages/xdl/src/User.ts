@@ -453,7 +453,7 @@ export class UserManagerInstance {
         });
       }
 
-      Analytics.setUserProperties(user.username, {
+      Analytics.setUserProperties(user.userId, {
         userId: user.userId,
         currentConnection: user.currentConnection,
         username: user.username,
