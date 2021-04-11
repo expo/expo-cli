@@ -716,8 +716,6 @@ function runAsync(programName: string) {
       }
     }
 
-    Config.developerTool = packageJSON.name;
-
     // Setup our commander instance
     program.name(programName);
     program

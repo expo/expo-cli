@@ -6,13 +6,61 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🛠 Breaking changes
 
-- Remove deprecated property `xde` from the manifest ([#3366](https://github.com/expo/expo-cli/pull/3366))
-
 ### 🎉 New features
 
 ### 🧹 Chores
 
 ### 🐛 Bug fixes
+
+## [Fri, 9 Apr 2021 15:05:32 -0700](https://github.com/expo/expo-cli/commit/31ce5bb9a78be83ee46a98a72d41652c05aa374c)
+
+### 🎉 New features
+
+- Added `currentFullName` to the public config ([#3376](https://github.com/expo/expo-cli/issues/3376))
+- Added getUserProjectIdAsync method ([#3359](https://github.com/expo/expo-cli/issues/3359))
+- Profile android build time ([#3348](https://github.com/expo/expo-cli/issues/3348))
+
+### 🧹 Chores
+
+- Simplify Config module ([#3373](https://github.com/expo/expo-cli/issues/3373))
+- Clean up logging messages ([#3357](https://github.com/expo/expo-cli/issues/3357))
+- Delete Api module ([#3360](https://github.com/expo/expo-cli/issues/3360))
+- Improve no xcode warnings ([#3363](https://github.com/expo/expo-cli/issues/3363))
+- Improve bundle identifier regex ([#3355](https://github.com/expo/expo-cli/issues/3355))
+- Improved ios package logging ([#3353](https://github.com/expo/expo-cli/issues/3353))
+- Remove deprecated property "xde" from the manifest ([#3366](https://github.com/expo/expo-cli/issues/3366))
+- Remove Config.offline ([#3374](https://github.com/expo/expo-cli/issues/3374))
+- Remove Config.helpUrl, use learnMore ([#3364](https://github.com/expo/expo-cli/issues/3364))
+- Remove unused ncp ([#3367](https://github.com/expo/expo-cli/issues/3367))
+- Remove unused TerminalLink.fallbackToUrl from XDL ([#3368](https://github.com/expo/expo-cli/issues/3368))
+- Move dev dep ([#3362](https://github.com/expo/expo-cli/issues/3362))
+- [config-plugins] Throw better error message when target does not exists ([#3350](https://github.com/expo/expo-cli/issues/3350))
+- [dev-client] Allow running projects without app.json ([#3371](https://github.com/expo/expo-cli/issues/3371))
+- [next-adapter] update RNW peer, remove deprecated types ([#3377](https://github.com/expo/expo-cli/issues/3377))
+- [xdl] Remove unused xde spawn script ([#3365](https://github.com/expo/expo-cli/issues/3365))
+
+### 🐛 Bug fixes
+
+- [expo-cli] Fix missing/extraneous dependencies
+- [xdl] Fix missing/extraneous dependencies ([#3369](https://github.com/expo/expo-cli/issues/3369))
+- Fix prompt bug when opening on iOS ([#3358](https://github.com/expo/expo-cli/issues/3358))
+- Fix product name getter ([#3354](https://github.com/expo/expo-cli/issues/3354))
+
+### 📦 Packages updated
+
+- @expo/config-plugins@1.0.25
+- @expo/config@3.3.35
+- @expo/dev-server@0.1.61
+- @expo/dev-tools@0.13.90
+- @expo/electron-adapter@0.0.52
+- expo-cli@4.3.5
+- expo-optimize@0.1.83
+- @expo/metro-config@0.1.61
+- @expo/next-adapter@2.1.66
+- expo-pwa@0.0.71
+- uri-scheme@1.0.72
+- @expo/webpack-config@0.12.65
+- xdl@59.0.30
 
 ## [Thu, 1 Apr 2021 14:25:44 -0700](https://github.com/expo/expo-cli/commit/4bbb35de0096a6369d38e5369c1120cead620ae4)
 
