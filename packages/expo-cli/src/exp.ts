@@ -29,7 +29,7 @@ import {
   ProjectUtils,
   UserManager,
 } from 'xdl';
-import { AnalyticsUnified } from 'xdl/build/Analytics';
+import UnifiedAnalytics from 'xdl/build/UnifiedAnalytics';
 
 import { AbortCommandError, SilentError } from './CommandError';
 import { loginOrRegisterAsync } from './accounts';
@@ -696,8 +696,8 @@ function runAsync(programName: string) {
   try {
     Analytics.setSegmentNodeKey('vGu92cdmVaggGA26s3lBX6Y5fILm8SQ7');
     Analytics.setVersionName(packageJSON.version);
-    AnalyticsUnified.setSegmentNodeKey('u4e9dmCiNpwIZTXuyZPOJE7KjCMowdx5');
-    AnalyticsUnified.setVersionName(packageJSON.version);
+    UnifiedAnalytics.setSegmentNodeKey('u4e9dmCiNpwIZTXuyZPOJE7KjCMowdx5');
+    UnifiedAnalytics.setVersionName(packageJSON.version);
     _registerLogs();
 
     UserManager.setInteractiveAuthenticationCallback(loginOrRegisterAsync);

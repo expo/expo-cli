@@ -9,15 +9,19 @@ const PLATFORM_TO_ANALYTICS_PLATFORM: { [platform: string]: string } = {
   linux: 'Linux',
 };
 
-let _userId: string | undefined;
-let _userTraits: any;
-
 export class AnalyticsClient {
+  private _userId: string | undefined;
+  private _userTraits: any;
   private segmentNodeInstance: Segment | undefined;
   private version: string | undefined;
   private userIdentifyCalled: boolean = false;
-  public get Version() {
+
+  public get Verion() {
     return this.version;
+  }
+
+  public get UserId() {
+    return this._userId;
   }
 
   public flush() {
@@ -32,8 +36,8 @@ export class AnalyticsClient {
   }
 
   public setUserProperties(userId: string, traits: any) {
-    _userId = userId;
-    _userTraits = traits;
+    this._userId = userId;
+    this._userTraits = traits;
 
     this.ensureUserIdentified();
   }
@@ -43,10 +47,10 @@ export class AnalyticsClient {
   }
 
   public logEvent(name: string, properties: any = {}) {
-    if (this.segmentNodeInstance && _userId) {
+    if (this.segmentNodeInstance && this._userId) {
       this.ensureUserIdentified();
       this.segmentNodeInstance.track({
-        userId: _userId,
+        userId: this._userId,
         event: name,
         properties,
         context: this.getContext(),
@@ -55,10 +59,10 @@ export class AnalyticsClient {
   }
 
   private ensureUserIdentified() {
-    if (this.segmentNodeInstance && !this.userIdentifyCalled && _userId) {
+    if (this.segmentNodeInstance && !this.userIdentifyCalled && this._userId) {
       this.segmentNodeInstance.identify({
-        userId: _userId,
-        traits: _userTraits,
+        userId: this._userId,
+        traits: this._userTraits,
         context: this.getContext(),
       });
       this.userIdentifyCalled = true;
@@ -90,8 +94,6 @@ export class AnalyticsClient {
   }
 }
 
-const AnalyticsUnified = new AnalyticsClient();
-export { AnalyticsUnified };
-
 const defaultClient = new AnalyticsClient();
+
 export default defaultClient;
