@@ -450,7 +450,10 @@ Command.prototype.asyncActionProjectDir = function (
   asyncFn: Action,
   options: { checkConfig?: boolean; skipSDKVersionRequirement?: boolean } = {}
 ) {
-  this.option('--config [file]', 'Specify a path to app.json or app.config.js');
+  this.option(
+    '--config [file]',
+    `${chalk.yellow('Deprecated:')} Use app.config.js to switch config files instead.`
+  );
   return this.asyncAction(async (projectRoot: string, ...args: any[]) => {
     const opts = args[0];
 
