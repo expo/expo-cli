@@ -1,11 +1,10 @@
 import { ExpoConfig } from '@expo/config';
-import { JSONObject } from '@expo/json-file';
 import getenv from 'getenv';
 import pickBy from 'lodash/pickBy';
 import path from 'path';
 import semver from 'semver';
 
-import { ApiV2 as ApiV2Client, FsCache, UserManager, XDLError } from './internal';
+import { ApiV2 as ApiV2Client, FsCache, XDLError } from './internal';
 
 export type SDKVersion = {
   androidExpoViewUrl?: string;
@@ -64,20 +63,6 @@ export async function versionsAsync(options?: { skipCache?: boolean }): Promise<
 export async function sdkVersionsAsync(): Promise<SDKVersions> {
   const { sdkVersions } = await versionsAsync();
   return sdkVersions;
-}
-
-export async function setVersionsAsync(value: any) {
-  const user = await UserManager.getCurrentUserAsync();
-  const api = ApiV2Client.clientForUser(user);
-  const secret = process.env.EXPO_VERSIONS_SECRET;
-  if (!secret)
-    throw new Error(
-      'Versions.setVersionsAsync: EXPO_VERSIONS_SECRET environment variable is required'
-    );
-  await api.postAsync('versions/update', {
-    value: value as JSONObject,
-    secret,
-  });
 }
 
 // NOTE(brentvatne): it is possible for an unreleased version to be published to
@@ -175,69 +160,11 @@ export async function newestReleasedSdkVersionAsync(): Promise<{
   };
 }
 
-/**
- * Be careful when using this! It can include unreleased and beta SDK versions.
- */
-export async function newestSdkVersionAsync(): Promise<{
-  version: string;
-  data: SDKVersion | null;
-}> {
-  const sdkVersions = await sdkVersionsAsync();
-  let result = null;
-  let highestMajorVersion = '0.0.0';
-  for (const [version, data] of Object.entries(sdkVersions)) {
-    if (semver.major(version) > semver.major(highestMajorVersion)) {
-      highestMajorVersion = version;
-      result = data;
-    }
-  }
-  return {
-    version: highestMajorVersion,
-    data: result,
-  };
-}
-
 export async function oldestSupportedMajorVersionAsync(): Promise<number> {
   const sdkVersions = await sdkVersionsAsync();
   const supportedVersions = pickBy(sdkVersions, v => !v.isDeprecated);
   const versionNumbers = Object.keys(supportedVersions).map(version => semver.major(version));
   return Math.min(...versionNumbers);
-}
-
-export async function facebookReactNativeVersionsAsync(): Promise<string[]> {
-  const sdkVersions = await sdkVersionsAsync();
-  const facebookReactNativeVersions = new Set(
-    Object.values(sdkVersions)
-      .map(data => data.facebookReactNativeVersion)
-      .filter(version => version)
-  );
-  return Array.from(facebookReactNativeVersions);
-}
-
-export async function facebookReactNativeVersionToExpoVersionAsync(
-  outerFacebookReactNativeVersion: string
-): Promise<string | null> {
-  if (!semver.valid(outerFacebookReactNativeVersion)) {
-    throw new XDLError(
-      'INVALID_VERSION',
-      `${outerFacebookReactNativeVersion} is not a valid version. Must be in the form of x.y.z`
-    );
-  }
-
-  const sdkVersions = await releasedSdkVersionsAsync();
-  let currentSdkVersion: string | null = null;
-
-  for (const [version, { facebookReactNativeVersion }] of Object.entries(sdkVersions)) {
-    if (
-      semver.major(outerFacebookReactNativeVersion) === semver.major(facebookReactNativeVersion) &&
-      semver.minor(outerFacebookReactNativeVersion) === semver.minor(facebookReactNativeVersion) &&
-      (!currentSdkVersion || semver.gt(version, currentSdkVersion))
-    ) {
-      currentSdkVersion = version;
-    }
-  }
-
-  return currentSdkVersion;
 }
 
 export async function canTurtleBuildSdkVersion(
