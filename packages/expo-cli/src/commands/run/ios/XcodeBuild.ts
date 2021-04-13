@@ -84,11 +84,28 @@ export function getAppBinaryPath(buildOutput: string) {
     buildOutput,
     'UNLOCALIZED_RESOURCES_FOLDER_PATH'
   );
-  return path.join(
+
+  const binaryPath = path.join(
     // Use the shortest defined env variable (usually there's just one).
     CONFIGURATION_BUILD_DIR[0],
     // Use the last defined env variable.
     UNLOCALIZED_RESOURCES_FOLDER_PATH[UNLOCALIZED_RESOURCES_FOLDER_PATH.length - 1]
+  );
+
+  // If the app has a space in the name it'll fail because it isn't escaped properly by Xcode.
+  return getEscapedPath(binaryPath);
+}
+
+export function getEscapedPath(filePath: string): string {
+  if (fs.existsSync(filePath)) {
+    return filePath;
+  }
+  const unescapedPath = filePath.split(/\\ /).join(' ');
+  if (fs.existsSync(unescapedPath)) {
+    return unescapedPath;
+  }
+  throw new Error(
+    `Unexpected: Generated app at path "${filePath}" cannot be read, the app cannot be installed. Please report this and build onto a simulator.`
   );
 }
 
