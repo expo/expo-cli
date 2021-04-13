@@ -14,7 +14,6 @@ export class AnalyticsClient {
   private _userTraits: any;
   private segmentNodeInstance: Segment | undefined;
   private version: string | undefined;
-  private userIdentifyCalled: boolean = false;
 
   public get Verion() {
     return this.version;
