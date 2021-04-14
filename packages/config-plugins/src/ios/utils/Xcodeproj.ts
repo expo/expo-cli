@@ -1,4 +1,5 @@
 import { ExpoConfig } from '@expo/config-types';
+import assert from 'assert';
 import * as path from 'path';
 import xcode, {
   PBXFile,
@@ -12,7 +13,6 @@ import xcode, {
 } from 'xcode';
 import pbxFile from 'xcode/lib/pbxFile';
 
-import { assert } from '../../utils/errors';
 import { addWarningIOS } from '../../utils/warnings';
 import * as Paths from '../Paths';
 

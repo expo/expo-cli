@@ -1,9 +1,10 @@
+import assert from 'assert';
 import findUp from 'find-up';
 import * as path from 'path';
 import resolveFrom from 'resolve-from';
 
 import { ConfigPlugin, StaticPlugin } from '../Plugin.types';
-import { assert, PluginError } from './errors';
+import { PluginError } from './errors';
 import { fileExists } from './modules';
 
 // Default plugin entry file name.
