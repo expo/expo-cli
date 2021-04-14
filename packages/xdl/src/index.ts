@@ -6,7 +6,6 @@ if (process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test') {
 export {
   Analytics,
   Android,
-  Api,
   ApiV2,
   Binaries,
   Config,

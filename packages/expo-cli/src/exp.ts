@@ -16,10 +16,10 @@ import url from 'url';
 import wrapAnsi from 'wrap-ansi';
 import {
   Analytics,
-  Api,
   ApiV2,
   Binaries,
   Config,
+  ConnectionStatus,
   Doctor,
   Logger,
   LogRecord,
@@ -34,6 +34,7 @@ import {
 import { AbortCommandError, SilentError } from './CommandError';
 import { loginOrRegisterAsync } from './accounts';
 import { registerCommands } from './commands';
+import { learnMore } from './commands/utils/TerminalLink';
 import { profileMethod } from './commands/utils/profileMethod';
 import Log from './log';
 import update from './update';
@@ -46,7 +47,6 @@ import { ora } from './utils/ora';
 // directory
 const packageJSON = require('../package.json');
 
-Api.setClientName(packageJSON.version);
 ApiV2.setClientName(packageJSON.version);
 
 // The following prototyped functions are not used here, but within in each file found in `./commands`
@@ -343,7 +343,7 @@ Command.prototype.asyncAction = function (asyncFn: Action) {
     try {
       const options = args[args.length - 1];
       if (options.offline) {
-        Config.offline = true;
+        ConnectionStatus.setIsOffline(true);
       }
 
       await asyncFn(...args);
@@ -451,7 +451,10 @@ Command.prototype.asyncActionProjectDir = function (
   asyncFn: Action,
   options: { checkConfig?: boolean; skipSDKVersionRequirement?: boolean } = {}
 ) {
-  this.option('--config [file]', 'Specify a path to app.json or app.config.js');
+  this.option(
+    '--config [file]',
+    `${chalk.yellow('Deprecated:')} Use app.config.js to switch config files instead.`
+  );
   return this.asyncAction(async (projectRoot: string, ...args: any[]) => {
     const opts = args[0];
 
@@ -462,6 +465,17 @@ Command.prototype.asyncActionProjectDir = function (
     }
 
     if (opts.config) {
+      Log.log(
+        chalk.yellow(
+          `\u203A ${chalk.bold(
+            '--config'
+          )} flag is deprecated. Use app.config.js instead. ${learnMore(
+            'https://expo.fyi/config-flag-migration'
+          )}`
+        )
+      );
+      Log.newLine();
+
       // @ts-ignore: This guards against someone passing --config without a path.
       if (opts.config === true) {
         Log.addNewLineIfNone();
@@ -716,8 +730,6 @@ function runAsync(programName: string) {
         throw new Error('Environment variable SERVER_URL is not a valid url');
       }
     }
-
-    Config.developerTool = packageJSON.name;
 
     // Setup our commander instance
     program.name(programName);

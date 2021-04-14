@@ -1,6 +1,12 @@
 import os from 'os';
 
-import { ApiV2 as ApiV2Client, Config, Logger as logger, UrlUtils, UserManager } from './internal';
+import {
+  ApiV2 as ApiV2Client,
+  ConnectionStatus,
+  Logger as logger,
+  UrlUtils,
+  UserManager,
+} from './internal';
 
 const UPDATE_FREQUENCY_SECS = 20;
 
@@ -17,7 +23,7 @@ export async function startSession(
     keepUpdating = true;
   }
 
-  if (!Config.offline && keepUpdating) {
+  if (!ConnectionStatus.isOffline() && keepUpdating) {
     // TODO(anp) if the user has configured device ids, then notify for those too
     const authSession = await UserManager.getSessionAsync();
 

@@ -89,10 +89,8 @@ However, if you choose the one defined in the Xcode project you'll have to updat
   } else if (bundleIdentifierFromPbxproj && !bundleIdentifierFromConfig) {
     if (getConfigFilePaths(projectRoot).staticConfigPath) {
       await updateAppJsonConfigAsync(projectRoot, exp, bundleIdentifierFromPbxproj);
-      return bundleIdentifierFromPbxproj;
-    } else {
-      throw new Error(missingBundleIdentifierMessage(configDescription));
     }
+    return bundleIdentifierFromPbxproj;
   } else if (!bundleIdentifierFromPbxproj && bundleIdentifierFromConfig) {
     IOSConfig.BundleIdentifier.setBundleIdentifierForPbxproj(
       projectRoot,
