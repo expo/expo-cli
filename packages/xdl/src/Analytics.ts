@@ -34,11 +34,15 @@ export class AnalyticsClient {
     this.segmentNodeInstance = new Segment(key, { flushInterval: 300 });
   }
 
-  public setUserProperties(userId: string, traits: any) {
+  public identifyUser(userId: string, traits: any) {
     this._userId = userId;
     this._userTraits = traits;
 
-    this.ensureUserIdentified();
+    this.segmentNodeInstance?.identify({
+      userId: this._userId,
+      traits: this._userTraits,
+      context: this.getContext(),
+    });
   }
 
   public setVersionName(version: string) {
@@ -47,24 +51,12 @@ export class AnalyticsClient {
 
   public logEvent(name: string, properties: any = {}) {
     if (this.segmentNodeInstance && this._userId) {
-      this.ensureUserIdentified();
       this.segmentNodeInstance.track({
         userId: this._userId,
         event: name,
         properties,
         context: this.getContext(),
       });
-    }
-  }
-
-  private ensureUserIdentified() {
-    if (this.segmentNodeInstance && !this.userIdentifyCalled && this._userId) {
-      this.segmentNodeInstance.identify({
-        userId: this._userId,
-        traits: this._userTraits,
-        context: this.getContext(),
-      });
-      this.userIdentifyCalled = true;
     }
   }
 
