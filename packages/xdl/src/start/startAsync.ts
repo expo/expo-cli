@@ -53,7 +53,9 @@ export async function startAsync(
 ): Promise<ExpoConfig> {
   assertValidProjectRoot(projectRoot);
 
-  const user = await UserManager.getCurrentUserAsync();
+  const user = await UserManager.getCurrentUserAsync(); // just calling getCurrentUserAsync will, as a side-effect, bootstrap our analytics client.  But I think it is good to not rely on opaque side-effects, so we have a redundant check to bootstrap our analytics below.
+
+  console.log(UnifiedAnalytics.UserId);
 
   if (!UnifiedAnalytics.UserId && user) {
     UnifiedAnalytics.identifyUser(
