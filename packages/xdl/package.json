@@ -17,7 +17,7 @@
     "prepack": "node scripts/updateCaches.js",
     "clean": "rimraf build ./tsconfig.tsbuildinfo",
     "watch": "tsc --watch",
-    "test": "jest --config jest/unit-test-config.js",
+    "test": "jest",
     "integration-tests": "jest --config jest/integration-test-config.js"
   },
   "repository": {
