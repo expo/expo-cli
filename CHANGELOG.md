@@ -12,6 +12,18 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+## [Wed, 14 Apr 2021 12:36:03 -0700](https://github.com/expo/expo-cli/commit/30b4a040a81de0c73103e51ae38bbf4be8a58898)
+
+### 🧹 Chores
+
+- Update schema cache for SDK 41. Get a cool matching version: expo-cli@4.4.1 for SDK 41.
+
+### 📦 Packages updated
+
+- @expo/dev-tools@0.13.92
+- expo-cli@4.4.1
+- xdl@59.0.32
+
 ## [Wed, 14 Apr 2021 11:54:49 -0700](https://github.com/expo/expo-cli/commit/6bf320b102933730a9611011e46aac419736396c)
 
 ### 🛠 Breaking changes
