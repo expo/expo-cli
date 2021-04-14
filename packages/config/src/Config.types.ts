@@ -63,7 +63,6 @@ export type ExpoAppManifest = ExpoConfig & {
   sdkVersion: string;
   bundledAssets?: string[];
   isKernel?: boolean;
-  xde?: boolean;
   kernel?: { androidManifestPath?: string; iosManifestPath?: string };
   assetUrlOverride?: string;
   publishedTime?: string;

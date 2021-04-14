@@ -22,6 +22,7 @@ import {
 import { ConfigError } from './Errors';
 import { getExpoSDKVersion } from './Project';
 import { getDynamicConfig, getStaticConfig } from './getConfig';
+import { getCurrentFullName } from './getCurrentFullName';
 import { withConfigPlugins } from './plugins/withConfigPlugins';
 import { withInternal } from './plugins/withInternal';
 import { getRootPackageJsonPath } from './resolvePackageJson';
@@ -141,6 +142,10 @@ export function getConfig(projectRoot: string, options: GetConfigOptions = {}): 
       if (configWithDefaultValues.exp.android?.config) {
         delete configWithDefaultValues.exp.android.config;
       }
+
+      // This value will be overwritten when the manifest is being served from the host (i.e. not completely accurate).
+      // @ts-ignore: currentFullName not on type yet.
+      configWithDefaultValues.exp.currentFullName = getCurrentFullName(configWithDefaultValues.exp);
     }
 
     return configWithDefaultValues;

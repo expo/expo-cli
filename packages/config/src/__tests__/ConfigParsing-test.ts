@@ -96,6 +96,7 @@ describe(getConfig, () => {
   // - generated `.expo` object is created and the language hint is added
   describe('language support', () => {
     beforeEach(() => {
+      delete process.env.EXPO_DEBUG;
       const projectRoot = 'js';
       setCustomConfigPath(projectRoot, undefined);
     });
@@ -109,7 +110,7 @@ describe(getConfig, () => {
       expect(exp.name).toBe('rewrote+ts-config-test');
       expect(exp._internal).toStrictEqual({
         dynamicConfigPath: 'ts/app.config.ts',
-        isDebug: true,
+        isDebug: false,
         packageJsonPath: 'ts/package.json',
         projectRoot: 'ts',
         staticConfigPath: null,
@@ -132,7 +133,7 @@ describe(getConfig, () => {
       expect(exp.slug).toBe('someslug+config');
       expect(exp._internal).toStrictEqual({
         dynamicConfigPath: 'js/app.config.js',
-        isDebug: true,
+        isDebug: false,
         packageJsonPath: 'js/package.json',
         projectRoot: 'js',
         staticConfigPath: 'js/app.json',
@@ -166,6 +167,7 @@ describe(getConfig, () => {
 
   describe('behavior', () => {
     beforeEach(() => {
+      delete process.env.EXPO_DEBUG;
       resetCustomConfigPaths();
     });
 
@@ -209,7 +211,7 @@ describe(getConfig, () => {
 
       expect(exp._internal).toStrictEqual({
         dynamicConfigPath: null,
-        isDebug: true,
+        isDebug: false,
         packageJsonPath: 'custom-location-json/package.json',
         projectRoot: 'custom-location-json',
         staticConfigPath: 'custom-location-json/src/app.staging.json',

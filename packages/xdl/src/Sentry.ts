@@ -1,6 +1,6 @@
 import Raven from 'raven';
 
-import { Config } from './internal';
+import { Config, ConnectionStatus } from './internal';
 
 const SENTRY_DSN =
   'https://8554f14d112d4ed4b0558154762760ef:bae5673d5e5243abac5563d70861b5d8@sentry.io/194120';
@@ -23,7 +23,7 @@ function getOptions(options: any = {}) {
     tags: {
       ...options.tags,
       developerTool: Config.developerTool,
-      offline: Config.offline,
+      offline: ConnectionStatus.isOffline(),
     },
   };
 }

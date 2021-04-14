@@ -6,6 +6,7 @@ import {
   Android,
   assertValidProjectRoot,
   Config,
+  ConnectionStatus,
   DevSession,
   Env,
   ProjectSettings,
@@ -104,7 +105,7 @@ export async function startAsync(
 
   const { hostType } = await ProjectSettings.readAsync(projectRoot);
 
-  if (!Config.offline && hostType === 'tunnel') {
+  if (!ConnectionStatus.isOffline() && hostType === 'tunnel') {
     try {
       await startTunnelsAsync(projectRoot);
     } catch (e) {
@@ -133,7 +134,7 @@ async function stopInternalAsync(projectRoot: string): Promise<void> {
     stopExpoServerAsync(projectRoot),
     stopReactNativeServerAsync(projectRoot),
     async () => {
-      if (!Config.offline) {
+      if (!ConnectionStatus.isOffline()) {
         try {
           await stopTunnelsAsync(projectRoot);
         } catch (e) {
