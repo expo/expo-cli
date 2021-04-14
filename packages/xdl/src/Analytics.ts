@@ -38,11 +38,13 @@ export class AnalyticsClient {
     this._userId = userId;
     this._userTraits = traits;
 
-    this.segmentNodeInstance?.identify({
-      userId: this._userId,
-      traits: this._userTraits,
-      context: this.getContext(),
-    });
+    if (this.segmentNodeInstance) {
+      this.segmentNodeInstance.identify({
+        userId: this._userId,
+        traits: this._userTraits,
+        context: this.getContext(),
+      });
+    }
   }
 
   public setVersionName(version: string) {
