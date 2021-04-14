@@ -85,7 +85,7 @@ export async function getUpdatedDependenciesAsync(
   workflow: ExpoWorkflow,
   targetSdkVersion: TargetSDKVersion | null,
   targetSdkVersionString: string
-): Promise<DependencyList> {
+): Promise<{ dependencies: DependencyList; removed: string[] }> {
   // Get the updated version for any bundled modules
   const { exp, pkg } = getConfig(projectRoot);
   const bundledNativeModules = (await JsonFile.readAsync(
@@ -103,6 +103,8 @@ export async function getUpdatedDependenciesAsync(
     targetSdkVersion,
   });
 
+  const removed: string[] = [];
+
   // Add expo-random as a dependency if using expo-auth-session and upgrading to
   // a version where it has been moved to a peer dependency.
   // We can remove this when we no longer support SDK versions < 40, or have a
@@ -115,7 +117,16 @@ export async function getUpdatedDependenciesAsync(
     dependencies['expo-random'] = bundledNativeModules['expo-random'];
   }
 
-  return dependencies;
+  if (
+    dependencies['@react-native-community/async-storage'] &&
+    semver.gte(targetSdkVersionString, '41.0.0')
+  ) {
+    dependencies['@react-native-async-storage/async-storage'] =
+      bundledNativeModules['@react-native-async-storage/async-storage'];
+    removed.push('@react-native-community/async-storage');
+  }
+
+  return { dependencies, removed };
 }
 
 export type UpgradeDependenciesOptions = {
@@ -601,7 +612,7 @@ export async function upgradeAsync(
   Log.addNewLineIfNone();
 
   // Get all updated packages
-  const updates = await getUpdatedDependenciesAsync(
+  const { dependencies: updates, removed } = await getUpdatedDependenciesAsync(
     projectRoot,
     workflow,
     targetSdkVersion,
@@ -639,6 +650,14 @@ export async function upgradeAsync(
       updatingPackagesStep.fail(
         `Failed to upgrade JavaScript dependencies: ${dependenciesAsStringArray.join(' ')}`
       );
+    }
+  }
+
+  if (removed.length) {
+    try {
+      await packageManager.removeAsync(...removed);
+    } catch (e) {
+      updatingPackagesStep.fail(`Failed to remove JavaScript dependencies: ${removed.join(' ')}`);
     }
   }
 
@@ -682,6 +701,13 @@ export async function upgradeAsync(
   Log.log(chalk.grey.bold([...Object.keys(updates), ...['expo']].join(', ')));
   Log.addNewLineIfNone();
 
+  if (removed.length) {
+    Log.addNewLineIfNone();
+    Log.log(chalk.bold(`🗑️ The following packages were removed:`));
+    Log.log(chalk.grey.bold(removed.join(', ')));
+    Log.addNewLineIfNone();
+  }
+
   // List packages that were not updated
   const allDependencies = { ...pkg.dependencies, ...pkg.devDependencies };
   const untouchedDependencies = difference(Object.keys(allDependencies), [
@@ -698,6 +724,16 @@ export async function upgradeAsync(
       )
     );
     Log.log(chalk.grey.bold(untouchedDependencies.join(', ')));
+    Log.addNewLineIfNone();
+  }
+
+  if (removed.includes('@react-native-community/async-storage')) {
+    Log.addNewLineIfNone();
+    Log.log(
+      chalk.bold(
+        `🚨 @react-native-community/async-storage has been renamed to @react-native-async-storage/async-storage. The dependency has been updated automatically, you will now need to either update the imports in your source code manually, or run \`npx expo-codemod sdk41-async-storage './**/*'\`.`
+      )
+    );
     Log.addNewLineIfNone();
   }
 
