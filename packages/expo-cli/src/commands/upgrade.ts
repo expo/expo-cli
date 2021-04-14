@@ -731,10 +731,9 @@ export async function upgradeAsync(
     Log.addNewLineIfNone();
     Log.log(
       chalk.bold(
-        `🚨 @react-native-community/async-storage has been renamed to @react-native-async-storage/async-storage. Run \`npx expo-codemod sdk41-async-storage './**/*'\` to rename imports`
+        `🚨 @react-native-community/async-storage has been renamed to @react-native-async-storage/async-storage. The dependency has been updated automatically, you will now need to either update the imports in your source code manually, or run \`npx expo-codemod sdk41-async-storage './**/*'\`.`
       )
     );
-    Log.log(chalk.grey.bold(untouchedDependencies.join(', ')));
     Log.addNewLineIfNone();
   }
 
