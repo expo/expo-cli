@@ -85,10 +85,6 @@ export class UserManagerInstance {
   _getSessionLock = new Semaphore();
   _interactiveAuthenticationCallbackAsync?: () => Promise<User>;
 
-  constructor() {
-    this.getCachedUserDataAsync = this.getCachedUserDataAsync.bind(this);
-  }
-
   static getGlobalInstance() {
     if (!__globalInstance) {
       __globalInstance = new UserManagerInstance();
@@ -219,7 +215,7 @@ export class UserManagerInstance {
   /**
    * Quickly grab cached user data to bootstrap non-critical services (analytics)
    */
-  async getCachedUserDataAsync(options?: { silent?: boolean }): Promise<UserData | null> {
+  async getCachedUserDataAsync(): Promise<UserData | null> {
     await this._getSessionLock.acquire();
 
     try {

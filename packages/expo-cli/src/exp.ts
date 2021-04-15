@@ -28,9 +28,9 @@ import {
   PackagerLogsStream,
   ProjectSettings,
   ProjectUtils,
+  UnifiedAnalytics,
   UserManager,
 } from 'xdl';
-import UnifiedAnalytics from 'xdl/build/UnifiedAnalytics';
 
 import { AbortCommandError, SilentError } from './CommandError';
 import { loginOrRegisterAsync } from './accounts';

@@ -23,7 +23,6 @@ import {
   UserManager,
   Webpack,
 } from '../internal';
-import { profileMethod } from '../utils/profileMethod';
 
 let serverInstance: Server | null = null;
 let messageSocket: any | null = null;
@@ -54,14 +53,11 @@ export async function startAsync(
 ): Promise<ExpoConfig> {
   assertValidProjectRoot(projectRoot);
 
-  const userData = await profileMethod(
-    UserManager.getCachedUserDataAsync,
-    'getCachedUserDataAsync'
-  )({ silent: false });
+  const userData = await UserManager.getCachedUserDataAsync();
 
   if (userData?.userId) {
     // analytics has probably not identified the user at this point, if so we need to bootstrap it
-    if (!UnifiedAnalytics.UserId) {
+    if (!UnifiedAnalytics.userId) {
       UnifiedAnalytics.identifyUser(
         userData.userId, // userId is used as the identifier in the other codebases (www/website) running unified analytics so we want to keep using it on the cli as well to avoid double counting users
         {
@@ -79,7 +75,7 @@ export async function startAsync(
     project: exp.name,
     action: 'expo start',
     source: 'expo cli',
-    source_version: UnifiedAnalytics.Verion,
+    source_version: UnifiedAnalytics.version,
   });
 
   Analytics.logEvent('Start Project', {

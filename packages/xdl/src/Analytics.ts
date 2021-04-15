@@ -12,34 +12,34 @@ const PLATFORM_TO_ANALYTICS_PLATFORM: { [platform: string]: string } = {
 export class AnalyticsClient {
   private _userId: string | undefined;
   private _userTraits: any;
-  private segmentNodeInstance: Segment | undefined;
-  private version: string | undefined;
+  private _segmentNodeInstance: Segment | undefined;
+  private _version: string | undefined;
 
-  public get Verion() {
-    return this.version;
+  public get version() {
+    return this._version;
   }
 
-  public get UserId() {
+  public get userId() {
     return this._userId;
   }
 
   public flush() {
-    if (this.segmentNodeInstance) {
-      this.segmentNodeInstance.flush();
+    if (this._segmentNodeInstance) {
+      this._segmentNodeInstance.flush();
     }
   }
 
   public setSegmentNodeKey(key: string) {
     // Do not wait before flushing, we want node to close immediately if the programs ends
-    this.segmentNodeInstance = new Segment(key, { flushInterval: 300 });
+    this._segmentNodeInstance = new Segment(key, { flushInterval: 300 });
   }
 
   public identifyUser(userId: string, traits: any) {
     this._userId = userId;
     this._userTraits = traits;
 
-    if (this.segmentNodeInstance) {
-      this.segmentNodeInstance.identify({
+    if (this._segmentNodeInstance) {
+      this._segmentNodeInstance.identify({
         userId: this._userId,
         traits: this._userTraits,
         context: this.getContext(),
@@ -48,12 +48,12 @@ export class AnalyticsClient {
   }
 
   public setVersionName(version: string) {
-    this.version = version;
+    this._version = version;
   }
 
   public logEvent(name: string, properties: any = {}) {
-    if (this.segmentNodeInstance && this._userId) {
-      this.segmentNodeInstance.track({
+    if (this._segmentNodeInstance && this._userId) {
+      this._segmentNodeInstance.track({
         userId: this._userId,
         event: name,
         properties,
@@ -77,9 +77,9 @@ export class AnalyticsClient {
       app: {},
     };
 
-    if (this.version) {
+    if (this._version) {
       context.app = {
-        version: this.version,
+        version: this._version,
       };
     }
 
