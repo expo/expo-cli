@@ -1,4 +1,5 @@
 import { findConfigFile, getConfig } from '@expo/config';
+import assert from 'assert';
 import chalk from 'chalk';
 import CliTable from 'cli-table3';
 import { Command } from 'commander';
@@ -6,7 +7,6 @@ import crypto from 'crypto';
 import { ApiV2, UserManager } from 'xdl';
 
 import CommandError, { ErrorCodes } from '../CommandError';
-import { assert } from '../assert';
 import Log from '../log';
 import { ora } from '../utils/ora';
 

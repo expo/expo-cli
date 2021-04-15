@@ -1,5 +1,6 @@
 import { JSONObject } from '@expo/json-file';
 import plist from '@expo/plist';
+import assert from 'assert';
 import { readFile, writeFile } from 'fs-extra';
 import path from 'path';
 import { XcodeProject } from 'xcode';
@@ -20,7 +21,6 @@ import { InfoPlist } from '../ios/IosConfig.types';
 import { AppDelegateProjectFile, getAppDelegate, getInfoPlistPath } from '../ios/Paths';
 import { getPbxproj } from '../ios/utils/Xcodeproj';
 import { writeXMLAsync } from '../utils/XML';
-import { assert } from '../utils/errors';
 import * as WarningAggregator from '../utils/warnings';
 import { withInterceptedMod } from './core-plugins';
 

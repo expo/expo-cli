@@ -3,7 +3,6 @@ module.exports = require(require.resolve('resolve-from'));
 module.exports.silent = (fromDirectory, request) => {
   const fs = require('fs');
   const path = require('path');
-
   try {
     fromDirectory = fs.realpathSync(fromDirectory);
   } catch (error) {
