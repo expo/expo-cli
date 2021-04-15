@@ -85,6 +85,10 @@ export class UserManagerInstance {
   _getSessionLock = new Semaphore();
   _interactiveAuthenticationCallbackAsync?: () => Promise<User>;
 
+  constructor() {
+    this.getCachedUserDataAsync = this.getCachedUserDataAsync.bind(this);
+  }
+
   static getGlobalInstance() {
     if (!__globalInstance) {
       __globalInstance = new UserManagerInstance();
@@ -210,6 +214,36 @@ export class UserManagerInstance {
       return null;
     }
     return auth;
+  }
+
+  /**
+   * Quickly grab cached user data to bootstrap non-critical services (analytics)
+   */
+  async getCachedUserDataAsync(options?: { silent?: boolean }): Promise<UserData | null> {
+    await this._getSessionLock.acquire();
+
+    try {
+      const currentUser = this._currentUser;
+      // If user is cached and there is an accessToken or sessionSecret, return the user
+      if (currentUser && (currentUser.accessToken || currentUser.sessionSecret)) {
+        return currentUser;
+      }
+
+      const userData = await this._readUserData();
+      const accessToken = UserSettings.accessToken();
+
+      // // No token, no session, no current user. Need to login
+      if (!accessToken && !userData?.sessionSecret) {
+        return null;
+      }
+
+      return userData;
+    } catch (e) {
+      Logger.global.warn(e);
+      return null;
+    } finally {
+      this._getSessionLock.release();
+    }
   }
 
   /**

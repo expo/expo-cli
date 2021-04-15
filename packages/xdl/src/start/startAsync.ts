@@ -23,6 +23,7 @@ import {
   UserManager,
   Webpack,
 } from '../internal';
+import { profileMethod } from '../utils/profileMethod';
 
 let serverInstance: Server | null = null;
 let messageSocket: any | null = null;
@@ -53,28 +54,23 @@ export async function startAsync(
 ): Promise<ExpoConfig> {
   assertValidProjectRoot(projectRoot);
 
-  const user = await UserManager.getCurrentUserAsync(); // just calling getCurrentUserAsync will, as a side-effect, bootstrap our analytics client.  But I think it is good to not rely on opaque side-effects, so we have a redundant check to bootstrap our analytics below.
+  const user = await profileMethod(
+    UserManager.getCachedUserDataAsync,
+    'getCachedUserDataAsync'
+  )({ silent: false });
 
-  console.log(UnifiedAnalytics.UserId);
-
-  if (!UnifiedAnalytics.UserId && user) {
-    UnifiedAnalytics.identifyUser(
-      user.userId, // userId is used as the identifier in the other codebases (www/website) running unified analytics so we want to keep using it on the cli as well to avoid double counting users
-      {
-        userId: user.userId,
-        currentConnection: user.currentConnection,
-        username: user.username,
-        userType: user.kind,
-      }
-    );
-
-    if (!Analytics.UserId && user) {
-      Analytics.identifyUser(user.username, {
-        userId: user.userId,
-        currentConnection: user.currentConnection,
-        username: user.username,
-        userType: user.kind,
-      });
+  if (user?.userId) {
+    // analytics has probably not identified the user at this point, if so we need to bootstrap it
+    if (!UnifiedAnalytics.UserId) {
+      UnifiedAnalytics.identifyUser(
+        user.userId, // userId is used as the identifier in the other codebases (www/website) running unified analytics so we want to keep using it on the cli as well to avoid double counting users
+        {
+          userId: user.userId,
+          currentConnection: user?.currentConnection,
+          username: user?.username,
+          userType: '',
+        }
+      );
     }
   }
 
