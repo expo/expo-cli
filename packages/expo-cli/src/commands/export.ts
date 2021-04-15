@@ -26,7 +26,6 @@ type Options = {
   dumpAssetmap: boolean;
   dumpSourcemap: boolean;
   maxWorkers?: number;
-  force: boolean;
   experimentalBundle: boolean;
 };
 
@@ -177,7 +176,9 @@ export async function action(projectRoot: string, options: Options) {
     !(await CreateApp.assertFolderEmptyAsync({
       projectRoot: outputPath,
       folderName: options.outputDir,
-      overwrite: options.force,
+      // Always overwrite files, this is inline with most bundler tooling.
+      overwrite: true,
+      // overwrite: options.force,
     }))
   ) {
     const message = `Try using a new directory name with ${Log.chalk.bold(
@@ -224,7 +225,6 @@ export default function (program: Command) {
     )
     .option('-d, --dump-assetmap', 'Dump the asset map for further processing.')
     .option('--dev', 'Configure static files for developing locally using a non-https server')
-    .option('-f, --force', 'Overwrite files in output directory without prompting for confirmation')
     .option('-s, --dump-sourcemap', 'Dump the source map for debugging the JS bundle.')
     .option('-q, --quiet', 'Suppress verbose output.')
     .option(
