@@ -8,7 +8,15 @@ import readLastLines from 'read-last-lines';
 import semver from 'semver';
 import urljoin from 'url-join';
 import { v1 as uuidv1, v4 as uuidv4 } from 'uuid';
-import { EmbeddedAssets, Env, Project, ProjectAssets, UserManager, XDLError } from 'xdl';
+import {
+  EmbeddedAssets,
+  Env,
+  printBundleSizes,
+  Project,
+  ProjectAssets,
+  UserManager,
+  XDLError,
+} from 'xdl';
 
 import Log from '../../log';
 
@@ -90,6 +98,9 @@ export async function exportAppAsync(
     dev: options.isDev,
     useDevServer: Env.shouldUseDevServer(exp),
   });
+
+  printBundleSizes(bundles);
+
   const iosBundle = bundles.ios.code;
   const androidBundle = bundles.android.code;
 

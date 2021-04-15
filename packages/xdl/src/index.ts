@@ -22,6 +22,7 @@ export {
   Logger,
   ModuleVersion,
   NotificationCode,
+  printBundleSizes,
   PackagerLogsStream,
   LogRecord,
   LogUpdater,
