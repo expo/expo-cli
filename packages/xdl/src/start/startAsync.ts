@@ -68,7 +68,7 @@ export async function startAsync(
           userId: user.userId,
           currentConnection: user?.currentConnection,
           username: user?.username,
-          userType: '',
+          userType: '', // not available without hitting api
         }
       );
     }
