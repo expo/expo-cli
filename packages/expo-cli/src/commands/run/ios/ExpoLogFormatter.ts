@@ -188,6 +188,8 @@ export class ExpoLogFormatter extends Formatter {
     if (!moduleName) {
       if (target === this.props.appName || target === `Pods-${this.props.appName}`) {
         moduleName = '';
+      } else if (target && target in knownPackages) {
+        moduleName = knownPackages[target];
       } else {
         const pkg = this.packageJsonForProject(target);
         if (pkg) {
@@ -223,3 +225,17 @@ export class ExpoLogFormatter extends Formatter {
     Log.log(`\n\u203A ${this.errors.length} error(s), and ${this.warnings.length} warning(s)\n`);
   }
 }
+
+// A list of packages that aren't linked through cocoapods directly.
+const knownPackages: Record<string, string> = {
+  // Added to ReactCore as a `resource_bundle`
+  'React-Core-AccessibilityResources': 'react-native',
+  YogaKit: 'react-native',
+  // flipper
+  'Flipper-DoubleConversion': 'react-native',
+  'Flipper-Folly': 'react-native',
+  'OpenSSL-Universal': 'react-native',
+  FlipperKit: 'react-native',
+  Flipper: 'react-native',
+  'Flipper-RSocket': 'react-native',
+};
