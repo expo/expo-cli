@@ -6,11 +6,11 @@ import {
   ProjectTarget,
 } from '@expo/config';
 import simpleSpinner from '@expo/simple-spinner';
-import { Project, UserManager } from '@expo/xdl';
 import chalk from 'chalk';
 import { Command } from 'commander';
 import fs from 'fs';
 import path from 'path';
+import { Project, UserManager } from 'xdl';
 
 import CommandError from '../CommandError';
 import Log from '../log';

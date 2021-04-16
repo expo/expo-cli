@@ -103,9 +103,6 @@ export default class Log {
   }
 
   public static info(...args: any[]) {
-    if (!Log.isDebug) {
-      return;
-    }
     Log.respectProgressBars(() => {
       Log.consoleInfo(...args);
     });

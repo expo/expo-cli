@@ -5,15 +5,20 @@ import { clearNativeFolder } from './eject/clearNativeFolder';
 import { platformsFromPlatform } from './eject/platformOptions';
 import { EjectAsyncOptions, prebuildAsync } from './eject/prebuildAsync';
 import { learnMore } from './utils/TerminalLink';
+import maybeBailOnGitStatusAsync from './utils/maybeBailOnGitStatusAsync';
 
 export async function actionAsync(
-  projectDir: string,
+  projectRoot: string,
   {
     platform,
+    clean,
+    skipDependencyUpdate,
     ...options
   }: EjectAsyncOptions & {
     npm?: boolean;
     platform?: string;
+    clean?: boolean;
+    skipDependencyUpdate?: string;
   }
 ) {
   if (options.npm) {
@@ -22,11 +27,15 @@ export async function actionAsync(
 
   const platforms = platformsFromPlatform(platform);
 
-  // Clear the native folders before syncing
-  await clearNativeFolder(projectDir, platforms);
+  if (clean) {
+    if (await maybeBailOnGitStatusAsync()) return;
+    // Clear the native folders before syncing
+    await clearNativeFolder(projectRoot, platforms);
+  }
 
-  await prebuildAsync(projectDir, {
+  await prebuildAsync(projectRoot, {
     ...options,
+    skipDependencyUpdate: skipDependencyUpdate ? skipDependencyUpdate.split(',') : [],
     platforms,
   } as EjectAsyncOptions);
 }
@@ -44,7 +53,12 @@ export default function (program: Command) {
     )
     .helpGroup('eject')
     .option('--no-install', 'Skip installing npm packages and CocoaPods.')
+    .option('--clean', 'Delete the native folders and regenerate them before applying changes')
     .option('--npm', 'Use npm to install dependencies. (default when Yarn is not installed)')
     .option('-p, --platform [platform]', 'Platforms to sync: ios, android, all. Default: all')
+    .option(
+      '--skip-dependency-update <dependencies>',
+      'Preserves versions of listed packages in package.json (comma separated list)'
+    )
     .asyncActionProjectDir(actionAsync);
 }

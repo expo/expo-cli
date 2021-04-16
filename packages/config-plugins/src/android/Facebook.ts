@@ -1,8 +1,8 @@
 import { ExpoConfig } from '@expo/config-types';
+import assert from 'assert';
 
 import { createAndroidManifestPlugin, createStringsXmlPlugin } from '../plugins/android-plugins';
 import { writeXMLAsync } from '../utils/XML';
-import { assert } from '../utils/errors';
 import {
   addMetaDataItemToMainApplication,
   AndroidManifest,

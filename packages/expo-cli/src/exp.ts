@@ -1,12 +1,25 @@
 import bunyan from '@expo/bunyan';
 import { setCustomConfigPath } from '@expo/config';
+import { INTERNAL_CALLSITES_REGEX } from '@expo/metro-config';
 import simpleSpinner from '@expo/simple-spinner';
+import boxen from 'boxen';
+import chalk from 'chalk';
+import program, { Command } from 'commander';
+import fs from 'fs';
+import getenv from 'getenv';
+import leven from 'leven';
+import findLastIndex from 'lodash/findLastIndex';
+import path from 'path';
+import ProgressBar from 'progress';
+import stripAnsi from 'strip-ansi';
+import url from 'url';
+import wrapAnsi from 'wrap-ansi';
 import {
   Analytics,
-  Api,
   ApiV2,
   Binaries,
   Config,
+  ConnectionStatus,
   Doctor,
   Logger,
   LogRecord,
@@ -16,35 +29,24 @@ import {
   ProjectSettings,
   ProjectUtils,
   UserManager,
-} from '@expo/xdl';
-import boxen from 'boxen';
-import chalk from 'chalk';
-import program, { Command } from 'commander';
-import fs from 'fs';
-import getenv from 'getenv';
-import leven from 'leven';
-import findLastIndex from 'lodash/findLastIndex';
-import ora from 'ora';
-import path from 'path';
-import ProgressBar from 'progress';
-import stripAnsi from 'strip-ansi';
-import url from 'url';
-import wrapAnsi from 'wrap-ansi';
+} from 'xdl';
 
 import { AbortCommandError, SilentError } from './CommandError';
 import { loginOrRegisterAsync } from './accounts';
 import { registerCommands } from './commands';
+import { learnMore } from './commands/utils/TerminalLink';
 import { profileMethod } from './commands/utils/profileMethod';
 import Log from './log';
 import update from './update';
 import urlOpts from './urlOpts';
+import { matchFileNameOrURLFromStackTrace } from './utils/matchFileNameOrURLFromStackTrace';
+import { ora } from './utils/ora';
 
 // We use require() to exclude package.json from TypeScript's analysis since it lives outside the
 // src directory and would change the directory structure of the emitted files under the build
 // directory
 const packageJSON = require('../package.json');
 
-Api.setClientName(packageJSON.version);
 ApiV2.setClientName(packageJSON.version);
 
 // The following prototyped functions are not used here, but within in each file found in `./commands`
@@ -330,9 +332,9 @@ export type Action = (...args: any[]) => void;
 
 // asyncAction is a wrapper for all commands/actions to be executed after commander is done
 // parsing the command input
-Command.prototype.asyncAction = function (asyncFn: Action, skipUpdateCheck: boolean) {
+Command.prototype.asyncAction = function (asyncFn: Action) {
   return this.action(async (...args: any[]) => {
-    if (!skipUpdateCheck) {
+    if (process.env.EAS_BUILD !== '1') {
       try {
         await profileMethod(checkCliVersionAsync)();
       } catch (e) {}
@@ -341,7 +343,7 @@ Command.prototype.asyncAction = function (asyncFn: Action, skipUpdateCheck: bool
     try {
       const options = args[args.length - 1];
       if (options.offline) {
-        Config.offline = true;
+        ConnectionStatus.setIsOffline(true);
       }
 
       await asyncFn(...args);
@@ -449,17 +451,31 @@ Command.prototype.asyncActionProjectDir = function (
   asyncFn: Action,
   options: { checkConfig?: boolean; skipSDKVersionRequirement?: boolean } = {}
 ) {
-  this.option('--config [file]', 'Specify a path to app.json or app.config.js');
-  return this.asyncAction(async (projectDir: string, ...args: any[]) => {
+  this.option(
+    '--config [file]',
+    `${chalk.yellow('Deprecated:')} Use app.config.js to switch config files instead.`
+  );
+  return this.asyncAction(async (projectRoot: string, ...args: any[]) => {
     const opts = args[0];
 
-    if (!projectDir) {
-      projectDir = process.cwd();
+    if (!projectRoot) {
+      projectRoot = process.cwd();
     } else {
-      projectDir = path.resolve(process.cwd(), projectDir);
+      projectRoot = path.resolve(process.cwd(), projectRoot);
     }
 
     if (opts.config) {
+      Log.log(
+        chalk.yellow(
+          `\u203A ${chalk.bold(
+            '--config'
+          )} flag is deprecated. Use app.config.js instead. ${learnMore(
+            'https://expo.fyi/config-flag-migration'
+          )}`
+        )
+      );
+      Log.newLine();
+
       // @ts-ignore: This guards against someone passing --config without a path.
       if (opts.config === true) {
         Log.addNewLineIfNone();
@@ -487,7 +503,7 @@ Command.prototype.asyncActionProjectDir = function (
         process.exit(1);
         // throw new Error(`File at provided config path does not exist: ${pathToConfig}`);
       }
-      setCustomConfigPath(projectDir, pathToConfig);
+      setCustomConfigPath(projectRoot, pathToConfig);
     }
 
     const logLines = (msg: any, logFn: (...args: any[]) => void) => {
@@ -538,17 +554,27 @@ Command.prototype.asyncActionProjectDir = function (
 
       for (let i = 0; i <= lastFrameIndexToLog; i++) {
         const line = stackFrames[i];
+
         if (!line) {
-          continue;
-        } else if (line.match(/react-native\/.*YellowBox.js/)) {
           continue;
         }
 
-        if (line.startsWith('node_modules')) {
-          nestedLogFn('- ' + line);
-        } else {
-          nestedLogFn('* ' + line);
+        let isCollapsed = false;
+        const fileNameOrUrl = matchFileNameOrURLFromStackTrace(line);
+        if (fileNameOrUrl) {
+          // Use the same regex we use in Metro config to filter out traces:
+          isCollapsed = INTERNAL_CALLSITES_REGEX.test(fileNameOrUrl);
+
+          // Unless the user is in debug mode, skip printing the collapsed files.
+          if (!Log.isDebug && isCollapsed) {
+            continue;
+          }
         }
+
+        // If a file is collapsed, print it with dim styling.
+        const style = isCollapsed ? chalk.dim : (message: string) => message;
+        // Use the `at` prefix to match Node.js
+        nestedLogFn(style('at ' + line));
       }
 
       if (unloggedFrames > 0) {
@@ -586,7 +612,7 @@ Command.prototype.asyncActionProjectDir = function (
     let bar: ProgressBar | null;
     // eslint-disable-next-line no-new
     new PackagerLogsStream({
-      projectRoot: projectDir,
+      projectRoot,
       onStartBuildBundle: () => {
         bar = new ProgressBar('Building JavaScript bundle [:bar] :percent', {
           width: 64,
@@ -638,7 +664,7 @@ Command.prototype.asyncActionProjectDir = function (
     });
 
     // needed for validation logging to function
-    ProjectUtils.attachLoggerStream(projectDir, {
+    ProjectUtils.attachLoggerStream(projectRoot, {
       stream: {
         write: (chunk: LogRecord) => {
           if (chunk.tag === 'device') {
@@ -658,13 +684,13 @@ Command.prototype.asyncActionProjectDir = function (
     // This is relevant for command such as `send`
     if (
       options.checkConfig &&
-      (await ProjectSettings.getCurrentStatusAsync(projectDir)) !== 'running'
+      (await ProjectSettings.getCurrentStatusAsync(projectRoot)) !== 'running'
     ) {
       const spinner = ora('Making sure project is set up correctly...').start();
       Log.setSpinner(spinner);
       // validate that this is a good projectDir before we try anything else
 
-      const status = await Doctor.validateWithoutNetworkAsync(projectDir, {
+      const status = await Doctor.validateWithoutNetworkAsync(projectRoot, {
         skipSDKVersionRequirement: options.skipSDKVersionRequirement,
       });
       if (status === Doctor.FATAL) {
@@ -677,7 +703,7 @@ Command.prototype.asyncActionProjectDir = function (
     // the existing CLI modules only pass one argument to this function, so skipProjectValidation
     // will be undefined in most cases. we can explicitly pass a truthy value here to avoid validation (eg for init)
 
-    return asyncFn(projectDir, ...args);
+    return asyncFn(projectRoot, ...args);
   });
 };
 
@@ -704,8 +730,6 @@ function runAsync(programName: string) {
         throw new Error('Environment variable SERVER_URL is not a valid url');
       }
     }
-
-    Config.developerTool = packageJSON.name;
 
     // Setup our commander instance
     program.name(programName);

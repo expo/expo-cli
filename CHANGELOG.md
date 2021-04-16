@@ -8,7 +8,284 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🎉 New features
 
+### 🧹 Chores
+
 ### 🐛 Bug fixes
+
+## [Wed, 14 Apr 2021 12:36:03 -0700](https://github.com/expo/expo-cli/commit/30b4a040a81de0c73103e51ae38bbf4be8a58898)
+
+### 🧹 Chores
+
+- Update schema cache for SDK 41. Get a cool matching version: expo-cli@4.4.1 for SDK 41.
+
+### 📦 Packages updated
+
+- @expo/dev-tools@0.13.92
+- expo-cli@4.4.1
+- xdl@59.0.32
+
+## [Wed, 14 Apr 2021 11:54:49 -0700](https://github.com/expo/expo-cli/commit/6bf320b102933730a9611011e46aac419736396c)
+
+### 🛠 Breaking changes
+
+### 🎉 New features
+
+- [cli] Handle async storage package rename in upgrade command ([#3386](https://github.com/expo/expo-cli/issues/3386))
+
+### 🧹 Chores
+
+- Update test.yml to test against Node 12 and 14 ([#3388](https://github.com/expo/expo-cli/issues/3388))
+- [config-plugins] Replace docs in README with link to Expo docs ([#3384](https://github.com/expo/expo-cli/issues/3384))
+- [cli] Add deprecation message to --config flag ([#3382](https://github.com/expo/expo-cli/issues/3382))
+- [dev-tools] flip `noEmit` flag to preserve server build ([#3379](https://github.com/expo/expo-cli/issues/3379))
+
+### 🐛 Bug fixes
+
+- Support building apps with escaped names ([#3383](https://github.com/expo/expo-cli/issues/3383))
+- [codemod] Removed version gate ([#3390](https://github.com/expo/expo-cli/issues/3390))
+
+### 📦 Packages updated
+
+- @expo/config-plugins@1.0.26
+- @expo/config@3.3.36
+- @expo/dev-server@0.1.62
+- @expo/dev-tools@0.13.91
+- @expo/electron-adapter@0.0.53
+- expo-cli@4.4.0
+- expo-codemod@1.1.0
+- expo-optimize@0.1.84
+- @expo/metro-config@0.1.62
+- @expo/next-adapter@2.1.67
+- @expo/package-manager@0.0.40
+- pod-install@0.1.20
+- expo-pwa@0.0.72
+- uri-scheme@1.0.73
+- @expo/webpack-config@0.12.66
+- xdl@59.0.31
+
+## [Fri, 9 Apr 2021 15:05:32 -0700](https://github.com/expo/expo-cli/commit/31ce5bb9a78be83ee46a98a72d41652c05aa374c)
+
+### 🎉 New features
+
+- Added `currentFullName` to the public config ([#3376](https://github.com/expo/expo-cli/issues/3376))
+- Added getUserProjectIdAsync method ([#3359](https://github.com/expo/expo-cli/issues/3359))
+- Profile android build time ([#3348](https://github.com/expo/expo-cli/issues/3348))
+
+### 🧹 Chores
+
+- Simplify Config module ([#3373](https://github.com/expo/expo-cli/issues/3373))
+- Clean up logging messages ([#3357](https://github.com/expo/expo-cli/issues/3357))
+- Delete Api module ([#3360](https://github.com/expo/expo-cli/issues/3360))
+- Improve no xcode warnings ([#3363](https://github.com/expo/expo-cli/issues/3363))
+- Improve bundle identifier regex ([#3355](https://github.com/expo/expo-cli/issues/3355))
+- Improved ios package logging ([#3353](https://github.com/expo/expo-cli/issues/3353))
+- Remove deprecated property "xde" from the manifest ([#3366](https://github.com/expo/expo-cli/issues/3366))
+- Remove Config.offline ([#3374](https://github.com/expo/expo-cli/issues/3374))
+- Remove Config.helpUrl, use learnMore ([#3364](https://github.com/expo/expo-cli/issues/3364))
+- Remove unused ncp ([#3367](https://github.com/expo/expo-cli/issues/3367))
+- Remove unused TerminalLink.fallbackToUrl from XDL ([#3368](https://github.com/expo/expo-cli/issues/3368))
+- Move dev dep ([#3362](https://github.com/expo/expo-cli/issues/3362))
+- [config-plugins] Throw better error message when target does not exists ([#3350](https://github.com/expo/expo-cli/issues/3350))
+- [dev-client] Allow running projects without app.json ([#3371](https://github.com/expo/expo-cli/issues/3371))
+- [next-adapter] update RNW peer, remove deprecated types ([#3377](https://github.com/expo/expo-cli/issues/3377))
+- [xdl] Remove unused xde spawn script ([#3365](https://github.com/expo/expo-cli/issues/3365))
+
+### 🐛 Bug fixes
+
+- [expo-cli] Fix missing/extraneous dependencies
+- [xdl] Fix missing/extraneous dependencies ([#3369](https://github.com/expo/expo-cli/issues/3369))
+- Fix prompt bug when opening on iOS ([#3358](https://github.com/expo/expo-cli/issues/3358))
+- Fix product name getter ([#3354](https://github.com/expo/expo-cli/issues/3354))
+
+### 📦 Packages updated
+
+- @expo/config-plugins@1.0.25
+- @expo/config@3.3.35
+- @expo/dev-server@0.1.61
+- @expo/dev-tools@0.13.90
+- @expo/electron-adapter@0.0.52
+- expo-cli@4.3.5
+- expo-optimize@0.1.83
+- @expo/metro-config@0.1.61
+- @expo/next-adapter@2.1.66
+- expo-pwa@0.0.71
+- uri-scheme@1.0.72
+- @expo/webpack-config@0.12.65
+- xdl@59.0.30
+
+## [Thu, 1 Apr 2021 14:25:44 -0700](https://github.com/expo/expo-cli/commit/4bbb35de0096a6369d38e5369c1120cead620ae4)
+
+### 🎉 New features
+
+- Activate android emulator window ([#3345](https://github.com/expo/expo-cli/issues/3345))
+- Created unversioned react-native-maps plugin ([#3343](https://github.com/expo/expo-cli/issues/3343))
+- Add migration from @react-native-community/async-storage ([#3342](https://github.com/expo/expo-cli/issues/3342))
+- Run built APK on device ([#3338](https://github.com/expo/expo-cli/issues/3338))
+- Added expo config command to expo-cli ([#3323](https://github.com/expo/expo-cli/issues/3323))
+- Added device selection prop to run:android ([#3331](https://github.com/expo/expo-cli/issues/3331))
+- Pipe ora output to stdout in non-interactive mode ([#3329](https://github.com/expo/expo-cli/issues/3329))
+- Sort code signing identities by last selected ([#3321](https://github.com/expo/expo-cli/issues/3321))
+- Allow single platform for dev client schemes ([#3309](https://github.com/expo/expo-cli/issues/3309))
+- Improve single platform dev client ([#3337](https://github.com/expo/expo-cli/issues/3337))
+- Improve running in a project with single platform ([#3336](https://github.com/expo/expo-cli/issues/3336))
+- Code signing xcode projects automatically in development ([#3317](https://github.com/expo/expo-cli/issues/3317))
+- Auto install ios-deploy ([#3308](https://github.com/expo/expo-cli/issues/3308))
+- Improved device deployment ([#3306](https://github.com/expo/expo-cli/issues/3306))
+- Created ios command ([#3303](https://github.com/expo/expo-cli/issues/3303))
+
+### 🧹 Chores
+
+- Remove gulp and build with tsc from xdl ([#3334](https://github.com/expo/expo-cli/issues/3334))
+- Create cocoapods dep check file sooner ([#3346](https://github.com/expo/expo-cli/issues/3346))
+- Improve bplist parsing ([#3330](https://github.com/expo/expo-cli/issues/3330))
+- Updated metro config warning to reflect SDK 41 by default. ([#3325](https://github.com/expo/expo-cli/issues/3325))
+- Added spinner for device searching ([#3328](https://github.com/expo/expo-cli/issues/3328))
+- Improve IOSDeploy logging ([#3326](https://github.com/expo/expo-cli/issues/3326))
+- Remove -showBuildSettings usages ([#3318](https://github.com/expo/expo-cli/issues/3318))
+- Update xmldom and xcode dependencies ([#3314](https://github.com/expo/expo-cli/issues/3314))
+- Remove windows extraction binary ([#3165](https://github.com/expo/expo-cli/issues/3165))
+
+### 🐛 Bug fixes
+
+- Prevent removing existing schemes from AndroidManifest.xml ([#3324](https://github.com/expo/expo-cli/issues/3324))
+- Fix a bug where an IntentFilter could be overridden by the Scheme plugin. ([#3319](https://github.com/expo/expo-cli/issues/3319))
+- Fix broken debug spinner ([#3322](https://github.com/expo/expo-cli/issues/3322))
+
+### 📦 Packages updated
+
+- @expo/babel-preset-cli@0.2.19
+- @expo/config-plugins@1.0.24
+- @expo/config@3.3.34
+- @expo/dev-server@0.1.60
+- @expo/dev-tools@0.13.88
+- @expo/electron-adapter@0.0.51
+- expo-cli@4.3.3
+- expo-codemod@1.0.31
+- expo-optimize@0.1.82
+- @expo/image-utils@0.3.12
+- @expo/json-file@8.2.28
+- @expo/metro-config@0.1.60
+- @expo/next-adapter@2.1.65
+- @expo/osascript@2.0.25
+- @expo/package-manager@0.0.39
+- @expo/plist@0.0.12
+- pod-install@0.1.19
+- expo-pwa@0.0.70
+- @expo/schemer@1.3.27
+- uri-scheme@1.0.71
+- @expo/webpack-config@0.12.64
+- xdl@59.0.28
+
+## [Fri, 19 Mar 2021 10:26:48 -0700](https://github.com/expo/expo-cli/commit/c4b3c767269e6e5efd1abd9fa3b72b066eed2a00)
+
+### 🐛 Bug fixes
+
+- [cli] hide run:android
+- [xdl] facebookReactNativeVersionToExpoVersionAsync: only map to released versions ([#3305](https://github.com/expo/expo-cli/issues/3305))
+- [xdl] show uncaught exceptions ([#3302](https://github.com/expo/expo-cli/issues/3302))
+
+### 📦 Packages updated
+
+- @expo/config-plugins@1.0.23
+- @expo/config@3.3.33
+- @expo/dev-server@0.1.59
+- @expo/dev-tools@0.13.87
+- @expo/electron-adapter@0.0.50
+- expo-cli@4.3.2
+- expo-optimize@0.1.81
+- @expo/metro-config@0.1.59
+- @expo/next-adapter@2.1.64
+- expo-pwa@0.0.69
+- uri-scheme@1.0.70
+- @expo/webpack-config@0.12.63
+- xdl@59.0.27
+
+## [Thu, 18 Mar 2021 12:11:59 -0700](https://github.com/expo/expo-cli/commit/10162d5800ed830d9bbce56973e8f063e1d69c7c)
+
+### 🛠 Breaking changes
+
+### 🎉 New features
+
+- [cli] Added devClient option to mobile options ([#3301](https://github.com/expo/expo-cli/issues/3301))
+- [cli] Added socket controls ([#3280](https://github.com/expo/expo-cli/issues/3280))
+- [cli] skip update check when EAS_BUILD=1 ([#3290](https://github.com/expo/expo-cli/issues/3290))
+- [config-plugins] Added withGradleProperties mod ([#3298](https://github.com/expo/expo-cli/issues/3298))
+- [config-plugins] Created withSwiftBridgingHeader ([#3284](https://github.com/expo/expo-cli/issues/3284))
+- [config-plugins] add expo-ads-facebook to list of auto plugins ([#3289](https://github.com/expo/expo-cli/issues/3289))
+- [doctor] Re-enable checking reachability of exp.host domain ([#3285](https://github.com/expo/expo-cli/issues/3285))
+- [eject] preserve expo dev client scripts ([#3300](https://github.com/expo/expo-cli/issues/3300))
+- [expo-cli] skip updating dependencies in package.json in `expo prebuild` ([#3278](https://github.com/expo/expo-cli/issues/3278))
+- [init] Change template project default branch from master to main ([#3297](https://github.com/expo/expo-cli/issues/3297))
+- [logs] Improve errors thrown by invariant ([#3281](https://github.com/expo/expo-cli/issues/3281))
+- [logs] Mute regenerator runtime and setimmediate stack traces ([#3294](https://github.com/expo/expo-cli/issues/3294))
+- [prebuild] Added clean flag to prebuild ([#3295](https://github.com/expo/expo-cli/issues/3295))
+- [run] Add a command to build and run on Android ([#3239](https://github.com/expo/expo-cli/issues/3239))
+- [run] Added debug simctl logger ([#3293](https://github.com/expo/expo-cli/issues/3293))
+
+### 🐛 Bug fixes
+
+- Pause interactions after stopping ([#3286](https://github.com/expo/expo-cli/issues/3286))
+
+### 🧹 Chores
+
+- Move export code from xdl to expo-cli ([#3233](https://github.com/expo/expo-cli/issues/3233))
+- Refactor projectDir -> projectRoot ([#3292](https://github.com/expo/expo-cli/issues/3292))
+- Remove unused detach code from XDL and rename the package ([#3268](https://github.com/expo/expo-cli/issues/3268))
+- updated getenv dependencies to 1.0.0 ([#3299](https://github.com/expo/expo-cli/issues/3299))
+
+### 📦 Packages updated
+
+- @expo/config-plugins@1.0.22
+- @expo/config@3.3.32
+- @expo/dev-server@0.1.58
+- @expo/dev-tools@0.13.86
+- @expo/electron-adapter@0.0.49
+- expo-cli@4.3.1
+- expo-optimize@0.1.80
+- @expo/image-utils@0.3.11
+- @expo/metro-config@0.1.58
+- @expo/next-adapter@2.1.63
+- expo-pwa@0.0.68
+- uri-scheme@1.0.69
+- @expo/webpack-config@0.12.62
+- xdl@59.0.26
+
+## [Tue, 9 Mar 2021 11:17:38 -0800](https://github.com/expo/expo-cli/commit/7f66dad2ed570e2d001ea47ed6aabebd16ec8bfe)
+
+### 🛠 Breaking changes
+
+- [cli] Delete e (send to) command from terminal ui ([#3274](https://github.com/expo/expo-cli/issues/3274))
+
+### 🎉 New features
+
+- [cli] Unify terminal stack trace logs ([#3275](https://github.com/expo/expo-cli/issues/3275))
+- [cli] Collapse first frame if it's useless ([#3276](https://github.com/expo/expo-cli/issues/3276))
+- [cli][xdl] Rename Expo client to Expo Go wherever it makes sense
+
+### 🐛 Bug fixes
+
+- [cli] Remove Slack link from README
+- [config-plugins] eas build:configure fixes for Windows ([#3266](https://github.com/expo/expo-cli/issues/3266))
+- [config-plugins] Add release channel key to updates modules
+- [config-plugins] Support quote marks in target name in pbxproj ([#3264](https://github.com/expo/expo-cli/issues/3264))
+- [metro-config] Use relative asset registry path ([#3273](https://github.com/expo/expo-cli/issues/3273))
+- [xdl] Fix launching Android and iOS from terminal UI in unversioned apps
+
+### 📦 Packages updated
+
+- @expo/config-plugins@1.0.21
+- @expo/config@3.3.31
+- @expo/dev-server@0.1.57
+- @expo/dev-tools@0.13.85
+- @expo/electron-adapter@0.0.48
+- expo-cli@4.3.0
+- expo-optimize@0.1.79
+- @expo/metro-config@0.1.57
+- @expo/next-adapter@2.1.62
+- expo-pwa@0.0.67
+- uri-scheme@1.0.68
+- @expo/webpack-config@0.12.61
+- @expo/xdl@59.0.25
 
 ## [Wed, 24 Feb 2021 16:05:57 -0800](https://github.com/expo/expo-cli/commit/dd38f7d9c4d218ac6d408c748f2e2f6cde605b7a)
 
@@ -112,7 +389,7 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 📦 Packages updated
 
-  - @expo/config-plugins@1.0.18
+- @expo/config-plugins@1.0.18
 - @expo/config@3.3.28
 - @expo/dev-server@0.1.54
 - @expo/dev-tools@0.13.82

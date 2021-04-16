@@ -2,8 +2,9 @@ import plist from '@expo/plist';
 import fs from 'fs-extra';
 import path from 'path';
 
-import { spawnAsyncThrowError } from './ExponentTools';
-import logger from './Logger';
+import { ExponentTools, LoggerDetach as logger } from '../internal';
+
+const { spawnAsyncThrowError } = ExponentTools;
 
 function _getNormalizedPlistFilename(plistName: string) {
   let plistFilename;

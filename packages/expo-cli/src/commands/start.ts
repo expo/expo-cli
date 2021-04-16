@@ -1,7 +1,7 @@
 import { getConfig, isLegacyImportsEnabled } from '@expo/config';
-import { Project, UrlUtils, Versions } from '@expo/xdl';
 import chalk from 'chalk';
 import path from 'path';
+import { Project, UrlUtils, Versions } from 'xdl';
 
 import Log from '../log';
 import * as sendTo from '../sendTo';

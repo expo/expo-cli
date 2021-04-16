@@ -5,7 +5,7 @@ import schema from '../GraphQLSchema';
 import Issues from '../Issues';
 import createContext from '../createContext';
 
-jest.mock('@expo/xdl');
+jest.mock('xdl');
 
 const MOCK_LOGS = [
   {

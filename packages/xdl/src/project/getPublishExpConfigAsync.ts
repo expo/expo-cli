@@ -6,9 +6,7 @@ import {
   ProjectTarget,
 } from '@expo/config';
 
-import { maySkipManifestValidation } from '../Env';
-import XDLError from '../XDLError';
-import * as ExponentTools from '../detach/ExponentTools';
+import { Env, ExponentTools, XDLError } from '../internal';
 
 export type PublishOptions = {
   releaseChannel?: string;
@@ -39,7 +37,7 @@ export async function getPublishExpConfigAsync(
   const { sdkVersion } = exp;
 
   // Only allow projects to be published with UNVERSIONED if a correct token is set in env
-  if (sdkVersion === 'UNVERSIONED' && !maySkipManifestValidation()) {
+  if (sdkVersion === 'UNVERSIONED' && !Env.maySkipManifestValidation()) {
     throw new XDLError('INVALID_OPTIONS', 'Cannot publish with sdkVersion UNVERSIONED.');
   }
   exp.locales = await ExponentTools.getResolvedLocalesAsync(projectRoot, exp);

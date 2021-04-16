@@ -1,5 +1,5 @@
 import { ExpoConfig, isLegacyImportsEnabled } from '@expo/config';
-import { Project, ProjectSettings } from '@expo/xdl';
+import { Project, ProjectSettings, Versions } from 'xdl';
 
 import Log from '../../log';
 import { URLOptions } from '../../urlOpts';
@@ -108,8 +108,8 @@ export function parseRawArguments(options: RawStartOptions, rawArgs: string[]): 
   return opts;
 }
 
-async function cacheOptionsAsync(projectDir: string, options: NormalizedOptions): Promise<void> {
-  await ProjectSettings.setAsync(projectDir, {
+async function cacheOptionsAsync(projectRoot: string, options: NormalizedOptions): Promise<void> {
+  await ProjectSettings.setAsync(projectRoot, {
     devClient: options.devClient,
     scheme: options.scheme,
     dev: options.dev,
@@ -149,6 +149,14 @@ export function parseStartOptions(
     // See: https://docs.expo.io/bare/using-expo-client
     startOpts.target = options.devClient ? 'bare' : 'managed';
     Log.debug('Using target: ', startOpts.target);
+  }
+
+  // The SDK 41 client has web socket support.
+  if (Versions.gteSdkVersion(exp, '41.0.0')) {
+    startOpts.isRemoteReloadingEnabled = true;
+    if (!startOpts.webOnly) {
+      startOpts.isWebSocketsEnabled = true;
+    }
   }
 
   return startOpts;

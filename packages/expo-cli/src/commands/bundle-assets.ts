@@ -1,7 +1,7 @@
-import { Detach } from '@expo/xdl';
 import chalk from 'chalk';
 import { Command } from 'commander';
 import terminalLink from 'terminal-link';
+import { Detach } from 'xdl';
 
 import { SilentError } from '../CommandError';
 import Log from '../log';
@@ -11,9 +11,9 @@ type Options = {
   platform?: string;
 };
 
-async function action(projectDir: string, options: Options) {
+async function action(projectRoot: string, options: Options) {
   try {
-    await Detach.bundleAssetsAsync(projectDir, options);
+    await Detach.bundleAssetsAsync(projectRoot, options);
   } catch (e) {
     Log.error(e);
     Log.error(

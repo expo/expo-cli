@@ -203,7 +203,7 @@ xdescribe('upgradeAsync', () => {
     jest.unmock('commander');
     jest.unmock('@expo/package-manager');
     jest.unmock('@expo/config');
-    jest.unmock('@expo/xdl');
+    jest.unmock('xdl');
   });
 
   beforeAll(() => {

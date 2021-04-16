@@ -4,7 +4,7 @@ module.exports = () => ({
       require('@babel/preset-env'),
       {
         targets: {
-          node: '8.9.0',
+          node: '12.0.0',
         },
         modules: false,
       },
@@ -12,6 +12,7 @@ module.exports = () => ({
     require('@babel/preset-typescript'),
   ],
   plugins: [
+    require('@babel/plugin-proposal-export-namespace-from'),
     require('@babel/plugin-proposal-class-properties'),
     [
       require('@babel/plugin-transform-modules-commonjs'),

@@ -1,12 +1,12 @@
 import spawnAsync from '@expo/spawn-async';
-import { ProjectSettings } from '@expo/xdl';
 import path from 'path';
 import temporary from 'tempy';
+import { ProjectSettings } from 'xdl';
 
 import { EXPO_CLI } from '../TestUtils';
 
 const tempDir = temporary.directory();
-const projectDir = path.join(tempDir, 'my-app');
+const projectRoot = path.join(tempDir, 'my-app');
 
 beforeAll(async () => {
   // jest.setTimeout(60000);
@@ -16,7 +16,7 @@ beforeAll(async () => {
 });
 
 xtest('start --offline', async () => {
-  const promise = spawnAsync(EXPO_CLI, ['start', '--offline'], { cwd: projectDir });
+  const promise = spawnAsync(EXPO_CLI, ['start', '--offline'], { cwd: projectRoot });
   const cli = promise.child;
 
   cli.stderr.pipe(process.stderr);
@@ -39,7 +39,7 @@ xtest('start --offline with existing packager info', async () => {
     packagerPid: 1337,
   });
 
-  const promise = spawnAsync(EXPO_CLI, ['start', '--offline'], { cwd: projectDir });
+  const promise = spawnAsync(EXPO_CLI, ['start', '--offline'], { cwd: projectRoot });
   const cli = promise.child;
 
   cli.stderr.pipe(process.stderr);

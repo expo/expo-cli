@@ -1,4 +1,4 @@
-import { Android } from '@expo/xdl';
+import { Android } from 'xdl';
 
 import { Context } from '../../credentials';
 import { runCredentialsManager } from '../../credentials/route';

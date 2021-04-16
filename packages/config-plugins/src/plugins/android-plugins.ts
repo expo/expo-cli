@@ -1,6 +1,7 @@
 import { ExpoConfig } from '@expo/config-types';
 
 import { ConfigPlugin, Mod } from '../Plugin.types';
+import { Properties } from '../android';
 import { AndroidManifest } from '../android/Manifest';
 import { ApplicationProjectFile, GradleProjectFile } from '../android/Paths';
 import { ResourceXML } from '../android/Resources';
@@ -129,6 +130,23 @@ export const withSettingsGradle: ConfigPlugin<Mod<GradleProjectFile>> = (config,
   return withExtendedMod(config, {
     platform: 'android',
     mod: 'settingsGradle',
+    action,
+  });
+};
+
+/**
+ * Provides the /gradle.properties for modification.
+ *
+ * @param config
+ * @param action
+ */
+export const withGradleProperties: ConfigPlugin<Mod<Properties.PropertiesItem[]>> = (
+  config,
+  action
+) => {
+  return withExtendedMod(config, {
+    platform: 'android',
+    mod: 'gradleProperties',
     action,
   });
 };

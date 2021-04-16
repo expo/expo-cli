@@ -1,13 +1,17 @@
 import { ProjectTarget } from '@expo/config';
 import { MetroDevServerOptions, runMetroDevServerAsync } from '@expo/dev-server';
 
-import * as ProjectSettings from '../ProjectSettings';
-import * as ProjectUtils from '../project/ProjectUtils';
-import { assertValidProjectRoot } from '../project/errors';
-import { getManifestHandler } from './ManifestHandler';
-import { getFreePortAsync } from './getFreePortAsync';
+import {
+  assertValidProjectRoot,
+  getFreePortAsync,
+  ManifestHandler,
+  ProjectSettings,
+  ProjectUtils,
+} from '../internal';
 
 export type StartOptions = {
+  isWebSocketsEnabled?: boolean;
+  isRemoteReloadingEnabled?: boolean;
   devClient?: boolean;
   reset?: boolean;
   nonInteractive?: boolean;
@@ -41,7 +45,7 @@ export async function startDevServerAsync(projectRoot: string, startOptions: Sta
     options.maxWorkers = startOptions.maxWorkers;
   }
 
-  const { server, middleware } = await runMetroDevServerAsync(projectRoot, options);
-  middleware.use(getManifestHandler(projectRoot));
-  return server;
+  const { server, middleware, messageSocket } = await runMetroDevServerAsync(projectRoot, options);
+  middleware.use(ManifestHandler.getManifestHandler(projectRoot));
+  return [server, middleware, messageSocket];
 }

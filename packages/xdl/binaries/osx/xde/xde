@@ -1,5 +1,0 @@
-#!/bin/bash
-
-# commandLineArgs has dir + executable in development but only executable in prod, so add a dummy
-# arg so that we know when the real args start
-open -b host.exp.xde -n --args dummy --executed-from="$(pwd)" --pid=$$ --path-environment="$PATH" "$@"

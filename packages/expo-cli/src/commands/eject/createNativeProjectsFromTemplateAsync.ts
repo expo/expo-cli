@@ -37,12 +37,14 @@ export async function createNativeProjectsFromTemplateAsync({
   pkg,
   tempDir,
   platforms,
+  skipDependencyUpdate,
 }: {
   projectRoot: string;
   exp: ExpoConfig;
   pkg: PackageJSONConfig;
   tempDir: string;
   platforms: ModPlatform[];
+  skipDependencyUpdate?: string[];
 }): Promise<
   { hasNewProjectFiles: boolean; needsPodInstall: boolean } & DependenciesModificationResults
 > {
@@ -56,7 +58,12 @@ export async function createNativeProjectsFromTemplateAsync({
 
   writeMetroConfig({ projectRoot, pkg, tempDir });
 
-  const depsResults = await updatePackageJSONAsync({ projectRoot, tempDir, pkg });
+  const depsResults = await updatePackageJSONAsync({
+    projectRoot,
+    tempDir,
+    pkg,
+    skipDependencyUpdate,
+  });
 
   return {
     hasNewProjectFiles: !!copiedPaths.length,

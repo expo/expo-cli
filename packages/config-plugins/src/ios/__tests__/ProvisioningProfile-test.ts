@@ -36,5 +36,15 @@ describe('ProvisioningProfile module', () => {
       const pbxprojContents = fs.readFileSync(path.join(projectRoot, pbxProjPath), 'utf-8');
       expect(pbxprojContents).toMatchSnapshot();
     });
+    it('throws descriptive error when target name does not exist', async () => {
+      const fn = () => {
+        setProvisioningProfileForPbxproj(projectRoot, {
+          targetName: 'faketargetname',
+          profileName: '*[expo] com.swmansion.dominik.abcd.v2 AppStore 2020-07-24T07:56:22.983Z',
+          appleTeamId: 'J5FM626PE2',
+        });
+      };
+      expect(fn).toThrow('Unable to find a target named faketargetname');
+    });
   });
 });

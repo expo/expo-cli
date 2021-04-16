@@ -1,8 +1,10 @@
 import { getConfig, writeConfigJsonAsync } from '@expo/config';
 import spawnAsync from '@expo/spawn-async';
+import { makeExecutableSchema } from 'graphql-tools';
+import { $$asyncIterator } from 'iterall';
 import {
   Android,
-  Config,
+  ConnectionStatus,
   Exp,
   Logger,
   Project,
@@ -13,9 +15,7 @@ import {
   UserManager,
   UserSettings,
   Webpack,
-} from '@expo/xdl';
-import { makeExecutableSchema } from 'graphql-tools';
-import { $$asyncIterator } from 'iterall';
+} from 'xdl';
 
 import mergeAsyncIterators from '../asynciterators/mergeAsyncIterators';
 
@@ -458,7 +458,7 @@ const resolvers = {
   },
   ProjectSettings: {
     hostType(projectSettings) {
-      if (Config.offline && projectSettings.hostType === 'tunnel') {
+      if (ConnectionStatus.isOffline() && projectSettings.hostType === 'tunnel') {
         return 'lan';
       } else {
         return projectSettings.hostType;

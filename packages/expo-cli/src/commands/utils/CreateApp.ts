@@ -3,11 +3,12 @@ import chalk from 'chalk';
 import fs from 'fs-extra';
 import getenv from 'getenv';
 import yaml from 'js-yaml';
-import ora from 'ora';
 import * as path from 'path';
 import semver from 'semver';
 
 import Log from '../../log';
+import { ora } from '../../utils/ora';
+import { hasPackageJsonDependencyListChangedAsync } from '../run/ios/Podfile';
 
 export function validateName(name?: string): string | true {
   if (typeof name !== 'string' || name === '') {
@@ -160,7 +161,6 @@ export function getChangeDirectoryPath(projectRoot: string): string {
 }
 
 export async function installCocoaPodsAsync(projectRoot: string) {
-  Log.addNewLineIfNone();
   let step = logNewSection('Installing CocoaPods...');
   if (process.platform !== 'darwin') {
     step.succeed('Skipped installing CocoaPods because operating system is not on macOS.');
@@ -202,6 +202,8 @@ export async function installCocoaPodsAsync(projectRoot: string) {
 
   try {
     await packageManager.installAsync();
+    // Create cached list for later
+    await hasPackageJsonDependencyListChangedAsync(projectRoot).catch(() => null);
     step.succeed('Installed pods and initialized Xcode workspace.');
     return true;
   } catch (e) {

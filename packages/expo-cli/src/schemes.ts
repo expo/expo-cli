@@ -3,6 +3,10 @@ import plist from '@expo/plist';
 import * as fs from 'fs-extra';
 
 import { AbortCommandError } from './CommandError';
+import {
+  hasRequiredAndroidFilesAsync,
+  hasRequiredIOSFilesAsync,
+} from './commands/eject/clearNativeFolder';
 import Log from './log';
 
 async function getSchemesForIosAsync(projectRoot: string) {
@@ -34,12 +38,26 @@ function intersecting<T>(a: T[], b: T[]): T[] {
 }
 
 export async function getDevClientSchemeAsync(projectRoot: string): Promise<string> {
+  const [hasIos, hasAndroid] = await Promise.all([
+    hasRequiredIOSFilesAsync(projectRoot),
+    hasRequiredAndroidFilesAsync(projectRoot),
+  ]);
+
   const [ios, android] = await Promise.all([
     getSchemesForIosAsync(projectRoot),
     getSchemesForAndroidAsync(projectRoot),
   ]);
 
-  const [matching] = intersecting(ios, android);
+  let matching: string;
+  // Allow for only one native project to exist.
+  if (!hasIos) {
+    matching = android[0];
+  } else if (!hasAndroid) {
+    matching = ios[0];
+  } else {
+    [matching] = intersecting(ios, android);
+  }
+
   if (!matching) {
     Log.warn(
       '\nDev Client: No common URI schemes could be found for the native ios and android projects, this is required for opening the project\n'

@@ -6,6 +6,7 @@ import xcode from 'xcode';
 
 import { ExportedConfig } from '../../Plugin.types';
 import { withBranch } from '../../ios/Branch';
+import { PodfileBasic } from '../../ios/__tests__/fixtures/Podfile';
 import { getDirFromFS } from '../../ios/__tests__/utils/getDirFromFS';
 import { readXMLAsync } from '../../utils/XML';
 import {
@@ -55,6 +56,7 @@ describe('built-in plugins', () => {
     vol.fromJSON(
       {
         ...rnFixture,
+        'ios/Podfile': PodfileBasic,
         'config/GoogleService-Info.plist': 'noop',
         'config/google-services.json': '{}',
         './icons/foreground.png': icon,
@@ -291,8 +293,10 @@ describe('built-in plugins', () => {
       'ios/ReactNativeProject/Supporting/en.lproj/InfoPlist.strings',
       'ios/ReactNativeProject/Supporting/es.lproj/InfoPlist.strings',
       'ios/ReactNativeProject/GoogleService-Info.plist',
+      'ios/ReactNativeProject/ReactNativeProject-Bridging-Header.h',
       'ios/ReactNativeProject/ReactNativeProject.entitlements',
       'ios/ReactNativeProject.xcodeproj/project.pbxproj',
+      'ios/Podfile',
       'android/app/src/main/java/com/bacon/todo/MainActivity.java',
       'android/app/src/main/java/com/bacon/todo/MainApplication.java',
       'android/app/src/main/AndroidManifest.xml',
@@ -301,6 +305,7 @@ describe('built-in plugins', () => {
       'android/app/src/main/res/values/strings.xml',
       'android/app/build.gradle',
       'android/app/google-services.json',
+      'android/gradle.properties',
       'android/settings.gradle',
       'android/build.gradle',
       'config/GoogleService-Info.plist',

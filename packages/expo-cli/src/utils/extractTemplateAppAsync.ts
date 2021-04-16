@@ -1,6 +1,5 @@
 import { BareAppConfig, ExpoConfig } from '@expo/config';
 import JsonFile from '@expo/json-file';
-import { UserSettings } from '@expo/xdl';
 import fs from 'fs-extra';
 import merge from 'lodash/merge';
 import Minipass from 'minipass';
@@ -8,6 +7,7 @@ import pacote, { PackageSpec } from 'pacote';
 import path from 'path';
 import { Readable } from 'stream';
 import tar, { ReadEntry } from 'tar';
+import { UserSettings } from 'xdl';
 
 type AppJsonInput = { expo: Partial<ExpoConfig> & { name: string } };
 type TemplateConfig = { name: string };

@@ -1,4 +1,5 @@
 import JsonFile from '@expo/json-file';
+import spawnAsync from '@expo/spawn-async';
 import path from 'path';
 import stripAnsi from 'strip-ansi';
 import temporary from 'tempy';
@@ -17,15 +18,26 @@ test('init (no dir name)', async () => {
   expect(stderr).toMatch(/Pass the project name using the first argument/);
 });
 
-xtest('init', async () => {
+test('init', async () => {
   jest.setTimeout(60000);
+
+  await spawnAsync('git', ['config', '--global', 'user.name', 'Test User']);
+
   const cwd = temporary.directory();
   const { stdout } = await runAsync(
-    ['init', 'hello-world', '--template', 'blank', '--name', 'hello-&<world/>'],
+    ['init', 'hello-world', '--template', 'blank', '--name', 'hello-world', '--no-install'],
     { cwd, env: { ...process.env, YARN_CACHE_FOLDER: path.join(cwd, 'yarn-cache') } }
   );
   expect(stdout).toMatch(`Your project is ready!`);
-  const appJson = await JsonFile.readAsync(path.join(cwd, 'hello-world/app.json'));
-  expect(appJson).toHaveProperty(['expo', 'name'], 'hello-&<world/>');
+
+  const projectRoot = path.join(cwd, 'hello-world');
+  const appJson = await JsonFile.readAsync(path.join(projectRoot, 'app.json'));
+  expect(appJson).toHaveProperty(['expo', 'name'], 'hello-world');
   expect(appJson).toHaveProperty(['expo', 'slug'], 'hello-world');
+
+  const { stdout: gitBranch } = await spawnAsync('git', ['status'], {
+    cwd: projectRoot,
+    stdio: ['pipe', 'pipe', 'inherit'],
+  });
+  expect(gitBranch).toBe('On branch main\nnothing to commit, working tree clean\n');
 });

@@ -1,8 +1,8 @@
-import { AndroidCredentials } from '@expo/xdl';
 import assert from 'assert';
 import chalk from 'chalk';
 import * as fs from 'fs-extra';
 import * as path from 'path';
+import { AndroidCredentials } from 'xdl';
 
 import { Context } from '../../credentials';
 import { runCredentialsManager } from '../../credentials/route';

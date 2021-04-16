@@ -2,7 +2,6 @@ import { BareAppConfig, getConfig } from '@expo/config';
 import { AndroidConfig, IOSConfig } from '@expo/config-plugins';
 import plist from '@expo/plist';
 import spawnAsync from '@expo/spawn-async';
-import { UserManager, Versions } from '@expo/xdl';
 import chalk from 'chalk';
 import program, { Command } from 'commander';
 import fs from 'fs-extra';
@@ -11,6 +10,7 @@ import pacote from 'pacote';
 import path from 'path';
 import stripAnsi from 'strip-ansi';
 import terminalLink from 'terminal-link';
+import { UserManager, Versions } from 'xdl';
 
 import CommandError, { SilentError } from '../CommandError';
 import Log from '../log';
@@ -159,18 +159,18 @@ function padEnd(str: string, width: number): string {
   return str + Array(len + 1).join(' ');
 }
 
-async function action(projectDir: string, command: Command) {
+async function action(incomingProjectRoot: string, command: Command) {
   const options = parseOptions(command);
 
   // Resolve the name, and projectRoot
   let projectRoot: string;
-  if (!projectDir && options.yes) {
+  if (!incomingProjectRoot && options.yes) {
     projectRoot = path.resolve(process.cwd());
     const folderName = path.basename(projectRoot);
     assertValidName(folderName);
     await assertFolderEmptyAsync(projectRoot, folderName);
   } else {
-    projectRoot = await resolveProjectRootAsync(projectDir || options.name);
+    projectRoot = await resolveProjectRootAsync(incomingProjectRoot || options.name);
   }
 
   let resolvedTemplate: string | null = options.template ?? null;
@@ -409,9 +409,11 @@ export async function initGitRepoAsync(
         cwd: root,
         stdio: 'ignore',
       });
+      await spawnAsync('git', ['branch', '-M', 'main'], { cwd: root, stdio: 'ignore' });
     }
     return true;
   } catch (e) {
+    Log.debug('git error:', e);
     // no-op -- this is just a convenience and we don't care if it fails
     return false;
   }

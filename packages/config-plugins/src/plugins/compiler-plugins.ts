@@ -1,5 +1,6 @@
 import { JSONObject } from '@expo/json-file';
 import plist from '@expo/plist';
+import assert from 'assert';
 import { readFile, writeFile } from 'fs-extra';
 import path from 'path';
 import { XcodeProject } from 'xcode';
@@ -10,7 +11,7 @@ import {
   ExportedConfigWithProps,
   ModPlatform,
 } from '../Plugin.types';
-import { Manifest } from '../android';
+import { Manifest, Properties } from '../android';
 import { AndroidManifest } from '../android/Manifest';
 import * as AndroidPaths from '../android/Paths';
 import { readResourcesXMLAsync, ResourceXML } from '../android/Resources';
@@ -20,7 +21,6 @@ import { InfoPlist } from '../ios/IosConfig.types';
 import { AppDelegateProjectFile, getAppDelegate, getInfoPlistPath } from '../ios/Paths';
 import { getPbxproj } from '../ios/utils/Xcodeproj';
 import { writeXMLAsync } from '../utils/XML';
-import { assert } from '../utils/errors';
 import * as WarningAggregator from '../utils/warnings';
 import { withInterceptedMod } from './core-plugins';
 
@@ -49,6 +49,7 @@ export function resolveModResults(results: any, platformName: string, modName: s
 function applyAndroidBaseMods(config: ExportedConfig): ExportedConfig {
   config = withExpoDangerousBaseMod(config, 'android');
   config = withAndroidStringsXMLBaseMod(config);
+  config = withAndroidGradlePropertiesBaseMod(config);
   config = withAndroidManifestBaseMod(config);
   config = withAndroidMainActivityBaseMod(config);
   config = withAndroidSettingsGradleBaseMod(config);
@@ -84,6 +85,40 @@ const withAndroidManifestBaseMod: ConfigPlugin = config => {
         await Manifest.writeAndroidManifestAsync(filePath, modResults);
       } catch (error) {
         console.error(`AndroidManifest.xml mod error:`);
+        throw error;
+      }
+      return results;
+    },
+  });
+};
+
+export const withAndroidGradlePropertiesBaseMod: ConfigPlugin = config => {
+  // Append a rule to supply gradle.properties data to mods on `mods.android.gradleProperties`
+  return withInterceptedMod<Properties.PropertiesItem[]>(config, {
+    platform: 'android',
+    mod: 'gradleProperties',
+    skipEmptyMod: true,
+    async action({ modRequest: { nextMod, ...modRequest }, ...config }) {
+      let results: ExportedConfigWithProps<Properties.PropertiesItem[]> = {
+        ...config,
+        modRequest,
+      };
+
+      try {
+        const filePath = path.join(modRequest.platformProjectRoot, 'gradle.properties');
+        const contents = await readFile(filePath, 'utf8');
+        let modResults = Properties.parsePropertiesFile(contents);
+
+        results = await nextMod!({
+          ...config,
+          modResults,
+          modRequest,
+        });
+        resolveModResults(results, modRequest.platform, modRequest.modName);
+        modResults = results.modResults;
+        await writeFile(filePath, Properties.propertiesListToString(modResults), 'utf8');
+      } catch (error) {
+        console.error(`gradle.properties mod error:`);
         throw error;
       }
       return results;

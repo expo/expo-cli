@@ -10,16 +10,35 @@ import resolveFrom from 'resolve-from';
 export const EXPO_DEBUG = boolish('EXPO_DEBUG', false);
 
 // Import only the types here, the values will be imported from the project, at runtime.
-const INTERNAL_CALLSITES_REGEX = new RegExp(
+export const INTERNAL_CALLSITES_REGEX = new RegExp(
   [
     '/Libraries/Renderer/implementations/.+\\.js$',
     '/Libraries/BatchedBridge/MessageQueue\\.js$',
     '/Libraries/YellowBox/.+\\.js$',
     '/Libraries/LogBox/.+\\.js$',
     '/Libraries/Core/Timers/.+\\.js$',
-    '/node_modules/react-devtools-core/.+\\.js$',
-    '/node_modules/react-refresh/.+\\.js$',
-    '/node_modules/scheduler/.+\\.js$',
+    'node_modules/react-devtools-core/.+\\.js$',
+    'node_modules/react-refresh/.+\\.js$',
+    'node_modules/scheduler/.+\\.js$',
+    // Metro replaces `require()` with a different method,
+    // we want to omit this method from the stack trace.
+    // This is akin to most React tooling.
+    '/metro/.*/polyfills/require.js$',
+    // Hide frames related to a fast refresh.
+    '/metro/.*/lib/bundle-modules/.+\\.js$',
+    'node_modules/eventemitter3/index.js',
+    'node_modules/event-target-shim/dist/.+\\.js$',
+    // Ignore the log forwarder used in the Expo Go app
+    '/expo/build/environment/react-native-logs.fx.js$',
+    '/expo/build/logs/RemoteConsole.js$',
+    // Improve errors thrown by invariant (ex: `Invariant Violation: "main" has not been registered`).
+    'node_modules/invariant/.+\\.js$',
+    // Remove babel runtime additions
+    'node_modules/regenerator-runtime/.+\\.js$',
+    // Remove react native setImmediate ponyfill
+    'node_modules/promise/setimmediate/.+\\.js$',
+    // Babel helpers that implement language features
+    'node_modules/@babel/runtime/.+\\.js$',
   ].join('|')
 );
 
@@ -136,16 +155,29 @@ export function getDefaultConfig(
       port: Number(process.env.RCT_METRO_PORT) || 8081,
     },
     symbolicator: {
-      customizeFrame: (frame: { file: string | null }) => {
-        const collapse = Boolean(frame.file && INTERNAL_CALLSITES_REGEX.test(frame.file));
-        return { collapse };
+      customizeFrame: frame => {
+        let collapse = Boolean(frame.file && INTERNAL_CALLSITES_REGEX.test(frame.file));
+
+        if (!collapse) {
+          // This represents the first frame of the stacktrace.
+          // Often this looks like: `__r(0);`.
+          // The URL will also be unactionable in the app and therefore not very useful to the developer.
+          if (
+            frame.column === 3 &&
+            frame.methodName === 'global code' &&
+            frame.file?.match(/^https?:\/\//g)
+          ) {
+            collapse = true;
+          }
+        }
+
+        return { ...(frame || {}), collapse };
       },
     },
     transformer: {
       allowOptionalDependencies: true,
       babelTransformerPath: require.resolve('metro-react-native-babel-transformer'),
-      // TODO: Bacon: Add path for web platform
-      assetRegistryPath: path.join(reactNativePath, 'Libraries/Image/AssetRegistry'),
+      assetRegistryPath: 'react-native/Libraries/Image/AssetRegistry',
       assetPlugins: hashAssetFilesPath ? [hashAssetFilesPath] : undefined,
     },
   });

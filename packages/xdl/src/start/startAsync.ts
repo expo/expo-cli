@@ -1,28 +1,52 @@
 import { ExpoConfig, getConfig } from '@expo/config';
 import { Server } from 'http';
 
-import Analytics from '../Analytics';
-import * as Android from '../Android';
-import Config from '../Config';
-import * as DevSession from '../DevSession';
-import { shouldUseDevServer } from '../Env';
-import * as ProjectSettings from '../ProjectSettings';
-import * as Webpack from '../Webpack';
-import * as ProjectUtils from '../project/ProjectUtils';
-import { assertValidProjectRoot } from '../project/errors';
-import { startTunnelsAsync, stopTunnelsAsync } from './ngrok';
-import { startDevServerAsync, StartOptions } from './startDevServerAsync';
-import { startExpoServerAsync, stopExpoServerAsync } from './startLegacyExpoServerAsync';
 import {
+  Analytics,
+  Android,
+  assertValidProjectRoot,
+  Config,
+  ConnectionStatus,
+  DevSession,
+  Env,
+  ProjectSettings,
+  ProjectUtils,
+  startDevServerAsync,
+  StartDevServerOptions,
+  startExpoServerAsync,
   startReactNativeServerAsync,
+  startTunnelsAsync,
+  stopExpoServerAsync,
   stopReactNativeServerAsync,
-} from './startLegacyReactNativeServerAsync';
+  stopTunnelsAsync,
+  Webpack,
+} from '../internal';
 
 let serverInstance: Server | null = null;
+let messageSocket: any | null = null;
+
+/**
+ * Sends a message over web sockets to any connected device,
+ * does nothing when the dev server is not running.
+ *
+ * @param method name of the command. In RN projects `reload`, and `devMenu` are available. In Expo Go, `sendDevCommand` is available.
+ * @param params
+ */
+export function broadcastMessage(
+  method: 'reload' | 'devMenu' | 'sendDevCommand',
+  params?: Record<string, any> | undefined
+) {
+  if (messageSocket) {
+    messageSocket.broadcast(method, params);
+  }
+}
 
 export async function startAsync(
   projectRoot: string,
-  { exp = getConfig(projectRoot).exp, ...options }: StartOptions & { exp?: ExpoConfig } = {},
+  {
+    exp = getConfig(projectRoot).exp,
+    ...options
+  }: StartDevServerOptions & { exp?: ExpoConfig } = {},
   verbose: boolean = true
 ): Promise<ExpoConfig> {
   assertValidProjectRoot(projectRoot);
@@ -36,8 +60,8 @@ export async function startAsync(
     await Webpack.restartAsync(projectRoot, options);
     DevSession.startSession(projectRoot, exp, 'web');
     return exp;
-  } else if (shouldUseDevServer(exp) || options.devClient) {
-    serverInstance = await startDevServerAsync(projectRoot, options);
+  } else if (Env.shouldUseDevServer(exp) || options.devClient) {
+    [serverInstance, , messageSocket] = await startDevServerAsync(projectRoot, options);
     DevSession.startSession(projectRoot, exp, 'native');
   } else {
     await startExpoServerAsync(projectRoot);
@@ -47,7 +71,7 @@ export async function startAsync(
 
   const { hostType } = await ProjectSettings.readAsync(projectRoot);
 
-  if (!Config.offline && hostType === 'tunnel') {
+  if (!ConnectionStatus.isOffline() && hostType === 'tunnel') {
     try {
       await startTunnelsAsync(projectRoot);
     } catch (e) {
@@ -76,7 +100,7 @@ async function stopInternalAsync(projectRoot: string): Promise<void> {
     stopExpoServerAsync(projectRoot),
     stopReactNativeServerAsync(projectRoot),
     async () => {
-      if (!Config.offline) {
+      if (!ConnectionStatus.isOffline()) {
         try {
           await stopTunnelsAsync(projectRoot);
         } catch (e) {
