@@ -176,7 +176,7 @@ export async function installCocoaPodsAsync(projectRoot: string) {
     try {
       // prompt user -- do you want to install cocoapods right now?
       step.text = 'CocoaPods CLI not found in your PATH, installing it now.';
-      step.render();
+      step.stopAndPersist();
       await PackageManager.CocoaPodsPackageManager.installCLIAsync({
         nonInteractive: true,
         spawnOptions: {
