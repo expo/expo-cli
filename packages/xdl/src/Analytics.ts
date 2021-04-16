@@ -48,10 +48,6 @@ export class AnalyticsClient {
     }
   }
 
-  public setVersionName(version: string) {
-    this._version = version;
-  }
-
   public logEvent(name: string, properties: any = {}) {
     if (this.segmentNodeInstance && this._userId) {
       this.segmentNodeInstance.track({
