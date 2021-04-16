@@ -14,7 +14,7 @@ import { UserManager, Versions } from 'xdl';
 
 import CommandError, { SilentError } from '../CommandError';
 import Log from '../log';
-import prompts, { selectAsync } from '../prompts';
+import prompts, { confirmAsync, selectAsync } from '../prompts';
 import { extractAndPrepareTemplateAppAsync } from '../utils/extractTemplateAppAsync';
 import * as CreateApp from './utils/CreateApp';
 import { usesOldExpoUpdatesAsync } from './utils/ProjectUtils';
@@ -377,24 +377,16 @@ export async function initGitRepoAsync(
     }
   }
 
-  let runGitInit = true;
+  let shouldSkipInitializeGitTree = false;
 
   if (insideGitTree) {
-    const { answer } = await prompts({
-      type: 'text',
-      name: 'answer',
+    shouldSkipInitializeGitTree = await confirmAsync({
       message:
-        "You appear to be creating an Expo app within an existing Git work tree. Do you still want to run 'git init' within your new project folder? [y/n]",
-      initial: 'n',
+        'Project folder is being created inside of an existing Git project. Skip creating another Git tree for the project folder?',
     });
-
-    runGitInit = answer.trim() === 'y';
   }
 
-  if (!runGitInit) {
-    !flags.silent &&
-      insideGitTree &&
-      Log.log('New project is already inside of a git repo, skipping git init.');
+  if (shouldSkipInitializeGitTree) {
     return false;
   }
 
