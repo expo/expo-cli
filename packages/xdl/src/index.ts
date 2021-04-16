@@ -40,6 +40,7 @@ export {
   User,
   RobotUser,
   UserSettings,
+  UnifiedAnalytics,
   Versions,
   Webpack,
   XDLError,

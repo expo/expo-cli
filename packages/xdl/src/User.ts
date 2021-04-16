@@ -8,6 +8,7 @@ import {
   ConnectionStatus,
   Logger,
   Semaphore,
+  UnifiedAnalytics,
   UserData,
   UserSettings,
   XDLError,
@@ -209,6 +210,36 @@ export class UserManagerInstance {
       return null;
     }
     return auth;
+  }
+
+  /**
+   * Quickly grab cached user data to bootstrap non-critical services (analytics)
+   */
+  async getCachedUserDataAsync(): Promise<UserData | null> {
+    await this._getSessionLock.acquire();
+
+    try {
+      const currentUser = this._currentUser;
+      // If user is cached and there is an accessToken or sessionSecret, return the user
+      if (currentUser && (currentUser.accessToken || currentUser.sessionSecret)) {
+        return currentUser;
+      }
+
+      const userData = await this._readUserData();
+      const accessToken = UserSettings.accessToken();
+
+      // // No token, no session, no current user. Need to login
+      if (!accessToken && !userData?.sessionSecret) {
+        return null;
+      }
+
+      return userData;
+    } catch (e) {
+      Logger.global.warn(e);
+      return null;
+    } finally {
+      this._getSessionLock.release();
+    }
   }
 
   /**
@@ -453,7 +484,17 @@ export class UserManagerInstance {
         });
       }
 
-      Analytics.setUserProperties(user.username, {
+      UnifiedAnalytics.identifyUser(
+        user.userId, // userId is used as the identifier in the other codebases (www/website) running unified analytics so we want to keep using it on the cli as well to avoid double counting users
+        {
+          userId: user.userId,
+          currentConnection: user.currentConnection,
+          username: user.username,
+          userType: user.kind,
+        }
+      );
+
+      Analytics.identifyUser(user.username, {
         userId: user.userId,
         currentConnection: user.currentConnection,
         username: user.username,
