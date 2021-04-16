@@ -179,7 +179,11 @@ export async function installCocoaPodsAsync(projectRoot: string) {
       step.render();
       await PackageManager.CocoaPodsPackageManager.installCLIAsync({
         nonInteractive: true,
-        spawnOptions: packageManager.options,
+        spawnOptions: {
+          ...packageManager.options,
+          // Don't silence this part
+          stdio: ['inherit', 'inherit', 'pipe'],
+        },
       });
       step.succeed('Installed CocoaPods CLI.');
       step = logNewSection('Running `pod install` in the `ios` directory.');
