@@ -14,6 +14,57 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+## [Wed, 14 Apr 2021 12:36:03 -0700](https://github.com/expo/expo-cli/commit/30b4a040a81de0c73103e51ae38bbf4be8a58898)
+
+### 🧹 Chores
+
+- Update schema cache for SDK 41. Get a cool matching version: expo-cli@4.4.1 for SDK 41.
+
+### 📦 Packages updated
+
+- @expo/dev-tools@0.13.92
+- expo-cli@4.4.1
+- xdl@59.0.32
+
+## [Wed, 14 Apr 2021 11:54:49 -0700](https://github.com/expo/expo-cli/commit/6bf320b102933730a9611011e46aac419736396c)
+
+### 🛠 Breaking changes
+
+### 🎉 New features
+
+- [cli] Handle async storage package rename in upgrade command ([#3386](https://github.com/expo/expo-cli/issues/3386))
+
+### 🧹 Chores
+
+- Update test.yml to test against Node 12 and 14 ([#3388](https://github.com/expo/expo-cli/issues/3388))
+- [config-plugins] Replace docs in README with link to Expo docs ([#3384](https://github.com/expo/expo-cli/issues/3384))
+- [cli] Add deprecation message to --config flag ([#3382](https://github.com/expo/expo-cli/issues/3382))
+- [dev-tools] flip `noEmit` flag to preserve server build ([#3379](https://github.com/expo/expo-cli/issues/3379))
+
+### 🐛 Bug fixes
+
+- Support building apps with escaped names ([#3383](https://github.com/expo/expo-cli/issues/3383))
+- [codemod] Removed version gate ([#3390](https://github.com/expo/expo-cli/issues/3390))
+
+### 📦 Packages updated
+
+- @expo/config-plugins@1.0.26
+- @expo/config@3.3.36
+- @expo/dev-server@0.1.62
+- @expo/dev-tools@0.13.91
+- @expo/electron-adapter@0.0.53
+- expo-cli@4.4.0
+- expo-codemod@1.1.0
+- expo-optimize@0.1.84
+- @expo/metro-config@0.1.62
+- @expo/next-adapter@2.1.67
+- @expo/package-manager@0.0.40
+- pod-install@0.1.20
+- expo-pwa@0.0.72
+- uri-scheme@1.0.73
+- @expo/webpack-config@0.12.66
+- xdl@59.0.31
+
 ## [Fri, 9 Apr 2021 15:05:32 -0700](https://github.com/expo/expo-cli/commit/31ce5bb9a78be83ee46a98a72d41652c05aa374c)
 
 ### 🎉 New features

@@ -34,6 +34,7 @@ import {
 import { AbortCommandError, SilentError } from './CommandError';
 import { loginOrRegisterAsync } from './accounts';
 import { registerCommands } from './commands';
+import { learnMore } from './commands/utils/TerminalLink';
 import { profileMethod } from './commands/utils/profileMethod';
 import Log from './log';
 import update from './update';
@@ -450,7 +451,10 @@ Command.prototype.asyncActionProjectDir = function (
   asyncFn: Action,
   options: { checkConfig?: boolean; skipSDKVersionRequirement?: boolean } = {}
 ) {
-  this.option('--config [file]', 'Specify a path to app.json or app.config.js');
+  this.option(
+    '--config [file]',
+    `${chalk.yellow('Deprecated:')} Use app.config.js to switch config files instead.`
+  );
   return this.asyncAction(async (projectRoot: string, ...args: any[]) => {
     const opts = args[0];
 
@@ -461,6 +465,17 @@ Command.prototype.asyncActionProjectDir = function (
     }
 
     if (opts.config) {
+      Log.log(
+        chalk.yellow(
+          `\u203A ${chalk.bold(
+            '--config'
+          )} flag is deprecated. Use app.config.js instead. ${learnMore(
+            'https://expo.fyi/config-flag-migration'
+          )}`
+        )
+      );
+      Log.newLine();
+
       // @ts-ignore: This guards against someone passing --config without a path.
       if (opts.config === true) {
         Log.addNewLineIfNone();

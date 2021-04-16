@@ -1,7 +1,4 @@
 import fs from 'fs-extra';
-import os from 'os';
-import path from 'path';
-import uuid from 'uuid';
 
 import {
   ApiV2,
@@ -15,19 +12,9 @@ jest.mock('../ApiV2', () => ({
 }));
 
 describe('User', () => {
-  // for some reason, tempy fails with memfs in XDL
-  const expoDir = path.join(os.tmpdir(), `.expo-${uuid.v4()}`);
-
   beforeAll(() => {
-    process.env.__UNSAFE_EXPO_HOME_DIRECTORY = expoDir;
-    fs.mkdirpSync(expoDir);
+    fs.removeSync(UserSettings.userSettingsFile());
   });
-
-  afterAll(() => {
-    process.env.__UNSAFE_EXPO_HOME_DIRECTORY = '';
-    fs.removeSync(expoDir);
-  });
-
   it('uses a UserManager singleton', () => {
     const { default: manager } = jest.requireActual('../User');
     expect(manager).toBe(GlobalUserManager);

@@ -306,7 +306,7 @@ async function _validateReactNativeVersionAsync(
     ProjectUtils.logWarning(
       projectRoot,
       'expo',
-      `@react-native-community/async-storage has been renamed. To upgrade:\n- remove @react-native-community/async-storage from package.json\n- run "expo install @react-native-async-storage/async-storage"\n- run "npx expo-codemod sdk41-async-storage src" to rename imports`,
+      `\n@react-native-community/async-storage has been renamed. To upgrade:\n- remove @react-native-community/async-storage from package.json\n- run "expo install @react-native-async-storage/async-storage"\n- update your imports manually, or run "npx expo-codemod sdk41-async-storage './**/*'".\n`,
       'doctor-legacy-async-storage'
     );
     return WARNING;

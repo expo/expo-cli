@@ -37,6 +37,8 @@ export const INTERNAL_CALLSITES_REGEX = new RegExp(
     'node_modules/regenerator-runtime/.+\\.js$',
     // Remove react native setImmediate ponyfill
     'node_modules/promise/setimmediate/.+\\.js$',
+    // Babel helpers that implement language features
+    'node_modules/@babel/runtime/.+\\.js$',
   ].join('|')
 );
 

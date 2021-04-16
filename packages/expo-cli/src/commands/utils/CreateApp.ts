@@ -161,7 +161,6 @@ export function getChangeDirectoryPath(projectRoot: string): string {
 }
 
 export async function installCocoaPodsAsync(projectRoot: string) {
-  Log.addNewLineIfNone();
   let step = logNewSection('Installing CocoaPods...');
   if (process.platform !== 'darwin') {
     step.succeed('Skipped installing CocoaPods because operating system is not on macOS.');

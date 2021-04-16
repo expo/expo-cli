@@ -317,7 +317,7 @@ async function getManifestStringAsync(
 }
 
 async function createHostInfoAsync(): Promise<HostInfo> {
-  const host = await UserSettings.anonymousIdentifier();
+  const host = await UserSettings.getAnonymousIdentifierAsync();
 
   return {
     host,
