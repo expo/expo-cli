@@ -210,6 +210,10 @@ export interface PublishedProjectResult {
    */
   url: string;
   /**
+   * Project page URL
+   */
+  projectPageUrl: string;
+  /**
    * TODO: What is this?
    */
   ids: string[];
@@ -390,12 +394,22 @@ export async function publishAsync(
     });
   }
 
+  // Create project manifest URL
+  const url =
+    options.releaseChannel && options.releaseChannel !== 'default'
+      ? `${response.url}?release-channel=${options.releaseChannel}`
+      : response.url;
+
+  // Create project page URL
+  const websiteUrl = url.replace('exp.host', 'expo.io');
+  const splitUrl = websiteUrl.split('/');
+  splitUrl.splice(4, 0, 'projects');
+  const projectPageUrl = splitUrl.join('/');
+
   return {
     ...response,
-    url:
-      options.releaseChannel && options.releaseChannel !== 'default'
-        ? `${response.url}?release-channel=${options.releaseChannel}`
-        : response.url,
+    url,
+    projectPageUrl,
   };
 }
 
