@@ -40,8 +40,7 @@ describe('startAsync', () => {
   }));
 
   beforeEach(() => {
-    UnifiedAnalytics.setSegmentNodeKey('key');
-    UnifiedAnalytics.setVersionName('4.0.0');
+    UnifiedAnalytics.initializeClient('key', '4.0.0');
   });
 
   it('identifies the user for the unified client', async () => {

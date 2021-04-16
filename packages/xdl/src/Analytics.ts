@@ -10,38 +10,39 @@ const PLATFORM_TO_ANALYTICS_PLATFORM: { [platform: string]: string } = {
 };
 
 export class AnalyticsClient {
+  private userTraits: any;
+  private segmentNodeInstance: Segment | undefined;
   private _userId: string | undefined;
-  private _userTraits: any;
-  private _segmentNodeInstance: Segment | undefined;
   private _version: string | undefined;
-
-  public get version() {
-    return this._version;
-  }
 
   public get userId() {
     return this._userId;
   }
 
+  public get version() {
+    return this._version;
+  }
+
   public flush() {
-    if (this._segmentNodeInstance) {
-      this._segmentNodeInstance.flush();
+    if (this.segmentNodeInstance) {
+      this.segmentNodeInstance.flush();
     }
   }
 
-  public setSegmentNodeKey(key: string) {
+  public initializeClient(apiKey: string, packageVersion: string) {
     // Do not wait before flushing, we want node to close immediately if the programs ends
-    this._segmentNodeInstance = new Segment(key, { flushInterval: 300 });
+    this.segmentNodeInstance = new Segment(apiKey, { flushInterval: 300 });
+    this._version = packageVersion;
   }
 
   public identifyUser(userId: string, traits: any) {
     this._userId = userId;
-    this._userTraits = traits;
+    this.userTraits = traits;
 
-    if (this._segmentNodeInstance) {
-      this._segmentNodeInstance.identify({
+    if (this.segmentNodeInstance) {
+      this.segmentNodeInstance.identify({
         userId: this._userId,
-        traits: this._userTraits,
+        traits: this.userTraits,
         context: this.getContext(),
       });
     }
@@ -52,8 +53,8 @@ export class AnalyticsClient {
   }
 
   public logEvent(name: string, properties: any = {}) {
-    if (this._segmentNodeInstance && this._userId) {
-      this._segmentNodeInstance.track({
+    if (this.segmentNodeInstance && this._userId) {
+      this.segmentNodeInstance.track({
         userId: this._userId,
         event: name,
         properties,

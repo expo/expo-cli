@@ -710,10 +710,9 @@ Command.prototype.asyncActionProjectDir = function (
 
 function runAsync(programName: string) {
   try {
-    Analytics.setSegmentNodeKey('vGu92cdmVaggGA26s3lBX6Y5fILm8SQ7');
-    Analytics.setVersionName(packageJSON.version);
-    UnifiedAnalytics.setSegmentNodeKey('u4e9dmCiNpwIZTXuyZPOJE7KjCMowdx5');
-    UnifiedAnalytics.setVersionName(packageJSON.version);
+    Analytics.initializeClient('vGu92cdmVaggGA26s3lBX6Y5fILm8SQ7', packageJSON.version);
+    UnifiedAnalytics.initializeClient('u4e9dmCiNpwIZTXuyZPOJE7KjCMowdx5', packageJSON.version);
+
     _registerLogs();
 
     UserManager.setInteractiveAuthenticationCallback(loginOrRegisterAsync);
