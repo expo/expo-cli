@@ -169,8 +169,6 @@ export async function installCocoaPodsAsync(projectRoot: string) {
 
   const packageManager = new PackageManager.CocoaPodsPackageManager({
     cwd: path.join(projectRoot, 'ios'),
-    log: Log.log,
-    warn: Log.warn,
     silent: !EXPO_DEBUG,
   });
 
@@ -202,7 +200,7 @@ export async function installCocoaPodsAsync(projectRoot: string) {
   }
 
   try {
-    await packageManager.installAsync();
+    await packageManager.installAsync({ spinner: step });
     // Create cached list for later
     await hasPackageJsonDependencyListChangedAsync(projectRoot).catch(() => null);
     step.succeed('Installed pods and initialized Xcode workspace.');
