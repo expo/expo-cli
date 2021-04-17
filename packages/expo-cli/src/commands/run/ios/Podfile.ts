@@ -18,7 +18,7 @@ export function getDependenciesFromPodfileLock(podfileLockPath: string) {
     fileContent = fs.readFileSync(podfileLockPath, 'utf8');
   } catch (err) {
     Log.error(
-      `Could not find "Podfile.lock" at ${chalk.dim(podfileLockPath)}. Did you run "${chalk.bold(
+      `Could not find "Podfile.lock" at ${chalk.bold(podfileLockPath)}. Did you run "${chalk.bold(
         'npx pod-install'
       )}"?`
     );
