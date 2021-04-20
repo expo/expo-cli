@@ -401,10 +401,10 @@ export async function publishAsync(
       : response.url;
 
   // Create project page URL
-  const websiteUrl = url.replace('exp.host', 'expo.io');
-  const splitUrl = websiteUrl.split('/');
-  splitUrl.splice(4, 0, 'projects');
-  const projectPageUrl = splitUrl.join('/');
+  const projectPageUrl =
+    options.releaseChannel && options.releaseChannel !== 'default'
+      ? `${response.projectPageUrl}?release-channel=${options.releaseChannel}`
+      : response.projectPageUrl;
 
   return {
     ...response,
