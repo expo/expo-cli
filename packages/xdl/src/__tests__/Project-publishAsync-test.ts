@@ -81,6 +81,7 @@ jest.mock('axios', () => ({
         return mockApiV2Response(
           {
             url: 'https://test.exp.host/@testing/publish-test-app',
+            projectPageUrl: 'https://test.expo.io/@testing/projects/publish-test-app',
             ids: ['1', '2'],
           },
           options
