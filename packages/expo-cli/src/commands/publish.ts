@@ -112,7 +112,7 @@ export async function action(
 
   logManifestUrl({ url, sdkVersion: exp.sdkVersion });
 
-  if (target === 'managed') {
+  if (target === 'managed' && projectPageUrl) {
     // note(brentvatne): disable copy to clipboard functionality for now, need to think more about
     // whether this is desirable.
     //
