@@ -401,10 +401,11 @@ export async function publishAsync(
       : response.url;
 
   // Create project page URL
-  const projectPageUrl =
-    options.releaseChannel && options.releaseChannel !== 'default'
+  const projectPageUrl = response.projectPageUrl
+    ? options.releaseChannel && options.releaseChannel !== 'default'
       ? `${response.projectPageUrl}?release-channel=${options.releaseChannel}`
-      : response.projectPageUrl;
+      : response.projectPageUrl
+    : null;
 
   return {
     ...response,
