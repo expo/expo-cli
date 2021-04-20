@@ -197,7 +197,7 @@ function getPackageJsonAndPath(projectRoot: string): [PackageJSONConfig, string]
 export function readConfigJson(
   projectRoot: string,
   skipValidation: boolean = false,
-  skipNativeValidation: boolean = false
+  skipSDKVersionRequirement: boolean = false
 ): ProjectConfig {
   const paths = getConfigFilePaths(projectRoot);
 
@@ -240,7 +240,7 @@ export function readConfigJson(
       projectRoot,
       exp,
       pkg,
-      skipSDKVersionRequirement: skipNativeValidation,
+      skipSDKVersionRequirement,
       paths,
       packageJsonPath,
     }),
@@ -250,14 +250,6 @@ export function readConfigJson(
     rootConfig: { ...outputRootConfig } as AppJSONConfig,
     ...paths,
   };
-}
-
-export async function readConfigJsonAsync(
-  projectRoot: string,
-  skipValidation: boolean = false,
-  skipNativeValidation: boolean = false
-): Promise<ProjectConfig> {
-  return readConfigJson(projectRoot, skipValidation, skipNativeValidation);
 }
 
 /**
@@ -501,13 +493,9 @@ export async function writeConfigJsonAsync(
   options: object
 ): Promise<ProjectConfig> {
   const paths = getConfigFilePaths(projectRoot);
-  let {
-    exp,
-    pkg,
-    rootConfig,
-    dynamicConfigObjectType,
-    staticConfigPath,
-  } = await readConfigJsonAsync(projectRoot);
+  let { exp, pkg, rootConfig, dynamicConfigObjectType, staticConfigPath } = readConfigJson(
+    projectRoot
+  );
   exp = { ...rootConfig.expo, ...options };
   rootConfig = { ...rootConfig, expo: exp };
 

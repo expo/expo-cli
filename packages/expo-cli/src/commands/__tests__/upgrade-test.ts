@@ -298,9 +298,7 @@ xdescribe('upgradeAsync', () => {
       sdkVersion: undefined,
     });
 
-    const { exp, rootConfig: json } = await require('@expo/config').readConfigJsonAsync(
-      projectRoot
-    );
+    const { exp, rootConfig: json } = require('@expo/config').readConfigJson(projectRoot);
     expect(json.expo.sdkVersion).not.toBeDefined();
     // Uses expo package version
     expect(exp.sdkVersion).toBe('35.0.0');
@@ -323,7 +321,7 @@ xdescribe('upgradeAsync', () => {
       { projectRoot, workflow: 'managed', requestedSdkVersion: '37.0.0' },
       { yarn: true }
     );
-    const { rootConfig: json } = await require('@expo/config').readConfigJsonAsync(projectRoot);
+    const { rootConfig: json } = require('@expo/config').readConfigJson(projectRoot);
 
     expect(json.expo.androidNavigationBar.visible).toBe('leanback');
   }, 10000);

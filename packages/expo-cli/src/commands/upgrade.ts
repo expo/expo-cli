@@ -1,7 +1,7 @@
 import {
   getConfig,
   isLegacyImportsEnabled,
-  readConfigJsonAsync,
+  readConfigJson,
   writeConfigJsonAsync,
 } from '@expo/config';
 import { ExpoConfig } from '@expo/config-types';
@@ -231,7 +231,7 @@ async function makeBreakingChangesToConfigAsync(
     return;
   }
 
-  const { rootConfig } = await readConfigJsonAsync(projectRoot);
+  const { rootConfig } = readConfigJson(projectRoot);
   try {
     switch (targetSdkVersionString) {
       // IMPORTANT: adding a new case here? be sure to update the dynamic config situation above
@@ -587,7 +587,7 @@ export async function upgradeAsync(
     }
   } else if (staticConfigPath) {
     try {
-      const { rootConfig } = await readConfigJsonAsync(projectRoot);
+      const { rootConfig } = readConfigJson(projectRoot);
       if (rootConfig.expo.sdkVersion && rootConfig.expo.sdkVersion !== 'UNVERSIONED') {
         Log.addNewLineIfNone();
         await writeConfigJsonAsync(projectRoot, { sdkVersion: undefined });
