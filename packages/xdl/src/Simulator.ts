@@ -714,10 +714,12 @@ export async function openProjectAsync({
   shouldPrompt,
   devClient,
   udid,
+  scheme,
 }: {
   projectRoot: string;
   shouldPrompt?: boolean;
   devClient?: boolean;
+  scheme?: string;
   udid?: string;
 }): Promise<
   | { success: true; url: string; udid: string; bundleIdentifier: string }
@@ -732,6 +734,7 @@ export async function openProjectAsync({
 
   const projectUrl = await UrlUtils.constructDeepLinkAsync(projectRoot, {
     hostType: 'localhost',
+    scheme,
   });
   const { exp } = getConfig(projectRoot, {
     skipSDKVersionRequirement: true,

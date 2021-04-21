@@ -113,18 +113,27 @@ async function openInSimulatorAsync({
     });
   }
 
+  const schemes = await getSchemesForIosAsync(projectRoot);
+
   if (
     // If the dev-menu is installed, then deep link directly into the app so the user never sees the switcher screen.
     isDevMenuInstalled(projectRoot) &&
     // Ensure the app can handle custom URI schemes before attempting to deep link.
     // This can happen when someone manually removes all URI schemes from the native app.
-    (await getSchemesForIosAsync(projectRoot)).length
+    schemes.length
   ) {
-    Log.debug('Deep linking into simulator: ' + device.udid);
+    const scheme = schemes.sort((a, b) => b.length - a.length)[0];
+
+    // TODO: set to ensure TerminalUI uses this same scheme.
+
+    Log.debug('Deep linking into simulator: ' + device.udid + ', using scheme: ' + scheme);
+
     const result = await Simulator.openProjectAsync({
       projectRoot,
       udid: device.udid,
       devClient: true,
+      // Ensure a valid scheme is used, use the longest one to attempt to ensure uniqueness
+      scheme,
     });
     if (!result.success) {
       // TODO: Maybe fallback on using the bundle identifier.

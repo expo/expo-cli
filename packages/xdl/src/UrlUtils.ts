@@ -60,11 +60,17 @@ export async function constructDevClientUrlAsync(
   opts?: Partial<URLOptions>,
   requestHostname?: string
 ) {
-  const { scheme } = await ProjectSettings.getPackagerOptsAsync(projectRoot);
-  if (!scheme || typeof scheme !== 'string') {
-    throw new XDLError('NO_DEV_CLIENT_SCHEME', 'No scheme specified for development client');
+  let _scheme: string;
+  if (opts?.scheme) {
+    _scheme = opts?.scheme;
+  } else {
+    const { scheme } = await ProjectSettings.getPackagerOptsAsync(projectRoot);
+    if (!scheme || typeof scheme !== 'string') {
+      throw new XDLError('NO_DEV_CLIENT_SCHEME', 'No scheme specified for development client');
+    }
+    _scheme = scheme;
   }
-  const protocol = resolveProtocol(projectRoot, { scheme, urlType: 'custom' });
+  const protocol = resolveProtocol(projectRoot, { scheme: _scheme, urlType: 'custom' });
   const manifestUrl = await constructManifestUrlAsync(
     projectRoot,
     { ...opts, urlType: 'http' },
