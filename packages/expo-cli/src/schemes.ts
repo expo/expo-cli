@@ -14,7 +14,7 @@ export async function getSchemesForIosAsync(projectRoot: string) {
     const configPath = IOSConfig.Paths.getInfoPlistPath(projectRoot);
     const rawPlist = fs.readFileSync(configPath, 'utf8');
     const plistObject = plist.parse(rawPlist);
-    return IOSConfig.Scheme.getSchemesFromPlist(plistObject);
+    return sortLongest(IOSConfig.Scheme.getSchemesFromPlist(plistObject));
   } catch {
     // No ios folder or some other error
     return [];
@@ -25,7 +25,7 @@ export async function getSchemesForAndroidAsync(projectRoot: string) {
   try {
     const configPath = await AndroidConfig.Paths.getAndroidManifestAsync(projectRoot);
     const manifest = await AndroidConfig.Manifest.readAndroidManifestAsync(configPath);
-    return await AndroidConfig.Scheme.getSchemesFromManifest(manifest);
+    return sortLongest(await AndroidConfig.Scheme.getSchemesFromManifest(manifest));
   } catch {
     // No android folder or some other error
     return [];
@@ -79,4 +79,10 @@ export async function getDevClientSchemeAsync(projectRoot: string): Promise<stri
     throw new AbortCommandError();
   }
   return matching;
+}
+
+// sort longest to ensure uniqueness.
+// this might be undesirable as it causes the QR code to be longer.
+function sortLongest(obj: string[]): string[] {
+  return obj.sort((a, b) => b.length - a.length);
 }

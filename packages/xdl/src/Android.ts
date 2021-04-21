@@ -775,16 +775,18 @@ export async function openProjectAsync({
   shouldPrompt,
   devClient = false,
   device,
+  scheme,
 }: {
   projectRoot: string;
   shouldPrompt?: boolean;
   devClient?: boolean;
   device?: Device;
+  scheme?: string;
 }): Promise<{ success: true; url: string } | { success: false; error: string }> {
   try {
     await startAdbReverseAsync(projectRoot);
 
-    const projectUrl = await UrlUtils.constructDeepLinkAsync(projectRoot);
+    const projectUrl = await UrlUtils.constructDeepLinkAsync(projectRoot, { scheme });
     const { exp } = getConfig(projectRoot, {
       skipSDKVersionRequirement: true,
     });

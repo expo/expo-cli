@@ -110,18 +110,23 @@ export async function runAndroidActionAsync(projectRoot: string, options: Option
   const binaryPath = path.join(props.apkVariantDirectory, apkFile);
   await Android.installOnDeviceAsync(props.device, { binaryPath });
 
+  const schemes = await getSchemesForAndroidAsync(projectRoot);
+
   if (
     // If the dev-menu is installed, then deep link directly into the app so the user never sees the switcher screen.
     isDevMenuInstalled(projectRoot) &&
     // Ensure the app can handle custom URI schemes before attempting to deep link.
     // This can happen when someone manually removes all URI schemes from the native app.
-    (await getSchemesForAndroidAsync(projectRoot)).length
+    schemes.length
   ) {
-    Log.debug('Deep linking into device: ' + props.device.name);
+    // TODO: set to ensure TerminalUI uses this same scheme.
+    const scheme = schemes[0];
+    Log.debug(`Deep linking into device: ${props.device.name}, using scheme: ${scheme}`);
     const result = await Android.openProjectAsync({
       projectRoot,
       device: props.device,
       devClient: true,
+      scheme,
     });
     if (!result.success) {
       // TODO: Maybe fallback on using the package name.

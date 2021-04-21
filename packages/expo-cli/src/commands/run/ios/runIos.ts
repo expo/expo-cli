@@ -122,17 +122,15 @@ async function openInSimulatorAsync({
     // This can happen when someone manually removes all URI schemes from the native app.
     schemes.length
   ) {
-    const scheme = schemes.sort((a, b) => b.length - a.length)[0];
-
     // TODO: set to ensure TerminalUI uses this same scheme.
+    const scheme = schemes[0];
 
-    Log.debug('Deep linking into simulator: ' + device.udid + ', using scheme: ' + scheme);
+    Log.debug(`Deep linking into simulator: ${device.udid}, using scheme: ${scheme}`);
 
     const result = await Simulator.openProjectAsync({
       projectRoot,
       udid: device.udid,
       devClient: true,
-      // Ensure a valid scheme is used, use the longest one to attempt to ensure uniqueness
       scheme,
     });
     if (!result.success) {
