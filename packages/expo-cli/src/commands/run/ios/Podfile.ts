@@ -5,6 +5,7 @@ import fs from 'fs-extra';
 import { safeLoad } from 'js-yaml';
 import * as path from 'path';
 
+import { AbortCommandError } from '../../../CommandError';
 import Log from '../../../log';
 import { hashForDependencyMap } from '../../eject/updatePackageJson';
 import { installCocoaPodsAsync } from '../../utils/CreateApp';
@@ -95,7 +96,9 @@ export default async function maybePromptToSyncPodsAsync(projectRoot: string) {
     return;
   }
   if (!isLockfileCreated(projectRoot)) {
-    await installCocoaPodsAsync(projectRoot);
+    if (!(await installCocoaPodsAsync(projectRoot))) {
+      throw new AbortCommandError();
+    }
     return;
   }
 
@@ -117,7 +120,9 @@ async function promptToInstallPodsAsync(projectRoot: string, missingPods?: strin
   }
 
   try {
-    await installCocoaPodsAsync(projectRoot);
+    if (!(await installCocoaPodsAsync(projectRoot))) {
+      throw new AbortCommandError();
+    }
   } catch (error) {
     fs.removeSync(path.join(getTempPrebuildFolder(projectRoot), 'cached-packages.json'));
     throw error;
