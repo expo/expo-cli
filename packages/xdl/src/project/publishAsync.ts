@@ -38,6 +38,10 @@ export interface PublishedProjectResult {
    */
   url: string;
   /**
+   * Project page URL
+   */
+  projectPageUrl: string;
+  /**
    * TODO: What is this?
    */
   ids: string[];
@@ -199,12 +203,23 @@ export async function publishAsync(
     });
   }
 
+  // Create project manifest URL
+  const url =
+    options.releaseChannel && options.releaseChannel !== 'default'
+      ? `${response.url}?release-channel=${options.releaseChannel}`
+      : response.url;
+
+  // Create project page URL
+  const projectPageUrl = response.projectPageUrl
+    ? options.releaseChannel && options.releaseChannel !== 'default'
+      ? `${response.projectPageUrl}?release-channel=${options.releaseChannel}`
+      : response.projectPageUrl
+    : null;
+
   return {
     ...response,
-    url:
-      options.releaseChannel && options.releaseChannel !== 'default'
-        ? `${response.url}?release-channel=${options.releaseChannel}`
-        : response.url,
+    url,
+    projectPageUrl,
   };
 }
 
