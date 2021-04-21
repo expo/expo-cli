@@ -9,14 +9,11 @@ export async function startBundlerAsync(projectRoot: string) {
   installExitHooks(projectRoot);
   // This basically means don't use the Client app.
   const devClient = true;
-  try {
-    await ProjectSettings.setAsync(projectRoot, {
-      devClient,
-      scheme: await getDevClientSchemeAsync(projectRoot),
-    });
-  } catch {
-    // TODO: add a scheme automatically.
-  }
+  const scheme = await getDevClientSchemeAsync(projectRoot).catch(() => null);
+  await ProjectSettings.setAsync(projectRoot, {
+    devClient,
+    scheme,
+  });
   await Project.startAsync(projectRoot, { devClient });
   await TerminalUI.startAsync(projectRoot, {
     devClient,
