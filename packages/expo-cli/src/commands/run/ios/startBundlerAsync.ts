@@ -4,7 +4,10 @@ import { getDevClientSchemeAsync } from '../../../schemes';
 import * as TerminalUI from '../../start/TerminalUI';
 import { installExitHooks } from '../../start/installExitHooks';
 
-export async function startBundlerAsync(projectRoot: string) {
+export async function startBundlerAsync(
+  projectRoot: string,
+  { metroPort }: Pick<Project.StartOptions, 'metroPort'>
+) {
   // Add clean up hooks
   installExitHooks(projectRoot);
   // This basically means don't use the Client app.
@@ -14,9 +17,10 @@ export async function startBundlerAsync(projectRoot: string) {
     devClient,
     scheme,
   });
-  await Project.startAsync(projectRoot, { devClient });
+  await Project.startAsync(projectRoot, { devClient, metroPort });
   await TerminalUI.startAsync(projectRoot, {
     devClient,
+    // Enable controls
     isWebSocketsEnabled: true,
     isRemoteReloadingEnabled: true,
   });

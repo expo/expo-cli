@@ -1,8 +1,10 @@
 import { ExpoConfig, isLegacyImportsEnabled } from '@expo/config';
 import { Project, ProjectSettings, Versions } from 'xdl';
 
+import { AbortCommandError } from '../../CommandError';
 import Log from '../../log';
 import { URLOptions } from '../../urlOpts';
+import { resolvePortAsync } from '../run/utils/resolvePortAsync';
 
 export type NormalizedOptions = URLOptions & {
   webOnly?: boolean;
@@ -17,6 +19,7 @@ export type NormalizedOptions = URLOptions & {
   lan?: boolean;
   localhost?: boolean;
   tunnel?: boolean;
+  metroPort?: number;
 };
 
 export type RawStartOptions = NormalizedOptions & {
@@ -59,6 +62,14 @@ export async function normalizeOptionsAsync(
   const rawArgs = options.parent?.rawArgs || [];
 
   const opts = parseRawArguments(options, rawArgs);
+
+  if (opts.devClient) {
+    const metroPort = await resolvePortAsync(projectRoot);
+    if (!metroPort) {
+      throw new AbortCommandError();
+    }
+    opts.metroPort = metroPort;
+  }
 
   // Side-effect
   await cacheOptionsAsync(projectRoot, opts);
@@ -122,7 +133,9 @@ export function parseStartOptions(
   options: NormalizedOptions,
   exp: ExpoConfig
 ): Project.StartOptions {
-  const startOpts: Project.StartOptions = {};
+  const startOpts: Project.StartOptions = {
+    metroPort: options.metroPort,
+  };
 
   if (options.clear) {
     startOpts.reset = true;
