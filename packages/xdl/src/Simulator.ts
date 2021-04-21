@@ -193,7 +193,7 @@ export async function ensureSimulatorOpenAsync(
 ): Promise<SimControl.SimulatorDevice> {
   // Yes, simulators can be booted even if the app isn't running, obviously we'd never want this.
   if (!(await SimControl.isSimulatorAppRunningAsync())) {
-    Logger.global.info(`Opening the iOS simulator, this might take a moment.`);
+    Logger.global.info(`\u203A Opening the iOS simulator, this might take a moment.`);
 
     // In theory this would ensure the correct simulator is booted as well.
     // This isn't theory though, this is Xcode.
@@ -540,7 +540,7 @@ export async function upgradeExpoAsync(
   }
 
   if (_lastUrl) {
-    Logger.global.info(`Opening ${chalk.underline(_lastUrl)} in Expo`);
+    Logger.global.info(`\u203A Opening ${chalk.underline(_lastUrl)} in Expo`);
     await SimControl.openURLAsync({ udid: simulator.udid, url: _lastUrl });
     _lastUrl = null;
   }
@@ -581,6 +581,7 @@ async function openUrlInSimulatorSafeAsync({
       msg: error.message,
     };
   }
+  Logger.global.info(`\u203A Opening ${chalk.underline(url)} on ${chalk.bold(simulator.name)}`);
 
   let bundleIdentifier = 'host.exp.Exponent';
   try {
@@ -594,7 +595,6 @@ async function openUrlInSimulatorSafeAsync({
       _lastUrl = url;
     }
 
-    Logger.global.info(`Opening ${chalk.underline(url)} on ${chalk.bold(simulator.name)}`);
     await SimControl.openURLAsync({ url, udid: simulator.udid });
   } catch (e) {
     if (e.status === 194) {

@@ -495,7 +495,7 @@ export async function upgradeExpoAsync(options?: {
     await uninstallExpoAsync(device);
     await installExpoAsync({ device, url, version });
     if (_lastUrl) {
-      Logger.global.info(`Opening ${_lastUrl} in Expo.`);
+      Logger.global.info(`\u203A Opening ${_lastUrl} in Expo.`);
       await getAdbOutputAsync([
         'shell',
         'am',
@@ -678,6 +678,10 @@ async function openUrlAsync({
       return;
     }
 
+    Logger.global.info(
+      `\u203A Opening ${chalk.underline(url)} on ${chalk.bold(bootedDevice.name)}`
+    );
+
     await activateEmulatorWindowAsync(bootedDevice);
 
     device = bootedDevice;
@@ -725,8 +729,6 @@ async function openUrlAsync({
       _lastUrl = url;
       // _checkExpoUpToDateAsync(); // let this run in background
     }
-
-    Logger.global.info(`Opening ${chalk.underline(url)} on ${chalk.bold(device.name)}`);
 
     try {
       await _openUrlAsync({ pid: device.pid!, url, applicationId: clientApplicationId });
