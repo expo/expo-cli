@@ -323,6 +323,7 @@ export async function getAdbFileOutputAsync(args: string[], encoding?: 'latin1')
   try {
     return await execFileSync(adb, args, {
       encoding,
+      stdio: 'pipe',
     });
   } catch (e) {
     let errorMessage = (e.stderr || e.stdout || e.message).trim();
