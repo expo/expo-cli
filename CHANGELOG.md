@@ -12,6 +12,38 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+## [Tue, 20 Apr 2021 19:53:53 -0700](https://github.com/expo/expo-cli/commit/af417362f24d74af76ceb4ff82699c16d17025d4)
+
+### 🛠 Breaking changes
+
+### 🎉 New features
+
+- Enable socket controls in run:ios and run:android ([#3403](https://github.com/expo/expo-cli/issues/3403))
+
+### 🧹 Chores
+
+- Remove readConfigJsonAsync shim ([#3402](https://github.com/expo/expo-cli/issues/3402))
+
+### 🐛 Bug fixes
+
+- [config-plugins] Make user interface style default to light if not specified ([#3404](https://github.com/expo/expo-cli/issues/3404))
+
+### 📦 Packages updated
+
+- @expo/config-plugins@1.0.28
+- @expo/config@3.3.38
+- @expo/dev-server@0.1.64
+- @expo/dev-tools@0.13.94
+- @expo/electron-adapter@0.0.55
+- expo-cli@4.4.3
+- expo-optimize@0.1.86
+- @expo/metro-config@0.1.64
+- @expo/next-adapter@2.1.69
+- expo-pwa@0.0.74
+- uri-scheme@1.0.75
+- @expo/webpack-config@0.12.68
+- xdl@59.0.34
+
 ## [Mon, 19 Apr 2021 17:00:03 -0700](https://github.com/expo/expo-cli/commit/50562c70e9cda584465b01c4520ac82d29a4738f)
 
 ### 🎉 New features
