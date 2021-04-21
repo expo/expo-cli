@@ -134,7 +134,7 @@ export async function startReactNativeServerAsync({
   await Watchman.addToPathAsync(); // Attempt to fix watchman if it's hanging
   await Watchman.unblockAndGetVersionAsync(projectRoot);
 
-  let packagerPort = await getFreePortAsync(19001); // Create packager options
+  let packagerPort = options.metroPort ?? (await getFreePortAsync(19001)); // Create packager options
 
   const customLogReporterPath: string = require.resolve(
     path.join(__dirname, '../../build/reporter')
