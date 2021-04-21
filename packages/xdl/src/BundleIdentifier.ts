@@ -71,7 +71,7 @@ However, if you choose the one defined in the Xcode project you'll have to updat
           },
         ],
       });
-      if (bundleIdentifierSource === BundleIdentiferSource.XcodeProject) {
+      if (bundleIdentifierSource === BundleIdentiferSource.AppJson) {
         IOSConfig.BundleIdentifier.setBundleIdentifierForPbxproj(
           projectRoot,
           bundleIdentifierFromConfig
