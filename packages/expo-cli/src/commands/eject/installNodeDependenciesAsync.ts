@@ -2,6 +2,7 @@ import chalk from 'chalk';
 import fs from 'fs-extra';
 
 import { SilentError } from '../../CommandError';
+import Log from '../../log';
 import * as CreateApp from '../utils/CreateApp';
 
 /**
@@ -25,6 +26,11 @@ export async function installNodeDependenciesAsync(
   }
 
   const installJsDepsStep = CreateApp.logNewSection('Installing JavaScript dependencies.');
+
+  // Prevent the spinner from clashing with the node package manager logs
+  if (Log.isDebug) {
+    installJsDepsStep.stop();
+  }
 
   try {
     await CreateApp.installNodeDependenciesAsync(projectRoot, packageManager);

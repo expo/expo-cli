@@ -21,6 +21,10 @@ export interface ExpoConfig {
    */
   owner?: string;
   /**
+   * The auto generated Expo account name and slug used for services like Notifications and AuthSession proxy. Formatted like `@username/slug`. When unauthenticated, the username is `@anonymous`.
+   */
+  currentFullName?: string;
+  /**
    * Defaults to `unlisted`. `unlisted` hides the project from search results. `hidden` restricts access to the project page to only the owner and other users that have been granted access. Valid values: `public`, `unlisted`, `hidden`.
    */
   privacy?: 'public' | 'unlisted' | 'hidden';
@@ -166,6 +170,9 @@ export interface ExpoConfig {
   extra?: {
     [k: string]: any;
   };
+  /**
+   * @deprecated Use a `metro.config.js` file instead. [Learn more](https://docs.expo.io/guides/customizing-metro/)
+   */
   packagerOpts?: {
     [k: string]: any;
   };
@@ -474,7 +481,7 @@ export interface Android {
    */
   package?: string;
   /**
-   * Version number required by Google Play. Increment by one for each release. Must be an integer. [Learn more](https://developer.android.com/studio/publish/versioning.html)
+   * Version number required by Google Play. Increment by one for each release. Must be a positive integer. [Learn more](https://developer.android.com/studio/publish/versioning.html)
    */
   versionCode?: number;
   /**

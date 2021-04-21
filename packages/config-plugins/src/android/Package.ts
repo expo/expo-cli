@@ -147,8 +147,8 @@ export function setPackageInAndroidManifest(
   return androidManifest;
 }
 
-export async function getApplicationIdAsync(projectDir: string): Promise<string | null> {
-  const buildGradlePath = getAppBuildGradle(projectDir);
+export async function getApplicationIdAsync(projectRoot: string): Promise<string | null> {
+  const buildGradlePath = getAppBuildGradle(projectRoot);
   if (!(await fs.pathExists(buildGradlePath))) {
     return null;
   }

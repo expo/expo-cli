@@ -1,5 +1,3 @@
-import nodeAssert from 'assert';
-
 export class UnexpectedError extends Error {
   readonly name = 'UnexpectedError';
 
@@ -20,9 +18,4 @@ export class PluginError extends Error {
   constructor(message: string, public code: PluginErrorCode, public cause?: Error) {
     super(cause ? `${message}\n└─ Cause: ${cause.name}: ${cause.message}` : message);
   }
-}
-
-export function assert(value: any, message?: string | Error): asserts value {
-  // TODO: Upgrade node? TypeScript isn't properly asserting values without this wrapper.
-  return nodeAssert(value, message);
 }

@@ -1,8 +1,8 @@
-import { Exp, UserSettings } from '@expo/xdl';
-import ora from 'ora';
+import { Exp, UserSettings } from 'xdl';
 
 import { askForSendToAsync } from './askUser';
 import Log from './log';
+import { ora } from './utils/ora';
 
 export async function getRecipient(sendTo?: string | boolean): Promise<string> {
   let recipient: string | null = '';

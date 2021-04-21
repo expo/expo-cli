@@ -3,13 +3,14 @@ import fs from 'fs-extra';
 import path from 'path';
 import semver from 'semver';
 
-import logger from './Logger';
-import * as ExponentTools from './detach/ExponentTools';
-import * as IosPlist from './detach/IosPlist';
-// @ts-ignore IosWorkspace not yet converted to TypeScript
-import * as IosWorkspace from './detach/IosWorkspace';
-import StandaloneContext from './detach/StandaloneContext';
-import { writeArtifactSafelyAsync } from './tools/ArtifactUtils';
+import {
+  ExponentTools,
+  IosPlist,
+  IosWorkspace,
+  Logger as logger,
+  StandaloneContext,
+  writeArtifactSafelyAsync,
+} from './internal';
 
 export type EmbeddedAssetsConfiguration = {
   projectRoot: string;

@@ -1,7 +1,7 @@
 import { Profile, ProfileType, RequestContext } from '@expo/apple-utils';
-import ora from 'ora';
 
 import CommandError from '../CommandError';
+import { ora } from '../utils/ora';
 import { findP12CertSerialNumber } from '../utils/p12Certificate';
 import { AppleCtx, getRequestContext } from './authenticate';
 import { getBundleIdForIdentifierAsync, getProfilesForBundleIdAsync } from './bundleId';

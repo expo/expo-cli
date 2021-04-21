@@ -1,13 +1,15 @@
 import { ProjectTarget } from '@expo/config';
-import { Project, UrlUtils } from '@expo/xdl';
 import program, { Command } from 'commander';
 import crypto from 'crypto';
 import fs from 'fs-extra';
 import path from 'path';
+import { UrlUtils } from 'xdl';
 
 import CommandError, { SilentError } from '../CommandError';
 import Log from '../log';
 import prompt from '../prompts';
+import { exportAppAsync } from './export/exportAppAsync';
+import { mergeAppDistributions } from './export/mergeAppDistributions';
 import * as CreateApp from './utils/CreateApp';
 import { downloadAndDecompressAsync } from './utils/Tar';
 
@@ -24,7 +26,6 @@ type Options = {
   dumpAssetmap: boolean;
   dumpSourcemap: boolean;
   maxWorkers?: number;
-  force: boolean;
   experimentalBundle: boolean;
 };
 
@@ -88,8 +89,7 @@ async function exportFilesAsync(
       target: options.target,
     },
   };
-
-  return await Project.exportAppAsync(
+  return await exportAppAsync(
     projectRoot,
     options.publicUrl!,
     options.assetUrl,
@@ -99,8 +99,8 @@ async function exportFilesAsync(
   );
 }
 
-async function mergeSourceDirectoriesAsync(
-  projectDir: string,
+async function mergeSourceDirectoriresAsync(
+  projectRoot: string,
   mergeSrcDirs: string[],
   options: Pick<Options, 'mergeSrcUrl' | 'mergeSrcDir' | 'outputDir'>
 ): Promise<void> {
@@ -111,8 +111,8 @@ async function mergeSourceDirectoriesAsync(
   Log.nested(`Starting project merge of ${srcDirs} into ${options.outputDir}`);
 
   // Merge app distributions
-  await Project.mergeAppDistributions(
-    projectDir,
+  await mergeAppDistributions(
+    projectRoot,
     [...mergeSrcDirs, options.outputDir], // merge stuff in srcDirs and outputDir together
     options.outputDir
   );
@@ -122,7 +122,7 @@ async function mergeSourceDirectoriesAsync(
 }
 
 export async function collectMergeSourceUrlsAsync(
-  projectDir: string,
+  projectRoot: string,
   mergeSrcUrl: string[]
 ): Promise<string[]> {
   // Merge src dirs/urls into a multimanifest if specified
@@ -131,7 +131,7 @@ export async function collectMergeSourceUrlsAsync(
   // src urls were specified to merge in, so download and decompress them
   if (mergeSrcUrl.length > 0) {
     // delete .tmp if it exists and recreate it anew
-    const tmpFolder = path.resolve(projectDir, '.tmp');
+    const tmpFolder = path.resolve(projectRoot, '.tmp');
     await fs.remove(tmpFolder);
     await fs.ensureDir(tmpFolder);
 
@@ -176,7 +176,9 @@ export async function action(projectRoot: string, options: Options) {
     !(await CreateApp.assertFolderEmptyAsync({
       projectRoot: outputPath,
       folderName: options.outputDir,
-      overwrite: options.force,
+      // Always overwrite files, this is inline with most bundler tooling.
+      overwrite: true,
+      // overwrite: options.force,
     }))
   ) {
     const message = `Try using a new directory name with ${Log.chalk.bold(
@@ -199,7 +201,7 @@ export async function action(projectRoot: string, options: Options) {
   // add any local src dirs to be merged
   mergeSrcDirs.push(...options.mergeSrcDir);
 
-  await mergeSourceDirectoriesAsync(projectRoot, mergeSrcDirs, options);
+  await mergeSourceDirectoriresAsync(projectRoot, mergeSrcDirs, options);
 
   Log.log(`Export was successful. Your exported files can be found in ${options.outputDir}`);
 }
@@ -223,7 +225,6 @@ export default function (program: Command) {
     )
     .option('-d, --dump-assetmap', 'Dump the asset map for further processing.')
     .option('--dev', 'Configure static files for developing locally using a non-https server')
-    .option('-f, --force', 'Overwrite files in output directory without prompting for confirmation')
     .option('-s, --dump-sourcemap', 'Dump the source map for debugging the JS bundle.')
     .option('-q, --quiet', 'Suppress verbose output.')
     .option(

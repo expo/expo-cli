@@ -47,6 +47,7 @@ export {
   withProjectBuildGradle,
   withAppBuildGradle,
   withSettingsGradle,
+  withGradleProperties,
 } from './plugins/android-plugins';
 
 export { withStaticPlugin } from './plugins/static-plugins';

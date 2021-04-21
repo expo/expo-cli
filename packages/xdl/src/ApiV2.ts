@@ -5,11 +5,10 @@ import FormData from 'form-data';
 import merge from 'lodash/merge';
 import QueryString from 'querystring';
 
-import Config from './Config';
-import * as ConnectionStatus from './ConnectionStatus';
+import { Config, ConnectionStatus } from './internal';
 
-export const MAX_CONTENT_LENGTH = 100 /* MB */ * 1024 * 1024;
-export const MAX_BODY_LENGTH = 100 /* MB */ * 1024 * 1024;
+const MAX_CONTENT_LENGTH = 100 /* MB */ * 1024 * 1024;
+const MAX_BODY_LENGTH = 100 /* MB */ * 1024 * 1024;
 
 // These aren't constants because some commands switch between staging and prod
 function _rootBaseUrl() {

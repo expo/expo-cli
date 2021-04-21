@@ -31,6 +31,14 @@ export const INTERNAL_CALLSITES_REGEX = new RegExp(
     // Ignore the log forwarder used in the Expo Go app
     '/expo/build/environment/react-native-logs.fx.js$',
     '/expo/build/logs/RemoteConsole.js$',
+    // Improve errors thrown by invariant (ex: `Invariant Violation: "main" has not been registered`).
+    'node_modules/invariant/.+\\.js$',
+    // Remove babel runtime additions
+    'node_modules/regenerator-runtime/.+\\.js$',
+    // Remove react native setImmediate ponyfill
+    'node_modules/promise/setimmediate/.+\\.js$',
+    // Babel helpers that implement language features
+    'node_modules/@babel/runtime/.+\\.js$',
   ].join('|')
 );
 

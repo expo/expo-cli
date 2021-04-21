@@ -1,43 +1,11 @@
-import { ExpoConfig, Platform } from '@expo/config';
+import { ExpoConfig } from '@expo/config';
 import spawnAsyncQuiet, { SpawnOptions, SpawnResult } from '@expo/spawn-async';
 import axios from 'axios';
 import fs from 'fs-extra';
-import isObject from 'lodash/isObject';
 import path from 'path';
 import { Readable } from 'stream';
 
-import XDLError from '../XDLError';
-import LoggerDetach, { Logger, pipeOutputToLogger } from './Logger';
-
-function getManifestFileNameForSdkVersion(sdkVersion: string) {
-  if (parseSdkMajorVersion(sdkVersion) < 39) {
-    return 'shell-app-manifest.json';
-  } else {
-    return 'app.manifest';
-  }
-}
-
-function getBundleFileNameForSdkVersion(sdkVersion: string) {
-  if (parseSdkMajorVersion(sdkVersion) < 39) {
-    return 'shell-app.bundle';
-  } else {
-    return 'app.bundle';
-  }
-}
-
-function parseSdkMajorVersion(expSdkVersion: string) {
-  // We assume that the unversioned SDK is the latest
-  if (expSdkVersion === 'UNVERSIONED') {
-    return Infinity;
-  }
-
-  let sdkMajorVersion = 0;
-  try {
-    const versionComponents = expSdkVersion.split('.').map(number => parseInt(number, 10));
-    sdkMajorVersion = versionComponents[0];
-  } catch (_) {}
-  return sdkMajorVersion;
-}
+import { LoggerDetach, pipeOutputToLogger, XDLError } from '../internal';
 
 async function saveUrlToPathAsync(url: string, path: string, timeout = 20000) {
   const response = await axios.get(url, { responseType: 'stream', timeout });
@@ -48,16 +16,6 @@ async function saveUrlToPathAsync(url: string, path: string, timeout = 20000) {
     stream.on('error', reject);
     response.data.on('error', reject).pipe(stream);
   });
-}
-
-async function saveImageToPathAsync(projectRoot: string, pathOrURL: string, outPath: string) {
-  const localPath = path.resolve(projectRoot, pathOrURL);
-
-  if (fs.existsSync(localPath)) {
-    await fs.copy(localPath, outPath);
-  } else {
-    await saveUrlToPathAsync(pathOrURL, outPath, 0);
-  }
 }
 
 async function getManifestAsync(url: string, headers: any, options: any = {}) {
@@ -134,53 +92,6 @@ async function spawnAsync(
   }
 }
 
-function createSpawner(buildPhase: string, logger?: Logger) {
-  return (command: string, ...args: any[]) => {
-    const lastArg = args[args.length - 1];
-    const optionsFromArg = isObject(lastArg) ? args.pop() : {};
-
-    const options = { ...optionsFromArg, pipeToLogger: true };
-    if (buildPhase) {
-      options.loggerFields = options.loggerFields ? options.loggerFields : {};
-      options.loggerFields = { ...options.loggerFields, buildPhase };
-    }
-
-    if (logger) {
-      logger.info('Executing command:', command, ...args);
-    }
-    return spawnAsyncThrowError(command, args, options);
-  };
-}
-
-async function transformFileContentsAsync(
-  filename: string,
-  transform: (input: string) => string | null
-) {
-  const fileString = await fs.readFile(filename, 'utf8');
-  const newFileString = transform(fileString);
-  if (newFileString !== null) {
-    await fs.writeFile(filename, newFileString);
-  }
-}
-
-function manifestUsesSplashApi(manifest: ExpoConfig, platform: Platform) {
-  if (platform === 'ios') {
-    return manifest.splash || (manifest.ios && manifest.ios.splash);
-  }
-  if (platform === 'android') {
-    return manifest.splash || (manifest.android && manifest.android.splash);
-  }
-  return false;
-}
-
-function rimrafDontThrow(directory: string) {
-  fs.removeSync(directory);
-}
-
-async function removeIfExists(file: string) {
-  await fs.remove(file);
-}
-
 function isDirectory(dir: string) {
   try {
     if (fs.statSync(dir).isDirectory()) {
@@ -249,20 +160,11 @@ async function deleteLinesInFileAsync(
 
 export {
   isDirectory,
-  parseSdkMajorVersion,
   saveUrlToPathAsync,
-  saveImageToPathAsync,
   getManifestAsync,
-  rimrafDontThrow,
-  removeIfExists,
   spawnAsyncThrowError,
   spawnAsync,
-  transformFileContentsAsync,
-  manifestUsesSplashApi,
   getResolvedLocalesAsync,
   regexFileAsync,
   deleteLinesInFileAsync,
-  createSpawner,
-  getManifestFileNameForSdkVersion,
-  getBundleFileNameForSdkVersion,
 };

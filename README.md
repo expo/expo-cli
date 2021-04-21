@@ -89,7 +89,7 @@
 | [**`@expo/schemer`**](./packages/schemer)                                          | [![badges](https://img.shields.io/npm/v/@expo/schemer?color=32cd32&style=flat-square)](https://www.npmjs.com/package/@expo/schemer)                                 |
 | [**`uri-scheme`**](./packages/uri-scheme)                                          | [![badges](https://img.shields.io/npm/v/uri-scheme?color=32cd32&style=flat-square)](https://www.npmjs.com/package/uri-scheme)                                       |
 | [**`@expo/webpack-config`**](./packages/webpack-config)                            | [![badges](https://img.shields.io/npm/v/@expo/webpack-config?color=32cd32&style=flat-square)](https://www.npmjs.com/package/@expo/webpack-config)                   |
-| [**`@expo/xdl`**](./packages/xdl)                                                  | [![badges](https://img.shields.io/npm/v/@expo/xdl?color=32cd32&style=flat-square)](https://www.npmjs.com/package/@expo/xdl)                                         |
+| [**`xdl`**](./packages/xdl)                                                        | [![badges](https://img.shields.io/npm/v/xdl?color=32cd32&style=flat-square)](https://www.npmjs.com/package/xdl)                                                     |
 
 <!-- Generated with $ node scripts/build-packages-toc.js -->
 

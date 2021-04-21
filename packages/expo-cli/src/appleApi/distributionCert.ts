@@ -6,9 +6,9 @@ import {
 } from '@expo/apple-utils';
 import chalk from 'chalk';
 import dateformat from 'dateformat';
-import ora from 'ora';
 
 import CommandError, { ErrorCodes } from '../CommandError';
+import { ora } from '../utils/ora';
 import { AppleCtx, getRequestContext } from './authenticate';
 
 export type DistCertInfo = {

@@ -1,12 +1,7 @@
 import { ExpoConfig } from '@expo/config';
 import getenv from 'getenv';
-import os from 'os';
 
-import * as Versions from './Versions';
-
-export function home(): string {
-  return os.homedir();
-}
+import { Versions } from './internal';
 
 export function isDebug(): boolean {
   return getenv.boolish('EXPO_DEBUG', false);

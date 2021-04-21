@@ -321,7 +321,6 @@ export default async function (
   // TODO(Bacon): Move to expo/config - manifest code from XDL Project
   const publicConfig = {
     ...config,
-    xde: true,
     developer: {
       tool: 'expo-cli',
       projectRoot: env.projectRoot,

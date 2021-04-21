@@ -17,7 +17,9 @@ import assert from 'assert';
 import chalk from 'chalk';
 import { prompt } from 'prompts';
 
-import { logInfo, logWarning } from './project/ProjectUtils';
+import { ProjectUtils } from './internal';
+
+const { logInfo, logWarning } = ProjectUtils;
 
 enum BundleIdentiferSource {
   XcodeProject,
@@ -87,10 +89,8 @@ However, if you choose the one defined in the Xcode project you'll have to updat
   } else if (bundleIdentifierFromPbxproj && !bundleIdentifierFromConfig) {
     if (getConfigFilePaths(projectRoot).staticConfigPath) {
       await updateAppJsonConfigAsync(projectRoot, exp, bundleIdentifierFromPbxproj);
-      return bundleIdentifierFromPbxproj;
-    } else {
-      throw new Error(missingBundleIdentifierMessage(configDescription));
     }
+    return bundleIdentifierFromPbxproj;
   } else if (!bundleIdentifierFromPbxproj && bundleIdentifierFromConfig) {
     IOSConfig.BundleIdentifier.setBundleIdentifierForPbxproj(
       projectRoot,
@@ -107,11 +107,11 @@ function missingBundleIdentifierMessage(configDescription: string): string {
 }
 
 async function updateAppJsonConfigAsync(
-  projectDir: string,
+  projectRoot: string,
   exp: ExpoConfig,
   newBundleIdentifier: string
 ): Promise<void> {
-  const paths = getConfigFilePaths(projectDir);
+  const paths = getConfigFilePaths(projectRoot);
   assert(paths.staticConfigPath, "Can't update dynamic configs");
 
   const rawStaticConfig = (await JsonFile.readAsync(paths.staticConfigPath)) as any;
@@ -129,13 +129,13 @@ async function updateAppJsonConfigAsync(
  * It will return false if the value in static config is different than "ios.bundleIdentifier" in ExpoConfig
  */
 async function hasBundleIdentifierInStaticConfigAsync(
-  projectDir: string,
+  projectRoot: string,
   exp: ExpoConfig
 ): Promise<boolean> {
   if (!exp.ios?.bundleIdentifier) {
     return false;
   }
-  const paths = getConfigFilePaths(projectDir);
+  const paths = getConfigFilePaths(projectRoot);
   if (!paths.staticConfigPath) {
     return false;
   }

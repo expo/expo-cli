@@ -2,11 +2,11 @@ import chalk from 'chalk';
 import program from 'commander';
 import findWorkspaceRoot from 'find-yarn-workspace-root';
 import glob from 'glob';
-import ora from 'ora';
 
 import { SilentError } from '../../CommandError';
 import Log from '../../log';
 import { confirmAsync } from '../../prompts';
+import { ora } from '../../utils/ora';
 
 function queryExpoExtensionFilesAsync(projectRoot: string, ignore: string[]): Promise<string[]> {
   return new Promise((resolve, reject) => {

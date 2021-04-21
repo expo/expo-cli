@@ -6,19 +6,23 @@ import http from 'http';
 import os from 'os';
 import { URL } from 'url';
 
-import Analytics from '../Analytics';
-import ApiV2 from '../ApiV2';
-import Config from '../Config';
-import { resolveGoogleServicesFile, resolveManifestAssets } from '../ProjectAssets';
-import * as ProjectSettings from '../ProjectSettings';
-import * as UrlUtils from '../UrlUtils';
-import UserManager, { ANONYMOUS_USERNAME } from '../User';
-import UserSettings from '../UserSettings';
-import * as Versions from '../Versions';
-import { learnMore } from '../logs/TerminalLink';
-import * as Doctor from '../project/Doctor';
-import * as ProjectUtils from '../project/ProjectUtils';
-import { resolveEntryPoint } from '../tools/resolveEntryPoint';
+import {
+  Analytics,
+  ANONYMOUS_USERNAME,
+  ApiV2,
+  Config,
+  ConnectionStatus,
+  Doctor,
+  learnMore,
+  ProjectAssets,
+  ProjectSettings,
+  ProjectUtils,
+  resolveEntryPoint,
+  UrlUtils,
+  UserManager,
+  UserSettings,
+  Versions,
+} from '../internal';
 
 interface HostInfo {
   host: string;
@@ -197,7 +201,6 @@ export async function getManifestResponseAsync({
   const hostInfo = await createHostInfoAsync();
   const [projectSettings, bundleUrlPackagerOpts] = await getPackagerOptionsAsync(projectRoot);
   // Mutate the manifest
-  manifest.xde = true; // deprecated
   manifest.developer = {
     tool: Config.developerTool,
     projectRoot,
@@ -222,7 +225,7 @@ export async function getManifestResponseAsync({
   manifest.logUrl = await UrlUtils.constructLogUrlAsync(projectRoot, hostname);
   manifest.hostUri = await UrlUtils.constructHostUriAsync(projectRoot, hostname);
   // Resolve all assets and set them on the manifest as URLs
-  await resolveManifestAssets({
+  await ProjectAssets.resolveManifestAssets({
     projectRoot,
     manifest: manifest as ExpoAppManifest,
     async resolver(path) {
@@ -230,7 +233,7 @@ export async function getManifestResponseAsync({
     },
   });
   // The server normally inserts this but if we're offline we'll do it here
-  await resolveGoogleServicesFile(projectRoot, manifest);
+  await ProjectAssets.resolveGoogleServicesFile(projectRoot, manifest);
 
   // Create the final string
   let manifestString;
@@ -247,7 +250,7 @@ export async function getManifestResponseAsync({
           `Please request access from an admin of @${manifest.owner} or change the "owner" field to an account you belong to.\n` +
           learnMore('https://docs.expo.io/versions/latest/config/app/#owner')
       );
-      Config.offline = true;
+      ConnectionStatus.setIsOffline(true);
       manifestString = await getManifestStringAsync(manifest, hostInfo.host, acceptSignature);
     } else if (error.code === 'ENOTFOUND') {
       // Got a DNS error, i.e. can't access exp.host, warn and enable offline mode.
@@ -257,7 +260,7 @@ export async function getManifestResponseAsync({
           error.hostname || 'exp.host'
         }.`
       );
-      Config.offline = true;
+      ConnectionStatus.setIsOffline(true);
       manifestString = await getManifestStringAsync(manifest, hostInfo.host, acceptSignature);
     } else {
       throw error;
@@ -301,12 +304,12 @@ async function getManifestStringAsync(
   acceptSignature?: string | string[]
 ): Promise<string> {
   const currentSession = await UserManager.getSessionAsync();
-  if (!currentSession || Config.offline) {
+  if (!currentSession || ConnectionStatus.isOffline()) {
     manifest.id = `@${ANONYMOUS_USERNAME}/${manifest.slug}-${hostUUID}`;
   }
   if (!acceptSignature) {
     return JSON.stringify(manifest);
-  } else if (!currentSession || Config.offline) {
+  } else if (!currentSession || ConnectionStatus.isOffline()) {
     return getUnsignedManifestString(manifest);
   } else {
     return await getSignedManifestStringAsync(manifest, currentSession);
@@ -314,12 +317,12 @@ async function getManifestStringAsync(
 }
 
 async function createHostInfoAsync(): Promise<HostInfo> {
-  const host = await UserSettings.anonymousIdentifier();
+  const host = await UserSettings.getAnonymousIdentifierAsync();
 
   return {
     host,
     server: 'xdl',
-    serverVersion: require('@expo/xdl/package.json').version,
+    serverVersion: require('xdl/package.json').version,
     serverDriver: Config.developerTool,
     serverOS: os.platform(),
     serverOSVersion: os.release(),

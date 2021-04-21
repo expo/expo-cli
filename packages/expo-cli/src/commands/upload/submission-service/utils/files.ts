@@ -64,8 +64,8 @@ async function downloadAppArchiveAsync(url: string): Promise<string> {
   // Special use-case for downloading an EAS tar.gz file and unpackaging it.
   if (pathIsTar(url)) {
     await pipeline(downloadStream, tar.extract({ cwd: destinationFolder }, []));
-    // Move the folder contents matching .ipa, .apk, or .aab
-    return await moveFileOfTypeAsync(destinationFolder, '{ipa,apk,aab}', destinationPath);
+    // Move the folder contents matching .ipa, .app, .apk, or .aab
+    return await moveFileOfTypeAsync(destinationFolder, '{ipa,app,apk,aab}', destinationPath);
   } else {
     await pipeline(downloadStream, fs.createWriteStream(destinationPath));
   }

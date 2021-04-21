@@ -1,30 +1,20 @@
 import fs from 'fs-extra';
-import os from 'os';
-import path from 'path';
-import uuid from 'uuid';
 
-import ApiV2 from '../ApiV2';
-import GlobalUserManager, { UserManagerInstance } from '../User';
-import UserSettings from '../UserSettings';
+import {
+  ApiV2,
+  UserManager as GlobalUserManager,
+  UserManagerInstance,
+  UserSettings,
+} from '../internal';
 
 jest.mock('../ApiV2', () => ({
   clientForUser: jest.fn(),
 }));
 
 describe('User', () => {
-  // for some reason, tempy fails with memfs in XDL
-  const expoDir = path.join(os.tmpdir(), `.expo-${uuid.v4()}`);
-
   beforeAll(() => {
-    process.env.__UNSAFE_EXPO_HOME_DIRECTORY = expoDir;
-    fs.mkdirpSync(expoDir);
+    fs.removeSync(UserSettings.userSettingsFile());
   });
-
-  afterAll(() => {
-    process.env.__UNSAFE_EXPO_HOME_DIRECTORY = '';
-    fs.removeSync(expoDir);
-  });
-
   it('uses a UserManager singleton', () => {
     const { default: manager } = jest.requireActual('../User');
     expect(manager).toBe(GlobalUserManager);

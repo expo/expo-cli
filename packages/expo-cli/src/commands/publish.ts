@@ -6,11 +6,11 @@ import {
   ProjectTarget,
 } from '@expo/config';
 import simpleSpinner from '@expo/simple-spinner';
-import { Project, UserManager } from '@expo/xdl';
 import chalk from 'chalk';
 import { Command } from 'commander';
 import fs from 'fs';
 import path from 'path';
+import { Project, UserManager } from 'xdl';
 
 import CommandError from '../CommandError';
 import Log from '../log';
@@ -101,6 +101,7 @@ export async function action(
   });
 
   const url = result.url;
+  const projectPageUrl = result.projectPageUrl;
 
   if (options.quiet) {
     simpleSpinner.stop();
@@ -111,22 +112,19 @@ export async function action(
 
   logManifestUrl({ url, sdkVersion: exp.sdkVersion });
 
-  if (target === 'managed') {
-    // TODO: replace with websiteUrl from server when it is available, if that makes sense.
-    const websiteUrl = url.replace('exp.host', 'expo.io');
-
+  if (target === 'managed' && projectPageUrl) {
     // note(brentvatne): disable copy to clipboard functionality for now, need to think more about
     // whether this is desirable.
     //
     // Attempt to copy the URL to the clipboard, if it succeeds then append a notice to the log.
     // const copiedToClipboard = copyToClipboard(websiteUrl);
 
-    logProjectPageUrl({ url: websiteUrl, copiedToClipboard: false });
+    logProjectPageUrl({ url: projectPageUrl, copiedToClipboard: false });
 
     // Only send the link for managed projects.
     const recipient = await sendTo.getRecipient(options.sendTo);
     if (recipient) {
-      await sendTo.sendUrlAsync(websiteUrl, recipient);
+      await sendTo.sendUrlAsync(projectPageUrl, recipient);
     }
   }
 
@@ -164,7 +162,7 @@ function logManifestUrl({ url, sdkVersion }: { url: string; sdkVersion?: string 
 
 /**
  *
- * @example ⚙️   Project page: https://expo.io/@bacon/my-app [copied to clipboard] Learn more: https://expo.fyi/project-page
+ * @example ⚙️   Project page: https://expo.io/@bacon/projects/my-app [copied to clipboard] Learn more: https://expo.fyi/project-page
  * @param options
  */
 function logProjectPageUrl({

@@ -22,6 +22,7 @@ import {
 import { ConfigError } from './Errors';
 import { getExpoSDKVersion } from './Project';
 import { getDynamicConfig, getStaticConfig } from './getConfig';
+import { getCurrentFullName } from './getCurrentFullName';
 import { withConfigPlugins } from './plugins/withConfigPlugins';
 import { withInternal } from './plugins/withInternal';
 import { getRootPackageJsonPath } from './resolvePackageJson';
@@ -141,6 +142,10 @@ export function getConfig(projectRoot: string, options: GetConfigOptions = {}): 
       if (configWithDefaultValues.exp.android?.config) {
         delete configWithDefaultValues.exp.android.config;
       }
+
+      // This value will be overwritten when the manifest is being served from the host (i.e. not completely accurate).
+      // @ts-ignore: currentFullName not on type yet.
+      configWithDefaultValues.exp.currentFullName = getCurrentFullName(configWithDefaultValues.exp);
     }
 
     return configWithDefaultValues;
@@ -192,7 +197,7 @@ function getPackageJsonAndPath(projectRoot: string): [PackageJSONConfig, string]
 export function readConfigJson(
   projectRoot: string,
   skipValidation: boolean = false,
-  skipNativeValidation: boolean = false
+  skipSDKVersionRequirement: boolean = false
 ): ProjectConfig {
   const paths = getConfigFilePaths(projectRoot);
 
@@ -235,7 +240,7 @@ export function readConfigJson(
       projectRoot,
       exp,
       pkg,
-      skipSDKVersionRequirement: skipNativeValidation,
+      skipSDKVersionRequirement,
       paths,
       packageJsonPath,
     }),
@@ -245,14 +250,6 @@ export function readConfigJson(
     rootConfig: { ...outputRootConfig } as AppJSONConfig,
     ...paths,
   };
-}
-
-export async function readConfigJsonAsync(
-  projectRoot: string,
-  skipValidation: boolean = false,
-  skipNativeValidation: boolean = false
-): Promise<ProjectConfig> {
-  return readConfigJson(projectRoot, skipValidation, skipNativeValidation);
 }
 
 /**
@@ -496,13 +493,9 @@ export async function writeConfigJsonAsync(
   options: object
 ): Promise<ProjectConfig> {
   const paths = getConfigFilePaths(projectRoot);
-  let {
-    exp,
-    pkg,
-    rootConfig,
-    dynamicConfigObjectType,
-    staticConfigPath,
-  } = await readConfigJsonAsync(projectRoot);
+  let { exp, pkg, rootConfig, dynamicConfigObjectType, staticConfigPath } = readConfigJson(
+    projectRoot
+  );
   exp = { ...rootConfig.expo, ...options };
   rootConfig = { ...rootConfig, expo: exp };
 

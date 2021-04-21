@@ -1,9 +1,9 @@
 import { ExpoConfig, getConfig, readExpRcAsync } from '@expo/config';
 import { AndroidConfig } from '@expo/config-plugins';
+import * as osascript from '@expo/osascript';
 import spawnAsync from '@expo/spawn-async';
 import chalk from 'chalk';
-import child_process from 'child_process';
-import fs from 'fs-extra';
+import child_process, { execFileSync } from 'child_process';
 import trim from 'lodash/trim';
 import os from 'os';
 import path from 'path';
@@ -11,21 +11,23 @@ import ProgressBar from 'progress';
 import prompts from 'prompts';
 import semver from 'semver';
 
-import Analytics from './Analytics';
-import Api from './Api';
-import * as Binaries from './Binaries';
-import Logger from './Logger';
-import NotificationCode from './NotificationCode';
-import * as ProjectSettings from './ProjectSettings';
-import * as Prompts from './Prompts';
-import * as UrlUtils from './UrlUtils';
-import UserSettings from './UserSettings';
-import * as Versions from './Versions';
-import { getUrlAsync as getWebpackUrlAsync } from './Webpack';
-import { learnMore } from './logs/TerminalLink';
-import { getImageDimensionsAsync } from './tools/ImageUtils';
+import {
+  Analytics,
+  Binaries,
+  downloadApkAsync,
+  Env,
+  ImageUtils,
+  learnMore,
+  Logger,
+  NotificationCode,
+  ProjectSettings,
+  Prompts,
+  UrlUtils,
+  Versions,
+  Webpack,
+} from './internal';
 
-type Device = {
+export type Device = {
   pid?: string;
   name: string;
   type: 'emulator' | 'device';
@@ -129,17 +131,15 @@ export async function getAllAvailableDevicesAsync(): Promise<Device[]> {
  */
 async function isBootAnimationCompleteAsync(pid?: string): Promise<boolean> {
   try {
-    const output = await getAdbOutputAsync(
-      adbPidArgs(pid, 'shell', 'getprop', 'init.svc.bootanim')
-    );
-    return !!output.match(/stopped/);
+    const props = await getPropertyDataForDeviceAsync({ pid }, PROP_BOOT_ANIMATION_STATE);
+    return !!props[PROP_BOOT_ANIMATION_STATE].match(/stopped/);
   } catch {
     return false;
   }
 }
 
-async function startEmulatorAsync(device: Device): Promise<Device> {
-  Logger.global.info(`\u203A Attempting to open emulator: ${device.name}`);
+async function startEmulatorAsync(device: Pick<Device, 'name'>): Promise<Device> {
+  Logger.global.info(`\u203A Opening emulator ${chalk.bold(device.name)}`);
 
   // Start a process to open an emulator
   const emulatorProcess = child_process.spawn(
@@ -295,9 +295,35 @@ export async function getAdbOutputAsync(args: string[]): Promise<string> {
     _isAdbOwner = alreadyRunning === false;
   }
 
+  if (Env.isDebug()) {
+    Logger.global.info([adb, ...args].join(' '));
+  }
   try {
     const result = await spawnAsync(adb, args);
     return result.stdout;
+  } catch (e) {
+    // TODO: Support heap corruption for adb 29 (process exits with code -1073740940) (windows and linux)
+    let errorMessage = (e.stderr || e.stdout || e.message).trim();
+    if (errorMessage.startsWith(BEGINNING_OF_ADB_ERROR_MESSAGE)) {
+      errorMessage = errorMessage.substring(BEGINNING_OF_ADB_ERROR_MESSAGE.length);
+    }
+    throw new Error(errorMessage);
+  }
+}
+
+export async function getAdbFileOutputAsync(args: string[], encoding?: 'latin1') {
+  await Binaries.addToPathAsync('adb');
+  const adb = whichADB();
+
+  if (_isAdbOwner === null) {
+    const alreadyRunning = await adbAlreadyRunning(adb);
+    _isAdbOwner = alreadyRunning === false;
+  }
+
+  try {
+    return await execFileSync(adb, args, {
+      encoding,
+    });
   } catch (e) {
     let errorMessage = (e.stderr || e.stdout || e.message).trim();
     if (errorMessage.startsWith(BEGINNING_OF_ADB_ERROR_MESSAGE)) {
@@ -365,33 +391,6 @@ async function isClientOutdatedAsync(device: Device, sdkVersion?: string): Promi
   return !installedVersion || semver.lt(installedVersion, latestVersionForSdk);
 }
 
-function _apkCacheDirectory() {
-  const dotExpoHomeDirectory = UserSettings.dotExpoHomeDirectory();
-  const dir = path.join(dotExpoHomeDirectory, 'android-apk-cache');
-  fs.mkdirpSync(dir);
-  return dir;
-}
-
-export async function downloadApkAsync(
-  url?: string,
-  downloadProgressCallback?: (roundedProgress: number) => void
-) {
-  if (!url) {
-    const versions = await Versions.versionsAsync();
-    url = versions.androidUrl;
-  }
-
-  const filename = path.parse(url).name;
-  const apkPath = path.join(_apkCacheDirectory(), `${filename}.apk`);
-
-  if (await fs.pathExists(apkPath)) {
-    return apkPath;
-  }
-
-  await Api.downloadAsync(url, apkPath, undefined, downloadProgressCallback);
-  return apkPath;
-}
-
 export async function installExpoAsync({
   device,
   url,
@@ -431,11 +430,18 @@ export async function installExpoAsync({
   }
   Logger.notifications.info({ code: NotificationCode.START_LOADING });
   warningTimer = setWarningTimer();
-  const result = await getAdbOutputAsync(adbPidArgs(device.pid, 'install', path));
+  const result = await installOnDeviceAsync(device, { binaryPath: path });
   Logger.notifications.info({ code: NotificationCode.STOP_LOADING });
 
   clearTimeout(warningTimer);
   return result;
+}
+
+export async function installOnDeviceAsync(
+  device: Pick<Device, 'pid'>,
+  { binaryPath }: { binaryPath: string }
+) {
+  return await getAdbOutputAsync(adbPidArgs(device.pid, 'install', '-r', '-d', binaryPath));
 }
 
 export async function isDeviceBootedAsync({
@@ -548,7 +554,81 @@ async function _openUrlAsync({
   return openProject;
 }
 
-async function attemptToStartEmulatorOrAssertAsync(device: Device): Promise<Device | null> {
+function getUnixPID(port: number | string) {
+  return execFileSync('lsof', [`-i:${port}`, '-P', '-t', '-sTCP:LISTEN'], {
+    encoding: 'utf8',
+    stdio: ['pipe', 'pipe', 'ignore'],
+  })
+    .split('\n')[0]
+    .trim();
+}
+
+export async function activateEmulatorWindowAsync(device: Pick<Device, 'type' | 'pid'>) {
+  if (
+    // only mac is supported for now.
+    process.platform !== 'darwin' ||
+    // can only focus emulators
+    device.type !== 'emulator'
+  ) {
+    return;
+  }
+
+  // Google Emulator ID: `emulator-5554` -> `5554`
+  const androidPid = device.pid!.match(/-(\d+)/)?.[1];
+  if (!androidPid) {
+    return;
+  }
+  // Unix PID
+  const pid = getUnixPID(androidPid);
+
+  try {
+    await osascript.execAsync(`
+  tell application "System Events"
+    set frontmost of the first process whose unix id is ${pid} to true
+  end tell`);
+  } catch {
+    // noop -- this feature is very specific and subject to failure.
+  }
+}
+
+export async function openAppAsync(
+  device: Pick<Device, 'pid' | 'type'>,
+  {
+    packageName,
+    mainActivity,
+  }: {
+    packageName: string;
+    mainActivity: string;
+  }
+) {
+  const targetActivityURI = mainActivity.includes('.')
+    ? mainActivity
+    : [packageName, mainActivity].filter(Boolean).join('/.');
+
+  const openProject = await getAdbOutputAsync(
+    adbPidArgs(
+      device.pid,
+      'shell',
+      'am',
+      'start',
+      // FLAG_ACTIVITY_SINGLE_TOP -- If set, the activity will not be launched if it is already running at the top of the history stack.
+      '-f',
+      '0x20000000',
+      '-n',
+      targetActivityURI
+    )
+  );
+
+  if (openProject.includes(CANT_START_ACTIVITY_ERROR)) {
+    throw new Error(openProject.substring(openProject.indexOf('Error: ')));
+  }
+
+  await activateEmulatorWindowAsync(device);
+
+  return openProject;
+}
+
+export async function attemptToStartEmulatorOrAssertAsync(device: Device): Promise<Device | null> {
   // TODO: Add a light-weight method for checking since a device could disconnect.
 
   if (!(await isDeviceBootedAsync(device))) {
@@ -597,6 +677,9 @@ async function openUrlAsync({
     if (!bootedDevice) {
       return;
     }
+
+    await activateEmulatorWindowAsync(bootedDevice);
+
     device = bootedDevice;
 
     let installedExpo = false;
@@ -691,10 +774,12 @@ export async function openProjectAsync({
   projectRoot,
   shouldPrompt,
   devClient = false,
+  device,
 }: {
   projectRoot: string;
   shouldPrompt?: boolean;
   devClient?: boolean;
+  device?: Device;
 }): Promise<{ success: true; url: string } | { success: false; error: string }> {
   try {
     await startAdbReverseAsync(projectRoot);
@@ -704,13 +789,22 @@ export async function openProjectAsync({
       skipSDKVersionRequirement: true,
     });
 
-    const devices = await getAllAvailableDevicesAsync();
-    let device: Device | null = devices[0];
-    if (shouldPrompt) {
-      device = await promptForDeviceAsync(devices);
-    }
-    if (!device) {
-      return { success: false, error: 'escaped' };
+    if (device) {
+      const booted = await attemptToStartEmulatorOrAssertAsync(device);
+      if (!booted) {
+        return { success: false, error: 'escaped' };
+      }
+      device = booted;
+    } else {
+      const devices = await getAllAvailableDevicesAsync();
+      let booted: Device | null = devices[0];
+      if (shouldPrompt) {
+        booted = await promptForDeviceAsync(devices);
+      }
+      if (!booted) {
+        return { success: false, error: 'escaped' };
+      }
+      device = booted;
     }
 
     await openUrlAsync({
@@ -739,7 +833,7 @@ export async function openWebProjectAsync({
   try {
     await startAdbReverseAsync(projectRoot);
 
-    const projectUrl = await getWebpackUrlAsync(projectRoot);
+    const projectUrl = await Webpack.getUrlAsync(projectRoot);
     if (projectUrl === null) {
       return {
         success: false,
@@ -880,11 +974,11 @@ const splashScreenDPIConstraints: readonly DPIConstraint[] = [
 /**
  * Checks whether `resizeMode` is set to `native` and if `true` analyzes provided images for splashscreen
  * providing `Logger` feedback upon problems.
- * @param projectDir - directory of the expo project
+ * @param projectRoot - directory of the expo project
  * @since SDK33
  */
-export async function checkSplashScreenImages(projectDir: string): Promise<void> {
-  const { exp } = getConfig(projectDir);
+export async function checkSplashScreenImages(projectRoot: string): Promise<void> {
+  const { exp } = getConfig(projectRoot);
 
   // return before SDK33
   if (!Versions.gteSdkVersion(exp, '33.0.0')) {
@@ -907,7 +1001,10 @@ export async function checkSplashScreenImages(projectDir: string): Promise<void>
     );
     return;
   }
-  const generalSplashImage = await getImageDimensionsAsync(projectDir, generalSplashImagePath);
+  const generalSplashImage = await ImageUtils.getImageDimensionsAsync(
+    projectRoot,
+    generalSplashImagePath
+  );
   if (!generalSplashImage) {
     Logger.global.warn(
       `Couldn't read dimensions of provided splash image '${chalk.italic(
@@ -922,7 +1019,7 @@ export async function checkSplashScreenImages(projectDir: string): Promise<void>
   for (const { dpi, sizeMultiplier } of splashScreenDPIConstraints) {
     const imageRelativePath = androidSplash?.[dpi];
     if (imageRelativePath) {
-      const splashImage = await getImageDimensionsAsync(projectDir, imageRelativePath);
+      const splashImage = await ImageUtils.getImageDimensionsAsync(projectRoot, imageRelativePath);
       if (!splashImage) {
         Logger.global.warn(
           `Couldn't read dimensions of provided splash image '${chalk.italic(
@@ -995,7 +1092,7 @@ function nameStyleForDevice(device: Device) {
   return (text: string) => chalk.bold(chalk.gray(text));
 }
 
-async function promptForDeviceAsync(devices: Device[]): Promise<Device | null> {
+export async function promptForDeviceAsync(devices: Device[]): Promise<Device | null> {
   // TODO: provide an option to add or download more simulators
 
   // Pause interactions on the TerminalUI
@@ -1031,4 +1128,129 @@ async function promptForDeviceAsync(devices: Device[]): Promise<Device | null> {
   }
 
   return device;
+}
+
+export enum DeviceABI {
+  // The arch specific android target platforms are soft-deprecated.
+  // Instead of using TargetPlatform as a combination arch + platform
+  // the code will be updated to carry arch information in [DarwinArch]
+  // and [AndroidArch].
+  arm = 'arm',
+  arm64 = 'arm64',
+  x64 = 'x64',
+  x86 = 'x86',
+  armeabiV7a = 'armeabi-v7a',
+  armeabi = 'armeabi',
+  universal = 'universal',
+}
+
+type DeviceProperties = Record<string, string>;
+const deviceProperties: Record<string, DeviceProperties> = {};
+
+const PROP_SDK_VERSION = 'ro.build.version.release';
+// Can sometimes be null
+const PROP_API_VERSION = 'ro.build.version.sdk';
+// http://developer.android.com/ndk/guides/abis.html
+const PROP_CPU_NAME = 'ro.product.cpu.abi';
+const PROP_CPU_ABILIST_NAME = 'ro.product.cpu.abilist';
+const PROP_BOOT_ANIMATION_STATE = 'init.svc.bootanim';
+
+const LOWEST_SUPPORTED_EXPO_API_VERSION = 21;
+
+/**
+ * @returns string like '11' (i.e. Android 11)
+ */
+export async function getDeviceSDKVersionAsync(
+  device: Pick<Device, 'name' | 'pid'>
+): Promise<string> {
+  return await getPropertyForDeviceAsync(device, PROP_SDK_VERSION);
+}
+
+/**
+ * @returns number like `30` (i.e. API 30)
+ */
+export async function getDeviceAPIVersionAsync(
+  device: Pick<Device, 'name' | 'pid'>
+): Promise<number> {
+  const sdkVersion =
+    (await getPropertyForDeviceAsync(device, PROP_API_VERSION)) ??
+    LOWEST_SUPPORTED_EXPO_API_VERSION;
+  return parseInt(sdkVersion, 10);
+}
+
+/**
+ *
+ * @returns app/android/app/build/outputs/apk
+ */
+export function getAPKDirectory(projectRoot: string): string {
+  return path.join(projectRoot, 'android', 'app', 'build', 'outputs', 'apk');
+}
+
+export async function getDeviceABIsAsync(
+  device: Pick<Device, 'name' | 'pid'>
+): Promise<DeviceABI[]> {
+  const cpuAbilist = await getPropertyForDeviceAsync(device, PROP_CPU_ABILIST_NAME);
+
+  if (cpuAbilist) {
+    return cpuAbilist.trim().split(',') as DeviceABI[];
+  }
+
+  const abi = (await getPropertyForDeviceAsync(device, PROP_CPU_NAME)) as DeviceABI;
+  return [abi];
+}
+
+export async function getPropertyForDeviceAsync(
+  device: Pick<Device, 'name' | 'pid'>,
+  name: string,
+  shouldRefresh?: boolean
+): Promise<string> {
+  if (shouldRefresh) {
+    delete deviceProperties[device.name];
+  }
+
+  if (deviceProperties[device.name] == null) {
+    try {
+      deviceProperties[device.name] = await getPropertyDataForDeviceAsync(device);
+    } catch (error) {
+      // TODO: Ensure error has message and not stderr
+      Logger.global.error(
+        `Failed to get properties for device "${device.name}" (${device.pid}): ${error.message}`
+      );
+    }
+  }
+  return deviceProperties[device.name][name];
+}
+
+async function getPropertyDataForDeviceAsync(
+  device: Pick<Device, 'pid'>,
+  prop?: string
+): Promise<DeviceProperties> {
+  // @ts-ignore
+  const propCommand = adbPidArgs(...[device.pid, 'shell', 'getprop', prop].filter(Boolean));
+  try {
+    // Prevent reading as UTF8.
+    const results = (await getAdbFileOutputAsync(propCommand, 'latin1')).toString('latin1');
+    // Like:
+    // [wifi.direct.interface]: [p2p-dev-wlan0]
+    // [wifi.interface]: [wlan0]
+
+    if (prop) {
+      return {
+        [prop]: results,
+      };
+    }
+    return parseAdbDeviceProperties(results);
+  } catch (error) {
+    // TODO: Ensure error has message and not stderr
+    throw new Error(`Failed to get properties for device (${device.pid}): ${error.message}`);
+  }
+}
+
+export function parseAdbDeviceProperties(devicePropertiesString: string) {
+  const properties: DeviceProperties = {};
+  const propertyExp = /\[(.*?)\]: \[(.*?)\]/gm;
+  for (const match of devicePropertiesString.matchAll(propertyExp)) {
+    properties[match[1]] = match[2];
+  }
+  return properties;
 }

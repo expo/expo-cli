@@ -1,6 +1,6 @@
 {
   "name": "expo-codemod",
-  "version": "1.0.31-alpha.0",
+  "version": "1.1.1",
   "description": "Codemod scripts for Expo apps",
   "author": "Expo",
   "license": "MIT",
@@ -29,16 +29,16 @@
     "camelcase": "5.3.1",
     "chalk": "^4.0.0",
     "globby": "^11.0.0",
-    "jscodeshift": "0.6.4",
+    "jscodeshift": "0.11.0",
     "multimatch": "^4.0.0",
-    "semver": "^7.3.2",
     "yargs-parser": "^13.1.0"
   },
   "devDependencies": {
-    "@expo/babel-preset-cli": "0.2.18",
-    "@types/jscodeshift": "^0.6.0",
+    "@expo/babel-preset-cli": "0.2.20",
+    "@types/jscodeshift": "^0.11.0",
     "@types/multimatch": "^2.1.3",
     "@types/yargs-parser": "^13.0.0",
+    "ast-types": "^0.14.2",
     "rimraf": "^3.0.2"
   }
 }

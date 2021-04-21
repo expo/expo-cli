@@ -8,7 +8,7 @@ import Log from '../../log';
 import * as CreateApp from '../utils/CreateApp';
 import { isModuleSymlinked } from '../utils/isModuleSymlinked';
 
-type DependenciesMap = { [key: string]: string | number };
+export type DependenciesMap = { [key: string]: string | number };
 
 export type DependenciesModificationResults = {
   hasNewDependencies: boolean;
@@ -19,10 +19,12 @@ export async function updatePackageJSONAsync({
   projectRoot,
   tempDir,
   pkg,
+  skipDependencyUpdate,
 }: {
   projectRoot: string;
   tempDir: string;
   pkg: PackageJSONConfig;
+  skipDependencyUpdate?: string[];
 }): Promise<DependenciesModificationResults> {
   // NOTE(brentvatne): Removing spaces between steps for now, add back when
   // there is some additional context for steps
@@ -32,7 +34,12 @@ export async function updatePackageJSONAsync({
 
   updatePackageJSONScripts({ pkg });
 
-  const results = updatePackageJSONDependencies({ projectRoot, pkg, tempDir });
+  const results = updatePackageJSONDependencies({
+    projectRoot,
+    pkg,
+    tempDir,
+    skipDependencyUpdate,
+  });
 
   const removedPkgMain = updatePackageJSONEntryPoint({ pkg });
   await fs.writeFile(
@@ -68,14 +75,16 @@ export async function updatePackageJSONAsync({
  * - The same applies to expo-updates -- since some native project configuration may depend on the
  *   version, we should always use the version of expo-updates in the template.
  */
-function updatePackageJSONDependencies({
+export function updatePackageJSONDependencies({
   projectRoot,
   tempDir,
   pkg,
+  skipDependencyUpdate = [],
 }: {
   projectRoot: string;
   tempDir: string;
   pkg: PackageJSONConfig;
+  skipDependencyUpdate?: string[];
 }): DependenciesModificationResults {
   if (!pkg.devDependencies) {
     pkg.devDependencies = {};
@@ -96,13 +105,19 @@ function updatePackageJSONDependencies({
   for (const dependenciesKey of requiredDependencies) {
     if (
       // If the local package.json defined the dependency that we want to overwrite...
-      pkg.dependencies?.[dependenciesKey] &&
-      // Then ensure it isn't symlinked (i.e. the user has a custom version in their yarn workspace).
-      isModuleSymlinked({ projectRoot, moduleId: dependenciesKey, isSilent: true })
+      pkg.dependencies?.[dependenciesKey]
     ) {
-      // If the package is in the project's package.json and it's symlinked, then skip overwriting it.
-      symlinkedPackages.push(dependenciesKey);
-      continue;
+      if (
+        // Then ensure it isn't symlinked (i.e. the user has a custom version in their yarn workspace).
+        isModuleSymlinked({ projectRoot, moduleId: dependenciesKey, isSilent: true })
+      ) {
+        // If the package is in the project's package.json and it's symlinked, then skip overwriting it.
+        symlinkedPackages.push(dependenciesKey);
+        continue;
+      }
+      if (skipDependencyUpdate.includes(dependenciesKey)) {
+        continue;
+      }
     }
     combinedDependencies[dependenciesKey] = defaultDependencies[dependenciesKey];
   }
@@ -146,7 +161,7 @@ function updatePackageJSONDependencies({
  *
  * @param dependencies - ideally an object of type {[key]: string} - if not then this will error.
  */
-function createDependenciesMap(dependencies: any): DependenciesMap {
+export function createDependenciesMap(dependencies: any): DependenciesMap {
   if (typeof dependencies !== 'object') {
     throw new Error(`Dependency map is invalid, expected object but got ${typeof dependencies}`);
   } else if (!dependencies) {
@@ -178,9 +193,15 @@ function updatePackageJSONScripts({ pkg }: { pkg: PackageJSONConfig }) {
   if (!pkg.scripts) {
     pkg.scripts = {};
   }
-  pkg.scripts.start = 'react-native start';
-  pkg.scripts.ios = 'react-native run-ios';
-  pkg.scripts.android = 'react-native run-android';
+  if (!pkg.scripts.start?.includes('--dev-client')) {
+    pkg.scripts.start = 'react-native start';
+  }
+  if (!pkg.scripts.android?.includes('run')) {
+    pkg.scripts.android = 'react-native run-android';
+  }
+  if (!pkg.scripts.ios?.includes('run')) {
+    pkg.scripts.ios = 'react-native run-ios';
+  }
 }
 
 /**

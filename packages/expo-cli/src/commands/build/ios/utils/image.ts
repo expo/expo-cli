@@ -1,9 +1,9 @@
-import { UrlUtils, XDLError } from '@expo/xdl';
 import axios from 'axios';
 import fs from 'fs-extra';
 import pick from 'lodash/pick';
 import { PNG } from 'pngjs';
 import { Readable } from 'stream';
+import { UrlUtils, XDLError } from 'xdl';
 
 async function getImageStreamAsync(imagePathOrURL: string) {
   const isUrl = UrlUtils.isURL(imagePathOrURL, {

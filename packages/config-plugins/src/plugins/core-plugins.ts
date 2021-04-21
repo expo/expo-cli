@@ -1,3 +1,4 @@
+import assert from 'assert';
 import chalk from 'chalk';
 import { boolish } from 'getenv';
 
@@ -9,7 +10,6 @@ import {
   ModPlatform,
   StaticPlugin,
 } from '../Plugin.types';
-import { assert } from '../utils/errors';
 import { addHistoryItem, getHistoryItem, PluginHistoryItem } from '../utils/history';
 import { withStaticPlugin } from './static-plugins';
 

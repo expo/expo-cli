@@ -1,8 +1,8 @@
 import { getDefaultTarget } from '@expo/config';
-import { Android, ConnectionStatus, ProjectSettings, Simulator, Webpack } from '@expo/xdl';
 import { Command } from 'commander';
 import indentString from 'indent-string';
 import qrcodeTerminal from 'qrcode-terminal';
+import { Android, ConnectionStatus, ProjectSettings, Simulator, Webpack } from 'xdl';
 
 import CommandError, { AbortCommandError } from './CommandError';
 import Log from './log';
@@ -43,8 +43,8 @@ function addOptions(program: Command) {
     .option('--localhost', 'Same as --host localhost');
 }
 
-async function optsAsync(projectDir: string, options: any) {
-  const opts = await ProjectSettings.readAsync(projectDir);
+async function optsAsync(projectRoot: string, options: any) {
+  const opts = await ProjectSettings.readAsync(projectRoot);
 
   if ([options.host, options.lan, options.localhost, options.tunnel].filter(i => i).length > 1) {
     throw new CommandError(
@@ -73,7 +73,7 @@ async function optsAsync(projectDir: string, options: any) {
 
   // Prevent using --dev-client in a managed app.
   if (options.devClient) {
-    const defaultTarget = getDefaultTarget(projectDir);
+    const defaultTarget = getDefaultTarget(projectRoot);
     if (defaultTarget !== 'bare') {
       Log.warn(
         `\nOption ${Log.chalk.bold(
@@ -91,13 +91,13 @@ async function optsAsync(projectDir: string, options: any) {
     opts.scheme = options.scheme ?? null;
   } else if (options.devClient) {
     // Attempt to find the scheme or warn the user how to setup a custom scheme
-    opts.scheme = await getDevClientSchemeAsync(projectDir);
+    opts.scheme = await getDevClientSchemeAsync(projectRoot);
   } else {
     // Ensure this is reset when users don't use `--scheme` or `--dev-client`
     opts.scheme = null;
   }
 
-  await ProjectSettings.setAsync(projectDir, opts);
+  await ProjectSettings.setAsync(projectRoot, opts);
 
   return opts;
 }
@@ -108,7 +108,7 @@ function printQRCode(url: string) {
 
 async function handleMobileOptsAsync(
   projectRoot: string,
-  options: Pick<URLOptions, 'ios' | 'android' | 'web'> & { webOnly?: boolean }
+  options: Pick<URLOptions, 'devClient' | 'ios' | 'android' | 'web'> & { webOnly?: boolean }
 ) {
   await Promise.all([
     (async () => {
@@ -116,7 +116,7 @@ async function handleMobileOptsAsync(
         if (options.webOnly) {
           await Android.openWebProjectAsync({ projectRoot });
         } else {
-          await Android.openProjectAsync({ projectRoot });
+          await Android.openProjectAsync({ projectRoot, devClient: options.devClient ?? false });
         }
       }
     })(),
@@ -125,7 +125,11 @@ async function handleMobileOptsAsync(
         if (options.webOnly) {
           await Simulator.openWebProjectAsync({ projectRoot, shouldPrompt: false });
         } else {
-          await Simulator.openProjectAsync({ projectRoot, shouldPrompt: false });
+          await Simulator.openProjectAsync({
+            projectRoot,
+            devClient: options.devClient ?? false,
+            shouldPrompt: false,
+          });
         }
       }
     })(),

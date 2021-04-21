@@ -1,6 +1,6 @@
 {
   "name": "@expo/config",
-  "version": "3.3.31",
+  "version": "3.3.38",
   "description": "A library for interacting with the app.json",
   "main": "build/index.js",
   "scripts": {
@@ -36,11 +36,11 @@
     "@babel/plugin-proposal-class-properties": "~7.12.13",
     "@babel/preset-env": "~7.12.13",
     "@babel/preset-typescript": "~7.12.13",
-    "@expo/config-plugins": "1.0.21",
+    "@expo/config-plugins": "1.0.28",
     "@expo/config-types": "^40.0.0-beta.2",
-    "@expo/json-file": "8.2.28-alpha.0",
+    "@expo/json-file": "8.2.29",
     "fs-extra": "9.0.0",
-    "getenv": "0.7.0",
+    "getenv": "^1.0.0",
     "glob": "7.1.6",
     "require-from-string": "^2.0.2",
     "resolve-from": "^5.0.0",

@@ -1,8 +1,10 @@
 import { ExpoConfig, isLegacyImportsEnabled } from '@expo/config';
-import { Project, ProjectSettings } from '@expo/xdl';
+import { Project, ProjectSettings, Versions } from 'xdl';
 
+import { AbortCommandError } from '../../CommandError';
 import Log from '../../log';
 import { URLOptions } from '../../urlOpts';
+import { resolvePortAsync } from '../run/utils/resolvePortAsync';
 
 export type NormalizedOptions = URLOptions & {
   webOnly?: boolean;
@@ -17,6 +19,7 @@ export type NormalizedOptions = URLOptions & {
   lan?: boolean;
   localhost?: boolean;
   tunnel?: boolean;
+  metroPort?: number;
 };
 
 export type RawStartOptions = NormalizedOptions & {
@@ -59,6 +62,14 @@ export async function normalizeOptionsAsync(
   const rawArgs = options.parent?.rawArgs || [];
 
   const opts = parseRawArguments(options, rawArgs);
+
+  if (opts.devClient) {
+    const metroPort = await resolvePortAsync(projectRoot);
+    if (!metroPort) {
+      throw new AbortCommandError();
+    }
+    opts.metroPort = metroPort;
+  }
 
   // Side-effect
   await cacheOptionsAsync(projectRoot, opts);
@@ -108,8 +119,8 @@ export function parseRawArguments(options: RawStartOptions, rawArgs: string[]): 
   return opts;
 }
 
-async function cacheOptionsAsync(projectDir: string, options: NormalizedOptions): Promise<void> {
-  await ProjectSettings.setAsync(projectDir, {
+async function cacheOptionsAsync(projectRoot: string, options: NormalizedOptions): Promise<void> {
+  await ProjectSettings.setAsync(projectRoot, {
     devClient: options.devClient,
     scheme: options.scheme,
     dev: options.dev,
@@ -122,7 +133,9 @@ export function parseStartOptions(
   options: NormalizedOptions,
   exp: ExpoConfig
 ): Project.StartOptions {
-  const startOpts: Project.StartOptions = {};
+  const startOpts: Project.StartOptions = {
+    metroPort: options.metroPort,
+  };
 
   if (options.clear) {
     startOpts.reset = true;
@@ -149,6 +162,14 @@ export function parseStartOptions(
     // See: https://docs.expo.io/bare/using-expo-client
     startOpts.target = options.devClient ? 'bare' : 'managed';
     Log.debug('Using target: ', startOpts.target);
+  }
+
+  // The SDK 41 client has web socket support.
+  if (Versions.gteSdkVersion(exp, '41.0.0')) {
+    startOpts.isRemoteReloadingEnabled = true;
+    if (!startOpts.webOnly) {
+      startOpts.isWebSocketsEnabled = true;
+    }
   }
 
   return startOpts;

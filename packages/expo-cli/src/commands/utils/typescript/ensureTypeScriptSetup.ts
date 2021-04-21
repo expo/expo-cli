@@ -1,11 +1,11 @@
 import { getConfig } from '@expo/config';
 import * as PackageManager from '@expo/package-manager';
-import { Versions } from '@expo/xdl';
 import chalk from 'chalk';
 import program from 'commander';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import wrapAnsi from 'wrap-ansi';
+import { Versions } from 'xdl';
 
 import CommandError from '../../../CommandError';
 import Log from '../../../log';

@@ -1,31 +1,83 @@
 import { ExpoConfig, getConfig } from '@expo/config';
 import { Server } from 'http';
 
-import Analytics from '../Analytics';
-import * as Android from '../Android';
-import Config from '../Config';
-import * as DevSession from '../DevSession';
-import { shouldUseDevServer } from '../Env';
-import * as ProjectSettings from '../ProjectSettings';
-import * as Webpack from '../Webpack';
-import * as ProjectUtils from '../project/ProjectUtils';
-import { assertValidProjectRoot } from '../project/errors';
-import { startTunnelsAsync, stopTunnelsAsync } from './ngrok';
-import { startDevServerAsync, StartOptions } from './startDevServerAsync';
-import { startExpoServerAsync, stopExpoServerAsync } from './startLegacyExpoServerAsync';
 import {
+  Analytics,
+  Android,
+  assertValidProjectRoot,
+  Config,
+  ConnectionStatus,
+  DevSession,
+  Env,
+  ProjectSettings,
+  ProjectUtils,
+  startDevServerAsync,
+  StartDevServerOptions,
+  startExpoServerAsync,
   startReactNativeServerAsync,
+  startTunnelsAsync,
+  stopExpoServerAsync,
   stopReactNativeServerAsync,
-} from './startLegacyReactNativeServerAsync';
+  stopTunnelsAsync,
+  UnifiedAnalytics,
+  UserManager,
+  Webpack,
+} from '../internal';
 
 let serverInstance: Server | null = null;
+let messageSocket: any | null = null;
+
+/**
+ * Sends a message over web sockets to any connected device,
+ * does nothing when the dev server is not running.
+ *
+ * @param method name of the command. In RN projects `reload`, and `devMenu` are available. In Expo Go, `sendDevCommand` is available.
+ * @param params
+ */
+export function broadcastMessage(
+  method: 'reload' | 'devMenu' | 'sendDevCommand',
+  params?: Record<string, any> | undefined
+) {
+  if (messageSocket) {
+    messageSocket.broadcast(method, params);
+  }
+}
 
 export async function startAsync(
   projectRoot: string,
-  { exp = getConfig(projectRoot).exp, ...options }: StartOptions & { exp?: ExpoConfig } = {},
+  {
+    exp = getConfig(projectRoot).exp,
+    ...options
+  }: StartDevServerOptions & { exp?: ExpoConfig } = {},
   verbose: boolean = true
 ): Promise<ExpoConfig> {
   assertValidProjectRoot(projectRoot);
+
+  const userData = await UserManager.getCachedUserDataAsync();
+
+  if (userData?.userId) {
+    // analytics has probably not identified the user at this point, if so we need to bootstrap it
+    if (!UnifiedAnalytics.userId) {
+      UnifiedAnalytics.identifyUser(
+        userData.userId, // userId is used as the identifier in the other codebases (www/website) running unified analytics so we want to keep using it on the cli as well to avoid double counting users
+        {
+          userId: userData.userId,
+          currentConnection: userData?.currentConnection,
+          username: userData?.username,
+          userType: '', // not available without hitting api
+        }
+      );
+    }
+  }
+
+  UnifiedAnalytics.logEvent('action', {
+    organization: exp.owner,
+    project: exp.name,
+    action: 'expo start',
+    source: 'expo cli',
+    source_version: UnifiedAnalytics.version,
+  });
+
   Analytics.logEvent('Start Project', {
     projectRoot,
     developerTool: Config.developerTool,
@@ -36,8 +88,8 @@ export async function startAsync(
     await Webpack.restartAsync(projectRoot, options);
     DevSession.startSession(projectRoot, exp, 'web');
     return exp;
-  } else if (shouldUseDevServer(exp) || options.devClient) {
-    serverInstance = await startDevServerAsync(projectRoot, options);
+  } else if (Env.shouldUseDevServer(exp) || options.devClient) {
+    [serverInstance, , messageSocket] = await startDevServerAsync(projectRoot, options);
     DevSession.startSession(projectRoot, exp, 'native');
   } else {
     await startExpoServerAsync(projectRoot);
@@ -47,7 +99,7 @@ export async function startAsync(
 
   const { hostType } = await ProjectSettings.readAsync(projectRoot);
 
-  if (!Config.offline && hostType === 'tunnel') {
+  if (!ConnectionStatus.isOffline() && hostType === 'tunnel') {
     try {
       await startTunnelsAsync(projectRoot);
     } catch (e) {
@@ -76,7 +128,7 @@ async function stopInternalAsync(projectRoot: string): Promise<void> {
     stopExpoServerAsync(projectRoot),
     stopReactNativeServerAsync(projectRoot),
     async () => {
-      if (!Config.offline) {
+      if (!ConnectionStatus.isOffline()) {
         try {
           await stopTunnelsAsync(projectRoot);
         } catch (e) {

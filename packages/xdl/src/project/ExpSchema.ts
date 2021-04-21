@@ -6,8 +6,7 @@ import { boolish } from 'getenv';
 import schemaDerefSync from 'json-schema-deref-sync';
 import path from 'path';
 
-import ApiV2 from '../ApiV2';
-import { Cacher } from '../tools/FsCache';
+import { ApiV2, FsCache } from '../internal';
 
 export type Schema = any;
 export type AssetSchema = {
@@ -16,7 +15,7 @@ export type AssetSchema = {
 };
 
 const _xdlSchemaJson: { [sdkVersion: string]: Schema } = {};
-const _schemaCaches: { [version: string]: Cacher<JSONObject> } = {};
+const _schemaCaches: { [version: string]: FsCache.Cacher<JSONObject> } = {};
 
 export async function validatorFromProjectRoot(projectRoot: string): Promise<Schemer> {
   const { exp } = getConfig(projectRoot);
@@ -103,7 +102,7 @@ async function _getSchemaJSONAsync(sdkVersion: string): Promise<{ schema: Schema
 
 async function getConfigurationSchemaAsync(sdkVersion: string): Promise<JSONObject> {
   if (!_schemaCaches.hasOwnProperty(sdkVersion)) {
-    _schemaCaches[sdkVersion] = new Cacher(
+    _schemaCaches[sdkVersion] = new FsCache.Cacher(
       async () => {
         return await new ApiV2().getAsync(`project/configuration/schema/${sdkVersion}`);
       },
