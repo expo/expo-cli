@@ -5,9 +5,11 @@ import { SimControl, Simulator } from 'xdl';
 
 import CommandError from '../../../CommandError';
 import Log from '../../../log';
+import { getSchemesForIosAsync } from '../../../schemes';
 import { EjectAsyncOptions, prebuildAsync } from '../../eject/prebuildAsync';
 import { profileMethod } from '../../utils/profileMethod';
 import { parseBinaryPlistAsync } from '../utils/binaryPlist';
+import { isDevMenuInstalled } from '../utils/isDevMenuInstalled';
 import * as IOSDeploy from './IOSDeploy';
 import maybePromptToSyncPodsAsync from './Podfile';
 import * as XcodeBuild from './XcodeBuild';
@@ -60,6 +62,7 @@ export async function runIosActionAsync(projectRoot: string, options: Options) {
     await SimControl.installAsync({ udid: props.device.udid, dir: binaryPath });
 
     await openInSimulatorAsync({
+      projectRoot,
       bundleIdentifier,
       device: props.device,
       shouldStartBundler: props.shouldStartBundler,
@@ -89,15 +92,16 @@ async function getBundleIdentifierForBinaryAsync(binaryPath: string): Promise<st
 }
 
 async function openInSimulatorAsync({
+  projectRoot,
   bundleIdentifier,
   device,
   shouldStartBundler,
 }: {
+  projectRoot: string;
   bundleIdentifier: string;
   device: XcodeBuild.BuildProps['device'];
   shouldStartBundler?: boolean;
 }) {
-  let pid: string | null = null;
   XcodeBuild.logPrettyItem(
     `${chalk.bold`Opening`} on ${device.name} ${chalk.dim(`(${bundleIdentifier})`)}`
   );
@@ -109,22 +113,35 @@ async function openInSimulatorAsync({
     });
   }
 
-  const result = await SimControl.openBundleIdAsync({
-    udid: device.udid,
-    bundleIdentifier,
-  });
-
-  if (result.status === 0) {
-    if (result.stdout) {
-      const pidRegExp = new RegExp(`${bundleIdentifier}:\\s?(\\d+)`);
-      const pidMatch = result.stdout.match(pidRegExp);
-      pid = pidMatch?.[1] ?? null;
+  if (
+    // If the dev-menu is installed, then deep link directly into the app so the user never sees the switcher screen.
+    isDevMenuInstalled(projectRoot) &&
+    // Ensure the app can handle custom URI schemes before attempting to deep link.
+    // This can happen when someone manually removes all URI schemes from the native app.
+    (await getSchemesForIosAsync(projectRoot)).length
+  ) {
+    Log.debug('Deep linking into simulator: ' + device.udid);
+    const result = await Simulator.openProjectAsync({
+      projectRoot,
+      udid: device.udid,
+      devClient: true,
+    });
+    if (!result.success) {
+      // TODO: Maybe fallback on using the bundle identifier.
+      throw new CommandError(result.error);
     }
-    await Simulator.activateSimulatorWindowAsync();
   } else {
-    throw new CommandError(
-      `Failed to launch the app on simulator ${device.name} (${device.udid}). Error in "osascript" command: ${result.stderr}`
-    );
+    Log.debug('Opening app in simulator via bundle identifier: ' + device.udid);
+    const result = await SimControl.openBundleIdAsync({
+      udid: device.udid,
+      bundleIdentifier,
+    });
+    if (result.status === 0) {
+      await Simulator.activateSimulatorWindowAsync();
+    } else {
+      throw new CommandError(
+        `Failed to launch the app on simulator ${device.name} (${device.udid}). Error in "osascript" command: ${result.stderr}`
+      );
+    }
   }
-  return { pid };
 }

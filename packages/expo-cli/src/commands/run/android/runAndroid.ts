@@ -6,8 +6,10 @@ import { Android } from 'xdl';
 
 import CommandError from '../../../CommandError';
 import Log from '../../../log';
+import { getSchemesForAndroidAsync } from '../../../schemes';
 import { prebuildAsync } from '../../eject/prebuildAsync';
 import { startBundlerAsync } from '../ios/startBundlerAsync';
+import { isDevMenuInstalled } from '../utils/isDevMenuInstalled';
 import { resolvePortAsync } from '../utils/resolvePortAsync';
 import { resolveDeviceAsync } from './resolveDeviceAsync';
 import { spawnGradleAsync } from './spawnGradleAsync';
@@ -107,8 +109,29 @@ export async function runAndroidActionAsync(projectRoot: string, options: Option
 
   const binaryPath = path.join(props.apkVariantDirectory, apkFile);
   await Android.installOnDeviceAsync(props.device, { binaryPath });
-  // For now, just open the app with a matching package name
-  await Android.openAppAsync(props.device, props);
+
+  if (
+    // If the dev-menu is installed, then deep link directly into the app so the user never sees the switcher screen.
+    isDevMenuInstalled(projectRoot) &&
+    // Ensure the app can handle custom URI schemes before attempting to deep link.
+    // This can happen when someone manually removes all URI schemes from the native app.
+    (await getSchemesForAndroidAsync(projectRoot)).length
+  ) {
+    Log.debug('Deep linking into device: ' + props.device.name);
+    const result = await Android.openProjectAsync({
+      projectRoot,
+      device: props.device,
+      devClient: true,
+    });
+    if (!result.success) {
+      // TODO: Maybe fallback on using the package name.
+      throw new CommandError(result.error);
+    }
+  } else {
+    Log.debug('Opening app on device via package name: ' + props.device.name);
+    // For now, just open the app with a matching package name
+    await Android.openAppAsync(props.device, props);
+  }
 
   if (props.bundler) {
     // TODO: unify logs

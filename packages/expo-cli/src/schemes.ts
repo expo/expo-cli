@@ -9,7 +9,7 @@ import {
 } from './commands/eject/clearNativeFolder';
 import Log from './log';
 
-async function getSchemesForIosAsync(projectRoot: string) {
+export async function getSchemesForIosAsync(projectRoot: string) {
   try {
     const configPath = IOSConfig.Paths.getInfoPlistPath(projectRoot);
     const rawPlist = fs.readFileSync(configPath, 'utf8');
@@ -21,7 +21,7 @@ async function getSchemesForIosAsync(projectRoot: string) {
   }
 }
 
-async function getSchemesForAndroidAsync(projectRoot: string) {
+export async function getSchemesForAndroidAsync(projectRoot: string) {
   try {
     const configPath = await AndroidConfig.Paths.getAndroidManifestAsync(projectRoot);
     const manifest = await AndroidConfig.Manifest.readAndroidManifestAsync(configPath);

@@ -597,6 +597,17 @@ async function openUrlInSimulatorSafeAsync({
     Logger.global.info(`Opening ${chalk.underline(url)} on ${chalk.bold(simulator.name)}`);
     await SimControl.openURLAsync({ url, udid: simulator.udid });
   } catch (e) {
+    if (e.status === 194) {
+      // An error was encountered processing the command (domain=NSOSStatusErrorDomain, code=-10814):
+      // The operation couldn’t be completed. (OSStatus error -10814.)
+      //
+      // This can be thrown when no app conforms to the URI scheme that we attempted to open.
+
+      return {
+        success: false,
+        msg: `Device ${simulator.name} (${simulator.udid}) has no app to handle the URI: ${url}`,
+      };
+    }
     if (e.isXDLError) {
       // Hit some internal error, don't try again.
       // This includes Xcode license errors
@@ -702,10 +713,12 @@ export async function openProjectAsync({
   projectRoot,
   shouldPrompt,
   devClient,
+  udid,
 }: {
   projectRoot: string;
   shouldPrompt?: boolean;
   devClient?: boolean;
+  udid?: string;
 }): Promise<
   | { success: true; url: string; udid: string; bundleIdentifier: string }
   | { success: false; error: string }
@@ -725,7 +738,9 @@ export async function openProjectAsync({
   });
 
   let device: SimControl.SimulatorDevice | null = null;
-  if (shouldPrompt) {
+  if (udid) {
+    device = await ensureSimulatorOpenAsync({ udid });
+  } else if (shouldPrompt) {
     const devices = await getSelectableSimulatorsAsync();
     device = await promptForSimulatorAsync(devices);
   } else {
