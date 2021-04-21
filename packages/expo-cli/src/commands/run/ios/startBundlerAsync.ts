@@ -20,5 +20,7 @@ export async function startBundlerAsync(projectRoot: string) {
   await Project.startAsync(projectRoot, { devClient });
   await TerminalUI.startAsync(projectRoot, {
     devClient,
+    isWebSocketsEnabled: true,
+    isRemoteReloadingEnabled: true,
   });
 }
