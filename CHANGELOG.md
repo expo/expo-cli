@@ -14,6 +14,46 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+## [Mon, 19 Apr 2021 17:00:03 -0700](https://github.com/expo/expo-cli/commit/50562c70e9cda584465b01c4520ac82d29a4738f)
+
+### 🎉 New features
+
+- [config-plugins] feat: enable splash screen plugin for any SDK greater than 38 ([#3397](https://github.com/expo/expo-cli/issues/3397))
+- print bundle sizes in export ([#3393](https://github.com/expo/expo-cli/issues/3393))
+
+### 🧹 Chores
+
+- improve cocoapods manager ([#3399](https://github.com/expo/expo-cli/issues/3399))
+- [xdl][expo-cli] Adds action event to unified project ([#3372](https://github.com/expo/expo-cli/issues/3372))
+- Force overwriting by default in export ([#3395](https://github.com/expo/expo-cli/issues/3395))
+- Add known packages to improve tracing ([#3392](https://github.com/expo/expo-cli/issues/3392))
+- [metro-config] Skip babel runtime helpers ([#3391](https://github.com/expo/expo-cli/issues/3391))
+- remove node 10 support and assert wrapper ([#3356](https://github.com/expo/expo-cli/issues/3356))
+
+### 📦 Packages updated
+
+- @expo/babel-preset-cli@0.2.20
+- @expo/config-plugins@1.0.27
+- @expo/config@3.3.37
+- @expo/dev-server@0.1.63
+- @expo/dev-tools@0.13.93
+- @expo/electron-adapter@0.0.54
+- expo-cli@4.4.2
+- expo-codemod@1.1.1
+- expo-optimize@0.1.85
+- @expo/image-utils@0.3.13
+- @expo/json-file@8.2.29
+- @expo/metro-config@0.1.63
+- @expo/next-adapter@2.1.68
+- @expo/osascript@2.0.26
+- @expo/package-manager@0.0.41
+- pod-install@0.1.21
+- expo-pwa@0.0.73
+- @expo/schemer@1.3.28
+- uri-scheme@1.0.74
+- @expo/webpack-config@0.12.67
+- xdl@59.0.33
+
 ## [Wed, 14 Apr 2021 12:36:03 -0700](https://github.com/expo/expo-cli/commit/30b4a040a81de0c73103e51ae38bbf4be8a58898)
 
 ### 🧹 Chores

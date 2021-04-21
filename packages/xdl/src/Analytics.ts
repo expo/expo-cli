@@ -9,13 +9,19 @@ const PLATFORM_TO_ANALYTICS_PLATFORM: { [platform: string]: string } = {
   linux: 'Linux',
 };
 
-let _userId: string | undefined;
-let _userTraits: any;
-
 export class AnalyticsClient {
+  private userTraits: any;
   private segmentNodeInstance: Segment | undefined;
-  private version: string | undefined;
-  private userIdentifyCalled: boolean = false;
+  private _userId: string | undefined;
+  private _version: string | undefined;
+
+  public get userId() {
+    return this._userId;
+  }
+
+  public get version() {
+    return this._version;
+  }
 
   public flush() {
     if (this.segmentNodeInstance) {
@@ -23,42 +29,33 @@ export class AnalyticsClient {
     }
   }
 
-  public setSegmentNodeKey(key: string) {
+  public initializeClient(apiKey: string, packageVersion: string) {
     // Do not wait before flushing, we want node to close immediately if the programs ends
-    this.segmentNodeInstance = new Segment(key, { flushInterval: 300 });
+    this.segmentNodeInstance = new Segment(apiKey, { flushInterval: 300 });
+    this._version = packageVersion;
   }
 
-  public setUserProperties(userId: string, traits: any) {
-    _userId = userId;
-    _userTraits = traits;
+  public identifyUser(userId: string, traits: any) {
+    this._userId = userId;
+    this.userTraits = traits;
 
-    this.ensureUserIdentified();
-  }
-
-  public setVersionName(version: string) {
-    this.version = version;
-  }
-
-  public logEvent(name: string, properties: any = {}) {
-    if (this.segmentNodeInstance && _userId) {
-      this.ensureUserIdentified();
-      this.segmentNodeInstance.track({
-        userId: _userId,
-        event: name,
-        properties,
+    if (this.segmentNodeInstance) {
+      this.segmentNodeInstance.identify({
+        userId: this._userId,
+        traits: this.userTraits,
         context: this.getContext(),
       });
     }
   }
 
-  private ensureUserIdentified() {
-    if (this.segmentNodeInstance && !this.userIdentifyCalled && _userId) {
-      this.segmentNodeInstance.identify({
-        userId: _userId,
-        traits: _userTraits,
+  public logEvent(name: string, properties: any = {}) {
+    if (this.segmentNodeInstance && this._userId) {
+      this.segmentNodeInstance.track({
+        userId: this._userId,
+        event: name,
+        properties,
         context: this.getContext(),
       });
-      this.userIdentifyCalled = true;
     }
   }
 
@@ -77,9 +74,9 @@ export class AnalyticsClient {
       app: {},
     };
 
-    if (this.version) {
+    if (this._version) {
       context.app = {
-        version: this.version,
+        version: this._version,
       };
     }
 

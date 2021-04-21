@@ -1,6 +1,6 @@
 {
   "name": "@expo/dev-server",
-  "version": "0.1.62",
+  "version": "0.1.64",
   "description": "Development servers for starting React Native projects",
   "main": "build/MetroDevServer.js",
   "scripts": {
@@ -36,14 +36,14 @@
   ],
   "dependencies": {
     "@expo/bunyan": "4.0.0",
-    "@expo/metro-config": "0.1.62",
+    "@expo/metro-config": "0.1.64",
     "@react-native-community/cli-server-api": "4.9.0",
     "body-parser": "1.19.0",
     "resolve-from": "^5.0.0",
     "serialize-error": "6.0.0"
   },
   "devDependencies": {
-    "@expo/babel-preset-cli": "0.2.19",
+    "@expo/babel-preset-cli": "0.2.20",
     "@types/connect": "^3.4.33",
     "connect": "^3.7.0",
     "node-fetch": "^2.6.0",

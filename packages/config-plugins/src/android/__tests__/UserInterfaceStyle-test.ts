@@ -42,8 +42,8 @@ public class MainActivity extends ReactActivity {
 `;
 
 describe('User interface style', () => {
-  it(`returns null if no userInterfaceStyle is provided`, () => {
-    expect(getUserInterfaceStyle({})).toBe(null);
+  it(`returns light if no userInterfaceStyle is provided`, () => {
+    expect(getUserInterfaceStyle({})).toBe('light');
   });
 
   it(`returns the userInterfaceStyle if provided`, () => {

@@ -44,8 +44,8 @@ export const withUiModeMainActivity: ConfigPlugin = config => {
 
 export function getUserInterfaceStyle(
   config: Pick<ExpoConfig, 'android' | 'userInterfaceStyle'>
-): string | null {
-  return config.android?.userInterfaceStyle ?? config.userInterfaceStyle ?? null;
+): string {
+  return config.android?.userInterfaceStyle ?? config.userInterfaceStyle ?? 'light';
 }
 
 export function setUiModeAndroidManifest(
