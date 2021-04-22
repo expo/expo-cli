@@ -18,6 +18,7 @@ import Log from '../../log';
 import { selectAsync } from '../../prompts';
 import urlOpts from '../../urlOpts';
 import { openInEditorAsync } from '../utils/openInEditorAsync';
+import { profileMethod } from '../utils/profileMethod';
 
 const CTRL_C = '\u0003';
 const CTRL_D = '\u0004';
@@ -285,7 +286,10 @@ export async function startAsync(projectRoot: string, options: StartOptions) {
           //   !options.nonInteractive && (key === 'I' || !(await Simulator.isSimulatorBootedAsync()));
 
           Log.log(`${BLT} Opening on iOS...`);
-          await Simulator.openProjectAsync({
+          await profileMethod(
+            Simulator.openProjectAsync,
+            'Simulator.openProjectAsync'
+          )({
             projectRoot,
             shouldPrompt: false,
             devClient: options.devClient ?? false,

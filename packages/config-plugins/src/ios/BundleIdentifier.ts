@@ -32,7 +32,7 @@ export const withBundleIdentifier: ConfigPlugin<{ bundleIdentifier?: string }> =
   ]);
 };
 
-function getBundleIdentifier(config: ExpoConfig): string | null {
+function getBundleIdentifier(config: Pick<ExpoConfig, 'ios'>): string | null {
   return config.ios?.bundleIdentifier ?? null;
 }
 
