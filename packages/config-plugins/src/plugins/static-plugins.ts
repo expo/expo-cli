@@ -14,14 +14,15 @@ const EXPO_CONFIG_PLUGIN_VERBOSE_ERRORS = boolish('EXPO_CONFIG_PLUGIN_VERBOSE_ER
 
 function isModuleMissingError(name: string, error: Error): boolean {
   // @ts-ignore
-  if (error.code === 'MODULE_NOT_FOUND') {
+  if (['MODULE_NOT_FOUND', 'PLUGIN_NOT_FOUND'].includes(error.code)) {
     return true;
   }
   return error.message.includes(`Cannot find module '${name}'`);
 }
 
 function isUnexpectedTokenError(error: Error): boolean {
-  if (error instanceof SyntaxError) {
+  // @ts-expect-error
+  if (error instanceof SyntaxError || error.code === 'INVALID_PLUGIN_IMPORT') {
     return (
       // These are the most common errors that'll be thrown when a package isn't transpiled correctly.
       !!error.message.match(/Unexpected token/) ||

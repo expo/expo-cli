@@ -16,16 +16,18 @@ function findUpPackageJson(root: string): string {
   return packageJson;
 }
 
-function resolvePluginForModule(projectRoot: string, modulePath: string): string {
-  const resolved = resolveFrom(projectRoot, modulePath);
-  assert(
-    resolved,
-    `Failed to resolve plugin for module "${modulePath}" relative to "${projectRoot}"`
-  );
+function resolvePluginForModule(projectRoot: string, modulePath: string) {
+  const resolved = resolveFrom.silent(projectRoot, modulePath);
+  if (!resolved) {
+    throw new PluginError(
+      `Failed to resolve plugin for module "${modulePath}" relative to "${projectRoot}"`,
+      'PLUGIN_NOT_FOUND'
+    );
+  }
   // If the modulePath is something like `@bacon/package/index.js` or `expo-foo/build/app`
   // then skip resolving the module `app.plugin.js`
   if (moduleNameIsDirectFileReference(modulePath)) {
-    return resolved;
+    return { isPluginFile: false, filePath: resolved };
   }
   return findUpPlugin(resolved);
 }
@@ -66,13 +68,14 @@ function resolveExpoPluginFile(root: string): string | null {
   return null;
 }
 
-function findUpPlugin(root: string): string {
+function findUpPlugin(root: string): { filePath: string; isPluginFile: boolean } {
   // Get the closest package.json to the node module
   const packageJson = findUpPackageJson(root);
   // resolve the root folder for the node module
   const moduleRoot = path.dirname(packageJson);
   // use whatever the initial resolved file was ex: `node_modules/my-package/index.js` or `./something.js`
-  return resolveExpoPluginFile(moduleRoot) ?? root;
+  const pluginFile = resolveExpoPluginFile(moduleRoot);
+  return { filePath: pluginFile ?? root, isPluginFile: !!pluginFile };
 }
 
 export function normalizeStaticPlugin(plugin: StaticPlugin | ConfigPlugin | string): StaticPlugin {
@@ -94,10 +97,36 @@ export function assertInternalProjectRoot(projectRoot?: string): asserts project
 }
 
 // Resolve the module function and assert type
-export function resolveConfigPluginFunction(projectRoot: string, pluginModulePath: string) {
-  const moduleFilePath = resolvePluginForModule(projectRoot, pluginModulePath);
-  const result = requirePluginFile(moduleFilePath);
-  return resolveConfigPluginExport(result, moduleFilePath);
+export function resolveConfigPluginFunction(projectRoot: string, pluginReference: string) {
+  const { filePath: pluginFile, isPluginFile } = resolvePluginForModule(
+    projectRoot,
+    pluginReference
+  );
+  let result: any;
+  try {
+    result = requirePluginFile(pluginFile);
+  } catch (error) {
+    if (error instanceof SyntaxError) {
+      const learnMoreLink = `Learn more: https://docs.expo.io/guides/config-plugins/#creating-a-plugin`;
+      // If the plugin reference is a node module, and that node module has a syntax error, then it probably doesn't have an official config plugin.
+      if (!isPluginFile && !moduleNameIsDirectFileReference(pluginReference)) {
+        const pluginError = new PluginError(
+          `Package "${pluginReference}" does not contain a valid config plugin.\n${learnMoreLink}\n\n${error.message}`,
+          'INVALID_PLUGIN_IMPORT'
+        );
+        pluginError.stack = error.stack;
+        throw pluginError;
+      }
+    }
+    throw error;
+  }
+
+  return resolveConfigPluginExport({
+    plugin: result,
+    pluginFile,
+    pluginReference,
+    isPluginFile,
+  });
 }
 
 /**
@@ -106,21 +135,41 @@ export function resolveConfigPluginFunction(projectRoot: string, pluginModulePat
  * - Return config type
  * - Serialize config
  *
- * @param result
- * @param configFile
+ * @param props.plugin plugin results
+ * @param props.pluginFile plugin file path
+ * @param props.pluginReference the string used to reference the plugin
+ * @param props.isPluginFile is file path from the app.plugin.js module root
  */
-export function resolveConfigPluginExport(result: any, configFile: string): ConfigPlugin<unknown> {
-  if (result.default != null) {
-    result = result.default;
+export function resolveConfigPluginExport({
+  plugin,
+  pluginFile,
+  pluginReference,
+  isPluginFile,
+}: {
+  plugin: any;
+  pluginFile: string;
+  pluginReference: string;
+  isPluginFile: boolean;
+}): ConfigPlugin<unknown> {
+  if (plugin.default != null) {
+    plugin = plugin.default;
   }
-  if (typeof result !== 'function') {
+  if (typeof plugin !== 'function') {
+    const learnMoreLink = `Learn more: https://docs.expo.io/guides/config-plugins/#creating-a-plugin`;
+    // If the plugin reference is a node module, and that node module does not export a function then it probably doesn't have a config plugin.
+    if (!isPluginFile && !moduleNameIsDirectFileReference(pluginReference)) {
+      throw new PluginError(
+        `Package "${pluginReference}" does not contain a valid config plugin. Module must export a function from file: ${pluginFile}.\n${learnMoreLink}`,
+        'INVALID_PLUGIN_TYPE'
+      );
+    }
     throw new PluginError(
-      `Plugin file ${configFile} must export a function. Learn more: https://github.com/expo/expo-cli/tree/master/packages/config-plugins#creating-a-plugin`,
+      `Plugin "${pluginReference}" must export a function from file: ${pluginFile}. ${learnMoreLink}`,
       'INVALID_PLUGIN_TYPE'
     );
   }
 
-  return result;
+  return plugin;
 }
 
 function requirePluginFile(filePath: string): any {
