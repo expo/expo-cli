@@ -159,7 +159,7 @@ export function resolveConfigPluginExport({
     // If the plugin reference is a node module, and that node module does not export a function then it probably doesn't have a config plugin.
     if (!isPluginFile && !moduleNameIsDirectFileReference(pluginReference)) {
       throw new PluginError(
-        `Package "${pluginReference}" does not contain a valid config plugin. Module must export a function from file: ${pluginFile}.\n${learnMoreLink}`,
+        `Package "${pluginReference}" does not contain a valid config plugin. Module must export a function from file: ${pluginFile}\n${learnMoreLink}`,
         'INVALID_PLUGIN_TYPE'
       );
     }
