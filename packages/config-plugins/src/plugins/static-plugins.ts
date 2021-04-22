@@ -21,8 +21,10 @@ function isModuleMissingError(name: string, error: Error): boolean {
 }
 
 function isUnexpectedTokenError(error: Error): boolean {
-  // @ts-expect-error
-  if (error instanceof SyntaxError || error.code === 'INVALID_PLUGIN_IMPORT') {
+  if (
+    error instanceof SyntaxError ||
+    (error instanceof PluginError && error.code === 'INVALID_PLUGIN_IMPORT')
+  ) {
     return (
       // These are the most common errors that'll be thrown when a package isn't transpiled correctly.
       !!error.message.match(/Unexpected token/) ||
