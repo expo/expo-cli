@@ -12,9 +12,9 @@ export async function validateDependenciesVersionsAsync(
   projectRoot: string,
   exp: ExpoConfig,
   pkg: PackageJSONConfig
-): Promise<void> {
+): Promise<boolean> {
   if (!Versions.gteSdkVersion(exp, '33.0.0')) {
-    return;
+    return false;
   }
 
   const bundleNativeModulesPath = resolveFrom.silent(projectRoot, 'expo/bundledNativeModules.json');
@@ -24,7 +24,7 @@ export async function validateDependenciesVersionsAsync(
         'expo'
       )} package version seems to be older.`
     );
-    return;
+    return false;
   }
 
   const bundledNativeModules = await JsonFile.readAsync(bundleNativeModulesPath);
@@ -63,5 +63,7 @@ export async function validateDependenciesVersionsAsync(
           'expo install [package-name ...]'
         )}`
     );
+    return false;
   }
+  return true;
 }

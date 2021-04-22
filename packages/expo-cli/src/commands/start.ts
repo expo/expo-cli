@@ -15,10 +15,10 @@ import {
   parseStartOptions,
   RawStartOptions,
 } from './start/parseStartOptions';
-import { validateDependenciesVersionsAsync } from './start/validateDependenciesVersions';
 import { assertProjectHasExpoExtensionFilesAsync } from './utils/deprecatedExtensionWarnings';
 import { profileMethod } from './utils/profileMethod';
 import { ensureTypeScriptSetupAsync } from './utils/typescript/ensureTypeScriptSetup';
+import { validateDependenciesVersionsAsync } from './utils/validateDependenciesVersions';
 
 async function action(projectRoot: string, options: NormalizedOptions): Promise<void> {
   Log.log(chalk.gray(`Starting project at ${projectRoot}`));
