@@ -29,7 +29,6 @@ import {
 import { profileMethod } from './utils/profileMethod';
 
 let _lastUrl: string | null = null;
-let _lastUdid: string | null = null;
 
 const SUGGESTED_XCODE_VERSION = `${Xcode.minimumVersion}.0`;
 
@@ -80,49 +79,60 @@ export async function ensureXcodeInstalledAsync(): Promise<boolean> {
   return true;
 }
 
+let _isXcodeCLIInstalled: boolean | null = null;
+
 export async function ensureXcodeCommandLineToolsInstalledAsync(): Promise<boolean> {
-  if (!(await ensureXcodeInstalledAsync())) {
-    // Need Xcode to install the CLI afaict
-    return false;
-  } else if (await SimControl.isXcrunInstalledAsync()) {
-    // Run this second to ensure the Xcode version check is run.
-    return true;
+  // NOTE(Bacon): See `isSimulatorInstalledAsync` for more info on why we cache this value.
+  if (_isXcodeCLIInstalled != null) {
+    return _isXcodeCLIInstalled;
   }
-
-  async function pendingAsync(): Promise<boolean> {
-    if (await SimControl.isXcrunInstalledAsync()) {
+  const _ensureXcodeCommandLineToolsInstalledAsync = async () => {
+    if (!(await ensureXcodeInstalledAsync())) {
+      // Need Xcode to install the CLI afaict
+      return false;
+    } else if (await SimControl.isXcrunInstalledAsync()) {
+      // Run this second to ensure the Xcode version check is run.
       return true;
-    } else {
-      await delayAsync(100);
-      return await pendingAsync();
     }
-  }
 
-  // This prompt serves no purpose accept informing the user what to do next, we could just open the App Store but it could be confusing if they don't know what's going on.
-  const confirm = await Prompts.confirmAsync({
-    initial: true,
-    message: `Xcode ${chalk.bold`Command Line Tools`} needs to be installed (requires ${chalk.bold`sudo`}), continue?`,
-  });
+    async function pendingAsync(): Promise<boolean> {
+      if (await SimControl.isXcrunInstalledAsync()) {
+        return true;
+      } else {
+        await delayAsync(100);
+        return await pendingAsync();
+      }
+    }
 
-  if (!confirm) {
+    // This prompt serves no purpose accept informing the user what to do next, we could just open the App Store but it could be confusing if they don't know what's going on.
+    const confirm = await Prompts.confirmAsync({
+      initial: true,
+      message: `Xcode ${chalk.bold`Command Line Tools`} needs to be installed (requires ${chalk.bold`sudo`}), continue?`,
+    });
+
+    if (!confirm) {
+      return false;
+    }
+
+    try {
+      await spawnAsync('sudo', [
+        'xcode-select',
+        '--install',
+        // TODO: Is there any harm in skipping this?
+        // '--switch', '/Applications/Xcode.app'
+      ]);
+      // Most likely the user will cancel the process, but if they don't this will continue checking until the CLI is available.
+      await pendingAsync();
+      return true;
+    } catch (error) {
+      // TODO: Figure out why this might get called (cancel early, network issues, server problems)
+      // TODO: Handle me
+    }
     return false;
-  }
+  };
+  _isXcodeCLIInstalled = await _ensureXcodeCommandLineToolsInstalledAsync();
 
-  try {
-    await spawnAsync('sudo', [
-      'xcode-select',
-      '--install',
-      // TODO: Is there any harm in skipping this?
-      // '--switch', '/Applications/Xcode.app'
-    ]);
-    // Most likely the user will cancel the process, but if they don't this will continue checking until the CLI is available.
-    await pendingAsync();
-    return true;
-  } catch (error) {
-    // TODO: Figure out why this might get called (cancel early, network issues, server problems)
-    // TODO: Handle me
-  }
-  return false;
+  return _isXcodeCLIInstalled;
 }
 
 class TimeoutError extends Error {}
@@ -138,49 +148,63 @@ async function getSimulatorAppIdAsync(): Promise<string | null> {
   return result;
 }
 
+let _isSimulatorInstalled: null | boolean = null;
+
 // Simulator installed
-export async function isSimulatorInstalledAsync() {
-  // Check to ensure Xcode and its CLI are installed and up to date.
-  if (!(await ensureXcodeCommandLineToolsInstalledAsync())) {
-    return false;
+export async function isSimulatorInstalledAsync(): Promise<boolean> {
+  if (_isSimulatorInstalled != null) {
+    return _isSimulatorInstalled;
   }
-  // TODO: extract into ensureSimulatorInstalled method
-
-  const result = await getSimulatorAppIdAsync();
-  if (!result) {
-    // This error may occur in CI where the users intends to install just the simulators but no Xcode.
-    Logger.global.error(
-      "Can't determine id of Simulator app; the Simulator is most likely not installed on this machine. Run `sudo xcode-select -s /Applications/Xcode.app`"
-    );
-    return false;
-  }
-  if (
-    result !== 'com.apple.iphonesimulator' &&
-    result !== 'com.apple.CoreSimulator.SimulatorTrampoline'
-  ) {
-    // TODO: FYI
-    Logger.global.warn(
-      "Simulator is installed but is identified as '" + result + "'; don't know what that is."
-    );
-    return false;
-  }
-
-  // make sure we can run simctl
-  try {
-    await SimControl.simctlAsync(['help']);
-  } catch (e) {
-    if (e.isXDLError) {
-      Logger.global.error(e.toString());
-    } else {
-      Logger.global.warn(`Unable to run simctl: ${e.toString()}`);
-      Logger.global.error(
-        'xcrun may not be configured correctly. Try running `sudo xcode-select --reset` and running this again.'
-      );
+  // NOTE(Bacon): This method can take upwards of 1-2s to run so we should cache the results per process.
+  // If the user installs Xcode while expo start is running, they'll need to restart
+  // the process for the command to work properly.
+  // This is better than waiting 1-2s every time you want to open the app on iOS.
+  const _isSimulatorInstalledAsync = async () => {
+    // Check to ensure Xcode and its CLI are installed and up to date.
+    if (!(await ensureXcodeCommandLineToolsInstalledAsync())) {
+      return false;
     }
-    return false;
-  }
+    // TODO: extract into ensureSimulatorInstalled method
 
-  return true;
+    const result = await getSimulatorAppIdAsync();
+    if (!result) {
+      // This error may occur in CI where the users intends to install just the simulators but no Xcode.
+      Logger.global.error(
+        "Can't determine id of Simulator app; the Simulator is most likely not installed on this machine. Run `sudo xcode-select -s /Applications/Xcode.app`"
+      );
+      return false;
+    }
+    if (
+      result !== 'com.apple.iphonesimulator' &&
+      result !== 'com.apple.CoreSimulator.SimulatorTrampoline'
+    ) {
+      // TODO: FYI
+      Logger.global.warn(
+        "Simulator is installed but is identified as '" + result + "'; don't know what that is."
+      );
+      return false;
+    }
+
+    // make sure we can run simctl
+    try {
+      await SimControl.simctlAsync(['help']);
+    } catch (e) {
+      if (e.isXDLError) {
+        Logger.global.error(e.toString());
+      } else {
+        Logger.global.warn(`Unable to run simctl: ${e.toString()}`);
+        Logger.global.error(
+          'xcrun may not be configured correctly. Try running `sudo xcode-select --reset` and running this again.'
+        );
+      }
+      return false;
+    }
+
+    return true;
+  };
+  _isSimulatorInstalled = await _isSimulatorInstalledAsync();
+
+  return _isSimulatorInstalled;
 }
 
 /**
@@ -564,17 +588,13 @@ async function openUrlInSimulatorSafeAsync({
   devClient?: boolean;
   exp?: ExpoConfig;
   projectRoot: string;
-}): Promise<{ success: true; bundleIdentifier: string } | { success: false; msg: string }> {
-  if (!(await isSimulatorInstalledAsync())) {
-    return {
-      success: false,
-      msg: 'Unable to verify Xcode and Simulator installation.',
-    };
-  }
-
+}): Promise<
+  | { success: true; device: SimControl.SimulatorDevice; bundleIdentifier: string }
+  | { success: false; msg: string }
+> {
   let simulator: SimControl.SimulatorDevice | null = null;
   try {
-    simulator = await ensureSimulatorOpenAsync({ udid });
+    simulator = await profileMethod(ensureSimulatorOpenAsync)({ udid });
   } catch (error) {
     return {
       success: false,
@@ -586,8 +606,11 @@ async function openUrlInSimulatorSafeAsync({
   let bundleIdentifier = 'host.exp.Exponent';
   try {
     if (devClient) {
-      bundleIdentifier = await BundleIdentifier.configureBundleIdentifierAsync(projectRoot, exp);
-      await assertDevClientInstalledAsync(simulator, bundleIdentifier);
+      bundleIdentifier = await profileMethod(BundleIdentifier.configureBundleIdentifierAsync)(
+        projectRoot,
+        exp
+      );
+      await profileMethod(assertDevClientInstalledAsync)(simulator, bundleIdentifier);
       // stream logs before opening the client.
       await streamLogsAsync({ udid: simulator.udid, bundleIdentifier });
     } else if (!isDetached) {
@@ -595,7 +618,10 @@ async function openUrlInSimulatorSafeAsync({
       _lastUrl = url;
     }
 
-    await SimControl.openURLAsync({ url, udid: simulator.udid });
+    await profileMethod(
+      SimControl.openURLAsync,
+      'SimControl.openURLAsync'
+    )({ url, udid: simulator.udid });
   } catch (e) {
     if (e.status === 194) {
       // An error was encountered processing the command (domain=NSOSStatusErrorDomain, code=-10814):
@@ -638,6 +664,7 @@ async function openUrlInSimulatorSafeAsync({
 
   return {
     success: true,
+    device: simulator,
     bundleIdentifier,
   };
 }
@@ -725,7 +752,7 @@ export async function openProjectAsync({
   | { success: true; url: string; udid: string; bundleIdentifier: string }
   | { success: false; error: string }
 > {
-  if (!(await isSimulatorInstalledAsync())) {
+  if (!(await profileMethod(isSimulatorInstalledAsync)())) {
     return {
       success: false,
       error: 'Unable to verify Xcode and Simulator installation.',
@@ -736,6 +763,7 @@ export async function openProjectAsync({
     hostType: 'localhost',
     scheme,
   });
+
   const { exp } = getConfig(projectRoot, {
     skipSDKVersionRequirement: true,
   });
@@ -746,16 +774,13 @@ export async function openProjectAsync({
   } else if (shouldPrompt) {
     const devices = await getSelectableSimulatorsAsync();
     device = await promptForSimulatorAsync(devices);
-  } else {
-    device = await ensureSimulatorOpenAsync({ udid: _lastUdid ?? undefined });
+    if (!device) {
+      return { success: false, error: 'escaped' };
+    }
   }
-  if (!device) {
-    return { success: false, error: 'escaped' };
-  }
-  _lastUdid = device.udid;
 
-  const result = await openUrlInSimulatorSafeAsync({
-    udid: device.udid,
+  const result = await profileMethod(openUrlInSimulatorSafeAsync)({
+    udid: device?.udid,
     url: projectUrl,
     sdkVersion: exp.sdkVersion,
     isDetached: !!exp.isDetached,
@@ -765,12 +790,13 @@ export async function openProjectAsync({
   });
 
   if (result.success) {
-    await activateSimulatorWindowAsync();
+    // run out of sync
+    activateSimulatorWindowAsync();
 
     return {
       success: true,
       url: projectUrl,
-      udid: device.udid,
+      udid: result.device.udid,
       bundleIdentifier: result.bundleIdentifier,
     };
   }
@@ -784,6 +810,10 @@ export async function streamLogsAsync({
   bundleIdentifier: string;
   udid: string;
 }) {
+  if (SimControlLogs.isStreamingLogs(udid)) {
+    return;
+  }
+
   const imageName = await SimControlLogs.getImageNameFromBundleIdentifierAsync(
     udid,
     bundleIdentifier
@@ -821,22 +851,20 @@ export async function openWebProjectAsync({
   if (shouldPrompt) {
     const devices = await getSelectableSimulatorsAsync();
     device = await promptForSimulatorAsync(devices);
-  } else {
-    device = await ensureSimulatorOpenAsync({ udid: _lastUdid ?? undefined });
+    if (!device) {
+      return { success: false, error: 'escaped' };
+    }
   }
-  if (!device) {
-    return { success: false, error: 'escaped' };
-  }
-  _lastUdid = device.udid;
 
   const result = await openUrlInSimulatorSafeAsync({
     url: projectUrl,
-    udid: device.udid,
+    udid: device?.udid,
     isDetached: true,
     projectRoot,
   });
   if (result.success) {
-    await activateSimulatorWindowAsync();
+    // run out of sync
+    activateSimulatorWindowAsync();
     return { success: true, url: projectUrl };
   }
   return { success: result.success, error: result.msg };

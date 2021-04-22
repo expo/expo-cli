@@ -2,8 +2,8 @@ import { getUserInterfaceStyle, setUserInterfaceStyle } from '../UserInterfaceSt
 
 describe('user interface style', () => {
   // TODO: should we default to 'Light' just as we do in the client if none is specified?
-  it(`returns null if no userInterfaceStyle is provided`, () => {
-    expect(getUserInterfaceStyle({})).toBe(null);
+  it(`returns light if no userInterfaceStyle is provided`, () => {
+    expect(getUserInterfaceStyle({})).toBe('light');
   });
 
   it(`returns the value if provided`, () => {

@@ -101,7 +101,9 @@ export async function runAndroidActionAsync(projectRoot: string, options: Option
   await spawnGradleAsync({ androidProjectPath, variant: options.variant });
 
   if (props.bundler) {
-    await startBundlerAsync(projectRoot);
+    await startBundlerAsync(projectRoot, {
+      metroPort: props.port,
+    });
   }
 
   const apkFile = await getInstallApkNameAsync(props.device, props);
