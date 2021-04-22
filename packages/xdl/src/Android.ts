@@ -323,6 +323,7 @@ export async function getAdbFileOutputAsync(args: string[], encoding?: 'latin1')
   try {
     return await execFileSync(adb, args, {
       encoding,
+      stdio: 'pipe',
     });
   } catch (e) {
     let errorMessage = (e.stderr || e.stdout || e.message).trim();
@@ -495,7 +496,7 @@ export async function upgradeExpoAsync(options?: {
     await uninstallExpoAsync(device);
     await installExpoAsync({ device, url, version });
     if (_lastUrl) {
-      Logger.global.info(`Opening ${_lastUrl} in Expo.`);
+      Logger.global.info(`\u203A Opening ${_lastUrl} in Expo.`);
       await getAdbOutputAsync([
         'shell',
         'am',
@@ -678,6 +679,10 @@ async function openUrlAsync({
       return;
     }
 
+    Logger.global.info(
+      `\u203A Opening ${chalk.underline(url)} on ${chalk.bold(bootedDevice.name)}`
+    );
+
     await activateEmulatorWindowAsync(bootedDevice);
 
     device = bootedDevice;
@@ -726,8 +731,6 @@ async function openUrlAsync({
       // _checkExpoUpToDateAsync(); // let this run in background
     }
 
-    Logger.global.info(`Opening ${chalk.underline(url)} on ${chalk.bold(device.name)}`);
-
     try {
       await _openUrlAsync({ pid: device.pid!, url, applicationId: clientApplicationId });
     } catch (e) {
@@ -775,16 +778,18 @@ export async function openProjectAsync({
   shouldPrompt,
   devClient = false,
   device,
+  scheme,
 }: {
   projectRoot: string;
   shouldPrompt?: boolean;
   devClient?: boolean;
   device?: Device;
+  scheme?: string;
 }): Promise<{ success: true; url: string } | { success: false; error: string }> {
   try {
     await startAdbReverseAsync(projectRoot);
 
-    const projectUrl = await UrlUtils.constructDeepLinkAsync(projectRoot);
+    const projectUrl = await UrlUtils.constructDeepLinkAsync(projectRoot, { scheme });
     const { exp } = getConfig(projectRoot, {
       skipSDKVersionRequirement: true,
     });

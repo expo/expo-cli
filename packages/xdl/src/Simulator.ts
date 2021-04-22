@@ -217,7 +217,7 @@ export async function ensureSimulatorOpenAsync(
 ): Promise<SimControl.SimulatorDevice> {
   // Yes, simulators can be booted even if the app isn't running, obviously we'd never want this.
   if (!(await SimControl.isSimulatorAppRunningAsync())) {
-    Logger.global.info(`Opening the iOS simulator, this might take a moment.`);
+    Logger.global.info(`\u203A Opening the iOS simulator, this might take a moment.`);
 
     // In theory this would ensure the correct simulator is booted as well.
     // This isn't theory though, this is Xcode.
@@ -564,7 +564,7 @@ export async function upgradeExpoAsync(
   }
 
   if (_lastUrl) {
-    Logger.global.info(`Opening ${chalk.underline(_lastUrl)} in Expo`);
+    Logger.global.info(`\u203A Opening ${chalk.underline(_lastUrl)} in Expo`);
     await SimControl.openURLAsync({ udid: simulator.udid, url: _lastUrl });
     _lastUrl = null;
   }
@@ -601,6 +601,7 @@ async function openUrlInSimulatorSafeAsync({
       msg: error.message,
     };
   }
+  Logger.global.info(`\u203A Opening ${chalk.underline(url)} on ${chalk.bold(simulator.name)}`);
 
   let bundleIdentifier = 'host.exp.Exponent';
   try {
@@ -617,12 +618,22 @@ async function openUrlInSimulatorSafeAsync({
       _lastUrl = url;
     }
 
-    Logger.global.info(`Opening ${chalk.underline(url)} on ${chalk.bold(simulator.name)}`);
     await profileMethod(
       SimControl.openURLAsync,
       'SimControl.openURLAsync'
     )({ url, udid: simulator.udid });
   } catch (e) {
+    if (e.status === 194) {
+      // An error was encountered processing the command (domain=NSOSStatusErrorDomain, code=-10814):
+      // The operation couldn’t be completed. (OSStatus error -10814.)
+      //
+      // This can be thrown when no app conforms to the URI scheme that we attempted to open.
+
+      return {
+        success: false,
+        msg: `Device ${simulator.name} (${simulator.udid}) has no app to handle the URI: ${url}`,
+      };
+    }
     if (e.isXDLError) {
       // Hit some internal error, don't try again.
       // This includes Xcode license errors
@@ -729,10 +740,14 @@ export async function openProjectAsync({
   projectRoot,
   shouldPrompt,
   devClient,
+  udid,
+  scheme,
 }: {
   projectRoot: string;
   shouldPrompt?: boolean;
   devClient?: boolean;
+  scheme?: string;
+  udid?: string;
 }): Promise<
   | { success: true; url: string; udid: string; bundleIdentifier: string }
   | { success: false; error: string }
@@ -746,6 +761,7 @@ export async function openProjectAsync({
 
   const projectUrl = await UrlUtils.constructDeepLinkAsync(projectRoot, {
     hostType: 'localhost',
+    scheme,
   });
 
   const { exp } = getConfig(projectRoot, {
@@ -753,7 +769,9 @@ export async function openProjectAsync({
   });
 
   let device: SimControl.SimulatorDevice | null = null;
-  if (shouldPrompt) {
+  if (udid) {
+    device = await ensureSimulatorOpenAsync({ udid });
+  } else if (shouldPrompt) {
     const devices = await getSelectableSimulatorsAsync();
     device = await promptForSimulatorAsync(devices);
     if (!device) {
