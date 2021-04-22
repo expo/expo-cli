@@ -29,7 +29,6 @@ import {
 import { profileMethod } from './utils/profileMethod';
 
 let _lastUrl: string | null = null;
-let _lastUdid: string | null = null;
 
 const SUGGESTED_XCODE_VERSION = `${Xcode.minimumVersion}.0`;
 
@@ -602,7 +601,6 @@ async function openUrlInSimulatorSafeAsync({
       msg: error.message,
     };
   }
-  _lastUdid = simulator.udid;
 
   let bundleIdentifier = 'host.exp.Exponent';
   try {
