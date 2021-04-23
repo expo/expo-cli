@@ -19,7 +19,7 @@ describe('Sanity Tests', () => {
 });
 
 const schema = require('./files/schema.json').schema;
-const S = new Schemer(schema, { rootDir: './__tests__' });
+const S = new Schemer(schema, {}, './__tests__');
 const good = require('./files/app.json');
 const bad = require('./files/bad.json');
 const badWithNot = require('./files/badwithnot.json');
