@@ -470,16 +470,6 @@ function ensureConfigHasDefaultValues({
 
   const expWithDefaults = { ...exp, name, slug, version, description };
 
-  // Find expo binary in project/workspace node_modules
-  const hasExpoInstalled = resolveFrom.silent(projectRoot, 'expo');
-
-  if (!hasExpoInstalled) {
-    throw new ConfigError(
-      `Unable to find expo in this project - have you run yarn / npm install?`,
-      'MODULE_NOT_FOUND'
-    );
-  }
-
   let sdkVersion;
   try {
     sdkVersion = getExpoSDKVersion(projectRoot, expWithDefaults);
