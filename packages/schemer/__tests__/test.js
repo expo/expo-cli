@@ -48,7 +48,11 @@ describe('Manual Validation Individual Unit Tests', () => {
   });
 
   it('Local Square Icon correct', async () => {
-    const S = new Schemer({ properties: { icon: { meta: { asset: true, square: true } } } });
+    const S = new Schemer(
+      { properties: { icon: { meta: { asset: true, square: true } } } },
+      {},
+      './__tests__'
+    );
     await expect(S.validateIcon('./files/check.png')).resolves;
   });
 

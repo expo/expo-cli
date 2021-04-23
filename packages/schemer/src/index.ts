@@ -31,7 +31,7 @@ export default class Schemer {
   rootDir: string;
   manualValidationErrors: ValidationError[];
   // Schema is a JSON Schema object
-  constructor(schema: object, options: Options = {}) {
+  constructor(schema: object, options: Options = {}, rootDir?: string) {
     this.options = {
       allErrors: true,
       verbose: true,
@@ -44,7 +44,7 @@ export default class Schemer {
     this.ajv = new Ajv(this.options);
     addFormats(this.ajv, { mode: 'full' });
     this.schema = schema;
-    this.rootDir = __dirname;
+    this.rootDir = rootDir || __dirname;
     this.manualValidationErrors = [];
   }
 
