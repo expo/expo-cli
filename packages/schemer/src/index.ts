@@ -21,17 +21,21 @@ type Meta = {
   contentTypeHuman?: string;
 };
 
+type SchemerOptions = Options & {
+  rootDir?: string;
+};
+
 type AssetField = { fieldPath: string; data: string; meta: Meta };
 
 export { SchemerError, ValidationError, ErrorCodes, ErrorCode } from './Error';
 export default class Schemer {
-  options: Options;
+  options: SchemerOptions;
   ajv: Ajv;
   schema: object;
   rootDir: string;
   manualValidationErrors: ValidationError[];
   // Schema is a JSON Schema object
-  constructor(schema: object, options: Options = {}, rootDir?: string) {
+  constructor(schema: object, options: SchemerOptions = {}) {
     this.options = {
       allErrors: true,
       verbose: true,
@@ -44,7 +48,7 @@ export default class Schemer {
     this.ajv = new Ajv(this.options);
     addFormats(this.ajv, { mode: 'full' });
     this.schema = schema;
-    this.rootDir = rootDir || __dirname;
+    this.rootDir = this.options.rootDir || __dirname;
     this.manualValidationErrors = [];
   }
 

@@ -19,7 +19,7 @@ describe('Sanity Tests', () => {
 });
 
 const schema = require('./files/schema.json').schema;
-const S = new Schemer(schema, {}, './__tests__');
+const S = new Schemer(schema, { rootDir: './__tests__' });
 const good = require('./files/app.json');
 const bad = require('./files/bad.json');
 const badWithNot = require('./files/badwithnot.json');
@@ -76,8 +76,7 @@ describe('Manual Validation Individual Unit Tests', () => {
   it('Local Square Icon correct', async () => {
     const S = new Schemer(
       { properties: { icon: { meta: { asset: true, square: true } } } },
-      {},
-      './__tests__'
+      { rootDir: './__tests__' }
     );
     await expect(S.validateIcon('./files/check.png')).resolves;
   });

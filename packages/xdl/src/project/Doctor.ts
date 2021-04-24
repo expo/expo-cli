@@ -126,7 +126,7 @@ async function validateWithSchema(
 ): Promise<{ schemaErrorMessage: string | undefined; assetsErrorMessage: string | undefined }> {
   let schemaErrorMessage;
   let assetsErrorMessage;
-  const validator = new Schemer(schema, {}, projectRoot);
+  const validator = new Schemer(schema, { rootDir: projectRoot });
 
   // Validate the schema itself
   try {
