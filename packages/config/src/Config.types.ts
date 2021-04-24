@@ -80,8 +80,6 @@ export type ExpoAppManifest = ExpoConfig & {
     tool: string | null;
     projectRoot?: string;
   };
-  ios?: { publishSourceMapPath?: string } & ExpoConfig['ios'];
-  android?: { publishSourceMapPath?: string } & ExpoConfig['android'];
 };
 
 export type Hook = {

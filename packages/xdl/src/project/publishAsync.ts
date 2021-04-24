@@ -102,10 +102,8 @@ export async function publishAsync(
 
   const hasHooks = validPostPublishHooks.length > 0;
 
-  const shouldPublishAndroidMaps = !!exp.android?.publishSourceMapPath;
-  const shouldPublishIosMaps = !!exp.ios?.publishSourceMapPath;
-  const androidSourceMap = hasHooks || shouldPublishAndroidMaps ? bundles.android.map : null;
-  const iosSourceMap = hasHooks || shouldPublishIosMaps ? bundles.ios.map : null;
+  const androidSourceMap = hasHooks ? bundles.android.map : null;
+  const iosSourceMap = hasHooks ? bundles.ios.map : null;
 
   let response;
   try {
@@ -184,11 +182,9 @@ export async function publishAsync(
     iosManifestUrl: fullManifestUrl,
     iosManifest,
     iosBundle,
-    iosSourceMap,
     androidManifestUrl: fullManifestUrl,
     androidManifest,
     androidBundle,
-    androidSourceMap,
     target,
   });
 
