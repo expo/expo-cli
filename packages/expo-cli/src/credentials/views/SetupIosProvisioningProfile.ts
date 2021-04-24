@@ -3,13 +3,7 @@ import chalk from 'chalk';
 import Log from '../../log';
 import { AppLookupParams } from '../api/IosApi';
 import { Context, IView } from '../context';
-import { IosDistCredentials } from '../credentials';
 import * as iosProfileView from './IosProvisioningProfile';
-
-interface ProvisioningProfileOptions {
-  nonInteractive?: boolean;
-  distCert: IosDistCredentials;
-}
 
 export class SetupIosProvisioningProfile implements IView {
   constructor(private app: AppLookupParams) {}
@@ -21,9 +15,9 @@ export class SetupIosProvisioningProfile implements IView {
 
     const distCert = await ctx.ios.getDistCert(this.app);
     if (!distCert) {
-      // dist cert should aready be created
+      // dist cert should already be created
       // TODO: trigger dist cert creation here
-      throw new Error('There is no disttribution certificate assgined for this app');
+      throw new Error('There is no distribution certificate assigned for this app');
     }
 
     const appCredentials = await ctx.ios.getAppCredentials(this.app);
