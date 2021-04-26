@@ -317,11 +317,9 @@ export async function exportAppAsync(
       iosManifestUrl: urljoin(publicUrl, 'ios-index.json'),
       iosManifest,
       iosBundle,
-      iosSourceMap,
       androidManifestUrl: urljoin(publicUrl, 'android-index.json'),
       androidManifest,
       androidBundle,
-      androidSourceMap,
       target,
     });
   }
