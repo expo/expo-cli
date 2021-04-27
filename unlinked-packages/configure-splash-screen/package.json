@@ -35,7 +35,7 @@
   "license": "MIT",
   "homepage": "https://github.com/expo/expo-cli/tree/master/unlinked-packages/configure-splash-screen",
   "engines": {
-    "node": ">=10"
+    "node": ">=12"
   },
   "dependencies": {
     "color-string": "^1.5.3",
