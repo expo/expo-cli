@@ -36,7 +36,6 @@ describe('Holistic Unit Test', () => {
     try {
       await S.validateSchemaAsync(bad);
     } catch (e) {
-      console.log(e);
       expect(e).toBeTruthy();
       expect(e.errors.length).toBe(4);
     }
