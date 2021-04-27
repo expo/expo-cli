@@ -1,4 +1,8 @@
-import { getConfig } from '@expo/config';
+import { ExpoConfig, getConfig } from '@expo/config';
+import {
+  normalizeStaticPlugin,
+  resolveConfigPluginFunction,
+} from '@expo/config-plugins/build/utils/plugin-resolver';
 import JsonFile from '@expo/json-file';
 import * as PackageManager from '@expo/package-manager';
 import { Command } from 'commander';
@@ -8,7 +12,57 @@ import { Versions } from 'xdl';
 
 import CommandError, { SilentError } from '../CommandError';
 import Log from '../log';
+import { attemptAddingPluginsAsync } from './eject/ConfigValidation';
 import { findProjectRootAsync } from './utils/ProjectUtils';
+
+function packageHasConfigPlugin(projectRoot: string, packageName: string) {
+  try {
+    return !!resolveConfigPluginFunction(projectRoot, packageName);
+  } catch {
+    return false;
+  }
+}
+
+function getNamedPlugins(plugins: NonNullable<ExpoConfig['plugins']>): string[] {
+  const namedPlugins = [];
+  for (const plugin of plugins) {
+    try {
+      // @ts-ignore
+      const [normal] = normalizeStaticPlugin(plugin);
+      if (typeof normal === 'string') {
+        namedPlugins.push(normal);
+      }
+    } catch {
+      // ignore assertions
+    }
+  }
+  return namedPlugins;
+}
+
+async function maybePromptToAddPackagePluginsAsync(
+  projectRoot: string,
+  exp: Pick<ExpoConfig, 'plugins'>,
+  packages: string[]
+) {
+  Log.debug('Checking config plugins...');
+  const currentPlugins = exp.plugins || [];
+  const normalized = getNamedPlugins(currentPlugins);
+
+  Log.debug(`Existing plugins: ${normalized.join(', ')}`);
+
+  const plugins = packages.filter(pkg => {
+    if (normalized.includes(pkg)) {
+      // already included in plugins array
+      return false;
+    }
+    // Check if the package has a valid plugin. Must be a well-made plugin for it to work with this.
+    const hasPlugin = packageHasConfigPlugin(projectRoot, pkg);
+    Log.debug(`Package "${pkg}" has plugin: ${hasPlugin}`);
+    return hasPlugin;
+  });
+
+  await attemptAddingPluginsAsync(projectRoot, exp, plugins);
+}
 
 async function resolveExpoProjectRootAsync() {
   try {
@@ -128,6 +182,12 @@ async function installAsync(packages: string[], options: PackageManager.CreateFo
   }
   Log.log(`Installing ${messages.join(' and ')} using ${packageManager.name}.`);
   await packageManager.addAsync(...versionedPackages);
+
+  await maybePromptToAddPackagePluginsAsync(
+    projectRoot,
+    exp,
+    versionedPackages.map(pkg => pkg.split('@')[0]).filter(Boolean)
+  );
 }
 
 export default function install(program: Command) {

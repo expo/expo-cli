@@ -253,7 +253,7 @@ export async function getOrPromptForPackage(projectRoot: string): Promise<string
   return packageName;
 }
 
-async function attemptModification(
+export async function attemptModification(
   projectRoot: string,
   edits: Partial<ExpoConfig>,
   exactEdits: Partial<ExpoConfig>
@@ -262,7 +262,7 @@ async function attemptModification(
     skipSDKVersionRequirement: true,
   });
   if (modification.type === 'success') {
-    Log.newLine();
+    Log.addNewLineIfNone();
   } else {
     warnAboutConfigAndThrow(modification.type, modification.message!, exactEdits);
   }
@@ -271,12 +271,36 @@ async function attemptModification(
 function logNoConfig() {
   Log.log(
     Log.chalk.yellow(
-      'No Expo config was found. Please create an Expo config (`app.config.js` or `app.json`) in your project root.'
+      `No Expo config was found. Please create an Expo config (${Log.chalk.bold`app.json`} or ${Log
+        .chalk.bold`app.config.js`}) in your project root.`
     )
   );
 }
 
-function warnAboutConfigAndThrow(type: string, message: string, edits: Partial<ExpoConfig>) {
+export async function attemptAddingPluginsAsync(
+  projectRoot: string,
+  exp: Pick<ExpoConfig, 'plugins'>,
+  plugins: string[]
+): Promise<void> {
+  if (!plugins.length) return;
+
+  const edits = {
+    plugins: (exp.plugins || []).concat(plugins),
+  };
+  const modification = await modifyConfigAsync(projectRoot, edits, {
+    skipSDKVersionRequirement: true,
+  });
+  if (modification.type === 'success') {
+    Log.log(`\u203A Added config plugins: ${plugins.join(', ')}`);
+  } else {
+    const exactEdits = {
+      plugins,
+    };
+    warnAboutConfigAndThrow(modification.type, modification.message!, exactEdits);
+  }
+}
+
+export function warnAboutConfigAndThrow(type: string, message: string, edits: Partial<ExpoConfig>) {
   Log.addNewLineIfNone();
   if (type === 'warn') {
     // The project is using a dynamic config, give the user a helpful log and bail out.
@@ -290,7 +314,7 @@ function warnAboutConfigAndThrow(type: string, message: string, edits: Partial<E
 }
 
 function notifyAboutManualConfigEdits(edits: Partial<ExpoConfig>) {
-  Log.log(Log.chalk.cyan(`Please add the following to your Expo config, and try again... `));
+  Log.log(Log.chalk.cyan(`Please add the following to your Expo config`));
   Log.newLine();
   Log.log(JSON.stringify(edits, null, 2));
   Log.newLine();
