@@ -14,10 +14,6 @@ import {
 } from '../credentials';
 import ApiClient from './IosApiV2Wrapper';
 
-type CredentialFields = {
-  credentials: { [key: string]: any };
-};
-
 export interface AppLookupParams {
   accountName: string;
   projectName: string;
@@ -44,7 +40,7 @@ export function getAppLookupParams(experienceName: string, bundleIdentifier: str
 // - when accessing user or app credentials identified by AppLookupParams fetch all credentials for that app (user and app credentials)
 // - when updating userCredentials refetch only userCredentials
 // - when deleting userCredentials modify prefetched appCredentials without calling api
-// - when updating provisioningProfile refetch all credentials for that app (user and app crednetials)
+// - when updating provisioningProfile refetch all credentials for that app (user and app credentials)
 // - when deleting provisioningProfile modify appCredentials in cache
 // - when deleting pushCert refetch all credentials for app (app + user)
 //
