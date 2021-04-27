@@ -15,6 +15,8 @@ function withInternalRemoved(config: ExpoConfig) {
   return config;
 }
 
+jest.unmock('resolve-from');
+
 const projectRoot = join(__dirname, 'fixtures/project-files');
 
 // Not using in-memory fs because the node resolution isn't mocked out.
@@ -66,15 +68,15 @@ describe(withStaticPlugin, () => {
     );
   });
   it(`uses internal projectRoot`, () => {
-    let config: ExpoConfig = {
-      name: 'foo',
-      slug: 'foo',
-      _internal: { projectRoot: '.' },
-    };
+    let config: ExpoConfig = withInternal(
+      {
+        name: 'foo',
+        slug: 'foo',
+      },
+      projectRoot
+    );
 
     config = withPlugins(config, [
-      // @ts-ignore -- invalid type
-      c => withInternal(c, projectRoot),
       // @ts-ignore -- invalid type
       c =>
         withStaticPlugin(c, {
@@ -94,11 +96,13 @@ describe(withStaticPlugin, () => {
   });
 
   it(`passes props to plugin`, () => {
-    let config: ExpoConfig = {
-      name: 'foo',
-      slug: 'foo',
-      _internal: { projectRoot: '.' },
-    };
+    let config: ExpoConfig = withInternal(
+      {
+        name: 'foo',
+        slug: 'foo',
+      },
+      '.'
+    );
 
     config = withPlugins(config, [
       // @ts-ignore -- invalid type
@@ -141,6 +145,6 @@ describe(withStaticPlugin, () => {
         plugin: ['./not-existing.js', { foobar: true }],
         projectRoot,
       })
-    ).toThrow(/Cannot find module '.\/not-existing.js'/);
+    ).toThrow(/Failed to resolve plugin for module ".\/not-existing.js"/);
   });
 });
