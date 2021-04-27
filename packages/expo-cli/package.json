@@ -38,7 +38,7 @@
   },
   "homepage": "https://github.com/expo/expo-cli/tree/master/packages/expo-cli#readme",
   "engines": {
-    "node": ">=6.9.1"
+    "node": ">=12"
   },
   "devDependencies": {
     "@babel/cli": "^7.8.4",

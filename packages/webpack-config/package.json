@@ -34,7 +34,7 @@
   ],
   "license": "MIT",
   "engines": {
-    "node": ">=8.10"
+    "node": ">=12"
   },
   "bugs": {
     "url": "https://github.com/expo/expo-cli/issues"
