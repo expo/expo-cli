@@ -98,6 +98,12 @@ export function assertInternalProjectRoot(projectRoot?: string): asserts project
 
 // Resolve the module function and assert type
 export function resolveConfigPluginFunction(projectRoot: string, pluginReference: string) {
+  const { plugin } = resolveConfigPluginFunctionWithInfo(projectRoot, pluginReference);
+  return plugin;
+}
+
+// Resolve the module function and assert type
+export function resolveConfigPluginFunctionWithInfo(projectRoot: string, pluginReference: string) {
   const { filePath: pluginFile, isPluginFile } = resolvePluginForModule(
     projectRoot,
     pluginReference
@@ -121,12 +127,13 @@ export function resolveConfigPluginFunction(projectRoot: string, pluginReference
     throw error;
   }
 
-  return resolveConfigPluginExport({
+  const plugin = resolveConfigPluginExport({
     plugin: result,
     pluginFile,
     pluginReference,
     isPluginFile,
   });
+  return { plugin, pluginFile, pluginReference, isPluginFile };
 }
 
 /**

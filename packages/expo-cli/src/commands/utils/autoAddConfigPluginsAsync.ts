@@ -1,21 +1,32 @@
 import { ExpoConfig } from '@expo/config';
 import {
   normalizeStaticPlugin,
-  resolveConfigPluginFunction,
+  resolveConfigPluginFunctionWithInfo,
 } from '@expo/config-plugins/build/utils/plugin-resolver';
 
 import Log from '../../log';
 import { attemptAddingPluginsAsync } from '../eject/ConfigValidation';
 
+/**
+ * Resolve if a package has a config plugin.
+ * For sanity, we'll only support config plugins that use the `app.config.js` entry file,
+ * this is because a package like `lodash` could be a "valid" config plugin and break the prebuild process.
+ *
+ * @param projectRoot
+ * @param packageName
+ * @returns
+ */
 function packageHasConfigPlugin(projectRoot: string, packageName: string) {
   try {
-    return !!resolveConfigPluginFunction(projectRoot, packageName);
-  } catch {
-    return false;
-  }
+    const info = resolveConfigPluginFunctionWithInfo(projectRoot, packageName);
+    if (info.isPluginFile) {
+      return info.plugin;
+    }
+  } catch {}
+  return false;
 }
 
-function getNamedPlugins(plugins: NonNullable<ExpoConfig['plugins']>): string[] {
+export function getNamedPlugins(plugins: NonNullable<ExpoConfig['plugins']>): string[] {
   const namedPlugins = [];
   for (const plugin of plugins) {
     try {
@@ -49,9 +60,12 @@ export async function autoAddConfigPluginsAsync(
       return false;
     }
     // Check if the package has a valid plugin. Must be a well-made plugin for it to work with this.
-    const hasPlugin = packageHasConfigPlugin(projectRoot, pkg);
-    Log.debug(`Package "${pkg}" has plugin: ${hasPlugin}`);
-    return hasPlugin;
+    const plugin = packageHasConfigPlugin(projectRoot, pkg);
+
+    Log.debug(
+      `Package "${pkg}" has plugin: ${!!plugin}` + (plugin ? ` (args: ${plugin.length})` : '')
+    );
+    return !!plugin;
   });
 
   await attemptAddingPluginsAsync(projectRoot, exp, plugins);
