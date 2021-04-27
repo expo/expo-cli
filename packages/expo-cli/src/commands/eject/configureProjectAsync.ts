@@ -31,28 +31,19 @@ export const expoManagedPlugins = [
   'expo-ads-facebook',
   'expo-location',
   'expo-media-library',
-  // 'expo-notifications',
   'expo-screen-orientation',
   'expo-sensors',
   'expo-task-manager',
   'expo-local-authentication',
+  'expo-dev-client',
 ];
 
 // Plugins that need to be automatically applied, but also get applied by expo-cli if the versioned plugin isn't available.
 // These are split up because the user doesn't need to be prompted to setup these packages.
 const expoManagedVersionedPlugins = [
-  // 'expo-splash-screen',
-  // 'expo-facebook',
-  // 'expo-branch',
-  // 'expo-updates',
-  // 'expo-ads-admob',
-  'expo-apple-authentication',
-  'expo-document-picker',
   'expo-firebase-analytics',
   'expo-firebase-core',
   'expo-google-sign-in',
-  // 'expo-dev-menu',
-  // 'expo-dev-launcher',
 ];
 
 const withOptionalPlugins: ConfigPlugin<(StaticPlugin | string)[]> = (config, plugins) => {
