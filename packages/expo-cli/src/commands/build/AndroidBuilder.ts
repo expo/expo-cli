@@ -8,7 +8,7 @@ import {
   useKeystore,
 } from '../../credentials/views/AndroidKeystore';
 import { SetupAndroidKeystore } from '../../credentials/views/SetupAndroidKeystore';
-import { getOrPromptForPackage } from '../eject/ConfigValidation';
+import { getOrPromptForPackage } from '../utils/getOrPromptApplicationId';
 import BaseBuilder from './BaseBuilder';
 import BuildError from './BuildError';
 import { Platform, PLATFORMS } from './constants';

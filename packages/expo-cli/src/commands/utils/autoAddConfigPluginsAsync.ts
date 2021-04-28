@@ -5,7 +5,7 @@ import {
 } from '@expo/config-plugins/build/utils/plugin-resolver';
 
 import Log from '../../log';
-import { attemptAddingPluginsAsync } from '../eject/ConfigValidation';
+import { attemptAddingPluginsAsync } from './modifyConfigAsync';
 
 /**
  * Resolve if a package has a config plugin.

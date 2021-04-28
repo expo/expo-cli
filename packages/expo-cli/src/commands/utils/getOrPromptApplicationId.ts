@@ -1,94 +1,20 @@
-import { ExpoConfig, getConfig, modifyConfigAsync } from '@expo/config';
-import got from 'got';
+import { getConfig } from '@expo/config';
 import { UserManager } from 'xdl';
 
-import CommandError, { SilentError } from '../../CommandError';
+import CommandError from '../../CommandError';
 import Log from '../../log';
 import prompt, { confirmAsync } from '../../prompts';
-import { learnMore } from '../utils/TerminalLink';
-import { isUrlAvailableAsync } from '../utils/url';
+import { learnMore } from './TerminalLink';
+import { attemptModification } from './modifyConfigAsync';
+import {
+  getBundleIdWarningAsync,
+  getPackageNameWarningAsync,
+  validateBundleId,
+  validatePackage,
+} from './validateApplicationId';
 
 const noBundleIdMessage = `Your project must have a \`bundleIdentifier\` set in the Expo config (app.json or app.config.js).\nSee https://expo.fyi/bundle-identifier`;
 const noPackageMessage = `Your project must have a \`package\` set in the Expo config (app.json or app.config.js).\nSee https://expo.fyi/android-package`;
-
-export function validateBundleId(value: string): boolean {
-  return /^[a-zA-Z0-9-.]+$/.test(value);
-}
-
-function validatePackage(value: string): boolean {
-  return /^[a-zA-Z][a-zA-Z0-9_]*(\.[a-zA-Z][a-zA-Z0-9_]*)+$/.test(value);
-}
-
-const cachedBundleIdResults: Record<string, string> = {};
-const cachedPackageNameResults: Record<string, string> = {};
-
-/**
- * A quality of life method that provides a warning when the bundle ID is already in use.
- *
- * @param bundleId
- */
-async function getBundleIdWarningAsync(bundleId: string): Promise<string | null> {
-  // Prevent fetching for the same ID multiple times.
-  if (cachedBundleIdResults[bundleId]) {
-    return cachedBundleIdResults[bundleId];
-  }
-
-  if (!(await isUrlAvailableAsync('itunes.apple.com'))) {
-    // If no network, simply skip the warnings since they'll just lead to more confusion.
-    return null;
-  }
-
-  const url = `http://itunes.apple.com/lookup?bundleId=${bundleId}`;
-  try {
-    const response = await got(url);
-    const json = JSON.parse(response.body?.trim());
-    if (json.resultCount > 0) {
-      const firstApp = json.results[0];
-      const message = formatInUseWarning(firstApp.trackName, firstApp.sellerName, bundleId);
-      cachedBundleIdResults[bundleId] = message;
-      return message;
-    }
-  } catch {
-    // Error fetching itunes data.
-  }
-  return null;
-}
-
-async function getPackageNameWarningAsync(packageName: string): Promise<string | null> {
-  // Prevent fetching for the same ID multiple times.
-  if (cachedPackageNameResults[packageName]) {
-    return cachedPackageNameResults[packageName];
-  }
-
-  if (!(await isUrlAvailableAsync('play.google.com'))) {
-    // If no network, simply skip the warnings since they'll just lead to more confusion.
-    return null;
-  }
-
-  const url = `https://play.google.com/store/apps/details?id=${packageName}`;
-  try {
-    const response = await got(url);
-    // If the page exists, then warn the user.
-    if (response.statusCode === 200) {
-      // There is no JSON API for the Play Store so we can't concisely
-      // locate the app name and developer to match the iOS warning.
-      const message = `⚠️  The package ${Log.chalk.bold(
-        packageName
-      )} is already in use. ${Log.chalk.dim(learnMore(url))}`;
-      cachedPackageNameResults[packageName] = message;
-      return message;
-    }
-  } catch {
-    // Error fetching play store data or the page doesn't exist.
-  }
-  return null;
-}
-
-function formatInUseWarning(appName: string, author: string, id: string): string {
-  return `⚠️  The app ${Log.chalk.bold(appName)} by ${Log.chalk.italic(
-    author
-  )} is already using ${Log.chalk.bold(id)}`;
-}
 
 export async function getOrPromptForBundleIdentifier(projectRoot: string): Promise<string> {
   const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
@@ -251,71 +177,4 @@ export async function getOrPromptForPackage(projectRoot: string): Promise<string
   );
 
   return packageName;
-}
-
-export async function attemptModification(
-  projectRoot: string,
-  edits: Partial<ExpoConfig>,
-  exactEdits: Partial<ExpoConfig>
-): Promise<void> {
-  const modification = await modifyConfigAsync(projectRoot, edits, {
-    skipSDKVersionRequirement: true,
-  });
-  if (modification.type === 'success') {
-    Log.addNewLineIfNone();
-  } else {
-    warnAboutConfigAndThrow(modification.type, modification.message!, exactEdits);
-  }
-}
-
-function logNoConfig() {
-  Log.log(
-    Log.chalk.yellow(
-      `No Expo config was found. Please create an Expo config (${Log.chalk.bold`app.json`} or ${Log
-        .chalk.bold`app.config.js`}) in your project root.`
-    )
-  );
-}
-
-export async function attemptAddingPluginsAsync(
-  projectRoot: string,
-  exp: Pick<ExpoConfig, 'plugins'>,
-  plugins: string[]
-): Promise<void> {
-  if (!plugins.length) return;
-
-  const edits = {
-    plugins: (exp.plugins || []).concat(plugins),
-  };
-  const modification = await modifyConfigAsync(projectRoot, edits, {
-    skipSDKVersionRequirement: true,
-  });
-  if (modification.type === 'success') {
-    Log.log(`\u203A Added config plugins: ${plugins.join(', ')}`);
-  } else {
-    const exactEdits = {
-      plugins,
-    };
-    warnAboutConfigAndThrow(modification.type, modification.message!, exactEdits);
-  }
-}
-
-export function warnAboutConfigAndThrow(type: string, message: string, edits: Partial<ExpoConfig>) {
-  Log.addNewLineIfNone();
-  if (type === 'warn') {
-    // The project is using a dynamic config, give the user a helpful log and bail out.
-    Log.log(Log.chalk.yellow(message));
-  } else {
-    logNoConfig();
-  }
-
-  notifyAboutManualConfigEdits(edits);
-  throw new SilentError();
-}
-
-function notifyAboutManualConfigEdits(edits: Partial<ExpoConfig>) {
-  Log.log(Log.chalk.cyan(`Please add the following to your Expo config`));
-  Log.newLine();
-  Log.log(JSON.stringify(edits, null, 2));
-  Log.newLine();
 }
