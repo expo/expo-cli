@@ -1,0 +1,74 @@
+name: Test Packages Windows
+on:
+  push:
+    branches: [master]
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        node: ['12', '14']
+    name: Build with Node ${{ matrix.node }}
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 1
+      - name: Setup node
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node }}
+      - run: yarn install --frozen-lockfile --check-files
+      - run: yarn lerna run prepare --stream
+      - run: yarn lint --max-warnings=0
+      - uses: actions/cache@v2
+        with:
+          path: '*'
+          key: v2-${{ github.sha }}-${{ matrix.node }}
+  test:
+    runs-on: ubuntu-latest
+    needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ['12', '14']
+        package:
+          [
+              electron-adapter,
+              dev-tools,
+              babel-preset-cli,
+              config,
+              config-plugins,
+              dev-server,
+              expo-cli,
+              expo-codemod,
+              image-utils,
+              json-file,
+              metro-config,
+              package-manager,
+              pkcs12,
+              plist,
+              pwa,
+              schemer,
+              uri-scheme,
+              webpack-config,
+              xdl,
+          ]
+    name: Test ${{ matrix.package }} on Node ${{ matrix.node }}
+    steps:
+      - uses: actions/cache@v2
+        with:
+          path: '*'
+          key: v2-${{ github.sha }}-${{ matrix.node }}
+      - name: Set up Node
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node }}
+      - name: Test ${{ matrix.package }}
+        run: cd packages/${{ matrix.package }} && yarn test
+        # run: cd packages/${{ matrix.package }} && yarn test --coverage
+        env:
+          CI: true
+          EXPO_DEBUG: true
