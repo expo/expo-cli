@@ -13,7 +13,7 @@ export type InterfaceOrientation =
 
 export type InterfaceStyle = 'Light' | 'Dark' | 'Automatic';
 
-export type InfoPlist = Record<string, JSONValue> & {
+export type InfoPlist = Record<string, JSONValue | undefined> & {
   UIStatusBarHidden?: boolean;
   UIStatusBarStyle?: string;
   UILaunchStoryboardName?: string | 'SplashScreen';
