@@ -10,10 +10,7 @@ import semver from 'semver';
 
 import { AbortCommandError, SilentError } from '../../CommandError';
 import Log from '../../log';
-import {
-  extractTemplateAppAsync,
-  extractTemplateAppFolderAsync,
-} from '../../utils/extractTemplateAppAsync';
+import { extractTemplateAppAsync } from '../../utils/extractTemplateAppAsync';
 import * as CreateApp from '../utils/CreateApp';
 import * as GitIgnore from '../utils/GitIgnore';
 import { resolveTemplateArgAsync } from './Github';
