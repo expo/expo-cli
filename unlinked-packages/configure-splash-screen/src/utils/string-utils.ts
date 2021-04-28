@@ -1,6 +1,3 @@
-// runtime polyfills
-import 'core-js/es/string/match-all';
-
 /**
  * @returns [`true`, modifiedContent: string] if replacement is successful, [`false`, originalContent] otherwise.
  */

@@ -40,7 +40,6 @@
   "dependencies": {
     "color-string": "^1.5.3",
     "commander": "^5.1.0",
-    "core-js": "^3.6.5",
     "fs-extra": "^9.0.0",
     "glob": "^7.1.6",
     "lodash": "^4.17.15",
