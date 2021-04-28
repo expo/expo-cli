@@ -11,11 +11,13 @@ import { createNativeProjectsFromTemplateAsync } from './createNativeProjectsFro
 import { ensureConfigAsync } from './ensureConfigAsync';
 import { installNodeDependenciesAsync } from './installNodeDependenciesAsync';
 import { assertPlatforms, ensureValidPlatforms } from './platformOptions';
+import { resolveTemplateOption } from './resolveTemplate';
 import { warnIfDependenciesRequireAdditionalSetup } from './setupWarnings';
 
 export type EjectAsyncOptions = {
   verbose?: boolean;
   force?: boolean;
+  template?: string;
   install?: boolean;
   packageManager?: 'npm' | 'yarn';
   platforms: ModPlatform[];
@@ -58,6 +60,7 @@ export async function prebuildAsync(
     projectRoot,
     exp,
     pkg,
+    template: options.template != null ? resolveTemplateOption(options.template) : undefined,
     tempDir,
     platforms,
     skipDependencyUpdate: options.skipDependencyUpdate,

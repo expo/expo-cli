@@ -113,7 +113,7 @@ export async function extractAndPrepareTemplateAppAsync(
 export async function extractTemplateAppAsync(
   templateSpec: PackageSpec,
   targetPath: string,
-  config: { name?: string }
+  config: TemplateConfig
 ) {
   await pacote.tarball.stream(
     templateSpec,
@@ -128,9 +128,19 @@ export async function extractTemplateAppAsync(
   return targetPath;
 }
 
+export async function extractTemplateAppFolderAsync(
+  tarFilePath: string,
+  targetPath: string,
+  config: TemplateConfig
+) {
+  const readStream = fs.createReadStream(tarFilePath);
+  await extractTemplateAppAsyncImpl(targetPath, config, readStream);
+  return targetPath;
+}
+
 async function extractTemplateAppAsyncImpl(
   targetPath: string,
-  config: { name?: string },
+  config: TemplateConfig,
   tarStream: Readable
 ) {
   await fs.mkdirp(targetPath);
@@ -139,7 +149,6 @@ async function extractTemplateAppAsyncImpl(
       cwd: targetPath,
       strip: 1,
       // TODO(ville): pending https://github.com/DefinitelyTyped/DefinitelyTyped/pull/36598
-      // @ts-ignore property missing from the type definition
       transform: createFileTransform(config),
       onentry(entry: ReadEntry) {
         if (config.name) {

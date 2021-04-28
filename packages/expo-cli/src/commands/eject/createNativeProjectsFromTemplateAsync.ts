@@ -10,7 +10,10 @@ import semver from 'semver';
 
 import { SilentError } from '../../CommandError';
 import Log from '../../log';
-import { extractTemplateAppAsync } from '../../utils/extractTemplateAppAsync';
+import {
+  extractTemplateAppAsync,
+  extractTemplateAppFolderAsync,
+} from '../../utils/extractTemplateAppAsync';
 import * as CreateApp from '../utils/CreateApp';
 import * as GitIgnore from '../utils/GitIgnore';
 import {
@@ -35,6 +38,7 @@ export async function createNativeProjectsFromTemplateAsync({
   projectRoot,
   exp,
   pkg,
+  template,
   tempDir,
   platforms,
   skipDependencyUpdate,
@@ -42,6 +46,7 @@ export async function createNativeProjectsFromTemplateAsync({
   projectRoot: string;
   exp: ExpoConfig;
   pkg: PackageJSONConfig;
+  template?: string;
   tempDir: string;
   platforms: ModPlatform[];
   skipDependencyUpdate?: string[];
@@ -50,6 +55,7 @@ export async function createNativeProjectsFromTemplateAsync({
 > {
   const copiedPaths = await cloneNativeDirectoriesAsync({
     projectRoot,
+    template,
     tempDir,
     exp,
     pkg,
@@ -85,18 +91,18 @@ export async function createNativeProjectsFromTemplateAsync({
 async function cloneNativeDirectoriesAsync({
   projectRoot,
   tempDir,
+  template,
   exp,
   pkg,
   platforms,
 }: {
   projectRoot: string;
   tempDir: string;
+  template?: string;
   exp: Pick<ExpoConfig, 'name' | 'sdkVersion'>;
   pkg: PackageJSONConfig;
   platforms: ModPlatform[];
 }): Promise<string[]> {
-  const templateSpec = await validateBareTemplateExistsAsync(exp.sdkVersion!);
-
   // NOTE(brentvatne): Removing spaces between steps for now, add back when
   // there is some additional context for steps
   const creatingNativeProjectStep = CreateApp.logNewSection(
@@ -108,7 +114,12 @@ async function cloneNativeDirectoriesAsync({
   let copiedPaths: string[] = [];
   let skippedPaths: string[] = [];
   try {
-    await extractTemplateAppAsync(templateSpec, tempDir, exp);
+    if (template) {
+      await extractTemplateAppFolderAsync(template, tempDir, exp);
+    } else {
+      const templateSpec = await validateBareTemplateExistsAsync(exp.sdkVersion!);
+      await extractTemplateAppAsync(templateSpec, tempDir, exp);
+    }
     [copiedPaths, skippedPaths] = await copyPathsFromTemplateAsync(
       projectRoot,
       tempDir,
