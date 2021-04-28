@@ -73,7 +73,6 @@
     "url": "https://github.com/expo/expo-cli.git",
     "directory": "packages/dev-tools"
   },
-  "gitHead": "613642fe06827cc231405784b099cf71c29072df",
   "publishConfig": {
     "access": "public"
   }
