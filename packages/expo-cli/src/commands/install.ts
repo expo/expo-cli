@@ -9,6 +9,7 @@ import { Versions } from 'xdl';
 import CommandError, { SilentError } from '../CommandError';
 import Log from '../log';
 import { findProjectRootAsync } from './utils/ProjectUtils';
+import { autoAddConfigPluginsAsync } from './utils/autoAddConfigPluginsAsync';
 
 async function resolveExpoProjectRootAsync() {
   try {
@@ -128,6 +129,12 @@ async function installAsync(packages: string[], options: PackageManager.CreateFo
   }
   Log.log(`Installing ${messages.join(' and ')} using ${packageManager.name}.`);
   await packageManager.addAsync(...versionedPackages);
+
+  await autoAddConfigPluginsAsync(
+    projectRoot,
+    exp,
+    versionedPackages.map(pkg => pkg.split('@')[0]).filter(Boolean)
+  );
 }
 
 export default function install(program: Command) {
