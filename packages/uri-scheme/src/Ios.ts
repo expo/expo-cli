@@ -96,7 +96,7 @@ export async function getAsync({
 }: Pick<Options, 'projectRoot' | 'infoPath'>): Promise<string[]> {
   const infoPlistPath = infoPath ?? getConfigPath(projectRoot);
   const rawPlist = fs.readFileSync(infoPlistPath, 'utf8');
-  const plistObject = plist.parse(rawPlist) as PlistObject;
+  const plistObject = plist.parse(rawPlist);
   const schemes = Scheme.getSchemesFromPlist(plistObject);
   return schemes;
 }
