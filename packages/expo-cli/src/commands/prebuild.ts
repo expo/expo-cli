@@ -57,7 +57,7 @@ export default function (program: Command) {
     .option('--npm', 'Use npm to install dependencies. (default when Yarn is not installed)')
     .option(
       '--template <template>',
-      'Project template to clone from. File path pointing to a local tar file'
+      'Project template to clone from. File path pointing to a local tar file or a github repo'
     )
     .option('-p, --platform [platform]', 'Platforms to sync: ios, android, all. Default: all')
     .option(
