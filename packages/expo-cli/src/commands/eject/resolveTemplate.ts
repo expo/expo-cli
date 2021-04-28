@@ -5,13 +5,17 @@ import { isURL } from 'xdl/build/UrlUtils';
 import CommandError from '../../CommandError';
 
 export function resolveTemplateOption(template: string) {
-  // TODO: Resolve earlier
   if (isURL(template, {})) {
-    throw new CommandError('template of type URL is not supported');
+    return template;
   }
   const templatePath = path.resolve(template);
   if (!fs.existsSync(templatePath)) {
     throw new CommandError('template file does not exist: ' + templatePath);
+  }
+  if (!fs.statSync(templatePath).isFile()) {
+    throw new CommandError(
+      'template must be a tar file created by running `npm pack` in a project: ' + templatePath
+    );
   }
   return templatePath;
 }

@@ -8,7 +8,7 @@ import pacote from 'pacote';
 import path from 'path';
 import semver from 'semver';
 
-import { SilentError } from '../../CommandError';
+import { AbortCommandError, SilentError } from '../../CommandError';
 import Log from '../../log';
 import {
   extractTemplateAppAsync,
@@ -16,6 +16,7 @@ import {
 } from '../../utils/extractTemplateAppAsync';
 import * as CreateApp from '../utils/CreateApp';
 import * as GitIgnore from '../utils/GitIgnore';
+import { resolveTemplateArgAsync } from './Github';
 import {
   DependenciesModificationResults,
   isPkgMainExpoAppEntry,
@@ -115,7 +116,7 @@ async function cloneNativeDirectoriesAsync({
   let skippedPaths: string[] = [];
   try {
     if (template) {
-      await extractTemplateAppFolderAsync(template, tempDir, exp);
+      await resolveTemplateArgAsync(tempDir, creatingNativeProjectStep, exp.name, template);
     } else {
       const templateSpec = await validateBareTemplateExistsAsync(exp.sdkVersion!);
       await extractTemplateAppAsync(templateSpec, tempDir, exp);
@@ -144,13 +145,13 @@ async function cloneNativeDirectoriesAsync({
     }
     creatingNativeProjectStep.succeed(message);
   } catch (e) {
-    Log.error(e.message);
-    creatingNativeProjectStep.fail(
-      'Failed to create the native project - see the output above for more information.'
-    );
+    if (!(e instanceof AbortCommandError)) {
+      Log.error(e.message);
+    }
+    creatingNativeProjectStep.fail('Failed to create the native project.');
     Log.log(
       chalk.yellow(
-        'You may want to delete the `./ios` and/or `./android` directories before running eject again.'
+        'You may want to delete the `./ios` and/or `./android` directories before trying again.'
       )
     );
     throw new SilentError(e);
