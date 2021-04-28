@@ -23,6 +23,7 @@ import Log from '../log';
 import { confirmAsync, selectAsync } from '../prompts';
 import { ora } from '../utils/ora';
 import { findProjectRootAsync } from './utils/ProjectUtils';
+import { getBundledNativeModulesAsync } from './utils/bundledNativeModules';
 import { assertProjectHasExpoExtensionFilesAsync } from './utils/deprecatedExtensionWarnings';
 import maybeBailOnGitStatusAsync from './utils/maybeBailOnGitStatusAsync';
 
@@ -88,9 +89,11 @@ export async function getUpdatedDependenciesAsync(
 ): Promise<{ dependencies: DependencyList; removed: string[] }> {
   // Get the updated version for any bundled modules
   const { exp, pkg } = getConfig(projectRoot);
-  const bundledNativeModules = (await JsonFile.readAsync(
-    resolveFrom(projectRoot, 'expo/bundledNativeModules.json')
-  )) as DependencyList;
+
+  const bundledNativeModules = await getBundledNativeModulesAsync(
+    projectRoot,
+    targetSdkVersionString
+  );
 
   // Smoosh regular and dev dependencies together for now
   const projectDependencies = { ...pkg.dependencies, ...pkg.devDependencies };
