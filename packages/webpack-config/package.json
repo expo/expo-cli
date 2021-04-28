@@ -91,7 +91,6 @@
     "rimraf": "^3.0.2",
     "serve": "^11.1.0"
   },
-  "gitHead": "613642fe06827cc231405784b099cf71c29072df",
   "browserslist": {
     "production": [
       ">0.2%",
