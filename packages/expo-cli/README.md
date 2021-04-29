@@ -30,7 +30,19 @@ To view this on your phone, do the following:
 To publish something you've made, just follow these steps:
 
 - Create an Expo account or login to an existing one by running `expo login`.
-- Run an Expo CLI server using `expo start`.
+- Run an Expo CLI server usingTo run your project, navigate to the directory and run one of the following yarn commands.
+
+yarn start # you can open iOS, Android, or web from here, or run them directly with the commands below.
+
+yarn android
+
+yarn ios # requires an iOS device or macOS for access to an iOS simulator
+
+yarn web
+
+yarn web
+yarn run v1.22.10
+$ expo start --web.
 - Check to make sure you can load your app by opening it in the Expo app.
 - Once everything looks good, run `expo publish`. A few seconds later, you should get a clean URL sent to you that points to the exp.host server where your package was published to.
 
