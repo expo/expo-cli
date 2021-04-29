@@ -101,21 +101,23 @@ export async function getModdedConfigAsync({
   config = withManagedPlugins(config);
 
   if (platforms.includes('ios')) {
-    config.ios!.bundleIdentifier =
-      bundleIdentifier ?? config.ios!.bundleIdentifier ?? 'UNDEFINED (invalid)';
+    if (!config.ios) config.ios = {};
+    config.ios.bundleIdentifier =
+      bundleIdentifier ?? config.ios.bundleIdentifier ?? 'UNDEFINED (invalid)';
 
     // Add all built-in plugins
     config = withExpoIOSPlugins(config, {
-      bundleIdentifier: config.ios!.bundleIdentifier,
+      bundleIdentifier: config.ios.bundleIdentifier,
     });
   }
 
   if (platforms.includes('android')) {
-    config.android!.package = packageName ?? config.android?.package ?? 'UNDEFINED (invalid)';
+    if (!config.android) config.android = {};
+    config.android.package = packageName ?? config.android.package ?? 'UNDEFINED (invalid)';
 
     // Add all built-in plugins
     config = withExpoAndroidPlugins(config, {
-      package: config.android!.package,
+      package: config.android.package,
     });
   }
 
