@@ -10,7 +10,7 @@ interface NativeModule {
   versionRange: string;
 }
 type BundledNativeModuleList = NativeModule[];
-type BundledNativeModules = Record<string, string>;
+export type BundledNativeModules = Record<string, string>;
 
 export async function getBundledNativeModulesAsync(
   projectRoot: string,
