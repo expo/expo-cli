@@ -1,7 +1,6 @@
 import { ExpoConfig, PackageJSONConfig } from '@expo/config';
 import JsonFile from '@expo/json-file';
 import chalk from 'chalk';
-import intersection from 'lodash/intersection';
 import nullthrows from 'nullthrows';
 import resolveFrom from 'resolve-from';
 import semver from 'semver';
@@ -16,6 +15,7 @@ export async function validateDependenciesVersionsAsync(
   exp: ExpoConfig,
   pkg: PackageJSONConfig
 ): Promise<boolean> {
+  // expo package for SDK < 33.0.0 does not have bundledNativeModules.json
   if (!Versions.gteSdkVersion(exp, '33.0.0')) {
     return false;
   }
@@ -36,38 +36,13 @@ export async function validateDependenciesVersionsAsync(
     return false;
   }
 
-  const bundledNativeModulesNames = Object.keys(bundledNativeModules);
-  const projectDependencies = Object.keys(pkg.dependencies || []);
+  // intersection of packages from package.json and bundled native modules
+  const packagesToCheck = getPackagesToCheck(pkg.dependencies, bundledNativeModules);
+  // read package versions from the file system (node_modules)
+  const packageVersions = await resolvePackageVersionsAsync(projectRoot, packagesToCheck);
+  // find incorrect dependencies by comparing the actual package versions with the bundled native module version ranges
+  const incorrectDeps = findIncorrectDependencies(packageVersions, bundledNativeModules);
 
-  const packagesToCheck = intersection(bundledNativeModulesNames, projectDependencies);
-  const incorrectDeps: {
-    packageName: string;
-    expectedVersionOrRange: string;
-    actualVersion: string;
-  }[] = [];
-
-  const packageVersionsFromPackageJSON = await Promise.all(
-    packagesToCheck.map(packageName => getPackageVersionAsync(projectRoot, packageName))
-  );
-  const packageVersions = packagesToCheck.reduce((acc, packageName, idx) => {
-    acc[packageName] = packageVersionsFromPackageJSON[idx];
-    return acc;
-  }, {} as Record<string, string>);
-
-  for (const packageName of packagesToCheck) {
-    const expectedVersionOrRange = bundledNativeModules[packageName];
-    const actualVersion = packageVersions[packageName];
-    if (
-      typeof expectedVersionOrRange === 'string' &&
-      !semver.intersects(expectedVersionOrRange, actualVersion)
-    ) {
-      incorrectDeps.push({
-        packageName,
-        expectedVersionOrRange,
-        actualVersion,
-      });
-    }
-  }
   if (incorrectDeps.length > 0) {
     Log.warn('Some dependencies are incompatible with the installed expo package version:');
     incorrectDeps.forEach(({ packageName, expectedVersionOrRange, actualVersion }) => {
@@ -88,6 +63,33 @@ export async function validateDependenciesVersionsAsync(
   return true;
 }
 
+function getPackagesToCheck(
+  dependencies: Record<string, string>,
+  bundledNativeModules: BundledNativeModules
+): string[] {
+  const dependencyNames = Object.keys(dependencies || {});
+  const result: string[] = [];
+  for (const dependencyName of dependencyNames) {
+    if (dependencyName in bundledNativeModules) {
+      result.push(dependencyName);
+    }
+  }
+  return result;
+}
+
+async function resolvePackageVersionsAsync(
+  projectRoot: string,
+  packages: string[]
+): Promise<Record<string, string>> {
+  const packageVersionsFromPackageJSON = await Promise.all(
+    packages.map(packageName => getPackageVersionAsync(projectRoot, packageName))
+  );
+  return packages.reduce((acc, packageName, idx) => {
+    acc[packageName] = packageVersionsFromPackageJSON[idx];
+    return acc;
+  }, {} as Record<string, string>);
+}
+
 async function getPackageVersionAsync(projectRoot: string, packageName: string): Promise<string> {
   const packageJsonPath = resolveFrom.silent(projectRoot, `${packageName}/package.json`);
   if (!packageJsonPath) {
@@ -97,4 +99,33 @@ async function getPackageVersionAsync(projectRoot: string, packageName: string):
   }
   const packageJson = await JsonFile.readAsync<BundledNativeModules>(packageJsonPath);
   return packageJson.version;
+}
+
+interface IncorrectDependency {
+  packageName: string;
+  expectedVersionOrRange: string;
+  actualVersion: string;
+}
+
+function findIncorrectDependencies(
+  packageVersions: Record<string, string>,
+  bundledNativeModules: BundledNativeModules
+): IncorrectDependency[] {
+  const packages = Object.keys(packageVersions);
+  const incorrectDeps: IncorrectDependency[] = [];
+  for (const packageName of packages) {
+    const expectedVersionOrRange = bundledNativeModules[packageName];
+    const actualVersion = packageVersions[packageName];
+    if (
+      typeof expectedVersionOrRange === 'string' &&
+      !semver.intersects(expectedVersionOrRange, actualVersion)
+    ) {
+      incorrectDeps.push({
+        packageName,
+        expectedVersionOrRange,
+        actualVersion,
+      });
+    }
+  }
+  return incorrectDeps;
 }
