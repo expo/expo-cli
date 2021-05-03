@@ -88,6 +88,11 @@ function isLockfileCreated(projectRoot: string): boolean {
   return fs.existsSync(podfileLockPath);
 }
 
+function isPodFolderCreated(projectRoot: string): boolean {
+  const podFolderPath = path.join(projectRoot, 'ios', 'Pods');
+  return fs.existsSync(podFolderPath);
+}
+
 // TODO: Same process but with app.config changes + default plugins.
 // This will ensure the user is prompted for extra setup.
 export default async function maybePromptToSyncPodsAsync(projectRoot: string) {
@@ -95,7 +100,7 @@ export default async function maybePromptToSyncPodsAsync(projectRoot: string) {
     // Project does not use CocoaPods
     return;
   }
-  if (!isLockfileCreated(projectRoot)) {
+  if (!isLockfileCreated(projectRoot) || !isPodFolderCreated(projectRoot)) {
     if (!(await installCocoaPodsAsync(projectRoot))) {
       throw new AbortCommandError();
     }
