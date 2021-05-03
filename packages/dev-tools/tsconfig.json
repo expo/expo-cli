@@ -13,7 +13,7 @@
     "noImplicitAny": false,
     "outDir": "build/server",
     "rootDir": "server",
-    "allowJs": false,
+    "allowJs": true,
     "forceConsistentCasingInFileNames": true,
     "noEmit": false,
     "isolatedModules": true,
