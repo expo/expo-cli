@@ -1,9 +1,9 @@
-import { ExpoConfig } from '@expo/config-types';
 import path from 'path';
 import resolveFrom from 'resolve-from';
 
 import { ConfigPlugin } from '../Plugin.types';
 import { withAndroidManifest } from '../plugins/android-plugins';
+import { ExpoConfigUpdates, getUpdateUrl } from '../utils/Updates';
 import {
   addMetaDataItemToMainApplication,
   AndroidManifest,
@@ -13,11 +13,6 @@ import {
 } from './Manifest';
 
 const CREATE_MANIFEST_ANDROID_PATH = 'expo-updates/scripts/create-manifest-android.gradle';
-
-type ExpoConfigUpdates = Pick<
-  ExpoConfig,
-  'sdkVersion' | 'owner' | 'runtimeVersion' | 'updates' | 'slug'
->;
 
 export enum Config {
   ENABLED = 'expo.modules.updates.ENABLED',
@@ -39,17 +34,6 @@ export const withUpdates: ConfigPlugin<{ expoUsername: string | null }> = (
     return config;
   });
 };
-
-export function getUpdateUrl(
-  config: Pick<ExpoConfigUpdates, 'owner' | 'slug'>,
-  username: string | null
-): string | null {
-  const user = typeof config.owner === 'string' ? config.owner : username;
-  if (!user) {
-    return null;
-  }
-  return `https://exp.host/@${user}/${config.slug}`;
-}
 
 export function getRuntimeVersion(
   config: Pick<ExpoConfigUpdates, 'runtimeVersion'>
@@ -104,11 +88,13 @@ export function setUpdatesConfig(
   );
 
   const updateUrl = getUpdateUrl(config, username);
+  console.log({ updateUrl });
   if (updateUrl) {
     addMetaDataItemToMainApplication(mainApplication, Config.UPDATE_URL, updateUrl);
   } else {
     removeMetaDataItemFromMainApplication(mainApplication, Config.UPDATE_URL);
   }
+  console.log({ mainApplication });
 
   return setVersionsConfig(config, androidManifest);
 }
