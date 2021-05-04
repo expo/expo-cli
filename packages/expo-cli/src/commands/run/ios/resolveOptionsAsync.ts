@@ -77,7 +77,7 @@ export async function resolveOptionsAsync(
 
   const isSimulator = !('deviceType' in device);
 
-  let port = await resolvePortAsync(projectRoot, options.port);
+  let port = options.bundler ? await resolvePortAsync(projectRoot, options.port) : null;
   // Skip bundling if the port is null
   options.bundler = !!port;
   if (!port) {
