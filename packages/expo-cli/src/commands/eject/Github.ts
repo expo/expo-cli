@@ -90,7 +90,7 @@ export async function resolveTemplateArgAsync(
     if (!repoUrl) {
       const templatePath = path.resolve(template);
       if (!fs.existsSync(templatePath)) {
-        throw new CommandError('template file does not exist: ' + templatePath);
+        throw new CommandError(`template file does not exist: ${templatePath}`);
       }
 
       return await extractTemplateAppFolderAsync(templatePath, tempDir, { name: appName });
