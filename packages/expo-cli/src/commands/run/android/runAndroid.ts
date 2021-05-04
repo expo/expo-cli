@@ -142,11 +142,7 @@ export async function runAndroidActionAsync(projectRoot: string, options: Option
 
   if (props.bundler) {
     // TODO: unify logs
-    Log.nested(
-      `\nLogs for your project will appear in the browser console. ${chalk.dim(
-        `Press Ctrl+C to exit.`
-      )}`
-    );
+    Log.nested(`\nLogs for your project will appear below. ${chalk.dim(`Press Ctrl+C to exit.`)}`);
   }
 }
 
