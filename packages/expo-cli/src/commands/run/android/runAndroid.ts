@@ -67,7 +67,7 @@ async function resolveOptionsAsync(
     throw new CommandError(`Could not find package name in AndroidManifest.xml at "${filePath}"`);
   }
 
-  let port = await resolvePortAsync(projectRoot, options.port);
+  let port = options.bundler ? await resolvePortAsync(projectRoot, options.port) : null;
   options.bundler = !!port;
   if (!port) {
     // Skip bundling if the port is null
@@ -142,11 +142,7 @@ export async function runAndroidActionAsync(projectRoot: string, options: Option
 
   if (props.bundler) {
     // TODO: unify logs
-    Log.nested(
-      `\nLogs for your project will appear in the browser console. ${chalk.dim(
-        `Press Ctrl+C to exit.`
-      )}`
-    );
+    Log.nested(`\nLogs for your project will appear below. ${chalk.dim(`Press Ctrl+C to exit.`)}`);
   }
 }
 
