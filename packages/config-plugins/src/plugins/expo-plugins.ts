@@ -1,10 +1,13 @@
 /**
  * These are the versioned first-party plugins with some of the future third-party plugins mixed in for legacy support.
  */
-import { ConfigPlugin } from '../Plugin.types';
+import { ExpoConfig } from '@expo/config-types';
+
+import { ConfigPlugin, StaticPlugin } from '../Plugin.types';
 import * as AndroidConfig from '../android';
 import * as IOSConfig from '../ios';
 import { withPlugins } from './core-plugins';
+import { withStaticPlugin } from './static-plugins';
 import withAdMob from './unversioned/expo-ads-admob';
 import withAppleAuthentication from './unversioned/expo-apple-authentication';
 import withBranch from './unversioned/expo-branch';
@@ -122,3 +125,55 @@ export const withExpoVersionedSDKPlugins: ConfigPlugin<{ expoUsername: string | 
     withSplashScreen,
   ]);
 };
+
+export function getExpoLegacyPlugins() {
+  return expoLegacyPlugins;
+}
+
+// Expo managed packages that require extra update.
+// These get applied automatically to create parity with expo build in eas build.
+const expoLegacyPlugins = [
+  'expo-app-auth',
+  'expo-av',
+  'expo-background-fetch',
+  'expo-barcode-scanner',
+  'expo-brightness',
+  'expo-calendar',
+  'expo-camera',
+  'expo-contacts',
+  'expo-image-picker',
+  'expo-file-system',
+  'expo-ads-facebook',
+  'expo-location',
+  'expo-media-library',
+  'expo-screen-orientation',
+  'expo-sensors',
+  'expo-task-manager',
+  'expo-local-authentication',
+];
+
+// Plugins that need to be automatically applied, but also get applied by expo-cli if the versioned plugin isn't available.
+// These are split up because the user doesn't need to be prompted to setup these packages.
+const expoManagedVersionedPlugins = [
+  'expo-firebase-analytics',
+  'expo-firebase-core',
+  'expo-google-sign-in',
+];
+
+const withOptionalLegacyPlugins: ConfigPlugin<(StaticPlugin | string)[]> = (config, plugins) => {
+  return plugins.reduce((prev, plugin) => {
+    return withStaticPlugin(prev, {
+      // hide errors
+      _isLegacyPlugin: true,
+      plugin,
+      // If a plugin doesn't exist, do nothing.
+      fallback: config => config,
+    });
+  }, config);
+};
+
+export function withExpoLegacyPlugins(config: ExpoConfig) {
+  return withOptionalLegacyPlugins(config, [
+    ...new Set(expoManagedVersionedPlugins.concat(expoLegacyPlugins)),
+  ]);
+}

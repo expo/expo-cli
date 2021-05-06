@@ -1,13 +1,11 @@
 import { ExpoConfig, getConfig, ProjectConfig } from '@expo/config';
 import {
   compileModsAsync,
-  ConfigPlugin,
   ModPlatform,
-  StaticPlugin,
   withExpoAndroidPlugins,
   withExpoIOSPlugins,
+  withExpoLegacyPlugins,
   withExpoVersionedSDKPlugins,
-  withStaticPlugin,
 } from '@expo/config-plugins';
 import util from 'util';
 import { UserManager } from 'xdl';
@@ -17,64 +15,6 @@ import {
   getOrPromptForBundleIdentifier,
   getOrPromptForPackage,
 } from '../utils/getOrPromptApplicationId';
-
-// Expo managed packages that require extra update.
-// These get applied automatically to create parity with expo build in eas build.
-export const expoManagedPlugins = [
-  'expo-app-auth',
-  'expo-av',
-  'expo-background-fetch',
-  'expo-barcode-scanner',
-  'expo-brightness',
-  'expo-calendar',
-  'expo-camera',
-  'expo-contacts',
-  'expo-image-picker',
-  'expo-file-system',
-  'expo-ads-facebook',
-  'expo-location',
-  'expo-media-library',
-  // 'expo-notifications',
-  'expo-screen-orientation',
-  'expo-sensors',
-  'expo-task-manager',
-  'expo-local-authentication',
-];
-
-// Plugins that need to be automatically applied, but also get applied by expo-cli if the versioned plugin isn't available.
-// These are split up because the user doesn't need to be prompted to setup these packages.
-const expoManagedVersionedPlugins = [
-  // 'expo-splash-screen',
-  // 'expo-facebook',
-  // 'expo-branch',
-  // 'expo-updates',
-  // 'expo-ads-admob',
-  'expo-apple-authentication',
-  'expo-document-picker',
-  'expo-firebase-analytics',
-  'expo-firebase-core',
-  'expo-google-sign-in',
-  // 'expo-dev-menu',
-  // 'expo-dev-launcher',
-];
-
-const withOptionalPlugins: ConfigPlugin<(StaticPlugin | string)[]> = (config, plugins) => {
-  return plugins.reduce((prev, plugin) => {
-    return withStaticPlugin(prev, {
-      // hide errors
-      _isLegacyPlugin: true,
-      plugin,
-      // If a plugin doesn't exist, do nothing.
-      fallback: config => config,
-    });
-  }, config);
-};
-
-function withManagedPlugins(config: ExpoConfig) {
-  return withOptionalPlugins(config, [
-    ...new Set(expoManagedVersionedPlugins.concat(expoManagedPlugins)),
-  ]);
-}
 
 export async function getModdedConfigAsync({
   projectRoot,
@@ -94,11 +34,15 @@ export async function getModdedConfigAsync({
   });
 
   const expoUsername =
-    process.env.EAS_BUILD_USERNAME || (await UserManager.getCurrentUsernameAsync());
+    config.owner ||
+    process.env.EXPO_CLI_USERNAME ||
+    process.env.EAS_BUILD_USERNAME ||
+    (await UserManager.getCurrentUsernameAsync());
+
   // Add all built-in plugins first because they should take
   // priority over the unversioned plugins.
   config = withExpoVersionedSDKPlugins(config, { expoUsername });
-  config = withManagedPlugins(config);
+  config = withExpoLegacyPlugins(config);
 
   if (platforms.includes('ios')) {
     if (!config.ios) config.ios = {};

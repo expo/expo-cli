@@ -15,6 +15,8 @@ export {
   withExpoIOSPlugins,
   withExpoAndroidPlugins,
   withExpoVersionedSDKPlugins,
+  withExpoLegacyPlugins,
+  getExpoLegacyPlugins,
 } from './plugins/expo-plugins';
 
 /**
@@ -55,3 +57,5 @@ export { withStaticPlugin } from './plugins/static-plugins';
 export { compileModsAsync } from './plugins/mod-compiler';
 
 export { PluginError } from './utils/errors';
+
+export * as BaseModPlugins from './plugins/compiler-plugins';

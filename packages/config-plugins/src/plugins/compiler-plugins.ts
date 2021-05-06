@@ -302,7 +302,7 @@ function applyIOSBaseMods(config: ExportedConfig): ExportedConfig {
   config = withIosInfoPlistBaseMod(config);
   config = withExpoPlistBaseMod(config);
   config = withXcodeProjectBaseMod(config);
-  config = withEntitlementsBaseMod(config);
+  config = withEntitlementsPlistBaseMod(config);
 
   return config;
 }
@@ -470,22 +470,42 @@ const withIosInfoPlistBaseMod: ConfigPlugin = config => {
   });
 };
 
-const withEntitlementsBaseMod: ConfigPlugin = config => {
+export const withEntitlementsPlistBaseMod: ConfigPlugin<{ dryRun?: boolean } | void> = (
+  config,
+  _props
+) => {
+  const props = _props || {};
   // Append a rule to supply .entitlements data to mods on `mods.ios.entitlements`
   return withInterceptedMod<JSONObject>(config, {
     platform: 'ios',
     mod: 'entitlements',
     skipEmptyMod: true,
     async action({ modRequest: { nextMod, ...modRequest }, ...config }) {
-      const entitlementsPath = getEntitlementsPath(modRequest.projectRoot);
+      let entitlementsPath = '';
+      try {
+        entitlementsPath = getEntitlementsPath(modRequest.projectRoot);
+      } catch (error) {
+        // Skip missing file errors in dry run mode since we don't write anywhere.
+        if (!props.dryRun) throw error;
+      }
 
       let results: ExportedConfigWithProps<JSONObject> = {
         ...config,
         modRequest,
       };
 
+      let data: JSONObject = {};
       try {
-        const data = plist.parse(await readFile(entitlementsPath, 'utf8'));
+        data = plist.parse(await readFile(entitlementsPath, 'utf8'));
+      } catch {
+        // If the file is invalid or doesn't exist, fallback on a default object (matching our template).
+        data = {
+          // always enable notifications by default.
+          'aps-environment': 'development',
+        };
+      }
+
+      try {
         // Apply all of the .entitlements values to the expo.ios.entitlements object
         // TODO: Remove this in favor of just overwriting the .entitlements with the Expo object. This will enable people to actually remove values.
         if (!config.ios) {
@@ -507,7 +527,14 @@ const withEntitlementsBaseMod: ConfigPlugin = config => {
           modResults: config.ios.entitlements as JSONObject,
         });
         resolveModResults(results, modRequest.platform, modRequest.modName);
-        await writeFile(entitlementsPath, plist.build(results.modResults));
+        // Update the contents of the static entitlements object
+        if (!config.ios) {
+          config.ios = {};
+        }
+        config.ios.entitlements = results.modResults;
+        if (!props.dryRun) {
+          await writeFile(entitlementsPath, plist.build(results.modResults));
+        }
       } catch (error) {
         console.error(`${path.basename(entitlementsPath)} mod error:`);
         throw error;

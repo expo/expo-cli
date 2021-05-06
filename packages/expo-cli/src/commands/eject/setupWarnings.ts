@@ -1,11 +1,11 @@
 import { PackageJSONConfig } from '@expo/config';
+import { getExpoLegacyPlugins } from '@expo/config-plugins';
 import chalk from 'chalk';
 import semver from 'semver';
 
 import Log from '../../log';
 import * as CreateApp from '../utils/CreateApp';
 import { learnMore } from '../utils/TerminalLink';
-import { expoManagedPlugins } from './configureProjectAsync';
 
 /**
  * Some packages are not configured automatically on eject and may require
@@ -20,7 +20,7 @@ export function warnIfDependenciesRequireAdditionalSetup(
     pkg,
     sdkVersion,
     appliedPlugins: appliedPlugins ?? [],
-    autoPlugins: expoManagedPlugins,
+    autoPlugins: getExpoLegacyPlugins(),
   });
 
   logSetupWarnings(warnings);
