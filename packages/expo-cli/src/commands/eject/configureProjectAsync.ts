@@ -13,7 +13,10 @@ import util from 'util';
 import { UserManager } from 'xdl';
 
 import Log from '../../log';
-import { getOrPromptForBundleIdentifier, getOrPromptForPackage } from './ConfigValidation';
+import {
+  getOrPromptForBundleIdentifier,
+  getOrPromptForPackage,
+} from '../utils/getOrPromptApplicationId';
 
 // Expo managed packages that require extra update.
 // These get applied automatically to create parity with expo build in eas build.
@@ -26,6 +29,9 @@ export const expoManagedPlugins = [
   'expo-calendar',
   'expo-camera',
   'expo-contacts',
+  'expo-dev-menu',
+  'expo-dev-launcher',
+  'expo-dev-client',
   'expo-image-picker',
   'expo-file-system',
   'expo-ads-facebook',
@@ -35,7 +41,6 @@ export const expoManagedPlugins = [
   'expo-sensors',
   'expo-task-manager',
   'expo-local-authentication',
-  'expo-dev-client',
 ];
 
 // Plugins that need to be automatically applied, but also get applied by expo-cli if the versioned plugin isn't available.
@@ -89,21 +94,23 @@ export async function getModdedConfigAsync({
   config = withManagedPlugins(config);
 
   if (platforms.includes('ios')) {
-    config.ios!.bundleIdentifier =
-      bundleIdentifier ?? config.ios!.bundleIdentifier ?? 'UNDEFINED (invalid)';
+    if (!config.ios) config.ios = {};
+    config.ios.bundleIdentifier =
+      bundleIdentifier ?? config.ios.bundleIdentifier ?? 'UNDEFINED (invalid)';
 
     // Add all built-in plugins
     config = withExpoIOSPlugins(config, {
-      bundleIdentifier: config.ios!.bundleIdentifier,
+      bundleIdentifier: config.ios.bundleIdentifier,
     });
   }
 
   if (platforms.includes('android')) {
-    config.android!.package = packageName ?? config.android?.package ?? 'UNDEFINED (invalid)';
+    if (!config.android) config.android = {};
+    config.android.package = packageName ?? config.android.package ?? 'UNDEFINED (invalid)';
 
     // Add all built-in plugins
     config = withExpoAndroidPlugins(config, {
-      package: config.android!.package,
+      package: config.android.package,
     });
   }
 
