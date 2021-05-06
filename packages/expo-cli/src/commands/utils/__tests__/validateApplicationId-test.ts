@@ -1,4 +1,4 @@
-import { validateBundleId } from '../ConfigValidation';
+import { validateBundleId } from '../validateApplicationId';
 
 describe(validateBundleId, () => {
   it(`validates`, () => {

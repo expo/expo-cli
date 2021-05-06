@@ -27,7 +27,7 @@
   },
   "homepage": "https://github.com/expo/expo-cli/tree/master/packages/osascript#readme",
   "engines": {
-    "node": "8.x.x || >=10.0.0"
+    "node": ">=12"
   },
   "dependencies": {
     "@expo/spawn-async": "^1.5.0",

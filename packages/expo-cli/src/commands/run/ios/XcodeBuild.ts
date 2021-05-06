@@ -272,15 +272,16 @@ function writeBuildLogs(projectRoot: string, buildOutput: string, errorOutput: s
     '\n```\n\n# Error output\n\n```log\n' +
     errorOutput +
     '\n```\n';
-  const logFilePath = getErrorLogFilePath(projectRoot);
+  const [mdFilePath, logFilePath] = getErrorLogFilePath(projectRoot);
 
-  fs.writeFileSync(logFilePath, output);
-  return logFilePath;
+  fs.writeFileSync(mdFilePath, output);
+  fs.writeFileSync(logFilePath, buildOutput);
+  return mdFilePath;
 }
 
-function getErrorLogFilePath(projectRoot: string): string {
+function getErrorLogFilePath(projectRoot: string): [string, string] {
   const filename = 'xcodebuild.md';
   const folder = path.join(projectRoot, '.expo');
   fs.ensureDirSync(folder);
-  return path.join(folder, filename);
+  return [path.join(folder, filename), path.join(folder, 'xcodebuild-output.log')];
 }

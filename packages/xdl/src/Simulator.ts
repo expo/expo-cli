@@ -580,6 +580,7 @@ async function openUrlInSimulatorSafeAsync({
   devClient = false,
   projectRoot,
   exp = getConfig(projectRoot, { skipSDKVersionRequirement: true }).exp,
+  skipNativeLogs = false,
 }: {
   url: string;
   udid?: string;
@@ -588,6 +589,7 @@ async function openUrlInSimulatorSafeAsync({
   devClient?: boolean;
   exp?: ExpoConfig;
   projectRoot: string;
+  skipNativeLogs?: boolean;
 }): Promise<
   | { success: true; device: SimControl.SimulatorDevice; bundleIdentifier: string }
   | { success: false; msg: string }
@@ -611,8 +613,10 @@ async function openUrlInSimulatorSafeAsync({
         exp
       );
       await profileMethod(assertDevClientInstalledAsync)(simulator, bundleIdentifier);
-      // stream logs before opening the client.
-      await streamLogsAsync({ udid: simulator.udid, bundleIdentifier });
+      if (!skipNativeLogs) {
+        // stream logs before opening the client.
+        await streamLogsAsync({ udid: simulator.udid, bundleIdentifier });
+      }
     } else if (!isDetached) {
       await ensureExpoClientInstalledAsync(simulator, sdkVersion);
       _lastUrl = url;
@@ -742,12 +746,14 @@ export async function openProjectAsync({
   devClient,
   udid,
   scheme,
+  skipNativeLogs,
 }: {
   projectRoot: string;
   shouldPrompt?: boolean;
   devClient?: boolean;
   scheme?: string;
   udid?: string;
+  skipNativeLogs?: boolean;
 }): Promise<
   | { success: true; url: string; udid: string; bundleIdentifier: string }
   | { success: false; error: string }
@@ -787,6 +793,7 @@ export async function openProjectAsync({
     devClient,
     exp,
     projectRoot,
+    skipNativeLogs,
   });
 
   if (result.success) {

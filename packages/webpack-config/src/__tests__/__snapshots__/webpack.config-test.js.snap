@@ -70,7 +70,7 @@ Object {
           Object {
             "test": /\\\\\\.\\(gif\\|jpe\\?g\\|png\\|svg\\)\\$/,
             "use": Object {
-              "loader": "packages/webpack-config/node_modules/url-loader/dist/cjs.js",
+              "loader": "node_modules/url-loader/dist/cjs.js",
               "options": Object {
                 "esModule": false,
                 "limit": 1000,
@@ -118,7 +118,7 @@ Object {
             "test": /\\\\\\.\\(woff2\\?\\|eot\\|ttf\\|otf\\)\\$/,
             "use": Array [
               Object {
-                "loader": "packages/webpack-config/node_modules/url-loader/dist/cjs.js",
+                "loader": "node_modules/url-loader/dist/cjs.js",
                 "options": Object {
                   "esModule": false,
                   "limit": 50000,
@@ -140,7 +140,7 @@ Object {
               /\\\\\\.html\\$/,
               /\\\\\\.json\\$/,
             ],
-            "loader": "packages/webpack-config/node_modules/file-loader/dist/cjs.js",
+            "loader": "node_modules/file-loader/dist/cjs.js",
             "options": Object {
               "esModule": false,
               "name": "static/media/[name].[hash:8].[ext]",
@@ -245,7 +245,7 @@ Object {
           Object {
             "test": /\\\\\\.\\(gif\\|jpe\\?g\\|png\\|svg\\)\\$/,
             "use": Object {
-              "loader": "packages/webpack-config/node_modules/url-loader/dist/cjs.js",
+              "loader": "node_modules/url-loader/dist/cjs.js",
               "options": Object {
                 "esModule": false,
                 "limit": 1000,
@@ -293,7 +293,7 @@ Object {
             "test": /\\\\\\.\\(woff2\\?\\|eot\\|ttf\\|otf\\)\\$/,
             "use": Array [
               Object {
-                "loader": "packages/webpack-config/node_modules/url-loader/dist/cjs.js",
+                "loader": "node_modules/url-loader/dist/cjs.js",
                 "options": Object {
                   "esModule": false,
                   "limit": 50000,
@@ -315,7 +315,7 @@ Object {
               /\\\\\\.html\\$/,
               /\\\\\\.json\\$/,
             ],
-            "loader": "packages/webpack-config/node_modules/file-loader/dist/cjs.js",
+            "loader": "node_modules/file-loader/dist/cjs.js",
             "options": Object {
               "esModule": false,
               "name": "static/media/[name].[hash:8].[ext]",
@@ -527,7 +527,7 @@ Object {
           Object {
             "test": /\\\\\\.\\(gif\\|jpe\\?g\\|png\\|svg\\)\\$/,
             "use": Object {
-              "loader": "packages/webpack-config/node_modules/url-loader/dist/cjs.js",
+              "loader": "node_modules/url-loader/dist/cjs.js",
               "options": Object {
                 "esModule": false,
                 "limit": 1000,
@@ -575,7 +575,7 @@ Object {
             "test": /\\\\\\.\\(woff2\\?\\|eot\\|ttf\\|otf\\)\\$/,
             "use": Array [
               Object {
-                "loader": "packages/webpack-config/node_modules/url-loader/dist/cjs.js",
+                "loader": "node_modules/url-loader/dist/cjs.js",
                 "options": Object {
                   "esModule": false,
                   "limit": 50000,
@@ -597,7 +597,7 @@ Object {
               /\\\\\\.html\\$/,
               /\\\\\\.json\\$/,
             ],
-            "loader": "packages/webpack-config/node_modules/file-loader/dist/cjs.js",
+            "loader": "node_modules/file-loader/dist/cjs.js",
             "options": Object {
               "esModule": false,
               "name": "static/media/[name].[hash:8].[ext]",
@@ -718,7 +718,7 @@ Object {
           Object {
             "test": /\\\\\\.\\(gif\\|jpe\\?g\\|png\\|svg\\)\\$/,
             "use": Object {
-              "loader": "packages/webpack-config/node_modules/url-loader/dist/cjs.js",
+              "loader": "node_modules/url-loader/dist/cjs.js",
               "options": Object {
                 "esModule": false,
                 "limit": 1000,
@@ -766,7 +766,7 @@ Object {
             "test": /\\\\\\.\\(woff2\\?\\|eot\\|ttf\\|otf\\)\\$/,
             "use": Array [
               Object {
-                "loader": "packages/webpack-config/node_modules/url-loader/dist/cjs.js",
+                "loader": "node_modules/url-loader/dist/cjs.js",
                 "options": Object {
                   "esModule": false,
                   "limit": 50000,
@@ -788,7 +788,7 @@ Object {
               /\\\\\\.html\\$/,
               /\\\\\\.json\\$/,
             ],
-            "loader": "packages/webpack-config/node_modules/file-loader/dist/cjs.js",
+            "loader": "node_modules/file-loader/dist/cjs.js",
             "options": Object {
               "esModule": false,
               "name": "static/media/[name].[hash:8].[ext]",

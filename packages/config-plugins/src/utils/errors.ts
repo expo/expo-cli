@@ -6,7 +6,7 @@ export class UnexpectedError extends Error {
   }
 }
 
-export type PluginErrorCode = 'INVALID_PLUGIN_TYPE';
+export type PluginErrorCode = 'INVALID_PLUGIN_TYPE' | 'INVALID_PLUGIN_IMPORT' | 'PLUGIN_NOT_FOUND';
 
 /**
  * Based on `JsonFileError` from `@expo/json-file`

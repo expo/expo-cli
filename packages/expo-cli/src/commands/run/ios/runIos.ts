@@ -79,11 +79,7 @@ export async function runIosActionAsync(projectRoot: string, options: Options) {
   }
 
   if (props.shouldStartBundler) {
-    Log.nested(
-      `\nLogs for your project will appear in the browser console. ${chalk.dim(
-        `Press Ctrl+C to exit.`
-      )}`
-    );
+    Log.nested(`\nLogs for your project will appear below. ${chalk.dim(`Press Ctrl+C to exit.`)}`);
   }
 }
 
@@ -134,6 +130,8 @@ async function openInSimulatorAsync({
       udid: device.udid,
       devClient: true,
       scheme,
+      // We always setup native logs before launching to ensure we catch any fatal errors.
+      skipNativeLogs: true,
     });
     if (!result.success) {
       // TODO: Maybe fallback on using the bundle identifier.

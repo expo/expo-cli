@@ -1,6 +1,7 @@
-import { getConfig, isLegacyImportsEnabled } from '@expo/config';
+import { ConfigError, getConfig, isLegacyImportsEnabled } from '@expo/config';
 import chalk from 'chalk';
 import path from 'path';
+import resolveFrom from 'resolve-from';
 import { Project, UrlUtils, Versions } from 'xdl';
 
 import Log from '../log';
@@ -25,6 +26,16 @@ async function action(projectRoot: string, options: NormalizedOptions): Promise<
 
   // Add clean up hooks
   installExitHooks(projectRoot);
+
+  // Find expo binary in project/workspace node_modules
+  const hasExpoInstalled = resolveFrom.silent(projectRoot, 'expo');
+
+  if (!hasExpoInstalled) {
+    throw new ConfigError(
+      `Unable to find expo in this project - have you run yarn / npm install yet?`,
+      'MODULE_NOT_FOUND'
+    );
+  }
 
   const { exp, pkg } = profileMethod(getConfig)(projectRoot, {
     skipSDKVersionRequirement: options.webOnly,

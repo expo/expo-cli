@@ -5,7 +5,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import { UrlUtils } from 'xdl';
 
-import CommandError, { SilentError } from '../CommandError';
+import CommandError from '../CommandError';
 import Log from '../log';
 import prompt from '../prompts';
 import { exportAppAsync } from './export/exportAppAsync';
@@ -171,24 +171,12 @@ export async function action(projectRoot: string, options: Options) {
   const outputPath = path.resolve(projectRoot, options.outputDir);
   await fs.ensureDir(outputPath);
 
-  // Assert if the folder has contents
-  if (
-    !(await CreateApp.assertFolderEmptyAsync({
-      projectRoot: outputPath,
-      folderName: options.outputDir,
-      // Always overwrite files, this is inline with most bundler tooling.
-      overwrite: true,
-      // overwrite: options.force,
-    }))
-  ) {
-    const message = `Try using a new directory name with ${Log.chalk.bold(
-      '--output-dir'
-    )}, moving these files, or using ${Log.chalk.bold('--force')} to overwrite them.`;
-    Log.newLine();
-    Log.nested(message);
-    Log.newLine();
-    throw new SilentError(message);
-  }
+  await CreateApp.assertFolderEmptyAsync({
+    projectRoot: outputPath,
+    folderName: options.outputDir,
+    // Always overwrite files, this is inline with most bundler tooling.
+    overwrite: true,
+  });
 
   // Wrap the XDL method for exporting assets
   await exportFilesAsync(projectRoot, options);

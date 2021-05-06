@@ -8,11 +8,12 @@ import pacote from 'pacote';
 import path from 'path';
 import semver from 'semver';
 
-import { SilentError } from '../../CommandError';
+import { AbortCommandError, SilentError } from '../../CommandError';
 import Log from '../../log';
 import { extractTemplateAppAsync } from '../../utils/extractTemplateAppAsync';
 import * as CreateApp from '../utils/CreateApp';
 import * as GitIgnore from '../utils/GitIgnore';
+import { resolveTemplateArgAsync } from './Github';
 import {
   DependenciesModificationResults,
   isPkgMainExpoAppEntry,
@@ -35,6 +36,7 @@ export async function createNativeProjectsFromTemplateAsync({
   projectRoot,
   exp,
   pkg,
+  template,
   tempDir,
   platforms,
   skipDependencyUpdate,
@@ -42,6 +44,7 @@ export async function createNativeProjectsFromTemplateAsync({
   projectRoot: string;
   exp: ExpoConfig;
   pkg: PackageJSONConfig;
+  template?: string;
   tempDir: string;
   platforms: ModPlatform[];
   skipDependencyUpdate?: string[];
@@ -50,6 +53,7 @@ export async function createNativeProjectsFromTemplateAsync({
 > {
   const copiedPaths = await cloneNativeDirectoriesAsync({
     projectRoot,
+    template,
     tempDir,
     exp,
     pkg,
@@ -85,18 +89,18 @@ export async function createNativeProjectsFromTemplateAsync({
 async function cloneNativeDirectoriesAsync({
   projectRoot,
   tempDir,
+  template,
   exp,
   pkg,
   platforms,
 }: {
   projectRoot: string;
   tempDir: string;
+  template?: string;
   exp: Pick<ExpoConfig, 'name' | 'sdkVersion'>;
   pkg: PackageJSONConfig;
   platforms: ModPlatform[];
 }): Promise<string[]> {
-  const templateSpec = await validateBareTemplateExistsAsync(exp.sdkVersion!);
-
   // NOTE(brentvatne): Removing spaces between steps for now, add back when
   // there is some additional context for steps
   const creatingNativeProjectStep = CreateApp.logNewSection(
@@ -108,7 +112,12 @@ async function cloneNativeDirectoriesAsync({
   let copiedPaths: string[] = [];
   let skippedPaths: string[] = [];
   try {
-    await extractTemplateAppAsync(templateSpec, tempDir, exp);
+    if (template) {
+      await resolveTemplateArgAsync(tempDir, creatingNativeProjectStep, exp.name, template);
+    } else {
+      const templateSpec = await validateBareTemplateExistsAsync(exp.sdkVersion!);
+      await extractTemplateAppAsync(templateSpec, tempDir, exp);
+    }
     [copiedPaths, skippedPaths] = await copyPathsFromTemplateAsync(
       projectRoot,
       tempDir,
@@ -133,13 +142,13 @@ async function cloneNativeDirectoriesAsync({
     }
     creatingNativeProjectStep.succeed(message);
   } catch (e) {
-    Log.error(e.message);
-    creatingNativeProjectStep.fail(
-      'Failed to create the native project - see the output above for more information.'
-    );
+    if (!(e instanceof AbortCommandError)) {
+      Log.error(e.message);
+    }
+    creatingNativeProjectStep.fail('Failed to create the native project.');
     Log.log(
       chalk.yellow(
-        'You may want to delete the `./ios` and/or `./android` directories before running eject again.'
+        'You may want to delete the `./ios` and/or `./android` directories before trying again.'
       )
     );
     throw new SilentError(e);

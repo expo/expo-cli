@@ -55,6 +55,10 @@ export default function (program: Command) {
     .option('--no-install', 'Skip installing npm packages and CocoaPods.')
     .option('--clean', 'Delete the native folders and regenerate them before applying changes')
     .option('--npm', 'Use npm to install dependencies. (default when Yarn is not installed)')
+    .option(
+      '--template <template>',
+      'Project template to clone from. File path pointing to a local tar file or a github repo'
+    )
     .option('-p, --platform [platform]', 'Platforms to sync: ios, android, all. Default: all')
     .option(
       '--skip-dependency-update <dependencies>',
