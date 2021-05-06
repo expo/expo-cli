@@ -61,7 +61,7 @@ function setBundleIdentifier(config: ExpoConfig, infoPlist: InfoPlist): InfoPlis
  * @param {string} projectRoot Path to project root containing the ios directory
  * @returns {string | null} bundle identifier of the Xcode project or null if the project is not configured
  */
-function getBundleIdentifierFromPbxproj(projectRoot: string): string | null {
+function getBundleIdentifierFromPbxproj(projectRoot: string, scheme?: string, buildConfiguration?: string): string | null {
   let pbxprojPath: string;
   try {
     pbxprojPath = getPBXProjectPath(projectRoot);
@@ -71,7 +71,24 @@ function getBundleIdentifierFromPbxproj(projectRoot: string): string | null {
   const project = xcode.project(pbxprojPath);
   project.parseSync();
 
-  const [, nativeTarget] = findFirstNativeTarget(project);
+  const nativeTarget: PBXNativeTarget:;
+  if (scheme) {
+    const targetName = getApplicationTargetForSchemeAsync(projectRoot, scheme)
+    const entry = findNativeTargetByName(project, targetName);
+    if (entry) {
+      nativeTarget = entry[1];
+    } else {
+      throw new Error(`Target ${targetName} specifieid in scheme ${scheme} does not exist`)
+    }
+  } else {
+    const entry = findFirstNativeTarget(project);
+    if (entry) {
+      nativeTarget = entry[1];
+    } else {
+      throw new Error(`Target ${targetName} specifieid in scheme ${scheme} does not exist`)
+    }   
+  }
+
   for (const [, item] of getBuildConfigurationForId(project, nativeTarget.buildConfigurationList)) {
     const bundleIdentifierRaw = item.buildSettings.PRODUCT_BUNDLE_IDENTIFIER;
     if (bundleIdentifierRaw) {
