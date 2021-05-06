@@ -25,8 +25,8 @@ import * as WarningAggregator from '../utils/warnings';
 import { withInterceptedMod } from './core-plugins';
 
 export function withBaseMods(config: ExportedConfig): ExportedConfig {
-  config = applyIOSBaseMods(config);
-  config = applyAndroidBaseMods(config);
+  config = withIOSBaseMods(config);
+  config = withAndroidBaseMods(config);
   return config;
 }
 
@@ -46,7 +46,7 @@ export function resolveModResults(results: any, platformName: string, modName: s
   return ensuredResults;
 }
 
-function applyAndroidBaseMods(config: ExportedConfig): ExportedConfig {
+function withAndroidBaseMods(config: ExportedConfig): ExportedConfig {
   config = withExpoDangerousBaseMod(config, 'android');
   config = withAndroidStringsXMLBaseMod(config);
   config = withAndroidGradlePropertiesBaseMod(config);
@@ -296,7 +296,7 @@ const withAndroidMainActivityBaseMod: ConfigPlugin = config => {
   });
 };
 
-function applyIOSBaseMods(config: ExportedConfig): ExportedConfig {
+function withIOSBaseMods(config: ExportedConfig): ExportedConfig {
   config = withExpoDangerousBaseMod(config, 'ios');
   config = withIOSAppDelegateBaseMod(config);
   config = withIOSInfoPlistBaseMod(config);
@@ -483,10 +483,10 @@ export const withIOSInfoPlistBaseMod: ConfigPlugin<{ dryRun?: boolean } | void> 
       resolveModResults(results, modRequest.platform, modRequest.modName);
       data = results.modResults;
       // Update the contents of the static infoPlist object
-      if (!config.ios) {
-        config.ios = {};
+      if (!results.ios) {
+        results.ios = {};
       }
-      config.ios.infoPlist = results.modResults;
+      results.ios.infoPlist = results.modResults;
       if (!props.dryRun) {
         await writeFile(filePath, plist.build(data));
       }
@@ -556,10 +556,10 @@ export const withIOSEntitlementsPlistBaseMod: ConfigPlugin<{ dryRun?: boolean } 
         });
         resolveModResults(results, modRequest.platform, modRequest.modName);
         // Update the contents of the static entitlements object
-        if (!config.ios) {
-          config.ios = {};
+        if (!results.ios) {
+          results.ios = {};
         }
-        config.ios.entitlements = results.modResults;
+        results.ios.entitlements = results.modResults;
         if (!props.dryRun) {
           await writeFile(entitlementsPath, plist.build(results.modResults));
         }

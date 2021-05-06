@@ -1,12 +1,5 @@
-import { ExpoConfig, getConfig, ProjectConfig } from '@expo/config';
-import {
-  compileModsAsync,
-  ModPlatform,
-  withExpoAndroidPlugins,
-  withExpoIOSPlugins,
-  withExpoLegacyPlugins,
-  withExpoVersionedSDKPlugins,
-} from '@expo/config-plugins';
+import { ExpoConfig, getPrebuildConfig, ProjectConfig } from '@expo/config';
+import { compileModsAsync, ModPlatform } from '@expo/config-plugins';
 import util from 'util';
 import { UserManager } from 'xdl';
 
@@ -15,58 +8,6 @@ import {
   getOrPromptForBundleIdentifier,
   getOrPromptForPackage,
 } from '../utils/getOrPromptApplicationId';
-
-export async function getModdedConfigAsync({
-  projectRoot,
-  platforms,
-  bundleIdentifier,
-  packageName,
-}: {
-  projectRoot: string;
-  bundleIdentifier?: string;
-  packageName?: string;
-  platforms: ModPlatform[];
-}) {
-  // let config: ExpoConfig;
-  let { exp: config, ...rest } = getConfig(projectRoot, {
-    skipSDKVersionRequirement: true,
-    isModdedConfig: true,
-  });
-
-  const expoUsername =
-    config.owner ||
-    process.env.EXPO_CLI_USERNAME ||
-    process.env.EAS_BUILD_USERNAME ||
-    (await UserManager.getCurrentUsernameAsync());
-
-  // Add all built-in plugins first because they should take
-  // priority over the unversioned plugins.
-  config = withExpoVersionedSDKPlugins(config, { expoUsername });
-  config = withExpoLegacyPlugins(config);
-
-  if (platforms.includes('ios')) {
-    if (!config.ios) config.ios = {};
-    config.ios.bundleIdentifier =
-      bundleIdentifier ?? config.ios.bundleIdentifier ?? 'UNDEFINED (invalid)';
-
-    // Add all built-in plugins
-    config = withExpoIOSPlugins(config, {
-      bundleIdentifier: config.ios.bundleIdentifier,
-    });
-  }
-
-  if (platforms.includes('android')) {
-    if (!config.android) config.android = {};
-    config.android.package = packageName ?? config.android.package ?? 'UNDEFINED (invalid)';
-
-    // Add all built-in plugins
-    config = withExpoAndroidPlugins(config, {
-      package: config.android.package,
-    });
-  }
-
-  return { exp: config, ...rest };
-}
 
 export function logConfig(config: ExpoConfig | ProjectConfig) {
   const isObjStr = (str: string): boolean => /^\w+: {/g.test(str);
@@ -104,11 +45,19 @@ export default async function configureManagedProjectAsync({
     packageName = await getOrPromptForPackage(projectRoot);
   }
 
-  let { exp: config } = await getModdedConfigAsync({
+  let { exp: config } = await getPrebuildConfig({
     projectRoot,
     platforms,
     packageName,
     bundleIdentifier,
+    async expoUsername(config): Promise<string | null> {
+      return (
+        config.owner ||
+        process.env.EXPO_CLI_USERNAME ||
+        process.env.EAS_BUILD_USERNAME ||
+        (await UserManager.getCurrentUsernameAsync())
+      );
+    },
   });
 
   // compile all plugins and mods
