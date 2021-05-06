@@ -298,11 +298,11 @@ const withAndroidMainActivityBaseMod: ConfigPlugin = config => {
 
 function applyIOSBaseMods(config: ExportedConfig): ExportedConfig {
   config = withExpoDangerousBaseMod(config, 'ios');
-  config = withAppDelegateBaseMod(config);
-  config = withIosInfoPlistBaseMod(config);
-  config = withExpoPlistBaseMod(config);
-  config = withXcodeProjectBaseMod(config);
-  config = withEntitlementsPlistBaseMod(config);
+  config = withIOSAppDelegateBaseMod(config);
+  config = withIOSInfoPlistBaseMod(config);
+  config = withIOSExpoPlistBaseMod(config);
+  config = withIOSXcodeProjectBaseMod(config);
+  config = withIOSEntitlementsPlistBaseMod(config);
 
   return config;
 }
@@ -324,7 +324,7 @@ const withExpoDangerousBaseMod: ConfigPlugin<ModPlatform> = (config, platform) =
   });
 };
 
-const withAppDelegateBaseMod: ConfigPlugin = config => {
+const withIOSAppDelegateBaseMod: ConfigPlugin = config => {
   return withInterceptedMod<AppDelegateProjectFile>(config, {
     platform: 'ios',
     mod: 'appDelegate',
@@ -358,7 +358,7 @@ const withAppDelegateBaseMod: ConfigPlugin = config => {
   });
 };
 
-const withExpoPlistBaseMod: ConfigPlugin = config => {
+const withIOSExpoPlistBaseMod: ConfigPlugin = config => {
   // Append a rule to supply Expo.plist data to mods on `mods.ios.expoPlist`
   return withInterceptedMod<JSONObject>(config, {
     platform: 'ios',
@@ -401,7 +401,7 @@ const withExpoPlistBaseMod: ConfigPlugin = config => {
   });
 };
 
-const withXcodeProjectBaseMod: ConfigPlugin = config => {
+const withIOSXcodeProjectBaseMod: ConfigPlugin = config => {
   // Append a rule to supply .xcodeproj data to mods on `mods.ios.xcodeproj`
   return withInterceptedMod<XcodeProject>(config, {
     platform: 'ios',
@@ -423,14 +423,24 @@ const withXcodeProjectBaseMod: ConfigPlugin = config => {
   });
 };
 
-const withIosInfoPlistBaseMod: ConfigPlugin = config => {
+export const withIOSInfoPlistBaseMod: ConfigPlugin<{ dryRun?: boolean } | void> = (
+  config,
+  _props
+) => {
+  const props = _props || {};
   // Append a rule to supply Info.plist data to mods on `mods.ios.infoPlist`
   return withInterceptedMod<InfoPlist>(config, {
     platform: 'ios',
     mod: 'infoPlist',
     skipEmptyMod: true,
     async action({ modRequest: { nextMod, ...modRequest }, ...config }) {
-      const filePath = getInfoPlistPath(modRequest.projectRoot);
+      let filePath = '';
+      try {
+        filePath = getInfoPlistPath(modRequest.projectRoot);
+      } catch (error) {
+        // Skip missing file errors in dry run mode since we don't write anywhere.
+        if (!props.dryRun) throw error;
+      }
 
       let results: ExportedConfigWithProps<JSONObject> = {
         ...config,
@@ -446,31 +456,47 @@ const withIosInfoPlistBaseMod: ConfigPlugin = config => {
         config.ios.infoPlist = {};
       }
 
-      const contents = await readFile(filePath, 'utf8');
-      assert(contents, 'Info.plist is empty');
-      let data = plist.parse(contents);
+      let data: InfoPlist = {};
+      try {
+        const contents = await readFile(filePath, 'utf8');
+        assert(contents, 'Info.plist is empty');
+        data = plist.parse(contents);
+      } catch (error) {
+        if (!props.dryRun) throw error;
+        // If the file is invalid or doesn't exist, fallback on a default blank object.
+        data = {
+          // TODO: Maybe sync with template
+        };
+      }
 
       config.ios.infoPlist = {
         ...(data || {}),
         ...config.ios.infoPlist,
       };
-      // TODO: Fix type
+
       results = await nextMod!({
         ...config,
         modRequest,
         modResults: config.ios.infoPlist as InfoPlist,
       });
+
       resolveModResults(results, modRequest.platform, modRequest.modName);
       data = results.modResults;
-
-      await writeFile(filePath, plist.build(data));
+      // Update the contents of the static infoPlist object
+      if (!config.ios) {
+        config.ios = {};
+      }
+      config.ios.infoPlist = results.modResults;
+      if (!props.dryRun) {
+        await writeFile(filePath, plist.build(data));
+      }
 
       return results;
     },
   });
 };
 
-export const withEntitlementsPlistBaseMod: ConfigPlugin<{ dryRun?: boolean } | void> = (
+export const withIOSEntitlementsPlistBaseMod: ConfigPlugin<{ dryRun?: boolean } | void> = (
   config,
   _props
 ) => {
@@ -497,7 +523,9 @@ export const withEntitlementsPlistBaseMod: ConfigPlugin<{ dryRun?: boolean } | v
       let data: JSONObject = {};
       try {
         data = plist.parse(await readFile(entitlementsPath, 'utf8'));
-      } catch {
+      } catch (error) {
+        if (!props.dryRun) throw error;
+
         // If the file is invalid or doesn't exist, fallback on a default object (matching our template).
         data = {
           // always enable notifications by default.
