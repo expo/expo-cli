@@ -16,7 +16,6 @@ import CommandError from '../CommandError';
 import Log from '../log';
 import { getProjectOwner } from '../projects';
 import * as sendTo from '../sendTo';
-import { getBuildStatusAsync } from './build/getBuildStatusAsync';
 import * as TerminalLink from './utils/TerminalLink';
 import { formatNamedWarning } from './utils/logConfigWarnings';
 
@@ -40,7 +39,7 @@ export async function action(
   const { exp, pkg } = getConfig(projectRoot, {
     skipSDKVersionRequirement: true,
   });
-  const { sdkVersion, isDetached } = exp;
+  const { sdkVersion } = exp;
 
   const target = options.target ?? getDefaultTarget(projectRoot);
 
