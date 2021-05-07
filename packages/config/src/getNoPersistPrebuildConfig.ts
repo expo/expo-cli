@@ -15,7 +15,7 @@ import { getPrebuildConfig } from './getPrebuildConfig';
  * });
  * ```
  */
-export function getUnpersistedPrebuildConfig(
+export function getNoPersistPrebuildConfig(
   projectRoot: string,
   {
     platforms = ['ios'],
@@ -36,22 +36,22 @@ export function getUnpersistedPrebuildConfig(
     packageName,
     expoUsername,
   });
-  // Apply the unpersisted base mods last
-  config.exp = withUnpersistedBaseMods(config.exp);
+  // Apply the noPersist base mods last
+  config.exp = withNoPersistBaseMods(config.exp);
 
   return config;
 }
 
 /**
- * Apply all base mods that have a `skipPersistence` option, delete all other mods.
+ * Apply all base mods that have a `noPersist` option, delete all other mods.
  */
-function withUnpersistedBaseMods(config: ExpoConfig): ExpoConfig {
+function withNoPersistBaseMods(config: ExpoConfig): ExpoConfig {
   config = BaseModPlugins.withIOSEntitlementsPlistBaseMod(config, {
-    skipPersistence: true,
+    noPersist: true,
   });
-  config = BaseModPlugins.withIOSInfoPlistBaseMod(config, { skipPersistence: true });
+  config = BaseModPlugins.withIOSInfoPlistBaseMod(config, { noPersist: true });
 
-  // Delete all mods that don't have skipPersistence options.
+  // Delete all mods that don't have noPersist options.
 
   const mods = (config as any).mods as ModConfig;
   mods.android = {};

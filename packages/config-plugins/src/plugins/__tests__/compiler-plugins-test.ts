@@ -22,7 +22,7 @@ describe(withIOSEntitlementsPlistBaseMod, () => {
     });
 
     // base mods must be added last
-    config = withIOSEntitlementsPlistBaseMod(config, { dryRun: true });
+    config = withIOSEntitlementsPlistBaseMod(config, { noPersist: true });
     config = await evalModsAsync(config, { projectRoot: '/', platforms: ['ios'] });
 
     expect(config.ios?.entitlements).toStrictEqual({
@@ -52,7 +52,7 @@ describe(withIOSInfoPlistBaseMod, () => {
     });
 
     // base mods must be added last
-    config = withIOSInfoPlistBaseMod(config, { dryRun: true });
+    config = withIOSInfoPlistBaseMod(config, { noPersist: true });
     config = await evalModsAsync(config, { projectRoot: '/', platforms: ['ios'] });
 
     expect(config.ios?.infoPlist).toStrictEqual({
