@@ -423,7 +423,7 @@ const withIOSXcodeProjectBaseMod: ConfigPlugin = config => {
   });
 };
 
-export const withIOSInfoPlistBaseMod: ConfigPlugin<{ dryRun?: boolean } | void> = (
+export const withIOSInfoPlistBaseMod: ConfigPlugin<{ skipPersistence?: boolean } | void> = (
   config,
   _props
 ) => {
@@ -439,7 +439,7 @@ export const withIOSInfoPlistBaseMod: ConfigPlugin<{ dryRun?: boolean } | void> 
         filePath = getInfoPlistPath(modRequest.projectRoot);
       } catch (error) {
         // Skip missing file errors in dry run mode since we don't write anywhere.
-        if (!props.dryRun) throw error;
+        if (!props.skipPersistence) throw error;
       }
 
       let results: ExportedConfigWithProps<JSONObject> = {
@@ -462,7 +462,7 @@ export const withIOSInfoPlistBaseMod: ConfigPlugin<{ dryRun?: boolean } | void> 
         assert(contents, 'Info.plist is empty');
         data = plist.parse(contents);
       } catch (error) {
-        if (!props.dryRun) throw error;
+        if (!props.skipPersistence) throw error;
         // If the file is invalid or doesn't exist, fallback on a default blank object.
         data = {
           // TODO: Maybe sync with template
@@ -487,7 +487,7 @@ export const withIOSInfoPlistBaseMod: ConfigPlugin<{ dryRun?: boolean } | void> 
         results.ios = {};
       }
       results.ios.infoPlist = results.modResults;
-      if (!props.dryRun) {
+      if (!props.skipPersistence) {
         await writeFile(filePath, plist.build(data));
       }
 
@@ -496,7 +496,7 @@ export const withIOSInfoPlistBaseMod: ConfigPlugin<{ dryRun?: boolean } | void> 
   });
 };
 
-export const withIOSEntitlementsPlistBaseMod: ConfigPlugin<{ dryRun?: boolean } | void> = (
+export const withIOSEntitlementsPlistBaseMod: ConfigPlugin<{ skipPersistence?: boolean } | void> = (
   config,
   _props
 ) => {
@@ -512,7 +512,7 @@ export const withIOSEntitlementsPlistBaseMod: ConfigPlugin<{ dryRun?: boolean } 
         entitlementsPath = getEntitlementsPath(modRequest.projectRoot);
       } catch (error) {
         // Skip missing file errors in dry run mode since we don't write anywhere.
-        if (!props.dryRun) throw error;
+        if (!props.skipPersistence) throw error;
       }
 
       let results: ExportedConfigWithProps<JSONObject> = {
@@ -524,7 +524,7 @@ export const withIOSEntitlementsPlistBaseMod: ConfigPlugin<{ dryRun?: boolean } 
       try {
         data = plist.parse(await readFile(entitlementsPath, 'utf8'));
       } catch (error) {
-        if (!props.dryRun) throw error;
+        if (!props.skipPersistence) throw error;
 
         // If the file is invalid or doesn't exist, fallback on a default object (matching our template).
         data = {
@@ -560,7 +560,7 @@ export const withIOSEntitlementsPlistBaseMod: ConfigPlugin<{ dryRun?: boolean } 
           results.ios = {};
         }
         results.ios.entitlements = results.modResults;
-        if (!props.dryRun) {
+        if (!props.skipPersistence) {
           await writeFile(entitlementsPath, plist.build(results.modResults));
         }
       } catch (error) {

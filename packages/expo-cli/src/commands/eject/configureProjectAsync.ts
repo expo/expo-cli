@@ -45,18 +45,17 @@ export default async function configureManagedProjectAsync({
     packageName = await getOrPromptForPackage(projectRoot);
   }
 
-  let { exp: config } = await getPrebuildConfig({
-    projectRoot,
+  const possibleUsername =
+    process.env.EXPO_CLI_USERNAME ||
+    process.env.EAS_BUILD_USERNAME ||
+    (await UserManager.getCurrentUsernameAsync());
+
+  let { exp: config } = getPrebuildConfig(projectRoot, {
     platforms,
     packageName,
     bundleIdentifier,
-    async expoUsername(config): Promise<string | null> {
-      return (
-        config.owner ||
-        process.env.EXPO_CLI_USERNAME ||
-        process.env.EAS_BUILD_USERNAME ||
-        (await UserManager.getCurrentUsernameAsync())
-      );
+    expoUsername(config) {
+      return config.owner || possibleUsername;
     },
   });
 

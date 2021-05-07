@@ -10,19 +10,20 @@ import { ExpoConfig } from '@expo/config-types';
 import { getConfig } from './Config';
 import { getAccountUsername } from './getCurrentFullName';
 
-export async function getPrebuildConfig({
-  projectRoot,
-  platforms,
-  bundleIdentifier,
-  packageName,
-  expoUsername,
-}: {
-  projectRoot: string;
-  bundleIdentifier?: string;
-  packageName?: string;
-  platforms: ModPlatform[];
-  expoUsername?: string | ((config: ExpoConfig) => Promise<string | null>);
-}) {
+export function getPrebuildConfig(
+  projectRoot: string,
+  {
+    platforms,
+    bundleIdentifier,
+    packageName,
+    expoUsername,
+  }: {
+    bundleIdentifier?: string;
+    packageName?: string;
+    platforms: ModPlatform[];
+    expoUsername?: string | ((config: ExpoConfig) => string | null);
+  }
+) {
   // let config: ExpoConfig;
   let { exp: config, ...rest } = getConfig(projectRoot, {
     skipSDKVersionRequirement: true,
@@ -31,7 +32,7 @@ export async function getPrebuildConfig({
 
   const resolvedExpoUsername =
     typeof expoUsername === 'function'
-      ? await expoUsername(config)
+      ? expoUsername(config)
       : // If the user didn't pass a username then fallback on the static cached username.
         expoUsername ?? getAccountUsername(config);
 
