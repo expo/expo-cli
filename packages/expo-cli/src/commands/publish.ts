@@ -66,15 +66,6 @@ export async function action(
 
   // Log warnings.
 
-  if (!isDetached && !options.duringBuild) {
-    // Check for SDK version and release channel mismatches only after displaying the values.
-    await logSDKMismatchWarningsAsync({
-      projectRoot,
-      releaseChannel: options.releaseChannel,
-      sdkVersion,
-    });
-  }
-
   logExpoUpdatesWarnings(pkg);
 
   logOptimizeWarnings({ projectRoot });
@@ -201,46 +192,6 @@ function getExampleManifestUrl(url: string, sdkVersion: string | undefined): str
   } else {
     return `${url}/index.exp?sdkVersion=${sdkVersion}`;
   }
-}
-
-/**
- * A convenient warning reminding people that they're publishing with an SDK that their published app does not support.
- *
- * @param options
- */
-async function logSDKMismatchWarningsAsync({
-  projectRoot,
-  releaseChannel,
-  sdkVersion,
-}: {
-  projectRoot: string;
-  releaseChannel?: string;
-  sdkVersion?: string;
-}) {
-  if (!sdkVersion) {
-    return;
-  }
-
-  const buildStatus = await getBuildStatusAsync(projectRoot, {
-    platform: 'all',
-    current: true,
-    releaseChannel,
-    sdkVersion,
-  });
-  const hasMismatch =
-    buildStatus.userHasBuiltExperienceBefore && !buildStatus.userHasBuiltAppBefore;
-  if (!hasMismatch) {
-    return;
-  }
-
-  // A convenient warning reminding people that they're publishing with an SDK that their published app does not support.
-  Log.nestedWarn(
-    formatNamedWarning(
-      'URL mismatch',
-      `No standalone app has been built with SDK ${sdkVersion} and release channel "${releaseChannel}" for this project before.\n  OTA updates only work for native projects that have the same SDK version and release channel.`,
-      'https://docs.expo.io/workflow/publishing/#limitations'
-    )
-  );
 }
 
 export function logExpoUpdatesWarnings(pkg: PackageJSONConfig): void {
