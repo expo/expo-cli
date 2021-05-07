@@ -12,6 +12,66 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+## [Thu, 6 May 2021 19:37:12 -0700](https://github.com/expo/expo-cli/commit/f7dfc87744de00e98fdb301b4814e7fca61a1465)
+
+### 🛠 Breaking changes
+
+### 🎉 New features
+
+- [cli] use bundledNativeModules.json from api ([#3444](https://github.com/expo/expo-cli/issues/3444))
+- [cli] Added expo-dev-client to auto plugins ([#3436](https://github.com/expo/expo-cli/issues/3436))
+- [cli] "expo is not installed" error ([#3425](https://github.com/expo/expo-cli/issues/3425))
+- [install] add config plugins automatically ([#3437](https://github.com/expo/expo-cli/issues/3437))
+- [run] add --no-bundler option ([#3460](https://github.com/expo/expo-cli/issues/3460))
+- [prebuild] Added template prop  ([#3439](https://github.com/expo/expo-cli/issues/3439))
+- [run] output logs and clear on pod folder ([#3457](https://github.com/expo/expo-cli/issues/3457))
+- [CI] add tests on Windows ([#3428](https://github.com/expo/expo-cli/issues/3428))
+- [workspace] deduplicate yarn lock in `postinstall` ([#3418](https://github.com/expo/expo-cli/issues/3418))
+- [cli] validate dependencies also on `doctor` run ([#3416](https://github.com/expo/expo-cli/issues/3416))
+- Deep link into dev menu when it's installed ([#3405](https://github.com/expo/expo-cli/issues/3405))
+- Improve errors when a package doesn't have a valid plugin ([#3421](https://github.com/expo/expo-cli/issues/3421))
+- Added a flag to skip git status check ([#3401](https://github.com/expo/expo-cli/issues/3401))
+- Add port selection to start --dev-client ([#3409](https://github.com/expo/expo-cli/issues/3409))
+
+
+### 🧹 Chores
+
+- Pad titles in log formatter and add duration ([#3466](https://github.com/expo/expo-cli/issues/3466))
+- [cli] remove dead code ([#3455](https://github.com/expo/expo-cli/issues/3455))
+- [electron] migrate to new repo ([#3446](https://github.com/expo/expo-cli/issues/3446))
+- [configure-splash-screen]: remove core-js dependency ([#3422](https://github.com/expo/expo-cli/issues/3422))
+- [configure-splash-screen] remove deep-equal dependency ([#3417](https://github.com/expo/expo-cli/issues/3417))
+- [workspace] update ESLint and Prettier ([#3427](https://github.com/expo/expo-cli/issues/3427))
+- [cli][xdl] return correct project page url after expo publish ([#3398](https://github.com/expo/expo-cli/issues/3398))
+- Expand Info.plist type ([#3442](https://github.com/expo/expo-cli/issues/3442))
+- bump minimum Node target to 12 ([#3434](https://github.com/expo/expo-cli/issues/3434))
+- Delete `publishSourceMapPath` ([#3430](https://github.com/expo/expo-cli/issues/3430))
+- Improve ios start up times ([#3413](https://github.com/expo/expo-cli/issues/3413))
+- Improve cocoapods error messages ([#3411](https://github.com/expo/expo-cli/issues/3411))
+
+### 🐛 Bug fixes
+
+- Fix bundle identifier validation ([#3443](https://github.com/expo/expo-cli/issues/3443))
+- Fix running dev client from the terminal UI using wrong bundle identifier ([#3407](https://github.com/expo/expo-cli/issues/3407))
+
+### 📦 Packages updated
+
+- @expo/config-plugins@1.0.29
+- @expo/config@3.3.39
+- @expo/dev-server@0.1.65
+- @expo/dev-tools@0.13.95
+- expo-cli@4.4.4
+- expo-optimize@0.1.87
+- @expo/metro-config@0.1.65
+- @expo/next-adapter@2.1.70
+- @expo/osascript@2.0.27
+- @expo/package-manager@0.0.42
+- pod-install@0.1.22
+- expo-pwa@0.0.75
+- uri-scheme@1.0.76
+- @expo/webpack-config@0.12.69
+- xdl@59.0.35
+
 ## [Tue, 20 Apr 2021 19:53:53 -0700](https://github.com/expo/expo-cli/commit/af417362f24d74af76ceb4ff82699c16d17025d4)
 
 ### 🛠 Breaking changes
