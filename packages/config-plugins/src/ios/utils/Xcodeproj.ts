@@ -341,7 +341,7 @@ export function getXCConfigurationListEntries(project: XcodeProject): Configurat
   return Object.entries(lists).filter(isNotComment);
 }
 
-export function getBuildConfigurationForId(
+export function getBuildConfigurationsForListId(
   project: XcodeProject,
   configurationListId: string
 ): ConfigurationSectionEntry[] {

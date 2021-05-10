@@ -11,7 +11,7 @@ import { getAllInfoPlistPaths, getAllPBXProjectPaths, getPBXProjectPath } from '
 import {
   ConfigurationSectionEntry,
   findFirstNativeTarget,
-  getBuildConfigurationForId,
+  getBuildConfigurationsForListId,
 } from './utils/Xcodeproj';
 
 export const withBundleIdentifier: ConfigPlugin<{ bundleIdentifier?: string }> = (
@@ -72,7 +72,10 @@ function getBundleIdentifierFromPbxproj(projectRoot: string): string | null {
   project.parseSync();
 
   const [, nativeTarget] = findFirstNativeTarget(project);
-  for (const [, item] of getBuildConfigurationForId(project, nativeTarget.buildConfigurationList)) {
+  for (const [, item] of getBuildConfigurationsForListId(
+    project,
+    nativeTarget.buildConfigurationList
+  )) {
     const bundleIdentifierRaw = item.buildSettings.PRODUCT_BUNDLE_IDENTIFIER;
     if (bundleIdentifierRaw) {
       const bundleIdentifier =
@@ -114,7 +117,7 @@ function updateBundleIdentifierForPbxproj(
 
   const [, nativeTarget] = findFirstNativeTarget(project);
 
-  getBuildConfigurationForId(project, nativeTarget.buildConfigurationList).forEach(
+  getBuildConfigurationsForListId(project, nativeTarget.buildConfigurationList).forEach(
     ([, item]: ConfigurationSectionEntry) => {
       if (item.buildSettings.PRODUCT_BUNDLE_IDENTIFIER === bundleIdentifier) {
         return;

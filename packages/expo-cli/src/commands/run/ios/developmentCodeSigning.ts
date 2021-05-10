@@ -32,7 +32,7 @@ export function getCodeSigningInfoForPbxproj(projectRoot: string) {
   const developmentTeams: string[] = [];
   const provisioningProfiles: string[] = [];
 
-  IOSConfig.XcodeUtils.getBuildConfigurationForId(project, nativeTarget.buildConfigurationList)
+  IOSConfig.XcodeUtils.getBuildConfigurationsForListId(project, nativeTarget.buildConfigurationList)
     .filter(
       ([, item]: IOSConfig.XcodeUtils.ConfigurationSectionEntry) => item.buildSettings.PRODUCT_NAME
     )
@@ -69,7 +69,7 @@ function setAutoCodeSigningInfoForPbxproj(
   const project = IOSConfig.XcodeUtils.getPbxproj(projectRoot);
   const [nativeTargetId, nativeTarget] = IOSConfig.XcodeUtils.findFirstNativeTarget(project);
 
-  IOSConfig.XcodeUtils.getBuildConfigurationForId(project, nativeTarget.buildConfigurationList)
+  IOSConfig.XcodeUtils.getBuildConfigurationsForListId(project, nativeTarget.buildConfigurationList)
     .filter(
       ([, item]: IOSConfig.XcodeUtils.ConfigurationSectionEntry) => item.buildSettings.PRODUCT_NAME
     )

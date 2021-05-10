@@ -4,7 +4,7 @@ import {
   ConfigurationSectionEntry,
   findFirstNativeTarget,
   findNativeTargetByName,
-  getBuildConfigurationForId,
+  getBuildConfigurationsForListId,
   getPbxproj,
   getProjectSection,
   isNotComment,
@@ -34,7 +34,7 @@ function setProvisioningProfileForPbxproj(
 
   const [nativeTargetId, nativeTarget] = target;
 
-  getBuildConfigurationForId(project, nativeTarget.buildConfigurationList)
+  getBuildConfigurationsForListId(project, nativeTarget.buildConfigurationList)
     .filter(([, item]: ConfigurationSectionEntry) => item.buildSettings.PRODUCT_NAME)
     .forEach(([, item]: ConfigurationSectionEntry) => {
       item.buildSettings.PROVISIONING_PROFILE_SPECIFIER = `"${profileName}"`;
