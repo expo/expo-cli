@@ -29,7 +29,7 @@ export async function validateDependenciesVersionsAsync(
     );
   } catch {
     Log.warn(
-      `Your project is in SDK version >= 33.0.0, but the ${chalk.underline(
+      `Your project uses Expo SDK version >= 33.0.0, but the ${chalk.bold(
         'expo'
       )} package version seems to be older.`
     );
