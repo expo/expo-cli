@@ -8,6 +8,11 @@ interface SchemeXML {
         BuildActionEntry?: BuildActionEntryType[];
       }[];
     }[];
+    ArchiveAction?: {
+      $?: {
+        buildConfiguration?: string;
+      };
+    }[];
   };
 }
 
@@ -57,6 +62,18 @@ export async function getApplicationTargetForSchemeAsync(
     throw new Error(`${scheme}.xcscheme seems to be corrupted`);
   }
   return targetName;
+}
+
+export async function getArchiveBuildConfigurationForSchemeAsync(
+  projectRoot: string,
+  scheme: string
+): Promise<string> {
+  const schemeXML = await readSchemeAsync(projectRoot, scheme);
+  const buildConfiguration = schemeXML?.Scheme?.ArchiveAction?.[0]?.['$']?.buildConfiguration;
+  if (!buildConfiguration) {
+    throw new Error(`${scheme}.xcscheme seems to be corrupted`);
+  }
+  return buildConfiguration;
 }
 
 function getBlueprintName(entry?: BuildActionEntryType): string | undefined {
