@@ -171,6 +171,12 @@ export interface ExpoConfig {
     [k: string]: any;
   };
   /**
+   * Configuration information for external libraries. Be careful not to commit anything private here!
+   */
+  libraries?: {
+    [k: string]: any;
+  };
+  /**
    * @deprecated Use a `metro.config.js` file instead. [Learn more](https://docs.expo.io/guides/customizing-metro/)
    */
   packagerOpts?: {
