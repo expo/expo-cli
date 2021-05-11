@@ -12,6 +12,33 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+## [Tue, 11 May 2021 14:01:05 -0700](https://github.com/expo/expo-cli/commit/f8cbaef2ab4708ada6159e9eee65bfa3cb55cea0)
+
+### 🧹 Chores
+
+- [cli] Update supported Node versions validation
+- [workspace] update TypeScript to latest release ([#3454](https://github.com/expo/expo-cli/issues/3454))
+
+### 🐛 Bug fixes
+
+- [config-plugins] ignore case when reading scheme ([#3465](https://github.com/expo/expo-cli/issues/3465))
+- [cli] Remove URL mismatch warning ([#3467](https://github.com/expo/expo-cli/issues/3467))
+
+### 📦 Packages updated
+
+- @expo/config-plugins@1.0.30
+- @expo/config@3.3.40
+- @expo/dev-server@0.1.66
+- @expo/dev-tools@0.13.96
+- expo-cli@4.4.5
+- expo-optimize@0.1.88
+- @expo/metro-config@0.1.66
+- @expo/next-adapter@2.1.71
+- expo-pwa@0.0.76
+- uri-scheme@1.0.77
+- @expo/webpack-config@0.12.70
+- xdl@59.0.36
+
 ## [Thu, 6 May 2021 19:37:12 -0700](https://github.com/expo/expo-cli/commit/f7dfc87744de00e98fdb301b4814e7fca61a1465)
 
 ### 🛠 Breaking changes
