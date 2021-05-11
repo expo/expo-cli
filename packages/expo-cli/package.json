@@ -1,6 +1,6 @@
 {
   "name": "expo-cli",
-  "version": "4.4.4",
+  "version": "4.4.5",
   "description": "The command-line tool for creating and publishing Expo apps",
   "preferGlobal": true,
   "main": "build/exp.js",
@@ -70,9 +70,9 @@
   "dependencies": {
     "@expo/apple-utils": "0.0.0-alpha.17",
     "@expo/bunyan": "4.0.0",
-    "@expo/config": "3.3.39",
-    "@expo/config-plugins": "1.0.29",
-    "@expo/dev-tools": "0.13.95",
+    "@expo/config": "3.3.40",
+    "@expo/config-plugins": "1.0.30",
+    "@expo/dev-tools": "0.13.96",
     "@expo/json-file": "8.2.29",
     "@expo/osascript": "2.0.27",
     "@expo/package-manager": "0.0.42",
@@ -128,6 +128,6 @@
     "url-join": "4.0.0",
     "uuid": "^8.0.0",
     "wrap-ansi": "^7.0.0",
-    "xdl": "59.0.35"
+    "xdl": "59.0.36"
   }
 }
