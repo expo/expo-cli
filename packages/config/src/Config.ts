@@ -375,7 +375,7 @@ export async function modifyConfigAsync(
 ): Promise<{
   type: 'success' | 'warn' | 'fail';
   message?: string;
-  config: ExpoConfig | AppJSONConfig | null;
+  config: AppJSONConfig | null;
 }> {
   const config = getConfig(projectRoot, readOptions);
   if (config.dynamicConfigPath) {
@@ -402,7 +402,7 @@ export async function modifyConfigAsync(
     };
   } else if (config.staticConfigPath) {
     // Static with no dynamic config, this means we can append to the config automatically.
-    let outputConfig: ExpoConfig | AppJSONConfig;
+    let outputConfig: AppJSONConfig;
     // If the config has an expo object (app.json) then append the options to that object.
     if (config.rootConfig.expo) {
       outputConfig = {
