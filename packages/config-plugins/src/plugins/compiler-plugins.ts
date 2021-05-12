@@ -24,9 +24,8 @@ import { writeXMLAsync } from '../utils/XML';
 import * as WarningAggregator from '../utils/warnings';
 import { InterceptedModOptions, withInterceptedMod } from './core-plugins';
 
-type ForwardedInterceptedModOptions = Pick<
-  InterceptedModOptions,
-  'saveToInternal' | 'skipEmptyMod'
+type ForwardedInterceptedModOptions = Partial<
+  Pick<InterceptedModOptions, 'saveToInternal' | 'skipEmptyMod'>
 >;
 
 export function withBaseMods(config: ExportedConfig): ExportedConfig {
@@ -443,7 +442,7 @@ const withIOSExpoPlistBaseMod: ConfigPlugin<ForwardedInterceptedModOptions | voi
 };
 
 const withIOSXcodeProjectBaseMod: ConfigPlugin<Pick<
-  InterceptedModOptions,
+  ForwardedInterceptedModOptions,
   'skipEmptyMod'
 > | void> = (config, props) => {
   // Append a rule to supply .xcodeproj data to mods on `mods.ios.xcodeproj`
