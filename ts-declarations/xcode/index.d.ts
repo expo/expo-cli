@@ -36,6 +36,7 @@ declare module 'xcode' {
     | 'PBXShellScriptBuildPhase'
     | 'PBXSourcesBuildPhase'
     | 'PBXVariantGroup'
+    | 'PBXTargetDependency'
     | 'XCBuildConfiguration'
     | 'XCConfigurationList';
 
@@ -81,7 +82,10 @@ declare module 'xcode' {
       comment: string;
     }[];
     buildRules: [];
-    dependencies: [];
+    dependencies: {
+      value: UUID;
+      comment: string;
+    }[];
     name: string;
     productName: string;
     productReference: UUID;
@@ -94,6 +98,12 @@ declare module 'xcode' {
     fileRef: UUID;
     // "AppDelegate.m"
     fileRef_comment: string;
+  }
+
+  interface PBXTargetDependency {
+    isa: 'PBXTargetDependency';
+    target: UUID;
+    targetProxy: UUID;
   }
 
   interface XCConfigurationList {
@@ -331,7 +341,7 @@ declare module 'xcode' {
      */
     pbxTargetByName(targetName: string): PBXNativeTarget | undefined;
     findTargetKey(name: string): string;
-    pbxItemByComment(name: string, pbxSectionName: unknown): unknown;
+    pbxItemByComment(name: string, pbxSectionName: XCObjectType): unknown;
     pbxSourcesBuildPhaseObj(target: unknown): unknown;
     pbxResourcesBuildPhaseObj(target: unknown): unknown;
     pbxFrameworksBuildPhaseObj(target: unknown): unknown;

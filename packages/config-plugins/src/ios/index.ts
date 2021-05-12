@@ -20,6 +20,7 @@ import * as RequiresFullScreen from './RequiresFullScreen';
 import * as Scheme from './Scheme';
 import * as SplashScreen from './SplashScreen';
 import * as Swift from './Swift';
+import * as Target from './Target';
 import * as Updates from './Updates';
 import * as UserInterfaceStyle from './UserInterfaceStyle';
 import * as UsesNonExemptEncryption from './UsesNonExemptEncryption';
@@ -54,6 +55,7 @@ export {
   RequiresFullScreen,
   Scheme,
   Swift,
+  Target,
   Updates,
   UserInterfaceStyle,
   UsesNonExemptEncryption,

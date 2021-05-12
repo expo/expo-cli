@@ -43,7 +43,7 @@ async function readSchemeAsync(
   }
 }
 
-export async function getApplicationTargetForSchemeAsync(
+export async function getApplicationTargetNameForSchemeAsync(
   projectRoot: string,
   scheme: string
 ): Promise<string> {
