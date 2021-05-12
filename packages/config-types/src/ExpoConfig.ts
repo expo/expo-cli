@@ -465,10 +465,6 @@ export interface IOS {
  */
 export interface Android {
   /**
-   * If set to true, APK will contain only unimodules that are explicitly added in package.json and their dependecies
-   */
-  enableDangerousExperimentalLeanBuilds?: boolean;
-  /**
    * The manifest for the Android version of your app will be written to this path during publish.
    */
   publishManifestPath?: string;
