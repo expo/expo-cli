@@ -25,7 +25,7 @@
   "scripts": {
     "prepare": "yarn run clean && yarn run build:prod",
     "lint": "eslint .",
-    "watch": "tsc --watch",
+    "watch": "tsc --watch --preserveWatchOutput",
     "watch:ncc": "yarn run build -w",
     "build": "ncc build ./src/index.ts -o build/",
     "build:prod": "ncc build ./src/index.ts -o build/ --minify --no-cache --no-source-map-register",

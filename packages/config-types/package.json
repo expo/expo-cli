@@ -5,7 +5,7 @@
   "types": "build/ExpoConfig.d.ts",
   "main": "build/ExpoConfig.js",
   "scripts": {
-    "watch": "tsc --watch",
+    "watch": "tsc --watch --preserveWatchOutput",
     "build": "tsc",
     "generate": "ts-node ./scripts/generate.ts",
     "prepare": "yarn run clean && yarn build",

@@ -10,7 +10,7 @@
   "scripts": {
     "start": "yarn run prepare",
     "build": "tsc",
-    "watch": "tsc --watch",
+    "watch": "tsc --watch --preserveWatchOutput",
     "prepare": "yarn run clean && yarn run build",
     "clean": "rimraf build ./tsconfig.tsbuildinfo",
     "lint": "eslint --ext .js,.jsx,.ts,.tsx,.d.ts src",

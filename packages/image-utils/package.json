@@ -4,7 +4,7 @@
   "description": "A package used by Expo CLI for processing images",
   "main": "build/index.js",
   "scripts": {
-    "watch": "tsc --watch",
+    "watch": "tsc --watch --preserveWatchOutput",
     "build": "tsc",
     "test": "jest",
     "prepare": "yarn run clean && yarn build",
