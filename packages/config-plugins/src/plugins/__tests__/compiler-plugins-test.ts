@@ -22,7 +22,7 @@ describe(withIOSEntitlementsPlistBaseMod, () => {
     });
 
     // base mods must be added last
-    config = withIOSEntitlementsPlistBaseMod(config, { noPersist: true });
+    config = withIOSEntitlementsPlistBaseMod(config, { noPersist: true, saveToInternal: true });
     config = await evalModsAsync(config, { projectRoot: '/', platforms: ['ios'] });
 
     expect(config.ios?.entitlements).toStrictEqual({
@@ -31,6 +31,8 @@ describe(withIOSEntitlementsPlistBaseMod, () => {
     });
     // @ts-ignore: mods are untyped
     expect(config.mods.ios.entitlements).toBeDefined();
+
+    expect(config._internal.modResults.ios.entitlements).toBeDefined();
 
     // Ensure no files were written
     expect(vol.toJSON()).toStrictEqual({});
@@ -52,7 +54,7 @@ describe(withIOSInfoPlistBaseMod, () => {
     });
 
     // base mods must be added last
-    config = withIOSInfoPlistBaseMod(config, { noPersist: true });
+    config = withIOSInfoPlistBaseMod(config, { noPersist: true, saveToInternal: true });
     config = await evalModsAsync(config, { projectRoot: '/', platforms: ['ios'] });
 
     expect(config.ios?.infoPlist).toStrictEqual({
@@ -60,6 +62,8 @@ describe(withIOSInfoPlistBaseMod, () => {
     });
     // @ts-ignore: mods are untyped
     expect(config.mods.ios.infoPlist).toBeDefined();
+
+    expect(config._internal.modResults.ios.infoPlist).toBeDefined();
 
     // Ensure no files were written
     expect(vol.toJSON()).toStrictEqual({});

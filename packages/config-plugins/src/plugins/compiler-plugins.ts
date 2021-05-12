@@ -22,7 +22,12 @@ import { AppDelegateProjectFile, getAppDelegate, getInfoPlistPath } from '../ios
 import { getPbxproj } from '../ios/utils/Xcodeproj';
 import { writeXMLAsync } from '../utils/XML';
 import * as WarningAggregator from '../utils/warnings';
-import { withInterceptedMod } from './core-plugins';
+import { InterceptedModOptions, withInterceptedMod } from './core-plugins';
+
+type ForwardedInterceptedModOptions = Pick<
+  InterceptedModOptions,
+  'saveToInternal' | 'skipEmptyMod'
+>;
 
 export function withBaseMods(config: ExportedConfig): ExportedConfig {
   config = withIOSBaseMods(config);
@@ -58,12 +63,16 @@ function withAndroidBaseMods(config: ExportedConfig): ExportedConfig {
   return config;
 }
 
-const withAndroidManifestBaseMod: ConfigPlugin = config => {
+const withAndroidManifestBaseMod: ConfigPlugin<ForwardedInterceptedModOptions | void> = (
+  config,
+  props
+) => {
   // Append a rule to supply AndroidManifest.xml data to mods on `mods.android.manifest`
   return withInterceptedMod<AndroidManifest>(config, {
     platform: 'android',
     mod: 'manifest',
-    skipEmptyMod: true,
+    skipEmptyMod: (props || {}).skipEmptyMod ?? true,
+    saveToInternal: (props || {}).saveToInternal,
     async action({ modRequest: { nextMod, ...modRequest }, ...config }) {
       let results: ExportedConfigWithProps<AndroidManifest> = {
         ...config,
@@ -92,12 +101,16 @@ const withAndroidManifestBaseMod: ConfigPlugin = config => {
   });
 };
 
-export const withAndroidGradlePropertiesBaseMod: ConfigPlugin = config => {
+export const withAndroidGradlePropertiesBaseMod: ConfigPlugin<ForwardedInterceptedModOptions | void> = (
+  config,
+  props
+) => {
   // Append a rule to supply gradle.properties data to mods on `mods.android.gradleProperties`
   return withInterceptedMod<Properties.PropertiesItem[]>(config, {
     platform: 'android',
     mod: 'gradleProperties',
-    skipEmptyMod: true,
+    skipEmptyMod: (props || {}).skipEmptyMod ?? true,
+    saveToInternal: (props || {}).saveToInternal,
     async action({ modRequest: { nextMod, ...modRequest }, ...config }) {
       let results: ExportedConfigWithProps<Properties.PropertiesItem[]> = {
         ...config,
@@ -126,12 +139,16 @@ export const withAndroidGradlePropertiesBaseMod: ConfigPlugin = config => {
   });
 };
 
-const withAndroidStringsXMLBaseMod: ConfigPlugin = config => {
+const withAndroidStringsXMLBaseMod: ConfigPlugin<ForwardedInterceptedModOptions | void> = (
+  config,
+  props
+) => {
   // Append a rule to supply strings.xml data to mods on `mods.android.strings`
   return withInterceptedMod<ResourceXML>(config, {
     platform: 'android',
     mod: 'strings',
-    skipEmptyMod: true,
+    skipEmptyMod: (props || {}).skipEmptyMod ?? true,
+    saveToInternal: (props || {}).saveToInternal,
     async action({ modRequest: { nextMod, ...modRequest }, ...config }) {
       let results: ExportedConfigWithProps<ResourceXML> = {
         ...config,
@@ -160,11 +177,15 @@ const withAndroidStringsXMLBaseMod: ConfigPlugin = config => {
   });
 };
 
-const withAndroidProjectBuildGradleBaseMod: ConfigPlugin = config => {
+const withAndroidProjectBuildGradleBaseMod: ConfigPlugin<ForwardedInterceptedModOptions | void> = (
+  config,
+  props
+) => {
   return withInterceptedMod<AndroidPaths.GradleProjectFile>(config, {
     platform: 'android',
     mod: 'projectBuildGradle',
-    skipEmptyMod: true,
+    skipEmptyMod: (props || {}).skipEmptyMod ?? true,
+    saveToInternal: (props || {}).saveToInternal,
     async action({ modRequest: { nextMod, ...modRequest }, ...config }) {
       let results: ExportedConfigWithProps<AndroidPaths.GradleProjectFile> = {
         ...config,
@@ -194,11 +215,15 @@ const withAndroidProjectBuildGradleBaseMod: ConfigPlugin = config => {
   });
 };
 
-const withAndroidSettingsGradleBaseMod: ConfigPlugin = config => {
+const withAndroidSettingsGradleBaseMod: ConfigPlugin<ForwardedInterceptedModOptions | void> = (
+  config,
+  props
+) => {
   return withInterceptedMod<AndroidPaths.GradleProjectFile>(config, {
     platform: 'android',
     mod: 'settingsGradle',
-    skipEmptyMod: true,
+    skipEmptyMod: (props || {}).skipEmptyMod ?? true,
+    saveToInternal: (props || {}).saveToInternal,
     async action({ modRequest: { nextMod, ...modRequest }, ...config }) {
       let results: ExportedConfigWithProps<AndroidPaths.GradleProjectFile> = {
         ...config,
@@ -228,11 +253,15 @@ const withAndroidSettingsGradleBaseMod: ConfigPlugin = config => {
   });
 };
 
-const withAndroidAppBuildGradleBaseMod: ConfigPlugin = config => {
+const withAndroidAppBuildGradleBaseMod: ConfigPlugin<ForwardedInterceptedModOptions | void> = (
+  config,
+  props
+) => {
   return withInterceptedMod<AndroidPaths.GradleProjectFile>(config, {
     platform: 'android',
     mod: 'appBuildGradle',
-    skipEmptyMod: true,
+    skipEmptyMod: (props || {}).skipEmptyMod ?? true,
+    saveToInternal: (props || {}).saveToInternal,
     async action({ modRequest: { nextMod, ...modRequest }, ...config }) {
       let results: ExportedConfigWithProps<AndroidPaths.GradleProjectFile> = {
         ...config,
@@ -262,11 +291,15 @@ const withAndroidAppBuildGradleBaseMod: ConfigPlugin = config => {
   });
 };
 
-const withAndroidMainActivityBaseMod: ConfigPlugin = config => {
+const withAndroidMainActivityBaseMod: ConfigPlugin<ForwardedInterceptedModOptions | void> = (
+  config,
+  props
+) => {
   return withInterceptedMod<AndroidPaths.ApplicationProjectFile>(config, {
     platform: 'android',
     mod: 'mainActivity',
-    skipEmptyMod: true,
+    skipEmptyMod: (props || {}).skipEmptyMod ?? true,
+    saveToInternal: (props || {}).saveToInternal,
     async action({ modRequest: { nextMod, ...modRequest }, ...config }) {
       let results: ExportedConfigWithProps<AndroidPaths.ApplicationProjectFile> = {
         ...config,
@@ -324,11 +357,15 @@ const withExpoDangerousBaseMod: ConfigPlugin<ModPlatform> = (config, platform) =
   });
 };
 
-const withIOSAppDelegateBaseMod: ConfigPlugin = config => {
+const withIOSAppDelegateBaseMod: ConfigPlugin<ForwardedInterceptedModOptions | void> = (
+  config,
+  props
+) => {
   return withInterceptedMod<AppDelegateProjectFile>(config, {
     platform: 'ios',
     mod: 'appDelegate',
-    skipEmptyMod: true,
+    skipEmptyMod: (props || {}).skipEmptyMod ?? true,
+    saveToInternal: (props || {}).saveToInternal,
     async action({ modRequest: { nextMod, ...modRequest }, ...config }) {
       let results: ExportedConfigWithProps<AppDelegateProjectFile> = {
         ...config,
@@ -358,12 +395,16 @@ const withIOSAppDelegateBaseMod: ConfigPlugin = config => {
   });
 };
 
-const withIOSExpoPlistBaseMod: ConfigPlugin = config => {
+const withIOSExpoPlistBaseMod: ConfigPlugin<ForwardedInterceptedModOptions | void> = (
+  config,
+  props
+) => {
   // Append a rule to supply Expo.plist data to mods on `mods.ios.expoPlist`
   return withInterceptedMod<JSONObject>(config, {
     platform: 'ios',
     mod: 'expoPlist',
-    skipEmptyMod: true,
+    skipEmptyMod: (props || {}).skipEmptyMod ?? true,
+    saveToInternal: (props || {}).saveToInternal,
     async action({ modRequest: { nextMod, ...modRequest }, ...config }) {
       const supportingDirectory = path.join(
         modRequest.platformProjectRoot,
@@ -401,12 +442,15 @@ const withIOSExpoPlistBaseMod: ConfigPlugin = config => {
   });
 };
 
-const withIOSXcodeProjectBaseMod: ConfigPlugin = config => {
+const withIOSXcodeProjectBaseMod: ConfigPlugin<Pick<
+  InterceptedModOptions,
+  'skipEmptyMod'
+> | void> = (config, props) => {
   // Append a rule to supply .xcodeproj data to mods on `mods.ios.xcodeproj`
   return withInterceptedMod<XcodeProject>(config, {
     platform: 'ios',
     mod: 'xcodeproj',
-    skipEmptyMod: true,
+    skipEmptyMod: (props || {}).skipEmptyMod ?? true,
     async action({ modRequest: { nextMod, ...modRequest }, ...config }) {
       const modResults = getPbxproj(modRequest.projectRoot);
       // TODO: Fix type
@@ -423,16 +467,16 @@ const withIOSXcodeProjectBaseMod: ConfigPlugin = config => {
   });
 };
 
-export const withIOSInfoPlistBaseMod: ConfigPlugin<{ noPersist?: boolean } | void> = (
-  config,
-  _props
-) => {
+export const withIOSInfoPlistBaseMod: ConfigPlugin<
+  (ForwardedInterceptedModOptions & { noPersist?: boolean }) | void
+> = (config, _props) => {
   const props = _props || {};
   // Append a rule to supply Info.plist data to mods on `mods.ios.infoPlist`
   return withInterceptedMod<InfoPlist>(config, {
     platform: 'ios',
     mod: 'infoPlist',
-    skipEmptyMod: true,
+    skipEmptyMod: (props || {}).skipEmptyMod ?? true,
+    saveToInternal: (props || {}).saveToInternal,
     async action({ modRequest: { nextMod, ...modRequest }, ...config }) {
       let filePath = '';
       try {
@@ -487,6 +531,7 @@ export const withIOSInfoPlistBaseMod: ConfigPlugin<{ noPersist?: boolean } | voi
         results.ios = {};
       }
       results.ios.infoPlist = results.modResults;
+
       if (!props.noPersist) {
         await writeFile(filePath, plist.build(data));
       }
@@ -496,16 +541,16 @@ export const withIOSInfoPlistBaseMod: ConfigPlugin<{ noPersist?: boolean } | voi
   });
 };
 
-export const withIOSEntitlementsPlistBaseMod: ConfigPlugin<{ noPersist?: boolean } | void> = (
-  config,
-  _props
-) => {
+export const withIOSEntitlementsPlistBaseMod: ConfigPlugin<
+  (ForwardedInterceptedModOptions & { noPersist?: boolean }) | void
+> = (config, _props) => {
   const props = _props || {};
   // Append a rule to supply .entitlements data to mods on `mods.ios.entitlements`
   return withInterceptedMod<JSONObject>(config, {
     platform: 'ios',
     mod: 'entitlements',
-    skipEmptyMod: true,
+    skipEmptyMod: (props || {}).skipEmptyMod ?? true,
+    saveToInternal: (props || {}).saveToInternal,
     async action({ modRequest: { nextMod, ...modRequest }, ...config }) {
       let entitlementsPath = '';
       try {

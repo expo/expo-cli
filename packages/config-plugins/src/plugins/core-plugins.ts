@@ -1,3 +1,5 @@
+import { ExpoConfig } from '@expo/config-types';
+import { JSONObject } from '@expo/json-file';
 import assert from 'assert';
 import chalk from 'chalk';
 import { boolish } from 'getenv';
@@ -121,6 +123,13 @@ export function withExtendedMod<T>(
   });
 }
 
+export type InterceptedModOptions = {
+  platform: ModPlatform;
+  mod: string;
+  skipEmptyMod?: boolean;
+  saveToInternal?: boolean;
+};
+
 /**
  * Plugin to intercept execution of a given `mod` with the given `action`.
  * If an action was already set on the given `config` config for `mod`, then it
@@ -131,6 +140,7 @@ export function withExtendedMod<T>(
  * @param platform platform to target (ios or android)
  * @param mod name of the platform function to intercept
  * @param skipEmptyMod should skip running the action if there is no existing mod to intercept
+ * @param saveToInternal should save the results to `_internal.modResults`, only enable this when the results are pure JSON.
  * @param action method to run on the mod when the config is compiled
  */
 export function withInterceptedMod<T>(
@@ -140,12 +150,8 @@ export function withInterceptedMod<T>(
     mod,
     action,
     skipEmptyMod,
-  }: {
-    platform: ModPlatform;
-    mod: string;
-    action: Mod<T>;
-    skipEmptyMod?: boolean;
-  }
+    saveToInternal,
+  }: InterceptedModOptions & { action: Mod<T> }
 ): ExportedConfig {
   if (!config.mods) {
     config.mods = {};
@@ -187,12 +193,32 @@ export function withInterceptedMod<T>(
       // In debug mod, log the plugin stack in the order which they were invoked
       console.log(debugTrace);
     }
-    return action({ ...config, modRequest: { ...modRequest, nextMod: interceptedMod } });
+    const results = await action({
+      ...config,
+      modRequest: { ...modRequest, nextMod: interceptedMod },
+    });
+
+    if (saveToInternal) {
+      saveToInternalObject(results, platform, mod, (results.modResults as unknown) as JSONObject);
+    }
+    return results;
   }
 
   (config.mods[platform] as any)[mod] = interceptingMod;
 
   return config;
+}
+
+function saveToInternalObject(
+  config: Pick<ExpoConfig, '_internal'>,
+  platformName: ModPlatform,
+  modName: string,
+  results: JSONObject
+) {
+  if (!config._internal) config._internal = {};
+  if (!config._internal.modResults) config._internal.modResults = {};
+  if (!config._internal.modResults[platformName]) config._internal.modResults[platformName] = {};
+  config._internal.modResults[platformName][modName] = results;
 }
 
 function getDebugPluginStackFromStackTrace(stacktrace?: string): string {
