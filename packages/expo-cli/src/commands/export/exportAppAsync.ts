@@ -125,7 +125,7 @@ export async function exportAppAsync(
     exp,
     hostedUrl: publicUrl,
     assetPath: 'assets',
-    outputDir,
+    outputDir: absoluteOutputDir,
     bundles,
     experimentalBundle,
   });
