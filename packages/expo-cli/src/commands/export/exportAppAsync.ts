@@ -71,7 +71,7 @@ export async function exportAppAsync(
   } = {},
   experimentalBundle: boolean
 ): Promise<void> {
-  const absoluteOutputDir = path.resolve(process.cwd(), outputDir);
+  const absoluteOutputDir = path.resolve(projectRoot, outputDir);
   const defaultTarget = getDefaultTarget(projectRoot);
   const target = options.publishOptions?.target ?? defaultTarget;
 
@@ -81,13 +81,6 @@ export async function exportAppAsync(
     Log.log(`- Asset target: ${target}`);
     Log.newLine();
   }
-
-  // build the bundles
-  // make output dirs if not exists
-  const assetPathToWrite = path.resolve(projectRoot, path.join(outputDir, 'assets'));
-  await fs.ensureDir(assetPathToWrite);
-  const bundlesPathToWrite = path.resolve(projectRoot, path.join(outputDir, 'bundles'));
-  await fs.ensureDir(bundlesPathToWrite);
 
   const { exp, pkg, hooks } = await Project.getPublishExpConfigAsync(
     projectRoot,
@@ -117,17 +110,22 @@ export async function exportAppAsync(
     ios: path.join('bundles', iosBundleUrl),
   };
 
-  await Project.writeArtifactSafelyAsync(projectRoot, null, iosJsPath, iosBundle);
-  await Project.writeArtifactSafelyAsync(projectRoot, null, androidJsPath, androidBundle);
+  const bundlesPathToWrite = path.resolve(absoluteOutputDir, 'bundles');
+  await fs.ensureDir(bundlesPathToWrite);
+  await Project.writeArtifactSafelyAsync(bundlesPathToWrite, null, iosJsPath, iosBundle);
+  await Project.writeArtifactSafelyAsync(bundlesPathToWrite, null, androidJsPath, androidBundle);
 
   Log.log('Finished saving JS Bundles.');
 
+  // TODO-JJ delete this when xdl is bumped, ensuring the existence of assetPathToWrite is now done there.
+  const assetPathToWrite = path.resolve(projectRoot, path.join(outputDir, 'assets'));
+  await fs.ensureDir(assetPathToWrite);
   const { assets } = await ProjectAssets.exportAssetsAsync({
     projectRoot,
     exp,
     hostedUrl: publicUrl,
     assetPath: 'assets',
-    outputDir: absoluteOutputDir,
+    outputDir,
     bundles,
     experimentalBundle,
   });
