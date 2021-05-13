@@ -297,8 +297,6 @@ async function saveAssetsAsync(projectRoot: string, assets: Asset[], outputDir: 
   // Collect paths by key, also effectively handles duplicates in the array
   const paths = collectAssetPaths(assets);
 
-  const assetRoot = path.resolve(projectRoot, path.join(outputDir, 'assets'));
-  await fs.ensureDir(assetRoot);
   // save files one chunk at a time
   const keyChunks = chunk(Object.keys(paths), 5);
   for (const keys of keyChunks) {
@@ -308,7 +306,9 @@ async function saveAssetsAsync(projectRoot: string, assets: Asset[], outputDir: 
 
       logAssetTask(projectRoot, 'saving', pathName);
 
-      const assetPath = path.resolve(assetRoot, key);
+      const assetPath = path.resolve(outputDir, 'assets', key);
+
+      // copy file over to assetPath
       promises.push(fs.copy(pathName, assetPath));
     }
     await Promise.all(promises);

@@ -82,7 +82,6 @@ export async function exportAppAsync(
     Log.newLine();
   }
 
-  // TODO-JJ delete the assetPathToWrite check when xdl is bumped: existence of assetPathToWrite is now done there.
   const assetPathToWrite = path.resolve(absoluteOutputDir, 'assets');
   await fs.ensureDir(assetPathToWrite);
   const bundlesPathToWrite = path.resolve(absoluteOutputDir, 'bundles');
