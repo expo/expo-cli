@@ -10,7 +10,7 @@
     "directory": "packages/webpack-config"
   },
   "scripts": {
-    "watch": "tsc --watch",
+    "watch": "tsc --watch --preserveWatchOutput",
     "build": "tsc",
     "lint": "eslint .",
     "clean": "rimraf ./webpack/ ./tsconfig.tsbuildinfo",

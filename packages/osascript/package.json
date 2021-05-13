@@ -4,7 +4,7 @@
   "description": "Tools for running an osascripts in Node",
   "main": "build/index.js",
   "scripts": {
-    "watch": "tsc --watch",
+    "watch": "tsc --watch --preserveWatchOutput",
     "build": "tsc",
     "prepare": "yarn run clean && yarn build",
     "clean": "rimraf build ./tsconfig.tsbuildinfo"

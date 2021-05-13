@@ -6,7 +6,7 @@
   "scripts": {
     "test": "jest --testPathIgnorePatterns network",
     "test-integration": "jest",
-    "watch": "tsc --watch",
+    "watch": "tsc --watch --preserveWatchOutput",
     "build": "tsc",
     "prepare": "yarn build"
   },

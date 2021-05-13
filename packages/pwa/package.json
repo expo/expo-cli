@@ -27,7 +27,7 @@
     "prepare": "yarn run clean && yarn run build",
     "test": "jest",
     "lint": "eslint .",
-    "watch": "tsc --watch",
+    "watch": "tsc --watch --preserveWatchOutput",
     "build": "tsc",
     "clean": "rimraf build ./tsconfig.tsbuildinfo"
   },

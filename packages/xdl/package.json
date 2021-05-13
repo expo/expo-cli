@@ -16,7 +16,7 @@
     "prepare": "yarn run clean && yarn run build",
     "prepack": "node scripts/updateCaches.js",
     "clean": "rimraf build ./tsconfig.tsbuildinfo",
-    "watch": "tsc --watch",
+    "watch": "tsc --watch --preserveWatchOutput",
     "test": "jest",
     "integration-tests": "jest --config jest/integration-test-config.js"
   },

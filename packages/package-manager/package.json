@@ -4,7 +4,7 @@
   "description": "A library for installing and finding packages in a node project",
   "main": "build",
   "scripts": {
-    "watch": "tsc --watch",
+    "watch": "tsc --watch --preserveWatchOutput",
     "build": "tsc",
     "prepare": "yarn run clean && yarn build",
     "clean": "rimraf build ./tsconfig.tsbuildinfo",

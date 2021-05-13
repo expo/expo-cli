@@ -4,7 +4,7 @@
   "description": "PKCS#12 Utilities for Node.js",
   "main": "build/index.js",
   "scripts": {
-    "watch": "tsc --watch",
+    "watch": "tsc --watch --preserveWatchOutput",
     "build": "tsc",
     "prepare": "yarn build",
     "lint": "eslint .",

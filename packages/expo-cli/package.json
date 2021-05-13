@@ -11,7 +11,7 @@
   "scripts": {
     "start": "yarn run prepare && yarn run watch",
     "build": "tsc --emitDeclarationOnly && babel src --out-dir build --extensions \".ts\" --source-maps --ignore \"src/**/__mocks__/*\",\"src/**/__tests__/*\"",
-    "watch": "tsc --watch",
+    "watch": "tsc --watch --preserveWatchOutput",
     "introspect": "ts-node ./scripts/introspect.ts",
     "prepare": "yarn run clean && yarn run build",
     "clean": "rimraf build ./tsconfig.tsbuildinfo",

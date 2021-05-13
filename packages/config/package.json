@@ -4,7 +4,7 @@
   "description": "A library for interacting with the app.json",
   "main": "build/index.js",
   "scripts": {
-    "watch": "tsc --watch",
+    "watch": "tsc --watch --preserveWatchOutput",
     "build": "tsc",
     "prepare": "yarn run clean && yarn build",
     "clean": "rimraf build ./tsconfig.tsbuildinfo",
