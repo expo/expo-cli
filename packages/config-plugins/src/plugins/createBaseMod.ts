@@ -14,17 +14,17 @@ export function createBaseMod<
   methodName,
   platform,
   modName,
-  readContentsAsync,
-  writeContentsAsync,
+  readAsync,
+  writeAsync,
 }: {
   methodName: string;
   platform: ModPlatform;
   modName: string;
-  readContentsAsync: (
+  readAsync: (
     modRequest: ExportedConfigWithProps<ModType>,
     props: Props
   ) => Promise<{ contents: ModType; filePath: string }>;
-  writeContentsAsync: (
+  writeAsync: (
     filePath: string,
     config: ExportedConfigWithProps<ModType>,
     props: Props
@@ -44,7 +44,7 @@ export function createBaseMod<
             modRequest,
           };
 
-          const { contents: modResults, filePath } = await readContentsAsync(results, props);
+          const { contents: modResults, filePath } = await readAsync(results, props);
 
           results = await nextMod!({
             ...config,
@@ -54,7 +54,7 @@ export function createBaseMod<
 
           resolveModResults(results, modRequest.platform, modRequest.modName);
 
-          await writeContentsAsync(filePath, results, props);
+          await writeAsync(filePath, results, props);
           return results;
         } catch (error) {
           console.error(`[${platform}.${modName}]: ${methodName} error:`);

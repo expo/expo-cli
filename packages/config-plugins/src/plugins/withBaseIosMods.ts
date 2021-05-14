@@ -28,11 +28,11 @@ export const withIOSAppDelegateBaseMod = createBaseMod<AppDelegateProjectFile>({
   methodName: 'withIOSAppDelegateBaseMod',
   platform: 'ios',
   modName: 'appDelegate',
-  async readContentsAsync({ modRequest: { projectRoot } }) {
+  async readAsync({ modRequest: { projectRoot } }) {
     const modResults = await getAppDelegate(projectRoot);
     return { filePath: modResults.path, contents: modResults };
   },
-  async writeContentsAsync(filePath, { modResults: { contents } }) {
+  async writeAsync(filePath, { modResults: { contents } }) {
     await writeFile(filePath, contents);
   },
 });
@@ -42,13 +42,13 @@ export const withIOSExpoPlistBaseMod = createBaseMod<JSONObject>({
   methodName: 'withIOSExpoPlistBaseMod',
   platform: 'ios',
   modName: 'expoPlist',
-  async readContentsAsync({ modRequest: { platformProjectRoot, projectName } }) {
+  async readAsync({ modRequest: { platformProjectRoot, projectName } }) {
     const supportingDirectory = path.join(platformProjectRoot, projectName!, 'Supporting');
     const filePath = path.resolve(supportingDirectory, 'Expo.plist');
     const modResults = plist.parse(await readFile(filePath, 'utf8'));
     return { filePath, contents: modResults };
   },
-  async writeContentsAsync(filePath, { modResults }) {
+  async writeAsync(filePath, { modResults }) {
     await writeFile(filePath, plist.build(modResults));
   },
 });
@@ -58,11 +58,11 @@ export const withIOSXcodeProjectBaseMod = createBaseMod<XcodeProject>({
   methodName: 'withIOSExpoPlistBaseMod',
   platform: 'ios',
   modName: 'xcodeproj',
-  async readContentsAsync({ modRequest: { projectRoot } }) {
+  async readAsync({ modRequest: { projectRoot } }) {
     const contents = getPbxproj(projectRoot);
     return { filePath: contents.filepath, contents };
   },
-  async writeContentsAsync(filePath, { modResults }) {
+  async writeAsync(filePath, { modResults }) {
     await writeFile(filePath, modResults.writeSync());
   },
 });
@@ -75,7 +75,7 @@ export const withIOSInfoPlistBaseMod = createBaseMod<
   methodName: 'withIOSInfoPlistBaseMod',
   platform: 'ios',
   modName: 'infoPlist',
-  async readContentsAsync(config, props) {
+  async readAsync(config, props) {
     let filePath = '';
     try {
       filePath = getInfoPlistPath(config.modRequest.projectRoot);
@@ -113,7 +113,7 @@ export const withIOSInfoPlistBaseMod = createBaseMod<
 
     return { filePath, contents: data };
   },
-  async writeContentsAsync(filePath, config, props) {
+  async writeAsync(filePath, config, props) {
     // Update the contents of the static infoPlist object
     if (!config.ios) {
       config.ios = {};
@@ -134,7 +134,7 @@ export const withIOSEntitlementsPlistBaseMod = createBaseMod<
   methodName: 'withIOSEntitlementsPlistBaseMod',
   platform: 'ios',
   modName: 'entitlements',
-  async readContentsAsync(config, props) {
+  async readAsync(config, props) {
     let filePath = '';
     try {
       filePath = getEntitlementsPath(config.modRequest.projectRoot);
@@ -172,7 +172,7 @@ export const withIOSEntitlementsPlistBaseMod = createBaseMod<
 
     return { filePath, contents: data };
   },
-  async writeContentsAsync(filePath, config, props) {
+  async writeAsync(filePath, config, props) {
     // Update the contents of the static infoPlist object
     if (!config.ios) {
       config.ios = {};
