@@ -1,6 +1,6 @@
 {
   "name": "expo-codemod",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Codemod scripts for Expo apps",
   "author": "Expo",
   "license": "MIT",
