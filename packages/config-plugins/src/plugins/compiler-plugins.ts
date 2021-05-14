@@ -21,12 +21,77 @@ import { InfoPlist } from '../ios/IosConfig.types';
 import { AppDelegateProjectFile, getAppDelegate, getInfoPlistPath } from '../ios/Paths';
 import { getPbxproj } from '../ios/utils/Xcodeproj';
 import { writeXMLAsync } from '../utils/XML';
-import * as WarningAggregator from '../utils/warnings';
 import { InterceptedModOptions, withInterceptedMod } from './core-plugins';
 
 type ForwardedInterceptedModOptions = Partial<
   Pick<InterceptedModOptions, 'saveToInternal' | 'skipEmptyMod'>
 >;
+
+export function createBaseMod<
+  ModType,
+  Props extends ForwardedInterceptedModOptions = ForwardedInterceptedModOptions
+>({
+  methodName,
+  platform,
+  modName,
+  readContentsAsync,
+  writeContentsAsync,
+}: {
+  methodName: string;
+  platform: ModPlatform;
+  modName: string;
+  readContentsAsync: (
+    modRequest: ExportedConfigWithProps<ModType>,
+    props: Props
+  ) => Promise<{ contents: ModType; filePath: string }>;
+  writeContentsAsync: (
+    filePath: string,
+    config: ExportedConfigWithProps<ModType>,
+    props: Props
+  ) => Promise<void>;
+}): ConfigPlugin<Props | void> {
+  const withUnknown: ConfigPlugin<Props | void> = (config, _props) => {
+    const props = _props || ({} as Props);
+    return withInterceptedMod<ModType>(config, {
+      platform,
+      mod: modName,
+      skipEmptyMod: props.skipEmptyMod ?? true,
+      saveToInternal: props.saveToInternal ?? false,
+      async action({ modRequest: { nextMod, ...modRequest }, ...config }) {
+        try {
+          let results: ExportedConfigWithProps<ModType> = {
+            ...config,
+            modRequest,
+          };
+
+          const { contents: modResults, filePath } = await readContentsAsync(results, props);
+
+          results = await nextMod!({
+            ...config,
+            modResults,
+            modRequest,
+          });
+
+          resolveModResults(results, modRequest.platform, modRequest.modName);
+
+          await writeContentsAsync(filePath, results, props);
+          return results;
+        } catch (error) {
+          console.error(`[${platform}.${modName}]: ${methodName} error:`);
+          throw error;
+        }
+      },
+    });
+  };
+
+  if (methodName) {
+    Object.defineProperty(withUnknown, 'name', {
+      value: methodName,
+    });
+  }
+
+  return withUnknown;
+}
 
 export function withBaseMods(config: ExportedConfig): ExportedConfig {
   config = withIOSBaseMods(config);
@@ -62,271 +127,102 @@ function withAndroidBaseMods(config: ExportedConfig): ExportedConfig {
   return config;
 }
 
-const withAndroidManifestBaseMod: ConfigPlugin<ForwardedInterceptedModOptions | void> = (
-  config,
-  props
-) => {
-  // Append a rule to supply AndroidManifest.xml data to mods on `mods.android.manifest`
-  return withInterceptedMod<AndroidManifest>(config, {
-    platform: 'android',
-    mod: 'manifest',
-    skipEmptyMod: (props || {}).skipEmptyMod ?? true,
-    saveToInternal: (props || {}).saveToInternal,
-    async action({ modRequest: { nextMod, ...modRequest }, ...config }) {
-      let results: ExportedConfigWithProps<AndroidManifest> = {
-        ...config,
-        modRequest,
-      };
+// Append a rule to supply gradle.properties data to mods on `mods.android.gradleProperties`
+export const withAndroidManifestBaseMod = createBaseMod<AndroidManifest>({
+  methodName: 'withAndroidManifestBaseMod',
+  platform: 'android',
+  modName: 'manifest',
+  async readContentsAsync({ modRequest: { projectRoot } }) {
+    const filePath = await AndroidPaths.getAndroidManifestAsync(projectRoot);
+    const contents = await Manifest.readAndroidManifestAsync(filePath);
+    return { filePath, contents };
+  },
+  async writeContentsAsync(filePath, { modResults }) {
+    await Manifest.writeAndroidManifestAsync(filePath, modResults);
+  },
+});
 
-      try {
-        const filePath = await AndroidPaths.getAndroidManifestAsync(modRequest.projectRoot);
-        let modResults = await Manifest.readAndroidManifestAsync(filePath);
+// Append a rule to supply gradle.properties data to mods on `mods.android.gradleProperties`
+export const withAndroidGradlePropertiesBaseMod = createBaseMod<Properties.PropertiesItem[]>({
+  methodName: 'withAndroidGradlePropertiesBaseMod',
+  platform: 'android',
+  modName: 'gradleProperties',
+  async readContentsAsync({ modRequest: { platformProjectRoot } }) {
+    const filePath = path.join(platformProjectRoot, 'gradle.properties');
+    const contents = Properties.parsePropertiesFile(await readFile(filePath, 'utf8'));
+    return { filePath, contents };
+  },
+  async writeContentsAsync(filePath, { modResults }) {
+    await writeFile(filePath, Properties.propertiesListToString(modResults));
+  },
+});
 
-        results = await nextMod!({
-          ...config,
-          modResults,
-          modRequest,
-        });
-        resolveModResults(results, modRequest.platform, modRequest.modName);
-        modResults = results.modResults;
+// Append a rule to supply strings.xml data to mods on `mods.android.strings`
+const withAndroidStringsXMLBaseMod = createBaseMod<ResourceXML>({
+  methodName: 'withAndroidStringsXMLBaseMod',
+  platform: 'android',
+  modName: 'strings',
+  async readContentsAsync({ modRequest: { projectRoot } }) {
+    const filePath = await getProjectStringsXMLPathAsync(projectRoot);
+    const contents = await readResourcesXMLAsync({ path: filePath });
+    return { filePath, contents };
+  },
+  async writeContentsAsync(filePath, { modResults }) {
+    await writeXMLAsync({ path: filePath, xml: modResults });
+  },
+});
 
-        await Manifest.writeAndroidManifestAsync(filePath, modResults);
-      } catch (error) {
-        console.error(`AndroidManifest.xml mod error:`);
-        throw error;
-      }
-      return results;
-    },
-  });
-};
+const withAndroidProjectBuildGradleBaseMod = createBaseMod<AndroidPaths.GradleProjectFile>({
+  methodName: 'withAndroidProjectBuildGradleBaseMod',
+  platform: 'android',
+  modName: 'projectBuildGradle',
+  async readContentsAsync({ modRequest: { projectRoot } }) {
+    const modResults = await AndroidPaths.getProjectBuildGradleAsync(projectRoot);
+    return { filePath: modResults.path, contents: modResults };
+  },
+  async writeContentsAsync(filePath, { modResults: { contents } }) {
+    await writeFile(filePath, contents);
+  },
+});
 
-export const withAndroidGradlePropertiesBaseMod: ConfigPlugin<ForwardedInterceptedModOptions | void> = (
-  config,
-  props
-) => {
-  // Append a rule to supply gradle.properties data to mods on `mods.android.gradleProperties`
-  return withInterceptedMod<Properties.PropertiesItem[]>(config, {
-    platform: 'android',
-    mod: 'gradleProperties',
-    skipEmptyMod: (props || {}).skipEmptyMod ?? true,
-    saveToInternal: (props || {}).saveToInternal,
-    async action({ modRequest: { nextMod, ...modRequest }, ...config }) {
-      let results: ExportedConfigWithProps<Properties.PropertiesItem[]> = {
-        ...config,
-        modRequest,
-      };
+const withAndroidSettingsGradleBaseMod = createBaseMod<AndroidPaths.GradleProjectFile>({
+  methodName: 'withAndroidSettingsGradleBaseMod',
+  platform: 'android',
+  modName: 'settingsGradle',
+  async readContentsAsync({ modRequest: { projectRoot } }) {
+    const modResults = await AndroidPaths.getSettingsGradleAsync(projectRoot);
+    return { filePath: modResults.path, contents: modResults };
+  },
+  async writeContentsAsync(filePath, { modResults: { contents } }) {
+    await writeFile(filePath, contents);
+  },
+});
 
-      try {
-        const filePath = path.join(modRequest.platformProjectRoot, 'gradle.properties');
-        const contents = await readFile(filePath, 'utf8');
-        let modResults = Properties.parsePropertiesFile(contents);
+const withAndroidAppBuildGradleBaseMod = createBaseMod<AndroidPaths.GradleProjectFile>({
+  methodName: 'withAndroidAppBuildGradleBaseMod',
+  platform: 'android',
+  modName: 'appBuildGradle',
+  async readContentsAsync({ modRequest: { projectRoot } }) {
+    const modResults = await AndroidPaths.getAppBuildGradleAsync(projectRoot);
+    return { filePath: modResults.path, contents: modResults };
+  },
+  async writeContentsAsync(filePath, { modResults: { contents } }) {
+    await writeFile(filePath, contents);
+  },
+});
 
-        results = await nextMod!({
-          ...config,
-          modResults,
-          modRequest,
-        });
-        resolveModResults(results, modRequest.platform, modRequest.modName);
-        modResults = results.modResults;
-        await writeFile(filePath, Properties.propertiesListToString(modResults), 'utf8');
-      } catch (error) {
-        console.error(`gradle.properties mod error:`);
-        throw error;
-      }
-      return results;
-    },
-  });
-};
-
-const withAndroidStringsXMLBaseMod: ConfigPlugin<ForwardedInterceptedModOptions | void> = (
-  config,
-  props
-) => {
-  // Append a rule to supply strings.xml data to mods on `mods.android.strings`
-  return withInterceptedMod<ResourceXML>(config, {
-    platform: 'android',
-    mod: 'strings',
-    skipEmptyMod: (props || {}).skipEmptyMod ?? true,
-    saveToInternal: (props || {}).saveToInternal,
-    async action({ modRequest: { nextMod, ...modRequest }, ...config }) {
-      let results: ExportedConfigWithProps<ResourceXML> = {
-        ...config,
-        modRequest,
-      };
-
-      try {
-        const filePath = await getProjectStringsXMLPathAsync(modRequest.projectRoot);
-        let modResults = await readResourcesXMLAsync({ path: filePath });
-
-        results = await nextMod!({
-          ...config,
-          modResults,
-          modRequest,
-        });
-        resolveModResults(results, modRequest.platform, modRequest.modName);
-        modResults = results.modResults;
-
-        await writeXMLAsync({ path: filePath, xml: modResults });
-      } catch (error) {
-        console.error(`strings.xml mod error:`);
-        throw error;
-      }
-      return results;
-    },
-  });
-};
-
-const withAndroidProjectBuildGradleBaseMod: ConfigPlugin<ForwardedInterceptedModOptions | void> = (
-  config,
-  props
-) => {
-  return withInterceptedMod<AndroidPaths.GradleProjectFile>(config, {
-    platform: 'android',
-    mod: 'projectBuildGradle',
-    skipEmptyMod: (props || {}).skipEmptyMod ?? true,
-    saveToInternal: (props || {}).saveToInternal,
-    async action({ modRequest: { nextMod, ...modRequest }, ...config }) {
-      let results: ExportedConfigWithProps<AndroidPaths.GradleProjectFile> = {
-        ...config,
-        modRequest,
-      };
-
-      try {
-        let modResults = await AndroidPaths.getProjectBuildGradleAsync(modRequest.projectRoot);
-        // Currently don't support changing the path or language
-        const filePath = modResults.path;
-
-        results = await nextMod!({
-          ...config,
-          modResults,
-          modRequest,
-        });
-        resolveModResults(results, modRequest.platform, modRequest.modName);
-        modResults = results.modResults;
-
-        await writeFile(filePath, modResults.contents);
-      } catch (error) {
-        console.error(`android/build.gradle mod error:`);
-        throw error;
-      }
-      return results;
-    },
-  });
-};
-
-const withAndroidSettingsGradleBaseMod: ConfigPlugin<ForwardedInterceptedModOptions | void> = (
-  config,
-  props
-) => {
-  return withInterceptedMod<AndroidPaths.GradleProjectFile>(config, {
-    platform: 'android',
-    mod: 'settingsGradle',
-    skipEmptyMod: (props || {}).skipEmptyMod ?? true,
-    saveToInternal: (props || {}).saveToInternal,
-    async action({ modRequest: { nextMod, ...modRequest }, ...config }) {
-      let results: ExportedConfigWithProps<AndroidPaths.GradleProjectFile> = {
-        ...config,
-        modRequest,
-      };
-
-      try {
-        let modResults = await AndroidPaths.getSettingsGradleAsync(modRequest.projectRoot);
-        // Currently don't support changing the path or language
-        const filePath = modResults.path;
-
-        results = await nextMod!({
-          ...config,
-          modResults,
-          modRequest,
-        });
-        resolveModResults(results, modRequest.platform, modRequest.modName);
-        modResults = results.modResults;
-
-        await writeFile(filePath, modResults.contents);
-      } catch (error) {
-        console.error(`android/settings.gradle mod error:`);
-        throw error;
-      }
-      return results;
-    },
-  });
-};
-
-const withAndroidAppBuildGradleBaseMod: ConfigPlugin<ForwardedInterceptedModOptions | void> = (
-  config,
-  props
-) => {
-  return withInterceptedMod<AndroidPaths.GradleProjectFile>(config, {
-    platform: 'android',
-    mod: 'appBuildGradle',
-    skipEmptyMod: (props || {}).skipEmptyMod ?? true,
-    saveToInternal: (props || {}).saveToInternal,
-    async action({ modRequest: { nextMod, ...modRequest }, ...config }) {
-      let results: ExportedConfigWithProps<AndroidPaths.GradleProjectFile> = {
-        ...config,
-        modRequest,
-      };
-
-      try {
-        let modResults = await AndroidPaths.getAppBuildGradleAsync(modRequest.projectRoot);
-        // Currently don't support changing the path or language
-        const filePath = modResults.path;
-
-        results = await nextMod!({
-          ...config,
-          modResults,
-          modRequest,
-        });
-        resolveModResults(results, modRequest.platform, modRequest.modName);
-        modResults = results.modResults;
-
-        await writeFile(filePath, modResults.contents);
-      } catch (error) {
-        console.error(`android/app/build.gradle mod error:`);
-        throw error;
-      }
-      return results;
-    },
-  });
-};
-
-const withAndroidMainActivityBaseMod: ConfigPlugin<ForwardedInterceptedModOptions | void> = (
-  config,
-  props
-) => {
-  return withInterceptedMod<AndroidPaths.ApplicationProjectFile>(config, {
-    platform: 'android',
-    mod: 'mainActivity',
-    skipEmptyMod: (props || {}).skipEmptyMod ?? true,
-    saveToInternal: (props || {}).saveToInternal,
-    async action({ modRequest: { nextMod, ...modRequest }, ...config }) {
-      let results: ExportedConfigWithProps<AndroidPaths.ApplicationProjectFile> = {
-        ...config,
-        modRequest,
-      };
-
-      try {
-        let modResults = await AndroidPaths.getMainActivityAsync(modRequest.projectRoot);
-        // Currently don't support changing the path or language
-        const filePath = modResults.path;
-
-        results = await nextMod!({
-          ...config,
-          modResults,
-          modRequest,
-        });
-        resolveModResults(results, modRequest.platform, modRequest.modName);
-        modResults = results.modResults;
-
-        await writeFile(filePath, modResults.contents);
-      } catch (error) {
-        console.error(`MainActivity mod error:`);
-        throw error;
-      }
-      return results;
-    },
-  });
-};
+const withAndroidMainActivityBaseMod = createBaseMod<AndroidPaths.ApplicationProjectFile>({
+  methodName: 'withAndroidMainActivityBaseMod',
+  platform: 'android',
+  modName: 'mainActivity',
+  async readContentsAsync({ modRequest: { projectRoot } }) {
+    const modResults = await AndroidPaths.getMainActivityAsync(projectRoot);
+    return { filePath: modResults.path, contents: modResults };
+  },
+  async writeContentsAsync(filePath, { modResults: { contents } }) {
+    await writeFile(filePath, contents);
+  },
+});
 
 function withIOSBaseMods(config: ExportedConfig): ExportedConfig {
   config = withExpoDangerousBaseMod(config, 'ios');
@@ -356,262 +252,162 @@ const withExpoDangerousBaseMod: ConfigPlugin<ModPlatform> = (config, platform) =
   });
 };
 
-const withIOSAppDelegateBaseMod: ConfigPlugin<ForwardedInterceptedModOptions | void> = (
-  config,
-  props
-) => {
-  return withInterceptedMod<AppDelegateProjectFile>(config, {
-    platform: 'ios',
-    mod: 'appDelegate',
-    skipEmptyMod: (props || {}).skipEmptyMod ?? true,
-    saveToInternal: (props || {}).saveToInternal,
-    async action({ modRequest: { nextMod, ...modRequest }, ...config }) {
-      let results: ExportedConfigWithProps<AppDelegateProjectFile> = {
-        ...config,
-        modRequest,
+const withIOSAppDelegateBaseMod = createBaseMod<AppDelegateProjectFile>({
+  methodName: 'withIOSAppDelegateBaseMod',
+  platform: 'ios',
+  modName: 'appDelegate',
+  async readContentsAsync({ modRequest: { projectRoot } }) {
+    const modResults = await getAppDelegate(projectRoot);
+    return { filePath: modResults.path, contents: modResults };
+  },
+  async writeContentsAsync(filePath, { modResults: { contents } }) {
+    await writeFile(filePath, contents);
+  },
+});
+
+const withIOSExpoPlistBaseMod = createBaseMod<JSONObject>({
+  methodName: 'withIOSExpoPlistBaseMod',
+  platform: 'ios',
+  modName: 'expoPlist',
+  async readContentsAsync({ modRequest: { platformProjectRoot, projectName } }) {
+    const supportingDirectory = path.join(platformProjectRoot, projectName!, 'Supporting');
+    const filePath = path.resolve(supportingDirectory, 'Expo.plist');
+    const modResults = plist.parse(await readFile(filePath, 'utf8'));
+    return { filePath, contents: modResults };
+  },
+  async writeContentsAsync(filePath, { modResults }) {
+    await writeFile(filePath, plist.build(modResults));
+  },
+});
+
+// Append a rule to supply .xcodeproj data to mods on `mods.ios.xcodeproj`
+const withIOSXcodeProjectBaseMod = createBaseMod<XcodeProject>({
+  methodName: 'withIOSExpoPlistBaseMod',
+  platform: 'ios',
+  modName: 'xcodeproj',
+  async readContentsAsync({ modRequest: { projectRoot } }) {
+    const contents = getPbxproj(projectRoot);
+    return { filePath: contents.filepath, contents };
+  },
+  async writeContentsAsync(filePath, { modResults }) {
+    await writeFile(filePath, modResults.writeSync());
+  },
+});
+
+// Append a rule to supply Info.plist data to mods on `mods.ios.infoPlist`
+const withIOSInfoPlistBaseMod = createBaseMod<
+  InfoPlist,
+  ForwardedInterceptedModOptions & { noPersist?: boolean }
+>({
+  methodName: 'withIOSInfoPlistBaseMod',
+  platform: 'ios',
+  modName: 'infoPlist',
+  async readContentsAsync(config, props) {
+    let filePath = '';
+    try {
+      filePath = getInfoPlistPath(config.modRequest.projectRoot);
+    } catch (error) {
+      // Skip missing file errors in dry run mode since we don't write anywhere.
+      if (!props.noPersist) throw error;
+    }
+
+    // Apply all of the Info.plist values to the expo.ios.infoPlist object
+    // TODO: Remove this in favor of just overwriting the Info.plist with the Expo object. This will enable people to actually remove values.
+    if (!config.ios) {
+      config.ios = {};
+    }
+    if (!config.ios.infoPlist) {
+      config.ios.infoPlist = {};
+    }
+
+    let data: InfoPlist = {};
+    try {
+      const contents = await readFile(filePath, 'utf8');
+      assert(contents, 'Info.plist is empty');
+      data = plist.parse(contents);
+    } catch (error) {
+      if (!props.noPersist) throw error;
+      // If the file is invalid or doesn't exist, fallback on a default blank object.
+      data = {
+        // TODO: Maybe sync with template
       };
+    }
 
-      try {
-        let modResults = getAppDelegate(modRequest.projectRoot);
-        // Currently don't support changing the path or language
-        const filePath = modResults.path;
+    config.ios.infoPlist = {
+      ...(data || {}),
+      ...config.ios.infoPlist,
+    };
 
-        results = await nextMod!({
-          ...config,
-          modResults,
-          modRequest,
-        });
-        resolveModResults(results, modRequest.platform, modRequest.modName);
-        modResults = results.modResults;
+    return { filePath, contents: data };
+  },
+  async writeContentsAsync(filePath, config, props) {
+    // Update the contents of the static infoPlist object
+    if (!config.ios) {
+      config.ios = {};
+    }
+    config.ios.infoPlist = config.modResults;
 
-        await writeFile(filePath, modResults.contents);
-      } catch (error) {
-        console.error(`AppDelegate mod error:`);
-        throw error;
-      }
-      return results;
-    },
-  });
-};
+    if (!props.noPersist) {
+      await writeFile(filePath, plist.build(config.modResults));
+    }
+  },
+});
 
-const withIOSExpoPlistBaseMod: ConfigPlugin<ForwardedInterceptedModOptions | void> = (
-  config,
-  props
-) => {
-  // Append a rule to supply Expo.plist data to mods on `mods.ios.expoPlist`
-  return withInterceptedMod<JSONObject>(config, {
-    platform: 'ios',
-    mod: 'expoPlist',
-    skipEmptyMod: (props || {}).skipEmptyMod ?? true,
-    saveToInternal: (props || {}).saveToInternal,
-    async action({ modRequest: { nextMod, ...modRequest }, ...config }) {
-      const supportingDirectory = path.join(
-        modRequest.platformProjectRoot,
-        modRequest.projectName!,
-        'Supporting'
-      );
-
-      let results: ExportedConfigWithProps<JSONObject> = {
-        ...config,
-        modRequest,
+// Append a rule to supply .entitlements data to mods on `mods.ios.entitlements`
+export const withIOSEntitlementsPlistBaseMod = createBaseMod<
+  InfoPlist,
+  ForwardedInterceptedModOptions & { noPersist?: boolean }
+>({
+  methodName: 'withIOSEntitlementsPlistBaseMod',
+  platform: 'ios',
+  modName: 'entitlements',
+  async readContentsAsync(config, props) {
+    let filePath = '';
+    try {
+      filePath = getEntitlementsPath(config.modRequest.projectRoot);
+    } catch (error) {
+      // Skip missing file errors in dry run mode since we don't write anywhere.
+      if (!props.noPersist) throw error;
+    }
+    let data: InfoPlist = {};
+    try {
+      const contents = await readFile(filePath, 'utf8');
+      assert(contents, 'Entitlements plist is empty');
+      data = plist.parse(contents);
+    } catch (error) {
+      if (!props.noPersist) throw error;
+      // If the file is invalid or doesn't exist, fallback on a default object (matching our template).
+      data = {
+        // always enable notifications by default.
+        'aps-environment': 'development',
       };
-      try {
-        const filePath = path.resolve(supportingDirectory, 'Expo.plist');
-        let modResults = plist.parse(await readFile(filePath, 'utf8'));
+    }
 
-        // TODO: Fix type
-        results = await nextMod!({
-          ...config,
-          modResults,
-          modRequest,
-        });
-        resolveModResults(results, modRequest.platform, modRequest.modName);
-        modResults = results.modResults;
+    // Apply all of the .entitlements values to the expo.ios.entitlements object
+    // TODO: Remove this in favor of just overwriting the .entitlements with the Expo object. This will enable people to actually remove values.
+    if (!config.ios) {
+      config.ios = {};
+    }
+    if (!config.ios.entitlements) {
+      config.ios.entitlements = {};
+    }
 
-        await writeFile(filePath, plist.build(modResults));
-      } catch (error) {
-        WarningAggregator.addWarningIOS(
-          'updates',
-          'Expo.plist configuration could not be applied. You will need to create Expo.plist if it does not exist and add Updates configuration manually.',
-          'https://docs.expo.io/bare/updating-your-app/#configuration-options'
-        );
-      }
-      return results;
-    },
-  });
-};
+    config.ios.entitlements = {
+      ...(data || {}),
+      ...config.ios.entitlements,
+    };
 
-const withIOSXcodeProjectBaseMod: ConfigPlugin<Pick<
-  ForwardedInterceptedModOptions,
-  'skipEmptyMod'
-> | void> = (config, props) => {
-  // Append a rule to supply .xcodeproj data to mods on `mods.ios.xcodeproj`
-  return withInterceptedMod<XcodeProject>(config, {
-    platform: 'ios',
-    mod: 'xcodeproj',
-    skipEmptyMod: (props || {}).skipEmptyMod ?? true,
-    async action({ modRequest: { nextMod, ...modRequest }, ...config }) {
-      const modResults = getPbxproj(modRequest.projectRoot);
-      // TODO: Fix type
-      const results = await nextMod!({
-        ...config,
-        modResults,
-        modRequest,
-      });
-      resolveModResults(results, modRequest.platform, modRequest.modName);
-      const resultData = results.modResults;
-      await writeFile(resultData.filepath, resultData.writeSync());
-      return results;
-    },
-  });
-};
+    return { filePath, contents: data };
+  },
+  async writeContentsAsync(filePath, config, props) {
+    // Update the contents of the static infoPlist object
+    if (!config.ios) {
+      config.ios = {};
+    }
+    config.ios.entitlements = config.modResults;
 
-export const withIOSInfoPlistBaseMod: ConfigPlugin<
-  (ForwardedInterceptedModOptions & { noPersist?: boolean }) | void
-> = (config, _props) => {
-  const props = _props || {};
-  // Append a rule to supply Info.plist data to mods on `mods.ios.infoPlist`
-  return withInterceptedMod<InfoPlist>(config, {
-    platform: 'ios',
-    mod: 'infoPlist',
-    skipEmptyMod: (props || {}).skipEmptyMod ?? true,
-    saveToInternal: (props || {}).saveToInternal,
-    async action({ modRequest: { nextMod, ...modRequest }, ...config }) {
-      let filePath = '';
-      try {
-        filePath = getInfoPlistPath(modRequest.projectRoot);
-      } catch (error) {
-        // Skip missing file errors in dry run mode since we don't write anywhere.
-        if (!props.noPersist) throw error;
-      }
-
-      let results: ExportedConfigWithProps<JSONObject> = {
-        ...config,
-        modRequest,
-      };
-
-      // Apply all of the Info.plist values to the expo.ios.infoPlist object
-      // TODO: Remove this in favor of just overwriting the Info.plist with the Expo object. This will enable people to actually remove values.
-      if (!config.ios) {
-        config.ios = {};
-      }
-      if (!config.ios.infoPlist) {
-        config.ios.infoPlist = {};
-      }
-
-      let data: InfoPlist = {};
-      try {
-        const contents = await readFile(filePath, 'utf8');
-        assert(contents, 'Info.plist is empty');
-        data = plist.parse(contents);
-      } catch (error) {
-        if (!props.noPersist) throw error;
-        // If the file is invalid or doesn't exist, fallback on a default blank object.
-        data = {
-          // TODO: Maybe sync with template
-        };
-      }
-
-      config.ios.infoPlist = {
-        ...(data || {}),
-        ...config.ios.infoPlist,
-      };
-
-      results = await nextMod!({
-        ...config,
-        modRequest,
-        modResults: config.ios.infoPlist as InfoPlist,
-      });
-
-      resolveModResults(results, modRequest.platform, modRequest.modName);
-      data = results.modResults;
-      // Update the contents of the static infoPlist object
-      if (!results.ios) {
-        results.ios = {};
-      }
-      results.ios.infoPlist = results.modResults;
-
-      if (!props.noPersist) {
-        await writeFile(filePath, plist.build(data));
-      }
-
-      return results;
-    },
-  });
-};
-
-export const withIOSEntitlementsPlistBaseMod: ConfigPlugin<
-  (ForwardedInterceptedModOptions & { noPersist?: boolean }) | void
-> = (config, _props) => {
-  const props = _props || {};
-  // Append a rule to supply .entitlements data to mods on `mods.ios.entitlements`
-  return withInterceptedMod<JSONObject>(config, {
-    platform: 'ios',
-    mod: 'entitlements',
-    skipEmptyMod: (props || {}).skipEmptyMod ?? true,
-    saveToInternal: (props || {}).saveToInternal,
-    async action({ modRequest: { nextMod, ...modRequest }, ...config }) {
-      let entitlementsPath = '';
-      try {
-        entitlementsPath = getEntitlementsPath(modRequest.projectRoot);
-      } catch (error) {
-        // Skip missing file errors in dry run mode since we don't write anywhere.
-        if (!props.noPersist) throw error;
-      }
-
-      let results: ExportedConfigWithProps<JSONObject> = {
-        ...config,
-        modRequest,
-      };
-
-      let data: JSONObject = {};
-      try {
-        data = plist.parse(await readFile(entitlementsPath, 'utf8'));
-      } catch (error) {
-        if (!props.noPersist) throw error;
-
-        // If the file is invalid or doesn't exist, fallback on a default object (matching our template).
-        data = {
-          // always enable notifications by default.
-          'aps-environment': 'development',
-        };
-      }
-
-      try {
-        // Apply all of the .entitlements values to the expo.ios.entitlements object
-        // TODO: Remove this in favor of just overwriting the .entitlements with the Expo object. This will enable people to actually remove values.
-        if (!config.ios) {
-          config.ios = {};
-        }
-        if (!config.ios.entitlements) {
-          config.ios.entitlements = {};
-        }
-
-        config.ios.entitlements = {
-          ...(data || {}),
-          ...config.ios.entitlements,
-        };
-
-        // TODO: Fix type
-        results = await nextMod!({
-          ...config,
-          modRequest,
-          modResults: config.ios.entitlements as JSONObject,
-        });
-        resolveModResults(results, modRequest.platform, modRequest.modName);
-        // Update the contents of the static entitlements object
-        if (!results.ios) {
-          results.ios = {};
-        }
-        results.ios.entitlements = results.modResults;
-        if (!props.noPersist) {
-          await writeFile(entitlementsPath, plist.build(results.modResults));
-        }
-      } catch (error) {
-        console.error(`${path.basename(entitlementsPath)} mod error:`);
-        throw error;
-      }
-      return results;
-    },
-  });
-};
+    if (!props.noPersist) {
+      await writeFile(filePath, plist.build(config.modResults));
+    }
+  },
+});
