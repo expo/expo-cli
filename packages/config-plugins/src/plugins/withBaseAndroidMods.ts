@@ -4,7 +4,8 @@ import path from 'path';
 import { ExportedConfig } from '../Plugin.types';
 import { Manifest, Paths, Properties, Resources, Strings } from '../android';
 import { writeXMLAsync } from '../utils/XML';
-import { createBaseMod, ForwardedBaseModOptions, withExpoDangerousBaseMod } from './createBaseMod';
+import { createBaseMod, ForwardedBaseModOptions } from './createBaseMod';
+import { withDangerousBaseMod } from './withDangerousBaseMod';
 
 const { readFile, writeFile } = promises;
 
@@ -12,7 +13,7 @@ export function withBaseAndroidMods(
   config: ExportedConfig,
   props: ForwardedBaseModOptions = {}
 ): ExportedConfig {
-  config = withExpoDangerousBaseMod(config, 'android');
+  config = withDangerousBaseMod(config, 'android');
   config = withAndroidStringsXMLBaseMod(config, props);
   config = withAndroidGradlePropertiesBaseMod(config, props);
   config = withAndroidManifestBaseMod(config, props);

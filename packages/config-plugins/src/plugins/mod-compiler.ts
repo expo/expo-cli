@@ -2,7 +2,6 @@ import path from 'path';
 
 import { ExportedConfig, Mod, ModConfig, ModPlatform } from '../Plugin.types';
 import { getHackyProjectName } from '../ios/utils/Xcodeproj';
-import { resolveModResults } from './compiler-plugins';
 import { ForwardedBaseModOptions } from './createBaseMod';
 import { withBaseAndroidMods } from './withBaseAndroidMods';
 import { withBaseIosMods } from './withBaseIosMods';

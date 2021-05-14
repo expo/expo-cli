@@ -4,8 +4,8 @@ import { vol } from 'memfs';
 import path from 'path';
 
 import { withGradleProperties } from '../android-plugins';
-import { withAndroidGradlePropertiesBaseMod } from '../compiler-plugins';
 import { evalModsAsync } from '../mod-compiler';
+import { withAndroidGradlePropertiesBaseMod } from '../withBaseAndroidMods';
 import rnFixture from './fixtures/react-native-project';
 
 jest.mock('fs');

@@ -1,6 +1,10 @@
-import { JSONObject } from '@expo/json-file';
-
-import { ConfigPlugin, ExportedConfigWithProps, ModPlatform } from '../Plugin.types';
+import {
+  ConfigPlugin,
+  ExportedConfig,
+  ExportedConfigWithProps,
+  ModConfig,
+  ModPlatform,
+} from '../Plugin.types';
 import { BaseModOptions, withBaseMod } from './core-plugins';
 
 export type ForwardedBaseModOptions = Partial<
@@ -89,19 +93,19 @@ export function resolveModResults(results: any, platformName: string, modName: s
   return ensuredResults;
 }
 
-export const withExpoDangerousBaseMod: ConfigPlugin<ModPlatform> = (config, platform) => {
-  // Used for scheduling when dangerous mods run.
-  return withBaseMod<JSONObject>(config, {
-    platform,
-    mod: 'dangerous',
-    skipEmptyMod: true,
-    async action({ modRequest: { nextMod, ...modRequest }, ...config }) {
-      const results = await nextMod!({
-        ...config,
-        modRequest,
-      });
-      resolveModResults(results, modRequest.platform, modRequest.modName);
-      return results;
-    },
-  });
-};
+export function clearMods(config: ExportedConfig, platform: ModPlatform, modNames: string[]) {
+  const mods = (config as any).mods as ModConfig;
+
+  for (const platformKey of Object.keys(mods)) {
+    if (platformKey !== platform) {
+      delete mods[platformKey as ModPlatform];
+    }
+  }
+
+  for (const key of Object.keys(mods[platform] || {})) {
+    if (!modNames.includes(key)) {
+      // @ts-ignore
+      delete mods[platform][key];
+    }
+  }
+}

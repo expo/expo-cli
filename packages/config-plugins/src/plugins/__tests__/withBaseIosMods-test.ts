@@ -1,9 +1,9 @@
 import { ExpoConfig } from '@expo/config-types';
 import { vol } from 'memfs';
 
-import { evalModsAsync } from '../../../build/plugins/mod-compiler';
-import { withIOSEntitlementsPlistBaseMod, withIOSInfoPlistBaseMod } from '../compiler-plugins';
 import { withEntitlementsPlist, withInfoPlist } from '../ios-plugins';
+import { evalModsAsync } from '../mod-compiler';
+import { withIOSEntitlementsPlistBaseMod, withIOSInfoPlistBaseMod } from '../withBaseIosMods';
 
 jest.mock('fs');
 
