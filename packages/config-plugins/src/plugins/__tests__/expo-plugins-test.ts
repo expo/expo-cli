@@ -285,14 +285,14 @@ describe('built-in plugins', () => {
     const after = getDirFromFS(vol.toJSON(), projectRoot);
 
     expect(Object.keys(after)).toStrictEqual([
+      'ios/ReactNativeProject/Supporting/Expo.plist',
+      'ios/ReactNativeProject/Supporting/en.lproj/InfoPlist.strings',
+      'ios/ReactNativeProject/Supporting/es.lproj/InfoPlist.strings',
       'ios/ReactNativeProject/Info.plist',
       'ios/ReactNativeProject/AppDelegate.m',
       'ios/ReactNativeProject/Base.lproj/LaunchScreen.xib',
       'ios/ReactNativeProject/Images.xcassets/AppIcon.appiconset/Contents.json',
       'ios/ReactNativeProject/Images.xcassets/Contents.json',
-      'ios/ReactNativeProject/Supporting/en.lproj/InfoPlist.strings',
-      'ios/ReactNativeProject/Supporting/es.lproj/InfoPlist.strings',
-      'ios/ReactNativeProject/Supporting/Expo.plist',
       'ios/ReactNativeProject/GoogleService-Info.plist',
       'ios/ReactNativeProject/ReactNativeProject-Bridging-Header.h',
       'ios/ReactNativeProject/ReactNativeProject.entitlements',

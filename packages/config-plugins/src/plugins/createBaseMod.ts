@@ -69,7 +69,7 @@ export function createBaseMod<
           const { contents: modResults, filePath } = await readAsync(results, props);
 
           results = await nextMod!({
-            ...config,
+            ...results,
             modResults,
             modRequest,
           });
