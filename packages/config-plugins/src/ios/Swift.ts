@@ -4,6 +4,7 @@ import path from 'path';
 import { ConfigPlugin, XcodeProject } from '../Plugin.types';
 import { withXcodeProject } from '../plugins/ios-plugins';
 import { getAppDelegate, getSourceRoot } from './Paths';
+import { withBuildSourceFile } from './XcodeProjectFile';
 import { addResourceFileToGroup, getProjectName } from './utils/Xcodeproj';
 
 const templateBridgingHeader = `//
@@ -154,3 +155,16 @@ export function createBridgingHeaderFile({
   }
   return project;
 }
+
+export const withNoopSwiftFile: ConfigPlugin = config => {
+  return withBuildSourceFile(config, {
+    filePath: 'noop-file.swift',
+    contents: [
+      '//',
+      '// @generated',
+      '// A blank Swift file must be created for native modules with Swift files to work correctly.',
+      '//',
+      '',
+    ].join('\n'),
+  });
+};
