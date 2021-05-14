@@ -10,26 +10,24 @@ import { Entitlements, Paths, XcodeUtils } from '../ios';
 import { InfoPlist } from '../ios/IosConfig.types';
 import {
   CreateBaseModProps,
-  createPlatformBaseMod,
   ForwardedBaseModOptions,
   provider,
+  withGeneratedBaseMods,
 } from './createBaseMod';
 
 const { readFile, writeFile } = promises;
 
+type IosModName = keyof Required<ModConfig>['ios'];
+
 export function withIosBaseMods(
   config: ExportedConfig,
-  props: ForwardedBaseModOptions = {}
+  props: ForwardedBaseModOptions & { only?: IosModName[] } = {}
 ): ExportedConfig {
-  return Object.entries(IosBaseMods).reduce(
-    (config, [modName, value]) =>
-      createPlatformBaseMod({ platform: 'ios', modName, ...value })(config, props),
-    config
-  );
+  return withGeneratedBaseMods<IosModName>(config, { ...props, platform: 'ios', providers });
 }
 
-const IosBaseMods: Record<
-  keyof Required<ModConfig>['ios'],
+const providers: Record<
+  IosModName,
   Pick<CreateBaseModProps<any, any>, 'readAsync' | 'writeAsync'>
 > = {
   dangerous: provider<unknown>({

@@ -149,3 +149,24 @@ export function provider<ModType, Props extends ForwardedBaseModOptions = Forwar
 ) {
   return props;
 }
+
+export function withGeneratedBaseMods<ModName extends string>(
+  config: ExportedConfig,
+  {
+    platform,
+    providers,
+    only,
+    ...props
+  }: ForwardedBaseModOptions & {
+    platform: ModPlatform;
+    providers: Record<ModName, Pick<CreateBaseModProps<any, any>, 'readAsync' | 'writeAsync'>>;
+    only?: ModName[];
+  }
+): ExportedConfig {
+  return Object.entries(providers).reduce((config, [modName, value]) => {
+    if (only && !only.includes(modName as ModName)) {
+      return config;
+    }
+    return createPlatformBaseMod({ platform, modName, ...(value as any) })(config, props);
+  }, config);
+}
