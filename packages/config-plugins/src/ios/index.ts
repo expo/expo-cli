@@ -19,7 +19,7 @@ import * as ProvisioningProfile from './ProvisioningProfile';
 import * as RequiresFullScreen from './RequiresFullScreen';
 import * as Scheme from './Scheme';
 import * as SplashScreen from './SplashScreen';
-import * as SwiftBridgingHeader from './SwiftBridgingHeader';
+import * as Swift from './Swift';
 import * as Updates from './Updates';
 import * as UserInterfaceStyle from './UserInterfaceStyle';
 import * as UsesNonExemptEncryption from './UsesNonExemptEncryption';
@@ -53,7 +53,7 @@ export {
   Permissions,
   RequiresFullScreen,
   Scheme,
-  SwiftBridgingHeader,
+  Swift,
   Updates,
   UserInterfaceStyle,
   UsesNonExemptEncryption,

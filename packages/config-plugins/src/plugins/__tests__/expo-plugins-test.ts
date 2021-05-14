@@ -293,6 +293,7 @@ describe('built-in plugins', () => {
       'ios/ReactNativeProject/Supporting/en.lproj/InfoPlist.strings',
       'ios/ReactNativeProject/Supporting/es.lproj/InfoPlist.strings',
       'ios/ReactNativeProject/GoogleService-Info.plist',
+      'ios/ReactNativeProject/noop-file.swift',
       'ios/ReactNativeProject/ReactNativeProject-Bridging-Header.h',
       'ios/ReactNativeProject/ReactNativeProject.entitlements',
       'ios/ReactNativeProject.xcodeproj/project.pbxproj',
