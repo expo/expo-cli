@@ -38,20 +38,7 @@ export function createBaseMod<
   modName,
   readAsync,
   writeAsync,
-}: {
-  methodName: string;
-  platform: ModPlatform;
-  modName: string;
-  readAsync: (
-    modRequest: ExportedConfigWithProps<ModType>,
-    props: Props
-  ) => Promise<{ contents: ModType; filePath: string }>;
-  writeAsync: (
-    filePath: string,
-    config: ExportedConfigWithProps<ModType>,
-    props: Props
-  ) => Promise<void>;
-}): ConfigPlugin<Props | void> {
+}: CreateBaseModProps<ModType, Props>): ConfigPlugin<Props | void> {
   const withUnknown: ConfigPlugin<Props | void> = (config, _props) => {
     const props = _props || ({} as Props);
     return withBaseMod<ModType>(config, {
