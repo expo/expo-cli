@@ -1,8 +1,27 @@
 import { JSONObject } from '@expo/json-file';
 
-import { ConfigPlugin, ModPlatform } from '../Plugin.types';
-import { withBaseMod } from './core-plugins';
+import { ConfigPlugin, Mod, ModPlatform } from '../Plugin.types';
 import { resolveModResults } from './createBaseMod';
+import { withBaseMod, withMod } from './withMod';
+
+/**
+ * Mods that don't modify any data, all unresolved functionality is performed inside a dangerous mod.
+ * All dangerous mods run first before other mods.
+ *
+ * @param config
+ * @param platform
+ * @param action
+ */
+export const withDangerousMod: ConfigPlugin<[ModPlatform, Mod<unknown>]> = (
+  config,
+  [platform, action]
+) => {
+  return withMod(config, {
+    platform,
+    mod: 'dangerous',
+    action,
+  });
+};
 
 export const withDangerousBaseMod: ConfigPlugin<ModPlatform> = (config, platform) => {
   // Used for scheduling when dangerous mods run.

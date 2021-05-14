@@ -5,7 +5,7 @@ import { ExportedConfig } from '../Plugin.types';
 import { Manifest, Paths, Properties, Resources, Strings } from '../android';
 import { writeXMLAsync } from '../utils/XML';
 import { createBaseMod, ForwardedBaseModOptions } from './createBaseMod';
-import { withDangerousBaseMod } from './withDangerousBaseMod';
+import { withDangerousBaseMod } from './withDangerousMod';
 
 const { readFile, writeFile } = promises;
 

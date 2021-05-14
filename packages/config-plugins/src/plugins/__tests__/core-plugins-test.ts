@@ -1,6 +1,7 @@
 import { ConfigPlugin, ExportedConfig } from '../../Plugin.types';
-import { createRunOncePlugin, withExtendedMod, withPlugins, withRunOnce } from '../core-plugins';
+import { createRunOncePlugin, withPlugins, withRunOnce } from '../core-plugins';
 import { evalModsAsync } from '../mod-compiler';
+import { withMod } from '../withMod';
 
 describe(withRunOnce, () => {
   it('runs plugins multiple times without withRunOnce', () => {
@@ -85,13 +86,13 @@ describe(withPlugins, () => {
   });
 });
 
-describe(withExtendedMod, () => {
+describe(withMod, () => {
   it('compiles mods', async () => {
     // A basic plugin exported from an app.json
     const exportedConfig: ExportedConfig = { name: 'app', slug: '', mods: null };
 
     // Apply mod
-    let config = withExtendedMod<any>(exportedConfig, {
+    let config = withMod<any>(exportedConfig, {
       platform: 'android',
       mod: 'custom',
       action(props) {

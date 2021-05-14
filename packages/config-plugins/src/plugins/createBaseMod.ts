@@ -5,7 +5,7 @@ import {
   ModConfig,
   ModPlatform,
 } from '../Plugin.types';
-import { BaseModOptions, withBaseMod } from './core-plugins';
+import { BaseModOptions, withBaseMod } from './withMod';
 
 export type ForwardedBaseModOptions = Partial<
   Pick<BaseModOptions, 'saveToInternal' | 'skipEmptyMod'>

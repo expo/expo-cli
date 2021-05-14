@@ -3,7 +3,7 @@ import { vol } from 'memfs';
 
 import { withEntitlementsPlist, withInfoPlist } from '../ios-plugins';
 import { evalModsAsync } from '../mod-compiler';
-import { withIOSEntitlementsPlistBaseMod, withIOSInfoPlistBaseMod } from '../withBaseIosMods';
+import { withIOSEntitlementsPlistBaseMod, withIOSInfoPlistBaseMod } from '../withIosBaseMods';
 
 jest.mock('fs');
 

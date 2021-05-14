@@ -9,7 +9,7 @@ import { ExportedConfig } from '../Plugin.types';
 import { Entitlements, Paths, XcodeUtils } from '../ios';
 import { InfoPlist } from '../ios/IosConfig.types';
 import { createBaseMod, ForwardedBaseModOptions } from './createBaseMod';
-import { withDangerousBaseMod } from './withDangerousBaseMod';
+import { withDangerousBaseMod } from './withDangerousMod';
 
 const { readFile, writeFile } = promises;
 

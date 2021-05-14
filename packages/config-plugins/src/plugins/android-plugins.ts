@@ -2,7 +2,7 @@ import { ExpoConfig } from '@expo/config-types';
 
 import { ConfigPlugin, Mod } from '../Plugin.types';
 import { Manifest, Paths, Properties, Resources } from '../android';
-import { withExtendedMod } from './core-plugins';
+import { withMod } from './withMod';
 
 type OptionalPromise<T> = T | Promise<T>;
 
@@ -57,7 +57,7 @@ export const withAndroidManifest: ConfigPlugin<Mod<Manifest.AndroidManifest>> = 
   config,
   action
 ) => {
-  return withExtendedMod(config, {
+  return withMod(config, {
     platform: 'android',
     mod: 'manifest',
     action,
@@ -71,7 +71,7 @@ export const withAndroidManifest: ConfigPlugin<Mod<Manifest.AndroidManifest>> = 
  * @param action
  */
 export const withStringsXml: ConfigPlugin<Mod<Resources.ResourceXML>> = (config, action) => {
-  return withExtendedMod(config, {
+  return withMod(config, {
     platform: 'android',
     mod: 'strings',
     action,
@@ -88,7 +88,7 @@ export const withMainActivity: ConfigPlugin<Mod<Paths.ApplicationProjectFile>> =
   config,
   action
 ) => {
-  return withExtendedMod(config, {
+  return withMod(config, {
     platform: 'android',
     mod: 'mainActivity',
     action,
@@ -105,7 +105,7 @@ export const withProjectBuildGradle: ConfigPlugin<Mod<Paths.GradleProjectFile>> 
   config,
   action
 ) => {
-  return withExtendedMod(config, {
+  return withMod(config, {
     platform: 'android',
     mod: 'projectBuildGradle',
     action,
@@ -119,7 +119,7 @@ export const withProjectBuildGradle: ConfigPlugin<Mod<Paths.GradleProjectFile>> 
  * @param action
  */
 export const withAppBuildGradle: ConfigPlugin<Mod<Paths.GradleProjectFile>> = (config, action) => {
-  return withExtendedMod(config, {
+  return withMod(config, {
     platform: 'android',
     mod: 'appBuildGradle',
     action,
@@ -133,7 +133,7 @@ export const withAppBuildGradle: ConfigPlugin<Mod<Paths.GradleProjectFile>> = (c
  * @param action
  */
 export const withSettingsGradle: ConfigPlugin<Mod<Paths.GradleProjectFile>> = (config, action) => {
-  return withExtendedMod(config, {
+  return withMod(config, {
     platform: 'android',
     mod: 'settingsGradle',
     action,
@@ -150,7 +150,7 @@ export const withGradleProperties: ConfigPlugin<Mod<Properties.PropertiesItem[]>
   config,
   action
 ) => {
-  return withExtendedMod(config, {
+  return withMod(config, {
     platform: 'android',
     mod: 'gradleProperties',
     action,

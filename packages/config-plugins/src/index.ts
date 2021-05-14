@@ -25,14 +25,10 @@ export {
 
 export * from './Plugin.types';
 
-export {
-  withPlugins,
-  withRunOnce,
-  createRunOncePlugin,
-  withDangerousMod,
-  withExtendedMod,
-  withBaseMod,
-} from './plugins/core-plugins';
+export { withPlugins, withRunOnce, createRunOncePlugin } from './plugins/core-plugins';
+
+export { withDangerousMod } from './plugins/withDangerousMod';
+export { withMod, withBaseMod } from './plugins/withMod';
 
 export {
   withAppDelegate,

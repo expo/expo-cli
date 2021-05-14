@@ -5,7 +5,7 @@ import { XcodeProject } from 'xcode';
 import { ConfigPlugin, Mod } from '../Plugin.types';
 import { ExpoPlist, InfoPlist } from '../ios/IosConfig.types';
 import { AppDelegateProjectFile } from '../ios/Paths';
-import { withExtendedMod } from './core-plugins';
+import { withMod } from './withMod';
 
 type MutateInfoPlistAction = (expo: ExpoConfig, infoPlist: InfoPlist) => InfoPlist;
 
@@ -59,7 +59,7 @@ export function createEntitlementsPlugin(
  * @param action
  */
 export const withAppDelegate: ConfigPlugin<Mod<AppDelegateProjectFile>> = (config, action) => {
-  return withExtendedMod(config, {
+  return withMod(config, {
     platform: 'ios',
     mod: 'appDelegate',
     action,
@@ -74,7 +74,7 @@ export const withAppDelegate: ConfigPlugin<Mod<AppDelegateProjectFile>> = (confi
  * @param action
  */
 export const withInfoPlist: ConfigPlugin<Mod<InfoPlist>> = (config, action) => {
-  return withExtendedMod<InfoPlist>(config, {
+  return withMod<InfoPlist>(config, {
     platform: 'ios',
     mod: 'infoPlist',
     async action(config) {
@@ -96,7 +96,7 @@ export const withInfoPlist: ConfigPlugin<Mod<InfoPlist>> = (config, action) => {
  * @param action
  */
 export const withEntitlementsPlist: ConfigPlugin<Mod<JSONObject>> = (config, action) => {
-  return withExtendedMod<JSONObject>(config, {
+  return withMod<JSONObject>(config, {
     platform: 'ios',
     mod: 'entitlements',
     async action(config) {
@@ -117,7 +117,7 @@ export const withEntitlementsPlist: ConfigPlugin<Mod<JSONObject>> = (config, act
  * @param action
  */
 export const withExpoPlist: ConfigPlugin<Mod<ExpoPlist>> = (config, action) => {
-  return withExtendedMod(config, {
+  return withMod(config, {
     platform: 'ios',
     mod: 'expoPlist',
     action,
@@ -131,7 +131,7 @@ export const withExpoPlist: ConfigPlugin<Mod<ExpoPlist>> = (config, action) => {
  * @param action
  */
 export const withXcodeProject: ConfigPlugin<Mod<XcodeProject>> = (config, action) => {
-  return withExtendedMod(config, {
+  return withMod(config, {
     platform: 'ios',
     mod: 'xcodeproj',
     action,
