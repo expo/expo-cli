@@ -1,7 +1,7 @@
 import { JSONObject } from '@expo/json-file';
 
 import { ConfigPlugin, Mod, ModPlatform } from '../Plugin.types';
-import { resolveModResults } from './createBaseMod';
+import { assertModResults } from './createBaseMod';
 import { withBaseMod, withMod } from './withMod';
 
 /**
@@ -34,7 +34,7 @@ export const withDangerousBaseMod: ConfigPlugin<ModPlatform> = (config, platform
         ...config,
         modRequest,
       });
-      resolveModResults(results, modRequest.platform, modRequest.modName);
+      assertModResults(results, modRequest.platform, modRequest.modName);
       return results;
     },
   });

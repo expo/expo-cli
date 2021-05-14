@@ -2,7 +2,7 @@ import path from 'path';
 
 import { ExportedConfig, Mod, ModConfig, ModPlatform } from '../Plugin.types';
 import { getHackyProjectName } from '../ios/utils/Xcodeproj';
-import { ForwardedBaseModOptions, resolveModResults } from './createBaseMod';
+import { assertModResults, ForwardedBaseModOptions } from './createBaseMod';
 import { withAndroidBaseMods } from './withAndroidBaseMods';
 import { withIosBaseMods } from './withIosBaseMods';
 
@@ -90,7 +90,7 @@ export async function evalModsAsync(
         });
 
         // Sanity check to help locate non compliant mods.
-        config = resolveModResults(results, platformName, modName);
+        config = assertModResults(results, platformName, modName);
         // @ts-ignore: data is added for modifications
         delete config.modResults;
         // @ts-ignore: info is added for modifications

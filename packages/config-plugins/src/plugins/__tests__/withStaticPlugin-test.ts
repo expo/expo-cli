@@ -2,7 +2,7 @@ import { withPlugins } from '@expo/config-plugins';
 import { ExpoConfig } from '@expo/config-types';
 import { join } from 'path';
 
-import { withStaticPlugin } from '../static-plugins';
+import { withStaticPlugin } from '../withStaticPlugin';
 
 function withInternal(config: ExpoConfig, projectRoot: string) {
   if (!config._internal) config._internal = {};

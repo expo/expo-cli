@@ -56,7 +56,7 @@ export function createBaseMod<
             modRequest,
           });
 
-          resolveModResults(results, modRequest.platform, modRequest.modName);
+          assertModResults(results, modRequest.platform, modRequest.modName);
 
           await writeAsync(filePath, results, props);
           return results;
@@ -77,7 +77,7 @@ export function createBaseMod<
   return withUnknown;
 }
 
-export function resolveModResults(results: any, platformName: string, modName: string) {
+export function assertModResults(results: any, platformName: string, modName: string) {
   // If the results came from a mod, they'd be in the form of [config, data].
   // Ensure the results are an array and omit the data since it should've been written by a data provider plugin.
   const ensuredResults = results;
