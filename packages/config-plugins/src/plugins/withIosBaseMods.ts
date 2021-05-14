@@ -5,12 +5,15 @@ import { promises } from 'fs';
 import path from 'path';
 import { XcodeProject } from 'xcode';
 
-import { ConfigPlugin, ExportedConfig, ModConfig } from '../Plugin.types';
+import { ExportedConfig, ModConfig } from '../Plugin.types';
 import { Entitlements, Paths, XcodeUtils } from '../ios';
 import { InfoPlist } from '../ios/IosConfig.types';
-import { createBaseMod, ForwardedBaseModOptions } from './createBaseMod';
-import { withDangerousBaseMod } from './withDangerousMod';
-import { withPlugins } from './withPlugins';
+import {
+  CreateBaseModProps,
+  createPlatformBaseMod,
+  ForwardedBaseModOptions,
+  provider,
+} from './createBaseMod';
 
 const { readFile, writeFile } = promises;
 
@@ -18,38 +21,35 @@ export function withIosBaseMods(
   config: ExportedConfig,
   props: ForwardedBaseModOptions = {}
 ): ExportedConfig {
-  return withPlugins(config, [
-    [IosBaseMods.dangerous, props],
-    [IosBaseMods.appDelegate, props],
-    [IosBaseMods.infoPlist, props],
-    [IosBaseMods.expoPlist, props],
-    [IosBaseMods.xcodeproj, props],
-    [IosBaseMods.entitlements, props],
-  ]);
+  return Object.entries(IosBaseMods).reduce(
+    (config, [modName, value]) =>
+      createPlatformBaseMod({ platform: 'ios', modName, ...value })(config, props),
+    config
+  );
 }
 
-export const IosBaseMods: Record<keyof Required<ModConfig>['ios'], ConfigPlugin<any>> = {
-  dangerous(config) {
-    return withDangerousBaseMod(config, 'ios');
-  },
+const IosBaseMods: Record<
+  keyof Required<ModConfig>['ios'],
+  Pick<CreateBaseModProps<any, any>, 'readAsync' | 'writeAsync'>
+> = {
+  dangerous: provider<unknown>({
+    async readAsync() {
+      return { filePath: '', contents: {} };
+    },
+    async writeAsync() {},
+  }),
   // Append a rule to supply AppDelegate data to mods on `mods.ios.appDelegate`
-  appDelegate: createBaseMod<Paths.AppDelegateProjectFile>({
-    methodName: 'withIOSAppDelegateBaseMod',
-    platform: 'ios',
-    modName: 'appDelegate',
+  appDelegate: provider<Paths.AppDelegateProjectFile>({
     async readAsync({ modRequest: { projectRoot } }) {
       const modResults = await Paths.getAppDelegate(projectRoot);
       return { filePath: modResults.path, contents: modResults };
     },
-    async writeAsync(filePath, { modResults: { contents } }) {
+    async writeAsync(filePath: string, { modResults: { contents } }) {
       await writeFile(filePath, contents);
     },
   }),
   // Append a rule to supply Expo.plist data to mods on `mods.ios.expoPlist`
-  expoPlist: createBaseMod<JSONObject>({
-    methodName: 'withIOSExpoPlistBaseMod',
-    platform: 'ios',
-    modName: 'expoPlist',
+  expoPlist: provider<JSONObject>({
     async readAsync({ modRequest: { platformProjectRoot, projectName } }) {
       const supportingDirectory = path.join(platformProjectRoot, projectName!, 'Supporting');
       const filePath = path.resolve(supportingDirectory, 'Expo.plist');
@@ -61,10 +61,7 @@ export const IosBaseMods: Record<keyof Required<ModConfig>['ios'], ConfigPlugin<
     },
   }),
   // Append a rule to supply .xcodeproj data to mods on `mods.ios.xcodeproj`
-  xcodeproj: createBaseMod<XcodeProject>({
-    methodName: 'withIOSExpoPlistBaseMod',
-    platform: 'ios',
-    modName: 'xcodeproj',
+  xcodeproj: provider<XcodeProject>({
     async readAsync({ modRequest: { projectRoot } }) {
       const contents = XcodeUtils.getPbxproj(projectRoot);
       return { filePath: contents.filepath, contents };
@@ -74,11 +71,7 @@ export const IosBaseMods: Record<keyof Required<ModConfig>['ios'], ConfigPlugin<
     },
   }),
   // Append a rule to supply Info.plist data to mods on `mods.ios.infoPlist`
-
-  infoPlist: createBaseMod<InfoPlist, ForwardedBaseModOptions & { noPersist?: boolean }>({
-    methodName: 'withIOSInfoPlistBaseMod',
-    platform: 'ios',
-    modName: 'infoPlist',
+  infoPlist: provider<InfoPlist, ForwardedBaseModOptions & { noPersist?: boolean }>({
     async readAsync(config, props) {
       let filePath = '';
       try {
@@ -130,10 +123,7 @@ export const IosBaseMods: Record<keyof Required<ModConfig>['ios'], ConfigPlugin<
     },
   }),
   // Append a rule to supply .entitlements data to mods on `mods.ios.entitlements`
-  entitlements: createBaseMod<JSONObject, ForwardedBaseModOptions & { noPersist?: boolean }>({
-    methodName: 'withIOSEntitlementsPlistBaseMod',
-    platform: 'ios',
-    modName: 'entitlements',
+  entitlements: provider<JSONObject, ForwardedBaseModOptions & { noPersist?: boolean }>({
     async readAsync(config, props) {
       let filePath = '';
       try {

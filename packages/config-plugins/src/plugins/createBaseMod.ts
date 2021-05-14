@@ -11,6 +11,24 @@ export type ForwardedBaseModOptions = Partial<
   Pick<BaseModOptions, 'saveToInternal' | 'skipEmptyMod'>
 >;
 
+export type CreateBaseModProps<
+  ModType,
+  Props extends ForwardedBaseModOptions = ForwardedBaseModOptions
+> = {
+  methodName: string;
+  platform: ModPlatform;
+  modName: string;
+  readAsync: (
+    modRequest: ExportedConfigWithProps<ModType>,
+    props: Props
+  ) => Promise<{ contents: ModType; filePath: string }>;
+  writeAsync: (
+    filePath: string,
+    config: ExportedConfigWithProps<ModType>,
+    props: Props
+  ) => Promise<void>;
+};
+
 export function createBaseMod<
   ModType,
   Props extends ForwardedBaseModOptions = ForwardedBaseModOptions
@@ -108,4 +126,26 @@ export function clearMods(config: ExportedConfig, platform: ModPlatform, modName
       delete mods[platform][key];
     }
   }
+}
+
+function upperFirst(name: string): string {
+  return name.charAt(0).toUpperCase() + name.slice(1);
+}
+
+export function createPlatformBaseMod<
+  ModType,
+  Props extends ForwardedBaseModOptions = ForwardedBaseModOptions
+>({ modName, ...props }: Omit<CreateBaseModProps<ModType, Props>, 'methodName'>) {
+  const methodName = `with${upperFirst(props.platform)}${upperFirst(modName)}BaseMod`;
+  return createBaseMod<ModType, Props>({
+    methodName,
+    modName,
+    ...props,
+  });
+}
+
+export function provider<ModType, Props extends ForwardedBaseModOptions = ForwardedBaseModOptions>(
+  props: Pick<CreateBaseModProps<ModType, Props>, 'readAsync' | 'writeAsync'>
+) {
+  return props;
 }
