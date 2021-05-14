@@ -529,20 +529,23 @@ async function _openUrlAsync({
   // launch the project!
   // https://github.com/expo/expo/issues/7772
   // adb shell monkey -p host.exp.exponent -c android.intent.category.LAUNCHER 1
-  const openClient = await getAdbOutputAsync(
-    adbPidArgs(
-      pid,
-      'shell',
-      'monkey',
-      '-p',
-      applicationId,
-      '-c',
-      'android.intent.category.LAUNCHER',
-      '1'
-    )
-  );
-  if (openClient.includes(CANT_START_ACTIVITY_ERROR)) {
-    throw new Error(openClient.substring(openClient.indexOf('Error: ')));
+  // Note: this is not needed in Expo Development Client, it only applies to Expo Go
+  if (applicationId === 'host.exp.exponent') {
+    const openClient = await getAdbOutputAsync(
+      adbPidArgs(
+        pid,
+        'shell',
+        'monkey',
+        '-p',
+        applicationId,
+        '-c',
+        'android.intent.category.LAUNCHER',
+        '1'
+      )
+    );
+    if (openClient.includes(CANT_START_ACTIVITY_ERROR)) {
+      throw new Error(openClient.substring(openClient.indexOf('Error: ')));
+    }
   }
 
   const openProject = await getAdbOutputAsync(
