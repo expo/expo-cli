@@ -292,6 +292,7 @@ describe('built-in plugins', () => {
       'ios/ReactNativeProject/Images.xcassets/Contents.json',
       'ios/ReactNativeProject/Supporting/en.lproj/InfoPlist.strings',
       'ios/ReactNativeProject/Supporting/es.lproj/InfoPlist.strings',
+      'ios/ReactNativeProject/Supporting/Expo.plist',
       'ios/ReactNativeProject/GoogleService-Info.plist',
       'ios/ReactNativeProject/ReactNativeProject-Bridging-Header.h',
       'ios/ReactNativeProject/ReactNativeProject.entitlements',

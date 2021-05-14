@@ -3,11 +3,11 @@ import { vol } from 'memfs';
 
 import { withEntitlementsPlist, withInfoPlist } from '../ios-plugins';
 import { evalModsAsync } from '../mod-compiler';
-import { withIOSEntitlementsPlistBaseMod, withIOSInfoPlistBaseMod } from '../withIosBaseMods';
+import { withIosBaseMods } from '../withIosBaseMods';
 
 jest.mock('fs');
 
-describe(withIOSEntitlementsPlistBaseMod, () => {
+describe('entitlements', () => {
   afterEach(() => {
     vol.reset();
   });
@@ -22,7 +22,11 @@ describe(withIOSEntitlementsPlistBaseMod, () => {
     });
 
     // base mods must be added last
-    config = withIOSEntitlementsPlistBaseMod(config, { noPersist: true, saveToInternal: true });
+    config = withIosBaseMods(config, {
+      noPersist: true,
+      saveToInternal: true,
+      only: ['entitlements'],
+    });
     config = await evalModsAsync(config, { projectRoot: '/', platforms: ['ios'] });
 
     expect(config.ios?.entitlements).toStrictEqual({
@@ -39,7 +43,7 @@ describe(withIOSEntitlementsPlistBaseMod, () => {
   });
 });
 
-describe(withIOSInfoPlistBaseMod, () => {
+describe('infoPlist', () => {
   afterEach(() => {
     vol.reset();
   });
@@ -54,7 +58,11 @@ describe(withIOSInfoPlistBaseMod, () => {
     });
 
     // base mods must be added last
-    config = withIOSInfoPlistBaseMod(config, { noPersist: true, saveToInternal: true });
+    config = withIosBaseMods(config, {
+      noPersist: true,
+      saveToInternal: true,
+      only: ['infoPlist'],
+    });
     config = await evalModsAsync(config, { projectRoot: '/', platforms: ['ios'] });
 
     expect(config.ios?.infoPlist).toStrictEqual({

@@ -79,7 +79,7 @@ export function createBaseMod<
           await writeAsync(filePath, results, props);
           return results;
         } catch (error) {
-          console.error(`[${platform}.${modName}]: ${methodName} error:`);
+          error.message = `[${platform}.${modName}]: ${methodName}: ${error.message}`;
           throw error;
         }
       },
