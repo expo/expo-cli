@@ -6,7 +6,7 @@ import temporary from 'tempy';
 
 import { createMinimalProjectAsync, runAsync } from '../TestUtils';
 
-xit('exports the project for a self-hosted production deployment', async () => {
+it('exports the project for a self-hosted production deployment', async () => {
   jest.setTimeout(5 * 60e3);
   const projectRoot = await createMinimalProjectAsync(temporary.directory(), 'export-test-app');
   const dotExpoHomeDirectory = path.join(projectRoot, '../.expo');

@@ -2,7 +2,7 @@
 
 exports[`exports the project for a self-hosted production deployment 1`] = `
 Array [
-  "dist/android-index.json (621 B)",
+  "dist/android-index.json (668 B)",
   "dist/assetmap.json (size ignored)",
   "dist/assets (dir)",
   "dist/assets/0886a6b127c6057cee83f9c65c7ffd62 (26.2 kB)",
@@ -37,8 +37,574 @@ Array [
   "dist/assets/f6c6f6c8cb7784254ad00056f6fbd74e (34.1 kB)",
   "dist/assets/fdc01171a7a7ea76b187afcd162dee7d (3.99 kB)",
   "dist/bundles (dir)",
-  "dist/bundles/android-3a2672da067816389ac33f1bcbb4a78a.js (1.13 MB)",
-  "dist/bundles/ios-cb481eb604922019260028d33ea85c47.js (1.12 MB)",
-  "dist/ios-index.json (613 B)",
+  "dist/bundles/android-f9683e17a3ae12ff7471672e2bbdf859.js (1.17 MB)",
+  "dist/bundles/ios-b47c7f161ec4cbd6bd17bf619ebcd6a2.js (1.16 MB)",
+  "dist/ios-index.json (660 B)",
 ]
+`;
+
+exports[`exports the project for a self-hosted production deployment: android-index 1`] = `
+Object {
+  "android": Object {
+    "package": "com.example.minimal",
+  },
+  "assetUrlOverride": "./assets",
+  "bundleUrl": "https://example.com/export-test-app/bundles/android-f9683e17a3ae12ff7471672e2bbdf859.js",
+  "commitTime": Any<String>,
+  "currentFullName": "@anonymous/export-test-app",
+  "dependencies": Array [
+    "expo",
+    "react",
+    "react-native",
+  ],
+  "id": "@anonymous/export-test-app",
+  "ios": Object {
+    "bundleIdentifier": "com.example.minimal",
+  },
+  "locales": Object {},
+  "name": "export-test-app",
+  "platform": "android",
+  "platforms": Array [
+    "ios",
+    "android",
+  ],
+  "publishedTime": Any<String>,
+  "releaseId": Any<String>,
+  "revisionId": Any<String>,
+  "sdkVersion": "37.0.0",
+  "slug": "export-test-app",
+  "version": "1.0.0",
+}
+`;
+
+exports[`exports the project for a self-hosted production deployment: assetmap 1`] = `
+Object {
+  "0886a6b127c6057cee83f9c65c7ffd62": Object {
+    "__packager_asset": undefined,
+    "fileHashes": Array [
+      "0886a6b127c6057cee83f9c65c7ffd62",
+    ],
+    "fileSystemLocation": "node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/glyphmaps",
+    "files": Array [
+      "node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/glyphmaps/FontAwesome5Free_meta.json",
+    ],
+    "hash": "0886a6b127c6057cee83f9c65c7ffd62",
+    "httpServerLocation": "/assets/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/glyphmaps",
+    "name": "FontAwesome5Free_meta",
+    "scales": Array [
+      undefined,
+    ],
+    "type": "json",
+  },
+  "09dd345dbd4ec5a0874841d5749ac153": Object {
+    "__packager_asset": undefined,
+    "fileHashes": Array [
+      "09dd345dbd4ec5a0874841d5749ac153",
+    ],
+    "fileSystemLocation": "node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/glyphmaps",
+    "files": Array [
+      "node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/glyphmaps/FontAwesome5Free.json",
+    ],
+    "hash": "09dd345dbd4ec5a0874841d5749ac153",
+    "httpServerLocation": "/assets/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/glyphmaps",
+    "name": "FontAwesome5Free",
+    "scales": Array [
+      undefined,
+    ],
+    "type": "json",
+  },
+  "140c53a7643ea949007aa9a282153849": Object {
+    "__packager_asset": undefined,
+    "fileHashes": Array [
+      "140c53a7643ea949007aa9a282153849",
+    ],
+    "fileSystemLocation": "node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts",
+    "files": Array [
+      "node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/EvilIcons.ttf",
+    ],
+    "hash": "140c53a7643ea949007aa9a282153849",
+    "httpServerLocation": "/assets/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts",
+    "name": "EvilIcons",
+    "scales": Array [
+      undefined,
+    ],
+    "type": "ttf",
+  },
+  "1a0e3525dd5df87e77057204129a5e6e": Object {
+    "__packager_asset": undefined,
+    "fileHashes": Array [
+      "1a0e3525dd5df87e77057204129a5e6e",
+    ],
+    "fileSystemLocation": "node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/glyphmaps",
+    "files": Array [
+      "node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/glyphmaps/MaterialCommunityIcons.json",
+    ],
+    "hash": "1a0e3525dd5df87e77057204129a5e6e",
+    "httpServerLocation": "/assets/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/glyphmaps",
+    "name": "MaterialCommunityIcons",
+    "scales": Array [
+      undefined,
+    ],
+    "type": "json",
+  },
+  "39843e5d52a6c5c42d5abdb0b34bcaa6": Object {
+    "__packager_asset": undefined,
+    "fileHashes": Array [
+      "39843e5d52a6c5c42d5abdb0b34bcaa6",
+    ],
+    "fileSystemLocation": "node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/glyphmaps",
+    "files": Array [
+      "node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/glyphmaps/Fontisto.json",
+    ],
+    "hash": "39843e5d52a6c5c42d5abdb0b34bcaa6",
+    "httpServerLocation": "/assets/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/glyphmaps",
+    "name": "Fontisto",
+    "scales": Array [
+      undefined,
+    ],
+    "type": "json",
+  },
+  "3a2ba31570920eeb9b1d217cabe58315": Object {
+    "__packager_asset": undefined,
+    "fileHashes": Array [
+      "3a2ba31570920eeb9b1d217cabe58315",
+    ],
+    "fileSystemLocation": "node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts",
+    "files": Array [
+      "node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/AntDesign.ttf",
+    ],
+    "hash": "3a2ba31570920eeb9b1d217cabe58315",
+    "httpServerLocation": "/assets/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts",
+    "name": "AntDesign",
+    "scales": Array [
+      undefined,
+    ],
+    "type": "ttf",
+  },
+  "3c851d60ad5ef3f2fe43ebd263490d78": Object {
+    "__packager_asset": undefined,
+    "fileHashes": Array [
+      "3c851d60ad5ef3f2fe43ebd263490d78",
+    ],
+    "fileSystemLocation": "node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts",
+    "files": Array [
+      "node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/MaterialCommunityIcons.ttf",
+    ],
+    "hash": "3c851d60ad5ef3f2fe43ebd263490d78",
+    "httpServerLocation": "/assets/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts",
+    "name": "MaterialCommunityIcons",
+    "scales": Array [
+      undefined,
+    ],
+    "type": "ttf",
+  },
+  "3e6805fbc794680014716b8c752f20b8": Object {
+    "__packager_asset": undefined,
+    "fileHashes": Array [
+      "3e6805fbc794680014716b8c752f20b8",
+    ],
+    "fileSystemLocation": "node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/glyphmaps",
+    "files": Array [
+      "node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/glyphmaps/Ionicons.json",
+    ],
+    "hash": "3e6805fbc794680014716b8c752f20b8",
+    "httpServerLocation": "/assets/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/glyphmaps",
+    "name": "Ionicons",
+    "scales": Array [
+      undefined,
+    ],
+    "type": "json",
+  },
+  "461d9bba8b6a3c91675039df12cfe6ca": Object {
+    "__packager_asset": undefined,
+    "fileHashes": Array [
+      "461d9bba8b6a3c91675039df12cfe6ca",
+    ],
+    "fileSystemLocation": "node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/glyphmaps",
+    "files": Array [
+      "node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/glyphmaps/Entypo.json",
+    ],
+    "hash": "461d9bba8b6a3c91675039df12cfe6ca",
+    "httpServerLocation": "/assets/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/glyphmaps",
+    "name": "Entypo",
+    "scales": Array [
+      undefined,
+    ],
+    "type": "json",
+  },
+  "54a5c98d22f313098b3dbe2d5b2e87ba": Object {
+    "__packager_asset": undefined,
+    "fileHashes": Array [
+      "54a5c98d22f313098b3dbe2d5b2e87ba",
+    ],
+    "fileSystemLocation": "node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/glyphmaps",
+    "files": Array [
+      "node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/glyphmaps/Feather.json",
+    ],
+    "hash": "54a5c98d22f313098b3dbe2d5b2e87ba",
+    "httpServerLocation": "/assets/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/glyphmaps",
+    "name": "Feather",
+    "scales": Array [
+      undefined,
+    ],
+    "type": "json",
+  },
+  "5cdf883b18a5651a29a4d1ef276d2457": Object {
+    "__packager_asset": undefined,
+    "fileHashes": Array [
+      "5cdf883b18a5651a29a4d1ef276d2457",
+    ],
+    "fileSystemLocation": "node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts",
+    "files": Array [
+      "node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Zocial.ttf",
+    ],
+    "hash": "5cdf883b18a5651a29a4d1ef276d2457",
+    "httpServerLocation": "/assets/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts",
+    "name": "Zocial",
+    "scales": Array [
+      undefined,
+    ],
+    "type": "ttf",
+  },
+  "60668d999bbaf663420340f7bdd580d7": Object {
+    "__packager_asset": undefined,
+    "fileHashes": Array [
+      "60668d999bbaf663420340f7bdd580d7",
+    ],
+    "fileSystemLocation": "node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/glyphmaps",
+    "files": Array [
+      "node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/glyphmaps/Foundation.json",
+    ],
+    "hash": "60668d999bbaf663420340f7bdd580d7",
+    "httpServerLocation": "/assets/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/glyphmaps",
+    "name": "Foundation",
+    "scales": Array [
+      undefined,
+    ],
+    "type": "json",
+  },
+  "647543ebfccf6e5495434383598453d1": Object {
+    "__packager_asset": undefined,
+    "fileHashes": Array [
+      "647543ebfccf6e5495434383598453d1",
+    ],
+    "fileSystemLocation": "node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/glyphmaps",
+    "files": Array [
+      "node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/glyphmaps/SimpleLineIcons.json",
+    ],
+    "hash": "647543ebfccf6e5495434383598453d1",
+    "httpServerLocation": "/assets/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/glyphmaps",
+    "name": "SimpleLineIcons",
+    "scales": Array [
+      undefined,
+    ],
+    "type": "json",
+  },
+  "744ce60078c17d86006dd0edabcd59a7": Object {
+    "__packager_asset": undefined,
+    "fileHashes": Array [
+      "744ce60078c17d86006dd0edabcd59a7",
+    ],
+    "fileSystemLocation": "node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts",
+    "files": Array [
+      "node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Entypo.ttf",
+    ],
+    "hash": "744ce60078c17d86006dd0edabcd59a7",
+    "httpServerLocation": "/assets/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts",
+    "name": "Entypo",
+    "scales": Array [
+      undefined,
+    ],
+    "type": "ttf",
+  },
+  "74d124a3caeac2bea111f3ca2f2dd34a": Object {
+    "__packager_asset": undefined,
+    "fileHashes": Array [
+      "74d124a3caeac2bea111f3ca2f2dd34a",
+    ],
+    "fileSystemLocation": "node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/glyphmaps",
+    "files": Array [
+      "node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/glyphmaps/Zocial.json",
+    ],
+    "hash": "74d124a3caeac2bea111f3ca2f2dd34a",
+    "httpServerLocation": "/assets/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/glyphmaps",
+    "name": "Zocial",
+    "scales": Array [
+      undefined,
+    ],
+    "type": "json",
+  },
+  "7e078700f0c35367a56c5bbb2047dda7": Object {
+    "__packager_asset": undefined,
+    "fileHashes": Array [
+      "7e078700f0c35367a56c5bbb2047dda7",
+    ],
+    "fileSystemLocation": "node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/glyphmaps",
+    "files": Array [
+      "node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/glyphmaps/MaterialIcons.json",
+    ],
+    "hash": "7e078700f0c35367a56c5bbb2047dda7",
+    "httpServerLocation": "/assets/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/glyphmaps",
+    "name": "MaterialIcons",
+    "scales": Array [
+      undefined,
+    ],
+    "type": "json",
+  },
+  "8b12b3e16d591abc926165fa8f760e3b": Object {
+    "__packager_asset": undefined,
+    "fileHashes": Array [
+      "8b12b3e16d591abc926165fa8f760e3b",
+    ],
+    "fileSystemLocation": "node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/glyphmaps",
+    "files": Array [
+      "node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/glyphmaps/AntDesign.json",
+    ],
+    "hash": "8b12b3e16d591abc926165fa8f760e3b",
+    "httpServerLocation": "/assets/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/glyphmaps",
+    "name": "AntDesign",
+    "scales": Array [
+      undefined,
+    ],
+    "type": "json",
+  },
+  "8e7f807ef943bff1f6d3c2c6e0f3769e": Object {
+    "__packager_asset": undefined,
+    "fileHashes": Array [
+      "8e7f807ef943bff1f6d3c2c6e0f3769e",
+    ],
+    "fileSystemLocation": "node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts",
+    "files": Array [
+      "node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Octicons.ttf",
+    ],
+    "hash": "8e7f807ef943bff1f6d3c2c6e0f3769e",
+    "httpServerLocation": "/assets/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts",
+    "name": "Octicons",
+    "scales": Array [
+      undefined,
+    ],
+    "type": "ttf",
+  },
+  "94c4ffdcbffeb0570c635d7f8edd8a25": Object {
+    "__packager_asset": undefined,
+    "fileHashes": Array [
+      "94c4ffdcbffeb0570c635d7f8edd8a25",
+    ],
+    "fileSystemLocation": "node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/glyphmaps",
+    "files": Array [
+      "node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/glyphmaps/EvilIcons.json",
+    ],
+    "hash": "94c4ffdcbffeb0570c635d7f8edd8a25",
+    "httpServerLocation": "/assets/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/glyphmaps",
+    "name": "EvilIcons",
+    "scales": Array [
+      undefined,
+    ],
+    "type": "json",
+  },
+  "a37b0c01c0baf1888ca812cc0508f6e2": Object {
+    "__packager_asset": undefined,
+    "fileHashes": Array [
+      "a37b0c01c0baf1888ca812cc0508f6e2",
+    ],
+    "fileSystemLocation": "node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts",
+    "files": Array [
+      "node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/MaterialIcons.ttf",
+    ],
+    "hash": "a37b0c01c0baf1888ca812cc0508f6e2",
+    "httpServerLocation": "/assets/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts",
+    "name": "MaterialIcons",
+    "scales": Array [
+      undefined,
+    ],
+    "type": "ttf",
+  },
+  "b06871f281fee6b241d60582ae9369b9": Object {
+    "__packager_asset": undefined,
+    "fileHashes": Array [
+      "b06871f281fee6b241d60582ae9369b9",
+    ],
+    "fileSystemLocation": "node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts",
+    "files": Array [
+      "node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/FontAwesome.ttf",
+    ],
+    "hash": "b06871f281fee6b241d60582ae9369b9",
+    "httpServerLocation": "/assets/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts",
+    "name": "FontAwesome",
+    "scales": Array [
+      undefined,
+    ],
+    "type": "ttf",
+  },
+  "b2e0fc821c6886fb3940f85a3320003e": Object {
+    "__packager_asset": undefined,
+    "fileHashes": Array [
+      "b2e0fc821c6886fb3940f85a3320003e",
+    ],
+    "fileSystemLocation": "node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts",
+    "files": Array [
+      "node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Ionicons.ttf",
+    ],
+    "hash": "b2e0fc821c6886fb3940f85a3320003e",
+    "httpServerLocation": "/assets/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts",
+    "name": "Ionicons",
+    "scales": Array [
+      undefined,
+    ],
+    "type": "ttf",
+  },
+  "b49ae8ab2dbccb02c4d11caaacf09eab": Object {
+    "__packager_asset": undefined,
+    "fileHashes": Array [
+      "b49ae8ab2dbccb02c4d11caaacf09eab",
+    ],
+    "fileSystemLocation": "node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts",
+    "files": Array [
+      "node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Fontisto.ttf",
+    ],
+    "hash": "b49ae8ab2dbccb02c4d11caaacf09eab",
+    "httpServerLocation": "/assets/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts",
+    "name": "Fontisto",
+    "scales": Array [
+      undefined,
+    ],
+    "type": "ttf",
+  },
+  "b70cea0339374107969eb53e5b1f603f": Object {
+    "__packager_asset": undefined,
+    "fileHashes": Array [
+      "b70cea0339374107969eb53e5b1f603f",
+    ],
+    "fileSystemLocation": "node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts",
+    "files": Array [
+      "node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/FontAwesome5_Solid.ttf",
+    ],
+    "hash": "b70cea0339374107969eb53e5b1f603f",
+    "httpServerLocation": "/assets/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts",
+    "name": "FontAwesome5_Solid",
+    "scales": Array [
+      undefined,
+    ],
+    "type": "ttf",
+  },
+  "c39278f7abfc798a241551194f55e29f": Object {
+    "__packager_asset": undefined,
+    "fileHashes": Array [
+      "c39278f7abfc798a241551194f55e29f",
+    ],
+    "fileSystemLocation": "node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts",
+    "files": Array [
+      "node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/FontAwesome5_Brands.ttf",
+    ],
+    "hash": "c39278f7abfc798a241551194f55e29f",
+    "httpServerLocation": "/assets/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts",
+    "name": "FontAwesome5_Brands",
+    "scales": Array [
+      undefined,
+    ],
+    "type": "ttf",
+  },
+  "ca9ce9ff0676a9b04ef0f8a3ad17dd08": Object {
+    "__packager_asset": undefined,
+    "fileHashes": Array [
+      "ca9ce9ff0676a9b04ef0f8a3ad17dd08",
+    ],
+    "fileSystemLocation": "node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts",
+    "files": Array [
+      "node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Feather.ttf",
+    ],
+    "hash": "ca9ce9ff0676a9b04ef0f8a3ad17dd08",
+    "httpServerLocation": "/assets/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts",
+    "name": "Feather",
+    "scales": Array [
+      undefined,
+    ],
+    "type": "ttf",
+  },
+  "d2285965fe34b05465047401b8595dd0": Object {
+    "__packager_asset": undefined,
+    "fileHashes": Array [
+      "d2285965fe34b05465047401b8595dd0",
+    ],
+    "fileSystemLocation": "node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts",
+    "files": Array [
+      "node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/SimpleLineIcons.ttf",
+    ],
+    "hash": "d2285965fe34b05465047401b8595dd0",
+    "httpServerLocation": "/assets/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts",
+    "name": "SimpleLineIcons",
+    "scales": Array [
+      undefined,
+    ],
+    "type": "ttf",
+  },
+  "e20945d7c929279ef7a6f1db184a4470": Object {
+    "__packager_asset": undefined,
+    "fileHashes": Array [
+      "e20945d7c929279ef7a6f1db184a4470",
+    ],
+    "fileSystemLocation": "node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts",
+    "files": Array [
+      "node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Foundation.ttf",
+    ],
+    "hash": "e20945d7c929279ef7a6f1db184a4470",
+    "httpServerLocation": "/assets/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts",
+    "name": "Foundation",
+    "scales": Array [
+      undefined,
+    ],
+    "type": "ttf",
+  },
+  "f1f91feb805137c9283fb766620ec5eb": Object {
+    "__packager_asset": undefined,
+    "fileHashes": Array [
+      "f1f91feb805137c9283fb766620ec5eb",
+    ],
+    "fileSystemLocation": "node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/glyphmaps",
+    "files": Array [
+      "node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/glyphmaps/FontAwesome.json",
+    ],
+    "hash": "f1f91feb805137c9283fb766620ec5eb",
+    "httpServerLocation": "/assets/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/glyphmaps",
+    "name": "FontAwesome",
+    "scales": Array [
+      undefined,
+    ],
+    "type": "json",
+  },
+  "f6c6f6c8cb7784254ad00056f6fbd74e": Object {
+    "__packager_asset": undefined,
+    "fileHashes": Array [
+      "f6c6f6c8cb7784254ad00056f6fbd74e",
+    ],
+    "fileSystemLocation": "node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts",
+    "files": Array [
+      "node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/FontAwesome5_Regular.ttf",
+    ],
+    "hash": "f6c6f6c8cb7784254ad00056f6fbd74e",
+    "httpServerLocation": "/assets/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts",
+    "name": "FontAwesome5_Regular",
+    "scales": Array [
+      undefined,
+    ],
+    "type": "ttf",
+  },
+  "fdc01171a7a7ea76b187afcd162dee7d": Object {
+    "__packager_asset": undefined,
+    "fileHashes": Array [
+      "fdc01171a7a7ea76b187afcd162dee7d",
+    ],
+    "fileSystemLocation": "node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/glyphmaps",
+    "files": Array [
+      "node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/glyphmaps/Octicons.json",
+    ],
+    "hash": "fdc01171a7a7ea76b187afcd162dee7d",
+    "httpServerLocation": "/assets/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/glyphmaps",
+    "name": "Octicons",
+    "scales": Array [
+      undefined,
+    ],
+    "type": "json",
+  },
+}
 `;
