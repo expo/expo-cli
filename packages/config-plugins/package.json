@@ -33,7 +33,7 @@
   ],
   "dependencies": {
     "@expo/config-types": "^40.0.0-beta.2",
-    "@expo/configure-splash-screen": "0.3.4",
+    "@expo/configure-splash-screen": "0.4.0",
     "@expo/image-utils": "0.3.13",
     "@expo/json-file": "8.2.29",
     "@expo/plist": "0.0.12",
