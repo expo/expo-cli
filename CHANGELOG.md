@@ -12,6 +12,55 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+## [Fri, 14 May 2021 14:16:05 -0700](https://github.com/expo/expo-cli/commit/0e2b0e5dd8d3c0eefa9e18ab32cd98b87d789a01)
+
+### 🛠 Breaking changes
+
+### 🎉 New features
+
+- [config-plugins] detect default build configuration for scheme ([#3474](https://github.com/expo/expo-cli/issues/3474))
+- [config-plugins] support PKCS keystores for android builds ([#3472](https://github.com/expo/expo-cli/issues/3472))
+
+### 🧹 Chores
+
+- [cli] Stop running `adb shell monkey` when opening apps other than Expo Go ([#3487](https://github.com/expo/expo-cli/issues/3487))
+- [config-plugins] Add noop Swift file to fix builds with Swift deps ([#3488](https://github.com/expo/expo-cli/issues/3488))
+- Update to @expo/configure-splash-screen@0.4.0
+- Update tsconfig to support node 12 ([#3489](https://github.com/expo/expo-cli/issues/3489))
+- Add additional hermes resolution ([#3486](https://github.com/expo/expo-cli/issues/3486))
+- disable wiping the console in tsc watch mode ([#3481](https://github.com/expo/expo-cli/issues/3481))
+
+### 🐛 Bug fixes
+
+- [cli] fix expo export so it finds the correct projectDir ([#3485](https://github.com/expo/expo-cli/issues/3485))
+- [xdl] Limit manifest serving to a few URLs ([#3491](https://github.com/expo/expo-cli/issues/3491))
+- [config] fix return typing of modifyConfigAsync ([#3482](https://github.com/expo/expo-cli/issues/3482))
+
+### 📦 Packages updated
+
+- @expo/config-plugins@1.0.31
+- @expo/config@3.3.41
+- @expo/dev-server@0.1.67
+- @expo/dev-tools@0.13.97
+- expo-cli@4.4.7
+- expo-codemod@1.1.2
+- expo-optimize@0.1.89
+- @expo/image-utils@0.3.14
+- @expo/json-file@8.2.30
+- @expo/metro-config@0.1.67
+- @expo/next-adapter@2.1.72
+- @expo/osascript@2.0.28
+- @expo/package-manager@0.0.43
+- @expo/pkcs12@0.0.5
+- @expo/plist@0.0.13
+- pod-install@0.1.23
+- expo-pwa@0.0.77
+- @expo/schemer@1.3.29
+- uri-scheme@1.0.78
+- @expo/webpack-config@0.12.71
+- xdl@59.0.37
+
+
 ## [Tue, 11 May 2021 14:19:49 -0700](https://github.com/expo/expo-cli/commit/79e6091d479a1ab7abd7dc07c61bfa37beee6680)
 
 ### 🧹 Chores
