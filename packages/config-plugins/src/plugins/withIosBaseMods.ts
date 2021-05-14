@@ -8,15 +8,16 @@ import { XcodeProject } from 'xcode';
 import { ExportedConfig } from '../Plugin.types';
 import { Entitlements, Paths, XcodeUtils } from '../ios';
 import { InfoPlist } from '../ios/IosConfig.types';
-import { createBaseMod, ForwardedBaseModOptions, withExpoDangerousBaseMod } from './createBaseMod';
+import { createBaseMod, ForwardedBaseModOptions } from './createBaseMod';
+import { withDangerousBaseMod } from './withDangerousBaseMod';
 
 const { readFile, writeFile } = promises;
 
-export function withBaseIosMods(
+export function withIosBaseMods(
   config: ExportedConfig,
   props: ForwardedBaseModOptions = {}
 ): ExportedConfig {
-  config = withExpoDangerousBaseMod(config, 'ios');
+  config = withDangerousBaseMod(config, 'ios');
   config = withIOSAppDelegateBaseMod(config, props);
   config = withIOSInfoPlistBaseMod(config, props);
   config = withIOSExpoPlistBaseMod(config, props);

@@ -9,7 +9,7 @@ import { withDangerousBaseMod } from './withDangerousBaseMod';
 
 const { readFile, writeFile } = promises;
 
-export function withBaseAndroidMods(
+export function withAndroidBaseMods(
   config: ExportedConfig,
   props: ForwardedBaseModOptions = {}
 ): ExportedConfig {

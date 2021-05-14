@@ -2,16 +2,16 @@ import path from 'path';
 
 import { ExportedConfig, Mod, ModConfig, ModPlatform } from '../Plugin.types';
 import { getHackyProjectName } from '../ios/utils/Xcodeproj';
-import { ForwardedBaseModOptions } from './createBaseMod';
-import { withBaseAndroidMods } from './withBaseAndroidMods';
-import { withBaseIosMods } from './withBaseIosMods';
+import { ForwardedBaseModOptions, resolveModResults } from './createBaseMod';
+import { withAndroidBaseMods } from './withAndroidBaseMods';
+import { withIosBaseMods } from './withIosBaseMods';
 
 export function withDefaultBaseMods(
   config: ExportedConfig,
   props: ForwardedBaseModOptions = {}
 ): ExportedConfig {
-  config = withBaseIosMods(config, props);
-  config = withBaseAndroidMods(config, props);
+  config = withIosBaseMods(config, props);
+  config = withAndroidBaseMods(config, props);
   return config;
 }
 

@@ -5,7 +5,7 @@ import path from 'path';
 
 import { withGradleProperties } from '../android-plugins';
 import { evalModsAsync } from '../mod-compiler';
-import { withAndroidGradlePropertiesBaseMod } from '../withBaseAndroidMods';
+import { withAndroidGradlePropertiesBaseMod } from '../withAndroidBaseMods';
 import rnFixture from './fixtures/react-native-project';
 
 jest.mock('fs');
