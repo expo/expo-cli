@@ -4,6 +4,7 @@ import { createDevServerMiddleware } from '@react-native-community/cli-server-ap
 import bodyParser from 'body-parser';
 import http from 'http';
 import type Metro from 'metro';
+import type { InspectorProxy as MetroInspectorProxy } from 'metro-inspector-proxy';
 import resolveFrom from 'resolve-from';
 
 import LogReporter from './LogReporter';
@@ -52,6 +53,12 @@ export async function runMetroDevServerAsync(
   });
   middleware.use(bodyParser.json());
   middleware.use('/logs', clientLogsMiddleware(options.logger));
+
+  if (metroConfig.server.runInspectorProxy) {
+    const InspectorProxy = importMetroInspectorProxyFromProject(projectRoot);
+    const inspectoryProxy = new InspectorProxy();
+    middleware.use(inspectoryProxy.processRequest.bind(inspectoryProxy));
+  }
 
   const customEnhanceMiddleware = metroConfig.server.enhanceMiddleware;
   // @ts-ignore can't mutate readonly config
@@ -164,6 +171,19 @@ function importMetroServerFromProject(projectRoot: string): typeof Metro.Server 
   if (!resolvedPath) {
     throw new Error(
       'Missing module "metro/src/Server" in the project. ' +
+        'This usually means React Native is not installed. ' +
+        'Please verify that dependencies in package.json include "react-native" ' +
+        'and run `yarn` or `npm install`.'
+    );
+  }
+  return require(resolvedPath);
+}
+
+function importMetroInspectorProxyFromProject(projectRoot: string): typeof MetroInspectorProxy {
+  const resolvedPath = resolveFrom.silent(projectRoot, 'metro-inspector-proxy/src/InspectorProxy');
+  if (!resolvedPath) {
+    throw new Error(
+      'Missing module "metro-inspector-proxy/src/InspectorProxy" in the project. ' +
         'This usually means React Native is not installed. ' +
         'Please verify that dependencies in package.json include "react-native" ' +
         'and run `yarn` or `npm install`.'
