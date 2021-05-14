@@ -4,22 +4,11 @@ import path from 'path';
 import { ConfigPlugin, XcodeProject } from '../Plugin.types';
 import { withXcodeProject } from '../plugins/ios-plugins';
 import { getAppDelegate, getSourceRoot } from './Paths';
-import {
-  addBuildSourceFileToGroup,
-  addResourceFileToGroup,
-  getProjectName,
-} from './utils/Xcodeproj';
+import { addResourceFileToGroup, getProjectName } from './utils/Xcodeproj';
 
 const templateBridgingHeader = `//
 //  Use this file to import your target's public headers that you would like to expose to Swift.
 //
-`;
-
-const templateSwiftNoop = `//
-//  This is an empty Swift file to ensure that any Swift project dependencies compile.
-//
-
-import Foundation
 `;
 
 /**
@@ -51,29 +40,17 @@ export function ensureSwiftBridgingHeaderSetup({
   if (shouldCreateSwiftBridgingHeader({ projectRoot, project })) {
     const projectName = getProjectName(projectRoot);
     const bridgingHeader = createBridgingHeaderFileName(projectName);
-
     // Ensure a bridging header is created in the Xcode project.
-    project = createFile({
+    project = createBridgingHeaderFile({
       project,
       projectName,
       projectRoot,
-      filename: bridgingHeader,
-      contents: templateBridgingHeader,
+      bridgingHeader,
     });
-
     // Designate the newly created file as the Swift bridging header in the Xcode project.
     project = linkBridgingHeaderFile({
       project,
       bridgingHeader: path.join(projectName, bridgingHeader),
-    });
-
-    // Create an empty Swift file
-    project = createFile({
-      project,
-      projectName,
-      projectRoot,
-      filename: 'noop.swift',
-      contents: templateSwiftNoop,
     });
   }
   return project;
@@ -145,41 +122,35 @@ export function linkBridgingHeaderFile({
   return project;
 }
 
-export function createFile({
+export function createBridgingHeaderFile({
   projectRoot,
   projectName,
   project,
-  filename,
-  contents,
+  bridgingHeader,
 }: {
   project: XcodeProject;
   projectName: string;
   projectRoot: string;
-  filename: string;
-  contents: string;
+  bridgingHeader: string;
 }): XcodeProject {
-  const fullPath = path.join(getSourceRoot(projectRoot), filename);
-  if (!fs.existsSync(fullPath)) {
+  const bridgingHeaderProjectPath = path.join(getSourceRoot(projectRoot), bridgingHeader);
+  if (!fs.existsSync(bridgingHeaderProjectPath)) {
     // Create the file
-    fs.writeFileSync(fullPath, contents, 'utf8');
+    fs.writeFileSync(bridgingHeaderProjectPath, templateBridgingHeader, 'utf8');
   }
 
   // This is non-standard, Xcode generates the bridging header in `/ios` which is kinda annoying.
   // Instead, this'll generate the default header in the application code folder `/ios/myproject/`.
-  const filepath = `${projectName}/${filename}`;
+  const filePath = `${projectName}/${bridgingHeader}`;
   // Ensure the file is linked with Xcode resource files
-  if (!project.hasFile(filepath)) {
-    if (filename.endsWith('.swift')) {
-      project = addBuildSourceFileToGroup({ filepath, groupName: projectName, project });
-    } else {
-      project = addResourceFileToGroup({
-        filepath,
-        groupName: projectName,
-        project,
-        // Not sure why, but this is how Xcode generates it.
-        isBuildFile: false,
-      });
-    }
+  if (!project.hasFile(filePath)) {
+    project = addResourceFileToGroup({
+      filepath: filePath,
+      groupName: projectName,
+      project,
+      // Not sure why, but this is how Xcode generates it.
+      isBuildFile: false,
+    });
   }
   return project;
 }
