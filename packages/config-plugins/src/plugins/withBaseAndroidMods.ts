@@ -1,4 +1,4 @@
-import { readFile, writeFile } from 'fs-extra';
+import { promises } from 'fs';
 import path from 'path';
 
 import { ExportedConfig } from '../Plugin.types';
@@ -8,17 +8,22 @@ import * as AndroidPaths from '../android/Paths';
 import { readResourcesXMLAsync, ResourceXML } from '../android/Resources';
 import { getProjectStringsXMLPathAsync } from '../android/Strings';
 import { writeXMLAsync } from '../utils/XML';
-import { createBaseMod, withExpoDangerousBaseMod } from './createBaseMod';
+import { createBaseMod, ForwardedBaseModOptions, withExpoDangerousBaseMod } from './createBaseMod';
 
-export function withBaseAndroidMods(config: ExportedConfig): ExportedConfig {
+const { readFile, writeFile } = promises;
+
+export function withBaseAndroidMods(
+  config: ExportedConfig,
+  props: ForwardedBaseModOptions = {}
+): ExportedConfig {
   config = withExpoDangerousBaseMod(config, 'android');
-  config = withAndroidStringsXMLBaseMod(config);
-  config = withAndroidGradlePropertiesBaseMod(config);
-  config = withAndroidManifestBaseMod(config);
-  config = withAndroidMainActivityBaseMod(config);
-  config = withAndroidSettingsGradleBaseMod(config);
-  config = withAndroidProjectBuildGradleBaseMod(config);
-  config = withAndroidAppBuildGradleBaseMod(config);
+  config = withAndroidStringsXMLBaseMod(config, props);
+  config = withAndroidGradlePropertiesBaseMod(config, props);
+  config = withAndroidManifestBaseMod(config, props);
+  config = withAndroidMainActivityBaseMod(config, props);
+  config = withAndroidSettingsGradleBaseMod(config, props);
+  config = withAndroidProjectBuildGradleBaseMod(config, props);
+  config = withAndroidAppBuildGradleBaseMod(config, props);
   return config;
 }
 

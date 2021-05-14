@@ -1,7 +1,7 @@
 import { JSONObject } from '@expo/json-file';
 import plist from '@expo/plist';
 import assert from 'assert';
-import { readFile, writeFile } from 'fs-extra';
+import { promises } from 'fs';
 import path from 'path';
 import { XcodeProject } from 'xcode';
 
@@ -12,13 +12,18 @@ import { AppDelegateProjectFile, getAppDelegate, getInfoPlistPath } from '../ios
 import { getPbxproj } from '../ios/utils/Xcodeproj';
 import { createBaseMod, ForwardedBaseModOptions, withExpoDangerousBaseMod } from './createBaseMod';
 
-export function withBaseIosMods(config: ExportedConfig): ExportedConfig {
+const { readFile, writeFile } = promises;
+
+export function withBaseIosMods(
+  config: ExportedConfig,
+  props: ForwardedBaseModOptions = {}
+): ExportedConfig {
   config = withExpoDangerousBaseMod(config, 'ios');
-  config = withIOSAppDelegateBaseMod(config);
-  config = withIOSInfoPlistBaseMod(config);
-  config = withIOSExpoPlistBaseMod(config);
-  config = withIOSXcodeProjectBaseMod(config);
-  config = withIOSEntitlementsPlistBaseMod(config);
+  config = withIOSAppDelegateBaseMod(config, props);
+  config = withIOSInfoPlistBaseMod(config, props);
+  config = withIOSExpoPlistBaseMod(config, props);
+  config = withIOSXcodeProjectBaseMod(config, props);
+  config = withIOSEntitlementsPlistBaseMod(config, props);
 
   return config;
 }
