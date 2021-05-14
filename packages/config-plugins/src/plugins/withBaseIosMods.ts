@@ -6,10 +6,8 @@ import path from 'path';
 import { XcodeProject } from 'xcode';
 
 import { ExportedConfig } from '../Plugin.types';
-import { getEntitlementsPath } from '../ios/Entitlements';
+import { Entitlements, Paths, XcodeUtils } from '../ios';
 import { InfoPlist } from '../ios/IosConfig.types';
-import { AppDelegateProjectFile, getAppDelegate, getInfoPlistPath } from '../ios/Paths';
-import { getPbxproj } from '../ios/utils/Xcodeproj';
 import { createBaseMod, ForwardedBaseModOptions, withExpoDangerousBaseMod } from './createBaseMod';
 
 const { readFile, writeFile } = promises;
@@ -29,12 +27,12 @@ export function withBaseIosMods(
 }
 
 // Append a rule to supply AppDelegate data to mods on `mods.ios.appDelegate`
-export const withIOSAppDelegateBaseMod = createBaseMod<AppDelegateProjectFile>({
+export const withIOSAppDelegateBaseMod = createBaseMod<Paths.AppDelegateProjectFile>({
   methodName: 'withIOSAppDelegateBaseMod',
   platform: 'ios',
   modName: 'appDelegate',
   async readAsync({ modRequest: { projectRoot } }) {
-    const modResults = await getAppDelegate(projectRoot);
+    const modResults = await Paths.getAppDelegate(projectRoot);
     return { filePath: modResults.path, contents: modResults };
   },
   async writeAsync(filePath, { modResults: { contents } }) {
@@ -64,7 +62,7 @@ export const withIOSXcodeProjectBaseMod = createBaseMod<XcodeProject>({
   platform: 'ios',
   modName: 'xcodeproj',
   async readAsync({ modRequest: { projectRoot } }) {
-    const contents = getPbxproj(projectRoot);
+    const contents = XcodeUtils.getPbxproj(projectRoot);
     return { filePath: contents.filepath, contents };
   },
   async writeAsync(filePath, { modResults }) {
@@ -83,7 +81,7 @@ export const withIOSInfoPlistBaseMod = createBaseMod<
   async readAsync(config, props) {
     let filePath = '';
     try {
-      filePath = getInfoPlistPath(config.modRequest.projectRoot);
+      filePath = Paths.getInfoPlistPath(config.modRequest.projectRoot);
     } catch (error) {
       // Skip missing file errors in dry run mode since we don't write anywhere.
       if (!props.noPersist) throw error;
@@ -142,7 +140,7 @@ export const withIOSEntitlementsPlistBaseMod = createBaseMod<
   async readAsync(config, props) {
     let filePath = '';
     try {
-      filePath = getEntitlementsPath(config.modRequest.projectRoot);
+      filePath = Entitlements.getEntitlementsPath(config.modRequest.projectRoot);
     } catch (error) {
       // Skip missing file errors in dry run mode since we don't write anywhere.
       if (!props.noPersist) throw error;

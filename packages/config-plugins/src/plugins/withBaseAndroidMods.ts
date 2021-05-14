@@ -2,11 +2,7 @@ import { promises } from 'fs';
 import path from 'path';
 
 import { ExportedConfig } from '../Plugin.types';
-import { Manifest, Properties } from '../android';
-import { AndroidManifest } from '../android/Manifest';
-import * as AndroidPaths from '../android/Paths';
-import { readResourcesXMLAsync, ResourceXML } from '../android/Resources';
-import { getProjectStringsXMLPathAsync } from '../android/Strings';
+import { Manifest, Paths, Properties, Resources, Strings } from '../android';
 import { writeXMLAsync } from '../utils/XML';
 import { createBaseMod, ForwardedBaseModOptions, withExpoDangerousBaseMod } from './createBaseMod';
 
@@ -28,12 +24,12 @@ export function withBaseAndroidMods(
 }
 
 // Append a rule to supply gradle.properties data to mods on `mods.android.gradleProperties`
-export const withAndroidManifestBaseMod = createBaseMod<AndroidManifest>({
+export const withAndroidManifestBaseMod = createBaseMod<Manifest.AndroidManifest>({
   methodName: 'withAndroidManifestBaseMod',
   platform: 'android',
   modName: 'manifest',
   async readAsync({ modRequest: { projectRoot } }) {
-    const filePath = await AndroidPaths.getAndroidManifestAsync(projectRoot);
+    const filePath = await Paths.getAndroidManifestAsync(projectRoot);
     const contents = await Manifest.readAndroidManifestAsync(filePath);
     return { filePath, contents };
   },
@@ -58,13 +54,13 @@ export const withAndroidGradlePropertiesBaseMod = createBaseMod<Properties.Prope
 });
 
 // Append a rule to supply strings.xml data to mods on `mods.android.strings`
-export const withAndroidStringsXMLBaseMod = createBaseMod<ResourceXML>({
+export const withAndroidStringsXMLBaseMod = createBaseMod<Resources.ResourceXML>({
   methodName: 'withAndroidStringsXMLBaseMod',
   platform: 'android',
   modName: 'strings',
   async readAsync({ modRequest: { projectRoot } }) {
-    const filePath = await getProjectStringsXMLPathAsync(projectRoot);
-    const contents = await readResourcesXMLAsync({ path: filePath });
+    const filePath = await Strings.getProjectStringsXMLPathAsync(projectRoot);
+    const contents = await Resources.readResourcesXMLAsync({ path: filePath });
     return { filePath, contents };
   },
   async writeAsync(filePath, { modResults }) {
@@ -72,12 +68,12 @@ export const withAndroidStringsXMLBaseMod = createBaseMod<ResourceXML>({
   },
 });
 
-export const withAndroidProjectBuildGradleBaseMod = createBaseMod<AndroidPaths.GradleProjectFile>({
+export const withAndroidProjectBuildGradleBaseMod = createBaseMod<Paths.GradleProjectFile>({
   methodName: 'withAndroidProjectBuildGradleBaseMod',
   platform: 'android',
   modName: 'projectBuildGradle',
   async readAsync({ modRequest: { projectRoot } }) {
-    const modResults = await AndroidPaths.getProjectBuildGradleAsync(projectRoot);
+    const modResults = await Paths.getProjectBuildGradleAsync(projectRoot);
     return { filePath: modResults.path, contents: modResults };
   },
   async writeAsync(filePath, { modResults: { contents } }) {
@@ -85,12 +81,12 @@ export const withAndroidProjectBuildGradleBaseMod = createBaseMod<AndroidPaths.G
   },
 });
 
-export const withAndroidSettingsGradleBaseMod = createBaseMod<AndroidPaths.GradleProjectFile>({
+export const withAndroidSettingsGradleBaseMod = createBaseMod<Paths.GradleProjectFile>({
   methodName: 'withAndroidSettingsGradleBaseMod',
   platform: 'android',
   modName: 'settingsGradle',
   async readAsync({ modRequest: { projectRoot } }) {
-    const modResults = await AndroidPaths.getSettingsGradleAsync(projectRoot);
+    const modResults = await Paths.getSettingsGradleAsync(projectRoot);
     return { filePath: modResults.path, contents: modResults };
   },
   async writeAsync(filePath, { modResults: { contents } }) {
@@ -98,12 +94,12 @@ export const withAndroidSettingsGradleBaseMod = createBaseMod<AndroidPaths.Gradl
   },
 });
 
-export const withAndroidAppBuildGradleBaseMod = createBaseMod<AndroidPaths.GradleProjectFile>({
+export const withAndroidAppBuildGradleBaseMod = createBaseMod<Paths.GradleProjectFile>({
   methodName: 'withAndroidAppBuildGradleBaseMod',
   platform: 'android',
   modName: 'appBuildGradle',
   async readAsync({ modRequest: { projectRoot } }) {
-    const modResults = await AndroidPaths.getAppBuildGradleAsync(projectRoot);
+    const modResults = await Paths.getAppBuildGradleAsync(projectRoot);
     return { filePath: modResults.path, contents: modResults };
   },
   async writeAsync(filePath, { modResults: { contents } }) {
@@ -111,12 +107,12 @@ export const withAndroidAppBuildGradleBaseMod = createBaseMod<AndroidPaths.Gradl
   },
 });
 
-export const withAndroidMainActivityBaseMod = createBaseMod<AndroidPaths.ApplicationProjectFile>({
+export const withAndroidMainActivityBaseMod = createBaseMod<Paths.ApplicationProjectFile>({
   methodName: 'withAndroidMainActivityBaseMod',
   platform: 'android',
   modName: 'mainActivity',
   async readAsync({ modRequest: { projectRoot } }) {
-    const modResults = await AndroidPaths.getMainActivityAsync(projectRoot);
+    const modResults = await Paths.getMainActivityAsync(projectRoot);
     return { filePath: modResults.path, contents: modResults };
   },
   async writeAsync(filePath, { modResults: { contents } }) {

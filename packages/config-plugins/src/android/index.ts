@@ -18,10 +18,12 @@ import * as Paths from './Paths';
 import * as Permissions from './Permissions';
 import * as PrimaryColor from './PrimaryColor';
 import * as Properties from './Properties';
+import * as Resources from './Resources';
 import * as RootViewBackgroundColor from './RootViewBackgroundColor';
 import * as Scheme from './Scheme';
 import * as SplashScreen from './SplashScreen';
 import * as StatusBar from './StatusBar';
+import * as Strings from './Strings';
 import * as Styles from './Styles';
 import * as Updates from './Updates';
 import * as UserInterfaceStyle from './UserInterfaceStyle';
@@ -48,10 +50,12 @@ export {
   Permissions,
   PrimaryColor,
   Properties,
+  Resources,
   RootViewBackgroundColor,
   Scheme,
   SplashScreen,
   StatusBar,
+  Strings,
   Styles,
   Updates,
   UserInterfaceStyle,
