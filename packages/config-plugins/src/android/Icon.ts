@@ -4,7 +4,7 @@ import fs from 'fs-extra';
 import path from 'path';
 
 import { ConfigPlugin } from '../Plugin.types';
-import { withDangerousMod } from '../plugins/core-plugins';
+import { withDangerousMod } from '../plugins/withDangerousMod';
 import { writeXMLAsync } from '../utils/XML';
 import * as Colors from './Colors';
 import { buildResourceItem, readResourcesXMLAsync } from './Resources';

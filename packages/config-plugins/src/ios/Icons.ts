@@ -4,7 +4,7 @@ import * as fs from 'fs-extra';
 import { join } from 'path';
 
 import { ConfigPlugin } from '../Plugin.types';
-import { withDangerousMod } from '../plugins/core-plugins';
+import { withDangerousMod } from '../plugins/withDangerousMod';
 import * as WarningAggregator from '../utils/warnings';
 import { ContentsJson, ContentsJsonImageIdiom, writeContentsJsonAsync } from './AssetContents';
 import { getProjectName } from './utils/Xcodeproj';

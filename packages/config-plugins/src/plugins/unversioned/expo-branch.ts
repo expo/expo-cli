@@ -1,8 +1,8 @@
 import { ConfigPlugin } from '../../Plugin.types';
 import { withBranch as withBranchAndroid } from '../../android/Branch';
 import { withBranch as withBranchIOS } from '../../ios/Branch';
-import { createRunOncePlugin } from '../core-plugins';
-import { withStaticPlugin } from '../static-plugins';
+import { createRunOncePlugin } from '../withRunOnce';
+import { withStaticPlugin } from '../withStaticPlugin';
 
 const packageName = 'expo-branch';
 

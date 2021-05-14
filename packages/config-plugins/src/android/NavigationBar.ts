@@ -1,7 +1,7 @@
 import { ExpoConfig } from '@expo/config-types';
 
 import { ConfigPlugin } from '../Plugin.types';
-import { withDangerousMod } from '../plugins/core-plugins';
+import { withDangerousMod } from '../plugins/withDangerousMod';
 import { writeXMLAsync } from '../utils/XML';
 import * as WarningAggregator from '../utils/warnings';
 import { getProjectColorsXMLPathAsync, setColorItem } from './Colors';

@@ -1,7 +1,8 @@
 import { ConfigPlugin, ExportedConfig } from '../../Plugin.types';
-import { createRunOncePlugin, withPlugins, withRunOnce } from '../core-plugins';
 import { evalModsAsync } from '../mod-compiler';
 import { withMod } from '../withMod';
+import { withPlugins } from '../withPlugins';
+import { createRunOncePlugin, withRunOnce } from '../withRunOnce';
 
 describe(withRunOnce, () => {
   it('runs plugins multiple times without withRunOnce', () => {

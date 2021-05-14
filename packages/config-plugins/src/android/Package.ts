@@ -5,7 +5,7 @@ import path from 'path';
 
 import { ConfigPlugin } from '../Plugin.types';
 import { createAndroidManifestPlugin, withAppBuildGradle } from '../plugins/android-plugins';
-import { withDangerousMod } from '../plugins/core-plugins';
+import { withDangerousMod } from '../plugins/withDangerousMod';
 import * as WarningAggregator from '../utils/warnings';
 import { AndroidManifest } from './Manifest';
 import { getAppBuildGradle, getMainApplicationAsync } from './Paths';

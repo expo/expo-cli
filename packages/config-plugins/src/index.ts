@@ -25,7 +25,9 @@ export {
 
 export * from './Plugin.types';
 
-export { withPlugins, withRunOnce, createRunOncePlugin } from './plugins/core-plugins';
+export { withPlugins } from './plugins/withPlugins';
+
+export { withRunOnce, createRunOncePlugin } from './plugins/withRunOnce';
 
 export { withDangerousMod } from './plugins/withDangerousMod';
 export { withMod, withBaseMod } from './plugins/withMod';
@@ -48,8 +50,8 @@ export {
   withGradleProperties,
 } from './plugins/android-plugins';
 
-export { withStaticPlugin } from './plugins/static-plugins';
+export { withStaticPlugin } from './plugins/withStaticPlugin';
 
-export { compileModsAsync } from './plugins/mod-compiler';
+export { compileModsAsync, withDefaultBaseMods, evalModsAsync } from './plugins/mod-compiler';
 
 export { PluginError } from './utils/errors';

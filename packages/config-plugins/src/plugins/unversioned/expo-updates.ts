@@ -1,8 +1,8 @@
 import { ConfigPlugin } from '../../Plugin.types';
 import { withUpdates as withUpdatesAndroid } from '../../android/Updates';
 import { withUpdates as withUpdatesIOS } from '../../ios/Updates';
-import { createRunOncePlugin } from '../core-plugins';
-import { withStaticPlugin } from '../static-plugins';
+import { createRunOncePlugin } from '../withRunOnce';
+import { withStaticPlugin } from '../withStaticPlugin';
 
 // Local unversioned updates plugin
 

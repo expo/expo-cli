@@ -1,8 +1,8 @@
 import { ConfigPlugin } from '../../Plugin.types';
 import { withFacebookAppIdString, withFacebookManifest } from '../../android/Facebook';
 import { withFacebook as withFacebookIOS } from '../../ios/Facebook';
-import { createRunOncePlugin } from '../core-plugins';
-import { withStaticPlugin } from '../static-plugins';
+import { createRunOncePlugin } from '../withRunOnce';
+import { withStaticPlugin } from '../withStaticPlugin';
 
 // Local unversioned facebook plugin
 

@@ -2,9 +2,9 @@ import { ExpoConfig } from '@expo/config-types';
 import { JSONObject } from '@expo/json-file';
 
 import { ConfigPlugin } from '../../Plugin.types';
-import { createRunOncePlugin } from '../core-plugins';
 import { createEntitlementsPlugin } from '../ios-plugins';
-import { withStaticPlugin } from '../static-plugins';
+import { createRunOncePlugin } from '../withRunOnce';
+import { withStaticPlugin } from '../withStaticPlugin';
 
 const packageName = 'expo-apple-authentication';
 
