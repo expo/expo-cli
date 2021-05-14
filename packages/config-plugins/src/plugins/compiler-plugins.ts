@@ -21,15 +21,13 @@ import { InfoPlist } from '../ios/IosConfig.types';
 import { AppDelegateProjectFile, getAppDelegate, getInfoPlistPath } from '../ios/Paths';
 import { getPbxproj } from '../ios/utils/Xcodeproj';
 import { writeXMLAsync } from '../utils/XML';
-import { InterceptedModOptions, withInterceptedMod } from './core-plugins';
+import { BaseModOptions, withBaseMod } from './core-plugins';
 
-type ForwardedInterceptedModOptions = Partial<
-  Pick<InterceptedModOptions, 'saveToInternal' | 'skipEmptyMod'>
->;
+type ForwardedBaseModOptions = Partial<Pick<BaseModOptions, 'saveToInternal' | 'skipEmptyMod'>>;
 
 export function createBaseMod<
   ModType,
-  Props extends ForwardedInterceptedModOptions = ForwardedInterceptedModOptions
+  Props extends ForwardedBaseModOptions = ForwardedBaseModOptions
 >({
   methodName,
   platform,
@@ -52,7 +50,7 @@ export function createBaseMod<
 }): ConfigPlugin<Props | void> {
   const withUnknown: ConfigPlugin<Props | void> = (config, _props) => {
     const props = _props || ({} as Props);
-    return withInterceptedMod<ModType>(config, {
+    return withBaseMod<ModType>(config, {
       platform,
       mod: modName,
       skipEmptyMod: props.skipEmptyMod ?? true,
@@ -237,7 +235,7 @@ function withIOSBaseMods(config: ExportedConfig): ExportedConfig {
 
 const withExpoDangerousBaseMod: ConfigPlugin<ModPlatform> = (config, platform) => {
   // Used for scheduling when dangerous mods run.
-  return withInterceptedMod<JSONObject>(config, {
+  return withBaseMod<JSONObject>(config, {
     platform,
     mod: 'dangerous',
     skipEmptyMod: true,
@@ -297,7 +295,7 @@ const withIOSXcodeProjectBaseMod = createBaseMod<XcodeProject>({
 // Append a rule to supply Info.plist data to mods on `mods.ios.infoPlist`
 const withIOSInfoPlistBaseMod = createBaseMod<
   InfoPlist,
-  ForwardedInterceptedModOptions & { noPersist?: boolean }
+  ForwardedBaseModOptions & { noPersist?: boolean }
 >({
   methodName: 'withIOSInfoPlistBaseMod',
   platform: 'ios',
@@ -356,7 +354,7 @@ const withIOSInfoPlistBaseMod = createBaseMod<
 // Append a rule to supply .entitlements data to mods on `mods.ios.entitlements`
 export const withIOSEntitlementsPlistBaseMod = createBaseMod<
   InfoPlist,
-  ForwardedInterceptedModOptions & { noPersist?: boolean }
+  ForwardedBaseModOptions & { noPersist?: boolean }
 >({
   methodName: 'withIOSEntitlementsPlistBaseMod',
   platform: 'ios',

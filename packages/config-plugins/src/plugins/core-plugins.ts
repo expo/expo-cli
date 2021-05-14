@@ -113,7 +113,7 @@ export function withExtendedMod<T>(
     action: Mod<T>;
   }
 ): ExportedConfig {
-  return withInterceptedMod(config, {
+  return withBaseMod(config, {
     platform,
     mod,
     async action({ modRequest: { nextMod, ...modRequest }, modResults, ...config }) {
@@ -123,7 +123,7 @@ export function withExtendedMod<T>(
   });
 }
 
-export type InterceptedModOptions = {
+export type BaseModOptions = {
   platform: ModPlatform;
   mod: string;
   skipEmptyMod?: boolean;
@@ -143,15 +143,9 @@ export type InterceptedModOptions = {
  * @param saveToInternal should save the results to `_internal.modResults`, only enable this when the results are pure JSON.
  * @param action method to run on the mod when the config is compiled
  */
-export function withInterceptedMod<T>(
+export function withBaseMod<T>(
   config: ExportedConfig,
-  {
-    platform,
-    mod,
-    action,
-    skipEmptyMod,
-    saveToInternal,
-  }: InterceptedModOptions & { action: Mod<T> }
+  { platform, mod, action, skipEmptyMod, saveToInternal }: BaseModOptions & { action: Mod<T> }
 ): ExportedConfig {
   if (!config.mods) {
     config.mods = {};
@@ -247,8 +241,8 @@ function getDebugPluginStackFromStackTrace(stacktrace?: string): string {
     })
     .filter(Boolean);
 
-  // redundant as all debug logs are captured in withInterceptedMod
-  if (plugins[0] === 'withInterceptedMod') {
+  // redundant as all debug logs are captured in withBaseMod
+  if (plugins[0] === 'withBaseMod') {
     plugins.shift();
   }
 

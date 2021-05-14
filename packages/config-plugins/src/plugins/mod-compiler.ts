@@ -2,7 +2,15 @@ import path from 'path';
 
 import { ExportedConfig, Mod, ModConfig, ModPlatform } from '../Plugin.types';
 import { getHackyProjectName } from '../ios/utils/Xcodeproj';
-import { resolveModResults, withBaseMods } from './compiler-plugins';
+import { resolveModResults } from './compiler-plugins';
+import { withBaseAndroidMods } from './withBaseAndroidMods';
+import { withBaseIosMods } from './withBaseIosMods';
+
+export function withDefaultBaseMods(config: ExportedConfig): ExportedConfig {
+  config = withBaseIosMods(config);
+  config = withBaseAndroidMods(config);
+  return config;
+}
 
 /**
  *
@@ -13,7 +21,7 @@ export async function compileModsAsync(
   config: ExportedConfig,
   props: { projectRoot: string; platforms?: ModPlatform[] }
 ): Promise<ExportedConfig> {
-  config = withBaseMods(config);
+  config = withDefaultBaseMods(config);
   return await evalModsAsync(config, props);
 }
 

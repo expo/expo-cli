@@ -31,7 +31,7 @@ export {
   createRunOncePlugin,
   withDangerousMod,
   withExtendedMod,
-  withInterceptedMod,
+  withBaseMod,
 } from './plugins/core-plugins';
 
 export {
