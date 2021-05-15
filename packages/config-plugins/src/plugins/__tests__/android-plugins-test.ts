@@ -5,7 +5,7 @@ import path from 'path';
 
 import { withGradleProperties } from '../android-plugins';
 import { evalModsAsync } from '../mod-compiler';
-import { withAndroidBaseMods } from '../withAndroidBaseMods';
+import { getAndroidModFileProviders, withAndroidBaseMods } from '../withAndroidBaseMods';
 import rnFixture from './fixtures/react-native-project';
 
 jest.mock('fs');
@@ -40,7 +40,11 @@ describe(withGradleProperties, () => {
       config.modResults.push({ type: 'comment', value: 'end-expo-test' });
       return config;
     });
-    config = withAndroidBaseMods(config, { only: ['gradleProperties'] });
+    config = withAndroidBaseMods(config, {
+      enabled: {
+        gradleProperties: getAndroidModFileProviders().gradleProperties,
+      },
+    });
 
     await evalModsAsync(config, { projectRoot, platforms: ['android'] });
 

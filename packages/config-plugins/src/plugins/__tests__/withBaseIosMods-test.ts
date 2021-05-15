@@ -3,7 +3,7 @@ import { vol } from 'memfs';
 
 import { withEntitlementsPlist, withInfoPlist } from '../ios-plugins';
 import { evalModsAsync } from '../mod-compiler';
-import { withIosBaseMods } from '../withIosBaseMods';
+import { getIosModFileProviders, withIosBaseMods } from '../withIosBaseMods';
 
 jest.mock('fs');
 
@@ -23,9 +23,13 @@ describe('entitlements', () => {
 
     // base mods must be added last
     config = withIosBaseMods(config, {
-      noPersist: true,
       saveToInternal: true,
-      only: ['entitlements'],
+      enabled: {
+        entitlements: {
+          readAsync: getIosModFileProviders().entitlements.readAsync,
+          async writeAsync() {},
+        },
+      },
     });
     config = await evalModsAsync(config, { projectRoot: '/', platforms: ['ios'] });
 
@@ -59,9 +63,13 @@ describe('infoPlist', () => {
 
     // base mods must be added last
     config = withIosBaseMods(config, {
-      noPersist: true,
       saveToInternal: true,
-      only: ['infoPlist'],
+      enabled: {
+        infoPlist: {
+          readAsync: getIosModFileProviders().infoPlist.readAsync,
+          async writeAsync() {},
+        },
+      },
     });
     config = await evalModsAsync(config, { projectRoot: '/', platforms: ['ios'] });
 

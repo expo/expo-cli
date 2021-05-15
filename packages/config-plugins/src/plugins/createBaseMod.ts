@@ -8,7 +8,18 @@ import {
 import { BaseModOptions, withBaseMod } from './withMod';
 
 export type ForwardedBaseModOptions = Partial<
-  Pick<BaseModOptions, 'saveToInternal' | 'skipEmptyMod'>
+  Pick<BaseModOptions, 'saveToInternal' | 'skipEmptyMod'> & {
+    /**
+     * Should the file be persisted. i.e. writeAsync.
+     * @default true
+     */
+    persist?: boolean;
+  }
+>;
+
+export type ModFileProvider<Props = any> = Pick<
+  CreateBaseModProps<Props>,
+  'readAsync' | 'writeAsync'
 >;
 
 export type CreateBaseModProps<
@@ -21,12 +32,17 @@ export type CreateBaseModProps<
   readAsync: (
     modRequest: ExportedConfigWithProps<ModType>,
     props: Props
-  ) => Promise<{ contents: ModType; filePath: string }>;
+  ) => Promise<{ modResults: ModType; filePath: string }>;
   writeAsync: (
     filePath: string,
     config: ExportedConfigWithProps<ModType>,
     props: Props
   ) => Promise<void>;
+  getTemplateAsync?: (
+    filePath: string,
+    config: ExportedConfigWithProps<ModType>,
+    props: Props
+  ) => Promise<ModType> | ModType;
 };
 
 export function createBaseMod<
@@ -53,7 +69,7 @@ export function createBaseMod<
             modRequest,
           };
 
-          const { contents: modResults, filePath } = await readAsync(results, props);
+          const { modResults, filePath } = await readAsync(results, props);
 
           results = await nextMod!({
             ...results,
@@ -63,7 +79,9 @@ export function createBaseMod<
 
           assertModResults(results, modRequest.platform, modRequest.modName);
 
-          await writeAsync(filePath, results, props);
+          if (props.persist !== false) {
+            await writeAsync(filePath, results, props);
+          }
           return results;
         } catch (error) {
           error.message = `[${platform}.${modName}]: ${methodName}: ${error.message}`;
@@ -123,6 +141,7 @@ export function createPlatformBaseMod<
   ModType,
   Props extends ForwardedBaseModOptions = ForwardedBaseModOptions
 >({ modName, ...props }: Omit<CreateBaseModProps<ModType, Props>, 'methodName'>) {
+  // Generate the function name to ensure it's uniform and also to improve stack traces.
   const methodName = `with${upperFirst(props.platform)}${upperFirst(modName)}BaseMod`;
   return createBaseMod<ModType, Props>({
     methodName,
@@ -132,7 +151,7 @@ export function createPlatformBaseMod<
 }
 
 export function provider<ModType, Props extends ForwardedBaseModOptions = ForwardedBaseModOptions>(
-  props: Pick<CreateBaseModProps<ModType, Props>, 'readAsync' | 'writeAsync'>
+  props: Pick<CreateBaseModProps<ModType, Props>, 'readAsync' | 'getTemplateAsync' | 'writeAsync'>
 ) {
   return props;
 }
@@ -146,14 +165,18 @@ export function withGeneratedBaseMods<ModName extends string>(
     ...props
   }: ForwardedBaseModOptions & {
     platform: ModPlatform;
-    providers: Record<ModName, Pick<CreateBaseModProps<any, any>, 'readAsync' | 'writeAsync'>>;
+    providers: Partial<
+      Record<ModName, Pick<CreateBaseModProps<any, any>, 'readAsync' | 'writeAsync'>>
+    >;
     only?: ModName[];
   }
 ): ExportedConfig {
   return Object.entries(providers).reduce((config, [modName, value]) => {
+    // Allow skipping mods
     if (only && !only.includes(modName as ModName)) {
       return config;
     }
-    return createPlatformBaseMod({ platform, modName, ...(value as any) })(config, props);
+    const baseMod = createPlatformBaseMod({ platform, modName, ...(value as any) });
+    return baseMod(config, props);
   }, config);
 }

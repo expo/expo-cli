@@ -9,8 +9,8 @@ import { ExportedConfig, ModConfig } from '../Plugin.types';
 import { Entitlements, Paths, XcodeUtils } from '../ios';
 import { InfoPlist } from '../ios/IosConfig.types';
 import {
-  CreateBaseModProps,
   ForwardedBaseModOptions,
+  ModFileProvider,
   provider,
   withGeneratedBaseMods,
 } from './createBaseMod';
@@ -19,20 +19,10 @@ const { readFile, writeFile } = promises;
 
 type IosModName = keyof Required<ModConfig>['ios'];
 
-export function withIosBaseMods(
-  config: ExportedConfig,
-  props: ForwardedBaseModOptions & { only?: IosModName[] } = {}
-): ExportedConfig {
-  return withGeneratedBaseMods<IosModName>(config, { ...props, platform: 'ios', providers });
-}
-
-const providers: Record<
-  IosModName,
-  Pick<CreateBaseModProps<any, any>, 'readAsync' | 'writeAsync'>
-> = {
+const providers = {
   dangerous: provider<unknown>({
     async readAsync() {
-      return { filePath: '', contents: {} };
+      return { filePath: '', modResults: {} };
     },
     async writeAsync() {},
   }),
@@ -40,7 +30,7 @@ const providers: Record<
   appDelegate: provider<Paths.AppDelegateProjectFile>({
     async readAsync({ modRequest: { projectRoot } }) {
       const modResults = await Paths.getAppDelegate(projectRoot);
-      return { filePath: modResults.path, contents: modResults };
+      return { filePath: modResults.path, modResults };
     },
     async writeAsync(filePath: string, { modResults: { contents } }) {
       await writeFile(filePath, contents);
@@ -52,7 +42,7 @@ const providers: Record<
       const supportingDirectory = path.join(platformProjectRoot, projectName!, 'Supporting');
       const filePath = path.resolve(supportingDirectory, 'Expo.plist');
       const modResults = plist.parse(await readFile(filePath, 'utf8'));
-      return { filePath, contents: modResults };
+      return { filePath, modResults };
     },
     async writeAsync(filePath, { modResults }) {
       await writeFile(filePath, plist.build(modResults));
@@ -61,8 +51,8 @@ const providers: Record<
   // Append a rule to supply .xcodeproj data to mods on `mods.ios.xcodeproj`
   xcodeproj: provider<XcodeProject>({
     async readAsync({ modRequest: { projectRoot } }) {
-      const contents = XcodeUtils.getPbxproj(projectRoot);
-      return { filePath: contents.filepath, contents };
+      const modResults = XcodeUtils.getPbxproj(projectRoot);
+      return { filePath: modResults.filepath, modResults };
     },
     async writeAsync(filePath, { modResults }) {
       await writeFile(filePath, modResults.writeSync());
@@ -75,8 +65,8 @@ const providers: Record<
       try {
         filePath = Paths.getInfoPlistPath(config.modRequest.projectRoot);
       } catch (error) {
-        // Skip missing file errors in dry run mode since we don't write anywhere.
-        if (!props.noPersist) throw error;
+        // Skip missing file errors if we don't plan on persisting.
+        if (props.persist !== false) throw error;
       }
 
       // Apply all of the Info.plist values to the expo.ios.infoPlist object
@@ -88,36 +78,35 @@ const providers: Record<
         config.ios.infoPlist = {};
       }
 
-      let data: InfoPlist = {};
+      let modResults: InfoPlist = {};
       try {
         const contents = await readFile(filePath, 'utf8');
         assert(contents, 'Info.plist is empty');
-        data = plist.parse(contents);
+        modResults = plist.parse(contents);
       } catch (error) {
-        if (!props.noPersist) throw error;
-        // If the file is invalid or doesn't exist, fallback on a default blank object.
-        data = {
-          // TODO: Maybe sync with template
-        };
+        if (this.getTemplateAsync) {
+          // If the file is invalid or doesn't exist, fallback on a default object (matching our template).
+          modResults = await this.getTemplateAsync?.(filePath, config, props);
+        } else {
+          throw error;
+        }
       }
 
       config.ios.infoPlist = {
-        ...(data || {}),
+        ...(modResults || {}),
         ...config.ios.infoPlist,
       };
 
-      return { filePath, contents: data };
+      return { filePath, modResults };
     },
-    async writeAsync(filePath, config, props) {
+    async writeAsync(filePath, config) {
       // Update the contents of the static infoPlist object
       if (!config.ios) {
         config.ios = {};
       }
       config.ios.infoPlist = config.modResults;
 
-      if (!props.noPersist) {
-        await writeFile(filePath, plist.build(config.modResults));
-      }
+      await writeFile(filePath, plist.build(config.modResults));
     },
   }),
   // Append a rule to supply .entitlements data to mods on `mods.ios.entitlements`
@@ -127,21 +116,21 @@ const providers: Record<
       try {
         filePath = Entitlements.getEntitlementsPath(config.modRequest.projectRoot);
       } catch (error) {
-        // Skip missing file errors in dry run mode since we don't write anywhere.
-        if (!props.noPersist) throw error;
+        // Skip missing file errors if we don't plan on persisting.
+        if (props.persist !== false) throw error;
       }
-      let data: JSONObject = {};
+      let modResults: JSONObject = {};
       try {
         const contents = await readFile(filePath, 'utf8');
         assert(contents, 'Entitlements plist is empty');
-        data = plist.parse(contents);
+        modResults = plist.parse(contents);
       } catch (error) {
-        if (!props.noPersist) throw error;
-        // If the file is invalid or doesn't exist, fallback on a default object (matching our template).
-        data = {
-          // always enable notifications by default.
-          'aps-environment': 'development',
-        };
+        if (this.getTemplateAsync) {
+          // If the file is invalid or doesn't exist, fallback on a default object (matching our template).
+          modResults = await this.getTemplateAsync?.(filePath, config, props);
+        } else {
+          throw error;
+        }
       }
 
       // Apply all of the .entitlements values to the expo.ios.entitlements object
@@ -154,22 +143,41 @@ const providers: Record<
       }
 
       config.ios.entitlements = {
-        ...(data || {}),
+        ...(modResults || {}),
         ...config.ios.entitlements,
       };
 
-      return { filePath, contents: data };
+      return { filePath, modResults };
     },
-    async writeAsync(filePath, config, props) {
+    getTemplateAsync() {
+      return {
+        // always enable notifications by default.
+        'aps-environment': 'development',
+      };
+    },
+    async writeAsync(filePath, config) {
       // Update the contents of the static infoPlist object
       if (!config.ios) {
         config.ios = {};
       }
       config.ios.entitlements = config.modResults;
 
-      if (!props.noPersist) {
-        await writeFile(filePath, plist.build(config.modResults));
-      }
+      await writeFile(filePath, plist.build(config.modResults));
     },
   }),
 };
+
+export function withIosBaseMods(
+  config: ExportedConfig,
+  { enabled, ...props }: ForwardedBaseModOptions & { enabled?: Partial<typeof providers> } = {}
+): ExportedConfig {
+  return withGeneratedBaseMods<IosModName>(config, {
+    ...props,
+    platform: 'ios',
+    providers: enabled ?? getIosModFileProviders(),
+  });
+}
+
+export function getIosModFileProviders() {
+  return providers;
+}
