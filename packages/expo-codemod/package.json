@@ -1,6 +1,6 @@
 {
   "name": "expo-codemod",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Codemod scripts for Expo apps",
   "author": "Expo",
   "license": "MIT",
@@ -13,7 +13,7 @@
     "expo-codemod": "./bin/expo-codemod.js"
   },
   "scripts": {
-    "watch": "tsc --watch",
+    "watch": "tsc --watch --preserveWatchOutput",
     "build": "tsc",
     "prepare": "yarn run clean && yarn build",
     "clean": "rimraf build ./tsconfig.tsbuildinfo",

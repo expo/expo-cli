@@ -10,6 +10,7 @@ import { EjectAsyncOptions, prebuildAsync } from '../../eject/prebuildAsync';
 import { profileMethod } from '../../utils/profileMethod';
 import { parseBinaryPlistAsync } from '../utils/binaryPlist';
 import { isDevMenuInstalled } from '../utils/isDevMenuInstalled';
+import { ExpoLogFormatter } from './ExpoLogFormatter';
 import * as IOSDeploy from './IOSDeploy';
 import maybePromptToSyncPodsAsync from './Podfile';
 import * as XcodeBuild from './XcodeBuild';
@@ -60,7 +61,7 @@ export async function runIosActionAsync(projectRoot: string, options: Options) {
   const bundleIdentifier = await profileMethod(getBundleIdentifierForBinaryAsync)(binaryPath);
 
   if (props.isSimulator) {
-    XcodeBuild.logPrettyItem(`${chalk.bold`Installing`} on ${props.device.name}`);
+    ExpoLogFormatter.logPrettyItem(`${chalk.bold`Installing`} on ${props.device.name}`);
     await SimControl.installAsync({ udid: props.device.udid, dir: binaryPath });
 
     await openInSimulatorAsync({
@@ -100,7 +101,7 @@ async function openInSimulatorAsync({
   device: XcodeBuild.BuildProps['device'];
   shouldStartBundler?: boolean;
 }) {
-  XcodeBuild.logPrettyItem(
+  ExpoLogFormatter.logPrettyItem(
     `${chalk.bold`Opening`} on ${device.name} ${chalk.dim(`(${bundleIdentifier})`)}`
   );
 

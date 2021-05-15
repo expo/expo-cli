@@ -159,10 +159,6 @@ function getProcessOptions({
   };
 }
 
-export function logPrettyItem(message: string) {
-  Log.log(`${chalk.whiteBright`\u203A`} ${message}`);
-}
-
 export async function buildAsync({
   projectRoot,
   xcodeProject,
@@ -196,7 +192,7 @@ export async function buildAsync({
     }
   }
 
-  logPrettyItem(chalk.bold`Planning build`);
+  ExpoLogFormatter.logPrettyItem(chalk.bold`Planning build`);
   Log.debug(`  xcodebuild ${args.join(' ')}`);
   const podfileLock = path.join(projectRoot, 'ios', 'Podfile.lock');
   const appName = xcodeProject.name.match(/.*\/(.*)\.\w+/)?.[1] || '';

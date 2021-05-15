@@ -2,7 +2,10 @@ import fs from 'fs';
 import { vol } from 'memfs';
 import path from 'path';
 
-import { getApplicationTargetForSchemeAsync } from '../BuildScheme';
+import {
+  getApplicationTargetForSchemeAsync,
+  getArchiveBuildConfigurationForSchemeAsync,
+} from '../BuildScheme';
 
 const fsReal = jest.requireActual('fs') as typeof fs;
 
@@ -64,5 +67,37 @@ describe(getApplicationTargetForSchemeAsync, () => {
         getApplicationTargetForSchemeAsync('/app', 'nonexistentscheme')
       ).rejects.toThrow(/does not exist/);
     });
+  });
+});
+
+describe(getArchiveBuildConfigurationForSchemeAsync, () => {
+  beforeAll(async () => {
+    vol.fromJSON(
+      {
+        'ios/testproject.xcodeproj/xcshareddata/xcschemes/testproject.xcscheme': fsReal.readFileSync(
+          path.join(__dirname, 'fixtures/testproject.xcscheme'),
+          'utf-8'
+        ),
+      },
+      '/app'
+    );
+  });
+
+  afterAll(() => {
+    vol.reset();
+  });
+
+  it('returns build configuration name for existing scheme', async () => {
+    const buildConfiguration = await getArchiveBuildConfigurationForSchemeAsync(
+      '/app',
+      'testproject'
+    );
+    expect(buildConfiguration).toBe('Release');
+  });
+
+  it('throws if the scheme does not exist', async () => {
+    await expect(() =>
+      getArchiveBuildConfigurationForSchemeAsync('/app', 'nonexistentscheme')
+    ).rejects.toThrow(/does not exist/);
   });
 });

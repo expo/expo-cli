@@ -294,6 +294,7 @@ describe('built-in plugins', () => {
       'ios/ReactNativeProject/Images.xcassets/AppIcon.appiconset/Contents.json',
       'ios/ReactNativeProject/Images.xcassets/Contents.json',
       'ios/ReactNativeProject/GoogleService-Info.plist',
+      'ios/ReactNativeProject/noop-file.swift',
       'ios/ReactNativeProject/ReactNativeProject-Bridging-Header.h',
       'ios/ReactNativeProject/ReactNativeProject.entitlements',
       'ios/ReactNativeProject.xcodeproj/project.pbxproj',

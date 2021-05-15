@@ -41,7 +41,7 @@ export type Publication = {
 };
 
 export type PublicationDetail = {
-  manifest: {
+  manifest?: {
     [key: string]: string;
   };
   publishedTime: string;
@@ -257,7 +257,9 @@ export async function printPublicationDetailAsync(
   const generalTableString = table.printTableJson(detail, 'Release Description');
   Log.log(generalTableString);
 
-  // Print manifest info
-  const manifestTableString = table.printTableJson(manifest, 'Manifest Details');
-  Log.log(manifestTableString);
+  if (manifest) {
+    // Print manifest info
+    const manifestTableString = table.printTableJson(manifest, 'Manifest Details');
+    Log.log(manifestTableString);
+  }
 }

@@ -1,6 +1,6 @@
 {
   "name": "expo-cli",
-  "version": "4.4.3",
+  "version": "4.4.7",
   "description": "The command-line tool for creating and publishing Expo apps",
   "preferGlobal": true,
   "main": "build/exp.js",
@@ -11,7 +11,7 @@
   "scripts": {
     "start": "yarn run prepare && yarn run watch",
     "build": "tsc --emitDeclarationOnly && babel src --out-dir build --extensions \".ts\" --source-maps --ignore \"src/**/__mocks__/*\",\"src/**/__tests__/*\"",
-    "watch": "tsc --watch",
+    "watch": "tsc --watch --preserveWatchOutput",
     "introspect": "ts-node ./scripts/introspect.ts",
     "prepare": "yarn run clean && yarn run build",
     "clean": "rimraf build ./tsconfig.tsbuildinfo",
@@ -70,17 +70,17 @@
   "dependencies": {
     "@expo/apple-utils": "0.0.0-alpha.17",
     "@expo/bunyan": "4.0.0",
-    "@expo/config": "3.3.38",
-    "@expo/config-plugins": "1.0.28",
-    "@expo/dev-tools": "0.13.94",
-    "@expo/json-file": "8.2.29",
-    "@expo/osascript": "2.0.26",
-    "@expo/package-manager": "0.0.41",
-    "@expo/plist": "0.0.12",
+    "@expo/config": "3.3.41",
+    "@expo/config-plugins": "1.0.31",
+    "@expo/dev-tools": "0.13.97",
+    "@expo/json-file": "8.2.30",
+    "@expo/osascript": "2.0.28",
+    "@expo/package-manager": "0.0.43",
+    "@expo/plist": "0.0.13",
     "@expo/results": "^1.0.0",
     "@expo/simple-spinner": "1.0.2",
     "@expo/spawn-async": "1.5.0",
-    "@expo/xcpretty": "~2.0.0",
+    "@expo/xcpretty": "~2.0.1",
     "@hapi/joi": "^17.1.1",
     "babel-runtime": "6.26.0",
     "base32.js": "0.1.0",
@@ -109,6 +109,7 @@
     "md5-file": "^5.0.0",
     "minipass": "2.3.5",
     "npm-package-arg": "6.1.0",
+    "nullthrows": "^1.1.1",
     "ora": "3.4.0",
     "pacote": "^11.1.0",
     "pngjs": "3.4.0",
@@ -128,6 +129,9 @@
     "url-join": "4.0.0",
     "uuid": "^8.0.0",
     "wrap-ansi": "^7.0.0",
-    "xdl": "59.0.34"
+    "xdl": "59.0.37"
+  },
+  "resolutions": {
+    "hermes-engine": "0.0.0"
   }
 }

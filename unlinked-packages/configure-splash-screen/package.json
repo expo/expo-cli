@@ -1,6 +1,6 @@
 {
   "name": "@expo/configure-splash-screen",
-  "version": "0.3.4",
+  "version": "0.4.0",
   "description": "Supplementary module for 'expo-splash-screen' providing cli configuration command",
   "bin": {
     "configure-splash-screen": "./build/index-cli.js",
@@ -10,7 +10,7 @@
   "scripts": {
     "start": "yarn run prepare",
     "build": "tsc",
-    "watch": "tsc --watch",
+    "watch": "tsc --watch --preserveWatchOutput",
     "prepare": "yarn run clean && yarn run build",
     "clean": "rimraf build ./tsconfig.tsbuildinfo",
     "lint": "eslint --ext .js,.jsx,.ts,.tsx,.d.ts src",

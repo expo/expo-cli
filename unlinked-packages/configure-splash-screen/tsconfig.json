@@ -1,9 +1,6 @@
 {
   "extends": "../../tsconfig.base",
   "compilerOptions": {
-    "target": "ES2019",
-    "module": "CommonJS",
-    "lib": ["es2019", "es2020.string"],
     "rootDir": "./src",
     "outDir": "./build",
     "esModuleInterop": true,

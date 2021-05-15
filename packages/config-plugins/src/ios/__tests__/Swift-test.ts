@@ -2,10 +2,12 @@ import * as fs from 'fs';
 import { vol } from 'memfs';
 import * as path from 'path';
 
+import { compileModsAsync } from '../../plugins/mod-compiler';
 import {
   ensureSwiftBridgingHeaderSetup,
   getDesignatedSwiftBridgingHeaderFileReference,
-} from '../SwiftBridgingHeader';
+  withNoopSwiftFile,
+} from '../Swift';
 import { getPbxproj } from '../utils/Xcodeproj';
 
 const fsReal = jest.requireActual('fs') as typeof fs;
@@ -67,5 +69,35 @@ describe(ensureSwiftBridgingHeaderSetup, () => {
     expect(
       vol.existsSync(path.join(projectRootSwift, 'ios/testproject/testproject-Bridging-Header.h'))
     ).toBe(false);
+  });
+});
+
+describe(withNoopSwiftFile, () => {
+  const projectRoot = '/alpha';
+  beforeAll(async () => {
+    vol.fromJSON(
+      {
+        'ios/testproject.xcodeproj/project.pbxproj': fsReal.readFileSync(
+          path.join(__dirname, 'fixtures/project.pbxproj'),
+          'utf-8'
+        ),
+        'ios/testproject/AppDelegate.m': '',
+      },
+      projectRoot
+    );
+  });
+
+  afterAll(() => {
+    vol.reset();
+  });
+
+  it(`creates a noop swift file`, async () => {
+    const config = withNoopSwiftFile({
+      name: 'testproject',
+      slug: 'testproject',
+    });
+
+    await compileModsAsync(config, { projectRoot: '/alpha', platforms: ['ios'] });
+    expect(fs.existsSync('/alpha/ios/testproject/noop-file.swift')).toBeTruthy();
   });
 });

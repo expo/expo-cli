@@ -1,5 +1,4 @@
-import { FileOperation, Formatter, Parser } from '@expo/xcpretty';
-import { switchRegex } from '@expo/xcpretty/build/switchRegex';
+import { FileOperation, Formatter, Parser, switchRegex } from '@expo/xcpretty';
 import chalk from 'chalk';
 import findUp from 'find-up';
 import path from 'path';
@@ -106,6 +105,10 @@ type CustomProps = {
 };
 
 export class ExpoLogFormatter extends Formatter {
+  static logPrettyItem(message: string) {
+    Log.log(`${chalk.whiteBright`\u203A`} ${message}`);
+  }
+
   private nativeProjectRoot: string;
 
   constructor(public props: CustomProps) {
@@ -139,17 +142,17 @@ export class ExpoLogFormatter extends Formatter {
       case 'GenerateDSYMFile':
         return `Generating debug`;
       case 'Ld':
-        return 'Linking';
+        return 'Linking  ';
       case 'Libtool':
-        return 'Building lib';
+        return 'Packaging';
       case 'ProcessPCH':
         return 'Precompiling';
       case 'ProcessInfoPlistFile':
-        return 'Processing';
+        return 'Preparing';
       case 'CodeSign':
-        return 'Signing';
+        return 'Signing  ';
       case 'Touch':
-        return 'Creating';
+        return 'Creating ';
       case 'CompileC':
       case 'CompileSwift':
       case 'CompileXIB':
@@ -176,7 +179,7 @@ export class ExpoLogFormatter extends Formatter {
     const moduleNameTag = this.getPkgName('', target);
 
     return Formatter.format(
-      'Running script',
+      'Executing',
       [moduleNameTag, Formatter.formatBreadCrumb(scriptName, target, project)]
         .filter(Boolean)
         .join(' ')

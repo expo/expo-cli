@@ -31,7 +31,8 @@ export const withExpoIOSPlugins: ConfigPlugin<{
 
   return withPlugins(config, [
     [IOSConfig.BundleIdentifier.withBundleIdentifier, { bundleIdentifier }],
-    IOSConfig.SwiftBridgingHeader.withSwiftBridgingHeader,
+    IOSConfig.Swift.withSwiftBridgingHeader,
+    IOSConfig.Swift.withNoopSwiftFile,
     IOSConfig.Google.withGoogle,
     IOSConfig.Name.withDisplayName,
     IOSConfig.Orientation.withOrientation,

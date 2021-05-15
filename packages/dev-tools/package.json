@@ -1,13 +1,13 @@
 {
   "name": "@expo/dev-tools",
-  "version": "0.13.94",
+  "version": "0.13.97",
   "main": "build/server/index.js",
   "scripts": {
-    "dev": "cross-env NODE_ENV=development ts-node ./server/dev-server",
+    "dev": "cross-env NODE_ENV=development ts-node -T ./server/dev-server",
     "build": "yarn clean && yarn build-server && yarn extract-fragment-types && yarn build-client",
     "build-client": "cross-env NODE_ENV=production next build && next export -o ./build/client",
     "build-server": "cross-env NODE_ENV=production tsc",
-    "extract-fragment-types": "ts-node ./server/extract-fragment-types",
+    "extract-fragment-types": "ts-node -T ./server/extract-fragment-types",
     "clean": "rimraf .next build",
     "prepare": "yarn run clean && yarn run build",
     "start": "yarn dev",
@@ -17,7 +17,7 @@
     "build"
   ],
   "dependencies": {
-    "@expo/config": "3.3.38",
+    "@expo/config": "3.3.41",
     "base64url": "3.0.1",
     "express": "4.16.4",
     "freeport-async": "2.0.0",
@@ -63,9 +63,9 @@
     "redux": "^3.7.2",
     "rimraf": "^3.0.2",
     "slugify": "^1.0.2",
-    "ts-node": "^8.6.2",
+    "ts-node": "^9.1.1",
     "velocity-react": "^1.4.1",
-    "xdl": "59.0.34"
+    "xdl": "59.0.37"
   },
   "license": "MIT",
   "repository": {

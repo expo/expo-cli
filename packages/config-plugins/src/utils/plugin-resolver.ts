@@ -16,7 +16,7 @@ function findUpPackageJson(root: string): string {
   return packageJson;
 }
 
-function resolvePluginForModule(projectRoot: string, modulePath: string) {
+export function resolvePluginForModule(projectRoot: string, modulePath: string) {
   const resolved = resolveFrom.silent(projectRoot, modulePath);
   if (!resolved) {
     throw new PluginError(
