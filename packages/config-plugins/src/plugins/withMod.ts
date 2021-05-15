@@ -59,6 +59,7 @@ export function withBaseMod<T>(
   if (isDebug) {
     // Get a stack trace via the Error API
     const stack = new Error().stack;
+    console.log('STACK:', stack);
     // Format the stack trace to create the debug log
     debugTrace = getDebugPluginStackFromStackTrace(stack);
     const modStack = chalk.bold(`${platform}.${mod}`);
@@ -116,21 +117,19 @@ function getDebugPluginStackFromStackTrace(stacktrace?: string): string {
     .map(first => {
       // Match the first part of the stack trace against the plugin naming convention
       // "with" followed by a capital letter.
-      const match = first?.match(/(\bwith[A-Z].*?\b)/g);
-      if (match?.length) {
-        // Return the plugin name
-        return match[0];
-      }
-      return null;
+      return (
+        first?.match(/^(\bwith[A-Z].*?\b)/)?.[1]?.trim() ??
+        first?.match(/\.(\bwith[A-Z].*?\b)/)?.[1]?.trim() ??
+        null
+      );
     })
-    .filter(Boolean);
+    .filter(Boolean)
+    .filter(plugin => {
+      // redundant as all debug logs are captured in withBaseMod
+      return !['withMod', 'withBaseMod', 'withExtendedMod'].includes(plugin!);
+    });
 
-  // redundant as all debug logs are captured in withBaseMod
-  if (plugins[0] === 'withBaseMod') {
-    plugins.shift();
-  }
-
-  const commonPlugins = ['withPlugins', 'withMod'];
+  const commonPlugins = ['withPlugins', 'withRunOnce', 'withStaticPlugin'];
 
   return (
     (plugins as string[])
@@ -141,7 +140,7 @@ function getDebugPluginStackFromStackTrace(stacktrace?: string): string {
           pluginName = chalk.bold(pluginName);
         }
         // highlight dangerous mods
-        if (pluginName.toLowerCase().includes('danger')) {
+        if (pluginName.toLowerCase().includes('dangerous')) {
           pluginName = chalk.red(pluginName);
         }
 
