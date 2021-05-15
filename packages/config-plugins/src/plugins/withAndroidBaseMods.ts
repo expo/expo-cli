@@ -15,12 +15,108 @@ const { readFile, writeFile } = promises;
 
 type AndroidModName = keyof Required<ModConfig>['android'];
 
+const providers = {
+  dangerous: provider<unknown>({
+    getFilePathAsync() {
+      return '';
+    },
+    async readAsync() {
+      return { filePath: '', modResults: {} };
+    },
+    async writeAsync() {},
+  }),
+
+  // Append a rule to supply gradle.properties data to mods on `mods.android.gradleProperties`
+  manifest: provider<Manifest.AndroidManifest>({
+    getFilePathAsync({ modRequest: { projectRoot } }) {
+      return Paths.getAndroidManifestAsync(projectRoot);
+    },
+    async readAsync(filePath) {
+      return await Manifest.readAndroidManifestAsync(filePath);
+    },
+    async writeAsync(filePath, { modResults }) {
+      await Manifest.writeAndroidManifestAsync(filePath, modResults);
+    },
+  }),
+
+  // Append a rule to supply gradle.properties data to mods on `mods.android.gradleProperties`
+  gradleProperties: provider<Properties.PropertiesItem[]>({
+    getFilePathAsync({ modRequest: { platformProjectRoot } }) {
+      return path.join(platformProjectRoot, 'gradle.properties');
+    },
+    async readAsync(filePath) {
+      return Properties.parsePropertiesFile(await readFile(filePath, 'utf8'));
+    },
+    async writeAsync(filePath, { modResults }) {
+      await writeFile(filePath, Properties.propertiesListToString(modResults));
+    },
+  }),
+
+  // Append a rule to supply strings.xml data to mods on `mods.android.strings`
+  strings: provider<Resources.ResourceXML>({
+    getFilePathAsync({ modRequest: { projectRoot } }) {
+      return Strings.getProjectStringsXMLPathAsync(projectRoot);
+    },
+    async readAsync(filePath) {
+      return Resources.readResourcesXMLAsync({ path: filePath });
+    },
+    async writeAsync(filePath, { modResults }) {
+      await writeXMLAsync({ path: filePath, xml: modResults });
+    },
+  }),
+
+  projectBuildGradle: provider<Paths.GradleProjectFile>({
+    getFilePathAsync({ modRequest: { projectRoot } }) {
+      return Paths.getProjectBuildGradleFilePath(projectRoot);
+    },
+    async readAsync(filePath) {
+      return Paths.getFileInfo(filePath);
+    },
+    async writeAsync(filePath, { modResults: { contents } }) {
+      await writeFile(filePath, contents);
+    },
+  }),
+
+  settingsGradle: provider<Paths.GradleProjectFile>({
+    getFilePathAsync({ modRequest: { projectRoot } }) {
+      return Paths.getSettingsGradleFilePath(projectRoot);
+    },
+    async readAsync(filePath) {
+      return Paths.getFileInfo(filePath);
+    },
+    async writeAsync(filePath, { modResults: { contents } }) {
+      await writeFile(filePath, contents);
+    },
+  }),
+
+  appBuildGradle: provider<Paths.GradleProjectFile>({
+    getFilePathAsync({ modRequest: { projectRoot } }) {
+      return Paths.getAppBuildGradleFilePath(projectRoot);
+    },
+    async readAsync(filePath) {
+      return Paths.getFileInfo(filePath);
+    },
+    async writeAsync(filePath, { modResults: { contents } }) {
+      await writeFile(filePath, contents);
+    },
+  }),
+
+  mainActivity: provider<Paths.ApplicationProjectFile>({
+    getFilePathAsync({ modRequest: { projectRoot } }) {
+      return Paths.getProjectFilePath(projectRoot, 'MainActivity');
+    },
+    async readAsync(filePath) {
+      return Paths.getFileInfo(filePath);
+    },
+    async writeAsync(filePath, { modResults: { contents } }) {
+      await writeFile(filePath, contents);
+    },
+  }),
+};
+
 export function withAndroidBaseMods(
   config: ExportedConfig,
-  {
-    enabled,
-    ...props
-  }: ForwardedBaseModOptions & { enabled?: Record<AndroidModName, ModFileProvider> } = {}
+  { enabled, ...props }: ForwardedBaseModOptions & { enabled?: Partial<typeof providers> } = {}
 ): ExportedConfig {
   return withGeneratedBaseMods<AndroidModName>(config, {
     ...props,
@@ -29,89 +125,6 @@ export function withAndroidBaseMods(
   });
 }
 
-export function getAndroidModFileProviders(): Record<AndroidModName, ModFileProvider> {
-  return {
-    dangerous: provider<unknown>({
-      async readAsync() {
-        return { filePath: '', modResults: {} };
-      },
-      async writeAsync() {},
-    }),
-
-    // Append a rule to supply gradle.properties data to mods on `mods.android.gradleProperties`
-    manifest: provider<Manifest.AndroidManifest>({
-      async readAsync({ modRequest: { projectRoot } }) {
-        const filePath = await Paths.getAndroidManifestAsync(projectRoot);
-        const modResults = await Manifest.readAndroidManifestAsync(filePath);
-        return { filePath, modResults };
-      },
-      async writeAsync(filePath, { modResults }) {
-        await Manifest.writeAndroidManifestAsync(filePath, modResults);
-      },
-    }),
-
-    // Append a rule to supply gradle.properties data to mods on `mods.android.gradleProperties`
-    gradleProperties: provider<Properties.PropertiesItem[]>({
-      async readAsync({ modRequest: { platformProjectRoot } }) {
-        const filePath = path.join(platformProjectRoot, 'gradle.properties');
-        const modResults = Properties.parsePropertiesFile(await readFile(filePath, 'utf8'));
-        return { filePath, modResults };
-      },
-      async writeAsync(filePath, { modResults }) {
-        await writeFile(filePath, Properties.propertiesListToString(modResults));
-      },
-    }),
-
-    // Append a rule to supply strings.xml data to mods on `mods.android.strings`
-    strings: provider<Resources.ResourceXML>({
-      async readAsync({ modRequest: { projectRoot } }) {
-        const filePath = await Strings.getProjectStringsXMLPathAsync(projectRoot);
-        const modResults = await Resources.readResourcesXMLAsync({ path: filePath });
-        return { filePath, modResults };
-      },
-      async writeAsync(filePath, { modResults }) {
-        await writeXMLAsync({ path: filePath, xml: modResults });
-      },
-    }),
-
-    projectBuildGradle: provider<Paths.GradleProjectFile>({
-      async readAsync({ modRequest: { projectRoot } }) {
-        const modResults = await Paths.getProjectBuildGradleAsync(projectRoot);
-        return { filePath: modResults.path, modResults };
-      },
-      async writeAsync(filePath, { modResults: { contents } }) {
-        await writeFile(filePath, contents);
-      },
-    }),
-
-    settingsGradle: provider<Paths.GradleProjectFile>({
-      async readAsync({ modRequest: { projectRoot } }) {
-        const modResults = await Paths.getSettingsGradleAsync(projectRoot);
-        return { filePath: modResults.path, modResults };
-      },
-      async writeAsync(filePath, { modResults: { contents } }) {
-        await writeFile(filePath, contents);
-      },
-    }),
-
-    appBuildGradle: provider<Paths.GradleProjectFile>({
-      async readAsync({ modRequest: { projectRoot } }) {
-        const modResults = await Paths.getAppBuildGradleAsync(projectRoot);
-        return { filePath: modResults.path, modResults };
-      },
-      async writeAsync(filePath, { modResults: { contents } }) {
-        await writeFile(filePath, contents);
-      },
-    }),
-
-    mainActivity: provider<Paths.ApplicationProjectFile>({
-      async readAsync({ modRequest: { projectRoot } }) {
-        const modResults = await Paths.getMainActivityAsync(projectRoot);
-        return { filePath: modResults.path, modResults };
-      },
-      async writeAsync(filePath, { modResults: { contents } }) {
-        await writeFile(filePath, contents);
-      },
-    }),
-  };
+export function getAndroidModFileProviders() {
+  return providers;
 }

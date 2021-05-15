@@ -8,7 +8,7 @@ import { createAndroidManifestPlugin, withAppBuildGradle } from '../plugins/andr
 import { withDangerousMod } from '../plugins/withDangerousMod';
 import * as WarningAggregator from '../utils/warnings';
 import { AndroidManifest } from './Manifest';
-import { getAppBuildGradle, getMainApplicationAsync } from './Paths';
+import { getAppBuildGradleFilePath, getMainApplicationAsync } from './Paths';
 
 export const withPackageManifest = createAndroidManifestPlugin(
   setPackageInAndroidManifest,
@@ -148,7 +148,7 @@ export function setPackageInAndroidManifest(
 }
 
 export async function getApplicationIdAsync(projectRoot: string): Promise<string | null> {
-  const buildGradlePath = getAppBuildGradle(projectRoot);
+  const buildGradlePath = getAppBuildGradleFilePath(projectRoot);
   if (!(await fs.pathExists(buildGradlePath))) {
     return null;
   }

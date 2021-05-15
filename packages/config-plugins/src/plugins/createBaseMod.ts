@@ -29,20 +29,20 @@ export type CreateBaseModProps<
   methodName: string;
   platform: ModPlatform;
   modName: string;
-  readAsync: (
+  getFilePathAsync: (
     modRequest: ExportedConfigWithProps<ModType>,
     props: Props
-  ) => Promise<{ modResults: ModType; filePath: string }>;
+  ) => Promise<string> | string;
+  readAsync: (
+    filePath: string,
+    modRequest: ExportedConfigWithProps<ModType>,
+    props: Props
+  ) => Promise<ModType>;
   writeAsync: (
     filePath: string,
     config: ExportedConfigWithProps<ModType>,
     props: Props
   ) => Promise<void>;
-  getTemplateAsync?: (
-    filePath: string,
-    config: ExportedConfigWithProps<ModType>,
-    props: Props
-  ) => Promise<ModType> | ModType;
 };
 
 export function createBaseMod<
@@ -52,6 +52,7 @@ export function createBaseMod<
   methodName,
   platform,
   modName,
+  getFilePathAsync,
   readAsync,
   writeAsync,
 }: CreateBaseModProps<ModType, Props>): ConfigPlugin<Props | void> {
@@ -69,7 +70,19 @@ export function createBaseMod<
             modRequest,
           };
 
-          const { modResults, filePath } = await readAsync(results, props);
+          // Defaults to true unless specified otherwise
+          const persist = props.persist !== false;
+
+          let filePath = '';
+
+          try {
+            filePath = await getFilePathAsync(results, props);
+          } catch (error) {
+            // Skip missing file errors if we don't plan on persisting.
+            if (persist) throw error;
+          }
+
+          const modResults = await readAsync(filePath, results, props);
 
           results = await nextMod!({
             ...results,
@@ -79,7 +92,7 @@ export function createBaseMod<
 
           assertModResults(results, modRequest.platform, modRequest.modName);
 
-          if (props.persist !== false) {
+          if (persist) {
             await writeAsync(filePath, results, props);
           }
           return results;
@@ -151,7 +164,7 @@ export function createPlatformBaseMod<
 }
 
 export function provider<ModType, Props extends ForwardedBaseModOptions = ForwardedBaseModOptions>(
-  props: Pick<CreateBaseModProps<ModType, Props>, 'readAsync' | 'getTemplateAsync' | 'writeAsync'>
+  props: Pick<CreateBaseModProps<ModType, Props>, 'readAsync' | 'getFilePathAsync' | 'writeAsync'>
 ) {
   return props;
 }
@@ -166,7 +179,10 @@ export function withGeneratedBaseMods<ModName extends string>(
   }: ForwardedBaseModOptions & {
     platform: ModPlatform;
     providers: Partial<
-      Record<ModName, Pick<CreateBaseModProps<any, any>, 'readAsync' | 'writeAsync'>>
+      Record<
+        ModName,
+        Pick<CreateBaseModProps<any, any>, 'readAsync' | 'getFilePathAsync' | 'writeAsync'>
+      >
     >;
     only?: ModName[];
   }

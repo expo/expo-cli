@@ -59,7 +59,6 @@ export function withBaseMod<T>(
   if (isDebug) {
     // Get a stack trace via the Error API
     const stack = new Error().stack;
-    console.log('STACK:', stack);
     // Format the stack trace to create the debug log
     debugTrace = getDebugPluginStackFromStackTrace(stack);
     const modStack = chalk.bold(`${platform}.${mod}`);

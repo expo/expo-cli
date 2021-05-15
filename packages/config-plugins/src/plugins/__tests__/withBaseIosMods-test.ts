@@ -24,9 +24,15 @@ describe('entitlements', () => {
     // base mods must be added last
     config = withIosBaseMods(config, {
       saveToInternal: true,
+      persist: false,
       enabled: {
         entitlements: {
-          readAsync: getIosModFileProviders().entitlements.readAsync,
+          getFilePathAsync() {
+            return '';
+          },
+          async readAsync() {
+            return {};
+          },
           async writeAsync() {},
         },
       },
@@ -34,7 +40,6 @@ describe('entitlements', () => {
     config = await evalModsAsync(config, { projectRoot: '/', platforms: ['ios'] });
 
     expect(config.ios?.entitlements).toStrictEqual({
-      'aps-environment': 'development',
       haha: 'bet',
     });
     // @ts-ignore: mods are untyped
@@ -64,9 +69,15 @@ describe('infoPlist', () => {
     // base mods must be added last
     config = withIosBaseMods(config, {
       saveToInternal: true,
+      persist: false,
       enabled: {
         infoPlist: {
-          readAsync: getIosModFileProviders().infoPlist.readAsync,
+          getFilePathAsync() {
+            return '';
+          },
+          async readAsync() {
+            return {};
+          },
           async writeAsync() {},
         },
       },

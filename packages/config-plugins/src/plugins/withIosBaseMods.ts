@@ -3,17 +3,12 @@ import plist from '@expo/plist';
 import assert from 'assert';
 import { promises } from 'fs';
 import path from 'path';
-import { XcodeProject } from 'xcode';
+import xcode, { XcodeProject } from 'xcode';
 
 import { ExportedConfig, ModConfig } from '../Plugin.types';
-import { Entitlements, Paths, XcodeUtils } from '../ios';
+import { Entitlements, Paths } from '../ios';
 import { InfoPlist } from '../ios/IosConfig.types';
-import {
-  ForwardedBaseModOptions,
-  ModFileProvider,
-  provider,
-  withGeneratedBaseMods,
-} from './createBaseMod';
+import { ForwardedBaseModOptions, provider, withGeneratedBaseMods } from './createBaseMod';
 
 const { readFile, writeFile } = promises;
 
@@ -21,16 +16,21 @@ type IosModName = keyof Required<ModConfig>['ios'];
 
 const providers = {
   dangerous: provider<unknown>({
+    getFilePathAsync() {
+      return '';
+    },
     async readAsync() {
-      return { filePath: '', modResults: {} };
+      return {};
     },
     async writeAsync() {},
   }),
   // Append a rule to supply AppDelegate data to mods on `mods.ios.appDelegate`
   appDelegate: provider<Paths.AppDelegateProjectFile>({
-    async readAsync({ modRequest: { projectRoot } }) {
-      const modResults = await Paths.getAppDelegate(projectRoot);
-      return { filePath: modResults.path, modResults };
+    getFilePathAsync({ modRequest: { projectRoot } }) {
+      return Paths.getAppDelegateFilePath(projectRoot);
+    },
+    async readAsync(filePath) {
+      return Paths.getFileInfo(filePath);
     },
     async writeAsync(filePath: string, { modResults: { contents } }) {
       await writeFile(filePath, contents);
@@ -38,11 +38,12 @@ const providers = {
   }),
   // Append a rule to supply Expo.plist data to mods on `mods.ios.expoPlist`
   expoPlist: provider<JSONObject>({
-    async readAsync({ modRequest: { platformProjectRoot, projectName } }) {
+    getFilePathAsync({ modRequest: { platformProjectRoot, projectName } }) {
       const supportingDirectory = path.join(platformProjectRoot, projectName!, 'Supporting');
-      const filePath = path.resolve(supportingDirectory, 'Expo.plist');
-      const modResults = plist.parse(await readFile(filePath, 'utf8'));
-      return { filePath, modResults };
+      return path.resolve(supportingDirectory, 'Expo.plist');
+    },
+    async readAsync(filePath) {
+      return plist.parse(await readFile(filePath, 'utf8'));
     },
     async writeAsync(filePath, { modResults }) {
       await writeFile(filePath, plist.build(modResults));
@@ -50,9 +51,13 @@ const providers = {
   }),
   // Append a rule to supply .xcodeproj data to mods on `mods.ios.xcodeproj`
   xcodeproj: provider<XcodeProject>({
-    async readAsync({ modRequest: { projectRoot } }) {
-      const modResults = XcodeUtils.getPbxproj(projectRoot);
-      return { filePath: modResults.filepath, modResults };
+    getFilePathAsync({ modRequest: { projectRoot } }) {
+      return Paths.getPBXProjectPath(projectRoot);
+    },
+    async readAsync(filePath) {
+      const project = xcode.project(filePath);
+      project.parseSync();
+      return project;
     },
     async writeAsync(filePath, { modResults }) {
       await writeFile(filePath, modResults.writeSync());
@@ -60,15 +65,10 @@ const providers = {
   }),
   // Append a rule to supply Info.plist data to mods on `mods.ios.infoPlist`
   infoPlist: provider<InfoPlist, ForwardedBaseModOptions & { noPersist?: boolean }>({
-    async readAsync(config, props) {
-      let filePath = '';
-      try {
-        filePath = Paths.getInfoPlistPath(config.modRequest.projectRoot);
-      } catch (error) {
-        // Skip missing file errors if we don't plan on persisting.
-        if (props.persist !== false) throw error;
-      }
-
+    getFilePathAsync(config) {
+      return Paths.getInfoPlistPath(config.modRequest.projectRoot);
+    },
+    async readAsync(filePath, config) {
       // Apply all of the Info.plist values to the expo.ios.infoPlist object
       // TODO: Remove this in favor of just overwriting the Info.plist with the Expo object. This will enable people to actually remove values.
       if (!config.ios) {
@@ -78,26 +78,16 @@ const providers = {
         config.ios.infoPlist = {};
       }
 
-      let modResults: InfoPlist = {};
-      try {
-        const contents = await readFile(filePath, 'utf8');
-        assert(contents, 'Info.plist is empty');
-        modResults = plist.parse(contents);
-      } catch (error) {
-        if (this.getTemplateAsync) {
-          // If the file is invalid or doesn't exist, fallback on a default object (matching our template).
-          modResults = await this.getTemplateAsync?.(filePath, config, props);
-        } else {
-          throw error;
-        }
-      }
+      const contents = await readFile(filePath, 'utf8');
+      assert(contents, 'Info.plist is empty');
+      const modResults = plist.parse(contents) as InfoPlist;
 
       config.ios.infoPlist = {
         ...(modResults || {}),
         ...config.ios.infoPlist,
       };
 
-      return { filePath, modResults };
+      return modResults;
     },
     async writeAsync(filePath, config) {
       // Update the contents of the static infoPlist object
@@ -111,27 +101,13 @@ const providers = {
   }),
   // Append a rule to supply .entitlements data to mods on `mods.ios.entitlements`
   entitlements: provider<JSONObject, ForwardedBaseModOptions & { noPersist?: boolean }>({
-    async readAsync(config, props) {
-      let filePath = '';
-      try {
-        filePath = Entitlements.getEntitlementsPath(config.modRequest.projectRoot);
-      } catch (error) {
-        // Skip missing file errors if we don't plan on persisting.
-        if (props.persist !== false) throw error;
-      }
-      let modResults: JSONObject = {};
-      try {
-        const contents = await readFile(filePath, 'utf8');
-        assert(contents, 'Entitlements plist is empty');
-        modResults = plist.parse(contents);
-      } catch (error) {
-        if (this.getTemplateAsync) {
-          // If the file is invalid or doesn't exist, fallback on a default object (matching our template).
-          modResults = await this.getTemplateAsync?.(filePath, config, props);
-        } else {
-          throw error;
-        }
-      }
+    getFilePathAsync(config) {
+      return Entitlements.getEntitlementsPath(config.modRequest.projectRoot);
+    },
+    async readAsync(filePath, config) {
+      const contents = await readFile(filePath, 'utf8');
+      assert(contents, 'Entitlements plist is empty');
+      const modResults = plist.parse(contents);
 
       // Apply all of the .entitlements values to the expo.ios.entitlements object
       // TODO: Remove this in favor of just overwriting the .entitlements with the Expo object. This will enable people to actually remove values.
@@ -147,13 +123,7 @@ const providers = {
         ...config.ios.entitlements,
       };
 
-      return { filePath, modResults };
-    },
-    getTemplateAsync() {
-      return {
-        // always enable notifications by default.
-        'aps-environment': 'development',
-      };
+      return modResults;
     },
     async writeAsync(filePath, config) {
       // Update the contents of the static infoPlist object
