@@ -8,13 +8,7 @@ import {
 import { BaseModOptions, withBaseMod } from './withMod';
 
 export type ForwardedBaseModOptions = Partial<
-  Pick<BaseModOptions, 'saveToInternal' | 'skipEmptyMod'> & {
-    /**
-     * Should the file be persisted. i.e. writeAsync.
-     * @default true
-     */
-    persist?: boolean;
-  }
+  Pick<BaseModOptions, 'saveToInternal' | 'skipEmptyMod'>
 >;
 
 export type ModFileProvider<Props = any> = Pick<
@@ -70,17 +64,7 @@ export function createBaseMod<
             modRequest,
           };
 
-          // Defaults to true unless specified otherwise
-          const persist = props.persist !== false;
-
-          let filePath = '';
-
-          try {
-            filePath = await getFilePathAsync(results, props);
-          } catch (error) {
-            // Skip missing file errors if we don't plan on persisting.
-            if (persist) throw error;
-          }
+          const filePath = await getFilePathAsync(results, props);
 
           const modResults = await readAsync(filePath, results, props);
 
@@ -92,9 +76,7 @@ export function createBaseMod<
 
           assertModResults(results, modRequest.platform, modRequest.modName);
 
-          if (persist) {
-            await writeAsync(filePath, results, props);
-          }
+          await writeAsync(filePath, results, props);
           return results;
         } catch (error) {
           error.message = `[${platform}.${modName}]: ${methodName}: ${error.message}`;
@@ -174,7 +156,6 @@ export function withGeneratedBaseMods<ModName extends string>(
   {
     platform,
     providers,
-    only,
     ...props
   }: ForwardedBaseModOptions & {
     platform: ModPlatform;
@@ -184,14 +165,9 @@ export function withGeneratedBaseMods<ModName extends string>(
         Pick<CreateBaseModProps<any, any>, 'readAsync' | 'getFilePathAsync' | 'writeAsync'>
       >
     >;
-    only?: ModName[];
   }
 ): ExportedConfig {
   return Object.entries(providers).reduce((config, [modName, value]) => {
-    // Allow skipping mods
-    if (only && !only.includes(modName as ModName)) {
-      return config;
-    }
     const baseMod = createPlatformBaseMod({ platform, modName, ...(value as any) });
     return baseMod(config, props);
   }, config);

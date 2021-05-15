@@ -24,7 +24,6 @@ describe('entitlements', () => {
     // base mods must be added last
     config = withIosBaseMods(config, {
       saveToInternal: true,
-      persist: false,
       enabled: {
         entitlements: {
           getFilePathAsync() {
@@ -69,7 +68,6 @@ describe('infoPlist', () => {
     // base mods must be added last
     config = withIosBaseMods(config, {
       saveToInternal: true,
-      persist: false,
       enabled: {
         infoPlist: {
           getFilePathAsync() {

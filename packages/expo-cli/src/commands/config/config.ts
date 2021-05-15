@@ -1,7 +1,7 @@
 import {
   getConfig,
-  getNoPersistPrebuildConfig,
   getPrebuildConfig,
+  getSafeIosPrebuildConfig,
   ProjectConfig,
 } from '@expo/config';
 import { evalModsAsync } from '@expo/config-plugins/build/plugins/mod-compiler';
@@ -24,8 +24,8 @@ async function actionAsync(projectRoot: string, options: Options) {
     config = profileMethod(getPrebuildConfig)(projectRoot, {
       platforms: ['ios', 'android'],
     });
-  } else if (options.type === 'noPersist') {
-    config = profileMethod(getNoPersistPrebuildConfig)(projectRoot);
+  } else if (options.type === 'evalIos') {
+    config = profileMethod(getSafeIosPrebuildConfig)(projectRoot);
 
     await evalModsAsync(config.exp, {
       projectRoot,
@@ -56,7 +56,7 @@ export default function (program: Command) {
     .command('config [path]')
     .description('Show the project config')
     .helpGroup('info')
-    .option('-t, --type <type>', 'Type of config to show. Options: public, prebuild, noPersist')
+    .option('-t, --type <type>', 'Type of config to show. Options: public, prebuild, evalIos')
     .option('--full', 'Include all project config data')
     .asyncActionProjectDir(profileMethod(actionAsync));
 }
