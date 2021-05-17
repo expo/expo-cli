@@ -35,6 +35,12 @@ export interface ModProps<T = any> {
   readonly platform: ModPlatform;
 
   /**
+   * If the mod is being evaluated in introspection mode.
+   * No file system modifications should be made when introspect is `true`.
+   */
+  readonly introspect: boolean;
+
+  /**
    * [iOS]: The path component used for querying project files.
    *
    * @example projectRoot/ios/[projectName]/

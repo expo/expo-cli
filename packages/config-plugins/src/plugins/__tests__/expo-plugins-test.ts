@@ -9,6 +9,7 @@ import { withBranch } from '../../ios/Branch';
 import { PodfileBasic } from '../../ios/__tests__/fixtures/Podfile';
 import { getDirFromFS } from '../../ios/__tests__/utils/getDirFromFS';
 import { readXMLAsync } from '../../utils/XML';
+import { withGradleProperties } from '../android-plugins';
 import {
   withExpoAndroidPlugins,
   withExpoIOSPlugins,
@@ -261,6 +262,26 @@ describe('built-in plugins', () => {
     expect(config.ios?.infoPlist?.ITSAppUsesNonExemptEncryption).toBe(false);
   });
 
+  it('sends a valid modRequest', async () => {
+    let config = getPrebuildConfig();
+
+    let modRequest;
+    config = withGradleProperties(config, config => {
+      modRequest = config.modRequest;
+      return config;
+    });
+    // Apply mod
+    config = await compileModsAsync(config, { introspect: true, projectRoot: '/app' });
+
+    expect(modRequest).toStrictEqual({
+      introspect: true,
+      modName: 'gradleProperties',
+      platform: 'android',
+      platformProjectRoot: '/app/android',
+      projectName: undefined,
+      projectRoot: '/app',
+    });
+  });
   it('compiles mods', async () => {
     let config = getPrebuildConfig();
     // Apply mod

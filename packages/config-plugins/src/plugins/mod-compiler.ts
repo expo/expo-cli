@@ -72,9 +72,9 @@ export function withIntrospectionBaseMods(
  */
 export async function compileModsAsync(
   config: ExportedConfig,
-  { introspect, ...props }: { projectRoot: string; platforms?: ModPlatform[]; introspect?: boolean }
+  props: { projectRoot: string; platforms?: ModPlatform[]; introspect?: boolean }
 ): Promise<ExportedConfig> {
-  if (introspect === true) {
+  if (props.introspect === true) {
     config = withIntrospectionBaseMods(config);
   } else {
     config = withDefaultBaseMods(config);
@@ -112,7 +112,11 @@ const orders: Record<string, string[]> = {
  */
 export async function evalModsAsync(
   config: ExportedConfig,
-  { projectRoot, platforms }: { projectRoot: string; platforms?: ModPlatform[] }
+  {
+    projectRoot,
+    introspect,
+    platforms,
+  }: { projectRoot: string; introspect?: boolean; platforms?: ModPlatform[] }
 ): Promise<ExportedConfig> {
   for (const [platformName, platform] of Object.entries(config.mods ?? ({} as ModConfig))) {
     if (platforms && !platforms.includes(platformName as any)) {
@@ -135,6 +139,7 @@ export async function evalModsAsync(
           platformProjectRoot,
           platform: platformName as ModPlatform,
           modName,
+          introspect: !!introspect,
         };
 
         const results = await (mod as Mod)({
