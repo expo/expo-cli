@@ -41,7 +41,7 @@ describe(withGradleProperties, () => {
       return config;
     });
     config = withAndroidBaseMods(config, {
-      enabled: {
+      providers: {
         gradleProperties: getAndroidModFileProviders().gradleProperties,
       },
     });
