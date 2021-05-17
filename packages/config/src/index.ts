@@ -5,4 +5,4 @@ export * from './Config.types';
 export * from './Project';
 export * from './Errors';
 export { getPrebuildConfig } from './getPrebuildConfig';
-export { getSafeIosPrebuildConfig } from './getSafeIosPrebuildConfig';
+export { getIntrospectPrebuildConfig } from './getIntrospectPrebuildConfig';

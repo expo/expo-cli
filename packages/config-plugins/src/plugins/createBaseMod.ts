@@ -11,10 +11,22 @@ export type ForwardedBaseModOptions = Partial<
   Pick<BaseModOptions, 'saveToInternal' | 'skipEmptyMod'>
 >;
 
-export type ModFileProvider<Props = any> = Pick<
-  CreateBaseModProps<Props>,
-  'readAsync' | 'writeAsync'
->;
+export type BaseModProviderMethods<
+  ModType,
+  Props extends ForwardedBaseModOptions = ForwardedBaseModOptions
+> = {
+  getFilePath: (config: ExportedConfigWithProps<ModType>, props: Props) => Promise<string> | string;
+  read: (
+    filePath: string,
+    config: ExportedConfigWithProps<ModType>,
+    props: Props
+  ) => Promise<ModType> | ModType;
+  write: (
+    filePath: string,
+    config: ExportedConfigWithProps<ModType>,
+    props: Props
+  ) => Promise<void> | void;
+};
 
 export type CreateBaseModProps<
   ModType,
@@ -23,21 +35,7 @@ export type CreateBaseModProps<
   methodName: string;
   platform: ModPlatform;
   modName: string;
-  getFilePathAsync: (
-    modRequest: ExportedConfigWithProps<ModType>,
-    props: Props
-  ) => Promise<string> | string;
-  readAsync: (
-    filePath: string,
-    modRequest: ExportedConfigWithProps<ModType>,
-    props: Props
-  ) => Promise<ModType>;
-  writeAsync: (
-    filePath: string,
-    config: ExportedConfigWithProps<ModType>,
-    props: Props
-  ) => Promise<void>;
-};
+} & BaseModProviderMethods<ModType, Props>;
 
 export function createBaseMod<
   ModType,
@@ -46,9 +44,9 @@ export function createBaseMod<
   methodName,
   platform,
   modName,
-  getFilePathAsync,
-  readAsync,
-  writeAsync,
+  getFilePath,
+  read,
+  write,
 }: CreateBaseModProps<ModType, Props>): ConfigPlugin<Props | void> {
   const withUnknown: ConfigPlugin<Props | void> = (config, _props) => {
     const props = _props || ({} as Props);
@@ -64,9 +62,9 @@ export function createBaseMod<
             modRequest,
           };
 
-          const filePath = await getFilePathAsync(results, props);
+          const filePath = await getFilePath(results, props);
 
-          const modResults = await readAsync(filePath, results, props);
+          const modResults = await read(filePath, results, props);
 
           results = await nextMod!({
             ...results,
@@ -76,7 +74,7 @@ export function createBaseMod<
 
           assertModResults(results, modRequest.platform, modRequest.modName);
 
-          await writeAsync(filePath, results, props);
+          await write(filePath, results, props);
           return results;
         } catch (error) {
           error.message = `[${platform}.${modName}]: ${methodName}: ${error.message}`;
@@ -111,7 +109,10 @@ export function assertModResults(results: any, platformName: string, modName: st
   return ensuredResults;
 }
 
-export function clearMods(config: ExportedConfig, platform: ModPlatform, modNames: string[]) {
+export function clearMods(
+  config: ExportedConfig,
+  { platform, preserve }: { platform: ModPlatform; preserve?: string[] }
+) {
   const mods = (config as any).mods as ModConfig;
 
   for (const platformKey of Object.keys(mods)) {
@@ -121,7 +122,7 @@ export function clearMods(config: ExportedConfig, platform: ModPlatform, modName
   }
 
   for (const key of Object.keys(mods[platform] || {})) {
-    if (!modNames.includes(key)) {
+    if (!preserve?.includes(key)) {
       // @ts-ignore
       delete mods[platform][key];
     }
@@ -146,7 +147,7 @@ export function createPlatformBaseMod<
 }
 
 export function provider<ModType, Props extends ForwardedBaseModOptions = ForwardedBaseModOptions>(
-  props: Pick<CreateBaseModProps<ModType, Props>, 'readAsync' | 'getFilePathAsync' | 'writeAsync'>
+  props: BaseModProviderMethods<ModType, Props>
 ) {
   return props;
 }
@@ -159,12 +160,7 @@ export function withGeneratedBaseMods<ModName extends string>(
     ...props
   }: ForwardedBaseModOptions & {
     platform: ModPlatform;
-    providers: Partial<
-      Record<
-        ModName,
-        Pick<CreateBaseModProps<any, any>, 'readAsync' | 'getFilePathAsync' | 'writeAsync'>
-      >
-    >;
+    providers: Partial<Record<ModName, BaseModProviderMethods<any, any>>>;
   }
 ): ExportedConfig {
   return Object.entries(providers).reduce((config, [modName, value]) => {

@@ -4,8 +4,16 @@
 import * as AndroidConfig from './android';
 import * as IOSConfig from './ios';
 import { clearMods } from './plugins/createBaseMod';
-import { getAndroidModFileProviders, withAndroidBaseMods } from './plugins/withAndroidBaseMods';
-import { getIosModFileProviders, withIosBaseMods } from './plugins/withIosBaseMods';
+import {
+  getAndroidIntrospectModFileProviders,
+  getAndroidModFileProviders,
+  withAndroidBaseMods,
+} from './plugins/withAndroidBaseMods';
+import {
+  getIosIntrospectModFileProviders,
+  getIosModFileProviders,
+  withIosBaseMods,
+} from './plugins/withIosBaseMods';
 import * as XML from './utils/XML';
 import * as History from './utils/history';
 import * as WarningAggregator from './utils/warnings';
@@ -62,7 +70,9 @@ export { PluginError } from './utils/errors';
 export const BaseMods = {
   withAndroidBaseMods,
   getAndroidModFileProviders,
+  getAndroidIntrospectModFileProviders,
   withIosBaseMods,
   getIosModFileProviders,
+  getIosIntrospectModFileProviders,
   clearMods,
 };

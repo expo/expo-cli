@@ -3,7 +3,7 @@ import { vol } from 'memfs';
 
 import { withEntitlementsPlist, withInfoPlist } from '../ios-plugins';
 import { evalModsAsync } from '../mod-compiler';
-import { getIosModFileProviders, withIosBaseMods } from '../withIosBaseMods';
+import { withIosBaseMods } from '../withIosBaseMods';
 
 jest.mock('fs');
 
@@ -26,13 +26,13 @@ describe('entitlements', () => {
       saveToInternal: true,
       enabled: {
         entitlements: {
-          getFilePathAsync() {
+          getFilePath() {
             return '';
           },
-          async readAsync() {
+          async read() {
             return {};
           },
-          async writeAsync() {},
+          async write() {},
         },
       },
     });
@@ -70,13 +70,13 @@ describe('infoPlist', () => {
       saveToInternal: true,
       enabled: {
         infoPlist: {
-          getFilePathAsync() {
+          getFilePath() {
             return '';
           },
-          async readAsync() {
+          async read() {
             return {};
           },
-          async writeAsync() {},
+          async write() {},
         },
       },
     });

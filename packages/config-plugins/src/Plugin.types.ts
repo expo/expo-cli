@@ -49,7 +49,7 @@ export interface ExportedConfig extends ExpoConfig {
   mods?: ModConfig | null;
 }
 
-export interface ExportedConfigWithProps<Data = any> extends ExpoConfig {
+export interface ExportedConfigWithProps<Data = any> extends ExportedConfig {
   /**
    * The Object representation of a complex file type.
    */

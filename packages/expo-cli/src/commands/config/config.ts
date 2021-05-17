@@ -1,7 +1,7 @@
 import {
   getConfig,
+  getIntrospectPrebuildConfig,
   getPrebuildConfig,
-  getSafeIosPrebuildConfig,
   ProjectConfig,
 } from '@expo/config';
 import { evalModsAsync } from '@expo/config-plugins/build/plugins/mod-compiler';
@@ -24,13 +24,17 @@ async function actionAsync(projectRoot: string, options: Options) {
     config = profileMethod(getPrebuildConfig)(projectRoot, {
       platforms: ['ios', 'android'],
     });
-  } else if (options.type === 'evalIos') {
-    config = profileMethod(getSafeIosPrebuildConfig)(projectRoot);
+  } else if (options.type === 'introspect') {
+    config = profileMethod(getIntrospectPrebuildConfig)(projectRoot);
 
     await evalModsAsync(config.exp, {
       projectRoot,
-      platforms: ['ios'],
+      platforms: ['ios', 'android'],
     });
+    // @ts-ignore
+    delete config.modRequest;
+    // @ts-ignore
+    delete config.modResults;
   } else if (options.type === 'public') {
     config = profileMethod(getConfig)(projectRoot, {
       skipSDKVersionRequirement: true,
@@ -56,7 +60,7 @@ export default function (program: Command) {
     .command('config [path]')
     .description('Show the project config')
     .helpGroup('info')
-    .option('-t, --type <type>', 'Type of config to show. Options: public, prebuild, evalIos')
+    .option('-t, --type <type>', 'Type of config to show. Options: public, prebuild, introspect')
     .option('--full', 'Include all project config data')
     .asyncActionProjectDir(profileMethod(actionAsync));
 }
