@@ -8,6 +8,7 @@ import resolveFrom from 'resolve-from';
 
 import LogReporter from './LogReporter';
 import clientLogsMiddleware from './middleware/clientLogsMiddleware';
+import openInspectorMiddleware from './middleware/openInspectorMiddleware';
 
 export type MetroDevServerOptions = ExpoMetroConfig.LoadOptions & {
   logger: Log;
@@ -52,6 +53,7 @@ export async function runMetroDevServerAsync(
   });
   middleware.use(bodyParser.json());
   middleware.use('/logs', clientLogsMiddleware(options.logger));
+  middleware.use('/inspector', openInspectorMiddleware());
 
   const customEnhanceMiddleware = metroConfig.server.enhanceMiddleware;
   // @ts-ignore can't mutate readonly config
