@@ -1,10 +1,5 @@
-import {
-  getConfig,
-  getIntrospectPrebuildConfig,
-  getPrebuildConfig,
-  ProjectConfig,
-} from '@expo/config';
-import { evalModsAsync } from '@expo/config-plugins/build/plugins/mod-compiler';
+import { getConfig, getPrebuildConfig, ProjectConfig } from '@expo/config';
+import { compileModsAsync } from '@expo/config-plugins/build/plugins/mod-compiler';
 import { Command } from 'commander';
 
 import CommandError from '../../CommandError';
@@ -25,10 +20,13 @@ async function actionAsync(projectRoot: string, options: Options) {
       platforms: ['ios', 'android'],
     });
   } else if (options.type === 'introspect') {
-    config = profileMethod(getIntrospectPrebuildConfig)(projectRoot);
+    config = profileMethod(getPrebuildConfig)(projectRoot, {
+      platforms: ['ios', 'android'],
+    });
 
-    await evalModsAsync(config.exp, {
+    await compileModsAsync(config.exp, {
       projectRoot,
+      introspect: true,
       platforms: ['ios', 'android'],
     });
     // @ts-ignore

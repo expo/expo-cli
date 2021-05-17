@@ -3,8 +3,8 @@ import path from 'path';
 import { ExportedConfig, Mod, ModConfig, ModPlatform } from '../Plugin.types';
 import { getHackyProjectName } from '../ios/utils/Xcodeproj';
 import { assertModResults, ForwardedBaseModOptions } from './createBaseMod';
-import { withAndroidBaseMods } from './withAndroidBaseMods';
-import { withIosBaseMods } from './withIosBaseMods';
+import { getAndroidIntrospectModFileProviders, withAndroidBaseMods } from './withAndroidBaseMods';
+import { getIosIntrospectModFileProviders, withIosBaseMods } from './withIosBaseMods';
 
 export function withDefaultBaseMods(
   config: ExportedConfig,
@@ -16,15 +16,61 @@ export function withDefaultBaseMods(
 }
 
 /**
+ * Get a prebuild config that safely evaluates mods without persisting any changes to the file system.
+ * Currently this only supports infoPlist, entitlements, androidManifest, strings, gradleProperties, and expoPlist mods.
+ * This plugin should be evaluated directly:
+ */
+export function withIntrospectionBaseMods(
+  config: ExportedConfig,
+  props: ForwardedBaseModOptions = {}
+): ExportedConfig {
+  const iosProviders = getIosIntrospectModFileProviders();
+  const androidProviders = getAndroidIntrospectModFileProviders();
+  config = withIosBaseMods(config, { providers: iosProviders, saveToInternal: true, ...props });
+  config = withAndroidBaseMods(config, {
+    providers: androidProviders,
+    saveToInternal: true,
+    ...props,
+  });
+
+  const preserve = {
+    ios: Object.keys(iosProviders),
+    android: Object.keys(androidProviders),
+  };
+
+  if (config.mods) {
+    // Remove all mods that don't have an introspection base mod, for instance `dangerous` mods.
+    for (const platform of Object.keys(config.mods) as ModPlatform[]) {
+      if (!(platform in preserve)) {
+        delete config.mods[platform];
+      }
+      const platformPreserve = preserve[platform];
+      for (const key of Object.keys(config.mods[platform] || {})) {
+        if (!platformPreserve?.includes(key)) {
+          // @ts-ignore
+          delete config.mods[platform][key];
+        }
+      }
+    }
+  }
+
+  return config;
+}
+
+/**
  *
  * @param projectRoot
  * @param config
  */
 export async function compileModsAsync(
   config: ExportedConfig,
-  props: { projectRoot: string; platforms?: ModPlatform[] }
+  { introspect, ...props }: { projectRoot: string; platforms?: ModPlatform[]; introspect?: boolean }
 ): Promise<ExportedConfig> {
-  config = withDefaultBaseMods(config);
+  if (introspect === true) {
+    config = withIntrospectionBaseMods(config);
+  } else {
+    config = withDefaultBaseMods(config);
+  }
   return await evalModsAsync(config, props);
 }
 
