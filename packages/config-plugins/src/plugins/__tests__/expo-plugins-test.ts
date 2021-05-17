@@ -9,6 +9,7 @@ import { withBranch } from '../../ios/Branch';
 import { PodfileBasic } from '../../ios/__tests__/fixtures/Podfile';
 import { getDirFromFS } from '../../ios/__tests__/utils/getDirFromFS';
 import { readXMLAsync } from '../../utils/XML';
+import { withGradleProperties } from '../android-plugins';
 import {
   withExpoAndroidPlugins,
   withExpoIOSPlugins,
@@ -188,9 +189,9 @@ describe(evalModsAsync, () => {
 describe('built-in plugins', () => {
   const projectRoot = '/app';
   const iconPath = path.resolve(__dirname, '../../ios/__tests__/fixtures/icons/icon.png');
+  const icon = fsReal.readFileSync(iconPath) as any;
 
   beforeEach(async () => {
-    const icon = fsReal.readFileSync(iconPath) as any;
     // Trick XDL Info.plist reading
     Object.defineProperty(process, 'platform', {
       value: 'not-darwin',
@@ -374,6 +375,7 @@ describe('built-in plugins', () => {
 
   it('introspects mods', async () => {
     let config = getPrebuildConfig();
+
     // Apply mod
     config = await compileModsAsync(config, { introspect: true, projectRoot: '/app' });
 
@@ -393,11 +395,30 @@ describe('built-in plugins', () => {
 
     // Mods should all be functions
     expect(Object.values(config.mods.ios).every(value => typeof value === 'function')).toBe(true);
+    expect(Object.values(config.mods.android).every(value => typeof value === 'function')).toBe(
+      true
+    );
+    // Ensure these mods are removed
+    expect(config.mods.android.dangerous).toBeUndefined();
+    expect(config.mods.android.mainActivity).toBeUndefined();
+    expect(config.mods.android.appBuildGradle).toBeUndefined();
+    expect(config.mods.android.projectBuildGradle).toBeUndefined();
+    expect(config.mods.android.settingsGradle).toBeUndefined();
+    expect(config.mods.ios.dangerous).toBeUndefined();
+    expect(config.mods.ios.xcodeproj).toBeUndefined();
 
     delete config.mods;
 
     // Shape
     expect(config).toMatchSnapshot();
+
+    expect(config._internal.modResults).toBeDefined();
+    expect(config._internal.modResults.ios.infoPlist).toBeDefined();
+    expect(config._internal.modResults.ios.expoPlist).toBeDefined();
+    expect(config._internal.modResults.ios.entitlements).toBeDefined();
+    expect(config._internal.modResults.android.manifest).toBeDefined();
+    expect(Array.isArray(config._internal.modResults.android.gradleProperties)).toBe(true);
+    expect(config._internal.modResults.android.strings).toBeDefined();
 
     // Test the written files...
     const after = getDirFromFS(vol.toJSON(), projectRoot);
@@ -445,18 +466,87 @@ describe('built-in plugins', () => {
     );
 
     for (const [name, contents] of Object.entries(rnFixture)) {
-      // if (name.includes('pbxproj')) continue;
+      // The pbxproj seems to reformat in jest
+      if (name.includes('pbxproj')) continue;
       expect(after[name]).toMatch(contents);
     }
-    // expect(after['android/app/src/main/res/values/styles.xml']).toMatch(
-    //   rnFixture['android/app/src/main/res/values/styles.xml']
-    // );
-
     // Ensure the Xcode project file can be read and parsed.
     const project = xcode.project(
       path.join(projectRoot, 'ios/ReactNativeProject.xcodeproj/project.pbxproj')
     );
     project.parseSync();
+  });
+
+  // Tests that introspection works
+  it('introspects mods in a managed project', async () => {
+    vol.reset();
+    vol.fromJSON(
+      {
+        'config/GoogleService-Info.plist': 'noop',
+        'config/google-services.json': '{}',
+        'icons/foreground.png': icon,
+        'icons/background.png': icon,
+        'icons/notification-icon.png': icon,
+        'icons/ios-icon.png': icon,
+        'locales/en-US.json': JSON.stringify({ foo: 'uhh bar', fallback: 'fallback' }, null, 2),
+      },
+      projectRoot
+    );
+
+    let config = getPrebuildConfig();
+
+    // Apply mod
+    config = await compileModsAsync(config, { introspect: true, projectRoot: '/app' });
+
+    // App config should have been modified
+    expect(config.name).toBe('my cool app');
+    expect(config.ios.infoPlist).toBeDefined();
+    expect(config.ios.entitlements).toBeDefined();
+
+    // Google Sign In
+    expect(
+      config.ios?.infoPlist?.CFBundleURLTypes?.find(({ CFBundleURLSchemes }) =>
+        CFBundleURLSchemes.includes('GOOGLE_SIGN_IN_CLIENT_ID')
+      )
+    ).toBeDefined();
+    // Branch
+    expect(config.ios?.infoPlist?.branch_key?.live).toBe('MY_BRANCH_KEY');
+
+    // Mods should all be functions
+    expect(Object.values(config.mods.ios).every(value => typeof value === 'function')).toBe(true);
+    expect(Object.values(config.mods.android).every(value => typeof value === 'function')).toBe(
+      true
+    );
+    // Ensure these mods are removed
+    expect(config.mods.android.dangerous).toBeUndefined();
+    expect(config.mods.android.mainActivity).toBeUndefined();
+    expect(config.mods.android.appBuildGradle).toBeUndefined();
+    expect(config.mods.android.projectBuildGradle).toBeUndefined();
+    expect(config.mods.android.settingsGradle).toBeUndefined();
+    expect(config.mods.ios.dangerous).toBeUndefined();
+    expect(config.mods.ios.xcodeproj).toBeUndefined();
+
+    delete config.mods;
+
+    // Shape
+    expect(config).toMatchSnapshot();
+
+    expect(config._internal.modResults).toBeDefined();
+    expect(config._internal.modResults.ios.infoPlist).toBeDefined();
+    expect(config._internal.modResults.ios.expoPlist).toBeDefined();
+    expect(config._internal.modResults.ios.entitlements).toBeDefined();
+    expect(config._internal.modResults.android.manifest).toBeDefined();
+    expect(Array.isArray(config._internal.modResults.android.gradleProperties)).toBe(true);
+    expect(config._internal.modResults.android.strings).toBeDefined();
+
+    // Test the written files...
+    const after = getDirFromFS(vol.toJSON(), projectRoot);
+
+    expect(Object.keys(after)).toStrictEqual([
+      'config/GoogleService-Info.plist',
+      'config/google-services.json',
+      'locales/en-US.json',
+    ]);
   });
 });
 
@@ -468,6 +558,7 @@ async function isValidXMLAsync(filePath: string) {
     return false;
   }
 }
+
 async function isValidJSONAsync(filePath: string) {
   try {
     const res = await JsonFile.readAsync(filePath);

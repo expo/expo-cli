@@ -140,9 +140,9 @@ export function getAndroidIntrospectModFileProviders(): Omit<
   ) => {
     const realProvider = defaultProviders[modName];
     return provider<any>({
-      getFilePath(...props) {
+      async getFilePath(...props) {
         try {
-          return realProvider.getFilePath(...props);
+          return await realProvider.getFilePath(...props);
         } catch {
           // fallback to an empty string in introspection mode.
           return '';
@@ -150,7 +150,7 @@ export function getAndroidIntrospectModFileProviders(): Omit<
       },
       async read(...props) {
         try {
-          return realProvider.read(...props);
+          return await realProvider.read(...props);
         } catch {
           // fallback if a file is missing in introspection mode.
           if (fallbackContents instanceof Function) {

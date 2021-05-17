@@ -26,10 +26,18 @@ export function withIntrospectionBaseMods(
 ): ExportedConfig {
   const iosProviders = getIosIntrospectModFileProviders();
   const androidProviders = getAndroidIntrospectModFileProviders();
-  config = withIosBaseMods(config, { providers: iosProviders, saveToInternal: true, ...props });
+  config = withIosBaseMods(config, {
+    providers: iosProviders,
+    saveToInternal: true,
+    // This writing optimization can be skipped since we never write in introspection mode.
+    // Including empty mods will ensure that all mods get introspected.
+    skipEmptyMod: false,
+    ...props,
+  });
   config = withAndroidBaseMods(config, {
     providers: androidProviders,
     saveToInternal: true,
+    skipEmptyMod: false,
     ...props,
   });
 

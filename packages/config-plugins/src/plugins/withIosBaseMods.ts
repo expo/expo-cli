@@ -164,9 +164,9 @@ export function getIosIntrospectModFileProviders(): Omit<
   ) => {
     const realProvider = defaultProviders[modName];
     return provider<any>({
-      getFilePath(...props) {
+      async getFilePath(...props) {
         try {
-          return realProvider.getFilePath(...props);
+          return await realProvider.getFilePath(...props);
         } catch {
           // fallback to an empty string in introspection mode.
           return '';
@@ -174,7 +174,7 @@ export function getIosIntrospectModFileProviders(): Omit<
       },
       async read(...props) {
         try {
-          return realProvider.read(...props);
+          return await realProvider.read(...props);
         } catch {
           // fallback if a file is missing in introspection mode.
           return fallbackContents;
@@ -203,17 +203,17 @@ export function getIosIntrospectModFileProviders(): Omit<
     }),
 
     infoPlist: {
-      getFilePath(...props) {
+      async getFilePath(...props) {
         try {
-          return defaultProviders.infoPlist.getFilePath(...props);
+          return await defaultProviders.infoPlist.getFilePath(...props);
         } catch {
           return '';
         }
       },
 
-      read(filePath, config, props) {
+      async read(filePath, config, props) {
         try {
-          return defaultProviders.infoPlist.read(filePath, config, props);
+          return await defaultProviders.infoPlist.read(filePath, config, props);
         } catch {
           // Fallback to using the infoPlist object from the Expo config.
           return (
@@ -252,17 +252,17 @@ export function getIosIntrospectModFileProviders(): Omit<
     },
 
     entitlements: {
-      getFilePath(...props) {
+      async getFilePath(...props) {
         try {
-          return defaultProviders.entitlements.getFilePath(...props);
+          return await defaultProviders.entitlements.getFilePath(...props);
         } catch {
           return '';
         }
       },
 
-      read(filePath, config, props) {
+      async read(filePath, config, props) {
         try {
-          return defaultProviders.entitlements.read(filePath, config, props);
+          return await defaultProviders.entitlements.read(filePath, config, props);
         } catch {
           // Fallback to using the entitlements object from the Expo config.
           return config.ios?.entitlements ?? {};
