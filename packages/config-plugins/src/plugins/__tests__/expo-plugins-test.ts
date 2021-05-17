@@ -9,7 +9,6 @@ import { withBranch } from '../../ios/Branch';
 import { PodfileBasic } from '../../ios/__tests__/fixtures/Podfile';
 import { getDirFromFS } from '../../ios/__tests__/utils/getDirFromFS';
 import { readXMLAsync } from '../../utils/XML';
-import { withGradleProperties } from '../android-plugins';
 import {
   withExpoAndroidPlugins,
   withExpoIOSPlugins,
