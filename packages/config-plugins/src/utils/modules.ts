@@ -21,6 +21,14 @@ export async function directoryExistsAsync(file: string): Promise<boolean> {
   return (await statAsync(file))?.isDirectory() ?? false;
 }
 
+export async function pathExistsSync(file: string): Promise<boolean> {
+  try {
+    return !!fs.statSync(file);
+  } catch (e) {
+    return false;
+  }
+}
+
 export function fileExists(file: string): boolean {
   try {
     return fs.statSync(file).isFile();

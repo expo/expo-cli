@@ -1,6 +1,6 @@
 import { ExpoConfig } from '@expo/config-types';
 import { generateImageAsync } from '@expo/image-utils';
-import fs from 'fs-extra';
+import fs from 'fs';
 import path from 'path';
 
 import { ConfigPlugin } from '../Plugin.types';
@@ -117,7 +117,7 @@ async function writeNotificationIconImageFilesAsync(icon: string, projectRoot: s
     Object.values(dpiValues).map(async ({ folderName, scale }) => {
       const drawableFolderName = folderName.replace('mipmap', 'drawable');
       const dpiFolderPath = path.resolve(projectRoot, ANDROID_RES_PATH, drawableFolderName);
-      await fs.ensureDir(dpiFolderPath);
+      await fs.promises.mkdir(dpiFolderPath, { recursive: true });
       const iconSizePx = BASELINE_PIXEL_SIZE * scale;
 
       try {
@@ -133,7 +133,10 @@ async function writeNotificationIconImageFilesAsync(icon: string, projectRoot: s
             }
           )
         ).source;
-        await fs.writeFile(path.resolve(dpiFolderPath, NOTIFICATION_ICON + '.png'), resizedIcon);
+        await fs.promises.writeFile(
+          path.resolve(dpiFolderPath, NOTIFICATION_ICON + '.png'),
+          resizedIcon
+        );
       } catch (e) {
         throw new Error('Encountered an issue resizing Android notification icon: ' + e);
       }
@@ -146,7 +149,9 @@ async function removeNotificationIconImageFilesAsync(projectRoot: string) {
     Object.values(dpiValues).map(async ({ folderName }) => {
       const drawableFolderName = folderName.replace('mipmap', 'drawable');
       const dpiFolderPath = path.resolve(projectRoot, ANDROID_RES_PATH, drawableFolderName);
-      await fs.remove(path.resolve(dpiFolderPath, NOTIFICATION_ICON + '.png'));
+      await fs.promises
+        .unlink(path.resolve(dpiFolderPath, NOTIFICATION_ICON + '.png'))
+        .catch(() => {});
     })
   );
 }

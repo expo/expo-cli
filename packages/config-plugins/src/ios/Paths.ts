@@ -1,8 +1,9 @@
-import { pathExistsSync, readFileSync } from 'fs-extra';
+import { readFileSync } from 'fs';
 import { sync as globSync } from 'glob';
 import * as path from 'path';
 
 import { UnexpectedError } from '../utils/errors';
+import { pathExistsSync } from '../utils/modules';
 import * as WarningAggregator from '../utils/warnings';
 
 const ignoredPaths = ['**/@(Carthage|Pods|node_modules)/**'];

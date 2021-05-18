@@ -1,5 +1,5 @@
 import { ExpoConfig } from '@expo/config-types';
-import fs from 'fs-extra';
+import fs from 'fs';
 import { resolve } from 'path';
 
 import { ConfigPlugin } from '../Plugin.types';
@@ -74,7 +74,7 @@ export async function setGoogleServicesFile(
   const destinationPath = resolve(projectRoot, targetPath);
 
   try {
-    await fs.copy(completeSourcePath, destinationPath);
+    await fs.promises.copyFile(completeSourcePath, destinationPath);
   } catch (e) {
     throw new Error(
       `Cannot copy google-services.json from ${completeSourcePath} to ${destinationPath}. Please make sure the source and destination paths exist.`

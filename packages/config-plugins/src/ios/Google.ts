@@ -1,5 +1,5 @@
 import { ExpoConfig } from '@expo/config-types';
-import fs from 'fs-extra';
+import fs from 'fs';
 import path from 'path';
 import { XcodeProject } from 'xcode';
 

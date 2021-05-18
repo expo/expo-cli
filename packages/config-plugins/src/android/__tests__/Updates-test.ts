@@ -1,6 +1,5 @@
 import { ExpoConfig } from '@expo/config-types';
 import fs from 'fs';
-import fsExtra from 'fs-extra';
 import { vol } from 'memfs';
 import path from 'path';
 
@@ -114,7 +113,7 @@ describe('Android Updates config', () => {
         '/app'
       );
 
-      const contents = await fsExtra.readFile('/app/android/app/build.gradle', 'utf-8');
+      const contents = await fs.promises.readFile('/app/android/app/build.gradle', 'utf-8');
       const newContents = Updates.ensureBuildGradleContainsConfigurationScript('/app', contents);
       expect(newContents).toMatchSnapshot();
     });
@@ -141,7 +140,10 @@ describe('Android Updates config', () => {
         '/app'
       );
 
-      const contents = await fsExtra.readFile('/app/workspace/android/app/build.gradle', 'utf-8');
+      const contents = await fs.promises.readFile(
+        '/app/workspace/android/app/build.gradle',
+        'utf-8'
+      );
       const newContents = Updates.ensureBuildGradleContainsConfigurationScript(
         '/app/workspace',
         contents

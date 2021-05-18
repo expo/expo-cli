@@ -1,8 +1,9 @@
 import plist from '@expo/plist';
-import * as fs from 'fs-extra';
+import * as fs from 'fs';
 import { vol } from 'memfs';
 import * as path from 'path';
 
+import { fileExistsAsync } from '../../utils/modules';
 import { getEntitlementsPath } from '../Entitlements';
 
 const fsReal = jest.requireActual('fs') as typeof fs;
@@ -52,7 +53,7 @@ describe(getEntitlementsPath, () => {
     expect(entitlementsPath).toBe('/no-config/ios/testproject/testproject.entitlements');
 
     // New file has the contents of the old entitlements file
-    const data = plist.parse(await fs.readFile(entitlementsPath, 'utf8'));
+    const data = plist.parse(await fs.promises.readFile(entitlementsPath, 'utf8'));
     expect(data).toStrictEqual({
       // Push notifications enabled by default
       'aps-environment': 'development',
@@ -64,10 +65,10 @@ describe(getEntitlementsPath, () => {
     expect(entitlementsPath).toBe('/app/ios/testproject/testproject.entitlements');
 
     // New file has the contents of the old entitlements file
-    const data = plist.parse(await fs.readFile(entitlementsPath, 'utf8'));
+    const data = plist.parse(await fs.promises.readFile(entitlementsPath, 'utf8'));
     expect(data).toStrictEqual({ special: true });
 
     // Old file is deleted
-    expect(await fs.pathExists('/app/ios/testproject/old.entitlements')).toBe(false);
+    expect(await fileExistsAsync('/app/ios/testproject/old.entitlements')).toBe(false);
   });
 });

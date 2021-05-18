@@ -1,7 +1,9 @@
-import fs from 'fs-extra';
+import fs from 'fs';
 import { EOL } from 'os';
 import path from 'path';
 import { Builder, Parser } from 'xml2js';
+
+import { fileExistsAsync } from './modules';
 
 export type XMLValue = boolean | number | string | null | XMLArray | XMLObject;
 
@@ -19,13 +21,13 @@ export function logXMLString(doc: XMLObject) {
 
 export async function writeXMLAsync(options: { path: string; xml: any }): Promise<void> {
   const xml = new Builder().buildObject(options.xml);
-  await fs.ensureDir(path.dirname(options.path));
-  await fs.writeFile(options.path, xml);
+  await fs.promises.mkdir(path.dirname(options.path), { recursive: true });
+  await fs.promises.writeFile(options.path, xml);
 }
 
 async function removeFileIfExists(filePath: string) {
-  if (await fs.pathExists(filePath)) {
-    await fs.unlink(filePath);
+  if (await fileExistsAsync(filePath)) {
+    await fs.promises.unlink(filePath).catch(() => {});
   }
 }
 

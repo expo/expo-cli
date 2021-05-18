@@ -1,6 +1,6 @@
 import { ExpoConfig } from '@expo/config-types';
 import { generateImageAsync } from '@expo/image-utils';
-import * as fs from 'fs-extra';
+import * as fs from 'fs';
 import { join } from 'path';
 
 import { ConfigPlugin } from '../Plugin.types';
@@ -108,7 +108,7 @@ export async function setIconsAsync(config: ExpoConfig, projectRoot: string) {
   const iosNamedProjectRoot = getIosNamedProjectPath(projectRoot);
 
   // Ensure the Images.xcassets/AppIcon.appiconset path exists
-  await fs.ensureDir(join(iosNamedProjectRoot, IMAGESET_PATH));
+  await fs.promises.mkdir(join(iosNamedProjectRoot, IMAGESET_PATH), { recursive: true });
 
   // Store the image JSON data for assigning via the Contents.json
   const imagesJson: ContentsJson['images'] = [];
@@ -145,7 +145,7 @@ export async function setIconsAsync(config: ExpoConfig, projectRoot: string) {
           );
           // Write image buffer to the file system.
           const assetPath = join(iosNamedProjectRoot, IMAGESET_PATH, filename);
-          await fs.writeFile(assetPath, source);
+          await fs.promises.writeFile(assetPath, source);
           // Save a reference to the generated image so we don't create a duplicate.
           generatedIcons[filename] = true;
         }

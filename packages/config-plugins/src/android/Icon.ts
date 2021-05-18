@@ -1,6 +1,6 @@
 import { ExpoConfig } from '@expo/config-types';
 import { compositeImagesAsync, generateImageAsync } from '@expo/image-utils';
-import fs from 'fs-extra';
+import fs from 'fs';
 import path from 'path';
 
 import { ConfigPlugin } from '../Plugin.types';
@@ -160,9 +160,12 @@ async function configureLegacyIconAsync(
         });
       }
 
-      await fs.ensureDir(dpiFolderPath);
-      await fs.writeFile(path.resolve(dpiFolderPath, IC_LAUNCHER_PNG), squareIconImage);
-      await fs.writeFile(path.resolve(dpiFolderPath, IC_LAUNCHER_ROUND_PNG), roundIconImage);
+      await fs.promises.mkdir(dpiFolderPath, { recursive: true });
+      await fs.promises.writeFile(path.resolve(dpiFolderPath, IC_LAUNCHER_PNG), squareIconImage);
+      await fs.promises.writeFile(
+        path.resolve(dpiFolderPath, IC_LAUNCHER_ROUND_PNG),
+        roundIconImage
+      );
     })
   );
 }
@@ -199,7 +202,7 @@ export async function configureAdaptiveIconAsync(
             }
           )
         ).source;
-        await fs.writeFile(
+        await fs.promises.writeFile(
           path.resolve(dpiFolderPath, IC_LAUNCHER_FOREGROUND_PNG),
           adpativeIconForeground
         );
@@ -217,7 +220,7 @@ export async function configureAdaptiveIconAsync(
               }
             )
           ).source;
-          await fs.writeFile(
+          await fs.promises.writeFile(
             path.resolve(dpiFolderPath, IC_LAUNCHER_BACKGROUND_PNG),
             adpativeIconBackground
           );
@@ -264,16 +267,24 @@ export const createAdaptiveIconXmlString = (backgroundImage: string | null) => {
 
 async function createAdaptiveIconXmlFiles(projectRoot: string, icLauncherXmlString: string) {
   const anyDpiV26Directory = path.resolve(projectRoot, ANDROID_RES_PATH, MIPMAP_ANYDPI_V26);
-  await fs.ensureDir(anyDpiV26Directory);
-  await fs.writeFile(path.resolve(anyDpiV26Directory, IC_LAUNCHER_XML), icLauncherXmlString);
-  await fs.writeFile(path.resolve(anyDpiV26Directory, IC_LAUNCHER_ROUND_XML), icLauncherXmlString);
+  await fs.promises.mkdir(anyDpiV26Directory, { recursive: true });
+  await fs.promises.writeFile(
+    path.resolve(anyDpiV26Directory, IC_LAUNCHER_XML),
+    icLauncherXmlString
+  );
+  await fs.promises.writeFile(
+    path.resolve(anyDpiV26Directory, IC_LAUNCHER_ROUND_XML),
+    icLauncherXmlString
+  );
 }
 
 async function removeBackgroundImageFilesAsync(projectRoot: string) {
   return await Promise.all(
     Object.values(dpiValues).map(async ({ folderName }) => {
       const dpiFolderPath = path.resolve(projectRoot, ANDROID_RES_PATH, folderName);
-      await fs.remove(path.resolve(dpiFolderPath, IC_LAUNCHER_BACKGROUND_PNG));
+      await fs.promises
+        .unlink(path.resolve(dpiFolderPath, IC_LAUNCHER_BACKGROUND_PNG))
+        .catch(() => {});
     })
   );
 }

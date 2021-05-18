@@ -1,8 +1,9 @@
 #!/usr/bin/env node
+import JsonFile from '@expo/json-file';
 import axios from 'axios';
 import chalk from 'chalk';
 import { Command } from 'commander';
-import fs from 'fs-extra';
+import fs from 'fs';
 import { compile } from 'json-schema-to-typescript';
 import path from 'path';
 import semver from 'semver';
@@ -39,7 +40,7 @@ async function fetchSchemaAsync(version: string): Promise<Record<string, any>> {
     const filePath = path.resolve(program.path.trim());
     console.log(`Using local file: "${filePath}"`);
     try {
-      schema = (await fs.readJSON(filePath)).schema;
+      schema = (await JsonFile.readAsync(filePath)).schema;
     } catch (error) {
       console.warn('Failed to read the local JSON schema:');
       console.error(error);
@@ -76,6 +77,6 @@ async function fetchSchemaAsync(version: string): Promise<Record<string, any>> {
     unknownAny: false,
   });
   const filepath = `src/ExpoConfig.ts`;
-  fs.ensureDirSync(path.dirname(filepath));
-  await fs.writeFile(filepath, ts, 'utf8');
+  await fs.promises.mkdir(path.dirname(filepath), { recursive: true });
+  await fs.promises.writeFile(filepath, ts, 'utf8');
 })();

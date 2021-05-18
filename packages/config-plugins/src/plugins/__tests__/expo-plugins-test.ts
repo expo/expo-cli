@@ -1,5 +1,5 @@
 import JsonFile from '@expo/json-file';
-import fs from 'fs-extra';
+import fs from 'fs';
 import { vol } from 'memfs';
 import * as path from 'path';
 import xcode from 'xcode';

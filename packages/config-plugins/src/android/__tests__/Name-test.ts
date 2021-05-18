@@ -1,4 +1,4 @@
-import fs from 'fs-extra';
+import fs from 'fs';
 import { vol } from 'memfs';
 
 import { applyNameSettingsGradle, getName, sanitizeNameForGradle, setName } from '../Name';
@@ -73,7 +73,7 @@ describe('name', () => {
 
     const stringsPath = '/app/android/app/src/main/res/values/strings.xml';
     const stringsJSON = await readResourcesXMLAsync({ path: stringsPath });
-    const contents = await fs.readFile(stringsPath, { encoding: 'utf8', flag: 'r' });
+    const contents = await fs.promises.readFile(stringsPath, { encoding: 'utf8', flag: 'r' });
 
     // Test that it's written in escaped form
     expect(contents.includes(`'E&amp;x&lt;p&gt;o"`)).toBe(true);

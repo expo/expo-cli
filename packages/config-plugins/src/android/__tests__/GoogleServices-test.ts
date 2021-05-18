@@ -1,4 +1,4 @@
-import fs from 'fs-extra';
+import fs from 'fs';
 import { resolve } from 'path';
 
 import {
@@ -8,12 +8,12 @@ import {
   setGoogleServicesFile,
 } from '../GoogleServices';
 
-jest.mock('fs-extra');
+jest.mock('fs');
 const fixturesPath = resolve(__dirname, 'fixtures');
 
 describe('google services file', () => {
   afterAll(async () => {
-    await fs.remove(resolve(fixturesPath, 'not/'));
+    await fs.promises.unlink(resolve(fixturesPath, 'not/'));
   });
 
   it(`returns null if no googleServicesFile is provided`, () => {
