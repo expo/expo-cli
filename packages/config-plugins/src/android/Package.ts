@@ -1,11 +1,12 @@
 import { ExpoConfig } from '@expo/config-types';
-import fs from 'fs-extra';
+import fs from 'fs';
 import { sync as globSync } from 'glob';
 import path from 'path';
 
 import { ConfigPlugin } from '../Plugin.types';
 import { createAndroidManifestPlugin, withAppBuildGradle } from '../plugins/android-plugins';
 import { withDangerousMod } from '../plugins/withDangerousMod';
+import { moveAsync, pathExists } from '../utils/modules';
 import * as WarningAggregator from '../utils/warnings';
 import { AndroidManifest } from './Manifest';
 import { getAppBuildGradleFilePath, getMainApplicationAsync } from './Paths';
@@ -79,17 +80,18 @@ export async function renamePackageOnDisk(
   const newPackagePath = path.join(packageRoot, ...newPackageName.split('.'));
 
   // Create the new directory
-  fs.mkdirpSync(newPackagePath);
+  fs.mkdirSync(newPackagePath, { mode: 0o777, recursive: true });
 
   // Move everything from the old directory over
-  globSync('**/*', { cwd: currentPackagePath }).forEach(relativePath => {
+  const paths = globSync('**/*', { cwd: currentPackagePath });
+  for (const relativePath of paths) {
     const filepath = path.join(currentPackagePath, relativePath);
     if (fs.lstatSync(filepath).isFile()) {
-      fs.moveSync(filepath, path.join(newPackagePath, relativePath));
+      await moveAsync(filepath, path.join(newPackagePath, relativePath));
     } else {
-      fs.mkdirpSync(filepath);
+      fs.mkdirSync(filepath, { mode: 0o777, recursive: true });
     }
-  });
+  }
 
   // Remove the old directory recursively from com/old/package to com/old and com,
   // as long as the directories are empty
@@ -149,10 +151,10 @@ export function setPackageInAndroidManifest(
 
 export async function getApplicationIdAsync(projectRoot: string): Promise<string | null> {
   const buildGradlePath = getAppBuildGradleFilePath(projectRoot);
-  if (!(await fs.pathExists(buildGradlePath))) {
+  if (!(await pathExists(buildGradlePath))) {
     return null;
   }
-  const buildGradle = await fs.readFile(buildGradlePath, 'utf8');
+  const buildGradle = await fs.promises.readFile(buildGradlePath, 'utf8');
   const matchResult = buildGradle.match(/applicationId ['"](.*)['"]/);
   // TODO add fallback for legacy cases to read from AndroidManifest.xml
   return matchResult?.[1] ?? null;

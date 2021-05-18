@@ -21,12 +21,19 @@ export async function directoryExistsAsync(file: string): Promise<boolean> {
   return (await statAsync(file))?.isDirectory() ?? false;
 }
 
-export async function pathExistsSync(file: string): Promise<boolean> {
+export function pathExistsSync(file: string): boolean {
   try {
     return !!fs.statSync(file);
   } catch (e) {
     return false;
   }
+}
+
+export async function pathExists(file: string): Promise<boolean> {
+  return fs.promises
+    .access(file)
+    .then(() => true)
+    .catch(() => false);
 }
 
 export function fileExists(file: string): boolean {
@@ -35,4 +42,29 @@ export function fileExists(file: string): boolean {
   } catch (e) {
     return false;
   }
+}
+
+export function moveAsync(oldPath: string, newPath: string) {
+  return new Promise<void>((resolve, reject) => {
+    fs.rename(oldPath, newPath, function (err) {
+      if (err) {
+        if (err.code === 'EXDEV') {
+          copy();
+        } else {
+          reject(err);
+        }
+        return;
+      }
+      resolve();
+    });
+
+    function copy() {
+      const readStream = fs.createReadStream(oldPath);
+      const writeStream = fs.createWriteStream(newPath);
+      readStream.on('error', reject);
+      writeStream.on('error', reject);
+      readStream.on('close', () => fs.unlink(oldPath, reject));
+      readStream.pipe(writeStream);
+    }
+  });
 }
