@@ -1,4 +1,4 @@
-import { ensureDir } from 'fs-extra';
+import fs from 'fs';
 
 import { getAccountUsername } from '../getFullName';
 import { getExpoHomeDirectory, getUserState } from '../getUserState';
@@ -38,7 +38,7 @@ describe(getAccountUsername, () => {
     // Ensure the test doesn't interact with the developer's state.json
     expect(getExpoHomeDirectory()).toBe('/home/.expo');
     // Ensure the dir exists
-    await ensureDir(getExpoHomeDirectory());
+    await fs.promises.mkdir(getExpoHomeDirectory(), { recursive: true });
     // Set a username...
     await getUserState().setAsync('auth', { username: 'bacon-boi' });
     // Check the username...
