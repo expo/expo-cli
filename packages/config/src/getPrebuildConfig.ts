@@ -8,7 +8,7 @@ import {
 import { ExpoConfig } from '@expo/config-types';
 
 import { getConfig } from './Config';
-import { getAccountUsername } from './getCurrentFullName';
+import { getAccountUsername } from './getFullName';
 
 export function getPrebuildConfig(
   projectRoot: string,
