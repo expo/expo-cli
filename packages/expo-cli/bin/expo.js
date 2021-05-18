@@ -30,7 +30,7 @@ if (major > 15) {
         supportedVersions
     )
   );
-} else if (!((major === 12 && minor >= 13) || major === 14 || major === 15 || major === 15)) {
+} else if (!((major === 12 && minor >= 13) || major === 14 || major === 15 || major === 16)) {
   // eslint-disable-next-line no-console
   console.error(
     red('ERROR: Node.js ' + process.version + ' is no longer supported.\n\n' + supportedVersions)
