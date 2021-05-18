@@ -42,10 +42,7 @@ export function setCustomEntitlementsEntries(config: ExpoConfig, entitlements: I
   };
 }
 
-export function setAccessesContactNotes(
-  config: ExpoConfig,
-  { 'com.apple.developer.contacts.notes': _, ...entitlementsPlist }: Plist
-): Plist {
+export function setAccessesContactNotes(config: ExpoConfig, entitlementsPlist: Plist): Plist {
   if (config.ios?.accessesContactNotes) {
     return {
       ...entitlementsPlist,
