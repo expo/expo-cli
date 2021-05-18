@@ -9,6 +9,7 @@ import * as IOSConfig from '../ios';
 import withAdMob from './unversioned/expo-ads-admob';
 import withAppleAuthentication from './unversioned/expo-apple-authentication';
 import withBranch from './unversioned/expo-branch';
+import withContacts from './unversioned/expo-contacts';
 import withDocumentPicker from './unversioned/expo-document-picker';
 import withFacebook from './unversioned/expo-facebook';
 import withNotifications from './unversioned/expo-notifications';
@@ -44,7 +45,6 @@ export const withExpoIOSPlugins: ConfigPlugin<{
     IOSConfig.Version.withVersion,
     IOSConfig.Google.withGoogleServicesFile,
     // Entitlements
-    IOSConfig.Entitlements.withAccessesContactNotes,
     IOSConfig.Entitlements.withAssociatedDomains,
     // XcodeProject
     IOSConfig.DeviceFamily.withDeviceFamily,
@@ -118,6 +118,7 @@ export const withExpoVersionedSDKPlugins: ConfigPlugin<{ expoUsername: string | 
     withMaps,
     withAdMob,
     withAppleAuthentication,
+    withContacts,
     withNotifications,
     [withUpdates, { expoUsername }],
     withBranch,
@@ -141,7 +142,6 @@ const expoLegacyPlugins = [
   'expo-brightness',
   'expo-calendar',
   'expo-camera',
-  'expo-contacts',
   'expo-dev-menu',
   'expo-dev-launcher',
   'expo-dev-client',
