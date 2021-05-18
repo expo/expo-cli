@@ -11,7 +11,7 @@ const ANONYMOUS_USERNAME = 'anonymous';
  * @param manifest
  * @returns
  */
-export function getCurrentFullName(manifest: Pick<ExpoConfig, 'owner' | 'slug'>): string {
+export function getFullName(manifest: Pick<ExpoConfig, 'owner' | 'slug'>): string {
   const username = getAccountUsername(manifest);
   return `@${username}/${manifest.slug}`;
 }

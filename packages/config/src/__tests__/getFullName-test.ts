@@ -1,6 +1,6 @@
 import { ensureDir } from 'fs-extra';
 
-import { getAccountUsername } from '../getCurrentFullName';
+import { getAccountUsername } from '../getFullName';
 import { getExpoHomeDirectory, getUserState } from '../getUserState';
 
 jest.mock('os');
