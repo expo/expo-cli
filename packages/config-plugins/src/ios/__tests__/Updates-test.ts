@@ -14,7 +14,6 @@ const { silent } = require('resolve-from');
 describe('iOS Updates config', () => {
   it(`returns correct default values from all getters if no value provided`, () => {
     expect(Updates.getSDKVersion({})).toBe(null);
-    expect(Updates.getUpdateUrl({ slug: 'foo' }, null)).toBe(null);
     expect(Updates.getUpdatesCheckOnLaunch({})).toBe('ALWAYS');
     expect(Updates.getUpdatesEnabled({})).toBe(true);
     expect(Updates.getUpdatesTimeout({})).toBe(0);
@@ -22,10 +21,6 @@ describe('iOS Updates config', () => {
 
   it(`returns correct value from all getters if value provided`, () => {
     expect(Updates.getSDKVersion({ sdkVersion: '37.0.0' })).toBe('37.0.0');
-    expect(Updates.getUpdateUrl({ slug: 'my-app' }, 'user')).toBe('https://exp.host/@user/my-app');
-    expect(Updates.getUpdateUrl({ slug: 'my-app', owner: 'owner' }, 'user')).toBe(
-      'https://exp.host/@owner/my-app'
-    );
     expect(
       Updates.getUpdatesCheckOnLaunch({ updates: { checkAutomatically: 'ON_ERROR_RECOVERY' } })
     ).toBe('NEVER');

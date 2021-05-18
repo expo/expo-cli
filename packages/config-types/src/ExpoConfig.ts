@@ -192,6 +192,7 @@ export interface ExpoConfig {
      * How long (in ms) to allow for fetching OTA updates before falling back to a cached version of the app. Defaults to 30000 (30 sec). Must be between 0 and 300000 (5 minutes).
      */
     fallbackToCacheTimeout?: number;
+    url?: string;
   };
   /**
    * Provide overrides by locale for System Dialog prompts like Permissions Boxes
