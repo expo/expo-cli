@@ -271,7 +271,7 @@ describe('built-in plugins', () => {
       return config;
     });
     // Apply mod
-    config = await compileModsAsync(config, { introspect: true, projectRoot: '/app' });
+    await compileModsAsync(config, { introspect: true, projectRoot: '/app' });
 
     expect(modRequest).toStrictEqual({
       introspect: true,
