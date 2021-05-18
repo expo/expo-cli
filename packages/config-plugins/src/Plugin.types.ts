@@ -35,6 +35,12 @@ export interface ModProps<T = any> {
   readonly platform: ModPlatform;
 
   /**
+   * If the mod is being evaluated in introspection mode.
+   * No file system modifications should be made when introspect is `true`.
+   */
+  readonly introspect: boolean;
+
+  /**
    * [iOS]: The path component used for querying project files.
    *
    * @example projectRoot/ios/[projectName]/
@@ -49,7 +55,7 @@ export interface ExportedConfig extends ExpoConfig {
   mods?: ModConfig | null;
 }
 
-export interface ExportedConfigWithProps<Data = any> extends ExpoConfig {
+export interface ExportedConfigWithProps<Data = any> extends ExportedConfig {
   /**
    * The Object representation of a complex file type.
    */
@@ -67,6 +73,10 @@ export type Mod<Props = any> = (
 
 export interface ModConfig {
   android?: {
+    /**
+     * Dangerously make a modification before any other android mods have been run.
+     */
+    dangerous?: Mod<unknown>;
     /**
      * Modify the `android/app/src/main/AndroidManifest.xml` as JSON (parsed with [`xml2js`](https://www.npmjs.com/package/xml2js)).
      */
@@ -97,6 +107,10 @@ export interface ModConfig {
     gradleProperties?: Mod<Properties.PropertiesItem[]>;
   };
   ios?: {
+    /**
+     * Dangerously make a modification before any other android mods have been run.
+     */
+    dangerous?: Mod<unknown>;
     /**
      * Modify the `ios/<name>/Info.plist` as JSON (parsed with [`@expo/plist`](https://www.npmjs.com/package/@expo/plist)).
      */

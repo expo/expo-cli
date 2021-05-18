@@ -5,7 +5,7 @@ import fs from 'fs-extra';
 import xcode from 'xcode';
 
 import { ConfigPlugin } from '../Plugin.types';
-import { withDangerousMod } from '../plugins/core-plugins';
+import { withDangerousMod } from '../plugins/withDangerousMod';
 import { InfoPlist } from './IosConfig.types';
 import { getAllInfoPlistPaths, getAllPBXProjectPaths, getPBXProjectPath } from './Paths';
 import {

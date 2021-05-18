@@ -9,6 +9,7 @@ import { withBranch } from '../../ios/Branch';
 import { PodfileBasic } from '../../ios/__tests__/fixtures/Podfile';
 import { getDirFromFS } from '../../ios/__tests__/utils/getDirFromFS';
 import { readXMLAsync } from '../../utils/XML';
+import { withGradleProperties } from '../android-plugins';
 import {
   withExpoAndroidPlugins,
   withExpoIOSPlugins,
@@ -32,6 +33,148 @@ jest.mock('../../android/Icon', () => {
 const NotificationsPlugin = require('../../android/Notifications');
 NotificationsPlugin.withNotificationIcons = jest.fn(config => config);
 
+function getLargeConfig(): ExportedConfig {
+  // A very extensive Expo Config.
+  return {
+    name: 'my cool app',
+    slug: 'mycoolapp',
+    description: 'my app is great because it uses expo',
+    // owner?: string;
+    // privacy?: 'public' | 'unlisted' | 'hidden';
+    // sdkVersion?: string;
+    // runtimeVersion?: string;
+    version: '1.0.0',
+    platforms: ['android', 'ios', 'web'],
+    githubUrl: 'https://github.com/expo/expo',
+    orientation: 'default',
+    userInterfaceStyle: 'dark',
+    backgroundColor: 'orange',
+    primaryColor: '#fff000',
+    // icon: './icons/icon.png',
+    notification: {
+      icon: './icons/notification-icon.png',
+      color: 'green',
+      iosDisplayInForeground: true,
+      androidMode: 'collapse',
+      androidCollapsedTitle: '#{unread_notifications} new interactions',
+    },
+    appKey: 'othermain',
+    androidStatusBar: {
+      barStyle: 'light-content',
+      backgroundColor: '#000FFF',
+      hidden: false,
+      translucent: true,
+    },
+    androidNavigationBar: {
+      visible: 'sticky-immersive',
+      barStyle: 'dark-content',
+
+      backgroundColor: '#ff0000',
+    },
+    developmentClient: {
+      silentLaunch: true,
+    },
+    scheme: 'my-app-redirect',
+    packagerOpts: {
+      extraThing: true,
+    },
+    updates: {
+      enabled: true,
+      checkAutomatically: 'ON_ERROR_RECOVERY',
+      fallbackToCacheTimeout: 650,
+    },
+    locales: {
+      en: './locales/en-US.json',
+      es: { foo: 'el bar' },
+    },
+    facebookAppId: '1234567890',
+    facebookAutoInitEnabled: true,
+    facebookAutoLogAppEventsEnabled: true,
+    facebookAdvertiserIDCollectionEnabled: true,
+    facebookDisplayName: 'my-fb-test-app',
+    facebookScheme: 'fb1234567890',
+    ios: {
+      bundleIdentifier: 'com.bacon.tester.expoapp',
+      buildNumber: '6.5.0',
+      backgroundColor: '#ff0000',
+      merchantId: 'TEST_MERCHANT_ID',
+      appStoreUrl: 'https://itunes.apple.com/us/app/pillar-valley/id1336398804?ls=1&mt=8',
+      config: {
+        branch: {
+          apiKey: 'MY_BRANCH_KEY',
+        },
+        usesNonExemptEncryption: true,
+        googleMapsApiKey: 'TEST_googleMapsApiKey',
+        googleMobileAdsAppId: 'TEST_googleMobileAdsAppId',
+        googleMobileAdsAutoInit: true,
+        googleSignIn: {
+          reservedClientId: 'GOOGLE_SIGN_IN_CLIENT_ID',
+        },
+      },
+      googleServicesFile: './config/GoogleService-Info.plist',
+      supportsTablet: true,
+      isTabletOnly: false,
+      requireFullScreen: true,
+      userInterfaceStyle: 'automatic',
+      infoPlist: { bar: { val: ['foo'] } },
+      entitlements: { foo: 'bar' },
+      associatedDomains: ['applinks:https://pillarvalley.netlify.app'],
+      usesIcloudStorage: true,
+      usesAppleSignIn: true,
+      accessesContactNotes: true,
+    },
+    android: {
+      package: 'com.bacon.tester.expoapp',
+      versionCode: 6,
+      backgroundColor: '#ff0000',
+      userInterfaceStyle: 'light',
+      adaptiveIcon: {
+        foregroundImage: './icons/foreground.png',
+        backgroundImage: './icons/background.png',
+      },
+      permissions: ['CAMERA', 'com.sec.android.provider.badge.permission.WRITE'],
+      googleServicesFile: './config/google-services.json',
+      config: {
+        branch: {
+          apiKey: 'MY_BRANCH_ANDROID_KEY',
+        },
+        googleMaps: {
+          apiKey: 'MY_GOOGLE_MAPS_ANDROID_KEY',
+        },
+        googleMobileAdsAppId: 'MY_GOOGLE_MOBILE_ADS_APP_ID',
+        googleMobileAdsAutoInit: true,
+      },
+      intentFilters: [
+        {
+          autoVerify: true,
+          action: 'VIEW',
+          data: {
+            scheme: 'https',
+            host: '*.expo.io',
+          },
+          category: ['BROWSABLE', 'DEFAULT'],
+        },
+      ],
+      allowBackup: true,
+      softwareKeyboardLayoutMode: 'pan',
+    },
+    _internal: { projectRoot: '/app' },
+    mods: null,
+  };
+}
+
+function getPrebuildConfig() {
+  let config = { ...getLargeConfig() };
+  config = withExpoVersionedSDKPlugins(config, { expoUsername: 'bacon' });
+
+  config = withExpoIOSPlugins(config, {
+    bundleIdentifier: 'com.bacon.todo',
+  });
+  config = withExpoAndroidPlugins(config, {
+    package: 'com.bacon.todo',
+  });
+  return config;
+}
 describe(evalModsAsync, () => {
   it(`runs with no core mods`, async () => {
     let config: ExportedConfig = {
@@ -46,9 +189,9 @@ describe(evalModsAsync, () => {
 describe('built-in plugins', () => {
   const projectRoot = '/app';
   const iconPath = path.resolve(__dirname, '../../ios/__tests__/fixtures/icons/icon.png');
+  const icon = fsReal.readFileSync(iconPath) as any;
 
   beforeEach(async () => {
-    const icon = fsReal.readFileSync(iconPath) as any;
     // Trick XDL Info.plist reading
     Object.defineProperty(process, 'platform', {
       value: 'not-darwin',
@@ -119,143 +262,28 @@ describe('built-in plugins', () => {
     expect(config.ios?.infoPlist?.ITSAppUsesNonExemptEncryption).toBe(false);
   });
 
+  it('sends a valid modRequest', async () => {
+    let config = getPrebuildConfig();
+
+    let modRequest;
+    config = withGradleProperties(config, config => {
+      modRequest = config.modRequest;
+      return config;
+    });
+    // Apply mod
+    await compileModsAsync(config, { introspect: true, projectRoot: '/app' });
+
+    expect(modRequest).toStrictEqual({
+      introspect: true,
+      modName: 'gradleProperties',
+      platform: 'android',
+      platformProjectRoot: '/app/android',
+      projectName: undefined,
+      projectRoot: '/app',
+    });
+  });
   it('compiles mods', async () => {
-    let config: ExportedConfig = {
-      name: 'my cool app',
-      slug: 'mycoolapp',
-      description: 'my app is great because it uses expo',
-      // owner?: string;
-      // privacy?: 'public' | 'unlisted' | 'hidden';
-      // sdkVersion?: string;
-      // runtimeVersion?: string;
-      version: '1.0.0',
-      platforms: ['android', 'ios', 'web'],
-      githubUrl: 'https://github.com/expo/expo',
-      orientation: 'default',
-      userInterfaceStyle: 'dark',
-      backgroundColor: 'orange',
-      primaryColor: '#fff000',
-      // icon: './icons/icon.png',
-      notification: {
-        icon: './icons/notification-icon.png',
-        color: 'green',
-        iosDisplayInForeground: true,
-        androidMode: 'collapse',
-        androidCollapsedTitle: '#{unread_notifications} new interactions',
-      },
-      appKey: 'othermain',
-      androidStatusBar: {
-        barStyle: 'light-content',
-        backgroundColor: '#000FFF',
-        hidden: false,
-        translucent: true,
-      },
-      androidNavigationBar: {
-        visible: 'sticky-immersive',
-        barStyle: 'dark-content',
-
-        backgroundColor: '#ff0000',
-      },
-      developmentClient: {
-        silentLaunch: true,
-      },
-      scheme: 'my-app-redirect',
-      packagerOpts: {
-        extraThing: true,
-      },
-      updates: {
-        enabled: true,
-        checkAutomatically: 'ON_ERROR_RECOVERY',
-        fallbackToCacheTimeout: 650,
-      },
-      locales: {
-        en: './locales/en-US.json',
-        es: { foo: 'el bar' },
-      },
-      facebookAppId: '1234567890',
-      facebookAutoInitEnabled: true,
-      facebookAutoLogAppEventsEnabled: true,
-      facebookAdvertiserIDCollectionEnabled: true,
-      facebookDisplayName: 'my-fb-test-app',
-      facebookScheme: 'fb1234567890',
-      ios: {
-        bundleIdentifier: 'com.bacon.tester.expoapp',
-        buildNumber: '6.5.0',
-        backgroundColor: '#ff0000',
-        merchantId: 'TEST_MERCHANT_ID',
-        appStoreUrl: 'https://itunes.apple.com/us/app/pillar-valley/id1336398804?ls=1&mt=8',
-        config: {
-          branch: {
-            apiKey: 'MY_BRANCH_KEY',
-          },
-          usesNonExemptEncryption: true,
-          googleMapsApiKey: 'TEST_googleMapsApiKey',
-          googleMobileAdsAppId: 'TEST_googleMobileAdsAppId',
-          googleMobileAdsAutoInit: true,
-          googleSignIn: {
-            reservedClientId: 'GOOGLE_SIGN_IN_CLIENT_ID',
-          },
-        },
-        googleServicesFile: './config/GoogleService-Info.plist',
-        supportsTablet: true,
-        isTabletOnly: false,
-        requireFullScreen: true,
-        userInterfaceStyle: 'automatic',
-        infoPlist: { bar: { val: ['foo'] } },
-        entitlements: { foo: 'bar' },
-        associatedDomains: ['applinks:https://pillarvalley.netlify.app'],
-        usesIcloudStorage: true,
-        usesAppleSignIn: true,
-        accessesContactNotes: true,
-      },
-      android: {
-        package: 'com.bacon.tester.expoapp',
-        versionCode: 6,
-        backgroundColor: '#ff0000',
-        userInterfaceStyle: 'light',
-        adaptiveIcon: {
-          foregroundImage: './icons/foreground.png',
-          backgroundImage: './icons/background.png',
-        },
-        permissions: ['CAMERA', 'com.sec.android.provider.badge.permission.WRITE'],
-        googleServicesFile: './config/google-services.json',
-        config: {
-          branch: {
-            apiKey: 'MY_BRANCH_ANDROID_KEY',
-          },
-          googleMaps: {
-            apiKey: 'MY_GOOGLE_MAPS_ANDROID_KEY',
-          },
-          googleMobileAdsAppId: 'MY_GOOGLE_MOBILE_ADS_APP_ID',
-          googleMobileAdsAutoInit: true,
-        },
-        intentFilters: [
-          {
-            autoVerify: true,
-            action: 'VIEW',
-            data: {
-              scheme: 'https',
-              host: '*.expo.io',
-            },
-            category: ['BROWSABLE', 'DEFAULT'],
-          },
-        ],
-        allowBackup: true,
-        softwareKeyboardLayoutMode: 'pan',
-      },
-      _internal: { projectRoot: '/app' },
-      mods: null,
-    };
-
-    config = withExpoVersionedSDKPlugins(config, { expoUsername: 'bacon' });
-
-    config = withExpoIOSPlugins(config, {
-      bundleIdentifier: 'com.bacon.todo',
-    });
-    config = withExpoAndroidPlugins(config, {
-      package: 'com.bacon.todo',
-    });
-
+    let config = getPrebuildConfig();
     // Apply mod
     config = await compileModsAsync(config, { projectRoot: '/app' });
 
@@ -285,13 +313,14 @@ describe('built-in plugins', () => {
     const after = getDirFromFS(vol.toJSON(), projectRoot);
 
     expect(Object.keys(after)).toStrictEqual([
+      'ios/ReactNativeProject/Supporting/Expo.plist',
+      'ios/ReactNativeProject/Supporting/en.lproj/InfoPlist.strings',
+      'ios/ReactNativeProject/Supporting/es.lproj/InfoPlist.strings',
       'ios/ReactNativeProject/Info.plist',
       'ios/ReactNativeProject/AppDelegate.m',
       'ios/ReactNativeProject/Base.lproj/LaunchScreen.xib',
       'ios/ReactNativeProject/Images.xcassets/AppIcon.appiconset/Contents.json',
       'ios/ReactNativeProject/Images.xcassets/Contents.json',
-      'ios/ReactNativeProject/Supporting/en.lproj/InfoPlist.strings',
-      'ios/ReactNativeProject/Supporting/es.lproj/InfoPlist.strings',
       'ios/ReactNativeProject/GoogleService-Info.plist',
       'ios/ReactNativeProject/noop-file.swift',
       'ios/ReactNativeProject/ReactNativeProject-Bridging-Header.h',
@@ -363,6 +392,182 @@ describe('built-in plugins', () => {
     );
     project.parseSync();
   });
+
+  it('introspects mods', async () => {
+    let config = getPrebuildConfig();
+
+    // Apply mod
+    config = await compileModsAsync(config, { introspect: true, projectRoot: '/app' });
+
+    // App config should have been modified
+    expect(config.name).toBe('my cool app');
+    expect(config.ios.infoPlist).toBeDefined();
+    expect(config.ios.entitlements).toBeDefined();
+
+    // Google Sign In
+    expect(
+      config.ios?.infoPlist?.CFBundleURLTypes?.find(({ CFBundleURLSchemes }) =>
+        CFBundleURLSchemes.includes('GOOGLE_SIGN_IN_CLIENT_ID')
+      )
+    ).toBeDefined();
+    // Branch
+    expect(config.ios?.infoPlist?.branch_key?.live).toBe('MY_BRANCH_KEY');
+
+    // Mods should all be functions
+    expect(Object.values(config.mods.ios).every(value => typeof value === 'function')).toBe(true);
+    expect(Object.values(config.mods.android).every(value => typeof value === 'function')).toBe(
+      true
+    );
+    // Ensure these mods are removed
+    expect(config.mods.android.dangerous).toBeUndefined();
+    expect(config.mods.android.mainActivity).toBeUndefined();
+    expect(config.mods.android.appBuildGradle).toBeUndefined();
+    expect(config.mods.android.projectBuildGradle).toBeUndefined();
+    expect(config.mods.android.settingsGradle).toBeUndefined();
+    expect(config.mods.ios.dangerous).toBeUndefined();
+    expect(config.mods.ios.xcodeproj).toBeUndefined();
+
+    delete config.mods;
+
+    // Shape
+    expect(config).toMatchSnapshot();
+
+    expect(config._internal.modResults).toBeDefined();
+    expect(config._internal.modResults.ios.infoPlist).toBeDefined();
+    expect(config._internal.modResults.ios.expoPlist).toBeDefined();
+    expect(config._internal.modResults.ios.entitlements).toBeDefined();
+    expect(config._internal.modResults.android.manifest).toBeDefined();
+    expect(Array.isArray(config._internal.modResults.android.gradleProperties)).toBe(true);
+    expect(config._internal.modResults.android.strings).toBeDefined();
+
+    // Test the written files...
+    const after = getDirFromFS(vol.toJSON(), projectRoot);
+
+    expect(Object.keys(after)).toStrictEqual([
+      'ios/ReactNativeProject/Supporting/Expo.plist',
+      'ios/ReactNativeProject/Info.plist',
+      'ios/ReactNativeProject/AppDelegate.m',
+      'ios/ReactNativeProject/Base.lproj/LaunchScreen.xib',
+      'ios/ReactNativeProject/Images.xcassets/AppIcon.appiconset/Contents.json',
+      'ios/ReactNativeProject/Images.xcassets/Contents.json',
+      'ios/ReactNativeProject/ReactNativeProject.entitlements',
+      'ios/ReactNativeProject.xcodeproj/project.pbxproj',
+      'ios/Podfile',
+      'android/app/src/main/java/com/reactnativeproject/MainActivity.java',
+      'android/app/src/main/java/com/reactnativeproject/MainApplication.java',
+      'android/app/src/main/AndroidManifest.xml',
+      'android/app/src/main/res/values/styles.xml',
+      'android/app/build.gradle',
+      'android/gradle.properties',
+      'android/settings.gradle',
+      'android/build.gradle',
+      'config/GoogleService-Info.plist',
+      'config/google-services.json',
+      'locales/en-US.json',
+    ]);
+
+    // unmodified
+    expect(after['ios/ReactNativeProject/ReactNativeProject.entitlements']).not.toMatch(
+      'com.apple.developer.associated-domains'
+    );
+
+    expect(after['ios/ReactNativeProject/Info.plist']).toBe(
+      rnFixture['ios/ReactNativeProject/Info.plist']
+    );
+
+    expect(after['android/app/src/main/java/com/reactnativeproject/MainApplication.java']).toBe(
+      rnFixture['android/app/src/main/java/com/reactnativeproject/MainApplication.java']
+    );
+    expect(after['android/app/src/main/java/com/reactnativeproject/MainActivity.java']).toBe(
+      rnFixture['android/app/src/main/java/com/reactnativeproject/MainActivity.java']
+    );
+    expect(after['android/app/src/main/res/values/styles.xml']).toMatch(
+      rnFixture['android/app/src/main/res/values/styles.xml']
+    );
+
+    for (const [name, contents] of Object.entries(rnFixture)) {
+      // The pbxproj seems to reformat in jest
+      if (name.includes('pbxproj')) continue;
+      expect(after[name]).toMatch(contents);
+    }
+    // Ensure the Xcode project file can be read and parsed.
+    const project = xcode.project(
+      path.join(projectRoot, 'ios/ReactNativeProject.xcodeproj/project.pbxproj')
+    );
+    project.parseSync();
+  });
+
+  // Tests that introspection works
+  it('introspects mods in a managed project', async () => {
+    vol.reset();
+    vol.fromJSON(
+      {
+        'config/GoogleService-Info.plist': 'noop',
+        'config/google-services.json': '{}',
+        'icons/foreground.png': icon,
+        'icons/background.png': icon,
+        'icons/notification-icon.png': icon,
+        'icons/ios-icon.png': icon,
+        'locales/en-US.json': JSON.stringify({ foo: 'uhh bar', fallback: 'fallback' }, null, 2),
+      },
+      projectRoot
+    );
+
+    let config = getPrebuildConfig();
+
+    // Apply mod
+    config = await compileModsAsync(config, { introspect: true, projectRoot: '/app' });
+
+    // App config should have been modified
+    expect(config.name).toBe('my cool app');
+    expect(config.ios.infoPlist).toBeDefined();
+    expect(config.ios.entitlements).toBeDefined();
+
+    // Google Sign In
+    expect(
+      config.ios?.infoPlist?.CFBundleURLTypes?.find(({ CFBundleURLSchemes }) =>
+        CFBundleURLSchemes.includes('GOOGLE_SIGN_IN_CLIENT_ID')
+      )
+    ).toBeDefined();
+    // Branch
+    expect(config.ios?.infoPlist?.branch_key?.live).toBe('MY_BRANCH_KEY');
+
+    // Mods should all be functions
+    expect(Object.values(config.mods.ios).every(value => typeof value === 'function')).toBe(true);
+    expect(Object.values(config.mods.android).every(value => typeof value === 'function')).toBe(
+      true
+    );
+    // Ensure these mods are removed
+    expect(config.mods.android.dangerous).toBeUndefined();
+    expect(config.mods.android.mainActivity).toBeUndefined();
+    expect(config.mods.android.appBuildGradle).toBeUndefined();
+    expect(config.mods.android.projectBuildGradle).toBeUndefined();
+    expect(config.mods.android.settingsGradle).toBeUndefined();
+    expect(config.mods.ios.dangerous).toBeUndefined();
+    expect(config.mods.ios.xcodeproj).toBeUndefined();
+
+    delete config.mods;
+
+    // Shape
+    expect(config).toMatchSnapshot();
+
+    expect(config._internal.modResults).toBeDefined();
+    expect(config._internal.modResults.ios.infoPlist).toBeDefined();
+    expect(config._internal.modResults.ios.expoPlist).toBeDefined();
+    expect(config._internal.modResults.ios.entitlements).toBeDefined();
+    expect(config._internal.modResults.android.manifest).toBeDefined();
+    expect(Array.isArray(config._internal.modResults.android.gradleProperties)).toBe(true);
+    expect(config._internal.modResults.android.strings).toBeDefined();
+
+    // Test the written files...
+    const after = getDirFromFS(vol.toJSON(), projectRoot);
+
+    expect(Object.keys(after)).toStrictEqual([
+      'config/GoogleService-Info.plist',
+      'config/google-services.json',
+      'locales/en-US.json',
+    ]);
+  });
 });
 
 async function isValidXMLAsync(filePath: string) {
@@ -373,6 +578,7 @@ async function isValidXMLAsync(filePath: string) {
     return false;
   }
 }
+
 async function isValidJSONAsync(filePath: string) {
   try {
     const res = await JsonFile.readAsync(filePath);

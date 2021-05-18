@@ -6,7 +6,7 @@ import {
 } from '@expo/configure-splash-screen';
 
 import { ConfigPlugin } from '../Plugin.types';
-import { withDangerousMod } from '../plugins/core-plugins';
+import { withDangerousMod } from '../plugins/withDangerousMod';
 import * as WarningAggregator from '../utils/warnings';
 
 export const withSplashScreen: ConfigPlugin = config => {

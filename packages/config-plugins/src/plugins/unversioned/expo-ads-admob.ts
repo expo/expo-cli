@@ -1,8 +1,8 @@
 import { ConfigPlugin } from '../../Plugin.types';
 import { withAdMob as withAdMobAndroid } from '../../android/AdMob';
 import { withAdMob as withAdMobIOS } from '../../ios/AdMob';
-import { createRunOncePlugin } from '../core-plugins';
-import { withStaticPlugin } from '../static-plugins';
+import { createRunOncePlugin } from '../withRunOnce';
+import { withStaticPlugin } from '../withStaticPlugin';
 
 const packageName = 'expo-ads-admob';
 
