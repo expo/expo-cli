@@ -363,7 +363,7 @@ const withExpoPlistBaseMod: ConfigPlugin = config => {
   return withInterceptedMod<JSONObject>(config, {
     platform: 'ios',
     mod: 'expoPlist',
-    skipEmptyMod: true,
+    skipEmptyMod: false,
     async action({ modRequest: { nextMod, ...modRequest }, ...config }) {
       const supportingDirectory = path.join(
         modRequest.platformProjectRoot,
@@ -377,7 +377,8 @@ const withExpoPlistBaseMod: ConfigPlugin = config => {
       };
       try {
         const filePath = path.resolve(supportingDirectory, 'Expo.plist');
-        let modResults = plist.parse(await readFile(filePath, 'utf8'));
+        // Start from scratch every time.
+        let modResults = {};
 
         // TODO: Fix type
         results = await nextMod!({
