@@ -43,9 +43,7 @@ export default function InspectorMiddleware(): NextHandleFunction {
     } else if (req.method === 'POST' || req.method === 'PUT') {
       const appPath = require.resolve('./electron-app');
       if (!appPath) {
-        throw new Error(
-          'Missing electron-app file. ' + 'Please reinstall this module and try again.'
-        );
+        throw new Error('Missing electron-app file. \nPlease reinstall this module and try again.');
       }
 
       // The imported electron from nodejs process is path string to electron executable

@@ -1,5 +1,4 @@
 import { ChildProcess, spawn, SpawnOptions } from 'child_process';
-import type { NextFunction, NextHandleFunction } from 'connect';
 import type { IncomingMessage, ServerResponse } from 'http';
 import fetch from 'node-fetch';
 import { URL } from 'url';
