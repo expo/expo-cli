@@ -196,6 +196,10 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ## [Mon, 19 Apr 2021 17:00:03 -0700](https://github.com/expo/expo-cli/commit/50562c70e9cda584465b01c4520ac82d29a4738f)
 
+### 🛠 Breaking changes
+
+- Force overwriting by default in export, remove `--force` flag ([#3395](https://github.com/expo/expo-cli/issues/3395))
+
 ### 🎉 New features
 
 - [config-plugins] feat: enable splash screen plugin for any SDK greater than 38 ([#3397](https://github.com/expo/expo-cli/issues/3397))
@@ -205,7 +209,6 @@ This is the log of notable changes to Expo CLI and related packages.
 
 - improve cocoapods manager ([#3399](https://github.com/expo/expo-cli/issues/3399))
 - [xdl][expo-cli] Adds action event to unified project ([#3372](https://github.com/expo/expo-cli/issues/3372))
-- Force overwriting by default in export ([#3395](https://github.com/expo/expo-cli/issues/3395))
 - Add known packages to improve tracing ([#3392](https://github.com/expo/expo-cli/issues/3392))
 - [metro-config] Skip babel runtime helpers ([#3391](https://github.com/expo/expo-cli/issues/3391))
 - remove node 10 support and assert wrapper ([#3356](https://github.com/expo/expo-cli/issues/3356))
