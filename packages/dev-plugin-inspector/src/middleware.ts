@@ -1,5 +1,5 @@
 import { spawn } from 'child_process';
-import type { HandleFunction } from 'connect';
+import type { NextHandleFunction } from 'connect';
 import electron from 'electron';
 import type { IncomingMessage, ServerResponse } from 'http';
 import fetch from 'node-fetch';
@@ -8,7 +8,7 @@ import { URL } from 'url';
 
 const ENDPOINT = '/inspector';
 
-export default function InspectorMiddleware(): HandleFunction {
+export default function InspectorMiddleware(): NextHandleFunction {
   return async function (req: IncomingMessage, res: ServerResponse, next: (err?: Error) => void) {
     if (!req.url || !req.url.startsWith(ENDPOINT)) {
       next();
