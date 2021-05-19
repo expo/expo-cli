@@ -2,13 +2,13 @@ import Log from '@expo/bunyan';
 import * as ExpoMetroConfig from '@expo/metro-config';
 import { createDevServerMiddleware } from '@react-native-community/cli-server-api';
 import bodyParser from 'body-parser';
+import { HandleFunction } from 'connect';
 import http from 'http';
 import type Metro from 'metro';
 import resolveFrom from 'resolve-from';
 
 import LogReporter from './LogReporter';
 import clientLogsMiddleware from './middleware/clientLogsMiddleware';
-import openInspectorMiddleware from './middleware/openInspectorMiddleware';
 
 export type MetroDevServerOptions = ExpoMetroConfig.LoadOptions & {
   logger: Log;
@@ -53,7 +53,9 @@ export async function runMetroDevServerAsync(
   });
   middleware.use(bodyParser.json());
   middleware.use('/logs', clientLogsMiddleware(options.logger));
-  middleware.use('/inspector', openInspectorMiddleware());
+
+  const pluginMiddlewares = importPluginMiddlewares(projectRoot);
+  pluginMiddlewares.forEach(handler => middleware.use(handler));
 
   const customEnhanceMiddleware = metroConfig.server.enhanceMiddleware;
   // @ts-ignore can't mutate readonly config
@@ -172,4 +174,20 @@ function importMetroServerFromProject(projectRoot: string): typeof Metro.Server 
     );
   }
   return require(resolvedPath);
+}
+
+function importPluginMiddlewares(projectRoot: string): HandleFunction[] {
+  const supportedPlugins = ['@expo/dev-plugin-inspector'];
+  const middlewares: HandleFunction[] = [];
+  for (const module of supportedPlugins) {
+    const resolvePath = resolveFrom.silent(projectRoot, `${module}/build/middleware`);
+    if (!resolvePath) {
+      continue;
+    }
+    const middlewareCreator = require(resolvePath).default;
+    if (typeof middlewareCreator === 'function') {
+      middlewares.push(middlewareCreator());
+    }
+  }
+  return middlewares;
 }
