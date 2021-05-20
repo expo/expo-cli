@@ -1,4 +1,4 @@
-import { ExportedConfig } from '../../Plugin.types';
+import { ExportedConfig, Mod } from '../../Plugin.types';
 import { evalModsAsync } from '../mod-compiler';
 import { withBaseMod, withMod } from '../withMod';
 
@@ -7,16 +7,17 @@ describe(withMod, () => {
     // A basic plugin exported from an app.json
     const exportedConfig: ExportedConfig = { name: 'app', slug: '', mods: null };
 
+    const action: Mod<any> = jest.fn(props => {
+      // Capitalize app name
+      props.name = (props.name as string).toUpperCase();
+      return props;
+    });
     // Apply mod
     let config = withBaseMod<any>(exportedConfig, {
       platform: 'android',
       mod: 'custom',
       isProvider: true,
-      action(props) {
-        // Capitalize app name
-        props.name = (props.name as string).toUpperCase();
-        return props;
-      },
+      action,
     });
 
     // Compile plugins generically
@@ -34,6 +35,8 @@ describe(withMod, () => {
       name: 'APP',
       slug: '',
     });
+
+    expect(action).toBeCalledWith(config);
   });
   it('asserts multiple providers added', async () => {
     // Apply a provider mod.
