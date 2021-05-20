@@ -3,6 +3,7 @@ import type { NextHandleFunction } from 'connect';
 import electron from 'electron';
 import type { IncomingMessage, ServerResponse } from 'http';
 import fetch from 'node-fetch';
+import open from 'open';
 import { TLSSocket } from 'tls';
 import { URL } from 'url';
 
@@ -40,7 +41,14 @@ export default function InspectorMiddleware(): NextHandleFunction {
         'Content-Length': data.length.toString(),
       });
       res.end(data);
-    } else if (req.method === 'POST' || req.method === 'PUT') {
+    } else if (req.method === 'POST') {
+      const urlBase =
+        'https://chrome-devtools-frontend.appspot.com/serve_rev/@e3cd97fc771b893b7fd1879196d1215b622c2bed/inspector.html';
+      const ws = target.webSocketDebuggerUrl.replace('ws://[::]:', 'localhost:');
+      const url = `${urlBase}?experiments=true&v8only=true&ws=${encodeURIComponent(ws)}`;
+      open(url, { app: { name: 'google chrome' } });
+      res.end();
+    } else if (req.method === 'PUT') {
       const appPath = require.resolve('./electron-app');
       if (!appPath) {
         throw new Error('Missing electron-app file. \nPlease reinstall this module and try again.');
