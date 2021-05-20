@@ -12,6 +12,40 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+## [Thu, 20 May 2021 09:29:50 -0700](https://github.com/expo/expo-cli/commit/a4d6a8389aca6861758af093c096a640d814c9fb)
+
+### 🛠 Breaking changes
+
+### 🎉 New features
+
+- [config plugins] added prebuild introspection config ([#3479](https://github.com/expo/expo-cli/issues/3479))
+- Add `originalFullName` to the public config ([#3494](https://github.com/expo/expo-cli/issues/3494))
+
+### 🧹 Chores
+
+### 🐛 Bug fixes
+
+- [cli] Update export snapshots
+- Fix CHANGELOG to properly reflect breaking change
+- [cli] Fix version check for Node 16
+- Bump utils to support apple server errors ([#3496](https://github.com/expo/expo-cli/issues/3496))
+- [e2e] fix expo export e2e test ([#3492](https://github.com/expo/expo-cli/issues/3492))
+
+### 📦 Packages updated
+
+- @expo/config-plugins@1.0.32
+- @expo/config@3.3.42
+- @expo/dev-server@0.1.68
+- @expo/dev-tools@0.13.98
+- expo-cli@4.4.8
+- expo-optimize@0.1.90
+- @expo/metro-config@0.1.68
+- @expo/next-adapter@2.1.73
+- expo-pwa@0.0.78
+- uri-scheme@1.0.79
+- @expo/webpack-config@0.12.72
+- xdl@59.0.38
+
 ## [Fri, 14 May 2021 14:16:05 -0700](https://github.com/expo/expo-cli/commit/0e2b0e5dd8d3c0eefa9e18ab32cd98b87d789a01)
 
 ### 🛠 Breaking changes

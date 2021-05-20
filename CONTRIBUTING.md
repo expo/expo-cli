@@ -60,6 +60,14 @@ To publish a new release, run this command (you must have two-factor authenticat
 
 The command will bump the versions of all packages with changes since the previous release and publish them in the correct order. For each changed package, it will ask, if the changes require a new _major_ version (breaking changes), _minor_ version (new backwards compatible functionality) or just a _patch_ version (backwards compatible bug fixes).
 
+After publishing, there are a few more manual steps:
+1. Update the changelog:
+    1. `git log` to find the SHA of the previous publish commit
+    2. Insert the output from `./scripts/changelog-draft.js <sha>` into the changelog.
+    3. Rearrange/edit the entries from bug fixes into appropriate categories.
+2. Install the version just published manually (`expo-cli@version`), run a quick smoke test (create project, run it, eject it, run it).
+3. Promote the version just published to latest: `npm dist-tag add expo-cli@version latest`
+
 ### Canary release
 
 If you wish to publish a canary version, please run:
