@@ -1,6 +1,6 @@
 import { ExportedConfig } from '../../Plugin.types';
 import { evalModsAsync } from '../mod-compiler';
-import { withMod } from '../withMod';
+import { withBaseMod, withMod } from '../withMod';
 
 describe(withMod, () => {
   it('compiles mods', async () => {
@@ -8,9 +8,10 @@ describe(withMod, () => {
     const exportedConfig: ExportedConfig = { name: 'app', slug: '', mods: null };
 
     // Apply mod
-    let config = withMod<any>(exportedConfig, {
+    let config = withBaseMod<any>(exportedConfig, {
       platform: 'android',
       mod: 'custom',
+      isProvider: true,
       action(props) {
         // Capitalize app name
         props.name = (props.name as string).toUpperCase();

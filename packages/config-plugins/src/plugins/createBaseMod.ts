@@ -55,6 +55,7 @@ export function createBaseMod<
       mod: modName,
       skipEmptyMod: props.skipEmptyMod ?? true,
       saveToInternal: props.saveToInternal ?? false,
+      isProvider: true,
       async action({ modRequest: { nextMod, ...modRequest }, ...config }) {
         try {
           let results: ExportedConfigWithProps<ModType> = {
