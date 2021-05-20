@@ -76,13 +76,18 @@ export function withBaseMod<T>(
     debugTrace = `${modStack}: ${debugTrace}`;
   }
 
-  if (isProvider) {
-    // Prevent adding multiple providers to a mod.
-    // Base mods that provide files ignore any incoming modResults and therefore shouldn't have provider mods as parents.
-    if (interceptedMod.isProvider) {
+  // Prevent adding multiple providers to a mod.
+  // Base mods that provide files ignore any incoming modResults and therefore shouldn't have provider mods as parents.
+  if (interceptedMod.isProvider) {
+    if (isProvider) {
       throw new PluginError(
-        `Cannot add base modifier for "${platform}.${mod}" because another is already registered`,
+        `Cannot set provider mod for "${platform}.${mod}" because another is already being used.`,
         'CONFLICTING_PROVIDER'
+      );
+    } else {
+      throw new PluginError(
+        `Cannot add mod to "${platform}.${mod}" because the provider has already been added. Provider must be the last mod added.`,
+        'INVALID_MOD_ORDER'
       );
     }
   }
@@ -204,6 +209,7 @@ export function withMod<T>(
   return withBaseMod(config, {
     platform,
     mod,
+    isProvider: false,
     async action({ modRequest: { nextMod, ...modRequest }, modResults, ...config }) {
       const results = await action({ modRequest, modResults: modResults as T, ...config });
       return nextMod!(results as any);

@@ -11,6 +11,7 @@ export type PluginErrorCode =
   | 'INVALID_PLUGIN_IMPORT'
   | 'PLUGIN_NOT_FOUND'
   | 'CONFLICTING_PROVIDER'
+  | 'INVALID_MOD_ORDER'
   | 'MISSING_PROVIDER';
 
 /**

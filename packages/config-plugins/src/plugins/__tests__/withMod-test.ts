@@ -35,4 +35,65 @@ describe(withMod, () => {
       slug: '',
     });
   });
+  it('asserts multiple providers added', async () => {
+    // Apply a provider mod.
+    const config = withBaseMod<any>(
+      { name: 'app', slug: '', mods: null },
+      {
+        platform: 'android',
+        mod: 'custom',
+        isProvider: true,
+        action(props) {
+          // Capitalize app name
+          props.name = (props.name as string).toUpperCase();
+          return props;
+        },
+      }
+    );
+
+    expect(() =>
+      withBaseMod<any>(config, {
+        platform: 'android',
+        mod: 'custom',
+        isProvider: true,
+        action(props) {
+          // Capitalize app name
+          props.name = (props.name as string).toUpperCase();
+          return props;
+        },
+      })
+    ).toThrow(
+      'Cannot set provider mod for "android.custom" because another is already being used.'
+    );
+  });
+  it('throws when attempting to add a mod as the parent of a provider', async () => {
+    // Apply a provider mod.
+    const config = withBaseMod<any>(
+      { name: 'app', slug: '' },
+      {
+        platform: 'android',
+        mod: 'custom',
+        isProvider: true,
+        action(props) {
+          // Capitalize app name
+          props.name = (props.name as string).toUpperCase();
+          return props;
+        },
+      }
+    );
+
+    expect(() =>
+      withMod<any>(config, {
+        platform: 'android',
+        mod: 'custom',
+        action(props) {
+          // Capitalize app name
+          props.name = (props.name as string).toUpperCase();
+          return props;
+        },
+      })
+    ).toThrow(
+      'Cannot add mod to "android.custom" because the provider has already been added. Provider must be the last mod added.'
+    );
+  });
 });
