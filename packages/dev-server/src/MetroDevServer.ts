@@ -2,7 +2,7 @@ import Log from '@expo/bunyan';
 import * as ExpoMetroConfig from '@expo/metro-config';
 import { createDevServerMiddleware } from '@react-native-community/cli-server-api';
 import bodyParser from 'body-parser';
-import { HandleFunction } from 'connect';
+import type { HandleFunction } from 'connect';
 import http from 'http';
 import type Metro from 'metro';
 import resolveFrom from 'resolve-from';
