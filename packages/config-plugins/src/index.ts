@@ -3,7 +3,6 @@
  */
 import * as AndroidConfig from './android';
 import * as IOSConfig from './ios';
-import { clearMods } from './plugins/createBaseMod';
 import {
   getAndroidIntrospectModFileProviders,
   getAndroidModFileProviders,
@@ -74,5 +73,4 @@ export const BaseMods = {
   withIosBaseMods,
   getIosModFileProviders,
   getIosIntrospectModFileProviders,
-  clearMods,
 };

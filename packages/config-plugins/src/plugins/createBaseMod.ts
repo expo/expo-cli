@@ -2,7 +2,6 @@ import {
   ConfigPlugin,
   ExportedConfig,
   ExportedConfigWithProps,
-  ModConfig,
   ModPlatform,
 } from '../Plugin.types';
 import { BaseModOptions, withBaseMod } from './withMod';
@@ -108,26 +107,6 @@ export function assertModResults(results: any, platformName: string, modName: st
     );
   }
   return ensuredResults;
-}
-
-export function clearMods(
-  config: ExportedConfig,
-  { platform, preserve }: { platform: ModPlatform; preserve?: string[] }
-) {
-  const mods = (config as any).mods as ModConfig;
-
-  for (const platformKey of Object.keys(mods)) {
-    if (platformKey !== platform) {
-      delete mods[platformKey as ModPlatform];
-    }
-  }
-
-  for (const key of Object.keys(mods[platform] || {})) {
-    if (!preserve?.includes(key)) {
-      // @ts-ignore
-      delete mods[platform][key];
-    }
-  }
 }
 
 function upperFirst(name: string): string {
