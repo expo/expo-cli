@@ -76,8 +76,8 @@ const printUsageAsync = async (
     ['w', `open web`],
     [],
     !!options.isRemoteReloadingEnabled && ['r', `reload app`],
-    !!options.isWebSocketsEnabled && ['m', `toggle menu in Expo Go`],
-    !!options.isWebSocketsEnabled && !options.devClient && ['shift+m', `more Expo Go tools`],
+    !!options.isWebSocketsEnabled && ['m', `toggle menu`],
+    !!options.isWebSocketsEnabled && ['shift+m', `more tools`],
     ['o', `open project code in your editor`],
     ['c', `show project QR`],
     ['p', `toggle build mode`, devMode],
@@ -105,7 +105,7 @@ const printBasicUsageAsync = async (
     ['w', `open web`],
     [],
     !!options.isRemoteReloadingEnabled && ['r', `reload app`],
-    !!options.isWebSocketsEnabled && ['m', `toggle menu in Expo Go`],
+    !!options.isWebSocketsEnabled && ['m', `toggle menu`],
     ['d', `show developer tools`],
     ['shift+d', `toggle auto opening developer tools on startup`, currentToggle],
     [],
@@ -346,24 +346,18 @@ export async function startAsync(projectRoot: string, options: StartOptions) {
       }
       case 'm': {
         if (options.isWebSocketsEnabled) {
-          Log.log(`${BLT} Toggling dev menu in Expo Go`);
+          Log.log(`${BLT} Toggling dev menu`);
           Project.broadcastMessage('devMenu');
         }
         break;
       }
       case 'M': {
         if (options.isWebSocketsEnabled) {
-          // "More tools" is disabled in dev client for now because standard RN projects don't have hooks for it.
-          // In the future if the dev client package supports `sendDevCommand` then we can enable it.
-          if (options.devClient) {
-            return;
-          }
-
           Prompts.pauseInteractions();
           try {
             const value = await selectAsync({
               // Options match: Chrome > View > Developer
-              message: `Expo Go tools ${chalk.dim`(native only)`}`,
+              message: `Dev tools ${chalk.dim`(native only)`}`,
               choices: [
                 { title: 'Inspect elements', value: 'toggleElementInspector' },
                 { title: 'Toggle performance monitor', value: 'togglePerformanceMonitor' },
