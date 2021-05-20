@@ -2,7 +2,7 @@
 
 exports[`exports the project for a self-hosted production deployment 1`] = `
 Array [
-  "dist/android-index.json (668 B)",
+  "dist/android-index.json (716 B)",
   "dist/assetmap.json (size ignored)",
   "dist/assets (dir)",
   "dist/assets/0886a6b127c6057cee83f9c65c7ffd62 (26.2 kB)",
@@ -39,7 +39,7 @@ Array [
   "dist/bundles (dir)",
   "dist/bundles/android-f9683e17a3ae12ff7471672e2bbdf859.js (1.17 MB)",
   "dist/bundles/ios-b47c7f161ec4cbd6bd17bf619ebcd6a2.js (1.16 MB)",
-  "dist/ios-index.json (660 B)",
+  "dist/ios-index.json (708 B)",
 ]
 `;
 
@@ -63,6 +63,7 @@ Object {
   },
   "locales": Object {},
   "name": "export-test-app",
+  "originalFullName": "@anonymous/export-test-app",
   "platform": "android",
   "platforms": Array [
     "ios",
