@@ -46,7 +46,7 @@ export function getPrebuildConfig(
   if (platforms.includes('ios')) {
     if (!config.ios) config.ios = {};
     config.ios.bundleIdentifier =
-      bundleIdentifier ?? config.ios.bundleIdentifier ?? 'UNDEFINED (invalid)';
+      bundleIdentifier ?? config.ios.bundleIdentifier ?? `com.placeholder.appid`;
 
     // Add all built-in plugins
     config = withExpoIOSPlugins(config, {
@@ -56,7 +56,7 @@ export function getPrebuildConfig(
 
   if (platforms.includes('android')) {
     if (!config.android) config.android = {};
-    config.android.package = packageName ?? config.android.package ?? 'UNDEFINED (invalid)';
+    config.android.package = packageName ?? config.android.package ?? `com.placeholder.appid`;
 
     // Add all built-in plugins
     config = withExpoAndroidPlugins(config, {
