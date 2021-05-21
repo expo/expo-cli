@@ -1,9 +1,13 @@
 import { spawn } from 'child_process';
 import type { NextHandleFunction } from 'connect';
 import electron from 'electron';
+import fs from 'fs';
 import type { IncomingMessage, ServerResponse } from 'http';
 import fetch from 'node-fetch';
 import open from 'open';
+import path from 'path';
+import rimraf from 'rimraf';
+import osTmpDir from 'temp-dir';
 import { TLSSocket } from 'tls';
 import { URL } from 'url';
 
@@ -46,7 +50,7 @@ export default function InspectorMiddleware(): NextHandleFunction {
         'https://chrome-devtools-frontend.appspot.com/serve_rev/@e3cd97fc771b893b7fd1879196d1215b622c2bed/inspector.html';
       const ws = target.webSocketDebuggerUrl.replace('ws://[::]:', 'localhost:');
       const url = `${urlBase}?experiments=true&v8only=true&ws=${encodeURIComponent(ws)}`;
-      open(url, { app: { name: 'google chrome' } });
+      launchChromiumAsync(url);
       res.end();
     } else if (req.method === 'PUT') {
       const appPath = require.resolve('./electron-app');
@@ -102,4 +106,46 @@ function getRequestBase(req: IncomingMessage): string {
     req.socket instanceof TLSSocket && req.socket.encrypted === true ? 'https' : 'http';
   const host = req.headers.host;
   return `${scheme}:${host}`;
+}
+
+async function launchChromiumAsync(url: string): Promise<void> {
+  // For dev-client connecting metro in LAN, the request to fetch sourcemap may be blocked by Chromium
+  // with insecure-content (https page send xhr for http resource).
+  // Adding `--allow-running-insecure-content` to overcome this limitation
+  // without users manually allow insecure-content in site settings.
+  // However, if there is existing chromium browser process, the argument will not take effect.
+  // We also pass a `--user-data-dir=` as temporary profile and force chromium to create new browser process.
+  const tempProfileDir = fs.mkdtempSync(path.join(osTmpDir, 'chromium-for-inspector-'));
+  const launchArgs = [
+    '--allow-running-insecure-content',
+    `--user-data-dir=${tempProfileDir}`,
+    '--no-first-run',
+    '--no-startup-window',
+    '--no-default-browser-check',
+  ];
+
+  const result = await open(url, {
+    app: {
+      name: open.apps.chrome,
+      arguments: launchArgs,
+    },
+    // TODO: https://github.com/sindresorhus/open/pull/253
+    // newInstance: true,
+    wait: true,
+  });
+
+  // TODO: https://github.com/sindresorhus/open/pull/252
+  // if (result.exitCode !== 0) {
+  //   await open(url, {
+  //     app: {
+  //       name: open.apps.edge,
+  //       arguments: launchArgs,
+  //     },
+  // TODO: https://github.com/sindresorhus/open/pull/253
+  //     newInstance: true,
+  //     wait: true,
+  //   });
+  // }
+
+  rimraf.sync(tempProfileDir);
 }
