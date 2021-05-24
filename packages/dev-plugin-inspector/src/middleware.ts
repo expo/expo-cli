@@ -129,23 +129,20 @@ async function launchChromiumAsync(url: string): Promise<void> {
       name: open.apps.chrome,
       arguments: launchArgs,
     },
-    // TODO: https://github.com/sindresorhus/open/pull/253
-    // newInstance: true,
+    newInstance: true,
     wait: true,
   });
 
-  // TODO: https://github.com/sindresorhus/open/pull/252
-  // if (result.exitCode !== 0) {
-  //   await open(url, {
-  //     app: {
-  //       name: open.apps.edge,
-  //       arguments: launchArgs,
-  //     },
-  // TODO: https://github.com/sindresorhus/open/pull/253
-  //     newInstance: true,
-  //     wait: true,
-  //   });
-  // }
+  if (result.exitCode !== 0) {
+    await open(url, {
+      app: {
+        name: open.apps.edge,
+        arguments: launchArgs,
+      },
+      newInstance: true,
+      wait: true,
+    });
+  }
 
   rimraf.sync(tempProfileDir);
 }
