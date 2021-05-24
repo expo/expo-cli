@@ -1,8 +1,8 @@
 import { ConfigPlugin } from '../../Plugin.types';
 import { withSplashScreen as withSplashScreenAndroid } from '../../android/SplashScreen';
 import { withSplashScreen as withSplashScreenIOS } from '../../ios/SplashScreen';
-import { createRunOncePlugin } from '../core-plugins';
-import { withStaticPlugin } from '../static-plugins';
+import { createRunOncePlugin } from '../withRunOnce';
+import { withStaticPlugin } from '../withStaticPlugin';
 
 const packageName = 'expo-splash-screen';
 

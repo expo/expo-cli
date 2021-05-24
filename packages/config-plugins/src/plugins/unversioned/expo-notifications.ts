@@ -4,9 +4,9 @@ import {
   withNotificationIcons,
   withNotificationManifest,
 } from '../../android/Notifications';
-import { createRunOncePlugin } from '../core-plugins';
 import { withEntitlementsPlist } from '../ios-plugins';
-import { withStaticPlugin } from '../static-plugins';
+import { createRunOncePlugin } from '../withRunOnce';
+import { withStaticPlugin } from '../withStaticPlugin';
 
 const packageName = 'expo-notifications';
 

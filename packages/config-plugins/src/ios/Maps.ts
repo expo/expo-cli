@@ -3,8 +3,8 @@ import fs from 'fs-extra';
 import path from 'path';
 
 import { ConfigPlugin, InfoPlist } from '../Plugin.types';
-import { withDangerousMod } from '../plugins/core-plugins';
 import { createInfoPlistPlugin, withAppDelegate } from '../plugins/ios-plugins';
+import { withDangerousMod } from '../plugins/withDangerousMod';
 import { mergeContents, MergeResults, removeContents } from '../utils/generateCode';
 import { resolvePackageRootFolder } from '../utils/resolvePackageRootFolder';
 

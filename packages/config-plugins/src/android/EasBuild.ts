@@ -21,7 +21,7 @@ export function getEasBuildGradlePath(projectRoot: string): string {
 }
 
 export async function configureEasBuildAsync(projectRoot: string): Promise<void> {
-  const buildGradlePath = Paths.getAppBuildGradle(projectRoot);
+  const buildGradlePath = Paths.getAppBuildGradleFilePath(projectRoot);
   const easGradlePath = getEasBuildGradlePath(projectRoot);
 
   await fs.writeFile(easGradlePath, gradleScript);
@@ -36,7 +36,7 @@ export async function configureEasBuildAsync(projectRoot: string): Promise<void>
 }
 
 export async function isEasBuildGradleConfiguredAsync(projectRoot: string): Promise<boolean> {
-  const buildGradlePath = Paths.getAppBuildGradle(projectRoot);
+  const buildGradlePath = Paths.getAppBuildGradleFilePath(projectRoot);
   const easGradlePath = getEasBuildGradlePath(projectRoot);
 
   const hasEasGradleFile = await fs.pathExists(easGradlePath);

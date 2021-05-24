@@ -3,9 +3,9 @@ import { JSONObject } from '@expo/json-file';
 
 import { ConfigPlugin } from '../../Plugin.types';
 import * as WarningAggregator from '../../utils/warnings';
-import { createRunOncePlugin } from '../core-plugins';
 import { withEntitlementsPlist } from '../ios-plugins';
-import { withStaticPlugin } from '../static-plugins';
+import { createRunOncePlugin } from '../withRunOnce';
+import { withStaticPlugin } from '../withStaticPlugin';
 
 const packageName = 'expo-document-picker';
 

@@ -698,7 +698,9 @@ async function openUrlAsync({
         // TODO(ville): possibly need to compare Gradle project with app.json/config.ts
         // and show a helpful error message, if there's a mismatch.
         throw new Error(
-          `Could not find applicationId in ${AndroidConfig.Paths.getAppBuildGradle(projectRoot)}`
+          `Could not find applicationId in ${AndroidConfig.Paths.getAppBuildGradleFilePath(
+            projectRoot
+          )}`
         );
       } else {
         clientApplicationId = applicationId;

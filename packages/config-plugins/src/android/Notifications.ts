@@ -5,7 +5,7 @@ import path from 'path';
 
 import { ConfigPlugin } from '../Plugin.types';
 import { createAndroidManifestPlugin } from '../plugins/android-plugins';
-import { withDangerousMod } from '../plugins/core-plugins';
+import { withDangerousMod } from '../plugins/withDangerousMod';
 import { writeXMLAsync } from '../utils/XML';
 import * as Colors from './Colors';
 import { ANDROID_RES_PATH, dpiValues } from './Icon';

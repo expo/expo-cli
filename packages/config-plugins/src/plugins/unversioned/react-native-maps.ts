@@ -4,8 +4,8 @@ import { ConfigPlugin } from '../../Plugin.types';
 import { withGoogleMapsApiKey } from '../../android/GoogleMapsApiKey';
 import { withPermissions } from '../../android/Permissions';
 import { withMaps as withMapsIOS } from '../../ios/Maps';
-import { createRunOncePlugin } from '../core-plugins';
-import { withStaticPlugin } from '../static-plugins';
+import { createRunOncePlugin } from '../withRunOnce';
+import { withStaticPlugin } from '../withStaticPlugin';
 
 const packageName = 'react-native-maps';
 const LOCATION_USAGE = 'Allow $(PRODUCT_NAME) to access your location';

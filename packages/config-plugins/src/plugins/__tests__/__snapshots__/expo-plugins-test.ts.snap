@@ -138,7 +138,6 @@ Object {
         "applinks:https://pillarvalley.netlify.app",
       ],
       "com.apple.developer.contacts.notes": true,
-      "foo": "bar",
     },
     "googleServicesFile": "./config/GoogleService-Info.plist",
     "infoPlist": Object {
@@ -207,6 +206,1400 @@ Object {
       ],
       "UIUserInterfaceStyle": "Automatic",
       "UIViewControllerBasedStatusBarAppearance": false,
+      "branch_key": Object {
+        "live": "MY_BRANCH_KEY",
+      },
+    },
+    "isTabletOnly": false,
+    "merchantId": "TEST_MERCHANT_ID",
+    "requireFullScreen": true,
+    "supportsTablet": true,
+    "userInterfaceStyle": "automatic",
+    "usesAppleSignIn": true,
+    "usesIcloudStorage": true,
+  },
+  "locales": Object {
+    "en": "./locales/en-US.json",
+    "es": Object {
+      "foo": "el bar",
+    },
+  },
+  "name": "my cool app",
+  "notification": Object {
+    "androidCollapsedTitle": "#{unread_notifications} new interactions",
+    "androidMode": "collapse",
+    "color": "green",
+    "icon": "./icons/notification-icon.png",
+    "iosDisplayInForeground": true,
+  },
+  "orientation": "default",
+  "packagerOpts": Object {
+    "extraThing": true,
+  },
+  "platforms": Array [
+    "android",
+    "ios",
+    "web",
+  ],
+  "primaryColor": "#fff000",
+  "scheme": "my-app-redirect",
+  "slug": "mycoolapp",
+  "updates": Object {
+    "checkAutomatically": "ON_ERROR_RECOVERY",
+    "enabled": true,
+    "fallbackToCacheTimeout": 650,
+  },
+  "userInterfaceStyle": "dark",
+  "version": "1.0.0",
+}
+`;
+
+exports[`built-in plugins introspects mods 1`] = `
+Object {
+  "_internal": Object {
+    "modResults": Object {
+      "android": Object {
+        "gradleProperties": Array [
+          Object {
+            "type": "comment",
+            "value": "Project-wide Gradle settings.",
+          },
+          Object {
+            "type": "empty",
+          },
+          Object {
+            "type": "comment",
+            "value": "IDE (e.g. Android Studio) users:",
+          },
+          Object {
+            "type": "comment",
+            "value": "Gradle settings configured through the IDE *will override*",
+          },
+          Object {
+            "type": "comment",
+            "value": "any settings specified in this file.",
+          },
+          Object {
+            "type": "empty",
+          },
+          Object {
+            "type": "comment",
+            "value": "For more details on how to configure your build environment visit",
+          },
+          Object {
+            "type": "comment",
+            "value": "http://www.gradle.org/docs/current/userguide/build_environment.html",
+          },
+          Object {
+            "type": "empty",
+          },
+          Object {
+            "type": "comment",
+            "value": "Specifies the JVM arguments used for the daemon process.",
+          },
+          Object {
+            "type": "comment",
+            "value": "The setting is particularly useful for tweaking memory settings.",
+          },
+          Object {
+            "type": "comment",
+            "value": "Default value: -Xmx10248m -XX:MaxPermSize=256m",
+          },
+          Object {
+            "type": "comment",
+            "value": "org.gradle.jvmargs=-Xmx2048m -XX:MaxPermSize=512m -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8",
+          },
+          Object {
+            "type": "empty",
+          },
+          Object {
+            "type": "comment",
+            "value": "When configured, Gradle will run in incubating parallel mode.",
+          },
+          Object {
+            "type": "comment",
+            "value": "This option should only be used with decoupled projects. More details, visit",
+          },
+          Object {
+            "type": "comment",
+            "value": "http://www.gradle.org/docs/current/userguide/multi_project_builds.html#sec:decoupled_projects",
+          },
+          Object {
+            "type": "comment",
+            "value": "org.gradle.parallel=true",
+          },
+          Object {
+            "type": "empty",
+          },
+          Object {
+            "type": "comment",
+            "value": "AndroidX package structure to make it clearer which packages are bundled with the",
+          },
+          Object {
+            "type": "comment",
+            "value": "Android operating system, and which are packaged with your app's APK",
+          },
+          Object {
+            "type": "comment",
+            "value": "https://developer.android.com/topic/libraries/support-library/androidx-rn",
+          },
+          Object {
+            "key": "android.useAndroidX",
+            "type": "property",
+            "value": "true",
+          },
+          Object {
+            "type": "empty",
+          },
+          Object {
+            "type": "comment",
+            "value": "Automatically convert third-party libraries to use AndroidX",
+          },
+          Object {
+            "key": "android.enableJetifier",
+            "type": "property",
+            "value": "true",
+          },
+          Object {
+            "type": "empty",
+          },
+          Object {
+            "type": "comment",
+            "value": "Version of flipper SDK to use with React Native",
+          },
+          Object {
+            "key": "FLIPPER_VERSION",
+            "type": "property",
+            "value": "0.54.0",
+          },
+          Object {
+            "type": "empty",
+          },
+        ],
+        "manifest": Object {
+          "manifest": Object {
+            "$": Object {
+              "package": "com.bacon.todo",
+              "xmlns:android": "http://schemas.android.com/apk/res/android",
+            },
+            "application": Array [
+              Object {
+                "$": Object {
+                  "android:allowBackup": "true",
+                  "android:label": "@string/app_name",
+                  "android:name": ".MainApplication",
+                  "android:theme": "@style/AppTheme",
+                },
+                "activity": Array [
+                  Object {
+                    "$": Object {
+                      "android:configChanges": "keyboard|keyboardHidden|orientation|screenSize|uiMode",
+                      "android:label": "@string/app_name",
+                      "android:launchMode": "singleTask",
+                      "android:name": ".MainActivity",
+                      "android:screenOrientation": "unspecified",
+                      "android:windowSoftInputMode": "adjustResize",
+                    },
+                    "intent-filter": Array [
+                      Object {
+                        "action": Array [
+                          Object {
+                            "$": Object {
+                              "android:name": "android.intent.action.MAIN",
+                            },
+                          },
+                        ],
+                        "category": Array [
+                          Object {
+                            "$": Object {
+                              "android:name": "android.intent.category.LAUNCHER",
+                            },
+                          },
+                        ],
+                      },
+                      Object {
+                        "action": Array [
+                          Object {
+                            "$": Object {
+                              "android:name": "android.intent.action.VIEW",
+                            },
+                          },
+                        ],
+                        "category": Array [
+                          Object {
+                            "$": Object {
+                              "android:name": "android.intent.category.DEFAULT",
+                            },
+                          },
+                          Object {
+                            "$": Object {
+                              "android:name": "android.intent.category.BROWSABLE",
+                            },
+                          },
+                        ],
+                        "data": Array [
+                          Object {
+                            "$": Object {
+                              "android:scheme": "my-app-redirect",
+                            },
+                          },
+                          Object {
+                            "$": Object {
+                              "android:scheme": "com.bacon.todo",
+                            },
+                          },
+                        ],
+                      },
+                      Object {
+                        "$": Object {
+                          "android:autoVerify": "true",
+                        },
+                        "action": Array [
+                          Object {
+                            "$": Object {
+                              "android:name": "android.intent.action.VIEW",
+                            },
+                          },
+                        ],
+                        "category": Array [
+                          Object {
+                            "$": Object {
+                              "android:name": "android.intent.category.BROWSABLE",
+                            },
+                          },
+                          Object {
+                            "$": Object {
+                              "android:name": "android.intent.category.DEFAULT",
+                            },
+                          },
+                        ],
+                        "data": Array [
+                          Object {
+                            "$": Object {
+                              "android:host": "*.expo.io",
+                              "android:scheme": "https",
+                            },
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                  Object {
+                    "$": Object {
+                      "android:name": "com.facebook.react.devsupport.DevSettingsActivity",
+                    },
+                  },
+                  Object {
+                    "$": Object {
+                      "android:exported": "true",
+                      "android:name": "com.facebook.CustomTabActivity",
+                    },
+                    "intent-filter": Array [
+                      Object {
+                        "action": Array [
+                          Object {
+                            "$": Object {
+                              "android:name": "android.intent.action.VIEW",
+                            },
+                          },
+                        ],
+                        "category": Array [
+                          Object {
+                            "$": Object {
+                              "android:name": "android.intent.category.DEFAULT",
+                            },
+                          },
+                          Object {
+                            "$": Object {
+                              "android:name": "android.intent.category.BROWSABLE",
+                            },
+                          },
+                        ],
+                        "data": Array [
+                          Object {
+                            "$": Object {
+                              "android:scheme": "fb1234567890",
+                            },
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                ],
+                "meta-data": Array [
+                  Object {
+                    "$": Object {
+                      "android:name": "com.facebook.sdk.ApplicationId",
+                      "android:value": "@string/facebook_app_id",
+                    },
+                  },
+                  Object {
+                    "$": Object {
+                      "android:name": "com.facebook.sdk.ApplicationName",
+                      "android:value": "my-fb-test-app",
+                    },
+                  },
+                  Object {
+                    "$": Object {
+                      "android:name": "com.facebook.sdk.AutoInitEnabled",
+                      "android:value": "true",
+                    },
+                  },
+                  Object {
+                    "$": Object {
+                      "android:name": "com.facebook.sdk.AutoLogAppEventsEnabled",
+                      "android:value": "true",
+                    },
+                  },
+                  Object {
+                    "$": Object {
+                      "android:name": "com.facebook.sdk.AdvertiserIDCollectionEnabled",
+                      "android:value": "true",
+                    },
+                  },
+                  Object {
+                    "$": Object {
+                      "android:name": "io.branch.sdk.BranchKey",
+                      "android:value": "MY_BRANCH_ANDROID_KEY",
+                    },
+                  },
+                  Object {
+                    "$": Object {
+                      "android:name": "expo.modules.updates.ENABLED",
+                      "android:value": "true",
+                    },
+                  },
+                  Object {
+                    "$": Object {
+                      "android:name": "expo.modules.updates.EXPO_UPDATES_CHECK_ON_LAUNCH",
+                      "android:value": "NEVER",
+                    },
+                  },
+                  Object {
+                    "$": Object {
+                      "android:name": "expo.modules.updates.EXPO_UPDATES_LAUNCH_WAIT_MS",
+                      "android:value": "650",
+                    },
+                  },
+                  Object {
+                    "$": Object {
+                      "android:name": "expo.modules.updates.EXPO_UPDATE_URL",
+                      "android:value": "https://exp.host/@bacon/mycoolapp",
+                    },
+                  },
+                  Object {
+                    "$": Object {
+                      "android:name": "expo.modules.notifications.default_notification_icon",
+                      "android:resource": "@drawable/notification_icon",
+                    },
+                  },
+                  Object {
+                    "$": Object {
+                      "android:name": "expo.modules.notifications.default_notification_color",
+                      "android:resource": "@color/notification_icon_color",
+                    },
+                  },
+                  Object {
+                    "$": Object {
+                      "android:name": "com.google.android.gms.ads.APPLICATION_ID",
+                      "android:value": "MY_GOOGLE_MOBILE_ADS_APP_ID",
+                    },
+                  },
+                  Object {
+                    "$": Object {
+                      "android:name": "com.google.android.gms.ads.DELAY_APP_MEASUREMENT_INIT",
+                      "android:value": "false",
+                    },
+                  },
+                  Object {
+                    "$": Object {
+                      "android:name": "com.google.android.geo.API_KEY",
+                      "android:value": "MY_GOOGLE_MAPS_ANDROID_KEY",
+                    },
+                  },
+                ],
+                "uses-library": Array [
+                  Object {
+                    "$": Object {
+                      "android:name": "org.apache.http.legacy",
+                      "android:required": false,
+                    },
+                  },
+                ],
+              },
+            ],
+            "uses-permission": Array [
+              Object {
+                "$": Object {
+                  "android:name": "android.permission.INTERNET",
+                },
+              },
+              Object {
+                "$": Object {
+                  "android:name": "android.permission.CAMERA",
+                },
+              },
+              Object {
+                "$": Object {
+                  "android:name": "com.sec.android.provider.badge.permission.WRITE",
+                },
+              },
+              Object {
+                "$": Object {
+                  "android:name": "android.permission.ACCESS_NETWORK_STATE",
+                },
+              },
+              Object {
+                "$": Object {
+                  "android:name": "android.permission.SYSTEM_ALERT_WINDOW",
+                },
+              },
+              Object {
+                "$": Object {
+                  "android:name": "android.permission.WAKE_LOCK",
+                },
+              },
+              Object {
+                "$": Object {
+                  "android:name": "com.google.android.c2dm.permission.RECEIVE",
+                },
+              },
+            ],
+          },
+        },
+        "strings": Object {
+          "resources": Object {
+            "string": Array [
+              Object {
+                "$": Object {
+                  "name": "app_name",
+                },
+                "_": "my cool app",
+              },
+              Object {
+                "$": Object {
+                  "name": "facebook_app_id",
+                },
+                "_": "1234567890",
+              },
+            ],
+          },
+        },
+      },
+      "ios": Object {
+        "entitlements": Object {
+          "aps-environment": "development",
+          "com.apple.developer.applesignin": Array [
+            "Default",
+          ],
+          "com.apple.developer.associated-domains": Array [
+            "applinks:https://pillarvalley.netlify.app",
+          ],
+          "com.apple.developer.contacts.notes": true,
+        },
+        "expoPlist": Object {
+          "EXUpdatesCheckOnLaunch": "NEVER",
+          "EXUpdatesEnabled": true,
+          "EXUpdatesLaunchWaitMs": 650,
+          "EXUpdatesURL": "https://exp.host/@bacon/mycoolapp",
+        },
+        "infoPlist": Object {
+          "CFBundleDevelopmentRegion": "en",
+          "CFBundleDisplayName": "my cool app",
+          "CFBundleExecutable": "$(EXECUTABLE_NAME)",
+          "CFBundleIdentifier": "$(PRODUCT_BUNDLE_IDENTIFIER)",
+          "CFBundleInfoDictionaryVersion": "6.0",
+          "CFBundleName": "$(PRODUCT_NAME)",
+          "CFBundlePackageType": "APPL",
+          "CFBundleShortVersionString": "1.0.0",
+          "CFBundleSignature": "????",
+          "CFBundleURLTypes": Array [
+            Object {
+              "CFBundleURLSchemes": Array [
+                "my-app-redirect",
+                "com.bacon.todo",
+              ],
+            },
+            Object {
+              "CFBundleURLSchemes": Array [
+                "GOOGLE_SIGN_IN_CLIENT_ID",
+              ],
+            },
+            Object {
+              "CFBundleURLSchemes": Array [
+                "fb1234567890",
+              ],
+            },
+          ],
+          "CFBundleVersion": "6.5.0",
+          "FacebookAdvertiserIDCollectionEnabled": true,
+          "FacebookAppID": "1234567890",
+          "FacebookAutoInitEnabled": true,
+          "FacebookAutoLogAppEventsEnabled": true,
+          "FacebookDisplayName": "my-fb-test-app",
+          "GADApplicationIdentifier": "TEST_googleMobileAdsAppId",
+          "GMSApiKey": "TEST_googleMapsApiKey",
+          "ITSAppUsesNonExemptEncryption": true,
+          "LSApplicationQueriesSchemes": Array [
+            "fbapi",
+            "fb-messenger-api",
+            "fbauth2",
+            "fbshareextension",
+          ],
+          "LSRequiresIPhoneOS": true,
+          "NSAppTransportSecurity": Object {
+            "NSAllowsArbitraryLoads": true,
+            "NSExceptionDomains": Object {
+              "localhost": Object {
+                "NSExceptionAllowsInsecureHTTPLoads": true,
+              },
+            },
+          },
+          "NSLocationWhenInUseUsageDescription": "",
+          "UILaunchStoryboardName": "LaunchScreen",
+          "UIRequiredDeviceCapabilities": Array [
+            "armv7",
+          ],
+          "UIRequiresFullScreen": true,
+          "UISupportedInterfaceOrientations": Array [
+            "UIInterfaceOrientationPortrait",
+            "UIInterfaceOrientationPortraitUpsideDown",
+            "UIInterfaceOrientationLandscapeLeft",
+            "UIInterfaceOrientationLandscapeRight",
+          ],
+          "UIUserInterfaceStyle": "Automatic",
+          "UIViewControllerBasedStatusBarAppearance": false,
+          "branch_key": Object {
+            "live": "MY_BRANCH_KEY",
+          },
+        },
+      },
+    },
+    "pluginHistory": Object {
+      "expo-ads-admob": Object {
+        "name": "expo-ads-admob",
+        "version": "UNVERSIONED",
+      },
+      "expo-apple-authentication": Object {
+        "name": "expo-apple-authentication",
+        "version": "UNVERSIONED",
+      },
+      "expo-branch": Object {
+        "name": "expo-branch",
+        "version": "UNVERSIONED",
+      },
+      "expo-document-picker": Object {
+        "name": "expo-document-picker",
+        "version": "UNVERSIONED",
+      },
+      "expo-facebook": Object {
+        "name": "expo-facebook",
+        "version": "UNVERSIONED",
+      },
+      "expo-notifications": Object {
+        "name": "expo-notifications",
+        "version": "UNVERSIONED",
+      },
+      "expo-splash-screen": Object {
+        "name": "expo-splash-screen",
+        "version": "UNVERSIONED",
+      },
+      "expo-updates": Object {
+        "name": "expo-updates",
+        "version": "UNVERSIONED",
+      },
+      "react-native-maps": Object {
+        "name": "react-native-maps",
+        "version": "UNVERSIONED",
+      },
+    },
+    "projectRoot": "/app",
+  },
+  "android": Object {
+    "adaptiveIcon": Object {
+      "backgroundImage": "./icons/background.png",
+      "foregroundImage": "./icons/foreground.png",
+    },
+    "allowBackup": true,
+    "backgroundColor": "#ff0000",
+    "config": Object {
+      "branch": Object {
+        "apiKey": "MY_BRANCH_ANDROID_KEY",
+      },
+      "googleMaps": Object {
+        "apiKey": "MY_GOOGLE_MAPS_ANDROID_KEY",
+      },
+      "googleMobileAdsAppId": "MY_GOOGLE_MOBILE_ADS_APP_ID",
+      "googleMobileAdsAutoInit": true,
+    },
+    "googleServicesFile": "./config/google-services.json",
+    "intentFilters": Array [
+      Object {
+        "action": "VIEW",
+        "autoVerify": true,
+        "category": Array [
+          "BROWSABLE",
+          "DEFAULT",
+        ],
+        "data": Object {
+          "host": "*.expo.io",
+          "scheme": "https",
+        },
+      },
+    ],
+    "package": "com.bacon.todo",
+    "permissions": Array [
+      "CAMERA",
+      "com.sec.android.provider.badge.permission.WRITE",
+    ],
+    "softwareKeyboardLayoutMode": "pan",
+    "userInterfaceStyle": "light",
+    "versionCode": 6,
+  },
+  "androidNavigationBar": Object {
+    "backgroundColor": "#ff0000",
+    "barStyle": "dark-content",
+    "visible": "sticky-immersive",
+  },
+  "androidStatusBar": Object {
+    "backgroundColor": "#000FFF",
+    "barStyle": "light-content",
+    "hidden": false,
+    "translucent": true,
+  },
+  "appKey": "othermain",
+  "backgroundColor": "orange",
+  "description": "my app is great because it uses expo",
+  "developmentClient": Object {
+    "silentLaunch": true,
+  },
+  "facebookAdvertiserIDCollectionEnabled": true,
+  "facebookAppId": "1234567890",
+  "facebookAutoInitEnabled": true,
+  "facebookAutoLogAppEventsEnabled": true,
+  "facebookDisplayName": "my-fb-test-app",
+  "facebookScheme": "fb1234567890",
+  "githubUrl": "https://github.com/expo/expo",
+  "ios": Object {
+    "accessesContactNotes": true,
+    "appStoreUrl": "https://itunes.apple.com/us/app/pillar-valley/id1336398804?ls=1&mt=8",
+    "associatedDomains": Array [
+      "applinks:https://pillarvalley.netlify.app",
+    ],
+    "backgroundColor": "#ff0000",
+    "buildNumber": "6.5.0",
+    "bundleIdentifier": "com.bacon.todo",
+    "config": Object {
+      "branch": Object {
+        "apiKey": "MY_BRANCH_KEY",
+      },
+      "googleMapsApiKey": "TEST_googleMapsApiKey",
+      "googleMobileAdsAppId": "TEST_googleMobileAdsAppId",
+      "googleMobileAdsAutoInit": true,
+      "googleSignIn": Object {
+        "reservedClientId": "GOOGLE_SIGN_IN_CLIENT_ID",
+      },
+      "usesNonExemptEncryption": true,
+    },
+    "entitlements": Object {
+      "aps-environment": "development",
+      "com.apple.developer.applesignin": Array [
+        "Default",
+      ],
+      "com.apple.developer.associated-domains": Array [
+        "applinks:https://pillarvalley.netlify.app",
+      ],
+      "com.apple.developer.contacts.notes": true,
+    },
+    "googleServicesFile": "./config/GoogleService-Info.plist",
+    "infoPlist": Object {
+      "CFBundleDevelopmentRegion": "en",
+      "CFBundleDisplayName": "my cool app",
+      "CFBundleExecutable": "$(EXECUTABLE_NAME)",
+      "CFBundleIdentifier": "$(PRODUCT_BUNDLE_IDENTIFIER)",
+      "CFBundleInfoDictionaryVersion": "6.0",
+      "CFBundleName": "$(PRODUCT_NAME)",
+      "CFBundlePackageType": "APPL",
+      "CFBundleShortVersionString": "1.0.0",
+      "CFBundleSignature": "????",
+      "CFBundleURLTypes": Array [
+        Object {
+          "CFBundleURLSchemes": Array [
+            "my-app-redirect",
+            "com.bacon.todo",
+          ],
+        },
+        Object {
+          "CFBundleURLSchemes": Array [
+            "GOOGLE_SIGN_IN_CLIENT_ID",
+          ],
+        },
+        Object {
+          "CFBundleURLSchemes": Array [
+            "fb1234567890",
+          ],
+        },
+      ],
+      "CFBundleVersion": "6.5.0",
+      "FacebookAdvertiserIDCollectionEnabled": true,
+      "FacebookAppID": "1234567890",
+      "FacebookAutoInitEnabled": true,
+      "FacebookAutoLogAppEventsEnabled": true,
+      "FacebookDisplayName": "my-fb-test-app",
+      "GADApplicationIdentifier": "TEST_googleMobileAdsAppId",
+      "GMSApiKey": "TEST_googleMapsApiKey",
+      "ITSAppUsesNonExemptEncryption": true,
+      "LSApplicationQueriesSchemes": Array [
+        "fbapi",
+        "fb-messenger-api",
+        "fbauth2",
+        "fbshareextension",
+      ],
+      "LSRequiresIPhoneOS": true,
+      "NSAppTransportSecurity": Object {
+        "NSAllowsArbitraryLoads": true,
+        "NSExceptionDomains": Object {
+          "localhost": Object {
+            "NSExceptionAllowsInsecureHTTPLoads": true,
+          },
+        },
+      },
+      "NSLocationWhenInUseUsageDescription": "",
+      "UILaunchStoryboardName": "LaunchScreen",
+      "UIRequiredDeviceCapabilities": Array [
+        "armv7",
+      ],
+      "UIRequiresFullScreen": true,
+      "UISupportedInterfaceOrientations": Array [
+        "UIInterfaceOrientationPortrait",
+        "UIInterfaceOrientationPortraitUpsideDown",
+        "UIInterfaceOrientationLandscapeLeft",
+        "UIInterfaceOrientationLandscapeRight",
+      ],
+      "UIUserInterfaceStyle": "Automatic",
+      "UIViewControllerBasedStatusBarAppearance": false,
+      "branch_key": Object {
+        "live": "MY_BRANCH_KEY",
+      },
+    },
+    "isTabletOnly": false,
+    "merchantId": "TEST_MERCHANT_ID",
+    "requireFullScreen": true,
+    "supportsTablet": true,
+    "userInterfaceStyle": "automatic",
+    "usesAppleSignIn": true,
+    "usesIcloudStorage": true,
+  },
+  "locales": Object {
+    "en": "./locales/en-US.json",
+    "es": Object {
+      "foo": "el bar",
+    },
+  },
+  "name": "my cool app",
+  "notification": Object {
+    "androidCollapsedTitle": "#{unread_notifications} new interactions",
+    "androidMode": "collapse",
+    "color": "green",
+    "icon": "./icons/notification-icon.png",
+    "iosDisplayInForeground": true,
+  },
+  "orientation": "default",
+  "packagerOpts": Object {
+    "extraThing": true,
+  },
+  "platforms": Array [
+    "android",
+    "ios",
+    "web",
+  ],
+  "primaryColor": "#fff000",
+  "scheme": "my-app-redirect",
+  "slug": "mycoolapp",
+  "updates": Object {
+    "checkAutomatically": "ON_ERROR_RECOVERY",
+    "enabled": true,
+    "fallbackToCacheTimeout": 650,
+  },
+  "userInterfaceStyle": "dark",
+  "version": "1.0.0",
+}
+`;
+
+exports[`built-in plugins introspects mods in a managed project 1`] = `
+Object {
+  "_internal": Object {
+    "modResults": Object {
+      "android": Object {
+        "gradleProperties": Array [],
+        "manifest": Object {
+          "manifest": Object {
+            "$": Object {
+              "package": "com.bacon.todo",
+              "xmlns:android": "http://schemas.android.com/apk/res/android",
+            },
+            "application": Array [
+              Object {
+                "$": Object {
+                  "android:allowBackup": "true",
+                  "android:icon": "@mipmap/ic_launcher",
+                  "android:label": "@string/app_name",
+                  "android:name": ".MainApplication",
+                  "android:roundIcon": "@mipmap/ic_launcher_round",
+                  "android:theme": "@style/AppTheme",
+                },
+                "activity": Array [
+                  Object {
+                    "$": Object {
+                      "android:configChanges": "keyboard|keyboardHidden|orientation|screenSize|uiMode",
+                      "android:label": "@string/app_name",
+                      "android:launchMode": "singleTask",
+                      "android:name": ".MainActivity",
+                      "android:screenOrientation": "unspecified",
+                      "android:theme": "@style/Theme.App.SplashScreen",
+                      "android:windowSoftInputMode": "adjustResize",
+                    },
+                    "intent-filter": Array [
+                      Object {
+                        "action": Array [
+                          Object {
+                            "$": Object {
+                              "android:name": "android.intent.action.MAIN",
+                            },
+                          },
+                        ],
+                        "category": Array [
+                          Object {
+                            "$": Object {
+                              "android:name": "android.intent.category.LAUNCHER",
+                            },
+                          },
+                        ],
+                      },
+                      Object {
+                        "action": Array [
+                          Object {
+                            "$": Object {
+                              "android:name": "android.intent.action.VIEW",
+                            },
+                          },
+                        ],
+                        "category": Array [
+                          Object {
+                            "$": Object {
+                              "android:name": "android.intent.category.DEFAULT",
+                            },
+                          },
+                          Object {
+                            "$": Object {
+                              "android:name": "android.intent.category.BROWSABLE",
+                            },
+                          },
+                        ],
+                        "data": Array [
+                          Object {
+                            "$": Object {
+                              "android:scheme": "my-app-redirect",
+                            },
+                          },
+                          Object {
+                            "$": Object {
+                              "android:scheme": "com.bacon.todo",
+                            },
+                          },
+                        ],
+                      },
+                      Object {
+                        "$": Object {
+                          "android:autoVerify": "true",
+                        },
+                        "action": Array [
+                          Object {
+                            "$": Object {
+                              "android:name": "android.intent.action.VIEW",
+                            },
+                          },
+                        ],
+                        "category": Array [
+                          Object {
+                            "$": Object {
+                              "android:name": "android.intent.category.BROWSABLE",
+                            },
+                          },
+                          Object {
+                            "$": Object {
+                              "android:name": "android.intent.category.DEFAULT",
+                            },
+                          },
+                        ],
+                        "data": Array [
+                          Object {
+                            "$": Object {
+                              "android:host": "*.expo.io",
+                              "android:scheme": "https",
+                            },
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                  Object {
+                    "$": Object {
+                      "android:name": "com.facebook.react.devsupport.DevSettingsActivity",
+                    },
+                  },
+                  Object {
+                    "$": Object {
+                      "android:exported": "true",
+                      "android:name": "com.facebook.CustomTabActivity",
+                    },
+                    "intent-filter": Array [
+                      Object {
+                        "action": Array [
+                          Object {
+                            "$": Object {
+                              "android:name": "android.intent.action.VIEW",
+                            },
+                          },
+                        ],
+                        "category": Array [
+                          Object {
+                            "$": Object {
+                              "android:name": "android.intent.category.DEFAULT",
+                            },
+                          },
+                          Object {
+                            "$": Object {
+                              "android:name": "android.intent.category.BROWSABLE",
+                            },
+                          },
+                        ],
+                        "data": Array [
+                          Object {
+                            "$": Object {
+                              "android:scheme": "fb1234567890",
+                            },
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                ],
+                "meta-data": Array [
+                  Object {
+                    "$": Object {
+                      "android:name": "com.facebook.sdk.ApplicationId",
+                      "android:value": "@string/facebook_app_id",
+                    },
+                  },
+                  Object {
+                    "$": Object {
+                      "android:name": "com.facebook.sdk.ApplicationName",
+                      "android:value": "my-fb-test-app",
+                    },
+                  },
+                  Object {
+                    "$": Object {
+                      "android:name": "com.facebook.sdk.AutoInitEnabled",
+                      "android:value": "true",
+                    },
+                  },
+                  Object {
+                    "$": Object {
+                      "android:name": "com.facebook.sdk.AutoLogAppEventsEnabled",
+                      "android:value": "true",
+                    },
+                  },
+                  Object {
+                    "$": Object {
+                      "android:name": "com.facebook.sdk.AdvertiserIDCollectionEnabled",
+                      "android:value": "true",
+                    },
+                  },
+                  Object {
+                    "$": Object {
+                      "android:name": "io.branch.sdk.BranchKey",
+                      "android:value": "MY_BRANCH_ANDROID_KEY",
+                    },
+                  },
+                  Object {
+                    "$": Object {
+                      "android:name": "expo.modules.updates.ENABLED",
+                      "android:value": "true",
+                    },
+                  },
+                  Object {
+                    "$": Object {
+                      "android:name": "expo.modules.updates.EXPO_UPDATES_CHECK_ON_LAUNCH",
+                      "android:value": "NEVER",
+                    },
+                  },
+                  Object {
+                    "$": Object {
+                      "android:name": "expo.modules.updates.EXPO_UPDATES_LAUNCH_WAIT_MS",
+                      "android:value": "650",
+                    },
+                  },
+                  Object {
+                    "$": Object {
+                      "android:name": "expo.modules.updates.EXPO_UPDATE_URL",
+                      "android:value": "https://exp.host/@bacon/mycoolapp",
+                    },
+                  },
+                  Object {
+                    "$": Object {
+                      "android:name": "expo.modules.notifications.default_notification_icon",
+                      "android:resource": "@drawable/notification_icon",
+                    },
+                  },
+                  Object {
+                    "$": Object {
+                      "android:name": "expo.modules.notifications.default_notification_color",
+                      "android:resource": "@color/notification_icon_color",
+                    },
+                  },
+                  Object {
+                    "$": Object {
+                      "android:name": "com.google.android.gms.ads.APPLICATION_ID",
+                      "android:value": "MY_GOOGLE_MOBILE_ADS_APP_ID",
+                    },
+                  },
+                  Object {
+                    "$": Object {
+                      "android:name": "com.google.android.gms.ads.DELAY_APP_MEASUREMENT_INIT",
+                      "android:value": "false",
+                    },
+                  },
+                  Object {
+                    "$": Object {
+                      "android:name": "com.google.android.geo.API_KEY",
+                      "android:value": "MY_GOOGLE_MAPS_ANDROID_KEY",
+                    },
+                  },
+                ],
+                "uses-library": Array [
+                  Object {
+                    "$": Object {
+                      "android:name": "org.apache.http.legacy",
+                      "android:required": false,
+                    },
+                  },
+                ],
+              },
+            ],
+            "uses-permission": Array [
+              Object {
+                "$": Object {
+                  "android:name": "android.permission.INTERNET",
+                },
+              },
+              Object {
+                "$": Object {
+                  "android:name": "android.permission.CAMERA",
+                },
+              },
+              Object {
+                "$": Object {
+                  "android:name": "com.sec.android.provider.badge.permission.WRITE",
+                },
+              },
+              Object {
+                "$": Object {
+                  "android:name": "android.permission.ACCESS_NETWORK_STATE",
+                },
+              },
+              Object {
+                "$": Object {
+                  "android:name": "android.permission.SYSTEM_ALERT_WINDOW",
+                },
+              },
+              Object {
+                "$": Object {
+                  "android:name": "android.permission.WAKE_LOCK",
+                },
+              },
+              Object {
+                "$": Object {
+                  "android:name": "com.google.android.c2dm.permission.RECEIVE",
+                },
+              },
+            ],
+          },
+        },
+        "strings": Object {
+          "resources": Object {
+            "string": Array [
+              Object {
+                "$": Object {
+                  "name": "app_name",
+                },
+                "_": "my cool app",
+              },
+              Object {
+                "$": Object {
+                  "name": "facebook_app_id",
+                },
+                "_": "1234567890",
+              },
+            ],
+          },
+        },
+      },
+      "ios": Object {
+        "entitlements": Object {
+          "aps-environment": "development",
+          "com.apple.developer.applesignin": Array [
+            "Default",
+          ],
+          "com.apple.developer.associated-domains": Array [
+            "applinks:https://pillarvalley.netlify.app",
+          ],
+          "com.apple.developer.contacts.notes": true,
+          "foo": "bar",
+        },
+        "expoPlist": Object {
+          "EXUpdatesCheckOnLaunch": "NEVER",
+          "EXUpdatesEnabled": true,
+          "EXUpdatesLaunchWaitMs": 650,
+          "EXUpdatesURL": "https://exp.host/@bacon/mycoolapp",
+        },
+        "infoPlist": Object {
+          "CFBundleDisplayName": "my cool app",
+          "CFBundleShortVersionString": "1.0.0",
+          "CFBundleURLTypes": Array [
+            Object {
+              "CFBundleURLSchemes": Array [
+                "my-app-redirect",
+                "com.bacon.todo",
+              ],
+            },
+            Object {
+              "CFBundleURLSchemes": Array [
+                "GOOGLE_SIGN_IN_CLIENT_ID",
+              ],
+            },
+            Object {
+              "CFBundleURLSchemes": Array [
+                "fb1234567890",
+              ],
+            },
+          ],
+          "CFBundleVersion": "6.5.0",
+          "FacebookAdvertiserIDCollectionEnabled": true,
+          "FacebookAppID": "1234567890",
+          "FacebookAutoInitEnabled": true,
+          "FacebookAutoLogAppEventsEnabled": true,
+          "FacebookDisplayName": "my-fb-test-app",
+          "GADApplicationIdentifier": "TEST_googleMobileAdsAppId",
+          "GMSApiKey": "TEST_googleMapsApiKey",
+          "ITSAppUsesNonExemptEncryption": true,
+          "LSApplicationQueriesSchemes": Array [
+            "fbapi",
+            "fb-messenger-api",
+            "fbauth2",
+            "fbshareextension",
+          ],
+          "UIRequiresFullScreen": true,
+          "UISupportedInterfaceOrientations": Array [
+            "UIInterfaceOrientationPortrait",
+            "UIInterfaceOrientationPortraitUpsideDown",
+            "UIInterfaceOrientationLandscapeLeft",
+            "UIInterfaceOrientationLandscapeRight",
+          ],
+          "UIUserInterfaceStyle": "Automatic",
+          "bar": Object {
+            "val": Array [
+              "foo",
+            ],
+          },
+          "branch_key": Object {
+            "live": "MY_BRANCH_KEY",
+          },
+        },
+      },
+    },
+    "pluginHistory": Object {
+      "expo-ads-admob": Object {
+        "name": "expo-ads-admob",
+        "version": "UNVERSIONED",
+      },
+      "expo-apple-authentication": Object {
+        "name": "expo-apple-authentication",
+        "version": "UNVERSIONED",
+      },
+      "expo-branch": Object {
+        "name": "expo-branch",
+        "version": "UNVERSIONED",
+      },
+      "expo-document-picker": Object {
+        "name": "expo-document-picker",
+        "version": "UNVERSIONED",
+      },
+      "expo-facebook": Object {
+        "name": "expo-facebook",
+        "version": "UNVERSIONED",
+      },
+      "expo-notifications": Object {
+        "name": "expo-notifications",
+        "version": "UNVERSIONED",
+      },
+      "expo-splash-screen": Object {
+        "name": "expo-splash-screen",
+        "version": "UNVERSIONED",
+      },
+      "expo-updates": Object {
+        "name": "expo-updates",
+        "version": "UNVERSIONED",
+      },
+      "react-native-maps": Object {
+        "name": "react-native-maps",
+        "version": "UNVERSIONED",
+      },
+    },
+    "projectRoot": "/app",
+  },
+  "android": Object {
+    "adaptiveIcon": Object {
+      "backgroundImage": "./icons/background.png",
+      "foregroundImage": "./icons/foreground.png",
+    },
+    "allowBackup": true,
+    "backgroundColor": "#ff0000",
+    "config": Object {
+      "branch": Object {
+        "apiKey": "MY_BRANCH_ANDROID_KEY",
+      },
+      "googleMaps": Object {
+        "apiKey": "MY_GOOGLE_MAPS_ANDROID_KEY",
+      },
+      "googleMobileAdsAppId": "MY_GOOGLE_MOBILE_ADS_APP_ID",
+      "googleMobileAdsAutoInit": true,
+    },
+    "googleServicesFile": "./config/google-services.json",
+    "intentFilters": Array [
+      Object {
+        "action": "VIEW",
+        "autoVerify": true,
+        "category": Array [
+          "BROWSABLE",
+          "DEFAULT",
+        ],
+        "data": Object {
+          "host": "*.expo.io",
+          "scheme": "https",
+        },
+      },
+    ],
+    "package": "com.bacon.todo",
+    "permissions": Array [
+      "CAMERA",
+      "com.sec.android.provider.badge.permission.WRITE",
+    ],
+    "softwareKeyboardLayoutMode": "pan",
+    "userInterfaceStyle": "light",
+    "versionCode": 6,
+  },
+  "androidNavigationBar": Object {
+    "backgroundColor": "#ff0000",
+    "barStyle": "dark-content",
+    "visible": "sticky-immersive",
+  },
+  "androidStatusBar": Object {
+    "backgroundColor": "#000FFF",
+    "barStyle": "light-content",
+    "hidden": false,
+    "translucent": true,
+  },
+  "appKey": "othermain",
+  "backgroundColor": "orange",
+  "description": "my app is great because it uses expo",
+  "developmentClient": Object {
+    "silentLaunch": true,
+  },
+  "facebookAdvertiserIDCollectionEnabled": true,
+  "facebookAppId": "1234567890",
+  "facebookAutoInitEnabled": true,
+  "facebookAutoLogAppEventsEnabled": true,
+  "facebookDisplayName": "my-fb-test-app",
+  "facebookScheme": "fb1234567890",
+  "githubUrl": "https://github.com/expo/expo",
+  "ios": Object {
+    "accessesContactNotes": true,
+    "appStoreUrl": "https://itunes.apple.com/us/app/pillar-valley/id1336398804?ls=1&mt=8",
+    "associatedDomains": Array [
+      "applinks:https://pillarvalley.netlify.app",
+    ],
+    "backgroundColor": "#ff0000",
+    "buildNumber": "6.5.0",
+    "bundleIdentifier": "com.bacon.todo",
+    "config": Object {
+      "branch": Object {
+        "apiKey": "MY_BRANCH_KEY",
+      },
+      "googleMapsApiKey": "TEST_googleMapsApiKey",
+      "googleMobileAdsAppId": "TEST_googleMobileAdsAppId",
+      "googleMobileAdsAutoInit": true,
+      "googleSignIn": Object {
+        "reservedClientId": "GOOGLE_SIGN_IN_CLIENT_ID",
+      },
+      "usesNonExemptEncryption": true,
+    },
+    "entitlements": Object {
+      "aps-environment": "development",
+      "com.apple.developer.applesignin": Array [
+        "Default",
+      ],
+      "com.apple.developer.associated-domains": Array [
+        "applinks:https://pillarvalley.netlify.app",
+      ],
+      "com.apple.developer.contacts.notes": true,
+      "foo": "bar",
+    },
+    "googleServicesFile": "./config/GoogleService-Info.plist",
+    "infoPlist": Object {
+      "CFBundleDisplayName": "my cool app",
+      "CFBundleShortVersionString": "1.0.0",
+      "CFBundleURLTypes": Array [
+        Object {
+          "CFBundleURLSchemes": Array [
+            "my-app-redirect",
+            "com.bacon.todo",
+          ],
+        },
+        Object {
+          "CFBundleURLSchemes": Array [
+            "GOOGLE_SIGN_IN_CLIENT_ID",
+          ],
+        },
+        Object {
+          "CFBundleURLSchemes": Array [
+            "fb1234567890",
+          ],
+        },
+      ],
+      "CFBundleVersion": "6.5.0",
+      "FacebookAdvertiserIDCollectionEnabled": true,
+      "FacebookAppID": "1234567890",
+      "FacebookAutoInitEnabled": true,
+      "FacebookAutoLogAppEventsEnabled": true,
+      "FacebookDisplayName": "my-fb-test-app",
+      "GADApplicationIdentifier": "TEST_googleMobileAdsAppId",
+      "GMSApiKey": "TEST_googleMapsApiKey",
+      "ITSAppUsesNonExemptEncryption": true,
+      "LSApplicationQueriesSchemes": Array [
+        "fbapi",
+        "fb-messenger-api",
+        "fbauth2",
+        "fbshareextension",
+      ],
+      "UIRequiresFullScreen": true,
+      "UISupportedInterfaceOrientations": Array [
+        "UIInterfaceOrientationPortrait",
+        "UIInterfaceOrientationPortraitUpsideDown",
+        "UIInterfaceOrientationLandscapeLeft",
+        "UIInterfaceOrientationLandscapeRight",
+      ],
+      "UIUserInterfaceStyle": "Automatic",
       "bar": Object {
         "val": Array [
           "foo",
