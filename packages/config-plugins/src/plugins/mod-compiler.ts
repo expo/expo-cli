@@ -73,7 +73,12 @@ export function withIntrospectionBaseMods(
  */
 export async function compileModsAsync(
   config: ExportedConfig,
-  props: { projectRoot: string; platforms?: ModPlatform[]; introspect?: boolean; strict?: boolean }
+  props: {
+    projectRoot: string;
+    platforms?: ModPlatform[];
+    introspect?: boolean;
+    assertMissingModProviders?: boolean;
+  }
 ): Promise<ExportedConfig> {
   if (props.introspect === true) {
     config = withIntrospectionBaseMods(config);
@@ -121,8 +126,13 @@ export async function evalModsAsync(
      * Throw errors when mods are missing providers.
      * @default true
      */
-    strict,
-  }: { projectRoot: string; introspect?: boolean; strict?: boolean; platforms?: ModPlatform[] }
+    assertMissingModProviders,
+  }: {
+    projectRoot: string;
+    introspect?: boolean;
+    assertMissingModProviders?: boolean;
+    platforms?: ModPlatform[];
+  }
 ): Promise<ExportedConfig> {
   for (const [platformName, platform] of Object.entries(config.mods ?? ({} as ModConfig))) {
     if (platforms && !platforms.includes(platformName as any)) {
@@ -151,7 +161,7 @@ export async function evalModsAsync(
         if (!(mod as Mod).isProvider) {
           // In strict mode, throw an error.
           const errorMessage = `Initial base modifier for "${platformName}.${modName}" is not a provider and therefore will not provide modResults to child mods`;
-          if (strict !== false) {
+          if (assertMissingModProviders !== false) {
             throw new PluginError(errorMessage, 'MISSING_PROVIDER');
           } else {
             if (config._internal?.isDebug) {
