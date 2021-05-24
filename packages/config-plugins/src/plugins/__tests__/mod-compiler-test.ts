@@ -1,8 +1,9 @@
 import fs from 'fs-extra';
 import { vol } from 'memfs';
 
-import { ExportedConfig } from '../../Plugin.types';
+import { ExportedConfig, Mod } from '../../Plugin.types';
 import { compileModsAsync } from '../mod-compiler';
+import { withMod } from '../withMod';
 import rnFixture from './fixtures/react-native-project';
 
 jest.mock('fs');
@@ -19,6 +20,60 @@ describe(compileModsAsync, () => {
 
   afterEach(() => {
     vol.reset();
+  });
+
+  it('skips missing providers in loose mode', async () => {
+    // A basic plugin exported from an app.json
+    let exportedConfig: ExportedConfig = {
+      name: 'app',
+      slug: '',
+      mods: null,
+    };
+
+    const action: Mod<any> = jest.fn(props => {
+      // Capitalize app name
+      props.name = (props.name as string).toUpperCase();
+      return props;
+    });
+    // Apply mod
+    exportedConfig = withMod<any>(exportedConfig, {
+      platform: 'android',
+      mod: 'custom',
+      action,
+    });
+
+    const config = await compileModsAsync(exportedConfig, { projectRoot, strict: false });
+
+    expect(config.name).toBe('app');
+    // Base mods are skipped when no mods are applied, these shouldn't be defined.
+    expect(config.ios?.infoPlist).toBeUndefined();
+    expect(config.ios?.entitlements).toBeUndefined();
+    // Adds base mods
+    expect(Object.values(config.mods.ios).every(value => typeof value === 'function')).toBe(true);
+
+    expect(action).not.toBeCalled();
+  });
+
+  it('asserts missing providers in strict mode', async () => {
+    // A basic plugin exported from an app.json
+    let exportedConfig: ExportedConfig = {
+      name: 'app',
+      slug: '',
+      mods: null,
+    };
+
+    // Apply mod
+    exportedConfig = withMod<any>(exportedConfig, {
+      platform: 'android',
+      mod: 'custom',
+      action(config) {
+        return config;
+      },
+    });
+
+    await expect(compileModsAsync(exportedConfig, { projectRoot, strict: true })).rejects.toThrow(
+      `Initial base modifier for "android.custom" is not a provider and therefore will not provide modResults to child mods`
+    );
   });
 
   it('compiles with no mods', async () => {
