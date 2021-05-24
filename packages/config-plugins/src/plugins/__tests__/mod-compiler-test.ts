@@ -42,7 +42,10 @@ describe(compileModsAsync, () => {
       action,
     });
 
-    const config = await compileModsAsync(exportedConfig, { projectRoot, strict: false });
+    const config = await compileModsAsync(exportedConfig, {
+      projectRoot,
+      assertMissingModProviders: false,
+    });
 
     expect(config.name).toBe('app');
     // Base mods are skipped when no mods are applied, these shouldn't be defined.
@@ -54,7 +57,7 @@ describe(compileModsAsync, () => {
     expect(action).not.toBeCalled();
   });
 
-  it('asserts missing providers in strict mode', async () => {
+  it('asserts missing providers', async () => {
     // A basic plugin exported from an app.json
     let exportedConfig: ExportedConfig = {
       name: 'app',
@@ -71,7 +74,9 @@ describe(compileModsAsync, () => {
       },
     });
 
-    await expect(compileModsAsync(exportedConfig, { projectRoot, strict: true })).rejects.toThrow(
+    await expect(
+      compileModsAsync(exportedConfig, { projectRoot, assertMissingModProviders: true })
+    ).rejects.toThrow(
       `Initial base modifier for "android.custom" is not a provider and therefore will not provide modResults to child mods`
     );
   });
