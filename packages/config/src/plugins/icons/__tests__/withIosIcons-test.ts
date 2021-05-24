@@ -2,9 +2,9 @@ import * as fs from 'fs';
 import { vol } from 'memfs';
 import * as path from 'path';
 
+import rnFixture from '../../__tests__/fixtures/react-native-project';
 import { getIcons, ICON_CONTENTS, setIconsAsync } from '../withIosIcons';
 import { getDirFromFS } from './utils/getDirFromFS';
-
 const fsReal = jest.requireActual('fs') as typeof fs;
 
 jest.mock('fs');
@@ -56,22 +56,13 @@ const totalPossibleIcons = ICON_CONTENTS.reduce((prev, curr) => {
 }, []).length;
 
 describe('e2e: iOS icons', () => {
-  const iconPath = path.resolve(__dirname, './fixtures/icons/icon.png');
+  const iconPath = path.resolve(__dirname, '../../__tests__/fixtures/icon.png');
 
   const projectRoot = '/app';
   beforeAll(async () => {
     const icon = fsReal.readFileSync(iconPath);
 
-    vol.fromJSON(
-      {
-        'ios/testproject.xcodeproj/project.pbxproj': fsReal.readFileSync(
-          path.join(__dirname, 'fixtures/project.pbxproj'),
-          'utf-8'
-        ),
-        'ios/testproject/AppDelegate.swift': '',
-      },
-      projectRoot
-    );
+    vol.fromJSON(rnFixture, projectRoot);
 
     vol.mkdirpSync('/app/assets');
     vol.writeFileSync('/app/assets/icon.png', icon);
@@ -84,9 +75,9 @@ describe('e2e: iOS icons', () => {
   it('writes all the image files expected', async () => {
     await setIconsAsync(
       {
-        slug: 'testproject',
+        slug: 'ReactNativeProject',
         version: '1',
-        name: 'testproject',
+        name: 'ReactNativeProject',
         platforms: ['ios', 'android'],
         // must use full path for mock fs
         icon: '/app/assets/icon.png',
@@ -96,7 +87,7 @@ describe('e2e: iOS icons', () => {
 
     const after = getDirFromFS(vol.toJSON(), projectRoot);
     const icons = Object.keys(after).filter(value =>
-      value.startsWith('ios/testproject/Images.xcassets/AppIcon.appiconset/App-Icon')
+      value.startsWith('ios/ReactNativeProject/Images.xcassets/AppIcon.appiconset/App-Icon')
     );
 
     expect(icons.length).toBe(14);
@@ -106,7 +97,7 @@ describe('e2e: iOS icons', () => {
 
     // Test the Contents.json file
     const contents = JSON.parse(
-      after['ios/testproject/Images.xcassets/AppIcon.appiconset/Contents.json']
+      after['ios/ReactNativeProject/Images.xcassets/AppIcon.appiconset/Contents.json']
     );
     expect(contents.images).toMatchSnapshot();
 

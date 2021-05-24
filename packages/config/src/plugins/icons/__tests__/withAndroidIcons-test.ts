@@ -4,17 +4,17 @@ import { vol } from 'memfs';
 import * as path from 'path';
 
 import {
+  ADAPTIVE_ICON_XML_WITH_BACKGROUND_COLOR,
+  ADAPTIVE_ICON_XML_WITH_BOTH,
+  LIST_OF_ANDROID_ADAPTIVE_ICON_FILES_FINAL,
+  SAMPLE_COLORS_XML,
+} from '../../__tests__/fixtures/androidIcons';
+import {
   createAdaptiveIconXmlString,
   getAdaptiveIcon,
   getIcon,
   setIconAsync,
 } from '../withAndroidIcons';
-import {
-  ADAPTIVE_ICON_XML_WITH_BACKGROUND_COLOR,
-  ADAPTIVE_ICON_XML_WITH_BOTH,
-  LIST_OF_ANDROID_ADAPTIVE_ICON_FILES_FINAL,
-  SAMPLE_COLORS_XML,
-} from './fixtures/androidIcons';
 import { getDirFromFS } from './utils/getDirFromFS';
 
 const fsReal = jest.requireActual('fs') as typeof fs;
@@ -65,9 +65,9 @@ describe('Android Icon', () => {
     const withBackgroundColor = createAdaptiveIconXmlString(null);
     const withBoth = createAdaptiveIconXmlString('path/to/image');
 
-    expect(withBackgroundColor).toMatch(ADAPTIVE_ICON_XML_WITH_BACKGROUND_COLOR);
-    expect(withBackgroundImage).toMatch(ADAPTIVE_ICON_XML_WITH_BOTH);
-    expect(withBoth).toMatch(ADAPTIVE_ICON_XML_WITH_BOTH);
+    expect(withBackgroundColor).toBe(ADAPTIVE_ICON_XML_WITH_BACKGROUND_COLOR);
+    expect(withBackgroundImage).toBe(ADAPTIVE_ICON_XML_WITH_BOTH);
+    expect(withBoth).toBe(ADAPTIVE_ICON_XML_WITH_BOTH);
   });
 
   it('returns null if no icon config provided', async () => {
@@ -76,9 +76,9 @@ describe('Android Icon', () => {
 });
 
 describe('e2e: ONLY android legacy icon', () => {
-  const legacyIconPath = path.resolve(__dirname, './fixtures/icon.png');
+  const legacyIconPath = path.resolve(__dirname, '../../__tests__/fixtures/icon.png');
   const projectRoot = '/app';
-  const icon = require('../Icon');
+  const icon = require('../../icons/withAndroidIcons');
   const spyOnConfigureAdaptiveIconAsync = jest.spyOn(icon, 'configureAdaptiveIconAsync');
   beforeAll(async () => {
     const icon = fsReal.readFileSync(legacyIconPath);
@@ -121,8 +121,8 @@ describe('e2e: ONLY android legacy icon', () => {
 });
 
 describe('e2e: android adaptive icon', () => {
-  const adaptiveIconForegroundPath = path.resolve(__dirname, './fixtures/icon.png');
-  const adaptiveIconBackgroundPath = path.resolve(__dirname, './fixtures/icon.png');
+  const adaptiveIconForegroundPath = path.resolve(__dirname, '../../__tests__/fixtures/icon.png');
+  const adaptiveIconBackgroundPath = path.resolve(__dirname, '../../__tests__/fixtures/icon.png');
   const projectRoot = '/app';
 
   beforeAll(async () => {

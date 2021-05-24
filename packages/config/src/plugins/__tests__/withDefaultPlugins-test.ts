@@ -28,15 +28,15 @@ const fsReal = jest.requireActual('fs') as typeof fs;
 
 jest.mock('fs');
 // Weird issues with Android Icon module make it hard to mock test.
-jest.mock('../../android/Icon', () => {
+jest.mock('../icons/withAndroidIcons', () => {
   return {
-    withIcons(config) {
+    withAndroidIcons(config) {
       return config;
     },
     setIconAsync() {},
   };
 });
-const NotificationsPlugin = require('../../android/Notifications');
+const NotificationsPlugin = require('../unversioned/expo-notifications/withAndroidNotifications');
 NotificationsPlugin.withNotificationIcons = jest.fn(config => config);
 
 function getLargeConfig(): ExportedConfig {
@@ -194,7 +194,7 @@ describe(evalModsAsync, () => {
 
 describe('built-in plugins', () => {
   const projectRoot = '/app';
-  const iconPath = path.resolve(__dirname, '../../ios/__tests__/fixtures/icons/icon.png');
+  const iconPath = path.resolve(__dirname, './fixtures/icon.png');
   const icon = fsReal.readFileSync(iconPath) as any;
 
   beforeEach(async () => {

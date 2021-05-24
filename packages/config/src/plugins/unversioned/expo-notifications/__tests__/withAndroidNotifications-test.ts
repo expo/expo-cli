@@ -4,7 +4,7 @@ import { fs, vol } from 'memfs';
 import * as path from 'path';
 import { resolve } from 'path';
 
-import { SAMPLE_COLORS_XML } from '../../../icons/__tests__/fixtures/androidIcons';
+import { SAMPLE_COLORS_XML } from '../../../__tests__/fixtures/androidIcons';
 import { getDirFromFS } from '../../../icons/__tests__/utils/getDirFromFS';
 import {
   getNotificationColor,
@@ -32,7 +32,7 @@ const LIST_OF_GENERATED_NOTIFICATION_FILES = [
   'android/app/src/main/res/values/colors.xml',
   'assets/notificationIcon.png',
 ];
-const iconPath = path.resolve(__dirname, '../../../icons/__tests__/fixtures/icon.png');
+const iconPath = path.resolve(__dirname, '../../../__tests__/fixtures/icon.png');
 const projectRoot = '/app';
 
 describe('Android notifications configuration', () => {
@@ -61,8 +61,8 @@ describe('Android notifications configuration', () => {
   });
 
   afterAll(() => {
-    jest.unmock('@expo/image-utils');
-    jest.unmock('fs');
+    // jest.unmock('@expo/image-utils');
+    // jest.unmock('fs');
     vol.reset();
   });
 
@@ -101,9 +101,9 @@ function setUpDrawableDirectories() {
   vol.mkdirpSync('/app/android/app/src/main/res/drawable-xxxhdpi');
 }
 
-const { getMainApplication, readAndroidManifestAsync } = AndroidConfig.Manifest;
+const { getMainApplication } = AndroidConfig.Manifest;
 
-const fixturesPath = resolve(__dirname, 'fixtures');
+const fixturesPath = resolve(__dirname, '../../../__tests__/fixtures');
 const sampleManifestPath = resolve(fixturesPath, 'react-native-AndroidManifest.xml');
 const notificationConfig: ExpoConfig = {
   name: 'lol',
@@ -115,8 +115,15 @@ const notificationConfig: ExpoConfig = {
 };
 
 describe('Applies proper Android Notification configuration to AndroidManifest.xml', () => {
+  beforeEach(() => {
+    vol.fromJSON({
+      './AndroidManifest.xml': fsReal.readFileSync(sampleManifestPath, 'utf-8') as string,
+    });
+  });
   it('adds config if provided & does not duplicate', async () => {
-    let androidManifestJson = await readAndroidManifestAsync(sampleManifestPath);
+    let androidManifestJson = await AndroidConfig.Manifest.readAndroidManifestAsync(
+      './AndroidManifest.xml'
+    );
 
     androidManifestJson = await setNotificationConfigAsync(notificationConfig, androidManifestJson);
     // Run this twice to ensure copies don't get added.
@@ -138,7 +145,9 @@ describe('Applies proper Android Notification configuration to AndroidManifest.x
   });
 
   it('removes existing config if null is provided', async () => {
-    let androidManifestJson = await readAndroidManifestAsync(sampleManifestPath);
+    let androidManifestJson = await AndroidConfig.Manifest.readAndroidManifestAsync(
+      './AndroidManifest.xml'
+    );
 
     androidManifestJson = await setNotificationConfigAsync(notificationConfig, androidManifestJson);
     // Now let's get rid of the configuration:

@@ -27,21 +27,20 @@ export const LIST_OF_ANDROID_ADAPTIVE_ICON_FILES_FINAL = [
 ];
 
 export const ADAPTIVE_ICON_XML_WITH_BOTH = `<?xml version="1.0" encoding="utf-8"?>
-  <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
-      <background android:drawable="@mipmap/ic_launcher_background"/>
-      <foreground android:drawable="@mipmap/ic_launcher_foreground"/>
-  </adaptive-icon>`;
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@mipmap/ic_launcher_background"/>
+    <foreground android:drawable="@mipmap/ic_launcher_foreground"/>
+</adaptive-icon>`;
 export const ADAPTIVE_ICON_XML_WITH_BACKGROUND_COLOR = `<?xml version="1.0" encoding="utf-8"?>
-  <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
-      <background android:drawable="@color/iconBackground"/>
-      <foreground android:drawable="@mipmap/ic_launcher_foreground"/>
-  </adaptive-icon>`;
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@color/iconBackground"/>
+    <foreground android:drawable="@mipmap/ic_launcher_foreground"/>
+</adaptive-icon>`;
 export const SAMPLE_COLORS_XML = `<?xml version="1.0" encoding="utf-8"?>
-    <resources>
-      <!-- Below line is handled by '@expo/configure-splash-screen' command and it's discouraged to modify it manually -->
-      <color name="splashscreen_background">#FFFFFF</color>
-    </resources>
-    `;
+<resources>
+  <!-- Below line is handled by '@expo/configure-splash-screen' command and it's discouraged to modify it manually -->
+  <color name="splashscreen_background">#FFFFFF</color>
+</resources>`;
 export const defaultDirectoryJSON = {
   './android/app/src/main/res/values/colors.xml': SAMPLE_COLORS_XML,
 };

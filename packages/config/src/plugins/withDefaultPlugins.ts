@@ -11,6 +11,8 @@ import {
 } from '@expo/config-plugins';
 import { ExpoConfig } from '@expo/config-types';
 
+import { withAndroidIcons } from './icons/withAndroidIcons';
+import { withIosIcons } from './icons/withIosIcons';
 import withAdMob from './unversioned/expo-ads-admob';
 import withAppleAuthentication from './unversioned/expo-apple-authentication';
 import withBranch from './unversioned/expo-branch';
@@ -53,7 +55,7 @@ export const withExpoIOSPlugins: ConfigPlugin<{
     IOSConfig.DeviceFamily.withDeviceFamily,
     IOSConfig.Locales.withLocales,
     // Dangerous
-    IOSConfig.Icons.withIcons,
+    withIosIcons,
   ]);
 };
 
@@ -106,7 +108,7 @@ export const withExpoAndroidPlugins: ConfigPlugin<{
     AndroidConfig.StatusBar.withStatusBar,
     AndroidConfig.PrimaryColor.withPrimaryColor,
 
-    AndroidConfig.Icon.withIcons,
+    c => withAndroidIcons(c),
     // If we renamed the package, we should also move it around and rename it in source files
     // Added last to ensure this plugin runs first. Out of tree solutions will mistakenly resolve the package incorrectly otherwise.
     AndroidConfig.Package.withPackageRefactor,
