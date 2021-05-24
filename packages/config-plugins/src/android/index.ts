@@ -6,7 +6,6 @@ import * as EasBuild from './EasBuild';
 import * as Facebook from './Facebook';
 import * as GoogleMapsApiKey from './GoogleMapsApiKey';
 import * as GoogleServices from './GoogleServices';
-import * as Icon from './Icon';
 import * as IntentFilters from './IntentFilters';
 import * as Manifest from './Manifest';
 import * as Name from './Name';
@@ -39,7 +38,6 @@ export {
   GoogleMapsApiKey,
   AdMob,
   GoogleServices,
-  Icon,
   IntentFilters,
   Name,
   NavigationBar,

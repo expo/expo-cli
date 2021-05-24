@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import { vol } from 'memfs';
 import * as path from 'path';
 
-import { getIcons, ICON_CONTENTS, setIconsAsync } from '../Icons';
+import { getIcons, ICON_CONTENTS, setIconsAsync } from '../withIosIcons';
 import { getDirFromFS } from './utils/getDirFromFS';
 
 const fsReal = jest.requireActual('fs') as typeof fs;

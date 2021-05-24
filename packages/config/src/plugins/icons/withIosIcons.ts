@@ -1,13 +1,12 @@
+import { ConfigPlugin, IOSConfig, WarningAggregator, withDangerousMod } from '@expo/config-plugins';
 import { ExpoConfig } from '@expo/config-types';
 import { generateImageAsync } from '@expo/image-utils';
 import * as fs from 'fs-extra';
 import { join } from 'path';
 
-import { ConfigPlugin } from '../Plugin.types';
-import { withDangerousMod } from '../plugins/withDangerousMod';
-import * as WarningAggregator from '../utils/warnings';
 import { ContentsJson, ContentsJsonImageIdiom, writeContentsJsonAsync } from './AssetContents';
-import { getProjectName } from './utils/Xcodeproj';
+
+const { getProjectName } = IOSConfig.XcodeUtils;
 
 export const withIcons: ConfigPlugin = config => {
   return withDangerousMod(config, [

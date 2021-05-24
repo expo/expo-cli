@@ -1,13 +1,12 @@
+import { AndroidConfig, ConfigPlugin, withDangerousMod, XML } from '@expo/config-plugins';
 import { ExpoConfig } from '@expo/config-types';
 import { compositeImagesAsync, generateImageAsync } from '@expo/image-utils';
 import fs from 'fs-extra';
 import path from 'path';
 
-import { ConfigPlugin } from '../Plugin.types';
-import { withDangerousMod } from '../plugins/withDangerousMod';
-import { writeXMLAsync } from '../utils/XML';
-import * as Colors from './Colors';
-import { buildResourceItem, readResourcesXMLAsync } from './Resources';
+const { writeXMLAsync } = XML;
+const { Colors } = AndroidConfig;
+const { buildResourceItem, readResourcesXMLAsync } = AndroidConfig.Resources;
 
 type DPIString = 'mdpi' | 'hdpi' | 'xhdpi' | 'xxhdpi' | 'xxxhdpi';
 type dpiMap = Record<DPIString, { folderName: string; scale: number }>;

@@ -1,16 +1,21 @@
+import { ExpoConfig } from '@expo/config-types';
 import * as fs from 'fs';
 import { vol } from 'memfs';
 import * as path from 'path';
 
-import { ExpoConfig } from '../../Config.types';
-import { getDirFromFS } from '../../ios/__tests__/utils/getDirFromFS';
-import { createAdaptiveIconXmlString, getAdaptiveIcon, getIcon, setIconAsync } from '../Icon';
+import {
+  createAdaptiveIconXmlString,
+  getAdaptiveIcon,
+  getIcon,
+  setIconAsync,
+} from '../withAndroidIcons';
 import {
   ADAPTIVE_ICON_XML_WITH_BACKGROUND_COLOR,
   ADAPTIVE_ICON_XML_WITH_BOTH,
   LIST_OF_ANDROID_ADAPTIVE_ICON_FILES_FINAL,
   SAMPLE_COLORS_XML,
-} from './fixtures/icon';
+} from './fixtures/androidIcons';
+import { getDirFromFS } from './utils/getDirFromFS';
 
 const fsReal = jest.requireActual('fs') as typeof fs;
 
