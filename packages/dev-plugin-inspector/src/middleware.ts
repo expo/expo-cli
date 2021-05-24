@@ -1,6 +1,5 @@
 import { spawn } from 'child_process';
 import type { NextHandleFunction } from 'connect';
-import electron from 'electron';
 import fs from 'fs';
 import type { IncomingMessage, ServerResponse } from 'http';
 import fetch from 'node-fetch';
@@ -45,21 +44,12 @@ export default function InspectorMiddleware(): NextHandleFunction {
         'Content-Length': data.length.toString(),
       });
       res.end(data);
-    } else if (req.method === 'POST') {
+    } else if (req.method === 'POST' || req.method === 'PUT') {
       const urlBase =
         'https://chrome-devtools-frontend.appspot.com/serve_rev/@e3cd97fc771b893b7fd1879196d1215b622c2bed/inspector.html';
       const ws = target.webSocketDebuggerUrl.replace('ws://[::]:', 'localhost:');
       const url = `${urlBase}?experiments=true&v8only=true&ws=${encodeURIComponent(ws)}`;
       launchChromiumAsync(url);
-      res.end();
-    } else if (req.method === 'PUT') {
-      const appPath = require.resolve('./electron-app');
-      if (!appPath) {
-        throw new Error('Missing electron-app file. \nPlease reinstall this module and try again.');
-      }
-
-      // The imported electron from nodejs process is path string to electron executable
-      spawn((electron as unknown) as string, [appPath, target.devtoolsFrontendUrl]);
       res.end();
     } else {
       res.writeHead(405);
