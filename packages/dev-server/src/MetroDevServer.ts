@@ -13,6 +13,7 @@ import resolveFrom from 'resolve-from';
 import { URL } from 'url';
 
 import LogReporter from './LogReporter';
+import JSInspectorMiddleware from './middleware/JSInspectorMiddleware';
 import clientLogsMiddleware from './middleware/clientLogsMiddleware';
 
 export type MetroDevServerOptions = ExpoMetroConfig.LoadOptions & {
@@ -57,14 +58,15 @@ export async function runMetroDevServerAsync(
     watchFolders: metroConfig.watchFolders,
   });
 
-  replaceCliSecurityHeaderMiddleware(middleware as ConnectServer);
+  replaceCliSecurityHeaderMiddlewareWith(
+    middleware as ConnectServer,
+    remoteDevtoolsSecurityHeadersMiddleware
+  );
   middleware.use(remoteDevtoolsCorsMiddleware);
 
   middleware.use(bodyParser.json());
   middleware.use('/logs', clientLogsMiddleware(options.logger));
-
-  const pluginMiddlewares = importPluginMiddlewares(projectRoot);
-  pluginMiddlewares.forEach(handler => middleware.use(handler));
+  middleware.use('/inspector', JSInspectorMiddleware());
 
   const customEnhanceMiddleware = metroConfig.server.enhanceMiddleware;
   // @ts-ignore can't mutate readonly config
@@ -185,26 +187,13 @@ function importMetroServerFromProject(projectRoot: string): typeof Metro.Server 
   return require(resolvedPath);
 }
 
-function importPluginMiddlewares(projectRoot: string): HandleFunction[] {
-  const supportedPlugins = ['@expo/dev-plugin-inspector'];
-  const middlewares: HandleFunction[] = [];
-  for (const module of supportedPlugins) {
-    const resolvePath = resolveFrom.silent(projectRoot, `${module}/build/middleware`);
-    if (!resolvePath) {
-      continue;
-    }
-    const middlewareCreator = require(resolvePath).default;
-    if (typeof middlewareCreator === 'function') {
-      middlewares.push(middlewareCreator());
-    }
-  }
-  return middlewares;
-}
-
-function replaceCliSecurityHeaderMiddleware(app: ConnectServer) {
+function replaceCliSecurityHeaderMiddlewareWith(
+  app: ConnectServer,
+  targetMiddleware: HandleFunction
+) {
   const index = app.stack.findIndex(middleware => middleware.handle === securityHeadersMiddleware);
   if (index >= 0) {
-    app.stack[index].handle = remoteDevtoolsSecurityHeadersMiddleware;
+    app.stack[index].handle = targetMiddleware;
   }
 }
 
@@ -236,15 +225,15 @@ function remoteDevtoolsSecurityHeadersMiddleware(
   next();
 }
 
-// Hook before metro to process *.map that will
+// Hook before metro to process *.map that accepts multiple Access-Control-Allow-Origin
 function remoteDevtoolsCorsMiddleware(
   req: IncomingMessage,
   res: ServerResponse,
   next: (err?: Error) => void
 ) {
   if (req.url) {
-    // we just need the url.pathname,
-    // so it is okay for passing http://localhost:8081 here to make new URL() works like legacy url.parse.
+    // passing http://localhost:8081 here to make new URL() works like legacy url.parse.
+    // we need the pathname only.
     const url = new URL(req.url, 'http://localhost:8081');
     const origin = req.headers.origin;
     const isValidOrigin =
@@ -252,6 +241,8 @@ function remoteDevtoolsCorsMiddleware(
       ['devtools://devtools', 'https://chrome-devtools-frontend.appspot.com'].includes(origin);
     if (url.pathname.endsWith('.map') && origin && isValidOrigin) {
       res.setHeader('Access-Control-Allow-Origin', origin);
+
+      // Prevent metro overwrite Access-Control-Allow-Origin header
       const setHeader = res.setHeader.bind(res);
       res.setHeader = (key, ...args) => {
         if (key === 'Access-Control-Allow-Origin') {

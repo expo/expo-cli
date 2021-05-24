@@ -4,13 +4,13 @@ import fetch from 'node-fetch';
 import open from 'open';
 import { URL } from 'url';
 
-import InspectorMiddleware from '../middleware';
+import JSInspectorMiddleware from '../JSInspectorMiddleware';
 
 jest.mock('node-fetch').mock('open');
 
 const { Response } = jest.requireActual('node-fetch');
 
-describe('InspectorMiddleware', () => {
+describe('JSInspectorMiddleware', () => {
   it('should return specific app entity for GET /inspector with given applicationId', async () => {
     const appId = 'io.expo.test.devclient';
     const entities = JSON.parse(RESPONSE_FIXTURE) as { [key: string]: string }[];
@@ -22,7 +22,7 @@ describe('InspectorMiddleware', () => {
     const mockFetch = fetch as jest.MockedFunction<typeof fetch>;
     mockFetch.mockReturnValue(Promise.resolve(new Response(RESPONSE_FIXTURE)));
 
-    const middlewareAsync = InspectorMiddleware();
+    const middlewareAsync = JSInspectorMiddleware();
     await middlewareAsync(req, res as ServerResponse, next);
 
     expectMockedResponse(res, 200, JSON.stringify(entity));
@@ -35,7 +35,7 @@ describe('InspectorMiddleware', () => {
     const mockFetch = fetch as jest.MockedFunction<typeof fetch>;
     mockFetch.mockReturnValue(Promise.resolve(new Response(RESPONSE_FIXTURE)));
 
-    const middlewareAsync = InspectorMiddleware();
+    const middlewareAsync = JSInspectorMiddleware();
     await middlewareAsync(req, res as ServerResponse, next);
 
     expectMockedResponse(res, 404);
@@ -48,7 +48,7 @@ describe('InspectorMiddleware', () => {
     const mockFetch = fetch as jest.MockedFunction<typeof fetch>;
     mockFetch.mockReturnValue(Promise.resolve(new Response(RESPONSE_FIXTURE)));
 
-    const middlewareAsync = InspectorMiddleware();
+    const middlewareAsync = JSInspectorMiddleware();
     await middlewareAsync(req, res as ServerResponse, next);
 
     expectMockedResponse(res, 400);
@@ -73,7 +73,7 @@ describe('InspectorMiddleware', () => {
       }
     );
 
-    const middlewareAsync = InspectorMiddleware();
+    const middlewareAsync = JSInspectorMiddleware();
     await middlewareAsync(req, res as ServerResponse, next);
 
     expectMockedResponse(res, 200);
