@@ -1,16 +1,23 @@
+import { AndroidConfig } from '@expo/config-plugins';
 import { ExpoConfig } from '@expo/config-types';
 import { fs, vol } from 'memfs';
 import * as path from 'path';
+import { resolve } from 'path';
 
-import { getDirFromFS } from '../../ios/__tests__/utils/getDirFromFS';
+import { SAMPLE_COLORS_XML } from '../../../icons/__tests__/fixtures/androidIcons';
+import { getDirFromFS } from '../../../icons/__tests__/utils/getDirFromFS';
 import {
   getNotificationColor,
   getNotificationIcon,
+  META_DATA_NOTIFICATION_ICON,
+  META_DATA_NOTIFICATION_ICON_COLOR,
   NOTIFICATION_ICON_COLOR,
+  NOTIFICATION_ICON_COLOR_RESOURCE,
+  NOTIFICATION_ICON_RESOURCE,
+  setNotificationConfigAsync,
   setNotificationIconAsync,
   setNotificationIconColorAsync,
-} from '../Notifications';
-import { SAMPLE_COLORS_XML } from './fixtures/icon';
+} from '../withAndroidNotifications';
 
 jest.mock('fs');
 
@@ -25,7 +32,7 @@ const LIST_OF_GENERATED_NOTIFICATION_FILES = [
   'android/app/src/main/res/values/colors.xml',
   'assets/notificationIcon.png',
 ];
-const iconPath = path.resolve(__dirname, './fixtures/icon.png');
+const iconPath = path.resolve(__dirname, '../../../icons/__tests__/fixtures/icon.png');
 const projectRoot = '/app';
 
 describe('Android notifications configuration', () => {
@@ -93,3 +100,60 @@ function setUpDrawableDirectories() {
   vol.mkdirpSync('/app/android/app/src/main/res/drawable-xxhdpi');
   vol.mkdirpSync('/app/android/app/src/main/res/drawable-xxxhdpi');
 }
+
+const { getMainApplication, readAndroidManifestAsync } = AndroidConfig.Manifest;
+
+const fixturesPath = resolve(__dirname, 'fixtures');
+const sampleManifestPath = resolve(fixturesPath, 'react-native-AndroidManifest.xml');
+const notificationConfig: ExpoConfig = {
+  name: 'lol',
+  slug: 'lol',
+  notification: {
+    icon: '/app/assets/notificationIcon.png',
+    color: '#00ff00',
+  },
+};
+
+describe('Applies proper Android Notification configuration to AndroidManifest.xml', () => {
+  it('adds config if provided & does not duplicate', async () => {
+    let androidManifestJson = await readAndroidManifestAsync(sampleManifestPath);
+
+    androidManifestJson = await setNotificationConfigAsync(notificationConfig, androidManifestJson);
+    // Run this twice to ensure copies don't get added.
+    androidManifestJson = await setNotificationConfigAsync(notificationConfig, androidManifestJson);
+
+    const mainApplication = getMainApplication(androidManifestJson);
+
+    const notificationIcon = mainApplication['meta-data'].filter(
+      e => e.$['android:name'] === META_DATA_NOTIFICATION_ICON
+    );
+    expect(notificationIcon).toHaveLength(1);
+    expect(notificationIcon[0].$['android:resource']).toMatch(NOTIFICATION_ICON_RESOURCE);
+
+    const notificationColor = mainApplication['meta-data'].filter(
+      e => e.$['android:name'] === META_DATA_NOTIFICATION_ICON_COLOR
+    );
+    expect(notificationColor).toHaveLength(1);
+    expect(notificationColor[0].$['android:resource']).toMatch(NOTIFICATION_ICON_COLOR_RESOURCE);
+  });
+
+  it('removes existing config if null is provided', async () => {
+    let androidManifestJson = await readAndroidManifestAsync(sampleManifestPath);
+
+    androidManifestJson = await setNotificationConfigAsync(notificationConfig, androidManifestJson);
+    // Now let's get rid of the configuration:
+    androidManifestJson = await setNotificationConfigAsync({} as ExpoConfig, androidManifestJson);
+
+    const mainApplication = getMainApplication(androidManifestJson);
+
+    const notificationIcon = mainApplication['meta-data'].filter(
+      e => e.$['android:name'] === META_DATA_NOTIFICATION_ICON
+    );
+    expect(notificationIcon).toHaveLength(0);
+
+    const notificationColor = mainApplication['meta-data'].filter(
+      e => e.$['android:name'] === META_DATA_NOTIFICATION_ICON_COLOR
+    );
+    expect(notificationColor).toHaveLength(0);
+  });
+});

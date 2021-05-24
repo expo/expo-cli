@@ -1,22 +1,28 @@
+import {
+  AndroidConfig,
+  ConfigPlugin,
+  withAndroidManifest,
+  withDangerousMod,
+  XML,
+} from '@expo/config-plugins';
 import { ExpoConfig } from '@expo/config-types';
 import { generateImageAsync } from '@expo/image-utils';
 import fs from 'fs-extra';
 import path from 'path';
 
-import { ConfigPlugin } from '../Plugin.types';
-import { createAndroidManifestPlugin } from '../plugins/android-plugins';
-import { withDangerousMod } from '../plugins/withDangerousMod';
-import { writeXMLAsync } from '../utils/XML';
-import * as Colors from './Colors';
-import { ANDROID_RES_PATH, dpiValues } from './Icon';
-import {
+import { ANDROID_RES_PATH, dpiValues } from '../../icons/withAndroidIcons';
+
+const { writeXMLAsync } = XML;
+
+const { Colors } = AndroidConfig;
+const { buildResourceItem, readResourcesXMLAsync } = AndroidConfig.Resources;
+const {
   addMetaDataItemToMainApplication,
-  AndroidManifest,
   getMainApplicationOrThrow,
   removeMetaDataItemFromMainApplication,
-} from './Manifest';
-import { buildResourceItem, readResourcesXMLAsync } from './Resources';
+} = AndroidConfig.Manifest;
 
+type AndroidManifest = AndroidConfig.Manifest.AndroidManifest;
 const BASELINE_PIXEL_SIZE = 24;
 export const META_DATA_NOTIFICATION_ICON = 'expo.modules.notifications.default_notification_icon';
 export const META_DATA_NOTIFICATION_ICON_COLOR =
@@ -46,11 +52,11 @@ export const withNotificationIconColor: ConfigPlugin = config => {
   ]);
 };
 
-export const withNotificationManifest = createAndroidManifestPlugin(
-  setNotificationConfigAsync,
-  'withNotificationManifest'
-);
-
+export const withNotificationManifest: ConfigPlugin = config =>
+  withAndroidManifest(config, async config => {
+    config.modResults = await setNotificationConfigAsync(config, config.modResults);
+    return config;
+  });
 export function getNotificationIcon(config: ExpoConfig) {
   return config.notification?.icon || null;
 }

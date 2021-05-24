@@ -1,6 +1,11 @@
-import { AndroidConfig, ConfigPlugin, withEntitlementsPlist } from '@expo/config-plugins';
+import { ConfigPlugin, withEntitlementsPlist } from '@expo/config-plugins';
 
-import { createLegacyPlugin } from './createLegacyPlugin';
+import { createLegacyPlugin } from '../createLegacyPlugin';
+import {
+  withNotificationIconColor,
+  withNotificationIcons,
+  withNotificationManifest,
+} from './withAndroidNotifications';
 
 const withNotificationsEntitlement: ConfigPlugin<'production' | 'development'> = (config, mode) => {
   return withEntitlementsPlist(config, config => {
@@ -13,9 +18,9 @@ export default createLegacyPlugin({
   packageName: 'expo-notifications',
   fallback: [
     // Android
-    AndroidConfig.Notifications.withNotificationManifest,
-    AndroidConfig.Notifications.withNotificationIconColor,
-    AndroidConfig.Notifications.withNotificationIcons,
+    withNotificationManifest,
+    withNotificationIconColor,
+    withNotificationIcons,
     // iOS
     [withNotificationsEntitlement, 'development'],
   ],
