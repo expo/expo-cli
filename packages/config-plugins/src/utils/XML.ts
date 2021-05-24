@@ -11,38 +11,10 @@ export interface XMLObject {
   [key: string]: XMLValue | undefined;
 }
 
-export function logXMLString(doc: XMLObject) {
-  const builder = new Builder();
-  const xmlInput = builder.buildObject(doc);
-  console.log(xmlInput);
-}
-
 export async function writeXMLAsync(options: { path: string; xml: any }): Promise<void> {
   const xml = new Builder().buildObject(options.xml);
   await fs.ensureDir(path.dirname(options.path));
   await fs.writeFile(options.path, xml);
-}
-
-async function removeFileIfExists(filePath: string) {
-  if (await fs.pathExists(filePath)) {
-    await fs.unlink(filePath);
-  }
-}
-
-function hasResources(xml: XMLObject): boolean {
-  return Array.isArray(xml.resources) && !!xml.resources.length;
-}
-
-export async function writeXMLOrRemoveFileUponNoResourcesAsync(
-  filePath: string,
-  xml: XMLObject,
-  { disregardComments }: { disregardComments?: boolean } = {}
-) {
-  if (hasResources(xml)) {
-    await writeXMLAsync({ path: filePath, xml });
-  } else {
-    await removeFileIfExists(filePath);
-  }
 }
 
 export async function readXMLAsync(options: {
