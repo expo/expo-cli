@@ -56,6 +56,9 @@ export function getNativeTargets(project: XcodeProject): NativeTargetSectionEntr
 
 export function findFirstNativeTarget(project: XcodeProject): NativeTargetSectionEntry {
   const targets = getNativeTargets(project);
+  if (targets.length === 0) {
+    throw new Error(`Could not find any target in project.pbxproj`);
+  }
   return targets[0];
 }
 
