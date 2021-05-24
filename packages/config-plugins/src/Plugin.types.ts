@@ -67,9 +67,15 @@ export type ConfigPlugin<Props = void> = (config: ExpoConfig, props: Props) => E
 
 export type StaticPlugin<T = any> = [string | ConfigPlugin<T>, T];
 
-export type Mod<Props = any> = (
+export type Mod<Props = any> = ((
   config: ExportedConfigWithProps<Props>
-) => OptionalPromise<ExportedConfigWithProps<Props>>;
+) => OptionalPromise<ExportedConfigWithProps<Props>>) & {
+  /**
+   * Indicates that the mod provides data upstream to other mods.
+   * This mod should always be the last one added.
+   */
+  isProvider?: boolean;
+};
 
 export interface ModConfig {
   android?: {

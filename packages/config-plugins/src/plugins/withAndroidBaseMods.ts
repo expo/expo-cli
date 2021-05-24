@@ -173,7 +173,7 @@ export function getAndroidIntrospectModFileProviders(): Omit<
           manifest: {
             $: {
               'xmlns:android': 'http://schemas.android.com/apk/res/android',
-              package: config.android?.package ?? 'UNDEFINED (invalid)',
+              package: config.android?.package ?? 'com.placeholder.appid',
             },
             'uses-permission': [
               {

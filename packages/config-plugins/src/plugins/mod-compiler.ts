@@ -2,6 +2,7 @@ import path from 'path';
 
 import { ExportedConfig, Mod, ModConfig, ModPlatform } from '../Plugin.types';
 import { getHackyProjectName } from '../ios/utils/Xcodeproj';
+import { PluginError } from '../utils/errors';
 import { assertModResults, ForwardedBaseModOptions } from './createBaseMod';
 import { getAndroidIntrospectModFileProviders, withAndroidBaseMods } from './withAndroidBaseMods';
 import { getIosIntrospectModFileProviders, withIosBaseMods } from './withIosBaseMods';
@@ -72,7 +73,7 @@ export function withIntrospectionBaseMods(
  */
 export async function compileModsAsync(
   config: ExportedConfig,
-  props: { projectRoot: string; platforms?: ModPlatform[]; introspect?: boolean }
+  props: { projectRoot: string; platforms?: ModPlatform[]; introspect?: boolean; strict?: boolean }
 ): Promise<ExportedConfig> {
   if (props.introspect === true) {
     config = withIntrospectionBaseMods(config);
@@ -116,7 +117,12 @@ export async function evalModsAsync(
     projectRoot,
     introspect,
     platforms,
-  }: { projectRoot: string; introspect?: boolean; platforms?: ModPlatform[] }
+    /**
+     * Throw errors when mods are missing providers.
+     * @default true
+     */
+    strict,
+  }: { projectRoot: string; introspect?: boolean; strict?: boolean; platforms?: ModPlatform[] }
 ): Promise<ExportedConfig> {
   for (const [platformName, platform] of Object.entries(config.mods ?? ({} as ModConfig))) {
     if (platforms && !platforms.includes(platformName as any)) {
@@ -141,6 +147,20 @@ export async function evalModsAsync(
           modName,
           introspect: !!introspect,
         };
+
+        if (!(mod as Mod).isProvider) {
+          // In strict mode, throw an error.
+          const errorMessage = `Initial base modifier for "${platformName}.${modName}" is not a provider and therefore will not provide modResults to child mods`;
+          if (strict !== false) {
+            throw new PluginError(errorMessage, 'MISSING_PROVIDER');
+          } else {
+            if (config._internal?.isDebug) {
+              console.warn(errorMessage);
+            }
+            // In loose mode, just skip the mod entirely.
+            continue;
+          }
+        }
 
         const results = await (mod as Mod)({
           ...config,

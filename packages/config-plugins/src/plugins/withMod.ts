@@ -4,12 +4,14 @@ import chalk from 'chalk';
 import { boolish } from 'getenv';
 
 import { ExportedConfig, ExportedConfigWithProps, Mod, ModPlatform } from '../Plugin.types';
+import { PluginError } from '../utils/errors';
 
 const EXPO_DEBUG = boolish('EXPO_DEBUG', false);
 
 export type BaseModOptions = {
   platform: ModPlatform;
   mod: string;
+  isProvider?: boolean;
   skipEmptyMod?: boolean;
   saveToInternal?: boolean;
 };
@@ -25,11 +27,19 @@ export type BaseModOptions = {
  * @param mod name of the platform function to intercept
  * @param skipEmptyMod should skip running the action if there is no existing mod to intercept
  * @param saveToInternal should save the results to `_internal.modResults`, only enable this when the results are pure JSON.
+ * @param isProvider should provide data up to the other mods.
  * @param action method to run on the mod when the config is compiled
  */
 export function withBaseMod<T>(
   config: ExportedConfig,
-  { platform, mod, action, skipEmptyMod, saveToInternal }: BaseModOptions & { action: Mod<T> }
+  {
+    platform,
+    mod,
+    action,
+    skipEmptyMod,
+    isProvider,
+    saveToInternal,
+  }: BaseModOptions & { action: Mod<T> }
 ): ExportedConfig {
   if (!config.mods) {
     config.mods = {};
@@ -66,6 +76,22 @@ export function withBaseMod<T>(
     debugTrace = `${modStack}: ${debugTrace}`;
   }
 
+  // Prevent adding multiple providers to a mod.
+  // Base mods that provide files ignore any incoming modResults and therefore shouldn't have provider mods as parents.
+  if (interceptedMod.isProvider) {
+    if (isProvider) {
+      throw new PluginError(
+        `Cannot set provider mod for "${platform}.${mod}" because another is already being used.`,
+        'CONFLICTING_PROVIDER'
+      );
+    } else {
+      throw new PluginError(
+        `Cannot add mod to "${platform}.${mod}" because the provider has already been added. Provider must be the last mod added.`,
+        'INVALID_MOD_ORDER'
+      );
+    }
+  }
+
   async function interceptingMod({ modRequest, ...config }: ExportedConfigWithProps<T>) {
     if (isDebug) {
       // In debug mod, log the plugin stack in the order which they were invoked
@@ -81,6 +107,9 @@ export function withBaseMod<T>(
     }
     return results;
   }
+
+  // Ensure this base mod is registered as the provider.
+  interceptingMod.isProvider = isProvider;
 
   (config.mods[platform] as any)[mod] = interceptingMod;
 
@@ -180,6 +209,7 @@ export function withMod<T>(
   return withBaseMod(config, {
     platform,
     mod,
+    isProvider: false,
     async action({ modRequest: { nextMod, ...modRequest }, modResults, ...config }) {
       const results = await action({ modRequest, modResults: modResults as T, ...config });
       return nextMod!(results as any);
