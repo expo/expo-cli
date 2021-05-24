@@ -1,27 +1,19 @@
-import { ConfigPlugin } from '../../Plugin.types';
-import {
-  withNotificationIconColor,
-  withNotificationIcons,
-  withNotificationManifest,
-} from '../../android/Notifications';
-import { withEntitlementsPlist } from '../ios-plugins';
+import * as WarningAggregator from '../../utils/warnings';
 import { createLegacyPlugin } from './createLegacyPlugin';
-
-const withNotificationsEntitlement: ConfigPlugin<'production' | 'development'> = (config, mode) => {
-  return withEntitlementsPlist(config, config => {
-    config.modResults['aps-environment'] = mode;
-    return config;
-  });
-};
 
 export default createLegacyPlugin({
   packageName: 'expo-notifications',
-  fallback: [
-    // Android
-    withNotificationManifest,
-    withNotificationIconColor,
-    withNotificationIcons,
-    // iOS
-    [withNotificationsEntitlement, 'development'],
-  ],
+  fallback(config) {
+    // This is an awkward requirement due to notification being part of the Expo schema instead of plugin properties.
+    // To keep logic consolidated, we no longer support configuring notifications outside of the expo-notifications package.
+    // This warning will be skipped if expo-notifications is installed.
+    if (config.notification) {
+      // TODO: This warning should apply to both ios and android...
+      WarningAggregator.addWarningAndroid(
+        'Notifications',
+        'Install expo-notifications 11.0.0 or greater in the project to configure native notifications'
+      );
+    }
+    return config;
+  },
 });

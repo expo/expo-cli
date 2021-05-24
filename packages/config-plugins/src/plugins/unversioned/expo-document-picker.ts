@@ -4,12 +4,12 @@ import { createLegacyPlugin } from './createLegacyPlugin';
 export default createLegacyPlugin({
   packageName: 'expo-document-picker',
   fallback(config) {
+    // This is an awkward requirement due to usesIcloudStorage being part of the Expo schema instead of plugin properties.
+    // This warning will be skipped if expo-document-picker is installed.
     if (config.ios?.usesIcloudStorage) {
-      // TODO: need access to the appleTeamId for this one!
       WarningAggregator.addWarningIOS(
-        'ios.usesIcloudStorage',
-        'Install expo-document-picker to enable the ios.usesIcloudStorage feature'
-        // TODO: add a link to a docs page with more information on how to do this
+        'DocumentPicker',
+        'Install expo-document-picker 9.1.0 or greater in the project to use ios.usesIcloudStorage'
       );
     }
     return config;
