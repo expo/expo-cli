@@ -28,8 +28,7 @@
   },
   "homepage": "https://github.com/expo/expo-cli/tree/master/packages/prebuild-config#readme",
   "files": [
-    "build",
-    "paths"
+    "build"
   ],
   "dependencies": {
     "@expo/config": "3.3.42",
@@ -40,11 +39,6 @@
     "@expo/json-file": "8.2.30",
     "fs-extra": "9.0.0",
     "resolve-from": "^5.0.0"
-  },
-  "devDependencies": {
-    "@types/fs-extra": "^9.0.1",
-    "memfs": "^2.15.5",
-    "rimraf": "^3.0.2"
   },
   "publishConfig": {
     "access": "public"
