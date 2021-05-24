@@ -16,6 +16,10 @@ Object {
         "name": "expo-branch",
         "version": "UNVERSIONED",
       },
+      "expo-contacts": Object {
+        "name": "expo-contacts",
+        "version": "UNVERSIONED",
+      },
       "expo-document-picker": Object {
         "name": "expo-document-picker",
         "version": "UNVERSIONED",
@@ -788,6 +792,10 @@ Object {
         "name": "expo-branch",
         "version": "UNVERSIONED",
       },
+      "expo-contacts": Object {
+        "name": "expo-contacts",
+        "version": "UNVERSIONED",
+      },
       "expo-document-picker": Object {
         "name": "expo-document-picker",
         "version": "UNVERSIONED",
@@ -1429,6 +1437,10 @@ Object {
       },
       "expo-branch": Object {
         "name": "expo-branch",
+        "version": "UNVERSIONED",
+      },
+      "expo-contacts": Object {
+        "name": "expo-contacts",
         "version": "UNVERSIONED",
       },
       "expo-document-picker": Object {

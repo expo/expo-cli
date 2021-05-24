@@ -1,10 +1,10 @@
 import { ExpoConfig } from '@expo/config-types';
+import { JSONObject } from '@expo/json-file';
 import fs from 'fs-extra';
 import path from 'path';
 import slash from 'slash';
 
 import { createEntitlementsPlugin } from '../plugins/ios-plugins';
-import { InfoPlist } from './IosConfig.types';
 import * as Paths from './Paths';
 import {
   getPbxproj,
@@ -15,51 +15,15 @@ import {
   isNotTestHost,
 } from './utils/Xcodeproj';
 
-type Plist = Record<string, any>;
-
-export const withAccessesContactNotes = createEntitlementsPlugin(
-  setAccessesContactNotes,
-  'withAccessesContactNotes'
-);
-
 export const withAssociatedDomains = createEntitlementsPlugin(
   setAssociatedDomains,
   'withAssociatedDomains'
 );
 
-// TODO: should it be possible to turn off these entitlements by setting false in app.json and running apply
-
-export function getConfigEntitlements(config: ExpoConfig) {
-  return config.ios?.entitlements ?? {};
-}
-
-export function setCustomEntitlementsEntries(config: ExpoConfig, entitlements: InfoPlist) {
-  const entries = getConfigEntitlements(config);
-
-  return {
-    ...entitlements,
-    ...entries,
-  };
-}
-
-export function setAccessesContactNotes(
-  config: ExpoConfig,
-  { 'com.apple.developer.contacts.notes': _, ...entitlementsPlist }: Plist
-): Plist {
-  if (config.ios?.accessesContactNotes) {
-    return {
-      ...entitlementsPlist,
-      'com.apple.developer.contacts.notes': config.ios.accessesContactNotes,
-    };
-  }
-
-  return entitlementsPlist;
-}
-
 export function setAssociatedDomains(
   config: ExpoConfig,
-  { 'com.apple.developer.associated-domains': _, ...entitlementsPlist }: Plist
-): Plist {
+  { 'com.apple.developer.associated-domains': _, ...entitlementsPlist }: JSONObject
+): JSONObject {
   if (config.ios?.associatedDomains) {
     return {
       ...entitlementsPlist,

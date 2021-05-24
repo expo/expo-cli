@@ -13,10 +13,7 @@ const withAppleSignInEntitlement = createEntitlementsPlugin(
   'withAppleSignInEntitlement'
 );
 
-function setAppleSignInEntitlement(
-  config: ExpoConfig,
-  { 'com.apple.developer.applesignin': _, ...entitlementsPlist }: JSONObject
-): JSONObject {
+function setAppleSignInEntitlement(config: ExpoConfig, entitlementsPlist: JSONObject): JSONObject {
   if (config.ios?.usesAppleSignIn) {
     return {
       ...entitlementsPlist,
