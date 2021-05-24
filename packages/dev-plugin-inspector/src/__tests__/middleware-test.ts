@@ -1,11 +1,12 @@
-import { ChildProcess, spawn, SpawnOptions } from 'child_process';
+import { ChildProcess } from 'child_process';
 import type { IncomingMessage, ServerResponse } from 'http';
 import fetch from 'node-fetch';
+import open from 'open';
 import { URL } from 'url';
 
 import InspectorMiddleware from '../middleware';
 
-jest.mock('child_process').mock('node-fetch');
+jest.mock('node-fetch').mock('open');
 
 const { Response } = jest.requireActual('node-fetch');
 
@@ -53,7 +54,7 @@ describe('InspectorMiddleware', () => {
     expectMockedResponse(res, 400);
   });
 
-  it('should open electron for PUT /inspector with given applicationId', async () => {
+  it('should open browser for PUT /inspector with given applicationId', async () => {
     const appId = 'io.expo.test.devclient';
     const req = createRequest(`http://localhost:8081/inspector?applicationId=${appId}`, 'PUT');
     const res = createMockedResponse();
@@ -61,18 +62,21 @@ describe('InspectorMiddleware', () => {
     const mockFetch = fetch as jest.MockedFunction<typeof fetch>;
     mockFetch.mockReturnValue(Promise.resolve(new Response(RESPONSE_FIXTURE)));
 
+    const mockOpen = open as jest.MockedFunction<typeof open>;
+    mockOpen.mockImplementation(
+      (target: string): Promise<ChildProcess> => {
+        expect(target).toMatch(
+          /^https:\/\/chrome-devtools-frontend\.appspot\.com\/serve_rev\/@.+\/inspector.html/
+        );
+        const result: Partial<ChildProcess> = { exitCode: 0 };
+        return Promise.resolve(result as ChildProcess);
+      }
+    );
+
     const middlewareAsync = InspectorMiddleware();
     await middlewareAsync(req, res as ServerResponse, next);
 
-    const mockSpawn = spawn as jest.MockedFunction<typeof spawn>;
-    mockSpawn.mockImplementation(
-      (command: string, args: readonly string[], options: SpawnOptions): ChildProcess => {
-        expect(command).toContain('electron');
-        expect(args[1]).toMatch(/^devtools:\/\//);
-        const ret = (null as unknown) as ChildProcess;
-        return ret;
-      }
-    );
+    expectMockedResponse(res, 200);
   });
 
   const RESPONSE_FIXTURE = JSON.stringify([
@@ -150,5 +154,10 @@ function createMockedResponse(): MockedResponse {
 }
 
 function expectMockedResponse(res: MockedResponse, status: number, body?: string) {
-  expect(res.writeHead.mock.calls[0][0]).toBe(status);
+  if (status != 200) {
+    expect(res.writeHead.mock.calls[0][0]).toBe(status);
+  }
+  if (body) {
+    expect(res.end.mock.calls[0][0]).toBe(body);
+  }
 }

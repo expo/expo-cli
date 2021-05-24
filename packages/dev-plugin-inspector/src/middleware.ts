@@ -83,11 +83,6 @@ async function queryInspectorTargetAsync(
     }
   }
 
-  if (target?.devtoolsFrontendUrl.startsWith('chrome-devtools://')) {
-    // metro-inspector-proxy returns chrome-devtools:// scheme which not supported by Electron or Chrome.
-    // We replace the scheme as devtools:// instead.
-    target.devtoolsFrontendUrl = target.devtoolsFrontendUrl.substr(7);
-  }
   return target;
 }
 
