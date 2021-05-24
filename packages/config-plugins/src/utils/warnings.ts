@@ -4,6 +4,14 @@ type WarningArray = [string, string, string | undefined];
 let _warningsIOS: WarningArray[] = [];
 let _warningsAndroid: WarningArray[] = [];
 
+export function getWarningsIOS() {
+  return _warningsIOS;
+}
+
+export function getWarningsAndroid() {
+  return _warningsAndroid;
+}
+
 export function hasWarningsIOS() {
   return !!_warningsIOS.length;
 }

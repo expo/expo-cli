@@ -10,7 +10,7 @@ export default createLegacyPlugin({
     if (config.notification) {
       // TODO: This warning should apply to both ios and android...
       WarningAggregator.addWarningAndroid(
-        'Notifications',
+        'notification',
         'Install expo-notifications 11.0.0 or greater in the project to configure native notifications'
       );
     }

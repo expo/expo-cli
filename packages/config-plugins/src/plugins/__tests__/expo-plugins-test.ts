@@ -9,6 +9,7 @@ import { withBranch } from '../../ios/Branch';
 import { PodfileBasic } from '../../ios/__tests__/fixtures/Podfile';
 import { getDirFromFS } from '../../ios/__tests__/utils/getDirFromFS';
 import { readXMLAsync } from '../../utils/XML';
+import * as WarningAggregator from '../../utils/warnings';
 import { withGradleProperties } from '../android-plugins';
 import {
   withExpoAndroidPlugins,
@@ -173,6 +174,7 @@ function getPrebuildConfig() {
   });
   return config;
 }
+
 describe(evalModsAsync, () => {
   it(`runs with no core mods`, async () => {
     let config: ExportedConfig = {
@@ -190,6 +192,9 @@ describe('built-in plugins', () => {
   const icon = fsReal.readFileSync(iconPath) as any;
 
   beforeEach(async () => {
+    WarningAggregator.flushWarningsAndroid();
+    WarningAggregator.flushWarningsIOS();
+
     // Trick XDL Info.plist reading
     Object.defineProperty(process, 'platform', {
       value: 'not-darwin',
@@ -282,8 +287,36 @@ describe('built-in plugins', () => {
   });
   it('compiles mods', async () => {
     let config = getPrebuildConfig();
+
     // Apply mod
     config = await compileModsAsync(config, { projectRoot: '/app' });
+
+    // Ensure the expected warnings were added
+    expect(WarningAggregator.getWarningsAndroid()).toStrictEqual([
+      [
+        'notification',
+        'Install expo-notifications 11.0.0 or greater in the project to configure native notifications',
+        undefined,
+      ],
+      [
+        'androidNavigationBar.visible',
+        'Hiding the navigation bar must be done programmatically. Refer to the Android documentation - https://developer.android.com/training/system-ui/immersive - for instructions.',
+        undefined,
+      ],
+    ]);
+
+    expect(WarningAggregator.getWarningsIOS()).toStrictEqual([
+      [
+        'ios.usesIcloudStorage',
+        'Install expo-document-picker to enable the ios.usesIcloudStorage feature',
+        undefined,
+      ],
+      [
+        'icon',
+        'This is the image that your app uses on your home screen, you will need to configure it manually.',
+        undefined,
+      ],
+    ]);
 
     // App config should have been modified
     expect(config.name).toBe('my cool app');
