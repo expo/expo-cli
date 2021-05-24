@@ -1,3 +1,4 @@
+import { ConfigPlugin, WarningAggregator, withDangerousMod } from '@expo/config-plugins';
 import { ExpoConfig } from '@expo/config-types';
 import {
   AndroidSplashScreenConfig,
@@ -5,11 +6,7 @@ import {
   SplashScreenImageResizeMode,
 } from '@expo/configure-splash-screen';
 
-import { ConfigPlugin } from '../Plugin.types';
-import { withDangerousMod } from '../plugins/withDangerousMod';
-import * as WarningAggregator from '../utils/warnings';
-
-export const withSplashScreen: ConfigPlugin = config => {
+export const withAndroidSplashScreen: ConfigPlugin = config => {
   return withDangerousMod(config, [
     'android',
     async config => {

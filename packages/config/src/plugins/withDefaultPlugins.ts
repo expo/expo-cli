@@ -18,7 +18,7 @@ import withContacts from './unversioned/expo-contacts';
 import withDocumentPicker from './unversioned/expo-document-picker';
 import withFacebook from './unversioned/expo-facebook';
 import withNotifications from './unversioned/expo-notifications/expo-notifications';
-import withSplashScreen from './unversioned/expo-splash-screen';
+import withSplashScreen from './unversioned/expo-splash-screen/expo-splash-screen';
 import withUpdates from './unversioned/expo-updates';
 import withMaps from './unversioned/react-native-maps';
 
