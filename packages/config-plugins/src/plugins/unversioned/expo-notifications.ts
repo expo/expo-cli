@@ -5,19 +5,7 @@ import {
   withNotificationManifest,
 } from '../../android/Notifications';
 import { withEntitlementsPlist } from '../ios-plugins';
-import { createRunOncePlugin } from '../withRunOnce';
-import { withStaticPlugin } from '../withStaticPlugin';
-
-const packageName = 'expo-notifications';
-
-export const withNotifications: ConfigPlugin = config => {
-  return withStaticPlugin(config, {
-    _isLegacyPlugin: true,
-    plugin: packageName,
-    // If the static plugin isn't found, use the unversioned one.
-    fallback: withUnversionedNotifications,
-  });
-};
+import { createLegacyPlugin } from './createLegacyPlugin';
 
 const withNotificationsEntitlement: ConfigPlugin<'production' | 'development'> = (config, mode) => {
   return withEntitlementsPlist(config, config => {
@@ -26,16 +14,14 @@ const withNotificationsEntitlement: ConfigPlugin<'production' | 'development'> =
   });
 };
 
-const withUnversionedNotifications: ConfigPlugin = createRunOncePlugin(config => {
-  // Android
-  config = withNotificationManifest(config);
-  config = withNotificationIconColor(config);
-  config = withNotificationIcons(config);
-
-  // iOS
-  config = withNotificationsEntitlement(config, 'development');
-
-  return config;
-}, packageName);
-
-export default withNotifications;
+export default createLegacyPlugin({
+  packageName: 'expo-notifications',
+  fallback: [
+    // Android
+    withNotificationManifest,
+    withNotificationIconColor,
+    withNotificationIcons,
+    // iOS
+    [withNotificationsEntitlement, 'development'],
+  ],
+});

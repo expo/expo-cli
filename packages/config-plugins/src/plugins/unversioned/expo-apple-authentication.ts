@@ -1,12 +1,8 @@
 import { ExpoConfig } from '@expo/config-types';
 import { JSONObject } from '@expo/json-file';
 
-import { ConfigPlugin } from '../../Plugin.types';
 import { createEntitlementsPlugin } from '../ios-plugins';
-import { createRunOncePlugin } from '../withRunOnce';
-import { withStaticPlugin } from '../withStaticPlugin';
-
-const packageName = 'expo-apple-authentication';
+import { createLegacyPlugin } from './createLegacyPlugin';
 
 const withAppleSignInEntitlement = createEntitlementsPlugin(
   setAppleSignInEntitlement,
@@ -24,18 +20,7 @@ function setAppleSignInEntitlement(config: ExpoConfig, entitlementsPlist: JSONOb
   return entitlementsPlist;
 }
 
-export const withAppleAuthentication: ConfigPlugin = config => {
-  return withStaticPlugin(config, {
-    _isLegacyPlugin: true,
-    plugin: packageName,
-    // If the static plugin isn't found, use the unversioned one.
-    fallback: withUnversionedAppleAuthentication,
-  });
-};
-
-const withUnversionedAppleAuthentication: ConfigPlugin = createRunOncePlugin(config => {
-  config = withAppleSignInEntitlement(config);
-  return config;
-}, packageName);
-
-export default withAppleAuthentication;
+export default createLegacyPlugin({
+  packageName: 'expo-apple-authentication',
+  fallback: [withAppleSignInEntitlement],
+});

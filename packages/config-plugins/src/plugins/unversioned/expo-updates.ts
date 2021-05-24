@@ -8,23 +8,20 @@ import { withStaticPlugin } from '../withStaticPlugin';
 
 const packageName = 'expo-updates';
 
-export const withUpdates: ConfigPlugin<{ expoUsername: string }> = (config, props) => {
+export const withExpoUpdates: ConfigPlugin<{ expoUsername: string }> = (config, props) => {
   return withStaticPlugin(config, {
     _isLegacyPlugin: true,
     // Pass props to the static plugin if it exists.
     plugin: [packageName, props],
     // If the static plugin isn't found, use the unversioned one.
-    fallback: config => withUnversionedUpdates(config, props),
+    fallback: createRunOncePlugin(config => withUnversionedUpdates(config, props), packageName),
   });
 };
 
-const withUnversionedUpdates: ConfigPlugin<{ expoUsername: string }> = createRunOncePlugin(
-  (config, props) => {
-    config = withUpdatesAndroid(config, props);
-    config = withUpdatesIOS(config, props);
-    return config;
-  },
-  packageName
-);
+const withUnversionedUpdates: ConfigPlugin<{ expoUsername: string }> = (config, props) => {
+  config = withUpdatesAndroid(config, props);
+  config = withUpdatesIOS(config, props);
+  return config;
+};
 
-export default withUpdates;
+export default withExpoUpdates;
