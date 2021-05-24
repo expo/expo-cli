@@ -1,4 +1,5 @@
-import * as WarningAggregator from '../../utils/warnings';
+import { WarningAggregator } from '@expo/config-plugins';
+
 import { createLegacyPlugin } from './createLegacyPlugin';
 
 export default createLegacyPlugin({

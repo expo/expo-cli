@@ -1,14 +1,14 @@
-import {
-  ModPlatform,
-  withExpoAndroidPlugins,
-  withExpoIOSPlugins,
-  withExpoLegacyPlugins,
-  withExpoVersionedSDKPlugins,
-} from '@expo/config-plugins';
+import { ModPlatform } from '@expo/config-plugins';
 import { ExpoConfig } from '@expo/config-types';
 
 import { getConfig } from './Config';
 import { getAccountUsername } from './getFullName';
+import {
+  withExpoAndroidPlugins,
+  withExpoIOSPlugins,
+  withExpoLegacyPlugins,
+  withExpoVersionedSDKPlugins,
+} from './plugins/withDefaultPlugins';
 
 export function getPrebuildConfig(
   projectRoot: string,

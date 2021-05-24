@@ -1,8 +1,10 @@
-import { ConfigPlugin } from '../../Plugin.types';
-import { withUpdates as withUpdatesAndroid } from '../../android/Updates';
-import { withUpdates as withUpdatesIOS } from '../../ios/Updates';
-import { createRunOncePlugin } from '../withRunOnce';
-import { withStaticPlugin } from '../withStaticPlugin';
+import {
+  AndroidConfig,
+  ConfigPlugin,
+  createRunOncePlugin,
+  IOSConfig,
+  withStaticPlugin,
+} from '@expo/config-plugins';
 
 // Local unversioned updates plugin
 
@@ -19,8 +21,8 @@ export const withExpoUpdates: ConfigPlugin<{ expoUsername: string }> = (config, 
 };
 
 const withUnversionedUpdates: ConfigPlugin<{ expoUsername: string }> = (config, props) => {
-  config = withUpdatesAndroid(config, props);
-  config = withUpdatesIOS(config, props);
+  config = AndroidConfig.Updates.withUpdates(config, props);
+  config = IOSConfig.Updates.withUpdates(config, props);
   return config;
 };
 

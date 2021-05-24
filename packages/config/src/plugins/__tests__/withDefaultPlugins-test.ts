@@ -1,23 +1,29 @@
+import {
+  compileModsAsync,
+  evalModsAsync,
+  ExportedConfig,
+  IOSConfig,
+  withGradleProperties,
+  XML,
+} from '@expo/config-plugins';
 import JsonFile from '@expo/json-file';
 import fs from 'fs-extra';
 import { vol } from 'memfs';
 import * as path from 'path';
 import xcode from 'xcode';
 
-import { ExportedConfig } from '../../Plugin.types';
-import { withBranch } from '../../ios/Branch';
-import { PodfileBasic } from '../../ios/__tests__/fixtures/Podfile';
-import { getDirFromFS } from '../../ios/__tests__/utils/getDirFromFS';
-import { readXMLAsync } from '../../utils/XML';
-import { withGradleProperties } from '../android-plugins';
 import {
   withExpoAndroidPlugins,
   withExpoIOSPlugins,
   withExpoVersionedSDKPlugins,
-} from '../expo-plugins';
-import { compileModsAsync, evalModsAsync } from '../mod-compiler';
+} from '../withDefaultPlugins';
+import { PodfileBasic } from './fixtures/Podfile';
 import rnFixture from './fixtures/react-native-project';
+import { getDirFromFS } from './getDirFromFS';
 
+const { withBranch } = IOSConfig.Branch;
+
+const { readXMLAsync } = XML;
 const fsReal = jest.requireActual('fs') as typeof fs;
 
 jest.mock('fs');

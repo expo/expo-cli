@@ -1,7 +1,10 @@
-import { ConfigPlugin, PluginParameters } from '../../Plugin.types';
-import { withPlugins } from '../withPlugins';
-import { createRunOncePlugin } from '../withRunOnce';
-import { withStaticPlugin } from '../withStaticPlugin';
+import {
+  ConfigPlugin,
+  createRunOncePlugin,
+  PluginParameters,
+  withPlugins,
+  withStaticPlugin,
+} from '@expo/config-plugins';
 
 const camelize = (s: string) => s.replace(/-./g, x => x.toUpperCase()[1]);
 

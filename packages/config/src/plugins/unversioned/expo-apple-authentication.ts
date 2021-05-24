@@ -1,13 +1,15 @@
+import { ConfigPlugin, withEntitlementsPlist } from '@expo/config-plugins';
 import { ExpoConfig } from '@expo/config-types';
 import { JSONObject } from '@expo/json-file';
 
-import { createEntitlementsPlugin } from '../ios-plugins';
 import { createLegacyPlugin } from './createLegacyPlugin';
 
-const withAppleSignInEntitlement = createEntitlementsPlugin(
-  setAppleSignInEntitlement,
-  'withAppleSignInEntitlement'
-);
+const withAppleSignInEntitlement: ConfigPlugin = config => {
+  return withEntitlementsPlist(config, config => {
+    config.modResults = setAppleSignInEntitlement(config, config.modResults);
+    return config;
+  });
+};
 
 function setAppleSignInEntitlement(config: ExpoConfig, entitlementsPlist: JSONObject): JSONObject {
   if (config.ios?.usesAppleSignIn) {
