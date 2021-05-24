@@ -71,6 +71,7 @@
     "@expo/apple-utils": "0.0.0-alpha.20",
     "@expo/bunyan": "4.0.0",
     "@expo/config": "3.3.42",
+    "@expo/prebuild-config": "1.0.0",
     "@expo/config-plugins": "1.0.32",
     "@expo/dev-tools": "0.13.98",
     "@expo/json-file": "8.2.30",

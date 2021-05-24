@@ -1,8 +1,7 @@
+import { getAccountUsername, getConfig } from '@expo/config';
 import { ModPlatform } from '@expo/config-plugins';
 import { ExpoConfig } from '@expo/config-types';
 
-import { getConfig } from './Config';
-import { getAccountUsername } from './getFullName';
 import {
   withExpoAndroidPlugins,
   withExpoIOSPlugins,
