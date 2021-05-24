@@ -154,7 +154,7 @@ function createMockedResponse(): MockedResponse {
 }
 
 function expectMockedResponse(res: MockedResponse, status: number, body?: string) {
-  if (status != 200) {
+  if (status !== 200) {
     expect(res.writeHead.mock.calls[0][0]).toBe(status);
   }
   if (body) {

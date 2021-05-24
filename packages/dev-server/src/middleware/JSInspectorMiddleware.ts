@@ -1,4 +1,3 @@
-import { spawn } from 'child_process';
 import type { NextHandleFunction } from 'connect';
 import fs from 'fs';
 import type { IncomingMessage, ServerResponse } from 'http';
