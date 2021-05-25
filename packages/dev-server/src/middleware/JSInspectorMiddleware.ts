@@ -5,7 +5,6 @@ import fetch from 'node-fetch';
 import open from 'open';
 import path from 'path';
 import rimraf from 'rimraf';
-import osTmpDir from 'temp-dir';
 import { TLSSocket } from 'tls';
 import { URL } from 'url';
 
@@ -99,7 +98,8 @@ async function launchChromiumAsync(url: string): Promise<void> {
   // without users manually allow insecure-content in site settings.
   // However, if there is existing chromium browser process, the argument will not take effect.
   // We also pass a `--user-data-dir=` as temporary profile and force chromium to create new browser process.
-  const tempProfileDir = fs.mkdtempSync(path.join(osTmpDir, 'chromium-for-inspector-'));
+  const tmpDir = require('temp-dir');
+  const tempProfileDir = fs.mkdtempSync(path.join(tmpDir, 'chromium-for-inspector-'));
   const launchArgs = [
     '--allow-running-insecure-content',
     `--user-data-dir=${tempProfileDir}`,

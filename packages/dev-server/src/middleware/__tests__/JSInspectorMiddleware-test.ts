@@ -6,7 +6,11 @@ import { URL } from 'url';
 
 import JSInspectorMiddleware from '../JSInspectorMiddleware';
 
-jest.mock('node-fetch').mock('open');
+jest.mock('fs');
+jest.mock('node-fetch');
+jest.mock('open');
+jest.mock('rimraf');
+jest.mock('temp-dir', () => '/tmp');
 
 const { Response } = jest.requireActual('node-fetch');
 
