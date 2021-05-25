@@ -1,10 +1,9 @@
 import fs from 'fs-extra';
 
+import { findFirstNativeTarget, findNativeTargetByName } from './Target';
 import {
   ConfigurationSectionEntry,
-  findFirstNativeTarget,
-  findNativeTargetByName,
-  getBuildConfigurationForId,
+  getBuildConfigurationsForListId,
   getPbxproj,
   getProjectSection,
   isNotComment,
@@ -15,27 +14,27 @@ type ProvisioningProfileSettings = {
   targetName?: string;
   appleTeamId: string;
   profileName: string;
+  buildConfiguration?: string;
 };
 
-function setProvisioningProfileForPbxproj(
+export function setProvisioningProfileForPbxproj(
   projectRoot: string,
-  { targetName, profileName, appleTeamId }: ProvisioningProfileSettings
+  {
+    targetName,
+    profileName,
+    appleTeamId,
+    buildConfiguration = 'Release',
+  }: ProvisioningProfileSettings
 ): void {
   const project = getPbxproj(projectRoot);
-  const target = targetName
+
+  const nativeTargetEntry = targetName
     ? findNativeTargetByName(project, targetName)
     : findFirstNativeTarget(project);
+  const [nativeTargetId, nativeTarget] = nativeTargetEntry;
 
-  if (!target && targetName) {
-    throw new Error(`Unable to find a target named ${targetName}.`);
-  } else if (!target) {
-    throw new Error(`Unable to find any targets in this Xcode project.`);
-  }
-
-  const [nativeTargetId, nativeTarget] = target;
-
-  getBuildConfigurationForId(project, nativeTarget.buildConfigurationList)
-    .filter(([, item]: ConfigurationSectionEntry) => item.buildSettings.PRODUCT_NAME)
+  getBuildConfigurationsForListId(project, nativeTarget.buildConfigurationList)
+    .filter(([, item]: ConfigurationSectionEntry) => item.name === buildConfiguration)
     .forEach(([, item]: ConfigurationSectionEntry) => {
       item.buildSettings.PROVISIONING_PROFILE_SPECIFIER = `"${profileName}"`;
       item.buildSettings.DEVELOPMENT_TEAM = appleTeamId;
@@ -52,5 +51,3 @@ function setProvisioningProfileForPbxproj(
 
   fs.writeFileSync(project.filepath, project.writeSync());
 }
-
-export { setProvisioningProfileForPbxproj };
