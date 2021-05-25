@@ -8,20 +8,9 @@ import rimraf from 'rimraf';
 import { TLSSocket } from 'tls';
 import { URL } from 'url';
 
-const ENDPOINT = '/inspector';
-
-export default function InspectorMiddleware(): NextHandleFunction {
+export default function JSInspectorMiddleware(): NextHandleFunction {
   return async function (req: IncomingMessage, res: ServerResponse, next: (err?: Error) => void) {
-    if (!req.url || !req.url.startsWith(ENDPOINT)) {
-      next();
-      return;
-    }
-    const { pathname, origin, searchParams } = new URL(req.url, getRequestBase(req));
-    if (pathname !== ENDPOINT) {
-      next();
-      return;
-    }
-
+    const { origin, searchParams } = new URL(req.url ?? '/', getRequestBase(req));
     const applicationId = searchParams.get('applicationId');
     if (!applicationId) {
       res.writeHead(400).end('Missing applicationId');
@@ -30,7 +19,7 @@ export default function InspectorMiddleware(): NextHandleFunction {
 
     const target = await queryInspectorTargetAsync(origin, applicationId);
     if (!target) {
-      res.writeHead(404).end('Unable to find inspector target from metro-inspector-proxy.');
+      res.writeHead(404).end('Unable to find inspector target from metro-inspector-proxy');
       return;
     }
 
@@ -43,8 +32,15 @@ export default function InspectorMiddleware(): NextHandleFunction {
       });
       res.end(data);
     } else if (req.method === 'POST' || req.method === 'PUT') {
-      const urlBase =
-        'https://chrome-devtools-frontend.appspot.com/serve_rev/@e3cd97fc771b893b7fd1879196d1215b622c2bed/inspector.html';
+      // To update devtoolsFrontendRev, find the full commit hash in the url:
+      // https://chromium.googlesource.com/chromium/src.git/+log/refs/tags/{CHROME_VERSION}/chrome/VERSION
+      //
+      // 1. Replace {CHROME_VERSION} with the target chrome version
+      // 2. Click the first log item in the webpage
+      // 3. The full commit hash is the desired revision
+      const devtoolsFrontendRev = 'e3cd97fc771b893b7fd1879196d1215b622c2bed'; // Chrome 90.0.4430.212
+
+      const urlBase = `https://chrome-devtools-frontend.appspot.com/serve_rev/@${devtoolsFrontendRev}/inspector.html`;
       const ws = target.webSocketDebuggerUrl.replace('ws://[::]:', 'localhost:');
       const url = `${urlBase}?experiments=true&v8only=true&ws=${encodeURIComponent(ws)}`;
       launchChromiumAsync(url);
@@ -92,7 +88,7 @@ function getRequestBase(req: IncomingMessage): string {
 }
 
 async function launchChromiumAsync(url: string): Promise<void> {
-  // For dev-client connecting metro in LAN, the request to fetch sourcemap may be blocked by Chromium
+  // For dev-client connecting metro in LAN, the request to fetch sourcemaps may be blocked by Chromium
   // with insecure-content (https page send xhr for http resource).
   // Adding `--allow-running-insecure-content` to overcome this limitation
   // without users manually allow insecure-content in site settings.

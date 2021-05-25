@@ -10,7 +10,7 @@ import http from 'http';
 import type { IncomingMessage, ServerResponse } from 'http';
 import type Metro from 'metro';
 import resolveFrom from 'resolve-from';
-import { URL } from 'url';
+import { parse as parseUrl } from 'url';
 
 import LogReporter from './LogReporter';
 import JSInspectorMiddleware from './middleware/JSInspectorMiddleware';
@@ -58,8 +58,9 @@ export async function runMetroDevServerAsync(
     watchFolders: metroConfig.watchFolders,
   });
 
-  replaceCliSecurityHeaderMiddlewareWith(
+  replaceMiddlewareWith(
     middleware as ConnectServer,
+    securityHeadersMiddleware,
     remoteDevtoolsSecurityHeadersMiddleware
   );
   middleware.use(remoteDevtoolsCorsMiddleware);
@@ -187,17 +188,19 @@ function importMetroServerFromProject(projectRoot: string): typeof Metro.Server 
   return require(resolvedPath);
 }
 
-function replaceCliSecurityHeaderMiddlewareWith(
+function replaceMiddlewareWith(
   app: ConnectServer,
+  sourceMiddleware: HandleFunction,
   targetMiddleware: HandleFunction
 ) {
-  const index = app.stack.findIndex(middleware => middleware.handle === securityHeadersMiddleware);
+  const index = app.stack.findIndex(middleware => middleware.handle === sourceMiddleware);
   if (index >= 0) {
     app.stack[index].handle = targetMiddleware;
   }
 }
 
-// Same as securityHeadersMiddleware but allow cross-origin requests from https://chrome-devtools-frontend.appspot.com/
+// Like securityHeadersMiddleware but further allow cross-origin requests
+// from https://chrome-devtools-frontend.appspot.com/
 function remoteDevtoolsSecurityHeadersMiddleware(
   req: IncomingMessage,
   res: ServerResponse,
@@ -225,21 +228,21 @@ function remoteDevtoolsSecurityHeadersMiddleware(
   next();
 }
 
-// Hook before metro to process *.map that accepts multiple Access-Control-Allow-Origin
+// Middleware that accepts multiple Access-Control-Allow-Origin for processing *.map.
+// This is a hook middleware before metro processing *.map,
+// which originally allow only devtools://devtools
 function remoteDevtoolsCorsMiddleware(
   req: IncomingMessage,
   res: ServerResponse,
   next: (err?: Error) => void
 ) {
   if (req.url) {
-    // passing http://localhost:8081 here to make new URL() works like legacy url.parse.
-    // we need the pathname only.
-    const url = new URL(req.url, 'http://localhost:8081');
+    const url = parseUrl(req.url);
     const origin = req.headers.origin;
     const isValidOrigin =
       origin &&
       ['devtools://devtools', 'https://chrome-devtools-frontend.appspot.com'].includes(origin);
-    if (url.pathname.endsWith('.map') && origin && isValidOrigin) {
+    if (url.pathname?.endsWith('.map') && origin && isValidOrigin) {
       res.setHeader('Access-Control-Allow-Origin', origin);
 
       // Prevent metro overwrite Access-Control-Allow-Origin header

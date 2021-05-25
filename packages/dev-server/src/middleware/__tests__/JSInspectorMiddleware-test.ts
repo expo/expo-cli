@@ -15,7 +15,7 @@ jest.mock('temp-dir', () => '/tmp');
 const { Response } = jest.requireActual('node-fetch');
 
 describe('JSInspectorMiddleware', () => {
-  it('should return specific app entity for GET /inspector with given applicationId', async () => {
+  it('should return specific app entity for GET request with given applicationId', async () => {
     const appId = 'io.expo.test.devclient';
     const entities = JSON.parse(RESPONSE_FIXTURE) as { [key: string]: string }[];
     const entity = entities.find(object => object.description === appId);
@@ -32,7 +32,7 @@ describe('JSInspectorMiddleware', () => {
     expectMockedResponse(res, 200, JSON.stringify(entity));
   });
 
-  it('should return 404 for GET /inspector with nonexistent applicationId', async () => {
+  it('should return 404 for GET request with nonexistent applicationId', async () => {
     const req = createRequest('http://localhost:8081/inspector?applicationId=nonExistentApp');
     const res = createMockedResponse();
     const next = jest.fn();
@@ -45,7 +45,7 @@ describe('JSInspectorMiddleware', () => {
     expectMockedResponse(res, 404);
   });
 
-  it('should return 400 for GET /inspector without parameters', async () => {
+  it('should return 400 for GET request without parameters', async () => {
     const req = createRequest('http://localhost:8081/inspector');
     const res = createMockedResponse();
     const next = jest.fn();
@@ -58,7 +58,7 @@ describe('JSInspectorMiddleware', () => {
     expectMockedResponse(res, 400);
   });
 
-  it('should open browser for PUT /inspector with given applicationId', async () => {
+  it('should open browser for PUT request with given applicationId', async () => {
     const appId = 'io.expo.test.devclient';
     const req = createRequest(`http://localhost:8081/inspector?applicationId=${appId}`, 'PUT');
     const res = createMockedResponse();
