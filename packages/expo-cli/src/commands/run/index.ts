@@ -7,7 +7,7 @@ export default function (program: Command) {
   program
     .command('run:android [path]')
     .description('Run the Android app binary locally')
-    .helpGroup('internal')
+    .helpGroup('core')
     .option('--no-bundler', 'Skip starting the Metro bundler')
     .option('-d, --device [device]', 'Device name to build the app on')
     .option('-p, --port <port>', 'Port to start the Metro bundler on. Default: 8081')
@@ -16,7 +16,7 @@ export default function (program: Command) {
   program
     .command('run:ios [path]')
     .description('Run the iOS app binary locally')
-    .helpGroup('internal')
+    .helpGroup('core')
     .option('--no-bundler', 'Skip starting the Metro bundler')
     .option('-d, --device [device]', 'Device name or UDID to build the app on')
     .option('-p, --port <port>', 'Port to start the Metro bundler on. Default: 8081')
