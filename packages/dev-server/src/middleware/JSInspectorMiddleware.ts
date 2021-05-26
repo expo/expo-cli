@@ -1,10 +1,9 @@
 import type { NextHandleFunction } from 'connect';
-import fs from 'fs';
+import fs from 'fs-extra';
 import type { IncomingMessage, ServerResponse } from 'http';
 import fetch from 'node-fetch';
 import open from 'open';
 import path from 'path';
-import rimraf from 'rimraf';
 import { TLSSocket } from 'tls';
 import { URL } from 'url';
 
@@ -124,5 +123,5 @@ async function launchChromiumAsync(url: string): Promise<void> {
     });
   }
 
-  rimraf.sync(tempProfileDir);
+  await fs.remove(tempProfileDir);
 }
