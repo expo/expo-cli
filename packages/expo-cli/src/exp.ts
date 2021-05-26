@@ -710,9 +710,6 @@ Command.prototype.asyncActionProjectDir = function (
 
 function runAsync(programName: string) {
   try {
-    Analytics.initializeClient('vGu92cdmVaggGA26s3lBX6Y5fILm8SQ7', packageJSON.version);
-    UnifiedAnalytics.initializeClient('u4e9dmCiNpwIZTXuyZPOJE7KjCMowdx5', packageJSON.version);
-
     _registerLogs();
 
     UserManager.setInteractiveAuthenticationCallback(loginOrRegisterAsync);
@@ -849,10 +846,26 @@ async function writePathAsync() {
   await Binaries.writePathToUserSettingsAsync();
 }
 
+async function bootstrapAnalyticsAsync(): Promise<void> {
+  Analytics.initializeClient('vGu92cdmVaggGA26s3lBX6Y5fILm8SQ7', packageJSON.version);
+  UnifiedAnalytics.initializeClient('u4e9dmCiNpwIZTXuyZPOJE7KjCMowdx5', packageJSON.version);
+
+  const userData = await profileMethod(UserManager.getCachedUserDataAsync)();
+
+  if (!userData?.userId) return;
+
+  UnifiedAnalytics.identifyUser(userData.userId, {
+    userId: userData.userId,
+    currentConnection: userData?.currentConnection,
+    username: userData?.username,
+    userType: '', // not available without hitting api
+  });
+}
+
 // This is the entry point of the CLI
 export function run(programName: string) {
   (async function () {
-    await Promise.all([writePathAsync(), runAsync(programName)]);
+    await Promise.all([writePathAsync(), runAsync(programName), bootstrapAnalyticsAsync()]);
   })().catch(e => {
     Log.error('Uncaught Error', e);
     process.exit(1);

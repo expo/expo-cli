@@ -97,6 +97,10 @@ export class UserManagerInstance {
     this._getSessionLock = new Semaphore();
   }
 
+  constructor() {
+    this.getCachedUserDataAsync = this.getCachedUserDataAsync.bind(this);
+  }
+
   /**
    * Logs in a user for a given login type.
    *
