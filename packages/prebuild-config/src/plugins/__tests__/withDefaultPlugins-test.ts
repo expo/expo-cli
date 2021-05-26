@@ -57,7 +57,6 @@ function getLargeConfig(): ExportedConfig {
     primaryColor: '#fff000',
     // icon: './icons/icon.png',
     notification: {
-      icon: './icons/notification-icon.png',
       color: 'green',
       iosDisplayInForeground: true,
       androidMode: 'collapse',
@@ -213,7 +212,6 @@ describe('built-in plugins', () => {
         'config/google-services.json': '{}',
         './icons/foreground.png': icon,
         './icons/background.png': icon,
-        './icons/notification-icon.png': icon,
         './icons/ios-icon.png': icon,
         'locales/en-US.json': JSON.stringify({ foo: 'uhh bar', fallback: 'fallback' }, null, 2),
       },
@@ -543,7 +541,6 @@ describe('built-in plugins', () => {
         'config/google-services.json': '{}',
         'icons/foreground.png': icon,
         'icons/background.png': icon,
-        'icons/notification-icon.png': icon,
         'icons/ios-icon.png': icon,
         'locales/en-US.json': JSON.stringify({ foo: 'uhh bar', fallback: 'fallback' }, null, 2),
       },
