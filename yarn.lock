@@ -1446,7 +1446,7 @@
     mv "~2"
     safe-json-stringify "~1"
 
-"@expo/configure-splash-screen@0.4.0":
+"@expo/configure-splash-screen@~0.4.0":
   version "0.4.0"
   resolved "https://registry.yarnpkg.com/@expo/configure-splash-screen/-/configure-splash-screen-0.4.0.tgz#dad43fccae4525e32ec25d22c7338b2c3cbf6170"
   integrity sha512-IDPnr2/DW1tYpDHqedFYNCDzRTf9HYinWFQ7fOelNZLuOCMoErLbSStA5zfkv46o69AgcCpteqgKHSoxsIBz5g==
