@@ -351,6 +351,7 @@ Command.prototype.asyncAction = function (asyncFn: Action) {
       // After a command, flush the analytics queue so the program will not have any active timers
       // This allows node js to exit immediately
       Analytics.flush();
+      UnifiedAnalytics.flush();
     } catch (err) {
       // TODO: Find better ways to consolidate error messages
       if (err instanceof AbortCommandError || err instanceof SilentError) {
@@ -859,6 +860,13 @@ async function bootstrapAnalyticsAsync(): Promise<void> {
     currentConnection: userData?.currentConnection,
     username: userData?.username,
     userType: '', // not available without hitting api
+  });
+
+  const command = process.argv[2];
+  UnifiedAnalytics.logEvent('action', {
+    action: `expo ${command}`,
+    source: 'expo cli',
+    source_version: UnifiedAnalytics.version,
   });
 }
 
