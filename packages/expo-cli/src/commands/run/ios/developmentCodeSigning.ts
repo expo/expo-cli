@@ -27,12 +27,12 @@ async function setLastDeveloperCodeSigningIdAsync(id: string) {
  */
 export function getCodeSigningInfoForPbxproj(projectRoot: string) {
   const project = IOSConfig.XcodeUtils.getPbxproj(projectRoot);
-  const [, nativeTarget] = IOSConfig.XcodeUtils.findFirstNativeTarget(project);
+  const [, nativeTarget] = IOSConfig.Target.findFirstNativeTarget(project);
 
   const developmentTeams: string[] = [];
   const provisioningProfiles: string[] = [];
 
-  IOSConfig.XcodeUtils.getBuildConfigurationForId(project, nativeTarget.buildConfigurationList)
+  IOSConfig.XcodeUtils.getBuildConfigurationsForListId(project, nativeTarget.buildConfigurationList)
     .filter(
       ([, item]: IOSConfig.XcodeUtils.ConfigurationSectionEntry) => item.buildSettings.PRODUCT_NAME
     )
@@ -67,9 +67,9 @@ function setAutoCodeSigningInfoForPbxproj(
   { appleTeamId }: { appleTeamId: string }
 ): void {
   const project = IOSConfig.XcodeUtils.getPbxproj(projectRoot);
-  const [nativeTargetId, nativeTarget] = IOSConfig.XcodeUtils.findFirstNativeTarget(project);
+  const [nativeTargetId, nativeTarget] = IOSConfig.Target.findFirstNativeTarget(project);
 
-  IOSConfig.XcodeUtils.getBuildConfigurationForId(project, nativeTarget.buildConfigurationList)
+  IOSConfig.XcodeUtils.getBuildConfigurationsForListId(project, nativeTarget.buildConfigurationList)
     .filter(
       ([, item]: IOSConfig.XcodeUtils.ConfigurationSectionEntry) => item.buildSettings.PRODUCT_NAME
     )

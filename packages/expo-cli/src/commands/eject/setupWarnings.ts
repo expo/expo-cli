@@ -1,5 +1,5 @@
 import { PackageJSONConfig } from '@expo/config';
-import { getExpoLegacyPlugins } from '@expo/config-plugins';
+import { getExpoLegacyPlugins } from '@expo/prebuild-config';
 import chalk from 'chalk';
 import semver from 'semver';
 

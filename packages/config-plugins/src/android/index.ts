@@ -6,7 +6,6 @@ import * as EasBuild from './EasBuild';
 import * as Facebook from './Facebook';
 import * as GoogleMapsApiKey from './GoogleMapsApiKey';
 import * as GoogleServices from './GoogleServices';
-import * as Icon from './Icon';
 import * as IntentFilters from './IntentFilters';
 import * as Manifest from './Manifest';
 import * as Name from './Name';
@@ -20,7 +19,6 @@ import * as Properties from './Properties';
 import * as Resources from './Resources';
 import * as RootViewBackgroundColor from './RootViewBackgroundColor';
 import * as Scheme from './Scheme';
-import * as SplashScreen from './SplashScreen';
 import * as StatusBar from './StatusBar';
 import * as Strings from './Strings';
 import * as Styles from './Styles';
@@ -38,7 +36,6 @@ export {
   GoogleMapsApiKey,
   AdMob,
   GoogleServices,
-  Icon,
   IntentFilters,
   Name,
   NavigationBar,
@@ -51,7 +48,6 @@ export {
   Resources,
   RootViewBackgroundColor,
   Scheme,
-  SplashScreen,
   StatusBar,
   Strings,
   Styles,
