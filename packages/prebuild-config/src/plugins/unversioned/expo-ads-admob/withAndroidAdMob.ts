@@ -1,17 +1,22 @@
+import { AndroidConfig, ConfigPlugin, withAndroidManifest } from '@expo/config-plugins';
 import { ExpoConfig } from '@expo/config-types';
 
-import { createAndroidManifestPlugin } from '../plugins/android-plugins';
-import {
+const {
   addMetaDataItemToMainApplication,
-  AndroidManifest,
+
   getMainApplicationOrThrow,
   removeMetaDataItemFromMainApplication,
-} from './Manifest';
+} = AndroidConfig.Manifest;
 
 const META_APPLICATION_ID = 'com.google.android.gms.ads.APPLICATION_ID';
 const META_DELAY_APP_MEASUREMENT_INIT = 'com.google.android.gms.ads.DELAY_APP_MEASUREMENT_INIT';
 
-export const withAdMob = createAndroidManifestPlugin(setAdMobConfig, 'withAdMob');
+export const withAndroidAdMob: ConfigPlugin = config => {
+  return withAndroidManifest(config, config => {
+    config.modResults = setAdMobConfig(config, config.modResults);
+    return config;
+  });
+};
 
 export function getGoogleMobileAdsAppId(config: Pick<ExpoConfig, 'android'>) {
   return config.android?.config?.googleMobileAdsAppId ?? null;
@@ -23,7 +28,7 @@ export function getGoogleMobileAdsAutoInit(config: Pick<ExpoConfig, 'android'>) 
 
 export function setAdMobConfig(
   config: Pick<ExpoConfig, 'android'>,
-  androidManifest: AndroidManifest
+  androidManifest: AndroidConfig.Manifest.AndroidManifest
 ) {
   const appId = getGoogleMobileAdsAppId(config);
   const autoInit = getGoogleMobileAdsAutoInit(config);
