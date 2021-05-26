@@ -12,6 +12,37 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+## [Wed, 26 May 2021 12:38:22 -0700](https://github.com/expo/expo-cli/commit/315dc74ad3f1c7da5f8beeb804148a5fb8f4bef2)
+
+### 🛠 Breaking changes
+
+### 🎉 New features
+
+- [config-plugins][prebuild-config] Refactor config plugins ([#3514](https://github.com/expo/expo-cli/issues/3514))
+- [cli] Show run commands in help ([#3515](https://github.com/expo/expo-cli/issues/3515))
+
+### 🧹 Chores
+
+- [introspect] Add pipe sanitization ([#3517](https://github.com/expo/expo-cli/issues/3517))
+- [cli] Only set global git user name on CI
+
+### 📦 Packages updated
+
+- @expo/config-plugins@2.0.0
+- @expo/config@4.0.0
+- @expo/dev-server@0.1.70
+- @expo/dev-tools@0.13.100
+- expo-cli@4.5.0
+- expo-optimize@0.1.92
+- @expo/metro-config@0.1.70
+- @expo/next-adapter@2.1.75
+- @expo/prebuild-config@1.0.1
+- expo-pwa@0.0.80
+- uri-scheme@1.0.81
+- @expo/webpack-config@0.12.74
+- xdl@59.0.40
+- @expo/config-types@41.0.0
+
 ## [Tue, 25 May 2021 14:15:46 +0200](https://github.com/expo/expo-cli/commit/a90d37dee759078511321fe719c83e45c80dc68c)
 
 ### 🛠 Breaking changes
