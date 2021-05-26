@@ -1,12 +1,15 @@
+import { getConfig } from '@expo/config';
 import chalk from 'chalk';
 import fs from 'fs-extra';
 import * as path from 'path';
-import { SimControl, Simulator } from 'xdl';
+import { SimControl, Simulator, UnifiedAnalytics } from 'xdl';
 
 import CommandError from '../../../CommandError';
+import getDevClientProperties from '../../../analytics/getDevClientProperties';
 import Log from '../../../log';
 import { getSchemesForIosAsync } from '../../../schemes';
 import { EjectAsyncOptions, prebuildAsync } from '../../eject/prebuildAsync';
+import { installCustomExitHook } from '../../start/installExitHooks';
 import { profileMethod } from '../../utils/profileMethod';
 import { parseBinaryPlistAsync } from '../utils/binaryPlist';
 import { isDevMenuInstalled } from '../utils/isDevMenuInstalled';
@@ -19,6 +22,21 @@ import { startBundlerAsync } from './startBundlerAsync';
 const isMac = process.platform === 'darwin';
 
 export async function runIosActionAsync(projectRoot: string, options: Options) {
+  const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
+  UnifiedAnalytics.logEvent('dev client run command', {
+    status: 'started',
+    platform: 'ios',
+    ...getDevClientProperties(projectRoot, exp),
+  });
+  installCustomExitHook(() => {
+    UnifiedAnalytics.logEvent('dev client run command', {
+      status: 'finished',
+      platform: 'ios',
+      ...getDevClientProperties(projectRoot, exp),
+    });
+    UnifiedAnalytics.flush();
+  });
+
   if (!isMac) {
     // TODO: Prompt to use EAS?
 
@@ -81,6 +99,11 @@ export async function runIosActionAsync(projectRoot: string, options: Options) {
   if (props.shouldStartBundler) {
     Log.nested(`\nLogs for your project will appear below. ${chalk.dim(`Press Ctrl+C to exit.`)}`);
   }
+  UnifiedAnalytics.logEvent('dev client run command', {
+    status: 'ready',
+    platform: 'ios',
+    ...getDevClientProperties(projectRoot, exp),
+  });
 }
 
 async function getBundleIdentifierForBinaryAsync(binaryPath: string): Promise<string> {

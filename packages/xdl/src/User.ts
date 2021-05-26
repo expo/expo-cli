@@ -490,6 +490,7 @@ export class UserManagerInstance {
           currentConnection: user.currentConnection,
           username: user.username,
           userType: user.kind,
+          primaryAccountId: user.primaryAccountId,
         }
       );
 
@@ -498,6 +499,7 @@ export class UserManagerInstance {
         currentConnection: user.currentConnection,
         username: user.username,
         userType: user.kind,
+        primaryAccountId: user.primaryAccountId,
       });
     }
 
