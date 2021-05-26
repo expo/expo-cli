@@ -2,7 +2,6 @@ import * as AdMob from './AdMob';
 import * as Branch from './Branch';
 import * as BuildScheme from './BuildScheme';
 import * as BundleIdentifier from './BundleIdentifier';
-import * as CustomInfoPlistEntries from './CustomInfoPlistEntries';
 import * as DeviceFamily from './DeviceFamily';
 import * as Entitlements from './Entitlements';
 import * as Facebook from './Facebook';
@@ -18,6 +17,7 @@ import * as ProvisioningProfile from './ProvisioningProfile';
 import * as RequiresFullScreen from './RequiresFullScreen';
 import * as Scheme from './Scheme';
 import * as Swift from './Swift';
+import * as Target from './Target';
 import * as Updates from './Updates';
 import * as UserInterfaceStyle from './UserInterfaceStyle';
 import * as UsesNonExemptEncryption from './UsesNonExemptEncryption';
@@ -33,7 +33,6 @@ export {
   Branch,
   BuildScheme,
   BundleIdentifier,
-  CustomInfoPlistEntries,
   DeviceFamily,
   Entitlements,
   Facebook,
@@ -50,6 +49,7 @@ export {
   RequiresFullScreen,
   Scheme,
   Swift,
+  Target,
   Updates,
   UserInterfaceStyle,
   UsesNonExemptEncryption,

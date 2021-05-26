@@ -12,6 +12,44 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+## [Tue, 25 May 2021 14:15:46 +0200](https://github.com/expo/expo-cli/commit/a90d37dee759078511321fe719c83e45c80dc68c)
+
+### 🛠 Breaking changes
+
+### 🎉 New features
+
+- [config-plugins] make bundle identifier getter aware of multiple targets ([#3483](https://github.com/expo/expo-cli/issues/3483))
+- [config plugins] added provider validation ([#3506](https://github.com/expo/expo-cli/issues/3506))
+- [expo cli] Enable socket controls in dev-client ([#3502](https://github.com/expo/expo-cli/issues/3502))
+
+### 🧹 Chores
+
+- Delete CustomInfoPlistEntries
+- Rename strict to assertMissingModProviders ([#3511](https://github.com/expo/expo-cli/issues/3511))
+- Improve legacy plugin creation ([#3512](https://github.com/expo/expo-cli/issues/3512))
+- Remove unused slugify ([#3499](https://github.com/expo/expo-cli/issues/3499))
+- Use workflow/customizing
+
+### 🐛 Bug fixes
+
+- Prevent resetting entitlements ([#3500](https://github.com/expo/expo-cli/issues/3500))
+- Use a better default app id ([#3504](https://github.com/expo/expo-cli/issues/3504))
+
+### 📦 Packages updated
+
+- @expo/config-plugins@1.0.33
+- @expo/config@3.3.43
+- @expo/dev-server@0.1.69
+- @expo/dev-tools@0.13.99
+- expo-cli@4.4.9
+- expo-optimize@0.1.91
+- @expo/metro-config@0.1.69
+- @expo/next-adapter@2.1.74
+- expo-pwa@0.0.79
+- uri-scheme@1.0.80
+- @expo/webpack-config@0.12.73
+- xdl@59.0.39
+
 ## [Thu, 20 May 2021 09:29:50 -0700](https://github.com/expo/expo-cli/commit/a4d6a8389aca6861758af093c096a640d814c9fb)
 
 ### 🛠 Breaking changes
@@ -94,7 +132,6 @@ This is the log of notable changes to Expo CLI and related packages.
 - @expo/webpack-config@0.12.71
 - xdl@59.0.37
 
-
 ## [Tue, 11 May 2021 14:19:49 -0700](https://github.com/expo/expo-cli/commit/79e6091d479a1ab7abd7dc07c61bfa37beee6680)
 
 ### 🧹 Chores
@@ -147,7 +184,7 @@ This is the log of notable changes to Expo CLI and related packages.
 - [cli] "expo is not installed" error ([#3425](https://github.com/expo/expo-cli/issues/3425))
 - [install] add config plugins automatically ([#3437](https://github.com/expo/expo-cli/issues/3437))
 - [run] add --no-bundler option ([#3460](https://github.com/expo/expo-cli/issues/3460))
-- [prebuild] Added template prop  ([#3439](https://github.com/expo/expo-cli/issues/3439))
+- [prebuild] Added template prop ([#3439](https://github.com/expo/expo-cli/issues/3439))
 - [run] output logs and clear on pod folder ([#3457](https://github.com/expo/expo-cli/issues/3457))
 - [CI] add tests on Windows ([#3428](https://github.com/expo/expo-cli/issues/3428))
 - [workspace] deduplicate yarn lock in `postinstall` ([#3418](https://github.com/expo/expo-cli/issues/3418))
@@ -156,7 +193,6 @@ This is the log of notable changes to Expo CLI and related packages.
 - Improve errors when a package doesn't have a valid plugin ([#3421](https://github.com/expo/expo-cli/issues/3421))
 - Added a flag to skip git status check ([#3401](https://github.com/expo/expo-cli/issues/3401))
 - Add port selection to start --dev-client ([#3409](https://github.com/expo/expo-cli/issues/3409))
-
 
 ### 🧹 Chores
 

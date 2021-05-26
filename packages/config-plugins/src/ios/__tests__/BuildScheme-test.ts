@@ -3,7 +3,7 @@ import { vol } from 'memfs';
 import path from 'path';
 
 import {
-  getApplicationTargetForSchemeAsync,
+  getApplicationTargetNameForSchemeAsync,
   getArchiveBuildConfigurationForSchemeAsync,
 } from '../BuildScheme';
 
@@ -11,7 +11,7 @@ const fsReal = jest.requireActual('fs') as typeof fs;
 
 jest.mock('fs');
 
-describe(getApplicationTargetForSchemeAsync, () => {
+describe(getApplicationTargetNameForSchemeAsync, () => {
   describe('single build action entry', () => {
     beforeAll(async () => {
       vol.fromJSON(
@@ -30,13 +30,13 @@ describe(getApplicationTargetForSchemeAsync, () => {
     });
 
     it('returns the target name for existing scheme', async () => {
-      const target = await getApplicationTargetForSchemeAsync('/app', 'testproject');
+      const target = await getApplicationTargetNameForSchemeAsync('/app', 'testproject');
       expect(target).toBe('testproject');
     });
 
     it('throws if the scheme does not exist', async () => {
       await expect(() =>
-        getApplicationTargetForSchemeAsync('/app', 'nonexistentscheme')
+        getApplicationTargetNameForSchemeAsync('/app', 'nonexistentscheme')
       ).rejects.toThrow(/does not exist/);
     });
   });
@@ -58,13 +58,13 @@ describe(getApplicationTargetForSchemeAsync, () => {
     });
 
     it('returns the target name for existing scheme', async () => {
-      const target = await getApplicationTargetForSchemeAsync('/app', 'testproject');
+      const target = await getApplicationTargetNameForSchemeAsync('/app', 'testproject');
       expect(target).toBe('testproject');
     });
 
     it('throws if the scheme does not exist', async () => {
       await expect(() =>
-        getApplicationTargetForSchemeAsync('/app', 'nonexistentscheme')
+        getApplicationTargetNameForSchemeAsync('/app', 'nonexistentscheme')
       ).rejects.toThrow(/does not exist/);
     });
   });

@@ -40,7 +40,8 @@ describe('BundleIdentifier module', () => {
 
     it('returns null if no project.pbxproj exists', () => {
       vol.mkdirpSync(projectRoot);
-      expect(getBundleIdentifierFromPbxproj(projectRoot)).toBeNull();
+      const bundleId = getBundleIdentifierFromPbxproj(projectRoot, { targetName: 'testproject' });
+      expect(bundleId).toBeNull();
     });
 
     it('returns the bundle identifier defined in project.pbxproj', () => {
@@ -53,20 +54,51 @@ describe('BundleIdentifier module', () => {
         },
         projectRoot
       );
-      expect(getBundleIdentifierFromPbxproj(projectRoot)).toBe('org.name.testproject');
+      const bundleId = getBundleIdentifierFromPbxproj(projectRoot, { targetName: 'testproject' });
+      expect(bundleId).toBe('org.name.testproject');
     });
 
-    it('returns the bundle identifier for the first native target in project.pbxproj (project initialized with react-native init)', () => {
-      vol.fromJSON(
-        {
-          'ios/testproject.xcodeproj/project.pbxproj': originalFs.readFileSync(
-            path.join(__dirname, 'fixtures/project-rni.pbxproj'),
-            'utf-8'
-          ),
-        },
-        projectRoot
-      );
-      expect(getBundleIdentifierFromPbxproj(projectRoot)).toBe('org.reactjs.native.example.rni');
+    describe('multi-target project', () => {
+      it('returns correct bundle identifier for the default build configuration (Release)', () => {
+        vol.fromJSON(
+          {
+            'ios/testproject.xcodeproj/project.pbxproj': originalFs.readFileSync(
+              path.join(__dirname, 'fixtures/project-multitarget.pbxproj'),
+              'utf-8'
+            ),
+            'ios/testproject.xcodeproj/xcshareddata/xcschemes/multitarget.xcscheme': originalFs.readFileSync(
+              path.join(__dirname, 'fixtures/multitarget.xcscheme'),
+              'utf-8'
+            ),
+          },
+          projectRoot
+        );
+        const bundleId = getBundleIdentifierFromPbxproj(projectRoot, {
+          targetName: 'multitarget',
+        });
+        expect(bundleId).toBe('com.swmansion.dominik.multitarget');
+      });
+
+      it('returns correct bundle identifier for Debug build configuration', () => {
+        vol.fromJSON(
+          {
+            'ios/testproject.xcodeproj/project.pbxproj': originalFs.readFileSync(
+              path.join(__dirname, 'fixtures/project-multitarget.pbxproj'),
+              'utf-8'
+            ),
+            'ios/testproject.xcodeproj/xcshareddata/xcschemes/multitarget.xcscheme': originalFs.readFileSync(
+              path.join(__dirname, 'fixtures/multitarget.xcscheme'),
+              'utf-8'
+            ),
+          },
+          projectRoot
+        );
+        const bundleId = getBundleIdentifierFromPbxproj(projectRoot, {
+          targetName: 'multitarget',
+          buildConfiguration: 'Debug',
+        });
+        expect(bundleId).toBe('com.swmansion.dominik.multitarget.debug');
+      });
     });
   });
 

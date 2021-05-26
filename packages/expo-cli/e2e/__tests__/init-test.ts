@@ -21,7 +21,9 @@ test('init (no dir name)', async () => {
 test('init', async () => {
   jest.setTimeout(60000);
 
-  await spawnAsync('git', ['config', '--global', 'user.name', 'Test User']);
+  if (process.env.CI) {
+    await spawnAsync('git', ['config', '--global', 'user.name', 'Test User']);
+  }
 
   const cwd = temporary.directory();
   const { stdout } = await runAsync(
