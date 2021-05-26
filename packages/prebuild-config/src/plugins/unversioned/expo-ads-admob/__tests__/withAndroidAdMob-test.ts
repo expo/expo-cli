@@ -10,7 +10,7 @@ const { getMainApplicationOrThrow, readAndroidManifestAsync } = AndroidConfig.Ma
 
 const sampleManifestPath = resolve(
   __dirname,
-  '../../__tests__/fixtures',
+  '../../../__tests__/fixtures',
   'react-native-AndroidManifest.xml'
 );
 
