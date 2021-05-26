@@ -1,6 +1,6 @@
 import { ExpoConfig } from '@expo/config-types';
 
-import { Analytics, UnifiedAnalytics, UserData } from '../../internal';
+import { UnifiedAnalytics, UserData } from '../../internal';
 import { startAsync } from '../startAsync';
 
 jest.mock('../ngrok', () => ({ startTunnelsAsync: jest.fn() }));
@@ -43,19 +43,6 @@ describe('startAsync', () => {
     UnifiedAnalytics.initializeClient('key', '4.0.0');
   });
 
-  it('identifies the user for the unified client', async () => {
-    (UnifiedAnalytics.identifyUser as any) = jest.fn();
-
-    await startAsync(projectRoot);
-
-    expect(UnifiedAnalytics.identifyUser).toBeCalledWith(mockedUserData.userId, {
-      userId: mockedUserData.userId,
-      currentConnection: mockedUserData?.currentConnection,
-      username: mockedUserData?.username,
-      userType: '',
-    });
-  });
-
   it('tracks start event for the unified client', async () => {
     (UnifiedAnalytics.logEvent as any) = jest.fn();
 
@@ -68,13 +55,5 @@ describe('startAsync', () => {
       source: 'expo cli',
       source_version: UnifiedAnalytics.version,
     });
-  });
-
-  it('does not identify the user for the xdl client', async () => {
-    (Analytics.identifyUser as any) = jest.fn();
-
-    await startAsync(projectRoot);
-
-    expect(Analytics.userId).toBeUndefined();
   });
 });
