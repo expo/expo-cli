@@ -1,5 +1,6 @@
-import { getConfig, getPrebuildConfig, ProjectConfig } from '@expo/config';
+import { getConfig, ProjectConfig } from '@expo/config';
 import { compileModsAsync } from '@expo/config-plugins/build/plugins/mod-compiler';
+import { getPrebuildConfig } from '@expo/prebuild-config';
 import { Command } from 'commander';
 
 import CommandError from '../../CommandError';
