@@ -7,7 +7,18 @@ import path from 'path';
 import { TLSSocket } from 'tls';
 import { URL } from 'url';
 
-export default function JSInspectorMiddleware(): NextHandleFunction {
+interface MetroInspectorProxyApp {
+  description: string;
+  devtoolsFrontendUrl: string;
+  faviconUrl: string;
+  id: string;
+  title: string;
+  type: 'node';
+  vm: 'Hermes' | "don't use";
+  webSocketDebuggerUrl: string;
+}
+
+export default function createJsInspectorMiddleware(): NextHandleFunction {
   return async function (req: IncomingMessage, res: ServerResponse, next: (err?: Error) => void) {
     const { origin, searchParams } = new URL(req.url ?? '/', getRequestBase(req));
     const applicationId = searchParams.get('applicationId');
@@ -48,17 +59,6 @@ export default function JSInspectorMiddleware(): NextHandleFunction {
       res.writeHead(405);
     }
   };
-}
-
-interface MetroInspectorProxyApp {
-  description: string;
-  devtoolsFrontendUrl: string;
-  faviconUrl: string;
-  id: string;
-  title: string;
-  type: 'node';
-  vm: 'Hermes' | "don't use";
-  webSocketDebuggerUrl: string;
 }
 
 async function queryInspectorTargetAsync(
@@ -103,25 +103,27 @@ async function launchChromiumAsync(url: string): Promise<void> {
     '--no-default-browser-check',
   ];
 
-  const result = await open(url, {
-    app: {
-      name: open.apps.chrome,
-      arguments: launchArgs,
-    },
-    newInstance: true,
-    wait: true,
-  });
-
-  if (result.exitCode !== 0) {
-    await open(url, {
+  try {
+    const result = await open(url, {
       app: {
-        name: open.apps.edge,
+        name: open.apps.chrome,
         arguments: launchArgs,
       },
       newInstance: true,
       wait: true,
     });
-  }
 
-  await fs.remove(tempProfileDir);
+    if (result.exitCode !== 0) {
+      await open(url, {
+        app: {
+          name: open.apps.edge,
+          arguments: launchArgs,
+        },
+        newInstance: true,
+        wait: true,
+      });
+    }
+  } finally {
+    await fs.remove(tempProfileDir);
+  }
 }

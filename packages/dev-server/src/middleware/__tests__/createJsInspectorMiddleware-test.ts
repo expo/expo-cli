@@ -4,7 +4,7 @@ import fetch from 'node-fetch';
 import open from 'open';
 import { URL } from 'url';
 
-import JSInspectorMiddleware from '../JSInspectorMiddleware';
+import createJsInspectorMiddleware from '../createJsInspectorMiddleware';
 
 jest.mock('fs');
 jest.mock('node-fetch');
@@ -14,7 +14,7 @@ jest.mock('temp-dir', () => '/tmp');
 
 const { Response } = jest.requireActual('node-fetch');
 
-describe('JSInspectorMiddleware', () => {
+describe('createJsInspectorMiddleware', () => {
   it('should return specific app entity for GET request with given applicationId', async () => {
     const appId = 'io.expo.test.devclient';
     const entities = JSON.parse(RESPONSE_FIXTURE) as { [key: string]: string }[];
@@ -26,7 +26,7 @@ describe('JSInspectorMiddleware', () => {
     const mockFetch = fetch as jest.MockedFunction<typeof fetch>;
     mockFetch.mockReturnValue(Promise.resolve(new Response(RESPONSE_FIXTURE)));
 
-    const middlewareAsync = JSInspectorMiddleware();
+    const middlewareAsync = createJsInspectorMiddleware();
     await middlewareAsync(req, res as ServerResponse, next);
 
     expectMockedResponse(res, 200, JSON.stringify(entity));
@@ -39,7 +39,7 @@ describe('JSInspectorMiddleware', () => {
     const mockFetch = fetch as jest.MockedFunction<typeof fetch>;
     mockFetch.mockReturnValue(Promise.resolve(new Response(RESPONSE_FIXTURE)));
 
-    const middlewareAsync = JSInspectorMiddleware();
+    const middlewareAsync = createJsInspectorMiddleware();
     await middlewareAsync(req, res as ServerResponse, next);
 
     expectMockedResponse(res, 404);
@@ -52,7 +52,7 @@ describe('JSInspectorMiddleware', () => {
     const mockFetch = fetch as jest.MockedFunction<typeof fetch>;
     mockFetch.mockReturnValue(Promise.resolve(new Response(RESPONSE_FIXTURE)));
 
-    const middlewareAsync = JSInspectorMiddleware();
+    const middlewareAsync = createJsInspectorMiddleware();
     await middlewareAsync(req, res as ServerResponse, next);
 
     expectMockedResponse(res, 400);
@@ -77,7 +77,7 @@ describe('JSInspectorMiddleware', () => {
       }
     );
 
-    const middlewareAsync = JSInspectorMiddleware();
+    const middlewareAsync = createJsInspectorMiddleware();
     await middlewareAsync(req, res as ServerResponse, next);
 
     expectMockedResponse(res, 200);

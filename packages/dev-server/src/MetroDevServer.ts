@@ -13,8 +13,8 @@ import resolveFrom from 'resolve-from';
 import { parse as parseUrl } from 'url';
 
 import LogReporter from './LogReporter';
-import JSInspectorMiddleware from './middleware/JSInspectorMiddleware';
 import clientLogsMiddleware from './middleware/clientLogsMiddleware';
+import createJsInspectorMiddleware from './middleware/createJsInspectorMiddleware';
 
 export type MetroDevServerOptions = ExpoMetroConfig.LoadOptions & {
   logger: Log;
@@ -58,6 +58,8 @@ export async function runMetroDevServerAsync(
     watchFolders: metroConfig.watchFolders,
   });
 
+  // securityHeadersMiddleware does not support cross-origin requests for remote devtools to get the sourcemap.
+  // We replace with the enhanced version.
   replaceMiddlewareWith(
     middleware as ConnectServer,
     securityHeadersMiddleware,
@@ -67,7 +69,7 @@ export async function runMetroDevServerAsync(
 
   middleware.use(bodyParser.json());
   middleware.use('/logs', clientLogsMiddleware(options.logger));
-  middleware.use('/inspector', JSInspectorMiddleware());
+  middleware.use('/inspector', createJsInspectorMiddleware());
 
   const customEnhanceMiddleware = metroConfig.server.enhanceMiddleware;
   // @ts-ignore can't mutate readonly config
@@ -193,9 +195,9 @@ function replaceMiddlewareWith(
   sourceMiddleware: HandleFunction,
   targetMiddleware: HandleFunction
 ) {
-  const index = app.stack.findIndex(middleware => middleware.handle === sourceMiddleware);
-  if (index >= 0) {
-    app.stack[index].handle = targetMiddleware;
+  const item = app.stack.find(middleware => middleware.handle === sourceMiddleware);
+  if (item) {
+    item.handle = targetMiddleware;
   }
 }
 
@@ -214,9 +216,9 @@ function remoteDevtoolsSecurityHeadersMiddleware(
   ) {
     next(
       new Error(
-        'Unauthorized request from ' +
-          req.headers.origin +
-          '. This may happen because of a conflicting browser extension. Please try to disable it and try again.'
+        `Unauthorized request from ${req.headers.origin}. ` +
+          'This may happen because of a conflicting browser extension to intercept HTTP requests. ' +
+          'Please try again without browser extensions or using incognito mode.'
       )
     );
     return;
