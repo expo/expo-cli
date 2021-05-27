@@ -13,6 +13,10 @@ export async function shouldBuildHermesBundleAsync(
 ): Promise<boolean> {
   if (platform === 'android') {
     const gradlePropertiesPath = path.join(projectRoot, 'android', 'gradle.properties');
+    if (!fs.existsSync(gradlePropertiesPath)) {
+      // TODO(kudo): Clarify default behavior in managed workflow for gradle.properties not exist
+      return false;
+    }
     const properties = parseGradleProperties(await fs.readFile(gradlePropertiesPath, 'utf8'));
     for (const [key, value] of properties) {
       if (key === 'JS_RUNTIME' && value === 'hermes') {
