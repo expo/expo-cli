@@ -71,21 +71,6 @@ async function optsAsync(projectRoot: string, options: any) {
     opts.hostType = 'localhost';
   }
 
-  // Prevent using --dev-client in a managed app.
-  if (options.devClient) {
-    const defaultTarget = getDefaultTarget(projectRoot);
-    if (defaultTarget !== 'bare') {
-      Log.warn(
-        `\nOption ${Log.chalk.bold(
-          '--dev-client'
-        )} can only be used in bare workflow apps. Run ${Log.chalk.bold(
-          'expo eject'
-        )} and try again.\n`
-      );
-      throw new AbortCommandError();
-    }
-  }
-
   if (typeof options.scheme === 'string') {
     // Use the custom scheme
     opts.scheme = options.scheme ?? null;

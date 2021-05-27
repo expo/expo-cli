@@ -1,6 +1,10 @@
+import { getConfig } from '@expo/config';
 import { AndroidConfig, IOSConfig } from '@expo/config-plugins';
+import JsonFile from '@expo/json-file';
 import plist from '@expo/plist';
-import * as fs from 'fs-extra';
+import fs from 'fs';
+import path from 'path';
+import slugify from 'slugify';
 
 import { AbortCommandError } from './CommandError';
 import {
@@ -8,6 +12,7 @@ import {
   hasRequiredIOSFilesAsync,
 } from './commands/eject/clearNativeFolder';
 import Log from './log';
+import prompt from './prompts';
 
 export async function getSchemesForIosAsync(projectRoot: string) {
   try {
@@ -48,6 +53,11 @@ export async function getDevClientSchemeAsync(projectRoot: string): Promise<stri
     getSchemesForAndroidAsync(projectRoot),
   ]);
 
+  // Allow managed projects
+  if (!hasIos && !hasAndroid) {
+    return getManagedDevClientSchemeAsync(projectRoot);
+  }
+
   let matching: string;
   // Allow for only one native project to exist.
   if (!hasIos) {
@@ -60,7 +70,7 @@ export async function getDevClientSchemeAsync(projectRoot: string): Promise<stri
 
   if (!matching) {
     Log.warn(
-      '\nDev Client: No common URI schemes could be found for the native ios and android projects, this is required for opening the project\n'
+      '\nDev Client: No common URI schemes could be found for the native iOS and Android projects, this is required for opening the project\n'
     );
     Log.log(
       `Add a common scheme with ${Log.chalk.cyan(
@@ -79,6 +89,55 @@ export async function getDevClientSchemeAsync(projectRoot: string): Promise<stri
     throw new AbortCommandError();
   }
   return matching;
+}
+
+async function getManagedDevClientSchemeAsync(projectRoot: string): Promise<string> {
+  const { exp, staticConfigPath, dynamicConfigPath } = getConfig(projectRoot, {
+    skipSDKVersionRequirement: true,
+  });
+  if (exp.scheme) {
+    return exp.scheme;
+  }
+
+  Log.warn(
+    '\nDev Client: No URI schemes could be found in configuration, this is required for opening the project\n'
+  );
+  if (dynamicConfigPath && !staticConfigPath) {
+    // Dynamic config (app.config.js/app.config.ts) can't be automatically updated.
+    Log.log(
+      `Add a common scheme in ${dynamicConfigPath} or provide a scheme with the ${Log.chalk.cyan(
+        '--scheme'
+      )} flag\n`
+    );
+    throw new AbortCommandError();
+  }
+
+  const { scheme } = await prompt({
+    type: 'text',
+    name: 'scheme',
+    validate: value =>
+      /^[a-z0-9-]+$/.test(value) || 'Only lowercase characters/numbers (a-z, 0-9) or hyphen (-)',
+    message: `Please choose a URI scheme for your app`,
+    initial: slugify(exp.slug, {
+      // Remove non-allowed characters and additionally hyphens, which are allowed but not idiomatic.
+      remove: /[^a-z0-9]/,
+      // Convert to lower case.
+      lower: true,
+    }),
+  });
+  if (staticConfigPath) {
+    // if app.json exists we can update it
+    const config = JsonFile.read(staticConfigPath, { json5: true });
+    config.expo = { ...(config.expo as object), scheme };
+    await JsonFile.writeAsync(staticConfigPath, config);
+    Log.log(`Scheme '${scheme}' updated in ${path.basename(staticConfigPath)}`);
+  } else {
+    // otherwise we'll create a new app.json
+    const newConfigPath = path.join(projectRoot, 'app.json');
+    await JsonFile.writeAsync(newConfigPath, { expo: { scheme } });
+    Log.log(`Created ${path.basename(newConfigPath)}`);
+  }
+  return scheme;
 }
 
 // sort longest to ensure uniqueness.
