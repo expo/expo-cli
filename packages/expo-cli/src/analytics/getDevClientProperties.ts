@@ -1,7 +1,11 @@
-import { ExpoConfig, getDefaultTarget } from '@expo/config';
+import { ExpoConfig, getAccountUsername, getDefaultTarget } from '@expo/config';
 import JsonFile, { JSONValue } from '@expo/json-file';
 import memoize from 'lodash/memoize';
 import resolveFrom from 'resolve-from';
+
+const getAccountName = memoize((exp: Pick<ExpoConfig, 'owner'>) => {
+  return getAccountUsername(exp);
+});
 
 const getDevClientVersion = memoize((projectRoot: string): JSONValue | undefined => {
   try {
@@ -13,15 +17,15 @@ const getDevClientVersion = memoize((projectRoot: string): JSONValue | undefined
   return undefined;
 });
 
-const isManaged = memoize((projectRoot: string): boolean => {
-  return getDefaultTarget(projectRoot) === 'managed';
+const getProjectType = memoize((projectRoot: string): 'managed' | 'generic' => {
+  return getDefaultTarget(projectRoot) === 'managed' ? 'managed' : 'generic';
 });
 
 export default function getDevClientProperties(projectRoot: string, exp: ExpoConfig) {
   return {
-    accountName: exp.currentFullName,
-    devClientVersion: getDevClientVersion(projectRoot),
-    isManaged: isManaged(projectRoot),
-    uptimeMs: process.uptime() * 1000,
+    account_name: getAccountName({ owner: exp.owner }),
+    dev_client_version: getDevClientVersion(projectRoot),
+    project_type: getProjectType(projectRoot),
+    uptime_ms: process.uptime() * 1000,
   };
 }
