@@ -19,7 +19,6 @@ import {
   stopExpoServerAsync,
   stopReactNativeServerAsync,
   stopTunnelsAsync,
-  UnifiedAnalytics,
   Webpack,
 } from '../internal';
 
@@ -51,14 +50,6 @@ export async function startAsync(
   verbose: boolean = true
 ): Promise<ExpoConfig> {
   assertValidProjectRoot(projectRoot);
-
-  UnifiedAnalytics.logEvent('action', {
-    organization: exp.owner,
-    project: exp.name,
-    action: 'expo start',
-    source: 'expo cli',
-    source_version: UnifiedAnalytics.version,
-  });
 
   Analytics.logEvent('Start Project', {
     projectRoot,
