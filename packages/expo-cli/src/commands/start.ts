@@ -1,4 +1,4 @@
-import { ConfigError, getConfig, isLegacyImportsEnabled } from '@expo/config';
+import { ConfigError, ExpoConfig, getConfig, isLegacyImportsEnabled } from '@expo/config';
 import chalk from 'chalk';
 import path from 'path';
 import resolveFrom from 'resolve-from';
@@ -43,17 +43,7 @@ async function action(projectRoot: string, options: NormalizedOptions): Promise<
   });
 
   if (options.devClient) {
-    UnifiedAnalytics.logEvent('dev client start command', {
-      status: 'started',
-      ...getDevClientProperties(projectRoot, exp),
-    });
-    installCustomExitHook(() => {
-      UnifiedAnalytics.logEvent('dev client start command', {
-        status: 'finished',
-        ...getDevClientProperties(projectRoot, exp),
-      });
-      UnifiedAnalytics.flush();
-    });
+    track(projectRoot, exp);
   }
 
   // Assert various random things
@@ -130,6 +120,21 @@ async function action(projectRoot: string, options: NormalizedOptions): Promise<
       ...getDevClientProperties(projectRoot, exp),
     });
   }
+}
+
+function track(projectRoot: string, exp: ExpoConfig) {
+  UnifiedAnalytics.logEvent('dev client start command', {
+    status: 'started',
+    platform: 'ios',
+    ...getDevClientProperties(projectRoot, exp),
+  });
+  installCustomExitHook(() => {
+    UnifiedAnalytics.logEvent('dev client start command', {
+      status: 'finished',
+      ...getDevClientProperties(projectRoot, exp),
+    });
+    UnifiedAnalytics.flush();
+  });
 }
 
 export default (program: any) => {

@@ -1,4 +1,4 @@
-import { getConfig } from '@expo/config';
+import { ExpoConfig, getConfig } from '@expo/config';
 import { AndroidConfig } from '@expo/config-plugins';
 import chalk from 'chalk';
 import fs from 'fs';
@@ -6,6 +6,7 @@ import path from 'path';
 import { Android, UnifiedAnalytics } from 'xdl';
 
 import CommandError from '../../../CommandError';
+import StatusEventEmitter from '../../../StatusEventEmitter';
 import getDevClientProperties from '../../../analytics/getDevClientProperties';
 import Log from '../../../log';
 import { getSchemesForAndroidAsync } from '../../../schemes';
@@ -96,19 +97,7 @@ async function resolveOptionsAsync(
 
 export async function runAndroidActionAsync(projectRoot: string, options: Options) {
   const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
-  UnifiedAnalytics.logEvent('dev client run command', {
-    status: 'started',
-    platform: 'android',
-    ...getDevClientProperties(projectRoot, exp),
-  });
-  installCustomExitHook(() => {
-    UnifiedAnalytics.logEvent('dev client run command', {
-      status: 'finished',
-      platform: 'android',
-      ...getDevClientProperties(projectRoot, exp),
-    });
-    UnifiedAnalytics.flush();
-  });
+  track(projectRoot, exp);
 
   const androidProjectPath = await resolveAndroidProjectPathAsync(projectRoot);
 
@@ -117,6 +106,13 @@ export async function runAndroidActionAsync(projectRoot: string, options: Option
   Log.log('\u203A Building app...');
 
   await spawnGradleAsync({ androidProjectPath, variant: options.variant });
+
+  // Send the 'ready' event once the app is runing in the device.
+  UnifiedAnalytics.logEvent('dev client run command', {
+    status: 'ready',
+    platform: 'android',
+    ...getDevClientProperties(projectRoot, exp),
+  });
 
   if (props.bundler) {
     await startBundlerAsync(projectRoot, {
@@ -162,10 +158,37 @@ export async function runAndroidActionAsync(projectRoot: string, options: Option
     // TODO: unify logs
     Log.nested(`\nLogs for your project will appear below. ${chalk.dim(`Press Ctrl+C to exit.`)}`);
   }
+}
+
+function track(projectRoot: string, exp: ExpoConfig) {
   UnifiedAnalytics.logEvent('dev client run command', {
-    status: 'ready',
+    status: 'started',
     platform: 'android',
     ...getDevClientProperties(projectRoot, exp),
+  });
+  StatusEventEmitter.once('bundleBuildFinish', () => {
+    // Send the 'bundle ready' event once the JS has been built.
+    UnifiedAnalytics.logEvent('dev client run command', {
+      status: 'bundle ready',
+      platform: 'android',
+      ...getDevClientProperties(projectRoot, exp),
+    });
+  });
+  StatusEventEmitter.once('deviceLogReceive', () => {
+    // Send the 'ready' event once the app is running in a device.
+    UnifiedAnalytics.logEvent('dev client run command', {
+      status: 'ready',
+      platform: 'android',
+      ...getDevClientProperties(projectRoot, exp),
+    });
+  });
+  installCustomExitHook(() => {
+    UnifiedAnalytics.logEvent('dev client run command', {
+      status: 'finished',
+      platform: 'android',
+      ...getDevClientProperties(projectRoot, exp),
+    });
+    UnifiedAnalytics.flush();
   });
 }
 

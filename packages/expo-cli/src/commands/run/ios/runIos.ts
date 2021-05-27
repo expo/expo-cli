@@ -1,10 +1,11 @@
-import { getConfig } from '@expo/config';
+import { ExpoConfig, getConfig } from '@expo/config';
 import chalk from 'chalk';
 import fs from 'fs-extra';
 import * as path from 'path';
 import { SimControl, Simulator, UnifiedAnalytics } from 'xdl';
 
 import CommandError from '../../../CommandError';
+import StatusEventEmitter from '../../../StatusEventEmitter';
 import getDevClientProperties from '../../../analytics/getDevClientProperties';
 import Log from '../../../log';
 import { getSchemesForIosAsync } from '../../../schemes';
@@ -23,19 +24,7 @@ const isMac = process.platform === 'darwin';
 
 export async function runIosActionAsync(projectRoot: string, options: Options) {
   const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
-  UnifiedAnalytics.logEvent('dev client run command', {
-    status: 'started',
-    platform: 'ios',
-    ...getDevClientProperties(projectRoot, exp),
-  });
-  installCustomExitHook(() => {
-    UnifiedAnalytics.logEvent('dev client run command', {
-      status: 'finished',
-      platform: 'ios',
-      ...getDevClientProperties(projectRoot, exp),
-    });
-    UnifiedAnalytics.flush();
-  });
+  track(projectRoot, exp);
 
   if (!isMac) {
     // TODO: Prompt to use EAS?
@@ -103,6 +92,38 @@ export async function runIosActionAsync(projectRoot: string, options: Options) {
     status: 'ready',
     platform: 'ios',
     ...getDevClientProperties(projectRoot, exp),
+  });
+}
+
+function track(projectRoot: string, exp: ExpoConfig) {
+  UnifiedAnalytics.logEvent('dev client run command', {
+    status: 'started',
+    platform: 'ios',
+    ...getDevClientProperties(projectRoot, exp),
+  });
+  StatusEventEmitter.once('bundleBuildFinish', () => {
+    // Send the 'bundle ready' event once the JS has been built.
+    UnifiedAnalytics.logEvent('dev client run command', {
+      status: 'bundle ready',
+      platform: 'ios',
+      ...getDevClientProperties(projectRoot, exp),
+    });
+  });
+  StatusEventEmitter.once('deviceLogReceive', () => {
+    // Send the 'ready' event once the app is running in a device.
+    UnifiedAnalytics.logEvent('dev client run command', {
+      status: 'ready',
+      platform: 'ios',
+      ...getDevClientProperties(projectRoot, exp),
+    });
+  });
+  installCustomExitHook(() => {
+    UnifiedAnalytics.logEvent('dev client run command', {
+      status: 'finished',
+      platform: 'ios',
+      ...getDevClientProperties(projectRoot, exp),
+    });
+    UnifiedAnalytics.flush();
   });
 }
 

@@ -33,6 +33,7 @@ import {
 } from 'xdl';
 
 import { AbortCommandError, SilentError } from './CommandError';
+import StatusEventEmitter from './StatusEventEmitter';
 import { loginOrRegisterAsync } from './accounts';
 import { registerCommands } from './commands';
 import { learnMore } from './commands/utils/TerminalLink';
@@ -644,13 +645,9 @@ Command.prototype.asyncActionProjectDir = function (
           if (err) {
             Log.log(chalk.red('Failed building JavaScript bundle.'));
           } else {
-            Log.log(
-              chalk.green(
-                `Finished building JavaScript bundle in ${
-                  endTime.getTime() - startTime.getTime()
-                }ms.`
-              )
-            );
+            const totalBuildTimeMs = endTime.getTime() - startTime.getTime();
+            Log.log(chalk.green(`Finished building JavaScript bundle in ${totalBuildTimeMs}ms.`));
+            StatusEventEmitter.emit('bundleBuildFinish', { totalBuildTimeMs });
           }
         }
       },
