@@ -6,7 +6,7 @@ import { URL } from 'url';
 
 import createJsInspectorMiddleware from '../createJsInspectorMiddleware';
 
-jest.mock('fs');
+jest.mock('fs-extra');
 jest.mock('node-fetch');
 jest.mock('open');
 jest.mock('rimraf');
