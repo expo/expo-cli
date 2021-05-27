@@ -12,12 +12,19 @@ jest.mock('../ApiV2', () => ({
 }));
 
 describe('User', () => {
-  beforeAll(() => {
+  beforeEach(() => {
     fs.removeSync(UserSettings.userSettingsFile());
   });
+
   it('uses a UserManager singleton', () => {
     const { default: manager } = jest.requireActual('../User');
     expect(manager).toBe(GlobalUserManager);
+  });
+
+  it('does not contian auth data by default', async () => {
+    const maybeAuth = await UserSettings.getAsync('auth', null);
+
+    expect(maybeAuth).toBeNull();
   });
 
   it('is logged out by default', async () => {
@@ -122,6 +129,51 @@ describe('User', () => {
       // Log user out and check if the cache is empty
       await manager.logoutAsync();
       expect(await UserSettings.getAsync('auth', null)).toBeNull();
+    });
+
+    describe('getCachedUserDataAsync', () => {
+      it('retrieves cached credentials', async () => {
+        const api = _newTestApiV2();
+        const manager = _newTestUserManager();
+        const sessionSecret = 'session-secret-credentials';
+        const username = 'user-credentials';
+        const userId = 'user-id';
+        // Mock login response and authenticate
+        api.postAsync.mockResolvedValue({ sessionSecret });
+        api.getAsync.mockResolvedValue({ username, userId });
+
+        await manager.loginAsync('user-pass', {
+          username,
+          password: 'expopass',
+        });
+        expect(await manager.getCurrentUserAsync()).toMatchObject({
+          username,
+          sessionSecret,
+        });
+        // Empty in-memory cache, to force-fetch it
+        manager._currentUser = null;
+
+        // Check if the settings-cache has the token
+        expect(await manager.getCachedUserDataAsync()).toMatchObject({
+          username,
+          sessionSecret,
+          userId,
+        });
+      });
+
+      it('returns null when there are no cached credentials', async () => {
+        const manager = _newTestUserManager();
+
+        expect(await manager.getCachedUserDataAsync()).toBeNull();
+      });
+
+      it('returns null when a user has logged out', async () => {
+        const manager = _newTestUserManager();
+
+        await manager.logoutAsync();
+
+        expect(await manager.getCachedUserDataAsync()).toBeNull();
+      });
     });
   });
 

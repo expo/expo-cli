@@ -709,10 +709,42 @@ Command.prototype.asyncActionProjectDir = function (
   });
 };
 
-function runAsync(programName: string) {
+async function bootstrapAnalyticsAsync(): Promise<void> {
+  Analytics.initializeClient('vGu92cdmVaggGA26s3lBX6Y5fILm8SQ7', packageJSON.version);
+  UnifiedAnalytics.initializeClient('u4e9dmCiNpwIZTXuyZPOJE7KjCMowdx5', packageJSON.version);
+
+  const userData = await profileMethod(UserManager.getCachedUserDataAsync)();
+
+  if (!userData?.userId) return;
+
+  UnifiedAnalytics.identifyUser(userData.userId, {
+    userId: userData.userId,
+    currentConnection: userData?.currentConnection,
+    username: userData?.username,
+    userType: '', // not available without hitting api
+  });
+}
+
+function trackUsage(commands: Command[] = []) {
+  const input = process.argv[2];
+  const ExpoCommand = (cmd: Command): boolean =>
+    (cmd._name === input || cmd._alias === input) && input !== undefined;
+  const subCommand = commands.find(ExpoCommand)?._name;
+
+  if (!subCommand) return; // only track valid expo commands
+
+  UnifiedAnalytics.logEvent('action', {
+    action: `expo ${subCommand}`,
+    source: 'expo cli',
+    source_version: UnifiedAnalytics.version,
+  });
+}
+
+async function runAsync(programName: string) {
   try {
     _registerLogs();
 
+    await bootstrapAnalyticsAsync();
     UserManager.setInteractiveAuthenticationCallback(loginOrRegisterAsync);
 
     if (process.env.SERVER_URL) {
@@ -738,6 +770,8 @@ function runAsync(programName: string) {
 
     // Load each module found in ./commands by 'registering' it with our commander instance
     profileMethod(registerCommands)(program);
+
+    trackUsage(program.commands);
 
     program.on('command:detach', () => {
       Log.warn('To eject your project to ExpoKit (previously "detach"), use `expo eject`.');
@@ -847,33 +881,10 @@ async function writePathAsync() {
   await Binaries.writePathToUserSettingsAsync();
 }
 
-async function bootstrapAnalyticsAsync(): Promise<void> {
-  Analytics.initializeClient('vGu92cdmVaggGA26s3lBX6Y5fILm8SQ7', packageJSON.version);
-  UnifiedAnalytics.initializeClient('u4e9dmCiNpwIZTXuyZPOJE7KjCMowdx5', packageJSON.version);
-
-  const userData = await profileMethod(UserManager.getCachedUserDataAsync)();
-
-  if (!userData?.userId) return;
-
-  UnifiedAnalytics.identifyUser(userData.userId, {
-    userId: userData.userId,
-    currentConnection: userData?.currentConnection,
-    username: userData?.username,
-    userType: '', // not available without hitting api
-  });
-
-  const command = process.argv[2];
-  UnifiedAnalytics.logEvent('action', {
-    action: `expo ${command}`,
-    source: 'expo cli',
-    source_version: UnifiedAnalytics.version,
-  });
-}
-
 // This is the entry point of the CLI
 export function run(programName: string) {
   (async function () {
-    await Promise.all([writePathAsync(), runAsync(programName), bootstrapAnalyticsAsync()]);
+    await Promise.all([writePathAsync(), runAsync(programName)]);
   })().catch(e => {
     Log.error('Uncaught Error', e);
     process.exit(1);
