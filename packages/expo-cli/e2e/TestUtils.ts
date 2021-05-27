@@ -74,7 +74,8 @@ export default () => <View />;
 export async function createMinimalProjectAsync(
   parentDir: string,
   projectName: string,
-  config?: Partial<ExpoConfig>
+  config?: Partial<ExpoConfig>,
+  extraNativePackage?: { [name: string]: string }
 ) {
   // Create a minimal project
   const projectRoot = path.join(parentDir, projectName);
@@ -83,17 +84,23 @@ export async function createMinimalProjectAsync(
   fs.mkdirSync(projectRoot, { recursive: true });
 
   // Create a package.json
-  fs.writeFileSync(path.join(projectRoot, 'package.json'), JSON.stringify(minimumNativePkgJson));
+  const packageJson = {
+    ...minimumNativePkgJson,
+    dependencies: {
+      ...minimumNativePkgJson.dependencies,
+      ...extraNativePackage,
+    },
+  };
+  fs.writeFileSync(path.join(projectRoot, 'package.json'), JSON.stringify(packageJson));
 
   // TODO(Bacon): We shouldn't need this
   fs.writeFileSync(
     path.join(projectRoot, 'app.json'),
     JSON.stringify({
       ...minimumAppJson,
-      ...config,
       expo: {
         ...minimumAppJson.expo,
-        ...config?.expo,
+        ...config,
       },
     })
   );
