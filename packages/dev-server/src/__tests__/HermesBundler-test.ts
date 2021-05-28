@@ -13,10 +13,10 @@ describe('parseGradleProperties', () => {
     keyBar=valueBar
     `;
 
-    expect(parseGradleProperties(content)).toEqual([
-      ['keyFoo', 'valueFoo'],
-      ['keyBar', 'valueBar'],
-    ]);
+    expect(parseGradleProperties(content)).toEqual({
+      keyFoo: 'valueFoo',
+      keyBar: 'valueBar',
+    });
   });
 
   it('should keep "=" in value if there are multiple "="', () => {
@@ -24,7 +24,9 @@ describe('parseGradleProperties', () => {
     key=a=b=c
     `;
 
-    expect(parseGradleProperties(content)).toEqual([['key', 'a=b=c']]);
+    expect(parseGradleProperties(content)).toEqual({
+      key: 'a=b=c',
+    });
   });
 
   it('should exclude comment', () => {
@@ -34,7 +36,9 @@ describe('parseGradleProperties', () => {
     keyFoo=valueFoo
     `;
 
-    expect(parseGradleProperties(content)).toEqual([['keyFoo', 'valueFoo']]);
+    expect(parseGradleProperties(content)).toEqual({
+      keyFoo: 'valueFoo',
+    });
   });
 });
 

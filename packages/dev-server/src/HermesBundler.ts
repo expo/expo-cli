@@ -104,8 +104,8 @@ function getHermesCommandPlatform(): string {
   }
 }
 
-export function parseGradleProperties(content: string): [string, string][] {
-  const result = [];
+export function parseGradleProperties(content: string): Record<string, string> {
+  const result: Record<string, string> = {};
   for (let line of content.split('\n')) {
     line = line.trim();
     if (!line || line.startsWith('#')) {
@@ -113,8 +113,9 @@ export function parseGradleProperties(content: string): [string, string][] {
     }
 
     const sepIndex = line.indexOf('=');
-    const item: [string, string] = [line.substr(0, sepIndex), line.substr(sepIndex + 1)];
-    result.push(item);
+    const key = line.substr(0, sepIndex);
+    const value = line.substr(sepIndex + 1);
+    result[key] = value;
   }
   return result;
 }
