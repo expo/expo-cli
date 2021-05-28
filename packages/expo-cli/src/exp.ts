@@ -725,7 +725,7 @@ async function bootstrapAnalyticsAsync(): Promise<void> {
   });
 }
 
-function trackUsage(commands: Command[] = []) {
+export function trackUsage(commands: Command[] = []) {
   const input = process.argv[2];
   const ExpoCommand = (cmd: Command): boolean =>
     (cmd._name === input || cmd._alias === input) && input !== undefined;
