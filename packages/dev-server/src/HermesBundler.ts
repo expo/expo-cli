@@ -52,9 +52,7 @@ export async function buildHermesBundleAsync(
     args.push('-O');
   }
   await spawnAsync(hermesCommand, args);
-  const hbc = await fs.readFile(tempHbcFile);
-
-  const sourcemap = await createHermesSourcemapAsync(projectRoot, map, `${tempHbcFile}.map`);
+  const [hbc, sourcmap] = await Promise.all([fs.readFile(tempHbcFile), createHermesSourcemapAsync(projectRoot, map, `${tempHbcFile}.map`)]);
 
   await fs.remove(tempDir);
 
