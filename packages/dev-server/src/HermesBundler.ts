@@ -39,27 +39,31 @@ export async function buildHermesBundleAsync(
 ): Promise<HermesBundleOutput> {
   const tempDir = path.join(os.tmpdir(), `expo-bundler-${process.pid}`);
   await fs.ensureDir(tempDir);
+  try {
+    const tempBundleFile = path.join(tempDir, 'index.bundle');
+    const tempSourcemapFile = path.join(tempDir, 'index.bundle.map');
+    await fs.writeFile(tempBundleFile, code);
+    await fs.writeFile(tempSourcemapFile, map);
 
-  const tempBundleFile = path.join(tempDir, 'index.bundle');
-  const tempSourcemapFile = path.join(tempDir, 'index.bundle.map');
-  await fs.writeFile(tempBundleFile, code);
-  await fs.writeFile(tempSourcemapFile, map);
+    const tempHbcFile = path.join(tempDir, 'index.hbc');
+    const hermesCommand = getHermesCommand(projectRoot);
+    const args = ['-emit-binary', '-out', tempHbcFile, tempBundleFile, '-output-source-map'];
+    if (optimize) {
+      args.push('-O');
+    }
+    await spawnAsync(hermesCommand, args);
 
-  const tempHbcFile = path.join(tempDir, 'index.hbc');
-  const hermesCommand = getHermesCommand(projectRoot);
-  const args = ['-emit-binary', '-out', tempHbcFile, tempBundleFile, '-output-source-map'];
-  if (optimize) {
-    args.push('-O');
+    const [hbc, sourcemap] = await Promise.all([
+      fs.readFile(tempHbcFile),
+      createHermesSourcemapAsync(projectRoot, map, `${tempHbcFile}.map`),
+    ]);
+    return {
+      hbc,
+      sourcemap,
+    };
+  } finally {
+    await fs.remove(tempDir);
   }
-  await spawnAsync(hermesCommand, args);
-  const [hbc, sourcmap] = await Promise.all([fs.readFile(tempHbcFile), createHermesSourcemapAsync(projectRoot, map, `${tempHbcFile}.map`)]);
-
-  await fs.remove(tempDir);
-
-  return {
-    hbc,
-    sourcemap,
-  };
 }
 
 export async function createHermesSourcemapAsync(
