@@ -29,5 +29,12 @@ declare module '@react-native-community/cli-server-api' {
     };
     middleware: any;
   };
+
+  export function securityHeadersMiddleware(
+    req: http.IncomingMessage,
+    res: http.ServerResponse,
+    next: (err?: Error) => void
+  );
+
   //# sourceMappingURL=index.d.ts.map
 }

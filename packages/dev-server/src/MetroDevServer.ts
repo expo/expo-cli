@@ -1,13 +1,20 @@
 import Log from '@expo/bunyan';
 import * as ExpoMetroConfig from '@expo/metro-config';
-import { createDevServerMiddleware } from '@react-native-community/cli-server-api';
+import {
+  createDevServerMiddleware,
+  securityHeadersMiddleware,
+} from '@react-native-community/cli-server-api';
 import bodyParser from 'body-parser';
+import type { Server as ConnectServer, HandleFunction } from 'connect';
 import http from 'http';
+import type { IncomingMessage, ServerResponse } from 'http';
 import type Metro from 'metro';
 import resolveFrom from 'resolve-from';
+import { parse as parseUrl } from 'url';
 
 import LogReporter from './LogReporter';
 import clientLogsMiddleware from './middleware/clientLogsMiddleware';
+import createJsInspectorMiddleware from './middleware/createJsInspectorMiddleware';
 
 export type MetroDevServerOptions = ExpoMetroConfig.LoadOptions & {
   logger: Log;
@@ -50,8 +57,19 @@ export async function runMetroDevServerAsync(
     port: metroConfig.server.port,
     watchFolders: metroConfig.watchFolders,
   });
+
+  // securityHeadersMiddleware does not support cross-origin requests for remote devtools to get the sourcemap.
+  // We replace with the enhanced version.
+  replaceMiddlewareWith(
+    middleware as ConnectServer,
+    securityHeadersMiddleware,
+    remoteDevtoolsSecurityHeadersMiddleware
+  );
+  middleware.use(remoteDevtoolsCorsMiddleware);
+
   middleware.use(bodyParser.json());
   middleware.use('/logs', clientLogsMiddleware(options.logger));
+  middleware.use('/inspector', createJsInspectorMiddleware());
 
   const customEnhanceMiddleware = metroConfig.server.enhanceMiddleware;
   // @ts-ignore can't mutate readonly config
@@ -170,4 +188,74 @@ function importMetroServerFromProject(projectRoot: string): typeof Metro.Server 
     );
   }
   return require(resolvedPath);
+}
+
+function replaceMiddlewareWith(
+  app: ConnectServer,
+  sourceMiddleware: HandleFunction,
+  targetMiddleware: HandleFunction
+) {
+  const item = app.stack.find(middleware => middleware.handle === sourceMiddleware);
+  if (item) {
+    item.handle = targetMiddleware;
+  }
+}
+
+// Like securityHeadersMiddleware but further allow cross-origin requests
+// from https://chrome-devtools-frontend.appspot.com/
+function remoteDevtoolsSecurityHeadersMiddleware(
+  req: IncomingMessage,
+  res: ServerResponse,
+  next: (err?: Error) => void
+) {
+  // Block any cross origin request.
+  if (
+    typeof req.headers.origin === 'string' &&
+    !req.headers.origin.match(/^https?:\/\/localhost:/) &&
+    !req.headers.origin.match(/^https:\/\/chrome-devtools-frontend\.appspot\.com/)
+  ) {
+    next(
+      new Error(
+        `Unauthorized request from ${req.headers.origin}. ` +
+          'This may happen because of a conflicting browser extension to intercept HTTP requests. ' +
+          'Please try again without browser extensions or using incognito mode.'
+      )
+    );
+    return;
+  }
+
+  // Block MIME-type sniffing.
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+
+  next();
+}
+
+// Middleware that accepts multiple Access-Control-Allow-Origin for processing *.map.
+// This is a hook middleware before metro processing *.map,
+// which originally allow only devtools://devtools
+function remoteDevtoolsCorsMiddleware(
+  req: IncomingMessage,
+  res: ServerResponse,
+  next: (err?: Error) => void
+) {
+  if (req.url) {
+    const url = parseUrl(req.url);
+    const origin = req.headers.origin;
+    const isValidOrigin =
+      origin &&
+      ['devtools://devtools', 'https://chrome-devtools-frontend.appspot.com'].includes(origin);
+    if (url.pathname?.endsWith('.map') && origin && isValidOrigin) {
+      res.setHeader('Access-Control-Allow-Origin', origin);
+
+      // Prevent metro overwrite Access-Control-Allow-Origin header
+      const setHeader = res.setHeader.bind(res);
+      res.setHeader = (key, ...args) => {
+        if (key === 'Access-Control-Allow-Origin') {
+          return;
+        }
+        setHeader(key, ...args);
+      };
+    }
+  }
+  next();
 }
