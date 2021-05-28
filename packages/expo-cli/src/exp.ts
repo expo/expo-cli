@@ -713,7 +713,10 @@ async function bootstrapAnalyticsAsync(): Promise<void> {
   Analytics.initializeClient('vGu92cdmVaggGA26s3lBX6Y5fILm8SQ7', packageJSON.version);
   UnifiedAnalytics.initializeClient('u4e9dmCiNpwIZTXuyZPOJE7KjCMowdx5', packageJSON.version);
 
-  const userData = await profileMethod(UserManager.getCachedUserDataAsync)();
+  const userData = await profileMethod(
+    UserManager.getCachedUserDataAsync,
+    'getCachedUserDataAsync'
+  )();
 
   if (!userData?.userId) return;
 
@@ -771,7 +774,7 @@ async function runAsync(programName: string) {
     // Load each module found in ./commands by 'registering' it with our commander instance
     profileMethod(registerCommands)(program);
 
-    trackUsage(program.commands);
+    trackUsage(program.commands); // must be after register commands
 
     program.on('command:detach', () => {
       Log.warn('To eject your project to ExpoKit (previously "detach"), use `expo eject`.');
