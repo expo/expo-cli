@@ -150,7 +150,10 @@ export async function bundleAsync(
         );
 
         if (shouldBuildHermesBundle) {
-          options.logger.info({ tag: 'expo' }, `💿 Building hermes bundle for ${bundle.platform}`);
+          options.logger.info(
+            { tag: 'expo' },
+            `💿 Building Hermes bytecode for the bundle - platform[${bundle.platform}]`
+          );
           const hermesBundleOutput = await buildHermesBundleAsync(
             projectRoot,
             bundleOutput.code,
