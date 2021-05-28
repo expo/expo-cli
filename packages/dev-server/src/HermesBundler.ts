@@ -132,6 +132,7 @@ function importMetroSourceMapFromProject(projectRoot: string): typeof composeSou
   return require(resolvedPath);
 }
 
+// https://github.com/facebook/hermes/blob/release-v0.5/include/hermes/BCGen/HBC/BytecodeFileFormat.h#L24-L25
 const HERMES_MAGIC_HEADER = 'c61fbc03c103191f';
 
 export async function isHermesBytecodeBundleAsync(file: string): Promise<boolean> {
