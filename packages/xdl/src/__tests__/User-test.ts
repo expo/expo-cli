@@ -196,7 +196,7 @@ describe('User', () => {
       });
     });
 
-    it(`doesn't cache user when authenticating with credentials`, async () => {
+    it(`doesn't cache user when authenticating with token`, async () => {
       const api = _newTestApiV2();
       const manager = _newTestUserManager();
       const settingSpy = jest.spyOn(UserSettings, 'setAsync');
@@ -239,7 +239,7 @@ describe('User', () => {
       });
     });
 
-    it('returns access token with token', async () => {
+    it('returns access token with auth token', async () => {
       const manager = _newTestUserManager();
 
       // Mock token, without logging in

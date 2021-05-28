@@ -709,7 +709,7 @@ Command.prototype.asyncActionProjectDir = function (
   });
 };
 
-async function bootstrapAnalyticsAsync(): Promise<void> {
+export async function bootstrapAnalyticsAsync(): Promise<void> {
   Analytics.initializeClient('vGu92cdmVaggGA26s3lBX6Y5fILm8SQ7', packageJSON.version);
   UnifiedAnalytics.initializeClient('u4e9dmCiNpwIZTXuyZPOJE7KjCMowdx5', packageJSON.version);
 

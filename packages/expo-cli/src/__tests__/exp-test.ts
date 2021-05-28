@@ -1,8 +1,8 @@
 import program, { Command } from 'commander';
-import { UnifiedAnalytics } from 'xdl';
+import { UnifiedAnalytics, UserSettings } from 'xdl';
 
 import { registerCommands } from '../../build/commands';
-import { trackUsage } from '../../build/exp';
+import { bootstrapAnalyticsAsync, trackUsage } from '../../build/exp';
 
 Command.prototype.helpGroup = jest.fn().mockImplementation(_ => program);
 Command.prototype.asyncActionProjectDir = jest.fn().mockImplementation(_ => program);
@@ -10,6 +10,46 @@ Command.prototype.longDescription = jest.fn().mockImplementation(_ => program);
 Command.prototype.asyncAction = jest.fn().mockImplementation(_ => program);
 Command.prototype.allowOffline = jest.fn().mockImplementation(_ => program);
 Command.prototype.urlOpts = jest.fn().mockImplementation(_ => program);
+
+describe(bootstrapAnalyticsAsync.name, () => {
+  const spy = jest.spyOn(UnifiedAnalytics, 'identifyUser');
+
+  beforeEach(() => spy.mockClear());
+
+  describe('when unauthenticated', () => {
+    beforeEach(async () => {
+      await UserSettings.setAsync('auth', null);
+    });
+
+    it('does not identify the user', async () => {
+      await bootstrapAnalyticsAsync();
+      expect(spy).not.toBeCalled();
+    });
+  });
+
+  describe('when authenticated', () => {
+    const userData = {
+      sessionSecret: 'session-secret-auth',
+      username: 'username',
+      userId: 'user-id',
+      currentConnection: 'current-connection',
+    };
+
+    beforeEach(async () => {
+      await UserSettings.setAsync('auth', userData);
+    });
+
+    it('identifies the user', async () => {
+      await bootstrapAnalyticsAsync();
+      expect(spy).toBeCalledWith(userData.userId, {
+        userId: userData.userId,
+        currentConnection: userData?.currentConnection,
+        username: userData?.username,
+        userType: '',
+      });
+    });
+  });
+});
 
 describe(trackUsage.name, () => {
   const commands = generateCommandJSON();
