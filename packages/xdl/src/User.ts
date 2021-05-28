@@ -219,7 +219,7 @@ export class UserManagerInstance {
   /**
    * Returns cached user data without hitting our backend. Only works for 'Username-Password-Authentication' flow. Does not work with 'Access-Token-Authentication' flow.
    */
-  async getCachedUserDataAsync(): Promise<UserData | null> {
+  getCachedUserDataAsync = async (): Promise<UserData | null> => {
     await this._getSessionLock.acquire();
 
     try {
