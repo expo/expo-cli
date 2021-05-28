@@ -18,7 +18,7 @@ export async function shouldBuildHermesBundleAsync(
       return false;
     }
     const properties = parseGradleProperties(await fs.readFile(gradlePropertiesPath, 'utf8'));
-    for (const [key, value] of properties) {
+    for (const [key, value] of Object.entries(properties)) {
       if (key === 'JS_RUNTIME' && value === 'hermes') {
         return true;
       }
