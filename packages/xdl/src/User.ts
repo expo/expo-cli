@@ -213,9 +213,9 @@ export class UserManagerInstance {
   }
 
   /**
-   * Quickly grab cached user data to bootstrap non-critical services (analytics)
+   * Returns cached user data without hitting our backend. Only works for 'Username-Password-Authentication' flow. Does not work with 'Access-Token-Authentication' flow.
    */
-  async getCachedUserDataAsync(): Promise<UserData | null> {
+  getCachedUserDataAsync = async (): Promise<UserData | null> => {
     await this._getSessionLock.acquire();
 
     try {
@@ -226,10 +226,9 @@ export class UserManagerInstance {
       }
 
       const userData = await this._readUserData();
-      const accessToken = UserSettings.accessToken();
 
       // // No token, no session, no current user. Need to login
-      if (!accessToken && !userData?.sessionSecret) {
+      if (!userData?.sessionSecret) {
         return null;
       }
 
@@ -240,7 +239,7 @@ export class UserManagerInstance {
     } finally {
       this._getSessionLock.release();
     }
-  }
+  };
 
   /**
    * Get the current user based on the available token.
