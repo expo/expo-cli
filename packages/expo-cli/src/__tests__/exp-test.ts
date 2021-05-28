@@ -55,6 +55,14 @@ describe(trackUsage.name, () => {
 
     expect(spy).not.toHaveBeenCalled();
   });
+
+  it('does not match on a random string', () => {
+    process.argv[2] = 'GwZ3N0&%wtea';
+
+    trackUsage(commands as any);
+
+    expect(spy).not.toHaveBeenCalled();
+  });
 });
 
 type CommandMockData = {
