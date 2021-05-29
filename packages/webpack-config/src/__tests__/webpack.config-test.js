@@ -3,6 +3,8 @@ import { dirname } from 'path';
 import createConfig from '..';
 import normalizePaths from '../utils/normalizePaths';
 
+jest.unmock('resolve-from');
+
 const projectRoot = dirname(require.resolve('@expo/webpack-config/e2e/basic'));
 
 function normalizeConfig(config) {

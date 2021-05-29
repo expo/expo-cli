@@ -1,6 +1,5 @@
 /** @internal */ /** */
 /* eslint-env node */
-import { projectHasModule } from '@expo/config';
 import ReactRefreshWebpackPlugin from '@pmmmwh/react-refresh-webpack-plugin';
 import chalk from 'chalk';
 import { CleanWebpackPlugin } from 'clean-webpack-plugin';
@@ -20,6 +19,7 @@ import path from 'path';
 import PnpWebpackPlugin from 'pnp-webpack-plugin';
 import ModuleNotFoundPlugin from 'react-dev-utils/ModuleNotFoundPlugin';
 import WatchMissingNodeModulesPlugin from 'react-dev-utils/WatchMissingNodeModulesPlugin';
+import resolveFrom from 'resolve-from';
 import webpack, { Configuration, HotModuleReplacementPlugin, Options, Output } from 'webpack';
 import WebpackDeepScopeAnalysisPlugin from 'webpack-deep-scope-plugin';
 import ManifestPlugin from 'webpack-manifest-plugin';
@@ -192,11 +192,7 @@ export default async function (
   const webpackDevClientEntry = require.resolve('react-dev-utils/webpackHotDevClient');
 
   if (isNative) {
-    const reactNativeModulePath = projectHasModule(
-      'react-native',
-      env.projectRoot,
-      env.config ?? {}
-    );
+    const reactNativeModulePath = resolveFrom.silent(env.projectRoot, 'react-native');
     if (reactNativeModulePath) {
       for (const polyfill of [
         'Core/InitializeCore.js',
@@ -204,10 +200,9 @@ export default async function (
         'polyfills/error-guard.js',
         'polyfills/console.js',
       ]) {
-        const resolvedPolyfill = projectHasModule(
-          `react-native/Libraries/${polyfill}`,
+        const resolvedPolyfill = resolveFrom.silent(
           env.projectRoot,
-          env.config ?? {}
+          `react-native/Libraries/${polyfill}`
         );
         if (resolvedPolyfill) appEntry.unshift(resolvedPolyfill);
       }
@@ -215,10 +210,9 @@ export default async function (
   } else {
     // Add a loose requirement on the ResizeObserver polyfill if it's installed...
     // Avoid `withEntry` as we don't need so much complexity with this config.
-    const resizeObserverPolyfill = projectHasModule(
-      'resize-observer-polyfill/dist/ResizeObserver.global',
+    const resizeObserverPolyfill = resolveFrom.silent(
       env.projectRoot,
-      config
+      'resize-observer-polyfill/dist/ResizeObserver.global'
     );
     if (resizeObserverPolyfill) {
       appEntry.unshift(resizeObserverPolyfill);
@@ -300,7 +294,19 @@ export default async function (
     link => typeof link.rel === 'string' && link.rel.split(' ').includes('manifest')
   );
   let templateManifest = locations.template.manifest;
-  if (manifestLink && manifestLink.href) {
+  // Only inject a manifest tag if the template is missing one.
+  // This enables users to disable tag injection.
+  const shouldInjectManifestTag = !manifestLink;
+  if (manifestLink?.href) {
+    // Often the manifest will be referenced as `/manifest.json` (to support public paths).
+    // We've detected that the user has manually added a manifest tag to their template index.html which according
+    // to our docs means they want to use a custom manifest.json instead of having a new one generated.
+    //
+    // Normalize the link (removing the beginning slash) so it can be resolved relative to the user's static folder.
+    // Ref: https://docs.expo.io/guides/progressive-web-apps/#manual-setup
+    if (manifestLink.href.startsWith('/')) {
+      manifestLink.href = manifestLink.href.substring(1);
+    }
     templateManifest = locations.template.get(manifestLink.href);
   }
 
@@ -315,7 +321,6 @@ export default async function (
   // TODO(Bacon): Move to expo/config - manifest code from XDL Project
   const publicConfig = {
     ...config,
-    xde: true,
     developer: {
       tool: 'expo-cli',
       projectRoot: env.projectRoot,
@@ -372,6 +377,7 @@ export default async function (
             template: templateManifest,
             path: 'manifest.json',
             publicPath,
+            inject: shouldInjectManifestTag,
           },
           config
         ),

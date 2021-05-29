@@ -4,10 +4,7 @@ import { copyFileSync, ensureDirSync } from 'fs-extra';
 import path from 'path';
 import temporary from 'tempy';
 
-import { publishAsync } from '../Project';
-import UserManager from '../User';
-import { LogRecord } from '../logs/PackagerLogsStream';
-import { attachLoggerStream } from '../project/ProjectUtils';
+import { LogRecord, ProjectUtils, publishAsync, UserManager } from '../internal';
 
 jest.dontMock('fs');
 jest.dontMock('resolve-from');
@@ -81,6 +78,7 @@ jest.mock('axios', () => ({
         return mockApiV2Response(
           {
             url: 'https://test.exp.host/@testing/publish-test-app',
+            projectPageUrl: 'https://test.expo.io/@testing/projects/publish-test-app',
             ids: ['1', '2'],
           },
           options
@@ -106,7 +104,7 @@ describe('publishAsync', () => {
       );
     }
     await spawnAsync('yarnpkg', [], { cwd: projectRoot });
-    attachLoggerStream(projectRoot, {
+    ProjectUtils.attachLoggerStream(projectRoot, {
       stream: {
         write: (chunk: LogRecord) => {
           if (!/bundle_transform_progressed/.test(chunk.msg)) {
@@ -126,6 +124,7 @@ describe('publishAsync', () => {
     process.env.EXPO_USE_DEV_SERVER = 'true';
     const result = await publishAsync(projectRoot, { resetCache: true });
     expect(result.url).toBe('https://test.exp.host/@testing/publish-test-app');
+    expect(result.projectPageUrl).toBe('https://test.expo.io/@testing/projects/publish-test-app');
 
     process.env.EXPO_USE_DEV_SERVER = 'false';
     const resultOld = await publishAsync(projectRoot, { resetCache: true });

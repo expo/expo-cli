@@ -1,6 +1,6 @@
-import { XDLError } from '../xdl';
+import { XDLError } from '../internal';
 
-export async function assertValidProjectRoot(projectRoot: string) {
+export function assertValidProjectRoot(projectRoot: string) {
   if (!projectRoot) {
     throw new XDLError('NO_PROJECT_ROOT', 'No project root specified');
   }

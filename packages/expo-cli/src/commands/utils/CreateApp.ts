@@ -1,14 +1,14 @@
 import * as PackageManager from '@expo/package-manager';
 import chalk from 'chalk';
-import program from 'commander';
 import fs from 'fs-extra';
 import getenv from 'getenv';
 import yaml from 'js-yaml';
-import ora from 'ora';
 import * as path from 'path';
 import semver from 'semver';
 
-import log from '../../log';
+import Log from '../../log';
+import { ora } from '../../utils/ora';
+import { hasPackageJsonDependencyListChangedAsync } from '../run/ios/Podfile';
 
 export function validateName(name?: string): string | true {
   if (typeof name !== 'string' || name === '') {
@@ -61,16 +61,16 @@ export async function assertFolderEmptyAsync({
 }): Promise<boolean> {
   const conflicts = getConflictsForDirectory(projectRoot);
   if (conflicts.length) {
-    log.addNewLineIfNone();
-    log.nested(`The directory ${log.chalk.green(folderName)} has files that might be overwritten:`);
-    log.newLine();
+    Log.addNewLineIfNone();
+    Log.nested(`The directory ${Log.chalk.green(folderName)} has files that might be overwritten:`);
+    Log.newLine();
     for (const file of conflicts) {
-      log.nested(`  ${file}`);
+      Log.nested(`  ${file}`);
     }
 
     if (overwrite) {
-      log.newLine();
-      log.nested(`Removing existing files from ${log.chalk.green(folderName)}`);
+      Log.newLine();
+      Log.nested(`Removing existing files from ${Log.chalk.green(folderName)}`);
       await Promise.all(conflicts.map(conflict => fs.remove(path.join(projectRoot, conflict))));
       return true;
     }
@@ -94,7 +94,7 @@ export function resolvePackageManager(options: {
     packageManager = 'npm';
   }
   if (options.install) {
-    log(
+    Log.log(
       packageManager === 'yarn'
         ? `🧶 Using Yarn to install packages. ${chalk.dim('Pass --npm to use npm instead.')}`
         : '📦 Using npm to install packages.'
@@ -132,10 +132,10 @@ export async function installNodeDependenciesAsync(
       const config = yamlString ? yaml.safeLoad(yamlString) : {};
       config.nodeLinker = 'node-modules';
       !flags.silent &&
-        log.warn(
+        Log.warn(
           `Yarn v${version} detected, enabling experimental Yarn v2 support using the node-modules plugin.`
         );
-      !flags.silent && log(`Writing ${yarnRc}...`);
+      !flags.silent && Log.log(`Writing ${yarnRc}...`);
       fs.writeFileSync(yarnRc, yaml.safeDump(config));
     }
     await yarn.installAsync();
@@ -145,9 +145,9 @@ export async function installNodeDependenciesAsync(
 }
 
 export function logNewSection(title: string) {
-  const spinner = ora(log.chalk.bold(title));
+  const spinner = ora(Log.chalk.bold(title));
   // respect loading indicators
-  log.setSpinner(spinner);
+  Log.setSpinner(spinner);
   spinner.start();
   return spinner;
 }
@@ -161,15 +161,14 @@ export function getChangeDirectoryPath(projectRoot: string): string {
 }
 
 export async function installCocoaPodsAsync(projectRoot: string) {
-  log.addNewLineIfNone();
-  let step = logNewSection('Installing CocoaPods.');
+  let step = logNewSection('Installing CocoaPods...');
   if (process.platform !== 'darwin') {
     step.succeed('Skipped installing CocoaPods because operating system is not on macOS.');
     return false;
   }
+
   const packageManager = new PackageManager.CocoaPodsPackageManager({
     cwd: path.join(projectRoot, 'ios'),
-    log,
     silent: !EXPO_DEBUG,
   });
 
@@ -177,40 +176,46 @@ export async function installCocoaPodsAsync(projectRoot: string) {
     try {
       // prompt user -- do you want to install cocoapods right now?
       step.text = 'CocoaPods CLI not found in your PATH, installing it now.';
-      step.render();
+      step.stopAndPersist();
       await PackageManager.CocoaPodsPackageManager.installCLIAsync({
-        nonInteractive: program.nonInteractive,
-        spawnOptions: packageManager.options,
+        nonInteractive: true,
+        spawnOptions: {
+          ...packageManager.options,
+          // Don't silence this part
+          stdio: ['inherit', 'inherit', 'pipe'],
+        },
       });
-      step.succeed('Installed CocoaPods CLI');
+      step.succeed('Installed CocoaPods CLI.');
       step = logNewSection('Running `pod install` in the `ios` directory.');
     } catch (e) {
       step.stopAndPersist({
         symbol: '⚠️ ',
-        text: log.chalk.red(
-          'Unable to install the CocoaPods CLI. Continuing with project sync, you can install CocoaPods afterwards.'
-        ),
+        text: Log.chalk.red('Unable to install the CocoaPods CLI.'),
       });
-      if (e.message) {
-        log(`- ${e.message}`);
+      if (e instanceof PackageManager.CocoaPodsError) {
+        Log.log(e.message);
+      } else {
+        Log.log(`Unknown error: ${e.message}`);
       }
       return false;
     }
   }
 
   try {
-    await packageManager.installAsync();
+    await packageManager.installAsync({ spinner: step });
+    // Create cached list for later
+    await hasPackageJsonDependencyListChangedAsync(projectRoot).catch(() => null);
     step.succeed('Installed pods and initialized Xcode workspace.');
     return true;
   } catch (e) {
     step.stopAndPersist({
       symbol: '⚠️ ',
-      text: log.chalk.red(
-        'Something went wrong running `pod install` in the `ios` directory. Continuing with project sync, you can debug this afterwards.'
-      ),
+      text: Log.chalk.red('Something went wrong running `pod install` in the `ios` directory.'),
     });
-    if (e.message) {
-      log(`- ${e.message}`);
+    if (e instanceof PackageManager.CocoaPodsError) {
+      Log.log(e.message);
+    } else {
+      Log.log(`Unknown error: ${e.message}`);
     }
     return false;
   }

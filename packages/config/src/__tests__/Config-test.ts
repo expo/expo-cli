@@ -1,38 +1,38 @@
 import { vol } from 'memfs';
 
-import { getConfig, getProjectConfigDescription, readConfigJson } from '../Config';
+import { getConfig, getProjectConfigDescriptionWithPaths, readConfigJson } from '../Config';
 
 jest.mock('fs');
 
-describe(`getProjectConfigDescription`, () => {
+describe(getProjectConfigDescriptionWithPaths, () => {
   it(`describes a project using both a static and dynamic config`, () => {
-    const message = getProjectConfigDescription('/', {
+    const message = getProjectConfigDescriptionWithPaths('/', {
       dynamicConfigPath: '/app.config.js',
       staticConfigPath: '/app.config.json',
     });
-    expect(message).toMatch(`\`app.config.js\``);
-    expect(message).toMatch(`\`app.config.json\``);
+    expect(message).toMatch(`app.config.js`);
+    expect(message).toMatch(`app.config.json`);
   });
   it(`describes a project using only a static config`, () => {
-    const message = getProjectConfigDescription('/', {
+    const message = getProjectConfigDescriptionWithPaths('/', {
       dynamicConfigPath: null,
       staticConfigPath: '/app.json',
     });
-    expect(message).toMatch(`\`app.json\``);
+    expect(message).toMatch(`app.json`);
   });
   it(`describes a project using only a dynamic config`, () => {
-    const message = getProjectConfigDescription('/', {
+    const message = getProjectConfigDescriptionWithPaths('/', {
       dynamicConfigPath: '/app.config.ts',
       staticConfigPath: null,
     });
-    expect(message).toMatch(`\`app.config.ts\``);
+    expect(message).toMatch(`app.config.ts`);
   });
-  it(`describes a project with no configs`, () => {
-    const message = getProjectConfigDescription('/', {
+  it(`describes a project with no configs using a default value`, () => {
+    const message = getProjectConfigDescriptionWithPaths('/', {
       dynamicConfigPath: null,
       staticConfigPath: null,
     });
-    expect(message).toBe(null);
+    expect(message).toBe('app.json');
   });
 });
 

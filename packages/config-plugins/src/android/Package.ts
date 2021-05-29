@@ -5,10 +5,10 @@ import path from 'path';
 
 import { ConfigPlugin } from '../Plugin.types';
 import { createAndroidManifestPlugin, withAppBuildGradle } from '../plugins/android-plugins';
-import { withDangerousMod } from '../plugins/core-plugins';
+import { withDangerousMod } from '../plugins/withDangerousMod';
 import * as WarningAggregator from '../utils/warnings';
 import { AndroidManifest } from './Manifest';
-import { getMainApplicationAsync } from './Paths';
+import { getAppBuildGradleFilePath, getMainApplicationAsync } from './Paths';
 
 export const withPackageManifest = createAndroidManifestPlugin(
   setPackageInAndroidManifest,
@@ -145,4 +145,15 @@ export function setPackageInAndroidManifest(
   }
 
   return androidManifest;
+}
+
+export async function getApplicationIdAsync(projectRoot: string): Promise<string | null> {
+  const buildGradlePath = getAppBuildGradleFilePath(projectRoot);
+  if (!(await fs.pathExists(buildGradlePath))) {
+    return null;
+  }
+  const buildGradle = await fs.readFile(buildGradlePath, 'utf8');
+  const matchResult = buildGradle.match(/applicationId ['"](.*)['"]/);
+  // TODO add fallback for legacy cases to read from AndroidManifest.xml
+  return matchResult?.[1] ?? null;
 }

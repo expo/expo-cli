@@ -2,8 +2,7 @@ import fs from 'fs-extra';
 import hasbin from 'hasbin';
 import path from 'path';
 
-import UserSettings from './UserSettings';
-import XDLError from './XDLError';
+import { UserSettings, XDLError } from './internal';
 
 export const OSX_SOURCE_PATH = path.join(__dirname, '..', 'binaries', 'osx');
 

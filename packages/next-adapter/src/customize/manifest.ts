@@ -1,8 +1,9 @@
-import { getPackageJson, projectHasModule } from '@expo/config';
+import { getPackageJson } from '@expo/config';
 import { createForProject } from '@expo/package-manager';
 import chalk from 'chalk';
 import fs from 'fs-extra';
 import path from 'path';
+import resolveFrom from 'resolve-from';
 
 type SelectMethod = (context: { projectRoot: string; force: boolean }) => Promise<void>;
 type EnabledMethod = (context: { projectRoot: string; force: boolean }) => Promise<boolean>;
@@ -66,10 +67,10 @@ function getDependencies(
   projectRoot: string
 ): { dependencies: string[]; devDependencies: string[] } {
   const dependencies = ['react-native-web', 'next'].filter(
-    dependency => !projectHasModule(dependency, projectRoot, {})
+    dependency => !resolveFrom.silent(projectRoot, dependency)
   );
   const devDependencies = ['@expo/next-adapter', 'babel-preset-expo'].filter(
-    dependency => !projectHasModule(dependency, projectRoot, {})
+    dependency => !resolveFrom.silent(projectRoot, dependency)
   );
 
   return { dependencies, devDependencies };

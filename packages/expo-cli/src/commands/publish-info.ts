@@ -1,6 +1,6 @@
 import dateFormat from 'dateformat';
 
-import log from '../log';
+import Log from '../log';
 import {
   DetailOptions,
   getPublicationDetailAsync,
@@ -32,11 +32,11 @@ export default (program: any) => {
     .option('-s, --sdk-version <version>', 'Filter by SDK version e.g. 35.0.0')
     .option('-r, --raw', 'Produce some raw output.')
     .asyncActionProjectDir(
-      async (projectDir: string, options: HistoryOptions) => {
-        const result = await getPublishHistoryAsync(projectDir, options);
+      async (projectRoot: string, options: HistoryOptions) => {
+        const result = await getPublishHistoryAsync(projectRoot, options);
 
         if (options.raw) {
-          log(JSON.stringify(result));
+          Log.log(JSON.stringify(result));
           return;
         }
 
@@ -49,7 +49,7 @@ export default (program: any) => {
             },
             'General Info'
           );
-          log(generalTableString);
+          Log.log(generalTableString);
 
           // Print info specific to each publication
           const headers = [
@@ -76,7 +76,7 @@ export default (program: any) => {
             publishedTime: dateFormat(publication.publishedTime, 'ddd mmm dd yyyy HH:MM:ss Z'),
           }));
           const tableString = table.printTableJsonArray(headers, resultRows, colWidths);
-          log(tableString);
+          Log.log(tableString);
         } else {
           throw new Error('No records found matching your query.');
         }
@@ -91,12 +91,12 @@ export default (program: any) => {
     .option('--publish-id <publish-id>', 'Publication id. (Required)')
     .option('-r, --raw', 'Produce some raw output.')
     .asyncActionProjectDir(
-      async (projectDir: string, options: DetailOptions) => {
+      async (projectRoot: string, options: DetailOptions) => {
         if (!options.publishId) {
           throw new Error('--publish-id must be specified.');
         }
 
-        const detail = await getPublicationDetailAsync(projectDir, options);
+        const detail = await getPublicationDetailAsync(projectRoot, options);
         await printPublicationDetailAsync(detail, options);
       },
       { checkConfig: true }

@@ -5,7 +5,7 @@
 
 export interface ExpoConfig {
   /**
-   * The name of your app as it appears both within Expo client and on your home screen as a standalone app.
+   * The name of your app as it appears both within Expo Go and on your home screen as a standalone app.
    */
   name: string;
   /**
@@ -20,6 +20,14 @@ export interface ExpoConfig {
    * The Expo account name of the team owner, only applicable if you are enrolled in the EAS Priority Plan. If not provided, defaults to the username of the current user.
    */
   owner?: string;
+  /**
+   * The auto generated Expo account name and slug used for display purposes. Formatted like `@username/slug`. When unauthenticated, the username is `@anonymous`. For published projects, this value may change when a project is transferred between accounts or renamed.
+   */
+  currentFullName?: string;
+  /**
+   * The auto generated Expo account name and slug used for services like Notifications and AuthSession proxy. Formatted like `@username/slug`. When unauthenticated, the username is `@anonymous`. For published projects, this value will not change when a project is transferred between accounts or renamed.
+   */
+  originalFullName?: string;
   /**
    * Defaults to `unlisted`. `unlisted` hides the project from search results. `hidden` restricts access to the project page to only the owner and other users that have been granted access. Valid values: `public`, `unlisted`, `hidden`.
    */
@@ -166,18 +174,18 @@ export interface ExpoConfig {
   extra?: {
     [k: string]: any;
   };
-  rnCliPath?: string;
+  /**
+   * @deprecated Use a `metro.config.js` file instead. [Learn more](https://docs.expo.io/guides/customizing-metro/)
+   */
   packagerOpts?: {
     [k: string]: any;
   };
-  ignoreNodeModulesValidation?: boolean;
-  nodeModulesPath?: string;
   /**
    * Configuration for how and when the app should request OTA JavaScript updates
    */
   updates?: {
     /**
-     * If set to false, your standalone app will never download any code, and will only use code bundled locally on the device. In that case, all updates to your app must be submitted through Apple review. Defaults to true. (Note: This will not work out of the box with ExpoKit projects)
+     * If set to false, your standalone app will never download any code, and will only use code bundled locally on the device. In that case, all updates to your app must be submitted through app store review. Defaults to true. (Note: This will not work out of the box with ExpoKit projects)
      */
     enabled?: boolean;
     /**
@@ -188,6 +196,10 @@ export interface ExpoConfig {
      * How long (in ms) to allow for fetching OTA updates before falling back to a cached version of the app. Defaults to 30000 (30 sec). Must be between 0 and 300000 (5 minutes).
      */
     fallbackToCacheTimeout?: number;
+    /**
+     * URL from which expo-updates will fetch update manifests
+     */
+    url?: string;
   };
   /**
    * Provide overrides by locale for System Dialog prompts like Permissions Boxes
@@ -220,7 +232,7 @@ export interface ExpoConfig {
    */
   facebookDisplayName?: string;
   /**
-   * Used for Facebook native login. Starts with 'fb' and followed by a string of digits, like 'fb1234567890'. You can find your scheme [here](https://developers.facebook.com/docs/facebook-login/ios)in the 'Configuring Your info.plist' section (only applicable to standalone apps and custom Expo clients).
+   * Used for Facebook native login. Starts with 'fb' and followed by a string of digits, like 'fb1234567890'. You can find your scheme [here](https://developers.facebook.com/docs/facebook-login/ios)in the 'Configuring Your info.plist' section (only applicable to standalone apps and custom Expo Go apps).
    */
   facebookScheme?: string;
   /**
@@ -356,7 +368,7 @@ export interface IOS {
      */
     googleMobileAdsAppId?: string;
     /**
-     * A boolean indicating whether to initialize Google App Measurement and begin sending user-level event data to Google immediately when the app starts. The default in Expo (Client and in standalone apps) is `false`. [Sets the opposite of the given value to the following key in `Info.plist`.](https://developers.google.com/admob/ios/eu-consent#delay_app_measurement_optional)
+     * A boolean indicating whether to initialize Google App Measurement and begin sending user-level event data to Google immediately when the app starts. The default in Expo (Go and in standalone apps) is `false`. [Sets the opposite of the given value to the following key in `Info.plist`.](https://developers.google.com/admob/ios/eu-consent#delay_app_measurement_optional)
      */
     googleMobileAdsAutoInit?: boolean;
     /**
@@ -410,7 +422,7 @@ export interface IOS {
     [k: string]: any;
   };
   /**
-   * An array that contains Associated Domains for the standalone app. See [Apple's docs for config](https://developer.apple.com/documentation/uikit/core_app/allowing_apps_and_websites_to_link_to_your_content/enabling_universal_links).
+   * An array that contains Associated Domains for the standalone app. See [Apple's docs for config](https://developer.apple.com/documentation/safariservices/supporting_associated_domains).
    */
   associatedDomains?: string[];
   /**
@@ -430,7 +442,7 @@ export interface IOS {
    */
   splash?: {
     /**
-     * Local path to a XIB file as the loading screen. It overrides other loading screen options. Note: This will only be used in the standalone app (i.e., after you build the app). It will not be used in the Expo client.
+     * Local path to a XIB file as the loading screen. It overrides other loading screen options. Note: This will only be used in the standalone app (i.e., after you build the app). It will not be used in the Expo Go.
      */
     xib?: string;
     /**
@@ -461,10 +473,6 @@ export interface IOS {
  */
 export interface Android {
   /**
-   * If set to true, APK will contain only unimodules that are explicitly added in package.json and their dependecies
-   */
-  enableDangerousExperimentalLeanBuilds?: boolean;
-  /**
    * The manifest for the Android version of your app will be written to this path during publish.
    */
   publishManifestPath?: string;
@@ -477,7 +485,7 @@ export interface Android {
    */
   package?: string;
   /**
-   * Version number required by Google Play. Increment by one for each release. Must be an integer. [Learn more](https://developer.android.com/studio/publish/versioning.html)
+   * Version number required by Google Play. Increment by one for each release. Must be a positive integer. [Learn more](https://developer.android.com/studio/publish/versioning.html)
    */
   versionCode?: number;
   /**

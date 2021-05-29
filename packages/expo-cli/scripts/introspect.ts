@@ -49,8 +49,11 @@ function commandAsJSON(command: Command): CommandData {
   };
 }
 
+/** The easiest workaround for | (pipe) being confused with a markdown table
+ * separator and breaking marktown table autoformatting is to use ⎮ (U+23AE,
+ * Integral Extension) instead. <> are replaced by [] for HTML reasons. */
 function sanitizeFlags(flags: string) {
-  return flags.replace('<', '[').replace('>', ']');
+  return flags.replace('<', '[').replace('>', ']').replace('|', '⎮');
 }
 
 function formatOptionAsMarkdown(option: OptionData) {

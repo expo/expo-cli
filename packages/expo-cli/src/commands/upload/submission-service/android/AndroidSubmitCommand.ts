@@ -1,8 +1,8 @@
 import { Result, result } from '@expo/results';
-import { UserManager } from '@expo/xdl';
-import validator from 'validator';
+import { UserManager } from 'xdl';
 
-import log from '../../../../log';
+import Log from '../../../../log';
+import { isUUID } from '../../../utils/isUUID';
 import {
   ArchiveFileSource,
   ArchiveFileSourceType,
@@ -33,7 +33,7 @@ class AndroidSubmitCommand {
   async runAsync(): Promise<void> {
     if (!(await UserManager.getCurrentUserAsync())) {
       await UserManager.ensureLoggedInAsync();
-      log.addNewLineIfNone();
+      Log.addNewLineIfNone();
     }
 
     const submissionOptions = this.getAndroidSubmissionOptions();
@@ -57,7 +57,7 @@ class AndroidSubmitCommand {
     ].filter(r => !r.ok);
     if (errored.length > 0) {
       const message = errored.map(err => err.reason?.message).join('\n');
-      log.error(message);
+      Log.error(message);
       throw new Error('Failed to submit the app');
     }
 
@@ -154,7 +154,7 @@ class AndroidSubmitCommand {
         projectDir: this.ctx.projectDir,
       };
     } else if (id) {
-      if (!validator.isUUID(id)) {
+      if (!isUUID(id)) {
         throw new Error(`${id} is not a id`);
       }
       return {

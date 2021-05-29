@@ -1,12 +1,10 @@
 import { ExpoConfig } from '@expo/config-types';
+import { JSONObject } from '@expo/json-file';
 import fs from 'fs-extra';
 import path from 'path';
 import slash from 'slash';
 
-import { ConfigPlugin } from '../Plugin.types';
-import { createEntitlementsPlugin, withEntitlementsPlist } from '../plugins/ios-plugins';
-import * as WarningAggregator from '../utils/warnings';
-import { InfoPlist } from './IosConfig.types';
+import { createEntitlementsPlugin } from '../plugins/ios-plugins';
 import * as Paths from './Paths';
 import {
   getPbxproj,
@@ -17,97 +15,15 @@ import {
   isNotTestHost,
 } from './utils/Xcodeproj';
 
-type Plist = Record<string, any>;
-
-export const withAccessesContactNotes = createEntitlementsPlugin(
-  setAccessesContactNotes,
-  'withAccessesContactNotes'
-);
-
 export const withAssociatedDomains = createEntitlementsPlugin(
   setAssociatedDomains,
   'withAssociatedDomains'
 );
 
-export const withAppleSignInEntitlement = createEntitlementsPlugin(
-  setAppleSignInEntitlement,
-  'withAppleSignInEntitlement'
-);
-
-export const withICloudEntitlement: ConfigPlugin<{ appleTeamId: string }> = (
-  config,
-  { appleTeamId }
-) => {
-  return withEntitlementsPlist(config, config => {
-    config.modResults = setICloudEntitlement(config, config.modResults, appleTeamId);
-    return config;
-  });
-};
-
-// TODO: should it be possible to turn off these entitlements by setting false in app.json and running apply
-
-export function getConfigEntitlements(config: ExpoConfig) {
-  return config.ios?.entitlements ?? {};
-}
-
-export function setCustomEntitlementsEntries(config: ExpoConfig, entitlements: InfoPlist) {
-  const entries = getConfigEntitlements(config);
-
-  return {
-    ...entitlements,
-    ...entries,
-  };
-}
-
-export function setICloudEntitlement(
-  config: ExpoConfig,
-  entitlementsPlist: Plist,
-  appleTeamId: string
-): Plist {
-  if (config.ios?.usesIcloudStorage) {
-    // TODO: need access to the appleTeamId for this one!
-    WarningAggregator.addWarningIOS(
-      'ios.usesIcloudStorage',
-      'Enable the iCloud Storage Entitlement from the Capabilities tab in your Xcode project.'
-      // TODO: add a link to a docs page with more information on how to do this
-    );
-  }
-
-  return entitlementsPlist;
-}
-
-export function setAppleSignInEntitlement(
-  config: ExpoConfig,
-  { 'com.apple.developer.applesignin': _, ...entitlementsPlist }: Plist
-): Plist {
-  if (config.ios?.usesAppleSignIn) {
-    return {
-      ...entitlementsPlist,
-      'com.apple.developer.applesignin': ['Default'],
-    };
-  }
-
-  return entitlementsPlist;
-}
-
-export function setAccessesContactNotes(
-  config: ExpoConfig,
-  { 'com.apple.developer.contacts.notes': _, ...entitlementsPlist }: Plist
-): Plist {
-  if (config.ios?.accessesContactNotes) {
-    return {
-      ...entitlementsPlist,
-      'com.apple.developer.contacts.notes': config.ios.accessesContactNotes,
-    };
-  }
-
-  return entitlementsPlist;
-}
-
 export function setAssociatedDomains(
   config: ExpoConfig,
-  { 'com.apple.developer.associated-domains': _, ...entitlementsPlist }: Plist
-): Plist {
+  { 'com.apple.developer.associated-domains': _, ...entitlementsPlist }: JSONObject
+): JSONObject {
   if (config.ios?.associatedDomains) {
     return {
       ...entitlementsPlist,

@@ -1,9 +1,9 @@
-import { UrlUtils, Webpack } from '@expo/xdl';
 import chalk from 'chalk';
 import { Command } from 'commander';
+import { UrlUtils, Webpack } from 'xdl';
 
 import CommandError from '../../CommandError';
-import log from '../../log';
+import Log from '../../log';
 import { confirmAsync } from '../../prompts';
 import * as ProjectUtils from '../utils/ProjectUtils';
 import AndroidBuilder from './AndroidBuilder';
@@ -26,18 +26,18 @@ async function maybeBailOnWorkflowWarning({
   }
 
   const command = `expo build:${platform}`;
-  log.warn(chalk.bold(`⚠️  ${command} currently only supports managed workflow apps.`));
-  log.warn(
+  Log.warn(chalk.bold(`⚠️  ${command} currently only supports managed workflow apps.`));
+  Log.warn(
     `If you proceed with this command, we can run the build for you but it will not include any custom native modules or changes that you have made to your local native projects.`
   );
-  log.warn(
+  Log.warn(
     `Unless you are sure that you know what you are doing, we recommend aborting the build and doing a native release build through ${
       platform === 'ios' ? 'Xcode' : 'Android Studio'
     }.`
   );
 
   if (nonInteractive) {
-    log.warn(`Skipping confirmation prompt because non-interactive mode is enabled.`);
+    Log.warn(`Skipping confirmation prompt because non-interactive mode is enabled.`);
     return false;
   }
 
@@ -148,7 +148,7 @@ export default function (program: Command) {
     .asyncActionProjectDir(
       async (projectRoot: string, options: AndroidOptions) => {
         if (options.generateKeystore) {
-          log.warn(
+          Log.warn(
             `The --generate-keystore flag is deprecated and does not do anything. A Keystore will always be generated on the Expo servers if it's missing.`
           );
         }

@@ -1,24 +1,14 @@
-import {
-  configFilename,
-  ExpoConfig,
-  getConfig,
-  getPackageJson,
-  PackageJSONConfig,
-  resolveModule,
-} from '@expo/config';
+import { configFilename, ExpoConfig, getConfig, PackageJSONConfig } from '@expo/config';
 import Schemer, { SchemerError, ValidationError } from '@expo/schemer';
 import spawnAsync from '@expo/spawn-async';
-import fs from 'fs-extra';
+import { execSync } from 'child_process';
 import getenv from 'getenv';
 import isReachable from 'is-reachable';
-import path from 'path';
+import resolveFrom from 'resolve-from';
 import semver from 'semver';
 
-import Config from '../Config';
-import * as Versions from '../Versions';
-import * as Watchman from '../Watchman';
-import * as ExpSchema from './ExpSchema';
-import * as ProjectUtils from './ProjectUtils';
+import { ExpSchema, ProjectUtils, Versions, Watchman } from '../internal';
+import { learnMore } from '../logs/TerminalLink';
 
 export const NO_ISSUES = 0;
 export const WARNING = 1;
@@ -30,6 +20,8 @@ const MIN_NPM_VERSION = '3.0.0';
 const CORRECT_NPM_VERSION = 'latest';
 const WARN_NPM_VERSION_RANGES = ['>= 5.0.0 < 5.7.0'];
 const BAD_NPM_VERSION_RANGES = ['>= 5.0.0 <= 5.0.3'];
+
+const EXPO_NO_DOCTOR = getenv.boolish('EXPO_NO_DOCTOR', false);
 
 function _isNpmVersionWithinRanges(npmVersion: string, ranges: string[]) {
   return ranges.some(range => semver.satisfies(npmVersion, range));
@@ -44,8 +36,7 @@ async function _checkNpmVersionAsync(projectRoot: string) {
       }
     } catch (e) {}
 
-    const npmVersionResponse = await spawnAsync('npm', ['--version']);
-    const npmVersion = npmVersionResponse.stdout.trim();
+    const npmVersion = execSync('npm --version', { stdio: 'pipe' }).toString().trim();
 
     if (
       semver.lt(npmVersion, MIN_NPM_VERSION) ||
@@ -110,7 +101,7 @@ async function _checkWatchmanVersionAsync(projectRoot: string) {
   }
 }
 
-export async function validateWithSchema(
+async function validateWithSchema(
   projectRoot: string,
   {
     // Extract internal from the config object.
@@ -132,7 +123,9 @@ export async function validateWithSchema(
     if (e instanceof SchemerError) {
       schemaErrorMessage = `Error: Problem${
         e.errors.length > 1 ? 's' : ''
-      } validating fields in ${configName}. See https://docs.expo.io/workflow/configuration/`;
+      } validating fields in ${configName}. ${learnMore(
+        'https://docs.expo.io/workflow/configuration/'
+      )}`;
       schemaErrorMessage += e.errors.map(formatValidationError).join('');
     }
   }
@@ -144,7 +137,7 @@ export async function validateWithSchema(
       if (e instanceof SchemerError) {
         assetsErrorMessage = `Error: Problem${
           e.errors.length > 1 ? '' : 's'
-        } validating asset fields in ${configName}. See ${Config.helpUrl}`;
+        } validating asset fields in ${configName}. ${learnMore('https://docs.expo.io/')}`;
         assetsErrorMessage += e.errors.map(formatValidationError).join('');
       }
     }
@@ -284,134 +277,112 @@ async function _validateReactNativeVersionAsync(
   sdkVersions: Versions.SDKVersions,
   sdkVersion: string
 ): Promise<number> {
-  if (Config.validation.reactNativeVersionWarnings) {
-    let reactNative = null;
+  let reactNative = null;
 
-    if (pkg.dependencies?.['react-native']) {
-      reactNative = pkg.dependencies['react-native'];
-    } else if (pkg.devDependencies?.['react-native']) {
-      reactNative = pkg.devDependencies['react-native'];
-    } else if (pkg.peerDependencies?.['react-native']) {
-      reactNative = pkg.peerDependencies['react-native'];
-    }
+  if (pkg.dependencies?.['react-native']) {
+    reactNative = pkg.dependencies['react-native'];
+  } else if (pkg.devDependencies?.['react-native']) {
+    reactNative = pkg.devDependencies['react-native'];
+  } else if (pkg.peerDependencies?.['react-native']) {
+    reactNative = pkg.peerDependencies['react-native'];
+  }
 
-    // react-native is required
-    if (!reactNative) {
-      ProjectUtils.logError(
-        projectRoot,
-        'expo',
-        `Error: Can't find react-native in package.json dependencies`,
-        'doctor-no-react-native-in-package-json'
-      );
-      return ERROR;
-    }
-    ProjectUtils.clearNotification(projectRoot, 'doctor-no-react-native-in-package-json');
+  // react-native is required
+  if (!reactNative) {
+    ProjectUtils.logError(
+      projectRoot,
+      'expo',
+      `Error: Can't find react-native in package.json dependencies`,
+      'doctor-no-react-native-in-package-json'
+    );
+    return ERROR;
+  }
+  ProjectUtils.clearNotification(projectRoot, 'doctor-no-react-native-in-package-json');
 
-    if (!exp.isDetached) {
-      return NO_ISSUES;
+  if (
+    Versions.gteSdkVersion(exp, '41.0.0') &&
+    pkg.dependencies?.['@react-native-community/async-storage']
+  ) {
+    ProjectUtils.logWarning(
+      projectRoot,
+      'expo',
+      `\n@react-native-community/async-storage has been renamed. To upgrade:\n- remove @react-native-community/async-storage from package.json\n- run "expo install @react-native-async-storage/async-storage"\n- update your imports manually, or run "npx expo-codemod sdk41-async-storage './**/*'".\n`,
+      'doctor-legacy-async-storage'
+    );
+    return WARNING;
+  } else {
+    ProjectUtils.clearNotification(projectRoot, 'doctor-legacy-async-storage');
+  }
 
-      // (TODO-2017-07-20): Validate the react-native version if it uses
-      // officially published package rather than Expo fork. Expo fork of
-      // react-native was required before CRNA. We now only run the react-native
-      // validation of the version if we are using the fork. We should probably
-      // validate the version here as well such that it matches with the
-      // react-native version compatible with the selected SDK.
-    }
+  if (!exp.isDetached) {
+    return NO_ISSUES;
 
-    // Expo fork of react-native is required
-    if (!/expo\/react-native/.test(reactNative)) {
+    // (TODO-2017-07-20): Validate the react-native version if it uses
+    // officially published package rather than Expo fork. Expo fork of
+    // react-native was required before CRNA. We now only run the react-native
+    // validation of the version if we are using the fork. We should probably
+    // validate the version here as well such that it matches with the
+    // react-native version compatible with the selected SDK.
+  }
+
+  // Expo fork of react-native is required
+  if (!/expo\/react-native/.test(reactNative)) {
+    ProjectUtils.logWarning(
+      projectRoot,
+      'expo',
+      `Warning: Not using the Expo fork of react-native. ${learnMore('https://docs.expo.io/')}`,
+      'doctor-not-using-expo-fork'
+    );
+    return WARNING;
+  }
+  ProjectUtils.clearNotification(projectRoot, 'doctor-not-using-expo-fork');
+
+  try {
+    const reactNativeTag = reactNative.match(/sdk-\d+\.\d+\.\d+/)[0];
+    const sdkVersionObject = sdkVersions[sdkVersion];
+
+    // TODO: Want to be smarter about this. Maybe warn if there's a newer version.
+    if (
+      semver.major(Versions.parseSdkVersionFromTag(reactNativeTag)) !==
+      semver.major(Versions.parseSdkVersionFromTag(sdkVersionObject['expoReactNativeTag']))
+    ) {
       ProjectUtils.logWarning(
         projectRoot,
         'expo',
-        `Warning: Not using the Expo fork of react-native. See ${Config.helpUrl}.`,
-        'doctor-not-using-expo-fork'
+        `Warning: Invalid version of react-native for sdkVersion ${sdkVersion}. Use github:expo/react-native#${sdkVersionObject['expoReactNativeTag']}`,
+        'doctor-invalid-version-of-react-native'
       );
       return WARNING;
     }
-    ProjectUtils.clearNotification(projectRoot, 'doctor-not-using-expo-fork');
+    ProjectUtils.clearNotification(projectRoot, 'doctor-invalid-version-of-react-native');
 
-    try {
-      const reactNativeTag = reactNative.match(/sdk-\d+\.\d+\.\d+/)[0];
-      const sdkVersionObject = sdkVersions[sdkVersion];
-
-      // TODO: Want to be smarter about this. Maybe warn if there's a newer version.
-      if (
-        semver.major(Versions.parseSdkVersionFromTag(reactNativeTag)) !==
-        semver.major(Versions.parseSdkVersionFromTag(sdkVersionObject['expoReactNativeTag']))
-      ) {
-        ProjectUtils.logWarning(
-          projectRoot,
-          'expo',
-          `Warning: Invalid version of react-native for sdkVersion ${sdkVersion}. Use github:expo/react-native#${sdkVersionObject['expoReactNativeTag']}`,
-          'doctor-invalid-version-of-react-native'
-        );
-        return WARNING;
-      }
-      ProjectUtils.clearNotification(projectRoot, 'doctor-invalid-version-of-react-native');
-
-      ProjectUtils.clearNotification(projectRoot, 'doctor-malformed-version-of-react-native');
-    } catch (e) {
-      ProjectUtils.logWarning(
-        projectRoot,
-        'expo',
-        `Warning: ${reactNative} is not a valid version. Version must be in the form of sdk-x.y.z. Please update your package.json file.`,
-        'doctor-malformed-version-of-react-native'
-      );
-      return WARNING;
-    }
+    ProjectUtils.clearNotification(projectRoot, 'doctor-malformed-version-of-react-native');
+  } catch (e) {
+    ProjectUtils.logWarning(
+      projectRoot,
+      'expo',
+      `Warning: ${reactNative} is not a valid version. Version must be in the form of sdk-x.y.z. Please update your package.json file.`,
+      'doctor-malformed-version-of-react-native'
+    );
+    return WARNING;
   }
 
   return NO_ISSUES;
 }
 
 async function _validateNodeModulesAsync(projectRoot: string): Promise<number> {
-  // Just need `nodeModulesPath` so it doesn't matter if expo is installed or the sdkVersion is defined.
-  const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
-  let nodeModulesPath = projectRoot;
-  if (exp.nodeModulesPath) {
-    nodeModulesPath = path.resolve(projectRoot, exp.nodeModulesPath);
-  }
+  // Check to make sure react-native is installed
 
-  // Check to make sure node_modules exists at all
-  try {
-    const result = fs.statSync(path.join(nodeModulesPath, 'node_modules'));
-    if (!result.isDirectory()) {
-      ProjectUtils.logError(
-        projectRoot,
-        'expo',
-        `Error: node_modules directory is missing. Please run \`npm install\` in your project directory.`,
-        'doctor-node-modules-missing'
-      );
-      return FATAL;
-    }
-
-    ProjectUtils.clearNotification(projectRoot, 'doctor-node-modules-missing');
-  } catch (e) {
+  if (resolveFrom.silent(projectRoot, 'react-native/local-cli/cli.js')) {
+    ProjectUtils.clearNotification(projectRoot, 'doctor-react-native-not-installed');
+  } else {
     ProjectUtils.logError(
       projectRoot,
       'expo',
-      `Error: node_modules directory is missing. Please run \`npm install\` in your project directory.`,
-      'doctor-node-modules-missing'
+      `Error: react-native is not installed. Please run \`npm install\` or \`yarn\` in your project directory.`,
+      'doctor-react-native-not-installed'
     );
     return FATAL;
-  }
-
-  // Check to make sure react-native is installed
-  try {
-    resolveModule('react-native/local-cli/cli.js', projectRoot, exp);
-    ProjectUtils.clearNotification(projectRoot, 'doctor-react-native-not-installed');
-  } catch (e) {
-    if (e.code === 'MODULE_NOT_FOUND') {
-      ProjectUtils.logError(
-        projectRoot,
-        'expo',
-        `Error: react-native is not installed. Please run \`npm install\` or \`yarn\` in your project directory.`,
-        'doctor-react-native-not-installed'
-      );
-      return FATAL;
-    } else {
-      throw e;
-    }
   }
   return NO_ISSUES;
 }
@@ -435,7 +406,7 @@ async function validateAsync(
   allowNetwork: boolean,
   skipSDKVersionRequirement: boolean | undefined
 ): Promise<number> {
-  if (getenv.boolish('EXPO_NO_DOCTOR', false)) {
+  if (EXPO_NO_DOCTOR) {
     return NO_ISSUES;
   }
 
@@ -464,58 +435,16 @@ async function validateAsync(
 
   status = Math.max(status, expStatus);
 
-  if (exp && !exp.ignoreNodeModulesValidation) {
-    const nodeModulesStatus = await _validateNodeModulesAsync(projectRoot);
-    if (nodeModulesStatus > status) {
-      return nodeModulesStatus;
-    }
+  const nodeModulesStatus = await _validateNodeModulesAsync(projectRoot);
+  if (nodeModulesStatus > status) {
+    return nodeModulesStatus;
   }
 
   return status;
 }
 
-type ExpoSdkStatus = 0 | 1 | 2;
-
-export const EXPO_SDK_INSTALLED_AND_IMPORTED = 0;
-export const EXPO_SDK_NOT_INSTALLED = 1;
-export const EXPO_SDK_NOT_IMPORTED = 2;
-
-export async function getExpoSdkStatus(projectRoot: string): Promise<ExpoSdkStatus> {
-  const { pkg } = getPackageJson(projectRoot);
-
-  try {
-    if (
-      !(
-        pkg.dependencies?.['expo'] ||
-        pkg.devDependencies?.['expo'] ||
-        pkg.peerDependencies?.['expo']
-      )
-    ) {
-      return EXPO_SDK_NOT_INSTALLED;
-    }
-
-    const mainFilePath = path.join(projectRoot, pkg.main);
-    const mainFile = await fs.readFile(mainFilePath, 'utf8');
-
-    // TODO: support separate .ios.js and .android.js files
-    if (mainFile.includes(`from 'expo'`) || mainFile.includes(`require('expo')`)) {
-      return EXPO_SDK_INSTALLED_AND_IMPORTED;
-    } else {
-      return EXPO_SDK_NOT_IMPORTED;
-    }
-  } catch (e) {
-    return EXPO_SDK_NOT_IMPORTED;
-  }
-}
-
 export async function validateExpoServersAsync(projectRoot: string): Promise<number> {
-  const domains = [
-    'expo.io',
-    'expo.fyi',
-    'expo.dev',
-    'static.expo.dev',
-    // 'exp.host', - This is causing some intermittent false errors
-  ];
+  const domains = ['expo.io', 'expo.fyi', 'expo.dev', 'static.expo.dev', 'exp.host'];
   const attempts = await Promise.all(
     domains.map(async domain => ({
       domain,

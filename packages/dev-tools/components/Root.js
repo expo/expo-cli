@@ -7,7 +7,7 @@ if (typeof window !== 'undefined') {
   hydrate(window.__NEXT_DATA__.ids);
 }
 
-// eslint-disable-next-line no-unused-expressions
+// eslint-disable-next-line @babel/no-unused-expressions
 injectGlobal`
   html, body, div, span, applet, object, iframe,
   h1, h2, h3, h4, h5, h6, p, blockquote, pre,

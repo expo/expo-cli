@@ -1,4 +1,3 @@
-import { Logger, PackagerLogsStream, ProjectSettings, ProjectUtils } from '@expo/xdl';
 import base64url from 'base64url';
 import crypto from 'crypto';
 import express from 'express';
@@ -7,6 +6,7 @@ import * as graphql from 'graphql';
 import http from 'http';
 import path from 'path';
 import { SubscriptionServer } from 'subscriptions-transport-ws';
+import { Logger, PackagerLogsStream, ProjectSettings, ProjectUtils } from 'xdl';
 // @ts-ignore
 
 import AsyncIterableRingBuffer from './graphql/AsyncIterableRingBuffer';
@@ -49,7 +49,7 @@ export async function createAuthenticationContextAsync({ port }: { port: number 
   };
 }
 
-export async function startAsync(projectDir: string): Promise<string> {
+export async function startAsync(projectRoot: string): Promise<string> {
   const port = await freeportAsync(19002, { hostnames: [null, 'localhost'] });
   const server = express();
 
@@ -73,19 +73,19 @@ export async function startAsync(projectDir: string): Promise<string> {
     httpServer.once('listening', resolve);
     httpServer.listen(port, listenHostname);
   });
-  startGraphQLServer(projectDir, httpServer, authenticationContext);
-  await ProjectSettings.setPackagerInfoAsync(projectDir, { devToolsPort: port });
+  startGraphQLServer(projectRoot, httpServer, authenticationContext);
+  await ProjectSettings.setPackagerInfoAsync(projectRoot, { devToolsPort: port });
   return `http://${listenHostname}:${port}`;
 }
 
 export function startGraphQLServer(
-  projectDir: string,
+  projectRoot: string,
   httpServer: http.Server,
   authenticationContext: any
 ) {
   const layout = createLayout();
   const issues = new Issues();
-  const messageBuffer = createMessageBuffer(projectDir, issues);
+  const messageBuffer = createMessageBuffer(projectRoot, issues);
   SubscriptionServer.create(
     {
       schema: GraphQLSchema,
@@ -94,7 +94,7 @@ export function startGraphQLServer(
       onOperation: (operation, params) => ({
         ...params,
         context: createContext({
-          projectDir,
+          projectDir: projectRoot,
           messageBuffer,
           layout,
           issues,

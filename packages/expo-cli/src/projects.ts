@@ -1,9 +1,9 @@
 import { ExpoConfig, ProjectPrivacy } from '@expo/config';
-import { ApiV2, RobotUser, User } from '@expo/xdl';
-import ora from 'ora';
+import { ApiV2, RobotUser, User } from 'xdl';
 
 import CommandError from './CommandError';
-import log from './log';
+import Log from './log';
+import { ora } from './utils/ora';
 
 interface ProjectData {
   accountName: string;
@@ -18,7 +18,7 @@ async function ensureProjectExistsAsync(
   const projectFullName = `@${accountName}/${projectName}`;
 
   const spinner = ora(
-    `Ensuring project ${log.chalk.bold(projectFullName)} is registered on Expo servers`
+    `Ensuring project ${Log.chalk.bold(projectFullName)} is registered on Expo servers`
   ).start();
 
   const client = ApiV2.clientForUser(user);
@@ -29,7 +29,7 @@ async function ensureProjectExistsAsync(
   } catch (err) {
     if (err.code !== 'EXPERIENCE_NOT_FOUND') {
       spinner.fail(
-        `Something went wrong when looking for project ${log.chalk.bold(
+        `Something went wrong when looking for project ${Log.chalk.bold(
           projectFullName
         )} on Expo servers`
       );
@@ -37,7 +37,7 @@ async function ensureProjectExistsAsync(
     }
   }
   try {
-    spinner.text = `Registering project ${log.chalk.bold(projectFullName)} on Expo servers`;
+    spinner.text = `Registering project ${Log.chalk.bold(projectFullName)} on Expo servers`;
     const { id } = await client.postAsync('projects', {
       accountName,
       projectName,

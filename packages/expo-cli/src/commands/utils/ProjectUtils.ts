@@ -6,7 +6,7 @@ import path from 'path';
 import semver from 'semver';
 
 import CommandError from '../../CommandError';
-import log from '../../log';
+import Log from '../../log';
 
 export async function findProjectRootAsync(
   base: string
@@ -73,20 +73,20 @@ export async function validateGitStatusAsync(): Promise<boolean> {
   }
 
   if (workingTreeStatus === 'clean') {
-    log.nested(`Your git working tree is ${chalk.green('clean')}`);
-    log.nested('To revert the changes after this command completes, you can run the following:');
-    log.nested('  git clean --force && git reset --hard');
+    Log.nested(`Your git working tree is ${chalk.green('clean')}`);
+    Log.nested('To revert the changes after this command completes, you can run the following:');
+    Log.nested('  git clean --force && git reset --hard');
     return true;
   } else if (workingTreeStatus === 'dirty') {
-    log.nested(`${chalk.bold('Warning!')} Your git working tree is ${chalk.red('dirty')}.`);
-    log.nested(
+    Log.nested(`${chalk.bold('Warning!')} Your git working tree is ${chalk.red('dirty')}.`);
+    Log.nested(
       `It's recommended to ${chalk.bold(
         'commit all your changes before proceeding'
       )}, so you can revert the changes made by this command if necessary.`
     );
   } else {
-    log.nested("We couldn't find a git repository in your project directory.");
-    log.nested("It's recommended to back up your project before proceeding.");
+    Log.nested("We couldn't find a git repository in your project directory.");
+    Log.nested("It's recommended to back up your project before proceeding.");
   }
 
   return false;

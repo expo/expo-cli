@@ -159,11 +159,11 @@ export async function openAsync(
   options.uri = ensureUriString(options.uri);
 
   if (options.ios) {
-    logPlatformMessage('iOS', `Attempting to open URI "${options.uri}" in simulator`);
+    logPlatformMessage('iOS', `Opening URI "${options.uri}" in simulator`);
     await Ios.openAsync(options);
   }
   if (options.android) {
-    logPlatformMessage('Android', `Attempting to open URI "${options.uri}" in emulator`);
+    logPlatformMessage('Android', `Opening URI "${options.uri}" in emulator`);
     await Android.openAsync(options);
   }
 }

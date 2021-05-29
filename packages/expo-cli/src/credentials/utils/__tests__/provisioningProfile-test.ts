@@ -1,4 +1,4 @@
-import { testProvisioningProfileBase64 } from '../../test-fixtures/mock-base64-data';
+import { testProvisioningProfileBase64 } from '../../__tests__/fixtures/mock-base64-data';
 import * as provisioningProfileUtils from '../provisioningProfile';
 
 const MALFORMED_PROVISIONING_PROFILE = 'aWV5Zmd3eXVlZmdl';

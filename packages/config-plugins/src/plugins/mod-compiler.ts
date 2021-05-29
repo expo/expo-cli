@@ -2,7 +2,69 @@ import path from 'path';
 
 import { ExportedConfig, Mod, ModConfig, ModPlatform } from '../Plugin.types';
 import { getHackyProjectName } from '../ios/utils/Xcodeproj';
-import { resolveModResults, withBaseMods } from './compiler-plugins';
+import { PluginError } from '../utils/errors';
+import { assertModResults, ForwardedBaseModOptions } from './createBaseMod';
+import { getAndroidIntrospectModFileProviders, withAndroidBaseMods } from './withAndroidBaseMods';
+import { getIosIntrospectModFileProviders, withIosBaseMods } from './withIosBaseMods';
+
+export function withDefaultBaseMods(
+  config: ExportedConfig,
+  props: ForwardedBaseModOptions = {}
+): ExportedConfig {
+  config = withIosBaseMods(config, props);
+  config = withAndroidBaseMods(config, props);
+  return config;
+}
+
+/**
+ * Get a prebuild config that safely evaluates mods without persisting any changes to the file system.
+ * Currently this only supports infoPlist, entitlements, androidManifest, strings, gradleProperties, and expoPlist mods.
+ * This plugin should be evaluated directly:
+ */
+export function withIntrospectionBaseMods(
+  config: ExportedConfig,
+  props: ForwardedBaseModOptions = {}
+): ExportedConfig {
+  const iosProviders = getIosIntrospectModFileProviders();
+  const androidProviders = getAndroidIntrospectModFileProviders();
+  config = withIosBaseMods(config, {
+    providers: iosProviders,
+    saveToInternal: true,
+    // This writing optimization can be skipped since we never write in introspection mode.
+    // Including empty mods will ensure that all mods get introspected.
+    skipEmptyMod: false,
+    ...props,
+  });
+  config = withAndroidBaseMods(config, {
+    providers: androidProviders,
+    saveToInternal: true,
+    skipEmptyMod: false,
+    ...props,
+  });
+
+  const preserve = {
+    ios: Object.keys(iosProviders),
+    android: Object.keys(androidProviders),
+  };
+
+  if (config.mods) {
+    // Remove all mods that don't have an introspection base mod, for instance `dangerous` mods.
+    for (const platform of Object.keys(config.mods) as ModPlatform[]) {
+      if (!(platform in preserve)) {
+        delete config.mods[platform];
+      }
+      const platformPreserve = preserve[platform];
+      for (const key of Object.keys(config.mods[platform] || {})) {
+        if (!platformPreserve?.includes(key)) {
+          // @ts-ignore
+          delete config.mods[platform][key];
+        }
+      }
+    }
+  }
+
+  return config;
+}
 
 /**
  *
@@ -11,9 +73,18 @@ import { resolveModResults, withBaseMods } from './compiler-plugins';
  */
 export async function compileModsAsync(
   config: ExportedConfig,
-  props: { projectRoot: string; platforms?: ModPlatform[] }
+  props: {
+    projectRoot: string;
+    platforms?: ModPlatform[];
+    introspect?: boolean;
+    assertMissingModProviders?: boolean;
+  }
 ): Promise<ExportedConfig> {
-  config = withBaseMods(config);
+  if (props.introspect === true) {
+    config = withIntrospectionBaseMods(config);
+  } else {
+    config = withDefaultBaseMods(config);
+  }
   return await evalModsAsync(config, props);
 }
 
@@ -47,7 +118,21 @@ const orders: Record<string, string[]> = {
  */
 export async function evalModsAsync(
   config: ExportedConfig,
-  { projectRoot, platforms }: { projectRoot: string; platforms?: ModPlatform[] }
+  {
+    projectRoot,
+    introspect,
+    platforms,
+    /**
+     * Throw errors when mods are missing providers.
+     * @default true
+     */
+    assertMissingModProviders,
+  }: {
+    projectRoot: string;
+    introspect?: boolean;
+    assertMissingModProviders?: boolean;
+    platforms?: ModPlatform[];
+  }
 ): Promise<ExportedConfig> {
   for (const [platformName, platform] of Object.entries(config.mods ?? ({} as ModConfig))) {
     if (platforms && !platforms.includes(platformName as any)) {
@@ -70,7 +155,22 @@ export async function evalModsAsync(
           platformProjectRoot,
           platform: platformName as ModPlatform,
           modName,
+          introspect: !!introspect,
         };
+
+        if (!(mod as Mod).isProvider) {
+          // In strict mode, throw an error.
+          const errorMessage = `Initial base modifier for "${platformName}.${modName}" is not a provider and therefore will not provide modResults to child mods`;
+          if (assertMissingModProviders !== false) {
+            throw new PluginError(errorMessage, 'MISSING_PROVIDER');
+          } else {
+            if (config._internal?.isDebug) {
+              console.warn(errorMessage);
+            }
+            // In loose mode, just skip the mod entirely.
+            continue;
+          }
+        }
 
         const results = await (mod as Mod)({
           ...config,
@@ -79,7 +179,7 @@ export async function evalModsAsync(
         });
 
         // Sanity check to help locate non compliant mods.
-        config = resolveModResults(results, platformName, modName);
+        config = assertModResults(results, platformName, modName);
         // @ts-ignore: data is added for modifications
         delete config.modResults;
         // @ts-ignore: info is added for modifications

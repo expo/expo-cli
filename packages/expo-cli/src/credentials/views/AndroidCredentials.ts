@@ -1,6 +1,6 @@
 import isEmpty from 'lodash/isEmpty';
 
-import log from '../../log';
+import Log from '../../log';
 import prompt from '../../prompts';
 import { displayAndroidAppCredentials } from '../actions/list';
 import { Context, IView } from '../context';
@@ -14,11 +14,11 @@ class ExperienceView implements IView {
     const credentials = await ctx.android.fetchCredentials(this.experienceName);
 
     if (isEmpty(credentials.keystore) && isEmpty(credentials.pushCredentials)) {
-      log(`No credentials available for ${this.experienceName} experience.\n`);
+      Log.log(`No credentials available for ${this.experienceName} experience.\n`);
     } else if (this.experienceName) {
-      log.newLine();
+      Log.newLine();
       await displayAndroidAppCredentials(credentials);
-      log.newLine();
+      Log.newLine();
     }
 
     const { action } = await prompt({

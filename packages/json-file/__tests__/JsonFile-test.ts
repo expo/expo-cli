@@ -106,12 +106,12 @@ it(`deletes another key from the file`, async () => {
 // constantly update a file that often
 it('Multiple updates to the same file have no race conditions', async () => {
   const file = new JsonFile(path.join(FIXTURES, 'atomic-test.json'), { json5: true });
-  for (var i = 0; i < 50; i++) {
+  for (let i = 0; i < 50; i++) {
     await file.writeAsync({});
     let baseObj = {};
-    for (var j = 0; j < 20; j++) {
+    for (let j = 0; j < 20; j++) {
       baseObj = { ...baseObj, [j]: j };
-      await file.setAsync(j, j);
+      await file.setAsync(String(j), j);
     }
     const json = await file.readAsync();
     expect(json).toEqual(baseObj);
@@ -121,7 +121,7 @@ it('Multiple updates to the same file have no race conditions', async () => {
 it('Continuous updating!', async () => {
   const file = new JsonFile(path.join(FIXTURES, 'test.json'), { json5: true });
   await file.writeAsync({ i: 0 });
-  for (var i = 0; i < 20; i++) {
+  for (let i = 0; i < 20; i++) {
     await file.writeAsync({ i });
     await expect(file.readAsync()).resolves.toEqual({ i });
   }

@@ -1,33 +1,30 @@
 import fs from 'fs-extra';
-import os from 'os';
-import path from 'path';
-import uuid from 'uuid';
 
-import ApiV2 from '../ApiV2';
-import GlobalUserManager, { UserManagerInstance } from '../User';
-import UserSettings from '../UserSettings';
+import {
+  ApiV2,
+  UserManager as GlobalUserManager,
+  UserManagerInstance,
+  UserSettings,
+} from '../internal';
 
 jest.mock('../ApiV2', () => ({
   clientForUser: jest.fn(),
 }));
 
 describe('User', () => {
-  // for some reason, tempy fails with memfs in XDL
-  const expoDir = path.join(os.tmpdir(), `.expo-${uuid.v4()}`);
-
-  beforeAll(() => {
-    process.env.__UNSAFE_EXPO_HOME_DIRECTORY = expoDir;
-    fs.mkdirpSync(expoDir);
-  });
-
-  afterAll(() => {
-    process.env.__UNSAFE_EXPO_HOME_DIRECTORY = '';
-    fs.removeSync(expoDir);
+  beforeEach(() => {
+    fs.removeSync(UserSettings.userSettingsFile());
   });
 
   it('uses a UserManager singleton', () => {
     const { default: manager } = jest.requireActual('../User');
     expect(manager).toBe(GlobalUserManager);
+  });
+
+  it('does not contian auth data by default', async () => {
+    const maybeAuth = await UserSettings.getAsync('auth', null);
+
+    expect(maybeAuth).toBeNull();
   });
 
   it('is logged out by default', async () => {
@@ -133,6 +130,51 @@ describe('User', () => {
       await manager.logoutAsync();
       expect(await UserSettings.getAsync('auth', null)).toBeNull();
     });
+
+    describe('getCachedUserDataAsync', () => {
+      it('retrieves cached credentials', async () => {
+        const api = _newTestApiV2();
+        const manager = _newTestUserManager();
+        const sessionSecret = 'session-secret-credentials';
+        const username = 'user-credentials';
+        const userId = 'user-id';
+        // Mock login response and authenticate
+        api.postAsync.mockResolvedValue({ sessionSecret });
+        api.getAsync.mockResolvedValue({ username, userId });
+
+        await manager.loginAsync('user-pass', {
+          username,
+          password: 'expopass',
+        });
+        expect(await manager.getCurrentUserAsync()).toMatchObject({
+          username,
+          sessionSecret,
+        });
+        // Empty in-memory cache, to force-fetch it
+        manager._currentUser = null;
+
+        // Check if the settings-cache has the token
+        expect(await manager.getCachedUserDataAsync()).toMatchObject({
+          username,
+          sessionSecret,
+          userId,
+        });
+      });
+
+      it('returns null when there are no cached credentials', async () => {
+        const manager = _newTestUserManager();
+
+        expect(await manager.getCachedUserDataAsync()).toBeNull();
+      });
+
+      it('returns null when a user has logged out', async () => {
+        const manager = _newTestUserManager();
+
+        await manager.logoutAsync();
+
+        expect(await manager.getCachedUserDataAsync()).toBeNull();
+      });
+    });
   });
 
   describe('token', () => {
@@ -154,7 +196,7 @@ describe('User', () => {
       });
     });
 
-    it(`doesn't cache user when authenticating with credentials`, async () => {
+    it(`doesn't cache user when authenticating with token`, async () => {
       const api = _newTestApiV2();
       const manager = _newTestUserManager();
       const settingSpy = jest.spyOn(UserSettings, 'setAsync');
@@ -197,7 +239,7 @@ describe('User', () => {
       });
     });
 
-    it('returns access token with token', async () => {
+    it('returns access token with auth token', async () => {
       const manager = _newTestUserManager();
 
       // Mock token, without logging in

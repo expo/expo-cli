@@ -1,11 +1,11 @@
-import { UserSettings } from '@expo/xdl';
+import { UserSettings } from 'xdl';
 
-import log from './log';
+import Log from './log';
 import { promptEmailAsync } from './prompts';
 
 export async function askForSendToAsync(): Promise<string> {
   const cachedValue = await UserSettings.getAsync('sendTo', null);
-  log.nested("Enter an email address and we'll send a link");
+  Log.nested("Enter an email address and we'll send a link");
   const recipient = await promptEmailAsync(
     {
       message: `Email address`,

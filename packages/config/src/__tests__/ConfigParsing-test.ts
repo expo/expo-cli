@@ -96,6 +96,7 @@ describe(getConfig, () => {
   // - generated `.expo` object is created and the language hint is added
   describe('language support', () => {
     beforeEach(() => {
+      delete process.env.EXPO_DEBUG;
       const projectRoot = 'js';
       setCustomConfigPath(projectRoot, undefined);
     });
@@ -166,6 +167,7 @@ describe(getConfig, () => {
 
   describe('behavior', () => {
     beforeEach(() => {
+      delete process.env.EXPO_DEBUG;
       resetCustomConfigPaths();
     });
 

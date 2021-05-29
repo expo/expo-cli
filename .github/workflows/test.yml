@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node: ['10', '12']
+        node: ['12', '14']
     name: Build with Node ${{ matrix.node }}
     steps:
       - uses: actions/checkout@v2
@@ -33,10 +33,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node: ['10', '12']
+        node: ['12', '14']
         package:
           [
-            electron-adapter,
             dev-tools,
             babel-preset-cli,
             config,
@@ -71,6 +70,7 @@ jobs:
         # run: cd packages/${{ matrix.package }} && yarn test --coverage
         env:
           CI: true
+          EXPO_DEBUG: true
       # - name: Get Test Flag Name
       #   id: cov-flag-name
       #   run: echo "::set-output name=flag::$(echo ${{ matrix.package }} | perl -pe 's/[^a-z]+([a-z])/\U\1/gi;s/^([A-Z])/\l\1/')"

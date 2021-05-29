@@ -1,6 +1,6 @@
-import { jester, testAppLookupParams } from '../../test-fixtures/mocks-constants';
-import { getCtxMock } from '../../test-fixtures/mocks-context';
-import { testDistCertsFromApple, testIosDistCredential } from '../../test-fixtures/mocks-ios';
+import { jester, testAppLookupParams } from '../../__tests__/fixtures/mocks-constants';
+import { getCtxMock } from '../../__tests__/fixtures/mocks-context';
+import { testDistCertsFromApple, testIosDistCredential } from '../../__tests__/fixtures/mocks-ios';
 import { CreateIosDist, CreateOrReuseDistributionCert } from '../IosDistCert';
 
 // these variables need to be prefixed with 'mock' if declared outside of the mock scope

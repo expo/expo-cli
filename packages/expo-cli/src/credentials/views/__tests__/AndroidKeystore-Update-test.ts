@@ -1,7 +1,7 @@
 import { mockExpoXDL } from '../../../__tests__/mock-utils';
 import prompts from '../../../prompts';
-import { testExperienceName } from '../../test-fixtures/mocks-constants';
-import { getCtxMock } from '../../test-fixtures/mocks-context';
+import { testExperienceName } from '../../__tests__/fixtures/mocks-constants';
+import { getCtxMock } from '../../__tests__/fixtures/mocks-context';
 import { UpdateKeystore } from '../AndroidKeystore';
 
 jest.mock('../../actions/list');

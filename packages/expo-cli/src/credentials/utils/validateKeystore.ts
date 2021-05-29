@@ -3,7 +3,7 @@ import commandExists from 'command-exists';
 import temporary from 'tempy';
 import terminalLink from 'terminal-link';
 
-import log from '../../log';
+import Log from '../../log';
 
 export default async function validateKeystoreAsync({
   keystore: keystoreBase64,
@@ -17,7 +17,7 @@ export default async function validateKeystoreAsync({
   try {
     await commandExists('keytool');
   } catch (e) {
-    log.warn(
+    Log.warn(
       `Couldn't validate the provided Android keystore because the 'keytool' command is not available. Make sure that you have a Java Development Kit installed. See ${terminalLink(
         'https://openjdk.java.net',
         'https://openjdk.java.net'

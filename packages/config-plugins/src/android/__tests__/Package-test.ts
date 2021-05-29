@@ -1,7 +1,12 @@
 import { resolve } from 'path';
 
 import { readAndroidManifestAsync } from '../Manifest';
-import { getPackage, setPackageInAndroidManifest, setPackageInBuildGradle } from '../Package';
+import {
+  getApplicationIdAsync,
+  getPackage,
+  setPackageInAndroidManifest,
+  setPackageInBuildGradle,
+} from '../Package';
 
 const fixturesPath = resolve(__dirname, 'fixtures');
 const sampleManifestPath = resolve(fixturesPath, 'react-native-AndroidManifest.xml');
@@ -28,6 +33,10 @@ describe('package', () => {
 
   it(`returns the package if provided`, () => {
     expect(getPackage({ android: { package: 'com.example.xyz' } })).toBe('com.example.xyz');
+  });
+
+  it(`returns the applicationId defined in build.gradle`, () => {
+    expect(getApplicationIdAsync(fixturesPath)).resolves.toBe('com.helloworld');
   });
 
   it(`sets the applicationId in build.gradle if package is given`, () => {

@@ -2,7 +2,7 @@ import chalk from 'chalk';
 
 import { ProvisioningProfile } from '../../appleApi';
 import { ProvisioningProfileAdhocManager } from '../../appleApi/provisioningProfileAdhoc';
-import log from '../../log';
+import Log from '../../log';
 import { AppLookupParams } from '../api/IosApi';
 import { Context, IView } from '../context';
 
@@ -23,7 +23,7 @@ export class CreateOrReuseProvisioningProfileAdhoc implements IView {
 
   async assignProvisioningProfile(ctx: Context, provisioningProfile: ProvisioningProfile) {
     await ctx.ios.updateProvisioningProfile(this.app, provisioningProfile);
-    log(
+    Log.log(
       chalk.green(
         `Successfully assigned Provisioning Profile id: ${provisioningProfile.provisioningProfileId} to @${this.app.accountName}/${this.app.projectName} (${this.app.bundleIdentifier})`
       )

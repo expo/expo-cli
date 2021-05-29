@@ -1,5 +1,6 @@
 import { ensureSlash } from '@expo/config/paths';
 import CopyPlugin from 'copy-webpack-plugin';
+import { joinUrlPath } from 'expo-pwa';
 import { ensureDirSync, readFileSync, writeFileSync } from 'fs-extra';
 import { join } from 'path';
 import {
@@ -143,7 +144,7 @@ export default function withWorkbox(
   }
 
   const customManifestProps = {
-    navigateFallback: join(publicUrl, 'index.html'),
+    navigateFallback: joinUrlPath(publicUrl, 'index.html'),
   };
 
   if (useServiceWorker) {

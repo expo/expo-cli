@@ -9,6 +9,7 @@ const APPLY_EAS_GRADLE = 'apply from: "./eas-build.gradle"';
 function hasApplyLine(content: string, applyLine: string): boolean {
   return (
     content
+      .replace(/\r\n/g, '\n')
       .split('\n')
       // Check for both single and double quotes
       .some(line => line === applyLine || line === applyLine.replace(/"/g, "'"))
@@ -20,7 +21,7 @@ export function getEasBuildGradlePath(projectRoot: string): string {
 }
 
 export async function configureEasBuildAsync(projectRoot: string): Promise<void> {
-  const buildGradlePath = Paths.getAppBuildGradle(projectRoot);
+  const buildGradlePath = Paths.getAppBuildGradleFilePath(projectRoot);
   const easGradlePath = getEasBuildGradlePath(projectRoot);
 
   await fs.writeFile(easGradlePath, gradleScript);
@@ -35,7 +36,7 @@ export async function configureEasBuildAsync(projectRoot: string): Promise<void>
 }
 
 export async function isEasBuildGradleConfiguredAsync(projectRoot: string): Promise<boolean> {
-  const buildGradlePath = Paths.getAppBuildGradle(projectRoot);
+  const buildGradlePath = Paths.getAppBuildGradleFilePath(projectRoot);
   const easGradlePath = getEasBuildGradlePath(projectRoot);
 
   const hasEasGradleFile = await fs.pathExists(easGradlePath);

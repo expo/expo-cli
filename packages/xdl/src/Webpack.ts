@@ -1,27 +1,30 @@
 import { getConfig, getNameFromConfig } from '@expo/config';
+import * as devcert from '@expo/devcert';
 import { isUsingYarn } from '@expo/package-manager';
 import chalk from 'chalk';
-import * as devcert from 'devcert';
 import fs from 'fs-extra';
 import getenv from 'getenv';
 import http from 'http';
 import * as path from 'path';
-import { choosePort, prepareUrls, Urls } from 'react-dev-utils/WebpackDevServerUtils';
+import { prepareUrls, Urls } from 'react-dev-utils/WebpackDevServerUtils';
 import formatWebpackMessages from 'react-dev-utils/formatWebpackMessages';
 import openBrowser from 'react-dev-utils/openBrowser';
 import webpack from 'webpack';
 import WebpackDevServer from 'webpack-dev-server';
 
-import Logger from './Logger';
-import * as ProjectSettings from './ProjectSettings';
-import * as UrlUtils from './UrlUtils';
-import * as Versions from './Versions';
-import XDLError from './XDLError';
-import ip from './ip';
-import { learnMore } from './logs/TerminalLink';
-import * as ProjectUtils from './project/ProjectUtils';
-import { DEFAULT_PORT, HOST, isDebugModeEnabled } from './webpack-utils/WebpackEnvironment';
-import createWebpackCompiler, { printInstructions } from './webpack-utils/createWebpackCompiler';
+import {
+  choosePortAsync,
+  ip,
+  learnMore,
+  Logger,
+  ProjectSettings,
+  ProjectUtils,
+  UrlUtils,
+  Versions,
+  WebpackCompiler,
+  WebpackEnvironment,
+  XDLError,
+} from './internal';
 
 const WEBPACK_LOG_TAG = 'expo';
 
@@ -92,7 +95,7 @@ let devServerInfo: {
 
 export function printConnectionInstructions(projectRoot: string, options = {}) {
   if (!devServerInfo) return;
-  printInstructions(projectRoot, {
+  WebpackCompiler.printInstructions(projectRoot, {
     appName: devServerInfo.appName,
     urls: devServerInfo.urls,
     showInDevtools: false,
@@ -110,6 +113,12 @@ async function clearWebCacheAsync(projectRoot: string, mode: string): Promise<vo
   try {
     await fs.remove(cacheFolder);
   } catch {}
+}
+
+export async function broadcastMessage(message: 'content-changed' | string, data?: any) {
+  if (webpackDevServerInstance && webpackDevServerInstance instanceof WebpackDevServer) {
+    webpackDevServerInstance.sockWrite(webpackDevServerInstance.sockets, message, data);
+  }
 }
 
 export async function startAsync(
@@ -158,6 +167,7 @@ export async function startAsync(
 
   const config = await createWebpackConfigAsync(env, fullOptions);
   const port = await getAvailablePortAsync({
+    projectRoot,
     defaultPort: options.port,
   });
 
@@ -190,7 +200,7 @@ export async function startAsync(
 
   const server: DevServer = await new Promise(resolve => {
     // Create a webpack compiler that is configured with custom messages.
-    const compiler = createWebpackCompiler({
+    const compiler = WebpackCompiler.createWebpackCompiler({
       projectRoot,
       appName,
       config,
@@ -201,7 +211,7 @@ export async function startAsync(
     });
     const server = new WebpackDevServer(compiler, config.devServer);
     // Launch WebpackDevServer.
-    server.listen(port, HOST, error => {
+    server.listen(port, WebpackEnvironment.HOST, error => {
       if (error) {
         ProjectUtils.logError(projectRoot, WEBPACK_LOG_TAG, error.message);
       }
@@ -229,8 +239,12 @@ export async function startAsync(
 
 export async function stopAsync(projectRoot: string): Promise<void> {
   if (webpackDevServerInstance) {
-    ProjectUtils.logInfo(projectRoot, WEBPACK_LOG_TAG, '\u203A Closing Webpack server');
-    webpackDevServerInstance.close();
+    await new Promise(res => {
+      if (webpackDevServerInstance) {
+        ProjectUtils.logInfo(projectRoot, WEBPACK_LOG_TAG, '\u203A Stopping Webpack server');
+        webpackDevServerInstance.close(res);
+      }
+    });
     webpackDevServerInstance = null;
     devServerInfo = null;
     webpackServerPort = null;
@@ -415,20 +429,27 @@ async function getProtocolAsync(projectRoot: string): Promise<'http' | 'https'> 
   return https === true ? 'https' : 'http';
 }
 
-async function getAvailablePortAsync(
-  options: { host?: string; defaultPort?: number } = {}
-): Promise<number> {
+async function getAvailablePortAsync(options: {
+  host?: string;
+  defaultPort?: number;
+  projectRoot: string;
+}): Promise<number> {
   try {
     const defaultPort =
-      'defaultPort' in options && options.defaultPort ? options.defaultPort : DEFAULT_PORT;
-    const port = await choosePort(
-      'host' in options && options.host ? options.host : HOST,
-      defaultPort
+      'defaultPort' in options && options.defaultPort
+        ? options.defaultPort
+        : WebpackEnvironment.DEFAULT_PORT;
+    const port = await choosePortAsync(
+      options.projectRoot,
+      defaultPort,
+      'host' in options && options.host ? options.host : WebpackEnvironment.HOST
     );
-    if (!port) throw new Error(`Port ${defaultPort} not available.`);
-    else return port;
+    if (!port) {
+      throw new Error(`Port ${defaultPort} not available.`);
+    }
+    return port;
   } catch (error) {
-    throw new XDLError('NO_PORT_FOUND', 'No available port found: ' + error.message);
+    throw new XDLError('NO_PORT_FOUND', error.message);
   }
 }
 
@@ -555,7 +576,7 @@ function applyEnvironmentVariables(config: WebpackConfiguration): WebpackConfigu
   // Use EXPO_DEBUG_WEB=true to enable debugging features for cases where the prod build
   // has errors that aren't caught in development mode.
   // Related: https://github.com/expo/expo-cli/issues/614
-  if (isDebugModeEnabled() && config.mode === 'production') {
+  if (WebpackEnvironment.isDebugModeEnabled() && config.mode === 'production') {
     console.log(chalk.bgYellow.black('Bundling the project in debug mode.'));
 
     const output = config.output || {};

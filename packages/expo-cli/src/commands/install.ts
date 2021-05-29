@@ -1,15 +1,15 @@
-import { getConfig, projectHasModule } from '@expo/config';
-import JsonFile from '@expo/json-file';
+import { getConfig } from '@expo/config';
 import * as PackageManager from '@expo/package-manager';
-import { Versions } from '@expo/xdl';
 import { Command } from 'commander';
-import fs from 'fs';
 import npmPackageArg from 'npm-package-arg';
-import path from 'path';
+import resolveFrom from 'resolve-from';
+import { Versions } from 'xdl';
 
 import CommandError, { SilentError } from '../CommandError';
-import log from '../log';
+import Log from '../log';
 import { findProjectRootAsync } from './utils/ProjectUtils';
+import { autoAddConfigPluginsAsync } from './utils/autoAddConfigPluginsAsync';
+import { getBundledNativeModulesAsync } from './utils/bundledNativeModules';
 
 async function resolveExpoProjectRootAsync() {
   try {
@@ -21,11 +21,11 @@ async function resolveExpoProjectRootAsync() {
       throw error;
     }
     // This happens when an app.config exists but a package.json is not present.
-    log.addNewLineIfNone();
-    log.error(error.message);
-    log.newLine();
-    log(log.chalk.cyan(`You can create a new project with ${log.chalk.bold(`expo init`)}`));
-    log.newLine();
+    Log.addNewLineIfNone();
+    Log.error(error.message);
+    Log.newLine();
+    Log.log(Log.chalk.cyan(`You can create a new project with ${Log.chalk.bold(`expo init`)}`));
+    Log.newLine();
     throw new SilentError(error);
   }
 }
@@ -36,7 +36,7 @@ async function installAsync(packages: string[], options: PackageManager.CreateFo
   const packageManager = PackageManager.createForProject(projectRoot, {
     npm: options.npm,
     yarn: options.yarn,
-    log,
+    log: Log.log,
   });
 
   const { exp, pkg } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
@@ -49,54 +49,40 @@ async function installAsync(packages: string[], options: PackageManager.CreateFo
   }
 
   if (!exp.sdkVersion) {
-    log.addNewLineIfNone();
+    Log.addNewLineIfNone();
     throw new CommandError(
-      `The ${log.chalk.bold(`expo`)} package was found in your ${log.chalk.bold(
+      `The ${Log.chalk.bold(`expo`)} package was found in your ${Log.chalk.bold(
         `package.json`
-      )} but we couldn't resolve the Expo SDK version. Run ${log.chalk.bold(
+      )} but we couldn't resolve the Expo SDK version. Run ${Log.chalk.bold(
         `${packageManager.name.toLowerCase()} install`
       )} and then try this command again.\n`
     );
   }
 
   if (!Versions.gteSdkVersion(exp, '33.0.0')) {
-    const message = `${log.chalk.bold(
+    const message = `${Log.chalk.bold(
       `expo install`
     )} is only available for Expo SDK version 33 or higher.`;
-    log.addNewLineIfNone();
-    log.error(message);
-    log.newLine();
-    log(log.chalk.cyan(`Current version: ${log.chalk.bold(exp.sdkVersion)}`));
-    log.newLine();
+    Log.addNewLineIfNone();
+    Log.error(message);
+    Log.newLine();
+    Log.log(Log.chalk.cyan(`Current version: ${Log.chalk.bold(exp.sdkVersion)}`));
+    Log.newLine();
     throw new SilentError(message);
   }
 
   // This shouldn't be invoked because `findProjectRootAsync` will throw if node_modules are missing.
-  if (!fs.existsSync(path.join(exp.nodeModulesPath || projectRoot, 'node_modules'))) {
-    log.addNewLineIfNone();
-    log(log.chalk.cyan(`node_modules not found, running ${packageManager.name} install command.`));
-    log.newLine();
+  // Every React project should have react installed...
+  if (!resolveFrom.silent(projectRoot, 'react')) {
+    Log.addNewLineIfNone();
+    Log.log(
+      Log.chalk.cyan(`node_modules not found, running ${packageManager.name} install command.`)
+    );
+    Log.newLine();
     await packageManager.installAsync();
   }
 
-  const bundledNativeModulesPath = projectHasModule(
-    'expo/bundledNativeModules.json',
-    projectRoot,
-    exp
-  );
-
-  if (!bundledNativeModulesPath) {
-    log.addNewLineIfNone();
-    throw new CommandError(
-      `The dependency map ${log.chalk.bold(
-        `expo/bundledNativeModules.json`
-      )} cannot be found, please ensure you have the package "${log.chalk
-        .bold`expo`}" installed in your project.\n`
-    );
-  }
-
-  const bundledNativeModules = await JsonFile.readAsync(bundledNativeModulesPath);
-
+  const bundledNativeModules = await getBundledNativeModulesAsync(projectRoot, exp.sdkVersion);
   const nativeModules = [];
   const others = [];
   const versionedPackages = packages.map(arg => {
@@ -125,8 +111,17 @@ async function installAsync(packages: string[], options: PackageManager.CreateFo
   if (others.length > 0) {
     messages.push(`${others.length} other ${others.length === 1 ? 'package' : 'packages'}`);
   }
-  log(`Installing ${messages.join(' and ')} using ${packageManager.name}.`);
+  Log.log(`Installing ${messages.join(' and ')} using ${packageManager.name}.`);
   await packageManager.addAsync(...versionedPackages);
+
+  // Only auto add plugins if the plugins array is defined or if the project is using SDK +42.
+  if (Versions.gteSdkVersion(exp, '42.0.0') || Array.isArray(exp.plugins)) {
+    await autoAddConfigPluginsAsync(
+      projectRoot,
+      exp,
+      versionedPackages.map(pkg => pkg.split('@')[0]).filter(Boolean)
+    );
+  }
 }
 
 export default function install(program: Command) {

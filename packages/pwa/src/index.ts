@@ -1,10 +1,25 @@
 import { ExpoConfig, setCustomConfigPath } from '@expo/config';
 import * as Image from '@expo/image-utils';
 import * as path from 'path';
+import { URL } from 'url';
 
 import { createPWAManifestFromWebConfig, getConfigForPWA } from './Manifest';
 import { HTMLOutput, IconOptions, Manifest, ProjectOptions, SplashIcon } from './Manifest.types';
 import { assembleOrientationMedia, getDevices } from './Splash';
+
+/**
+ * Joins a url protocol + host to path segments, falls back to path.join
+ * if result is not a valid url.
+ */
+export function joinUrlPath(publicPath: string, ...toJoin: string[]): string {
+  const segments = path.join(...toJoin);
+  try {
+    // Throws if publicPath is not a valid protocol+host
+    return new URL(segments, publicPath).href;
+  } catch {
+    return path.join(publicPath, segments);
+  }
+}
 
 export async function generateAsync(
   type: string,
@@ -84,7 +99,7 @@ export async function generateSplashAsync(
               media: icon.media,
               // TODO(Bacon): Use sizes to query splash screens better
               // sizes: `${icon.width}x${icon.height}`,
-              href: path.join(publicPath, href),
+              href: joinUrlPath(publicPath, href),
             },
           },
         };
@@ -125,7 +140,7 @@ export async function generateAppleIconAsync(
             attributes: {
               rel,
               sizes: `${size}x${size}`,
-              href: path.join(publicPath, href),
+              href: joinUrlPath(publicPath, href),
             },
           },
         };
@@ -165,7 +180,7 @@ export async function generateChromeIconAsync(
             path: href,
           },
           manifest: {
-            src: path.join(publicPath, href),
+            src: joinUrlPath(publicPath, href),
             sizes: `${size}x${size}`,
             type: 'image/png',
           },
@@ -195,8 +210,8 @@ export async function generateFaviconAsync(
         const { source, name } = await Image.generateImageAsync(
           { projectRoot, cacheType },
           {
-            backgroundColor: 'transparent',
             ...icon,
+            backgroundColor: icon.backgroundColor || 'transparent',
             width: size,
             height: size,
             name: `favicon-${size}.png`,
@@ -216,7 +231,7 @@ export async function generateFaviconAsync(
               rel,
               type: 'image/png',
               sizes: `${size}x${size}`,
-              href: path.join(publicPath, href),
+              href: joinUrlPath(publicPath, href),
             },
           },
         };
@@ -224,7 +239,7 @@ export async function generateFaviconAsync(
     )
   );
 
-  const faviconUrl = path.join(publicPath, 'favicon.ico');
+  const faviconUrl = joinUrlPath(publicPath, 'favicon.ico');
 
   const largestImageBuffer = data[data.length - 1].asset.source;
 
@@ -260,7 +275,7 @@ export async function generateManifestAsync(
       asset: { source: JSON.stringify(manifest, null, 2) as any, path: 'manifest.json' },
       tag: {
         tagName: 'link',
-        attributes: { rel: 'manifest', href: path.join(options.publicPath, 'manifest.json') },
+        attributes: { rel: 'manifest', href: joinUrlPath(options.publicPath, 'manifest.json') },
       },
     },
   ];

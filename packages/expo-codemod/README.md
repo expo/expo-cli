@@ -39,6 +39,7 @@ Options:
 Transforms available:
   sdk33-imports
   sdk37-imports
+  sdk41-async-storage
 ```
 
 For example, to apply the `sdk33-imports` transform to all source files in the `src` folder, run:
@@ -119,4 +120,24 @@ Output:
 ```js
 import * as AuthSession from 'expo-auth-session';
 import * as ScreenOrientation from 'expo-screen-orientation';
+```
+
+### `sdk41-async-storage`
+
+_Used to migrate a project from SDK 40 to SDK 41._
+
+Transforms imports of the renamed package `@react-native-community/async-storage` to `@react-native-async-storage/async-storage`.
+
+#### Example
+
+Input:
+
+```js
+import AsyncStorage from '@react-native-community/async-storage';
+```
+
+Output:
+
+```js
+import AsyncStorage from '@react-native-async-storage/async-storage';
 ```
