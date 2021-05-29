@@ -51,9 +51,7 @@ export interface IOSSplashConfig {
   darkBackgroundColor: string;
 }
 
-// export const withIosSplashScreen: ConfigPlugin = config => {
-
-export const withSplashScreen: ConfigPlugin<IOSSplashConfig | undefined | null | void> = (
+export const withIosSplashScreen: ConfigPlugin<IOSSplashConfig | undefined | null | void> = (
   config,
   splash
 ) => {
