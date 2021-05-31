@@ -3,6 +3,7 @@ import * as AllowBackup from './AllowBackup';
 import * as Branch from './Branch';
 import * as Colors from './Colors';
 import * as EasBuild from './EasBuild';
+import * as Engine from './Engine';
 import * as Facebook from './Facebook';
 import * as GoogleMapsApiKey from './GoogleMapsApiKey';
 import * as GoogleServices from './GoogleServices';
@@ -54,4 +55,5 @@ export {
   Updates,
   UserInterfaceStyle,
   Version,
+  Engine,
 };
