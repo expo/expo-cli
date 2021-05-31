@@ -19,10 +19,10 @@ export type EmbeddedAssetsConfiguration = {
   releaseChannel?: string;
   iosManifestUrl: string;
   iosManifest: any;
-  iosBundle: string;
+  iosBundle: string | Uint8Array;
   androidManifestUrl: string;
   androidManifest: any;
-  androidBundle: string;
+  androidBundle: string | Uint8Array;
   target: ProjectTarget;
 };
 

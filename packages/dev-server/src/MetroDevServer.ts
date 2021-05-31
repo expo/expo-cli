@@ -12,6 +12,7 @@ import type Metro from 'metro';
 import resolveFrom from 'resolve-from';
 import { parse as parseUrl } from 'url';
 
+import { buildHermesBundleAsync, shouldBuildHermesBundleAsync } from './HermesBundler';
 import LogReporter from './LogReporter';
 import clientLogsMiddleware from './middleware/clientLogsMiddleware';
 import createJsInspectorMiddleware from './middleware/createJsInspectorMiddleware';
@@ -33,6 +34,8 @@ export type BundleAssetWithFileHashes = Metro.AssetData & {
 export type BundleOutput = {
   code: string;
   map: string;
+  hermesBytecodeBundle?: Uint8Array;
+  hermesSourcemap?: string;
   assets: readonly BundleAssetWithFileHashes[];
 };
 export type MessageSocket = {
@@ -156,7 +159,32 @@ export async function bundleAsync(
   };
 
   try {
-    return await Promise.all(bundles.map((bundle: BundleOptions) => buildAsync(bundle)));
+    return await Promise.all(
+      bundles.map(async (bundle: BundleOptions) => {
+        const bundleOutput = await buildAsync(bundle);
+        const shouldBuildHermesBundle = await shouldBuildHermesBundleAsync(
+          projectRoot,
+          bundle.platform
+        );
+
+        if (shouldBuildHermesBundle) {
+          options.logger.info(
+            { tag: 'expo' },
+            `💿 Building Hermes bytecode for the bundle - platform[${bundle.platform}]`
+          );
+          const hermesBundleOutput = await buildHermesBundleAsync(
+            projectRoot,
+            bundleOutput.code,
+            bundleOutput.map,
+            bundle.minify
+          );
+          bundleOutput.hermesBytecodeBundle = hermesBundleOutput.hbc;
+          bundleOutput.hermesSourcemap = hermesBundleOutput.sourcemap;
+        }
+
+        return bundleOutput;
+      })
+    );
   } finally {
     metroServer.end();
   }

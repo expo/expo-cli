@@ -52,10 +52,8 @@ function executeDefaultAsync(cwd: string, args: string[]) {
 it(`can eject a minimal project`, async () => {
   const projectName = 'default-eject-minimal-world';
   const projectRoot = await createMinimalProjectAsync(tempDir, projectName, {
-    expo: {
-      name: 'h"&<world/>🚀',
-    },
-  } as any);
+    name: 'h"&<world/>🚀',
+  });
 
   // Run a standard eject command
   const res = executeDefaultAsync(projectRoot, ['eject']);
