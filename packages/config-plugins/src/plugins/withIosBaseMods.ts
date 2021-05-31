@@ -83,7 +83,7 @@ const defaultProviders = {
         ...config.ios.infoPlist,
       };
 
-      return modResults;
+      return config.ios.infoPlist!;
     },
     async write(filePath, config) {
       // Update the contents of the static infoPlist object
@@ -113,7 +113,7 @@ const defaultProviders = {
         ...config.ios.entitlements,
       };
 
-      return modResults;
+      return config.ios.entitlements!;
     },
     async write(filePath, config) {
       // Update the contents of the static entitlements object

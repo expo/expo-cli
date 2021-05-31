@@ -142,6 +142,7 @@ Object {
         "applinks:https://pillarvalley.netlify.app",
       ],
       "com.apple.developer.contacts.notes": true,
+      "foo": "bar",
     },
     "googleServicesFile": "./config/GoogleService-Info.plist",
     "infoPlist": Object {
@@ -210,6 +211,11 @@ Object {
       ],
       "UIUserInterfaceStyle": "Automatic",
       "UIViewControllerBasedStatusBarAppearance": false,
+      "bar": Object {
+        "val": Array [
+          "foo",
+        ],
+      },
       "branch_key": Object {
         "live": "MY_BRANCH_KEY",
       },
@@ -700,6 +706,7 @@ Object {
             "applinks:https://pillarvalley.netlify.app",
           ],
           "com.apple.developer.contacts.notes": true,
+          "foo": "bar",
         },
         "expoPlist": Object {
           "EXUpdatesCheckOnLaunch": "NEVER",
@@ -773,6 +780,11 @@ Object {
           ],
           "UIUserInterfaceStyle": "Automatic",
           "UIViewControllerBasedStatusBarAppearance": false,
+          "bar": Object {
+            "val": Array [
+              "foo",
+            ],
+          },
           "branch_key": Object {
             "live": "MY_BRANCH_KEY",
           },
@@ -918,6 +930,7 @@ Object {
         "applinks:https://pillarvalley.netlify.app",
       ],
       "com.apple.developer.contacts.notes": true,
+      "foo": "bar",
     },
     "googleServicesFile": "./config/GoogleService-Info.plist",
     "infoPlist": Object {
@@ -986,6 +999,11 @@ Object {
       ],
       "UIUserInterfaceStyle": "Automatic",
       "UIViewControllerBasedStatusBarAppearance": false,
+      "bar": Object {
+        "val": Array [
+          "foo",
+        ],
+      },
       "branch_key": Object {
         "live": "MY_BRANCH_KEY",
       },
