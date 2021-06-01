@@ -4,7 +4,7 @@ import type { ConfigPlugin } from '../Plugin.types';
 import { withGradleProperties } from '../plugins/android-plugins';
 import type { PropertiesItem } from './Properties';
 
-export const GRADLE_PROP_KEY = 'expo.jsEngine';
+export const ENGINE_PROP_KEY = 'expo.jsEngine';
 export const DEFAULT_ENGINE = 'jsc';
 
 export const withEngine: ConfigPlugin = config => {
@@ -23,11 +23,11 @@ export function setEngine(
   gradleProperties: PropertiesItem[]
 ): PropertiesItem[] {
   const oldPropIndex = gradleProperties.findIndex(
-    prop => prop.type === 'property' && prop.key === GRADLE_PROP_KEY
+    prop => prop.type === 'property' && prop.key === ENGINE_PROP_KEY
   );
   const newProp: PropertiesItem = {
     type: 'property',
-    key: GRADLE_PROP_KEY,
+    key: ENGINE_PROP_KEY,
     value: config.android?.engine ?? DEFAULT_ENGINE,
   };
 

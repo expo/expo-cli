@@ -1,6 +1,6 @@
 import type { ExpoConfig } from '@expo/config-types';
 
-import { DEFAULT_ENGINE, getEngine, GRADLE_PROP_KEY, setEngine } from '../Engine';
+import { DEFAULT_ENGINE, ENGINE_PROP_KEY, getEngine, setEngine } from '../Engine';
 import { parsePropertiesFile } from '../Properties';
 
 describe('engine', () => {
@@ -23,7 +23,7 @@ android.enableJetifier=true
 
     expect(setEngine(config, gradleProperties)).toContainEqual({
       type: 'property',
-      key: GRADLE_PROP_KEY,
+      key: ENGINE_PROP_KEY,
       value: 'hermes',
     });
   });
@@ -38,7 +38,7 @@ expo.jsEngine=javascriptcore
 
     expect(setEngine(config, gradleProperties)).toContainEqual({
       type: 'property',
-      key: GRADLE_PROP_KEY,
+      key: ENGINE_PROP_KEY,
       value: 'hermes',
     });
   });
