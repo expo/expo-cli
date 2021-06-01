@@ -690,9 +690,9 @@ export interface Android {
    */
   softwareKeyboardLayoutMode?: 'resize' | 'pan';
   /**
-   * Specifies the JavaScript engine. Defaults to `hermes`. Valid values: `hermes`, `javascriptcore`.
+   * Specifies the JavaScript engine. Defaults to `jsc`. Valid values: `hermes`, `jsc`.
    */
-  engine?: 'hermes' | 'javascriptcore';
+  engine?: 'hermes' | 'jsc';
 }
 export interface AndroidIntentFiltersData {
   /**
