@@ -10,6 +10,28 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🧹 Chores
 
+## [Tue, 1 Jun 2021 13:02:23 +0200](https://github.com/expo/expo-cli/commit/6cd679038b3474954c8018f539432ff62b2ff72f)
+
+### 🐛 Bug fixes
+
+- [config-plugins] fix finding first native target ([#3533](https://github.com/expo/expo-cli/issues/3533))
+
+### 📦 Packages updated
+
+- @expo/config-plugins@2.0.2
+- @expo/config@4.0.2
+- @expo/dev-server@0.1.72
+- @expo/dev-tools@0.13.102
+- expo-cli@4.5.2
+- expo-optimize@0.1.94
+- @expo/metro-config@0.1.72
+- @expo/next-adapter@2.1.77
+- @expo/prebuild-config@1.0.3
+- expo-pwa@0.0.82
+- uri-scheme@1.0.83
+- @expo/webpack-config@0.12.76
+- xdl@59.0.42
+
 ## [Mon, 31 May 2021 15:50:35 -0700](https://github.com/expo/expo-cli/commit/d5cc32c7d0c2ecc960c597ac6ce52de5da12dbee)
 
 ### 🛠 Breaking changes
