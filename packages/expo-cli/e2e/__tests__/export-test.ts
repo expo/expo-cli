@@ -55,7 +55,7 @@ it('exports the project for a self-hosted production deployment', async () => {
   expect(distFiles).toMatchSnapshot();
 });
 
-it('should export hbc bundle if running with hermes', async () => {
+it('should export hbc bundle if jsEngine is hermes', async () => {
   jest.setTimeout(5 * 60e3);
   const tempDir = temporary.directory();
   try {
@@ -65,15 +65,15 @@ it('should export hbc bundle if running with hermes', async () => {
       'export-test-app',
       {
         sdkVersion: '41.0.0',
+        android: {
+          jsEngine: 'hermes',
+        },
       },
       {
         expo: '41.0.1',
         'react-native': '0.63.2',
       }
     );
-    const androidRoot = path.join(projectRoot, 'android');
-    await fs.ensureDir(androidRoot);
-    await fs.writeFile(path.join(androidRoot, 'gradle.properties'), 'expo.jsEngine=hermes');
     await fs.writeFile(
       path.join(projectRoot, 'babel.config.js'),
       `

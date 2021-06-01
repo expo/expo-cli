@@ -1,4 +1,5 @@
-import type { Platform } from '@expo/config';
+import type { Platform, ProjectTarget } from '@expo/config';
+import { getConfig } from '@expo/config';
 import spawnAsync from '@expo/spawn-async';
 import fs from 'fs-extra';
 import type { composeSourceMaps } from 'metro-source-map';
@@ -9,17 +10,21 @@ import resolveFrom from 'resolve-from';
 
 export async function shouldBuildHermesBundleAsync(
   projectRoot: string,
+  target: ProjectTarget,
   platform: Platform
 ): Promise<boolean> {
+  if (target === 'managed') {
+    const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
+    return platform === 'android' && exp.android?.jsEngine === 'hermes';
+  }
+
   if (platform === 'android') {
     const gradlePropertiesPath = path.join(projectRoot, 'android', 'gradle.properties');
-    if (!fs.existsSync(gradlePropertiesPath)) {
-      // TODO(kudo): Clarify default behavior in managed workflow for gradle.properties not exist
-      return false;
-    }
-    const properties = parseGradleProperties(await fs.readFile(gradlePropertiesPath, 'utf8'));
-    if (properties['expo.jsEngine'] === 'hermes') {
-      return true;
+    if (fs.existsSync(gradlePropertiesPath)) {
+      const properties = parseGradleProperties(await fs.readFile(gradlePropertiesPath, 'utf8'));
+      if (properties['expo.jsEngine'] === 'hermes') {
+        return true;
+      }
     }
   }
   return false;

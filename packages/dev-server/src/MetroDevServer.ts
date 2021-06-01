@@ -1,4 +1,5 @@
 import Log from '@expo/bunyan';
+import type { ProjectTarget } from '@expo/config';
 import * as ExpoMetroConfig from '@expo/metro-config';
 import {
   createDevServerMiddleware,
@@ -100,6 +101,7 @@ let nextBuildID = 0;
 // TODO: deprecate options.target
 export async function bundleAsync(
   projectRoot: string,
+  target: ProjectTarget,
   options: MetroDevServerOptions,
   bundles: BundleOptions[]
 ): Promise<BundleOutput[]> {
@@ -164,6 +166,7 @@ export async function bundleAsync(
         const bundleOutput = await buildAsync(bundle);
         const shouldBuildHermesBundle = await shouldBuildHermesBundleAsync(
           projectRoot,
+          target,
           bundle.platform
         );
 
