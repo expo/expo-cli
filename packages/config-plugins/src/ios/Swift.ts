@@ -151,6 +151,7 @@ export function createBridgingHeaderFile({
       project,
       // Not sure why, but this is how Xcode generates it.
       isBuildFile: false,
+      verbose: false,
     });
   }
   return project;
