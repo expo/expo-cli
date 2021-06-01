@@ -10,8 +10,8 @@ describe('engine', () => {
   });
 
   it('return the engine if provided', () => {
-    const config: Partial<ExpoConfig> = { android: { engine: 'javascriptcore' } };
-    expect(getEngine(config)).toBe('javascriptcore');
+    const config: Partial<ExpoConfig> = { android: { engine: 'jsc' } };
+    expect(getEngine(config)).toBe('jsc');
   });
 
   it('set the property if no property is existed', () => {
@@ -33,7 +33,7 @@ android.enableJetifier=true
     const gradleProperties = parsePropertiesFile(`
 android.useAndroidX=true
 android.enableJetifier=true
-expo.jsEngine=javascriptcore
+expo.jsEngine=jsc
 `);
 
     expect(setEngine(config, gradleProperties)).toContainEqual({
