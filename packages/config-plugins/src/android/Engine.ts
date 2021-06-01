@@ -5,7 +5,7 @@ import { withGradleProperties } from '../plugins/android-plugins';
 import type { PropertiesItem } from './Properties';
 
 export const GRADLE_PROP_KEY = 'expo.jsEngine';
-export const DEFAULT_ENGINE = 'hermes';
+export const DEFAULT_ENGINE = 'jsc';
 
 export const withEngine: ConfigPlugin = config => {
   return withGradleProperties(config, config => {
