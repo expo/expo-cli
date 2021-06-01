@@ -33,7 +33,7 @@ android.enableJetifier=true
     const gradleProperties = parsePropertiesFile(`
 android.useAndroidX=true
 android.enableJetifier=true
-JS_RUNTIME=javascriptcore
+expo.jsEngine=javascriptcore
 `);
 
     expect(setEngine(config, gradleProperties)).toContainEqual({

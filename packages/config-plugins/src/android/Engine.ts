@@ -4,7 +4,7 @@ import type { ConfigPlugin } from '../Plugin.types';
 import { withGradleProperties } from '../plugins/android-plugins';
 import type { PropertiesItem } from './Properties';
 
-export const GRADLE_PROP_KEY = 'JS_RUNTIME';
+export const GRADLE_PROP_KEY = 'expo.jsEngine';
 export const DEFAULT_ENGINE = 'hermes';
 
 export const withEngine: ConfigPlugin = config => {

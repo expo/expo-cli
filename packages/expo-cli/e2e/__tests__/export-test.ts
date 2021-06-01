@@ -73,7 +73,7 @@ it('should export hbc bundle if running with hermes', async () => {
     );
     const androidRoot = path.join(projectRoot, 'android');
     await fs.ensureDir(androidRoot);
-    await fs.writeFile(path.join(androidRoot, 'gradle.properties'), 'JS_RUNTIME=hermes');
+    await fs.writeFile(path.join(androidRoot, 'gradle.properties'), 'expo.jsEngine=hermes');
     await fs.writeFile(
       path.join(projectRoot, 'babel.config.js'),
       `
