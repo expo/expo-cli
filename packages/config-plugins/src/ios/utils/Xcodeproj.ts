@@ -333,7 +333,6 @@ export function getBuildConfigurationsForListId(
   return Object.entries(project.pbxXCBuildConfigurationSection())
     .filter(isNotComment)
     .filter(isBuildConfig)
-    .filter(isNotTestHost)
     .filter(([key]: ConfigurationSectionEntry) => buildConfigurations.includes(key));
 }
 
@@ -350,7 +349,7 @@ export function getBuildConfigurationForListIdAndName(
   ).find(i => i[1].name === buildConfiguration);
   if (!xcBuildConfigurationEntry) {
     throw new Error(
-      `Build configuration '${buildConfiguration} does not exist in list with id '${configurationListId}'`
+      `Build configuration '${buildConfiguration}' does not exist in list with id '${configurationListId}'`
     );
   }
   return xcBuildConfigurationEntry;
