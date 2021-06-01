@@ -1,4 +1,4 @@
-import { PBXTargetDependency, XcodeProject } from 'xcode';
+import { PBXNativeTarget, PBXTargetDependency, XcodeProject } from 'xcode';
 
 import { getApplicationTargetNameForSchemeAsync } from './BuildScheme';
 import { getPbxproj, isNotComment, NativeTargetSectionEntry } from './utils/Xcodeproj';
@@ -31,11 +31,9 @@ export async function findApplicationTargetWithDependenciesAsync(
 
     const [, target] = findNativeTargetById(project, targetId);
 
-    const type =
-      target.productType === TargetType.EXTENSION ||
-      target.productType === `"${TargetType.EXTENSION}"`
-        ? TargetType.EXTENSION
-        : TargetType.OTHER;
+    const type = isTargetOfType(target, TargetType.EXTENSION)
+      ? TargetType.EXTENSION
+      : TargetType.OTHER;
     return {
       name: target.name,
       type,
@@ -49,6 +47,10 @@ export async function findApplicationTargetWithDependenciesAsync(
   };
 }
 
+function isTargetOfType(target: PBXNativeTarget, targetType: TargetType): boolean {
+  return target.productType === targetType || target.productType === `"${targetType}"`;
+}
+
 export function getNativeTargets(project: XcodeProject): NativeTargetSectionEntry[] {
   const section = project.pbxNativeTargetSection();
   return Object.entries(section).filter(isNotComment);
@@ -56,10 +58,13 @@ export function getNativeTargets(project: XcodeProject): NativeTargetSectionEntr
 
 export function findFirstNativeTarget(project: XcodeProject): NativeTargetSectionEntry {
   const targets = getNativeTargets(project);
-  if (targets.length === 0) {
-    throw new Error(`Could not find any target in project.pbxproj`);
+  const applicationTargets = targets.filter(([, target]) =>
+    isTargetOfType(target, TargetType.APPLICATION)
+  );
+  if (applicationTargets.length === 0) {
+    throw new Error(`Could not find any application target in project.pbxproj`);
   }
-  return targets[0];
+  return applicationTargets[0];
 }
 
 export function findNativeTargetByName(
