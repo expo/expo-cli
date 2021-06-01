@@ -97,13 +97,13 @@ export async function publishAsync(
 
   await ProjectAssets.publishAssetsAsync({ projectRoot, exp, bundles });
 
-  const androidBundle = bundles.android.code;
-  const iosBundle = bundles.ios.code;
+  const androidBundle = bundles.android.hermesBytecodeBundle || bundles.android.code;
+  const iosBundle = bundles.ios.hermesBytecodeBundle || bundles.ios.code;
 
   const hasHooks = validPostPublishHooks.length > 0;
 
-  const androidSourceMap = hasHooks ? bundles.android.map : null;
-  const iosSourceMap = hasHooks ? bundles.ios.map : null;
+  const androidSourceMap = hasHooks ? bundles.android.hermesSourcemap || bundles.android.map : null;
+  const iosSourceMap = hasHooks ? bundles.ios.hermesSourcemap || bundles.ios.map : null;
 
   let response;
   try {
@@ -227,8 +227,8 @@ async function _uploadArtifactsAsync({
   pkg,
 }: {
   exp: ExpoConfig;
-  iosBundle: string;
-  androidBundle: string;
+  iosBundle: string | Uint8Array;
+  androidBundle: string | Uint8Array;
   options: PublishOptions;
   pkg: PackageJSONConfig;
 }) {
