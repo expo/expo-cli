@@ -1,26 +1,32 @@
+import { v4 as uuidv4 } from 'uuid';
 import { Builder, Parser } from 'xml2js';
 
-type IBBoolean = 'YES' | 'NO' | boolean;
+export type IBBoolean = 'YES' | 'NO' | boolean;
 
-type IBItem<
+export type IBItem<
   H extends Record<string, any>,
   B extends Record<string, any[]> = { [key: string]: any }
 > = {
   $: H;
 } & B;
 
-type Rect = {
+export type Rect = {
   key: string;
-  x: string;
-  y: string;
+  x: number;
+  y: number;
+  // x: string;
+  // y: string;
   width: number;
   height: number;
 };
 
-export type ImageContentMode = 'scaleAspectFit' | 'scaleAspectFill';
-type ConstraintAttribute = 'top' | 'bottom' | 'trailing' | 'leading';
+export type IBRect = IBItem<Rect>;
 
-type IBImageView = IBItem<
+export type ImageContentMode = 'scaleAspectFit' | 'scaleAspectFill';
+
+export type ConstraintAttribute = 'top' | 'bottom' | 'trailing' | 'leading';
+
+export type IBImageView = IBItem<
   {
     id: string;
     userLabel: string;
@@ -34,16 +40,100 @@ type IBImageView = IBItem<
     translatesAutoresizingMaskIntoConstraints?: IBBoolean;
   },
   {
-    rect: IBItem<Rect>[];
+    rect: IBRect[];
   }
 >;
 
-type IBConstraint = IBItem<{
+export type IBConstraint = IBItem<{
   firstItem: string;
   firstAttribute: ConstraintAttribute;
   secondItem: string;
   secondAttribute: ConstraintAttribute;
   id: string;
+}>;
+
+export type IBViewController = IBItem<
+  {
+    id: string;
+    placeholderIdentifier?: string;
+    userLabel: string;
+    sceneMemberID: string;
+  },
+  {
+    view: IBItem<
+      {
+        id: string;
+        key: string;
+        userInteractionEnabled: IBBoolean;
+        contentMode: string | 'scaleToFill';
+        insetsLayoutMarginsFromSafeArea: IBBoolean;
+        userLabel: string;
+      },
+      {
+        rect: IBRect[];
+        autoresizingMask: IBItem<{
+          key: string;
+          flexibleMaxX: IBBoolean;
+          flexibleMaxY: IBBoolean;
+        }>[];
+
+        subviews: IBItem<
+          object,
+          {
+            imageView: IBImageView[];
+          }
+        >[];
+        color: IBItem<{
+          key: string | 'backgroundColor';
+          systemColor: string | 'systemBackgroundColor';
+        }>[];
+        constraints: IBItem<
+          object,
+          {
+            constraint: IBConstraint[];
+          }
+        >[];
+        viewLayoutGuide: IBItem<{
+          id: string;
+          key: string | 'safeArea';
+        }>[];
+      }
+    >[];
+  }
+>;
+
+export type IBPoint = IBItem<{
+  key: string | 'canvasLocation';
+  x: number;
+  y: number;
+}>;
+
+export type IBScene = IBItem<
+  { sceneID: string },
+  {
+    objects: {
+      viewController: IBViewController[];
+      placeholder: IBItem<{
+        id: string;
+        placeholderIdentifier?: string;
+        userLabel: string;
+        sceneMemberID: string;
+      }>[];
+    }[];
+    point: IBPoint[];
+  }
+>;
+
+type IBResourceImage = IBItem<{
+  name: string;
+  width: number;
+  height: number;
+}>;
+
+type IBDevice = IBItem<{
+  id: string;
+  orientation: string | 'portrait';
+  appearance: string | 'light';
 }>;
 
 export type IBSplashScreenDocument = {
@@ -62,91 +152,32 @@ export type IBSplashScreenDocument = {
       initialViewController: string;
     },
     {
-      device: IBItem<{
-        id: string;
-        orientation: string | 'portrait';
-        appearance: string | 'light';
-      }>[];
+      device: IBDevice[];
       dependencies: unknown[];
       scenes: {
-        scene: IBItem<
-          { sceneID: string },
-          {
-            objects: {
-              viewController: IBItem<
-                {
-                  id: string;
-                  placeholderIdentifier?: string;
-                  userLabel: string;
-                  sceneMemberID: string;
-                },
-                {
-                  view: IBItem<
-                    {
-                      key: string;
-                      userInteractionEnabled: IBBoolean;
-                      contentMode: string | 'scaleToFill';
-                      insetsLayoutMarginsFromSafeArea: IBBoolean;
-                      id: string;
-                      userLabel: string;
-                    },
-                    {
-                      rect: IBItem<Rect>[];
-                      autoresizingMask: IBItem<{
-                        key: string;
-                        flexibleMaxX: IBBoolean;
-                        flexibleMaxY: IBBoolean;
-                      }>[];
-
-                      subviews: IBItem<
-                        object,
-                        {
-                          imageView: IBImageView[];
-                        }
-                      >[];
-                      color: IBItem<{
-                        key: string | 'backgroundColor';
-                        systemColor: string | 'systemBackgroundColor';
-                      }>[];
-                      constraints: IBItem<
-                        object,
-                        {
-                          constraint: IBConstraint[];
-                        }
-                      >[];
-                      viewLayoutGuide: IBItem<{
-                        key: string | 'safeArea';
-                        id: string;
-                      }>[];
-                    }
-                  >[];
-                }
-              >[];
-              placeholder: IBItem<{
-                id: string;
-                placeholderIdentifier?: string;
-                userLabel: string;
-                sceneMemberID: string;
-              }>[];
-            }[];
-            point: IBItem<{
-              key: string | 'canvasLocation';
-              x: number;
-              y: number;
-            }>[];
-          }
-        >[];
+        scene: IBScene[];
       }[];
       resources: {
-        image: IBItem<{
-          name: string;
-          width: number;
-          height: number;
-        }>[];
+        image: IBResourceImage[];
       }[];
     }
   >;
 };
+
+function createConstraint(
+  [firstItem, firstAttribute]: [string, ConstraintAttribute],
+  [secondItem, secondAttribute]: [string, ConstraintAttribute]
+): IBConstraint {
+  return {
+    $: {
+      firstItem,
+      firstAttribute,
+      secondItem,
+      secondAttribute,
+      id: uuidv4(),
+    },
+  };
+}
 
 export function applyImageToSplashScreenXML(
   xml: IBSplashScreenDocument,
@@ -179,8 +210,8 @@ export function applyImageToSplashScreenXML(
       {
         $: {
           key: 'frame',
-          x: '0.0',
-          y: '0.0',
+          x: 0.0,
+          y: 0.0,
           width,
           height,
         },
@@ -196,42 +227,10 @@ export function applyImageToSplashScreenXML(
   // Add Constraints
   xml.document.scenes[0].scene[0].objects[0].viewController[0].view[0].constraints[0].constraint.push(
     // <constraint firstItem="EXPO-SplashScreen" firstAttribute="top" secondItem="EXPO-ContainerView" secondAttribute="top" id="2VS-Uz-0LU"/>
-    {
-      $: {
-        firstItem: imageId,
-        firstAttribute: 'top',
-        secondItem: containerId,
-        secondAttribute: 'top',
-        id: '2VS-Uz-0LU',
-      },
-    },
-    {
-      $: {
-        firstItem: imageId,
-        firstAttribute: 'leading',
-        secondItem: containerId,
-        secondAttribute: 'leading',
-        id: 'LhH-Ei-DKo',
-      },
-    },
-    {
-      $: {
-        firstItem: imageId,
-        firstAttribute: 'trailing',
-        secondItem: containerId,
-        secondAttribute: 'trailing',
-        id: 'I6l-TP-6fn',
-      },
-    },
-    {
-      $: {
-        firstItem: imageId,
-        firstAttribute: 'bottom',
-        secondItem: containerId,
-        secondAttribute: 'bottom',
-        id: 'nbp-HC-eaG',
-      },
-    }
+    createConstraint([imageId, 'top'], [containerId, 'top']),
+    createConstraint([imageId, 'leading'], [containerId, 'leading']),
+    createConstraint([imageId, 'trailing'], [containerId, 'trailing']),
+    createConstraint([imageId, 'bottom'], [containerId, 'bottom'])
   );
 
   // Add resource
