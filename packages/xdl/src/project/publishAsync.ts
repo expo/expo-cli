@@ -93,7 +93,7 @@ export async function publishAsync(
     useDevServer: Env.shouldUseDevServer(exp),
   });
 
-  printBundleSizes(bundles);
+  printBundleSizes(bundles, true);
 
   await ProjectAssets.publishAssetsAsync({ projectRoot, exp, bundles });
 
