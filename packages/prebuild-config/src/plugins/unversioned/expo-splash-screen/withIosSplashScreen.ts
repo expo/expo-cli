@@ -9,6 +9,7 @@ import {
   withXcodeProject,
 } from '@expo/config-plugins';
 import { ExpoConfig } from '@expo/config-types';
+import Debug from 'debug';
 import fs from 'fs-extra';
 import Jimp from 'jimp/es';
 import * as path from 'path';
@@ -17,8 +18,7 @@ import { XcodeProject } from 'xcode';
 import {
   ContentsJsonImage,
   ContentsJsonImageAppearance,
-  ContentsJsonImageIdiom,
-  ContentsJsonImageScale,
+  createContentsJsonItem,
   writeContentsJsonAsync,
 } from '../../icons/AssetContents';
 import {
@@ -28,11 +28,15 @@ import {
   toString,
 } from './InterfaceBuilder';
 
+const debug = Debug('@expo/prebuild-config:expo-splash-screen:ios');
+
 const STORYBOARD_FILE_PATH = './SplashScreen.storyboard';
 const IMAGESET_PATH = 'Images.xcassets/SplashScreen.imageset';
 const BACKGROUND_IMAGESET_PATH = 'Images.xcassets/SplashScreenBackground.imageset';
 const PNG_FILENAME = 'image.png';
 const DARK_PNG_FILENAME = 'dark_image.png';
+const TABLET_PNG_FILENAME = 'tablet_image.png';
+const DARK_TABLET_PNG_FILENAME = 'dark_tablet_image.png';
 
 type ExpoConfigIosSplash = NonNullable<NonNullable<ExpoConfig['ios']>['splash']>;
 
@@ -47,8 +51,14 @@ export interface IOSSplashConfig {
   resizeMode: NonNullable<ExpoConfigIosSplash['resizeMode']>;
   userInterfaceStyle: NonNullable<ExpoConfigIosSplash['userInterfaceStyle']>;
   // TODO: These are here just to test the functionality, the API should be more robust and account for tablet images.
-  darkImage: string;
-  darkBackgroundColor: string;
+  darkImage: string | null;
+  darkBackgroundColor: string | null;
+  // TODO: These are here just to test the functionality, the API should be more robust and account for tablet images.
+  tabletImage: string | null;
+  tabletBackgroundColor: string | null;
+  // TODO: These are here just to test the functionality, the API should be more robust and account for tablet images.
+  darkTabletImage: string | null;
+  darkTabletBackgroundColor: string | null;
 }
 
 export const withIosSplashScreen: ConfigPlugin<IOSSplashConfig | undefined | null | void> = (
@@ -61,7 +71,11 @@ export const withIosSplashScreen: ConfigPlugin<IOSSplashConfig | undefined | nul
   // If the user didn't specify a splash object, infer the splash object from the Expo config.
   if (!splash) {
     splash = getSplashConfig(config);
+  } else {
+    debug(`custom splash config provided`);
   }
+
+  debug(`config:`, splash);
 
   return withPlugins(config, [
     [withSplashScreenInfoPlist, splash],
@@ -95,6 +109,8 @@ const withSplashScreenAssets: ConfigPlugin<IOSSplashConfig> = (config, splash) =
         projectPath,
         image: splash.image,
         darkImage: splash.darkImage,
+        tabletImage: splash.tabletImage,
+        darkTabletImage: splash.darkTabletImage,
       });
 
       return config;
@@ -169,7 +185,13 @@ export function getSplashConfig(config: ExpoConfig): IOSSplashConfig | null {
       // tabletImage: splash.tabletImage ?? image,
 
       darkImage: splash.darkImage ?? null,
-      darkBackgroundColor: splash.darkBackgroundColor ?? '#000000',
+      darkBackgroundColor: splash.darkBackgroundColor,
+
+      tabletImage: splash.tabletImage ?? null,
+      tabletBackgroundColor: splash.tabletBackgroundColor,
+
+      darkTabletImage: splash.darkTabletImage ?? null,
+      darkTabletBackgroundColor: splash.darkTabletBackgroundColor,
     };
   }
 
@@ -191,7 +213,12 @@ export function getSplashConfig(config: ExpoConfig): IOSSplashConfig | null {
       userInterfaceStyle: defaultUserInterfaceStyle,
 
       darkImage: splash.darkImage ?? null,
-      darkBackgroundColor: splash.darkBackgroundColor ?? '#000000',
+      darkBackgroundColor: splash.darkBackgroundColor,
+
+      tabletImage: null,
+      tabletBackgroundColor: null,
+      darkTabletImage: null,
+      darkTabletBackgroundColor: null,
     };
   }
 
@@ -212,12 +239,6 @@ export function warnUnsupportedSplashProperties(config: ExpoConfig) {
       'ios.splash.xib is not supported in prebuild. Please use ios.splash.image instead.'
     );
   }
-  if (config.ios?.splash?.tabletImage) {
-    WarningAggregator.addWarningIOS(
-      'splash',
-      'ios.splash.tabletImage is not supported in prebuild. Please use ios.splash.image instead.'
-    );
-  }
   if (config.ios?.splash?.userInterfaceStyle) {
     WarningAggregator.addWarningIOS(
       'splash',
@@ -230,17 +251,24 @@ async function copyImageFiles({
   projectPath,
   image,
   darkImage,
+  tabletImage,
+  darkTabletImage,
 }: {
   projectPath: string;
   image: string;
   darkImage: string | null;
+  tabletImage: string | null;
+  darkTabletImage: string | null;
 }) {
-  if (image) {
-    await fs.copyFile(image, path.resolve(projectPath, IMAGESET_PATH, PNG_FILENAME));
-  }
-  if (darkImage) {
-    await fs.copyFile(darkImage, path.resolve(projectPath, IMAGESET_PATH, DARK_PNG_FILENAME));
-  }
+  await generateImagesAssetsAsync({
+    async generateImageAsset(item, fileName) {
+      await fs.copyFile(item, path.resolve(projectPath, IMAGESET_PATH, fileName));
+    },
+    anyItem: image,
+    darkItem: darkImage,
+    tabletItem: tabletImage,
+    darkTabletItem: darkTabletImage,
+  });
 }
 
 /**
@@ -250,10 +278,14 @@ async function configureImageAssets({
   projectPath,
   image,
   darkImage,
+  tabletImage,
+  darkTabletImage,
 }: {
   projectPath: string;
   image: string;
   darkImage: string | null;
+  tabletImage: string | null;
+  darkTabletImage: string | null;
 }) {
   const imageSetPath = path.resolve(projectPath, IMAGESET_PATH);
 
@@ -268,11 +300,13 @@ async function configureImageAssets({
     assetPath: imageSetPath,
     image: PNG_FILENAME,
     darkImage: darkImage ? DARK_PNG_FILENAME : null,
+    tabletImage: tabletImage ? TABLET_PNG_FILENAME : null,
+    darkTabletImage: darkTabletImage ? DARK_TABLET_PNG_FILENAME : null,
   });
-  await copyImageFiles({ projectPath, image, darkImage });
+  await copyImageFiles({ projectPath, image, darkImage, tabletImage, darkTabletImage });
 }
 
-async function createPngFileAsync(filePath: string, color: string) {
+async function createPngFileAsync(color: string, filePath: string) {
   const png = new Jimp(1, 1, color);
   return png.writeAsync(filePath);
 }
@@ -281,21 +315,47 @@ async function createBackgroundImagesAsync({
   projectPath,
   color,
   darkColor,
+  tabletColor,
+  darkTabletColor,
 }: {
   projectPath: string;
   color: string;
   darkColor: string | null;
+  tabletColor: string | null;
+  darkTabletColor: string | null;
 }) {
-  await createPngFileAsync(
-    path.resolve(projectPath, BACKGROUND_IMAGESET_PATH, PNG_FILENAME),
-    color
-  );
-  if (darkColor) {
-    await createPngFileAsync(
-      path.resolve(projectPath, BACKGROUND_IMAGESET_PATH, DARK_PNG_FILENAME),
-      darkColor
-    );
-  }
+  await generateImagesAssetsAsync({
+    async generateImageAsset(item, fileName) {
+      await createPngFileAsync(item, path.resolve(projectPath, BACKGROUND_IMAGESET_PATH, fileName));
+    },
+    anyItem: color,
+    darkItem: darkColor,
+    tabletItem: tabletColor,
+    darkTabletItem: darkTabletColor,
+  });
+}
+
+async function generateImagesAssetsAsync({
+  generateImageAsset,
+  anyItem,
+  darkItem,
+  tabletItem,
+  darkTabletItem,
+}: {
+  generateImageAsset: (item: string, fileName: string) => Promise<void>;
+  anyItem: string;
+  darkItem: string | null;
+  tabletItem: string | null;
+  darkTabletItem: string | null;
+}) {
+  const items = ([
+    [anyItem, PNG_FILENAME],
+    [darkItem, DARK_PNG_FILENAME],
+    [tabletItem, TABLET_PNG_FILENAME],
+    [darkTabletItem, DARK_TABLET_PNG_FILENAME],
+  ].filter(([item]) => !!item) as unknown) as [string, string];
+
+  await Promise.all(items.map(([item, fileName]) => generateImageAsset(item, fileName)));
 }
 
 async function createSplashScreenBackgroundImageAsync({
@@ -308,79 +368,111 @@ async function createSplashScreenBackgroundImageAsync({
 }) {
   const color = splash.backgroundColor;
   const darkColor = splash.darkBackgroundColor;
+  const tabletColor = splash.tabletBackgroundColor;
+  const darkTabletColor = splash.darkTabletBackgroundColor;
 
   const imagesetPath = path.join(iosNamedProjectRoot, BACKGROUND_IMAGESET_PATH);
   // Ensure the Images.xcassets/... path exists
   await fs.remove(imagesetPath);
   await fs.ensureDir(imagesetPath);
 
-  const darkModeEnabled = !!splash.darkImage;
   await createBackgroundImagesAsync({
     projectPath: iosNamedProjectRoot,
     color,
-    darkColor: darkModeEnabled ? darkColor : null,
+    darkColor: darkColor ? darkColor : null,
+    tabletColor: tabletColor ? tabletColor : null,
+    darkTabletColor: darkTabletColor ? darkTabletColor : null,
   });
+
   await writeContentsJsonFileAsync({
     assetPath: path.resolve(iosNamedProjectRoot, BACKGROUND_IMAGESET_PATH),
     image: PNG_FILENAME,
-    darkImage: darkModeEnabled ? DARK_PNG_FILENAME : null,
+    darkImage: darkColor ? DARK_PNG_FILENAME : null,
+    tabletImage: tabletColor ? TABLET_PNG_FILENAME : null,
+    darkTabletImage: darkTabletColor ? DARK_TABLET_PNG_FILENAME : null,
   });
 }
+
+const darkAppearances: ContentsJsonImageAppearance[] = [
+  {
+    appearance: 'luminosity',
+    value: 'dark',
+  } as ContentsJsonImageAppearance,
+];
 
 export function buildContentsJsonImages({
   image,
   darkImage,
+  tabletImage,
+  darkTabletImage,
 }: {
   image: string;
+  tabletImage: string | null;
   darkImage: string | null;
+  darkTabletImage: string | null;
 }): ContentsJsonImage[] {
-  const idiom: ContentsJsonImageIdiom = 'universal';
   const images: ContentsJsonImage[] = [
-    {
-      idiom,
+    // Phone light
+    createContentsJsonItem({
+      idiom: 'universal',
       filename: image,
-      scale: '1x' as ContentsJsonImageScale,
-    },
-    {
-      appearances: [
-        {
-          appearance: 'luminosity',
-          value: 'dark',
-        } as ContentsJsonImageAppearance,
-      ],
-      idiom,
-      filename: darkImage ?? undefined,
-      scale: '1x' as ContentsJsonImageScale,
-    },
-    {
-      idiom,
-      scale: '2x' as ContentsJsonImageScale,
-    },
-    {
-      appearances: [
-        {
-          appearance: 'luminosity',
-          value: 'dark',
-        } as ContentsJsonImageAppearance,
-      ],
-      idiom,
-      scale: '2x' as ContentsJsonImageScale,
-    },
-    {
-      idiom,
-      scale: '3x' as ContentsJsonImageScale,
-    },
-    {
-      appearances: [
-        {
-          appearance: 'luminosity',
-          value: 'dark',
-        } as ContentsJsonImageAppearance,
-      ],
-      idiom,
-      scale: '3x' as ContentsJsonImageScale,
-    },
-  ].filter(el => (el.appearances?.[0]?.value === 'dark' ? Boolean(darkImage) : true));
+      scale: '1x',
+    }),
+    createContentsJsonItem({
+      idiom: 'universal',
+      scale: '2x',
+    }),
+    createContentsJsonItem({
+      idiom: 'universal',
+      scale: '3x',
+    }),
+    // Phone dark
+    darkImage &&
+      createContentsJsonItem({
+        idiom: 'universal',
+        appearances: darkAppearances,
+        filename: darkImage,
+        scale: '1x',
+      }),
+    darkImage &&
+      createContentsJsonItem({
+        idiom: 'universal',
+        appearances: darkAppearances,
+        scale: '2x',
+      }),
+    darkImage &&
+      createContentsJsonItem({
+        idiom: 'universal',
+        appearances: darkAppearances,
+        scale: '3x',
+      }),
+    // Tablet light
+    tabletImage &&
+      createContentsJsonItem({
+        idiom: 'ipad',
+        filename: tabletImage,
+        scale: '1x',
+      }),
+    tabletImage &&
+      createContentsJsonItem({
+        idiom: 'ipad',
+        scale: '2x',
+      }),
+    // Phone dark
+    darkTabletImage &&
+      createContentsJsonItem({
+        idiom: 'ipad',
+        appearances: darkAppearances,
+        filename: darkTabletImage ?? undefined,
+        scale: '1x',
+      }),
+    darkTabletImage &&
+      createContentsJsonItem({
+        idiom: 'ipad',
+        appearances: darkAppearances,
+        scale: '2x',
+      }),
+  ].filter(Boolean) as ContentsJsonImage[];
 
   return images;
 }
@@ -389,13 +481,19 @@ async function writeContentsJsonFileAsync({
   assetPath,
   image,
   darkImage,
+  tabletImage,
+  darkTabletImage,
 }: {
   assetPath: string;
   image: string;
   darkImage: string | null;
+  tabletImage: string | null;
+  darkTabletImage: string | null;
 }) {
-  const images = buildContentsJsonImages({ image, darkImage });
+  const images = buildContentsJsonImages({ image, darkImage, tabletImage, darkTabletImage });
 
+  debug(`create contents.json:`, assetPath);
+  debug(`use images:`, images);
   await writeContentsJsonAsync(assetPath, { images });
 }
 
