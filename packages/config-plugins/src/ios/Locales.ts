@@ -68,6 +68,7 @@ export async function setLocalesAsync(
         groupName: `${projectName}/Supporting/${lang}.lproj`,
         project,
         isBuildFile: true,
+        verbose: true,
       });
     }
   }
