@@ -1,4 +1,5 @@
 import spawnAsync from '@expo/spawn-async';
+import { ExpoRunFormatter } from '@expo/xcpretty';
 import chalk from 'chalk';
 import { spawn, SpawnOptionsWithoutStdio } from 'child_process';
 import * as fs from 'fs-extra';
@@ -7,8 +8,6 @@ import { SimControl } from 'xdl';
 
 import CommandError from '../../../CommandError';
 import Log from '../../../log';
-import { ExpoLogFormatter } from './ExpoLogFormatter';
-import { getDependenciesFromPodfileLock } from './Podfile';
 import { ensureDeviceIsCodeSignedForDeploymentAsync } from './developmentCodeSigning';
 import { ProjectInfo, XcodeConfiguration } from './resolveOptionsAsync';
 
@@ -26,6 +25,10 @@ export type BuildProps = {
 };
 
 type XcodeSDKName = 'iphoneos' | 'iphonesimulator';
+
+export function logPrettyItem(message: string) {
+  Log.log(`${chalk.whiteBright`\u203A`} ${message}`);
+}
 
 export async function getProjectBuildSettings(
   xcodeProject: ProjectInfo,
@@ -192,14 +195,11 @@ export async function buildAsync({
     }
   }
 
-  ExpoLogFormatter.logPrettyItem(chalk.bold`Planning build`);
+  logPrettyItem(chalk.bold`Planning build`);
   Log.debug(`  xcodebuild ${args.join(' ')}`);
-  const podfileLock = path.join(projectRoot, 'ios', 'Podfile.lock');
-  const appName = xcodeProject.name.match(/.*\/(.*)\.\w+/)?.[1] || '';
-  const formatter = new ExpoLogFormatter({
-    projectRoot,
-    appName,
-    podfile: getDependenciesFromPodfileLock(podfileLock),
+  const formatter = ExpoRunFormatter.create(projectRoot, {
+    xcodeProject,
+    isDebug: Log.isDebug,
   });
 
   return new Promise(async (resolve, reject) => {
@@ -227,7 +227,7 @@ export async function buildAsync({
     });
 
     buildProcess.on('close', (code: number) => {
-      formatter.finish();
+      Log.log(formatter.getBuildSummary());
       const logFilePath = writeBuildLogs(projectRoot, buildOutput, errorOutput);
       if (code !== 0) {
         // Determine if the logger found any errors;
