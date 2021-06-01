@@ -209,19 +209,19 @@ export function warnUnsupportedSplashProperties(config: ExpoConfig) {
   if (config.ios?.splash?.xib) {
     WarningAggregator.addWarningIOS(
       'splash',
-      'ios.splash.xib is not supported in bare workflow. Please use ios.splash.image instead.'
+      'ios.splash.xib is not supported in prebuild. Please use ios.splash.image instead.'
     );
   }
   if (config.ios?.splash?.tabletImage) {
     WarningAggregator.addWarningIOS(
       'splash',
-      'ios.splash.tabletImage is not supported in bare workflow. Please use ios.splash.image instead.'
+      'ios.splash.tabletImage is not supported in prebuild. Please use ios.splash.image instead.'
     );
   }
   if (config.ios?.splash?.userInterfaceStyle) {
     WarningAggregator.addWarningIOS(
       'splash',
-      'ios.splash.userInterfaceStyle is not supported in bare workflow. Please use ios.splash.darkImage (TODO) instead.'
+      'ios.splash.userInterfaceStyle is not supported in prebuild. Please use ios.splash.darkImage (TODO) instead.'
     );
   }
 }
