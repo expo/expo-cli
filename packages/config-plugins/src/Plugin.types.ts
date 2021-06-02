@@ -102,6 +102,14 @@ export interface ModConfig {
      */
     strings?: Mod<ResourceXML>;
     /**
+     * Modify the `android/app/src/main/res/values/colors.xml` as JSON (parsed with [`xml2js`](https://www.npmjs.com/package/xml2js)).
+     */
+    colors?: Mod<ResourceXML>;
+    /**
+     * Modify the `android/app/src/main/res/values/styles.xml` as JSON (parsed with [`xml2js`](https://www.npmjs.com/package/xml2js)).
+     */
+    styles?: Mod<ResourceXML>;
+    /**
      * Modify the `android/app/src/main/<package>/MainActivity.java` as a string.
      */
     mainActivity?: Mod<AndroidPaths.ApplicationProjectFile>;
