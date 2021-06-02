@@ -1,6 +1,6 @@
 {
   "name": "uri-scheme",
-  "version": "1.0.62",
+  "version": "1.0.83",
   "main": "build",
   "preferGlobal": true,
   "keywords": [
@@ -34,13 +34,11 @@
     "clean": "rimraf ./build/"
   },
   "devDependencies": {
-    "@expo/babel-preset-cli": "0.2.18",
-    "@expo/config-plugins": "1.0.16",
-    "@expo/plist": "0.0.11",
+    "@expo/babel-preset-cli": "0.2.20",
+    "@expo/config-plugins": "2.0.2",
+    "@expo/plist": "0.0.13",
     "@expo/spawn-async": "1.5.0",
-    "@types/node": "^12",
     "@types/prompts": "^2.0.6",
-    "@zeit/ncc": "^0.20.5",
     "chalk": "^4.0.0",
     "commander": "2.20.0",
     "glob": "7.1.6",

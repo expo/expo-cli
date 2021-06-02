@@ -1,6 +1,5 @@
 /** @internal */ /** */
-
-import { projectHasModule } from '@expo/config';
+import resolveFrom from 'resolve-from';
 
 export function getAliases(projectRoot: string): Record<string, string> {
   // Even if the module isn't installed, react-native should be aliased to react-native-web for better errors.
@@ -20,13 +19,13 @@ export function getAliases(projectRoot: string): Record<string, string> {
       'react-native-web/dist/vendor/react-native/NativeEventEmitter',
   };
   // Check if the installed version of react-native-web still supports NetInfo.
-  if (projectHasModule('react-native-web/dist/exports/NetInfo', projectRoot, {})) {
+  if (resolveFrom.silent(projectRoot, 'react-native-web/dist/exports/NetInfo')) {
     aliases['@react-native-community/netinfo'] = 'react-native-web/dist/exports/NetInfo';
   }
 
   // Add polyfills for modules that react-native-web doesn't support
   // Depends on expo-asset
-  if (projectHasModule('expo-asset', projectRoot, {})) {
+  if (resolveFrom.silent(projectRoot, 'expo-asset')) {
     aliases['react-native/Libraries/Image/AssetSourceResolver$'] =
       'expo-asset/build/AssetSourceResolver';
     aliases['react-native/Libraries/Image/assetPathUtils$'] =

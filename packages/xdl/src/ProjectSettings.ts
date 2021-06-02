@@ -3,6 +3,8 @@ import JsonFile from '@expo/json-file';
 import fs from 'fs-extra';
 import path from 'path';
 
+type ProjectStatus = 'running' | 'ill' | 'exited';
+
 export type ProjectSettings = {
   scheme: string | null;
   hostType: 'localhost' | 'lan' | 'tunnel';
@@ -106,6 +108,17 @@ export async function readPackagerInfoAsync(projectRoot: string): Promise<Packag
     });
   } catch (e) {
     return await packagerInfoJsonFile(projectRoot).writeAsync({});
+  }
+}
+
+export async function getCurrentStatusAsync(projectRoot: string): Promise<ProjectStatus> {
+  const { packagerPort, expoServerPort } = await readPackagerInfoAsync(projectRoot);
+  if (packagerPort && expoServerPort) {
+    return 'running';
+  } else if (packagerPort || expoServerPort) {
+    return 'ill';
+  } else {
+    return 'exited';
   }
 }
 

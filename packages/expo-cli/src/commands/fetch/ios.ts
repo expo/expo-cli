@@ -4,8 +4,8 @@ import * as path from 'path';
 
 import CommandError from '../../CommandError';
 import { Context } from '../../credentials/context';
-import log from '../../log';
-import { getOrPromptForBundleIdentifier } from '../eject/ConfigValidation';
+import Log from '../../log';
+import { getOrPromptForBundleIdentifier } from '../utils/getOrPromptApplicationId';
 
 async function fetchIosCertsAsync(projectRoot: string): Promise<void> {
   const inProjectDir = (filename: string): string => path.resolve(projectRoot, filename);
@@ -21,7 +21,7 @@ async function fetchIosCertsAsync(projectRoot: string): Promise<void> {
       projectName: ctx.manifest.slug,
       bundleIdentifier,
     };
-    log(
+    Log.log(
       `Retrieving iOS credentials for @${app.accountName}/${app.projectName} (${bundleIdentifier})`
     );
     const appCredentials = await ctx.ios.getAppCredentials(app);
@@ -34,7 +34,7 @@ async function fetchIosCertsAsync(projectRoot: string): Promise<void> {
       appCredentials?.credentials ?? {};
 
     if (teamId !== undefined) {
-      log(`These credentials are associated with Apple Team ID: ${teamId}`);
+      Log.log(`These credentials are associated with Apple Team ID: ${teamId}`);
     }
     if (certP12) {
       const distPath = inProjectDir(`${app.projectName}_dist.p12`);
@@ -45,19 +45,19 @@ async function fetchIosCertsAsync(projectRoot: string): Promise<void> {
       await fs.writeFile(distPrivateKeyPath, certPrivateSigningKey);
     }
     if (certP12 || certPrivateSigningKey) {
-      log('Wrote distribution cert credentials to disk.');
+      Log.log('Wrote distribution cert credentials to disk.');
     }
     if (apnsKeyP8) {
       const apnsKeyP8Path = inProjectDir(`${app.projectName}_apns_key.p8`);
       await fs.writeFile(apnsKeyP8Path, apnsKeyP8);
-      log('Wrote push key credentials to disk.');
+      Log.log('Wrote push key credentials to disk.');
     }
     if (pushP12) {
       const pushPath = inProjectDir(`${app.projectName}_push.p12`);
       await fs.writeFile(pushPath, Buffer.from(pushP12, 'base64'));
     }
     if (pushP12) {
-      log('Wrote push cert credentials to disk.');
+      Log.log('Wrote push cert credentials to disk.');
     }
     if (provisioningProfile) {
       const provisioningProfilePath = path.resolve(
@@ -65,9 +65,9 @@ async function fetchIosCertsAsync(projectRoot: string): Promise<void> {
         `${app.projectName}.mobileprovision`
       );
       await fs.writeFile(provisioningProfilePath, Buffer.from(provisioningProfile, 'base64'));
-      log('Wrote provisioning profile to disk');
+      Log.log('Wrote provisioning profile to disk');
     }
-    log(`Save these important values as well:
+    Log.log(`Save these important values as well:
 
 Distribution P12 password: ${
       certPassword ? chalk.bold(certPassword) : chalk.yellow('(not available)')
@@ -83,7 +83,7 @@ Push P12 password:         ${
     );
   }
 
-  log('All done!');
+  Log.log('All done!');
 }
 
 export default fetchIosCertsAsync;

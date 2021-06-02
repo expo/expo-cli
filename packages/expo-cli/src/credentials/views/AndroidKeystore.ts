@@ -1,4 +1,3 @@
-import { AndroidCredentials } from '@expo/xdl';
 import chalk from 'chalk';
 import commandExists from 'command-exists';
 import fs from 'fs-extra';
@@ -6,9 +5,10 @@ import omit from 'lodash/omit';
 import os from 'os';
 import path from 'path';
 import { v4 as uuid } from 'uuid';
+import { AndroidCredentials } from 'xdl';
 
 import CommandError from '../../CommandError';
-import log from '../../log';
+import Log from '../../log';
 import { confirmAsync } from '../../prompts';
 import { askForUserProvided } from '../actions/promptForCredentials';
 import { Context, IView } from '../context';
@@ -44,7 +44,7 @@ class UpdateKeystore implements IView {
       await validateKeystoreAsync(keystore);
     }
     await ctx.android.updateKeystore(this.experienceName, keystore);
-    log(chalk.green('Keystore updated successfully'));
+    Log.log(chalk.green('Keystore updated successfully'));
     return null;
   }
 
@@ -53,7 +53,7 @@ class UpdateKeystore implements IView {
     if (providedKeystore) {
       return providedKeystore;
     } else if (this.options.bestEffortKeystoreGeneration && !(await keytoolCommandExists())) {
-      log.warn(
+      Log.warn(
         'The `keytool` utility was not found in your PATH. A new Keystore will be generated on Expo servers.'
       );
       return null;
@@ -76,7 +76,7 @@ class UpdateKeystore implements IView {
         keystore: await fs.readFile(tmpKeystoreName, 'base64'),
       };
     } catch (error) {
-      log.warn(
+      Log.warn(
         'Failed to generate Android Keystore, it will be generated on Expo servers during the build'
       );
       throw error;
@@ -86,13 +86,13 @@ class UpdateKeystore implements IView {
   }
 
   async displayWarning() {
-    log.newLine();
-    log.warn(
+    Log.newLine();
+    Log.warn(
       `⚠️  Updating your Android build credentials will remove previous version from our servers, this is a ${chalk.red(
         'PERMANENT and IRREVERSIBLE action.'
       )}`
     );
-    log.warn(
+    Log.warn(
       chalk.bold(
         'Android Keystore must be identical to the one previously used to submit your app to the Google Play Store.'
       )
@@ -105,7 +105,7 @@ class RemoveKeystore implements IView {
 
   async open(ctx: Context): Promise<IView | null> {
     if (!(await ctx.android.fetchKeystore(this.experienceName))) {
-      log.warn('There is no valid Keystore defined for this app');
+      Log.warn('There is no valid Keystore defined for this app');
       return null;
     }
 
@@ -123,38 +123,38 @@ class RemoveKeystore implements IView {
       initial: false,
     });
     if (answers) {
-      log('Backing up your Android Keystore now...');
+      Log.log('Backing up your Android Keystore now...');
       await new DownloadKeystore(this.experienceName, {
         displayCredentials: true,
         outputPath: `${this.experienceName}.bak.jks`.replace('/', '__'),
       }).open(ctx);
 
       await ctx.android.removeKeystore(this.experienceName);
-      log(chalk.green('Keystore removed successfully'));
+      Log.log(chalk.green('Keystore removed successfully'));
     }
     return null;
   }
 
   async displayWarning() {
-    log.newLine();
-    log.warn(
+    Log.newLine();
+    Log.warn(
       `⚠️  Clearing your Android build credentials from our build servers is a ${chalk.red(
         'PERMANENT and IRREVERSIBLE action.'
       )}`
     );
-    log.warn(
+    Log.warn(
       chalk.bold(
         'Android Keystore must be identical to the one previously used to submit your app to the Google Play Store.'
       )
     );
-    log.warn(
+    Log.warn(
       'Please read https://docs.expo.io/distribution/building-standalone-apps/#if-you-choose-to-build-for-android for more info before proceeding.'
     );
-    log.newLine();
-    log.warn(
+    Log.newLine();
+    Log.warn(
       chalk.bold('Your Keystore will be backed up to your current directory if you continue.')
     );
-    log.newLine();
+    Log.newLine();
   }
 }
 
@@ -189,7 +189,7 @@ class DownloadKeystore implements IView {
     const { keystore, keystorePassword, keyAlias, keyPassword }: any = keystoreObj || {};
     if (!keystore || !keystorePassword || !keyAlias || !keyPassword) {
       if (!this.options?.quiet) {
-        log.warn('There is no valid Keystore defined for this app');
+        Log.warn('There is no valid Keystore defined for this app');
       }
       return null;
     }
@@ -199,13 +199,13 @@ class DownloadKeystore implements IView {
 
     await maybeRenameExistingFile(ctx.projectDir, keystorePath);
     if (!this.options?.quiet) {
-      log(chalk.green(`Saving Keystore to ${keystorePath}`));
+      Log.log(chalk.green(`Saving Keystore to ${keystorePath}`));
     }
     const storeBuf = Buffer.from(keystore, 'base64');
     await fs.writeFile(keystorePath, storeBuf);
 
     if (this.options?.displayCredentials ?? displayCredentials) {
-      log(`Keystore credentials
+      Log.log(`Keystore credentials
   Keystore password: ${chalk.bold(keystorePassword)}
   Key alias:         ${chalk.bold(keyAlias)}
   Key password:      ${chalk.bold(keyPassword)}
@@ -230,7 +230,7 @@ async function getKeystoreFromParams(options: {
   }
 
   if (!keystorePath || !keyAlias || !keystorePassword || !keyPassword) {
-    log(keystorePath, keyAlias, keystorePassword, keyPassword);
+    Log.log(keystorePath, keyAlias, keystorePassword, keyPassword);
     throw new Error(
       'In order to provide a Keystore through the CLI parameters, you have to pass --keystore-alias, --keystore-path parameters and set EXPO_ANDROID_KEY_PASSWORD and EXPO_ANDROID_KEYSTORE_PASSWORD environment variables.'
     );
@@ -244,7 +244,7 @@ async function getKeystoreFromParams(options: {
       keyPassword,
     };
   } catch (err) {
-    log.error(`Error while reading file ${keystorePath}`);
+    Log.error(`Error while reading file ${keystorePath}`);
     throw err;
   }
 }
@@ -271,7 +271,7 @@ async function maybeRenameExistingFile(projectDir: string, filename: string) {
     while (await fs.pathExists(path.resolve(projectDir, `OLD_${num}_${filename}`))) {
       num++;
     }
-    log(
+    Log.log(
       `\nA file already exists at "${desiredFilePath}"\n  Renaming the existing file to OLD_${num}_${filename}\n`
     );
     await fs.rename(desiredFilePath, path.resolve(projectDir, `OLD_${num}_${filename}`));

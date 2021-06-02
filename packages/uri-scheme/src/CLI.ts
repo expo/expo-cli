@@ -113,7 +113,12 @@ async function parseArgsAsync(uri: string, options: Options): Promise<Options> {
 
   const platforms = URIScheme.getAvailablePlatforms(options);
 
+  // This functionality allows users to run `npx uri-scheme add ...`
+  // in a project with only ios or android without throwing an error.
+  let canSkipMissingPlatforms = false;
+
   if (!options.android && !options.ios) {
+    canSkipMissingPlatforms = true;
     for (const key of platforms) {
       // @ts-ignore: Set iOS and Android props.
       options[key] = true;
@@ -136,10 +141,26 @@ async function parseArgsAsync(uri: string, options: Options): Promise<Options> {
   }
 
   if (options.android && !options.manifestPath) {
-    options.manifestPath = Android.getConfigPath(projectRoot);
+    try {
+      options.manifestPath = Android.getConfigPath(projectRoot);
+    } catch (error) {
+      if (canSkipMissingPlatforms) {
+        delete options.android;
+      } else {
+        throw error;
+      }
+    }
   }
   if (options.ios && !options.infoPath) {
-    options.infoPath = Ios.getConfigPath(projectRoot);
+    try {
+      options.infoPath = Ios.getConfigPath(projectRoot);
+    } catch (error) {
+      if (canSkipMissingPlatforms) {
+        delete options.ios;
+      } else {
+        throw error;
+      }
+    }
   }
 
   options.uri = uri;

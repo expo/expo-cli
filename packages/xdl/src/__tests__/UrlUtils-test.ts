@@ -1,6 +1,6 @@
 import { vol } from 'memfs';
 
-import * as UrlUtils from '../UrlUtils';
+import { UrlUtils } from '../internal';
 
 jest.mock('fs');
 jest.mock('resolve-from');
@@ -82,11 +82,7 @@ describe(UrlUtils.constructBundleQueryParamsWithConfig, () => {
   describe('SDK +33', () => {
     it(`creates a basic query string`, async () => {
       expect(
-        UrlUtils.constructBundleQueryParamsWithConfig(
-          projectRoot,
-          {},
-          { sdkVersion: '33.0.0', nodeModulesPath: './' }
-        )
+        UrlUtils.constructBundleQueryParamsWithConfig(projectRoot, {}, { sdkVersion: '33.0.0' })
       ).toBe('dev=false&hot=false');
     });
     it(`creates a full query string`, async () => {
@@ -94,7 +90,7 @@ describe(UrlUtils.constructBundleQueryParamsWithConfig, () => {
         UrlUtils.constructBundleQueryParamsWithConfig(
           projectRoot,
           { dev: true, strict: true, minify: true },
-          { sdkVersion: '33.0.0', nodeModulesPath: './' }
+          { sdkVersion: '33.0.0' }
         )
       ).toBe('dev=true&hot=false&strict=true&minify=true');
     });
@@ -235,5 +231,20 @@ describe(UrlUtils.constructSourceMapUrlAsync, () => {
     await expect(
       UrlUtils.constructSourceMapUrlAsync(projectRoot, './App.tsx', 'localhost')
     ).resolves.toBe('http://127.0.0.1:80/./App.tsx.map?dev=false&hot=false&minify=true');
+  });
+});
+
+describe(UrlUtils.isURL, () => {
+  it(`guards against protocols`, () => {
+    expect(UrlUtils.isURL('http://127.0.0.1:80', { protocols: ['http'] })).toBe(true);
+    expect(UrlUtils.isURL('127.0.0.1:80', { requireProtocol: true })).toBe(false);
+    expect(UrlUtils.isURL('http://127.0.0.1:80', { protocols: ['https'] })).toBe(false);
+    expect(UrlUtils.isURL('http://127.0.0.1:80', {})).toBe(true);
+    expect(
+      UrlUtils.isURL('127.0.0.1:80', { protocols: ['https', 'http'], requireProtocol: true })
+    ).toBe(false);
+    expect(UrlUtils.isURL('https://expo.io/', { protocols: ['https'] })).toBe(true);
+    expect(UrlUtils.isURL('', { protocols: ['https'] })).toBe(false);
+    expect(UrlUtils.isURL('hello', { protocols: ['https'] })).toBe(false);
   });
 });

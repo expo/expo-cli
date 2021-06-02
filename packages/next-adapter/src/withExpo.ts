@@ -1,9 +1,8 @@
 import { getBareExtensions } from '@expo/config/paths';
 import { withUnimodules } from '@expo/webpack-config/addons';
 import { AnyConfiguration } from '@expo/webpack-config/webpack/types';
-import { NextConfig } from 'next';
 
-export default function withExpo(nextConfig: NextConfig = {}): NextConfig {
+export default function withExpo(nextConfig: any = {}): any {
   return {
     ...nextConfig,
     pageExtensions: getBareExtensions(['web']),

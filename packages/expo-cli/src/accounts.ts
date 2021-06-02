@@ -1,14 +1,14 @@
-import { ApiV2, User, UserManager } from '@expo/xdl';
-import { ApiV2Error } from '@expo/xdl/build/ApiV2';
+import assert from 'assert';
 import chalk from 'chalk';
 import program from 'commander';
-import ora from 'ora';
 import openBrowser from 'react-dev-utils/openBrowser';
+import { ApiV2, User, UserManager } from 'xdl';
+import { ApiV2Error } from 'xdl/build/ApiV2';
 
 import CommandError, { SilentError } from './CommandError';
-import { assert } from './assert';
-import log from './log';
+import Log from './log';
 import promptNew, { confirmAsync, Question as NewQuestion, selectAsync } from './prompts';
+import { ora } from './utils/ora';
 import { nonEmptyInput } from './validators';
 
 UserManager.initialize();
@@ -35,7 +35,7 @@ export type SecondFactorDevice = {
 };
 
 export async function loginOrRegisterAsync(): Promise<User> {
-  log.warn('An Expo user account is required to proceed.');
+  Log.warn('An Expo user account is required to proceed.');
 
   // Always try to auto-login when these variables are set, even in non-interactive mode
   if (process.env.EXPO_CLI_USERNAME && process.env.EXPO_CLI_PASSWORD) {
@@ -76,8 +76,8 @@ export async function loginOrRegisterAsync(): Promise<User> {
 
   if (action === 'register') {
     openRegistrationInBrowser();
-    log.newLine();
-    log(
+    Log.newLine();
+    Log.log(
       `Log in with ${chalk.bold(
         'expo login'
       )} after you have created your account through the website.`
@@ -137,8 +137,8 @@ export async function login(options: CommandOptions): Promise<User> {
 async function _promptForOTPAsync(cancelBehavior: 'cancel' | 'menu'): Promise<string | null> {
   const enterMessage =
     cancelBehavior === 'cancel'
-      ? `press ${log.chalk.bold('Enter')} to cancel`
-      : `press ${log.chalk.bold('Enter')} for more options`;
+      ? `press ${Log.chalk.bold('Enter')} to cancel`
+      : `press ${Log.chalk.bold('Enter')} for more options`;
   const otpQuestion: NewQuestion = {
     type: 'text',
     name: 'otp',
@@ -257,14 +257,14 @@ export async function _retryUsernamePasswordAuthWithOTPAsync(
 
   if (smsAutomaticallySent) {
     assert(primaryDevice, 'OTP should only automatically be sent when there is a primary device');
-    log.nested(
+    Log.nested(
       `One-time password was sent to the phone number ending in ${primaryDevice.sms_phone_number}.`
     );
     otp = await _promptForOTPAsync('menu');
   }
 
   if (primaryDevice?.method === UserSecondFactorDeviceMethod.AUTHENTICATOR) {
-    log.nested('One-time password from authenticator required.');
+    Log.nested('One-time password from authenticator required.');
     otp = await _promptForOTPAsync('menu');
   }
 
@@ -334,7 +334,7 @@ async function _usernamePasswordAuth(
   }
 
   if (user) {
-    log(`\nSuccess. You are now logged in as ${chalk.green(user.username)}.`);
+    Log.log(`\nSuccess. You are now logged in as ${chalk.green(user.username)}.`);
     return user;
   } else {
     throw new Error('Unexpected Error: No user returned from the API');

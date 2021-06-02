@@ -2,9 +2,9 @@ import commandExists from 'command-exists';
 import fs from 'fs-extra';
 import { vol } from 'memfs';
 
-import { testKeystore } from '../../test-fixtures/mocks-android';
-import { testExperienceName } from '../../test-fixtures/mocks-constants';
-import { getCtxMock } from '../../test-fixtures/mocks-context';
+import { testKeystore } from '../../__tests__/fixtures/mocks-android';
+import { testExperienceName } from '../../__tests__/fixtures/mocks-constants';
+import { getCtxMock } from '../../__tests__/fixtures/mocks-context';
 import { SetupAndroidBuildCredentialsFromLocal } from '../SetupAndroidKeystore';
 
 jest.mock('../../actions/list');

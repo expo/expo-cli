@@ -49,10 +49,10 @@ export type HookArguments = {
   config: any;
   url: any;
   exp: ExpoConfig;
-  iosBundle: string;
+  iosBundle: string | Uint8Array;
   iosSourceMap: string | null;
   iosManifest: any;
-  androidBundle: string;
+  androidBundle: string | Uint8Array;
   androidSourceMap: string | null;
   androidManifest: any;
   projectRoot: string;
@@ -63,7 +63,6 @@ export type ExpoAppManifest = ExpoConfig & {
   sdkVersion: string;
   bundledAssets?: string[];
   isKernel?: boolean;
-  xde?: boolean;
   kernel?: { androidManifestPath?: string; iosManifestPath?: string };
   assetUrlOverride?: string;
   publishedTime?: string;
@@ -81,8 +80,6 @@ export type ExpoAppManifest = ExpoConfig & {
     tool: string | null;
     projectRoot?: string;
   };
-  ios?: { publishSourceMapPath?: string } & ExpoConfig['ios'];
-  android?: { publishSourceMapPath?: string } & ExpoConfig['android'];
 };
 
 export type Hook = {

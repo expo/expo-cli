@@ -1,10 +1,10 @@
 {
   "name": "@expo/metro-config",
-  "version": "0.1.51",
+  "version": "0.1.72",
   "description": "A Metro config for running React Native projects with the Metro bundler",
   "main": "build/ExpoMetroConfig.js",
   "scripts": {
-    "watch": "tsc --watch",
+    "watch": "tsc --watch --preserveWatchOutput",
     "build": "tsc",
     "prepare": "yarn run clean && yarn build",
     "clean": "rimraf build ./tsconfig.tsbuildinfo",
@@ -34,11 +34,13 @@
     "transformer.js"
   ],
   "dependencies": {
-    "@expo/config": "3.3.25",
-    "metro-react-native-babel-transformer": "^0.58.0"
+    "@expo/config": "4.0.2",
+    "chalk": "^4.1.0",
+    "getenv": "^1.0.0",
+    "metro-react-native-babel-transformer": "^0.59.0"
   },
   "devDependencies": {
-    "@expo/babel-preset-cli": "0.2.18",
+    "@expo/babel-preset-cli": "0.2.20",
     "expo": "37",
     "metro": "^0.59.0",
     "metro-config": "^0.59.0",

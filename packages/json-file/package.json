@@ -1,10 +1,10 @@
 {
   "name": "@expo/json-file",
-  "version": "8.2.26",
+  "version": "8.2.30",
   "description": "A module for reading, writing, and manipulating JSON files",
   "main": "build/JsonFile.js",
   "scripts": {
-    "watch": "tsc --watch",
+    "watch": "tsc --watch --preserveWatchOutput",
     "build": "tsc",
     "prepare": "yarn run clean && yarn build",
     "clean": "rimraf build ./tsconfig.tsbuildinfo",
@@ -31,15 +31,13 @@
     "@babel/code-frame": "~7.10.4",
     "fs-extra": "9.0.0",
     "json5": "^1.0.1",
-    "lodash": "^4.17.19",
     "write-file-atomic": "^2.3.0"
   },
   "devDependencies": {
-    "@expo/babel-preset-cli": "0.2.18",
+    "@expo/babel-preset-cli": "0.2.20",
     "@types/babel__code-frame": "^7.0.1",
     "@types/fs-extra": "^9.0.1",
     "@types/json5": "^0.0.30",
-    "@types/lodash": "^4.14.168",
     "@types/write-file-atomic": "^2.1.1",
     "rimraf": "^3.0.2"
   },

@@ -2,7 +2,7 @@
 import { ResizeMode } from '@expo/image-utils';
 import chalk from 'chalk';
 import { Command } from 'commander';
-import fs from 'fs-extra';
+import fs from 'fs';
 import { dirname, join, relative, resolve } from 'path';
 
 import { generateAsync, generateManifestAsync } from '.';
@@ -187,7 +187,7 @@ async function generateAssets(
 }
 
 async function resolveOutputAsync(publicPath: string, outputPath: string, items: HTMLOutput[]) {
-  fs.ensureDirSync(outputPath);
+  fs.mkdirSync(outputPath, { recursive: true });
 
   const meta: string[] = [];
   const manifest: Record<string, any> = {};
@@ -211,8 +211,8 @@ async function resolveOutputAsync(publicPath: string, outputPath: string, items:
 
     // Write image
     const assetPath = resolve(outputPath, item.asset.path);
-    fs.ensureDirSync(dirname(assetPath));
-    await fs.writeFile(assetPath, item.asset.source);
+    fs.mkdirSync(dirname(assetPath), { recursive: true });
+    fs.writeFileSync(assetPath, item.asset.source);
   }
 
   if (meta.length) {

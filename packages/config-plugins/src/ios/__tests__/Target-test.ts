@@ -1,38 +1,40 @@
-import fs from 'fs';
 import { vol } from 'memfs';
 import path from 'path';
 
-import { getApplicationTargetForSchemeAsync } from '../Target';
-
-const fsReal = jest.requireActual('fs') as typeof fs;
+import { findApplicationTargetWithDependenciesAsync, TargetType } from '../Target';
 
 jest.mock('fs');
 
-describe(getApplicationTargetForSchemeAsync, () => {
-  beforeAll(async () => {
+const originalFs = jest.requireActual('fs');
+
+describe(findApplicationTargetWithDependenciesAsync, () => {
+  const projectRoot = '/app';
+
+  afterEach(() => vol.reset());
+
+  it('reads the application target and its dependencies', async () => {
     vol.fromJSON(
       {
-        'ios/testproject.xcodeproj/xcshareddata/xcschemes/testproject.xcscheme': fsReal.readFileSync(
-          path.join(__dirname, 'fixtures/testproject.xcscheme'),
+        'ios/testproject.xcodeproj/project.pbxproj': originalFs.readFileSync(
+          path.join(__dirname, 'fixtures/project-multitarget.pbxproj'),
+          'utf-8'
+        ),
+        'ios/testproject.xcodeproj/xcshareddata/xcschemes/multitarget.xcscheme': originalFs.readFileSync(
+          path.join(__dirname, 'fixtures/multitarget.xcscheme'),
           'utf-8'
         ),
       },
-      '/app'
+      projectRoot
     );
-  });
 
-  afterAll(() => {
-    vol.reset();
-  });
-
-  it('returns the target name for existing scheme', async () => {
-    const target = await getApplicationTargetForSchemeAsync('/app', 'testproject');
-    expect(target).toBe('testproject');
-  });
-
-  it('throws if the scheme does not exist', async () => {
-    await expect(() =>
-      getApplicationTargetForSchemeAsync('/app', 'nonexistentscheme')
-    ).rejects.toThrow(/does not exist/);
+    const applicationTarget = await findApplicationTargetWithDependenciesAsync(
+      projectRoot,
+      'multitarget'
+    );
+    expect(applicationTarget.name).toBe('multitarget');
+    expect(applicationTarget.type).toBe(TargetType.APPLICATION);
+    expect(applicationTarget.dependencies.length).toBe(1);
+    expect(applicationTarget.dependencies[0].name).toBe('shareextension');
+    expect(applicationTarget.dependencies[0].type).toBe(TargetType.EXTENSION);
   });
 });

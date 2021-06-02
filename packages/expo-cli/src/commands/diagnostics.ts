@@ -2,7 +2,7 @@ import { getDefaultTarget } from '@expo/config';
 import { Command } from 'commander';
 import envinfo from 'envinfo';
 
-import log from '../log';
+import Log from '../log';
 
 const packageJSON = require('../../package.json');
 
@@ -38,7 +38,7 @@ async function actionAsync(projectRoot: string): Promise<void> {
   const lines = info.split('\n');
   lines.pop();
   lines.push(`    Expo Workflow: ${workflow}`);
-  log(lines.join('\n') + '\n');
+  Log.log(lines.join('\n') + '\n');
 }
 
 export default function (program: Command) {

@@ -15,7 +15,7 @@ module.exports = {
     require('./packages/schemer/jest.config'),
     require('./packages/uri-scheme/jest.config'),
     require('./packages/webpack-config/jest/unit-test-config'),
-    require('./packages/xdl/jest/unit-test-config'),
+    require('./packages/xdl/jest/integration-test-config'),
     require('./unlinked-packages/configure-splash-screen/jest.config'),
   ],
   testPathIgnorePatterns: ['.*'],

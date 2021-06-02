@@ -2,7 +2,6 @@ import { ExpoConfig } from '@expo/config-types';
 
 import { createInfoPlistPlugin } from '../plugins/ios-plugins';
 import { InfoPlist, URLScheme } from './IosConfig.types';
-import { findSchemeNames } from './Paths';
 
 export const withScheme = createInfoPlistPlugin(setScheme, 'withScheme');
 
@@ -102,8 +101,4 @@ export function getSchemesFromPlist(infoPlist: InfoPlist): string[] {
     }, []);
   }
   return [];
-}
-
-export function getSchemesFromXcodeproj(projectRoot: string): string[] {
-  return findSchemeNames(projectRoot);
 }

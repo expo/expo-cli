@@ -3,6 +3,16 @@
 import { resolveEntryAsync } from '../../utils';
 import withEntry from '../withEntry';
 
+const { silent } = require('resolve-from');
+
+jest.mock('fs');
+jest.mock('resolve-from');
+
+beforeEach(() => {
+  const resolveFrom = require('resolve-from');
+  resolveFrom.silent = silent;
+});
+
 it(`Ignores a missing custom entry without strict mode`, async () => {
   const config = withEntry(
     {
@@ -11,7 +21,7 @@ it(`Ignores a missing custom entry without strict mode`, async () => {
         app: [],
       },
     },
-    {},
+    { projectRoot: '/' },
     { entryPath: 'foo' }
   );
 
@@ -28,19 +38,16 @@ it(`Throws when a custom entry is missing in strict mode`, async () => {
           app: [],
         },
       },
-      {},
+      { projectRoot: '/' },
       { entryPath: 'foo', strict: true }
     )
   ).toThrow(/The required app entry module: "foo" couldn't be found/);
 });
 
 it(`Adds a custom entry point when it can be found`, async () => {
-  const Config = require('@expo/config');
-  Config.projectHasModule = jest.fn(customPath => {
-    return customPath;
-  });
   const withEntry = require('../withEntry').default;
-
+  const resolveFrom = require('resolve-from');
+  resolveFrom.silent = jest.fn((_, path) => path);
   const config = withEntry(
     {
       mode: 'production',
@@ -48,7 +55,7 @@ it(`Adds a custom entry point when it can be found`, async () => {
         app: ['bar'],
       },
     },
-    {},
+    { projectRoot: '/' },
     { entryPath: 'foo', strict: true }
   );
 
@@ -59,12 +66,9 @@ it(`Adds a custom entry point when it can be found`, async () => {
 });
 
 it(`Throws when app is missing from entry in strict mode`, async () => {
-  const Config = require('@expo/config');
-  Config.projectHasModule = jest.fn(customPath => {
-    return customPath;
-  });
   const withEntry = require('../withEntry').default;
-
+  const resolveFrom = require('resolve-from');
+  resolveFrom.silent = jest.fn((_, path) => path);
   const config = withEntry(
     {
       mode: 'production',
@@ -72,7 +76,7 @@ it(`Throws when app is missing from entry in strict mode`, async () => {
         otherValue: ['bar'],
       },
     },
-    {},
+    { projectRoot: '/' },
     { entryPath: 'foo', strict: true }
   );
 

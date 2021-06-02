@@ -1,6 +1,6 @@
 {
   "name": "pod-install",
-  "version": "0.1.15",
+  "version": "0.1.23",
   "main": "build",
   "keywords": [
     "cocoapods",
@@ -25,17 +25,15 @@
   "scripts": {
     "prepare": "yarn run clean && yarn run build:prod",
     "lint": "eslint .",
-    "watch": "tsc --watch",
+    "watch": "tsc --watch --preserveWatchOutput",
     "watch:ncc": "yarn run build -w",
     "build": "ncc build ./src/index.ts -o build/",
     "build:prod": "ncc build ./src/index.ts -o build/ --minify --no-cache --no-source-map-register",
     "clean": "rimraf ./build/"
   },
   "devDependencies": {
-    "@expo/babel-preset-cli": "0.2.18",
-    "@expo/package-manager": "0.0.35",
-    "@types/node": "^12",
-    "@zeit/ncc": "^0.20.5",
+    "@expo/babel-preset-cli": "0.2.20",
+    "@expo/package-manager": "0.0.43",
     "chalk": "^4.0.0",
     "commander": "2.20.0",
     "rimraf": "^3.0.2",

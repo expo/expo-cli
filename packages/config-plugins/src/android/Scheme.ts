@@ -23,20 +23,23 @@ export function getScheme(config: { scheme?: string | string[] }): string[] {
   return [];
 }
 
+// This plugin used to remove the unused schemes but this is unpredictable because other plugins could add schemes.
+// The only way to reliably remove schemes from the project is to nuke the file and regenerate the code (`expo prebuild --clean`).
+// Regardless, having extra schemes isn't a fatal issue and therefore a tolerable compromise is to just add new schemes that aren't currently present.
 export function setScheme(
   config: Pick<ExpoConfig, 'scheme' | 'android'>,
   androidManifest: AndroidManifest
 ) {
-  const scheme = [
+  const schemes = [
     ...getScheme(config),
     // @ts-ignore: TODO: android.scheme is an unreleased -- harder to add to turtle v1.
     ...getScheme(config.android ?? {}),
   ];
   // Add the package name to the list of schemes for easier Google auth and parity with Turtle v1.
   if (config.android?.package) {
-    scheme.push(config.android.package);
+    schemes.push(config.android.package);
   }
-  if (scheme.length === 0) {
+  if (schemes.length === 0) {
     return androidManifest;
   }
 
@@ -48,14 +51,15 @@ export function setScheme(
     return androidManifest;
   }
 
-  // Get the current schemes and remove them.
+  // Get the current schemes and remove them from the list of schemes to add.
   const currentSchemes = getSchemesFromManifest(androidManifest);
   for (const uri of currentSchemes) {
-    androidManifest = removeScheme(uri, androidManifest);
+    const index = schemes.indexOf(uri);
+    if (index > -1) schemes.splice(index, 1);
   }
 
-  // Now add all the new schemes.
-  for (const uri of scheme) {
+  // Now add all of the remaining schemes.
+  for (const uri of schemes) {
     androidManifest = appendScheme(uri, androidManifest);
   }
 

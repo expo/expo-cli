@@ -1,10 +1,10 @@
 import { loadPartialConfig } from '@babel/core';
-import { projectHasModule } from '@expo/config';
 import { getPossibleProjectRoot } from '@expo/config/paths';
 import chalk from 'chalk';
 import fs from 'fs-extra';
 import { boolish } from 'getenv';
 import path from 'path';
+import resolveFrom from 'resolve-from';
 import { Rule } from 'webpack';
 
 import { getConfig, getMode, getPaths } from '../env';
@@ -154,7 +154,7 @@ export default function createBabelLoader({
   ) {
     // If no babel config exists then fallback on the default `babel-preset-expo`
     // which is installed with `expo`.
-    const modulePath = projectHasModule('babel-preset-expo', projectRoot, {});
+    const modulePath = resolveFrom.silent(projectRoot, 'babel-preset-expo');
     if (modulePath) {
       presetOptions = {
         babelrc: false,

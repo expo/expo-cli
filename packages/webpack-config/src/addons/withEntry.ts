@@ -1,7 +1,6 @@
-import { projectHasModule } from '@expo/config';
 import { getPossibleProjectRoot } from '@expo/config/paths';
+import resolveFrom from 'resolve-from';
 
-import { getConfig } from '../env';
 import { AnyConfiguration, InputEnvironment } from '../types';
 import { resolveEntryAsync } from '../utils';
 
@@ -20,12 +19,7 @@ export default function withEntry(
 ): AnyConfiguration {
   env.projectRoot = env.projectRoot || getPossibleProjectRoot();
 
-  const extraAppEntry = projectHasModule(
-    options.entryPath,
-    env.projectRoot,
-    // @ts-ignore
-    env.config || getConfig(env)
-  );
+  const extraAppEntry = resolveFrom.silent(env.projectRoot, options.entryPath);
 
   if (!extraAppEntry) {
     if (options.strict) {

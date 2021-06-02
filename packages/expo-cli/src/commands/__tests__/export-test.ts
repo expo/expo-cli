@@ -2,8 +2,8 @@ import program from 'commander';
 import { vol } from 'memfs';
 
 import { mockExpoXDL } from '../../__tests__/mock-utils';
-import { jester } from '../../credentials/test-fixtures/mocks-constants';
-import log from '../../log';
+import { jester } from '../../credentials/__tests__/fixtures/mocks-constants';
+import Log from '../../log';
 import { collectMergeSourceUrlsAsync, ensurePublicUrlAsync, promptPublicUrlAsync } from '../export';
 
 jest.mock('fs');
@@ -43,7 +43,7 @@ describe('ensurePublicUrlAsync', () => {
     );
   });
   it(`does not throw when an invalid URL is used in dev mode`, async () => {
-    const logWarnSpy = jest.spyOn(log, 'nestedWarn').mockImplementation(() => {});
+    const logWarnSpy = jest.spyOn(Log, 'nestedWarn').mockImplementation(() => {});
 
     await expect(ensurePublicUrlAsync('bacon', true)).resolves.toBe('bacon');
     await expect(ensurePublicUrlAsync('ssh://bacon.io', true)).resolves.toBe('ssh://bacon.io');
@@ -54,7 +54,7 @@ describe('ensurePublicUrlAsync', () => {
   });
 
   it(`validates a URL`, async () => {
-    const logWarnSpy = jest.spyOn(log, 'nestedWarn').mockImplementation(() => {});
+    const logWarnSpy = jest.spyOn(Log, 'nestedWarn').mockImplementation(() => {});
 
     await expect(ensurePublicUrlAsync('https://expo.io', true)).resolves.toBe('https://expo.io');
     // No warnings thrown

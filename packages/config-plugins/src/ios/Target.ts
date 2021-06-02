@@ -1,42 +1,91 @@
-import path from 'path';
+import { PBXNativeTarget, PBXTargetDependency, XcodeProject } from 'xcode';
 
-import { readXMLAsync } from '../utils/XML';
-import { findSchemePaths } from './Paths';
+import { getApplicationTargetNameForSchemeAsync } from './BuildScheme';
+import { getPbxproj, isNotComment, NativeTargetSectionEntry } from './utils/Xcodeproj';
 
-interface SchemeXML {
-  Scheme?: {
-    BuildAction?: {
-      BuildActionEntries?: {
-        BuildActionEntry?: {
-          BuildableReference?: {
-            $?: {
-              BlueprintName?: string;
-            };
-          }[];
-        }[];
-      }[];
-    }[];
+export enum TargetType {
+  APPLICATION = 'com.apple.product-type.application',
+  EXTENSION = 'com.apple.product-type.app-extension',
+  OTHER = 'other',
+}
+
+export interface Target {
+  name: string;
+  type: TargetType;
+  dependencies?: Target[];
+}
+
+export async function findApplicationTargetWithDependenciesAsync(
+  projectRoot: string,
+  scheme: string
+): Promise<Target> {
+  const applicationTargetName = await getApplicationTargetNameForSchemeAsync(projectRoot, scheme);
+  const project = getPbxproj(projectRoot);
+  const [, applicationTarget] = findNativeTargetByName(project, applicationTargetName);
+
+  const dependencies: Target[] = applicationTarget.dependencies.map(({ value }) => {
+    const { target: targetId } = project.getPBXGroupByKeyAndType(
+      value,
+      'PBXTargetDependency'
+    ) as PBXTargetDependency;
+
+    const [, target] = findNativeTargetById(project, targetId);
+
+    const type = isTargetOfType(target, TargetType.EXTENSION)
+      ? TargetType.EXTENSION
+      : TargetType.OTHER;
+    return {
+      name: target.name,
+      type,
+    };
+  });
+
+  return {
+    name: applicationTarget.name,
+    type: TargetType.APPLICATION,
+    dependencies,
   };
 }
 
-export async function getApplicationTargetForSchemeAsync(
-  projectRoot: string,
-  scheme: string
-): Promise<string> {
-  const allSchemePaths = findSchemePaths(projectRoot);
-  const re = new RegExp(`/${scheme}.xcscheme`);
-  const schemePath = allSchemePaths.find(i => re.exec(i));
-  if (!schemePath) {
-    throw new Error(`scheme '${scheme}' does not exist`);
-  }
+function isTargetOfType(target: PBXNativeTarget, targetType: TargetType): boolean {
+  return target.productType === targetType || target.productType === `"${targetType}"`;
+}
 
-  const schemeXML = ((await readXMLAsync({ path: schemePath })) as unknown) as SchemeXML;
-  const targetName =
-    schemeXML.Scheme?.BuildAction?.[0]?.BuildActionEntries?.[0]?.BuildActionEntry?.[0]
-      ?.BuildableReference?.[0]?.['$']?.BlueprintName;
-  if (!targetName) {
-    const schemeRelativePath = path.relative(projectRoot, schemePath);
-    throw new Error(`${schemeRelativePath} seems to be corrupted`);
+export function getNativeTargets(project: XcodeProject): NativeTargetSectionEntry[] {
+  const section = project.pbxNativeTargetSection();
+  return Object.entries(section).filter(isNotComment);
+}
+
+export function findFirstNativeTarget(project: XcodeProject): NativeTargetSectionEntry {
+  const targets = getNativeTargets(project);
+  const applicationTargets = targets.filter(([, target]) =>
+    isTargetOfType(target, TargetType.APPLICATION)
+  );
+  if (applicationTargets.length === 0) {
+    throw new Error(`Could not find any application target in project.pbxproj`);
   }
-  return targetName;
+  return applicationTargets[0];
+}
+
+export function findNativeTargetByName(
+  project: XcodeProject,
+  targetName: string
+): NativeTargetSectionEntry {
+  const nativeTargets = getNativeTargets(project);
+  const nativeTargetEntry = nativeTargets.find(
+    ([, i]) => i.name === targetName || i.name === `"${targetName}"`
+  );
+  if (!nativeTargetEntry) {
+    throw new Error(`Could not find target '${targetName}' in project.pbxproj`);
+  }
+  return nativeTargetEntry;
+}
+
+function findNativeTargetById(project: XcodeProject, targetId: string): NativeTargetSectionEntry {
+  const nativeTargets = getNativeTargets(project);
+  const nativeTargetEntry = nativeTargets.find(([key]) => key === targetId);
+  if (!nativeTargetEntry) {
+    throw new Error(`Could not find target with id '${targetId}' in project.pbxproj`);
+  }
+  return nativeTargetEntry;
 }

@@ -1,13 +1,13 @@
-import { UserManager } from '@expo/xdl';
 import Table from 'cli-table3';
 import fs from 'fs-extra';
 import chunk from 'lodash/chunk';
 import omit from 'lodash/omit';
 import pick from 'lodash/pick';
-import ora from 'ora';
+import { UserManager } from 'xdl';
 
-import log from '../../../../log';
+import Log from '../../../../log';
 import { ensureProjectExistsAsync, getProjectOwner } from '../../../../projects';
+import { ora } from '../../../../utils/ora';
 import { sleep } from '../../../utils/promise';
 import SubmissionService, { DEFAULT_CHECK_INTERVAL_MS } from '../SubmissionService';
 import { Platform, Submission, SubmissionStatus } from '../SubmissionService.types';
@@ -202,7 +202,7 @@ function printSummary(summary: Summary): void {
   table.push([
     {
       colSpan: 2,
-      content: log.chalk.bold('Android Submission Summary'),
+      content: Log.chalk.bold('Android Submission Summary'),
       hAlign: 'center',
     },
   ]);
@@ -211,7 +211,7 @@ function printSummary(summary: Summary): void {
     const displayValue = SummaryHumanReadableValues[key as keyof Summary]?.(value) ?? value;
     table.push([displayKey, displayValue]);
   }
-  log(table.toString());
+  Log.log(table.toString());
 }
 
 export default AndroidSubmitter;

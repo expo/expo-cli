@@ -1,8 +1,6 @@
 import { codeFrameColumns } from '@babel/code-frame';
 import { mkdirp, readFile, readFileSync } from 'fs-extra';
 import JSON5 from 'json5';
-import get from 'lodash/get';
-import set from 'lodash/set';
 import path from 'path';
 import { promisify } from 'util';
 import writeFileAtomic from 'write-file-atomic';
@@ -200,10 +198,13 @@ async function getAsync<TJSONObject extends JSONObject, K extends keyof TJSONObj
   options?: Options<TJSONObject>
 ): Promise<any> {
   const object = await readAsync(file, options);
-  if (defaultValue === undefined && !(key in object)) {
+  if (key in object) {
+    return object[key];
+  }
+  if (defaultValue === undefined) {
     throw new JsonFileError(`No value at key path "${key}" in JSON object from: ${file}`);
   }
-  return get(object, key, defaultValue);
+  return defaultValue;
 }
 
 async function writeAsync<TJSONObject extends JSONObject>(
@@ -240,9 +241,8 @@ async function setAsync<TJSONObject extends JSONObject>(
 ): Promise<TJSONObject> {
   // TODO: Consider implementing some kind of locking mechanism, but
   // it's not critical for our use case, so we'll leave it out for now
-  let object = await readAsync(file, options);
-  object = set(object, key, value);
-  return writeAsync(file, object, options);
+  const object = await readAsync(file, options);
+  return writeAsync(file, { ...object, [key]: value }, options);
 }
 
 async function mergeAsync<TJSONObject extends JSONObject>(

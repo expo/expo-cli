@@ -4,7 +4,6 @@ import resolveFrom from 'resolve-from';
 
 import { getConfig } from '../Config';
 import { ProjectConfig } from '../Config.types';
-import { resolveModule } from '../Modules';
 import { getManagedExtensions } from './extensions';
 
 // https://github.com/facebook/create-react-app/blob/9750738cce89a967cc71f28390daf5d4311b193c/packages/react-scripts/config/paths.js#L22
@@ -92,8 +91,8 @@ export function getEntryPointWithExtensions(
     // Doing this enables us to create a bare minimum Expo project.
 
     // TODO(Bacon): We may want to do a check against `./App` and `expo` in the `package.json` `dependencies` as we can more accurately ensure that the project is expo-min without needing the modules installed.
-    return resolveModule('expo/AppEntry', projectRoot, exp);
-  } catch (_) {
+    return resolveFrom(projectRoot, 'expo/AppEntry');
+  } catch {
     throw new Error(
       `The project entry file could not be resolved. Please either define it in the \`package.json\` (main), \`app.json\` (expo.entryPoint), create an \`index.js\`, or install the \`expo\` package.`
     );

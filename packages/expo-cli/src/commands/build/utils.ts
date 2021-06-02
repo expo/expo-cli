@@ -1,8 +1,8 @@
-import { Versions } from '@expo/xdl';
 import chalk from 'chalk';
 import program from 'commander';
+import { Versions } from 'xdl';
 
-import log from '../../log';
+import Log from '../../log';
 import prompts from '../../prompts';
 
 export async function checkIfSdkIsSupported(
@@ -15,7 +15,7 @@ export async function checkIfSdkIsSupported(
   const { version: latestSDKVersion } = await Versions.newestReleasedSdkVersionAsync();
 
   if (!isSupported) {
-    log.error(
+    Log.error(
       chalk.red(
         'Unsupported SDK version: our app builders ' +
           (majorSdkVersion < minimumSdkVersionSupported
@@ -39,7 +39,7 @@ export async function askBuildType<T extends string>(
   }
 
   if (typeIsInvalid) {
-    log.error(`Build type must be one of (${allowedTypes.join(', ')})`);
+    Log.error(`Build type must be one of (${allowedTypes.join(', ')})`);
 
     if (program.nonInteractive) {
       process.exit(1);

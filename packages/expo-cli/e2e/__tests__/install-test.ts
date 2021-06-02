@@ -90,5 +90,5 @@ it(`works as expected`, async () => {
   );
   fs.writeFileSync(path.join(projectRoot, 'package.json'), JSON.stringify(minimumNativePkgJson));
 
-  await spawnAsync(EXPO_CLI, ['install', 'expo-camera'], { cwd: projectRoot });
+  await spawnAsync(EXPO_CLI, ['install', 'expo-camera'], { stdio: 'inherit', cwd: projectRoot });
 });

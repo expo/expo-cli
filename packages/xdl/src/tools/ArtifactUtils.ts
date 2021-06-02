@@ -1,13 +1,13 @@
 import fs from 'fs-extra';
 import path from 'path';
 
-import logger from '../Logger';
+import { Logger as logger } from '../internal';
 
 export async function writeArtifactSafelyAsync(
   projectRoot: string,
   keyName: string | null,
   artifactPath: string,
-  artifact: string
+  artifact: string | Uint8Array
 ) {
   const pathToWrite = path.resolve(projectRoot, artifactPath);
   if (!fs.existsSync(path.dirname(pathToWrite))) {

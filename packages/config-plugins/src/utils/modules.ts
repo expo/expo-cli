@@ -1,24 +1,13 @@
-import { ExpoConfig } from '@expo/config-types';
-import { stat, Stats, statSync } from 'fs-extra';
-import resolveFrom from 'resolve-from';
-
-export function projectHasModule(
-  modulePath: string,
-  projectRoot: string,
-  exp: Pick<ExpoConfig, 'nodeModulesPath'>
-): string | undefined {
-  const fromDir = exp.nodeModulesPath ? exp.nodeModulesPath : projectRoot;
-  return resolveFrom.silent(fromDir, modulePath);
-}
+import fs from 'fs';
 
 /**
  * A non-failing version of async FS stat.
  *
  * @param file
  */
-async function statAsync(file: string): Promise<Stats | null> {
+async function statAsync(file: string): Promise<fs.Stats | null> {
   try {
-    return await stat(file);
+    return await fs.promises.stat(file);
   } catch {
     return null;
   }
@@ -34,7 +23,7 @@ export async function directoryExistsAsync(file: string): Promise<boolean> {
 
 export function fileExists(file: string): boolean {
   try {
-    return statSync(file).isFile();
+    return fs.statSync(file).isFile();
   } catch (e) {
     return false;
   }

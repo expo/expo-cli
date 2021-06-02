@@ -1,9 +1,9 @@
 import { ExpoConfig, getConfig } from '@expo/config';
-import { ApiV2, RobotUser, User, UserManager } from '@expo/xdl';
 import pick from 'lodash/pick';
+import { ApiV2, RobotUser, User, UserManager } from 'xdl';
 
 import { AppleCtx, authenticateAsync } from '../appleApi';
-import log from '../log';
+import Log from '../log';
 import { getProjectOwner } from '../projects';
 import AndroidApi from './api/AndroidApi';
 import IosApi from './api/IosApi';
@@ -89,7 +89,7 @@ export class Context {
   logOwnerAndProject() {
     // Figure out if User A is configuring credentials as admin for User B's project
     const isProxyUser = this.manifest.owner && this.manifest.owner !== this.user.username;
-    log(
+    Log.log(
       `Accessing credentials ${isProxyUser ? 'on behalf of' : 'for'} ${
         this.projectOwner
       } in project ${this.manifest.slug}`

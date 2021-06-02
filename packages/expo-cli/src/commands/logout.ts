@@ -1,8 +1,8 @@
-import { UserManager } from '@expo/xdl';
 import { Command } from 'commander';
+import { UserManager } from 'xdl';
 
 import CommandError from '../CommandError';
-import log from '../log';
+import Log from '../log';
 
 async function action() {
   const user = await UserManager.getCurrentUserAsync();
@@ -15,7 +15,7 @@ async function action() {
 
   try {
     await UserManager.logoutAsync();
-    log('Logged out');
+    Log.log('Logged out');
   } catch (e) {
     throw new CommandError(`Couldn't logout: ${e.message}`);
   }

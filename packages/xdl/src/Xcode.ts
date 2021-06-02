@@ -1,25 +1,28 @@
-import spawnAsync from '@expo/spawn-async';
+import { execSync } from 'child_process';
 
-import Logger from './Logger';
+import { Logger } from './internal';
 
 // Based on the RN docs (Aug 2020).
 export const minimumVersion = 9.4;
 export const appStoreId = '497799835';
 
-export async function getXcodeVersionAsync(): Promise<string | null> {
+let _xcodeVersion: string | null | false = false;
+
+export function getXcodeVersion(): string | null {
+  // This method anywhere from 1-2s so cache the results in case we run it multiple times
+  // (like in run:ios or reopening on iOS for dev client).
+  if (_xcodeVersion !== false) {
+    return _xcodeVersion;
+  }
   try {
-    const { stdout } = await spawnAsync('xcodebuild', ['-version']);
-
-    const match = stdout.match(/^Xcode (\d+\.\d+)/);
-    if (match?.length) {
-      const last = match.pop();
-      // Convert to a semver string
-      if (last) {
-        return `${last}.0`;
-      }
-      return null;
+    const last = execSync('xcodebuild -version', { stdio: 'pipe' })
+      .toString()
+      .match(/^Xcode (\d+\.\d+)/)?.[1];
+    // Convert to a semver string
+    if (last) {
+      _xcodeVersion = `${last}.0`;
+      return _xcodeVersion;
     }
-
     // not sure what's going on
     Logger.global.error(
       'Unable to check Xcode version. Command ran successfully but no version number was found.'
@@ -27,7 +30,8 @@ export async function getXcodeVersionAsync(): Promise<string | null> {
   } catch {
     // not installed
   }
-  return null;
+  _xcodeVersion = null;
+  return _xcodeVersion;
 }
 
 /**
@@ -35,9 +39,9 @@ export async function getXcodeVersionAsync(): Promise<string | null> {
  *
  * @param appId
  */
-export async function openAppStoreAsync(appId: string): Promise<void> {
+export function openAppStore(appId: string) {
   const link = getAppStoreLink(appId);
-  await spawnAsync('open', [link]);
+  execSync(`open ${link}`, { stdio: 'ignore' });
 }
 
 function getAppStoreLink(appId: string): string {

@@ -1,13 +1,13 @@
-import { AndroidCredentials } from '@expo/xdl';
 import assert from 'assert';
 import chalk from 'chalk';
 import * as fs from 'fs-extra';
 import * as path from 'path';
+import { AndroidCredentials } from 'xdl';
 
 import { Context } from '../../credentials';
 import { runCredentialsManager } from '../../credentials/route';
 import { DownloadKeystore } from '../../credentials/views/AndroidKeystore';
-import log from '../../log';
+import Log from '../../log';
 
 type Options = {
   parent?: {
@@ -27,7 +27,7 @@ async function maybeRenameExistingFileAsync(projectRoot: string, filename: strin
     while (await fs.pathExists(path.resolve(projectRoot, `OLD_${num}_${filename}`))) {
       num++;
     }
-    log(
+    Log.log(
       `\nA file already exists at "${desiredFilePath}"\n  Renaming the existing file to OLD_${num}_${filename}\n`
     );
     await fs.rename(desiredFilePath, path.resolve(projectRoot, `OLD_${num}_${filename}`));
@@ -84,11 +84,11 @@ export async function fetchAndroidHashesAsync(
         keyAlias: keystore.keyAlias,
         keyPassword: keystore.keyPassword,
       });
-      log(
+      Log.log(
         `\nNote: if you are using Google Play signing, this app will be signed with a different key after publishing to the store, and you'll need to use the hashes displayed in the Google Play console.`
       );
     } else {
-      log.warn('There is no valid Keystore defined for this app');
+      Log.warn('There is no valid Keystore defined for this app');
     }
   } finally {
     await fs.remove(outputPath);
@@ -121,7 +121,7 @@ export async function fetchAndroidUploadCertAsync(
     const keystore = await ctx.android.fetchKeystore(experienceName);
 
     if (keystore) {
-      log(`Writing upload key to ${uploadKeyPath}`);
+      Log.log(`Writing upload key to ${uploadKeyPath}`);
       await AndroidCredentials.exportCertBase64(
         {
           keystorePath,
@@ -131,7 +131,7 @@ export async function fetchAndroidUploadCertAsync(
         uploadKeyPath
       );
     } else {
-      log.warn('There is no valid Keystore defined for this app');
+      Log.warn('There is no valid Keystore defined for this app');
     }
   } finally {
     await fs.remove(keystorePath);

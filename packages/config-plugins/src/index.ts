@@ -3,6 +3,16 @@
  */
 import * as AndroidConfig from './android';
 import * as IOSConfig from './ios';
+import {
+  getAndroidIntrospectModFileProviders,
+  getAndroidModFileProviders,
+  withAndroidBaseMods,
+} from './plugins/withAndroidBaseMods';
+import {
+  getIosIntrospectModFileProviders,
+  getIosModFileProviders,
+  withIosBaseMods,
+} from './plugins/withIosBaseMods';
 import * as XML from './utils/XML';
 import * as History from './utils/history';
 import * as WarningAggregator from './utils/warnings';
@@ -11,26 +21,18 @@ export { IOSConfig, AndroidConfig };
 
 export { WarningAggregator, History, XML };
 
-export {
-  withExpoIOSPlugins,
-  withExpoAndroidPlugins,
-  withExpoVersionedSDKPlugins,
-} from './plugins/expo-plugins';
-
 /**
  * These are the "config-plugins"
  */
 
 export * from './Plugin.types';
 
-export {
-  withPlugins,
-  withRunOnce,
-  createRunOncePlugin,
-  withDangerousMod,
-  withExtendedMod,
-  withInterceptedMod,
-} from './plugins/core-plugins';
+export { withPlugins } from './plugins/withPlugins';
+
+export { withRunOnce, createRunOncePlugin } from './plugins/withRunOnce';
+
+export { withDangerousMod } from './plugins/withDangerousMod';
+export { withMod, withBaseMod } from './plugins/withMod';
 
 export {
   withAppDelegate,
@@ -47,10 +49,20 @@ export {
   withProjectBuildGradle,
   withAppBuildGradle,
   withSettingsGradle,
+  withGradleProperties,
 } from './plugins/android-plugins';
 
-export { withStaticPlugin } from './plugins/static-plugins';
+export { withStaticPlugin } from './plugins/withStaticPlugin';
 
-export { compileModsAsync } from './plugins/mod-compiler';
+export { compileModsAsync, withDefaultBaseMods, evalModsAsync } from './plugins/mod-compiler';
 
 export { PluginError } from './utils/errors';
+
+export const BaseMods = {
+  withAndroidBaseMods,
+  getAndroidModFileProviders,
+  getAndroidIntrospectModFileProviders,
+  withIosBaseMods,
+  getIosModFileProviders,
+  getIosIntrospectModFileProviders,
+};

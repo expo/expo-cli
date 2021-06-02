@@ -1,16 +1,17 @@
 import { getConfig } from '@expo/config';
 import * as PackageManager from '@expo/package-manager';
-import { Versions } from '@expo/xdl';
 import chalk from 'chalk';
 import program from 'commander';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import wrapAnsi from 'wrap-ansi';
+import { Versions } from 'xdl';
 
 import CommandError from '../../../CommandError';
-import log from '../../../log';
+import Log from '../../../log';
 import { confirmAsync } from '../../../prompts';
 import { logNewSection } from '../CreateApp';
+import { profileMethod } from '../profileMethod';
 import {
   collectMissingPackages,
   hasTSConfig,
@@ -20,7 +21,7 @@ import { isTypeScriptSetupDisabled, updateTSConfigAsync } from './updateTSConfig
 
 export async function ensureTypeScriptSetupAsync(projectRoot: string): Promise<void> {
   if (isTypeScriptSetupDisabled) {
-    log(chalk.dim('\u203A Skipping TypeScript verification'));
+    Log.log(chalk.dim('\u203A Skipping TypeScript verification'));
     return;
   }
 
@@ -59,7 +60,7 @@ export async function shouldSetupTypeScriptAsync(
   }
   // This is a somewhat heavy check in larger projects.
   // Test that this is reasonably paced by running expo start in `expo/apps/native-component-list`
-  const typescriptFile = await queryFirstProjectTypeScriptFileAsync(projectRoot);
+  const typescriptFile = await profileMethod(queryFirstProjectTypeScriptFileAsync)(projectRoot);
   if (typescriptFile) {
     return { isBootstrapping: true };
   }
@@ -169,12 +170,12 @@ async function installPackagesAsync(
 ) {
   const packageManager = PackageManager.createForProject(projectRoot, {
     yarn: isYarn,
-    log,
-    silent: !log.isDebug,
+    log: Log.log,
+    silent: !Log.isDebug,
   });
 
   const packagesStr = chalk.bold(devPackages.join(', '));
-  log.newLine();
+  Log.newLine();
   const installingPackageStep = logNewSection(`Installing ${packagesStr}`);
   try {
     await packageManager.addDevAsync(...devPackages);

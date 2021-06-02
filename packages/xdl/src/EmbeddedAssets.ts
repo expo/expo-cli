@@ -3,13 +3,14 @@ import fs from 'fs-extra';
 import path from 'path';
 import semver from 'semver';
 
-import logger from './Logger';
-import * as ExponentTools from './detach/ExponentTools';
-import * as IosPlist from './detach/IosPlist';
-// @ts-ignore IosWorkspace not yet converted to TypeScript
-import * as IosWorkspace from './detach/IosWorkspace';
-import StandaloneContext from './detach/StandaloneContext';
-import { writeArtifactSafelyAsync } from './tools/ArtifactUtils';
+import {
+  ExponentTools,
+  IosPlist,
+  IosWorkspace,
+  Logger as logger,
+  StandaloneContext,
+  writeArtifactSafelyAsync,
+} from './internal';
 
 export type EmbeddedAssetsConfiguration = {
   projectRoot: string;
@@ -18,12 +19,10 @@ export type EmbeddedAssetsConfiguration = {
   releaseChannel?: string;
   iosManifestUrl: string;
   iosManifest: any;
-  iosBundle: string;
-  iosSourceMap: string | null;
+  iosBundle: string | Uint8Array;
   androidManifestUrl: string;
   androidManifest: any;
-  androidBundle: string;
-  androidSourceMap: string | null;
+  androidBundle: string | Uint8Array;
   target: ProjectTarget;
 };
 
@@ -120,19 +119,15 @@ async function _maybeWriteArtifactsToDiskAsync(config: EmbeddedAssetsConfigurati
     exp,
     iosManifest,
     iosBundle,
-    iosSourceMap,
     androidManifest,
     androidBundle,
-    androidSourceMap,
     target,
   } = config;
 
   let androidBundlePath;
   let androidManifestPath;
-  let androidSourceMapPath;
   let iosBundlePath;
   let iosManifestPath;
-  let iosSourceMapPath;
 
   if (shouldEmbedAssetsForExpoUpdates(projectRoot, exp, pkg, target)) {
     const defaultAndroidDir = _getDefaultEmbeddedAssetDir('android', projectRoot, exp);
@@ -160,17 +155,11 @@ async function _maybeWriteArtifactsToDiskAsync(config: EmbeddedAssetsConfigurati
   if (exp.android?.publishManifestPath) {
     androidManifestPath = exp.android.publishManifestPath;
   }
-  if (exp.android?.publishSourceMapPath) {
-    androidSourceMapPath = exp.android.publishSourceMapPath;
-  }
   if (exp.ios?.publishBundlePath) {
     iosBundlePath = exp.ios.publishBundlePath;
   }
   if (exp.ios?.publishManifestPath) {
     iosManifestPath = exp.ios.publishManifestPath;
-  }
-  if (exp.ios?.publishSourceMapPath) {
-    iosSourceMapPath = exp.ios.publishSourceMapPath;
   }
 
   if (androidBundlePath) {
@@ -191,15 +180,6 @@ async function _maybeWriteArtifactsToDiskAsync(config: EmbeddedAssetsConfigurati
     );
   }
 
-  if (androidSourceMapPath && androidSourceMap) {
-    await writeArtifactSafelyAsync(
-      projectRoot,
-      'android.publishSourceMapPath',
-      androidSourceMapPath,
-      androidSourceMap
-    );
-  }
-
   if (iosBundlePath) {
     await writeArtifactSafelyAsync(projectRoot, 'ios.publishBundlePath', iosBundlePath, iosBundle);
   }
@@ -210,15 +190,6 @@ async function _maybeWriteArtifactsToDiskAsync(config: EmbeddedAssetsConfigurati
       'ios.publishManifestPath',
       iosManifestPath,
       JSON.stringify(iosManifest)
-    );
-  }
-
-  if (iosSourceMapPath && iosSourceMap) {
-    await writeArtifactSafelyAsync(
-      projectRoot,
-      'ios.publishSourceMapPath',
-      iosSourceMapPath,
-      iosSourceMap
     );
   }
 }

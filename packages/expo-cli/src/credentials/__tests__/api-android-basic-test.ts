@@ -7,8 +7,8 @@ import {
   testKeystore,
   testKeystore2,
   testPushCredentials,
-} from '../test-fixtures/mocks-android';
-import { testExperienceName, testJester2ExperienceName } from '../test-fixtures/mocks-constants';
+} from './fixtures/mocks-android';
+import { testExperienceName, testJester2ExperienceName } from './fixtures/mocks-constants';
 
 beforeEach(() => {});
 

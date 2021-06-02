@@ -1,4 +1,4 @@
-import log from '../../../../log';
+import Log from '../../../../log';
 import prompt from '../../../../prompts';
 import { existingFile } from '../../../../validators';
 import { learnMore } from '../../../utils/TerminalLink';
@@ -36,7 +36,7 @@ async function getServiceAccountAsync(source: ServiceAccountSource): Promise<str
 
 async function handlePathSourceAsync(source: ServiceAccountPathSource): Promise<string> {
   if (!(await existingFile(source.path))) {
-    log.warn(`File ${source.path} doesn't exist.`);
+    Log.warn(`File ${source.path} doesn't exist.`);
     return await getServiceAccountAsync({ sourceType: ServiceAccountSourceType.prompt });
   }
   return source.path;
@@ -51,11 +51,11 @@ async function handlePromptSourceAsync(_source: ServiceAccountPromptSource): Pro
 }
 
 async function askForServiceAccountPathAsync(): Promise<string> {
-  log(
-    `${log.chalk.bold(
+  Log.log(
+    `${Log.chalk.bold(
       'A Google Service Account JSON key is required to upload your app to Google Play Store'
     )}.\n` +
-      `If you're not sure what this is or how to create one, ${log.chalk.dim(
+      `If you're not sure what this is or how to create one, ${Log.chalk.dim(
         learnMore('https://expo.fyi/creating-google-service-account')
       )}.`
   );

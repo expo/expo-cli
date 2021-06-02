@@ -2,10 +2,10 @@ import fs from 'fs-extra';
 import { vol } from 'memfs';
 
 import prompts from '../../../prompts';
-import { testKeystore } from '../../test-fixtures/mocks-android';
-import { testExperienceName } from '../../test-fixtures/mocks-constants';
-import { getCtxMock } from '../../test-fixtures/mocks-context';
-import { testAllCredentialsForApp } from '../../test-fixtures/mocks-ios';
+import { testKeystore } from '../../__tests__/fixtures/mocks-android';
+import { testExperienceName } from '../../__tests__/fixtures/mocks-constants';
+import { getCtxMock } from '../../__tests__/fixtures/mocks-context';
+import { testAllCredentialsForApp } from '../../__tests__/fixtures/mocks-ios';
 import * as credentialsJsonUpdateUtils from '../update';
 
 jest.mock('fs');

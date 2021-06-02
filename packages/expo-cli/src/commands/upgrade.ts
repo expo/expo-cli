@@ -1,22 +1,30 @@
-import { getConfig, readConfigJsonAsync, resolveModule, writeConfigJsonAsync } from '@expo/config';
+import {
+  getConfig,
+  isLegacyImportsEnabled,
+  readConfigJson,
+  writeConfigJsonAsync,
+} from '@expo/config';
 import { ExpoConfig } from '@expo/config-types';
 import JsonFile from '@expo/json-file';
 import * as PackageManager from '@expo/package-manager';
-import { Android, Project, Simulator, Versions } from '@expo/xdl';
 import chalk from 'chalk';
 import program, { Command } from 'commander';
 import getenv from 'getenv';
 import difference from 'lodash/difference';
 import omit from 'lodash/omit';
 import pickBy from 'lodash/pickBy';
-import ora from 'ora';
+import resolveFrom from 'resolve-from';
 import semver from 'semver';
 import terminalLink from 'terminal-link';
+import { Android, Project, ProjectSettings, Simulator, Versions } from 'xdl';
 
 import CommandError from '../CommandError';
-import log from '../log';
+import Log from '../log';
 import { confirmAsync, selectAsync } from '../prompts';
+import { ora } from '../utils/ora';
 import { findProjectRootAsync } from './utils/ProjectUtils';
+import { getBundledNativeModulesAsync } from './utils/bundledNativeModules';
+import { assertProjectHasExpoExtensionFilesAsync } from './utils/deprecatedExtensionWarnings';
 import maybeBailOnGitStatusAsync from './utils/maybeBailOnGitStatusAsync';
 
 type DependencyList = Record<string, string>;
@@ -61,17 +69,9 @@ export function maybeFormatSdkVersion(sdkVersionString: string | null): string |
  * This is preferable to reading it from the project package.json because we get
  * the exact installed version and not a range.
  */
-async function getExactInstalledModuleVersionAsync(
-  moduleName: string,
-  projectRoot: string,
-  options?: { nodeModulesPath?: string }
-) {
+async function getExactInstalledModuleVersionAsync(moduleName: string, projectRoot: string) {
   try {
-    const pkg = await JsonFile.readAsync(
-      resolveModule(`${moduleName}/package.json`, projectRoot, {
-        nodeModulesPath: options?.nodeModulesPath,
-      })
-    );
+    const pkg = await JsonFile.readAsync(resolveFrom(projectRoot, `${moduleName}/package.json`));
     return pkg.version as string;
   } catch (e) {
     return null;
@@ -86,12 +86,14 @@ export async function getUpdatedDependenciesAsync(
   workflow: ExpoWorkflow,
   targetSdkVersion: TargetSDKVersion | null,
   targetSdkVersionString: string
-): Promise<DependencyList> {
+): Promise<{ dependencies: DependencyList; removed: string[] }> {
   // Get the updated version for any bundled modules
   const { exp, pkg } = getConfig(projectRoot);
-  const bundledNativeModules = (await JsonFile.readAsync(
-    resolveModule('expo/bundledNativeModules.json', projectRoot, exp)
-  )) as DependencyList;
+
+  const bundledNativeModules = await getBundledNativeModulesAsync(
+    projectRoot,
+    targetSdkVersionString
+  );
 
   // Smoosh regular and dev dependencies together for now
   const projectDependencies = { ...pkg.dependencies, ...pkg.devDependencies };
@@ -103,6 +105,8 @@ export async function getUpdatedDependenciesAsync(
     workflow,
     targetSdkVersion,
   });
+
+  const removed: string[] = [];
 
   // Add expo-random as a dependency if using expo-auth-session and upgrading to
   // a version where it has been moved to a peer dependency.
@@ -116,7 +120,16 @@ export async function getUpdatedDependenciesAsync(
     dependencies['expo-random'] = bundledNativeModules['expo-random'];
   }
 
-  return dependencies;
+  if (
+    dependencies['@react-native-community/async-storage'] &&
+    semver.gte(targetSdkVersionString, '41.0.0')
+  ) {
+    dependencies['@react-native-async-storage/async-storage'] =
+      bundledNativeModules['@react-native-async-storage/async-storage'];
+    removed.push('@react-native-community/async-storage');
+  }
+
+  return { dependencies, removed };
 }
 
 export type UpgradeDependenciesOptions = {
@@ -153,8 +166,8 @@ export function getDependenciesFromBundledNativeModules({
   }
 
   if (!targetSdkVersion) {
-    log.newLine();
-    log.warn(
+    Log.newLine();
+    Log.warn(
       `Supported react, react-native, and react-dom versions are unknown because we don't have version information for the target SDK, please update them manually.`
     );
     return result;
@@ -221,7 +234,7 @@ async function makeBreakingChangesToConfigAsync(
     return;
   }
 
-  const { rootConfig } = await readConfigJsonAsync(projectRoot);
+  const { rootConfig } = readConfigJson(projectRoot);
   try {
     switch (targetSdkVersionString) {
       // IMPORTANT: adding a new case here? be sure to update the dynamic config situation above
@@ -275,7 +288,7 @@ async function maybeBailOnUnsafeFunctionalityAsync(
   // Give people a chance to bail out if they're updating from a super old version because YMMV
   if (!Versions.gteSdkVersion(exp, '33.0.0')) {
     if (program.nonInteractive) {
-      log.warn(
+      Log.warn(
         `This command works best on SDK 33 and higher. Because the command is running in nonInteractive mode it'll continue regardless.`
       );
       return true;
@@ -289,22 +302,22 @@ async function maybeBailOnUnsafeFunctionalityAsync(
       return true;
     }
 
-    log.newLine();
+    Log.newLine();
   }
   return false;
 }
 
 async function stopExpoServerAsync(projectRoot: string): Promise<void> {
   // Can't upgrade if Expo is running
-  const status = await Project.currentStatus(projectRoot);
+  const status = await ProjectSettings.getCurrentStatusAsync(projectRoot);
   if (status === 'running') {
     await Project.stopAsync(projectRoot);
-    log(
+    Log.log(
       chalk.bold.underline(
         'We found an existing expo-cli instance running for this project and closed it to continue.'
       )
     );
-    log.addNewLineIfNone();
+    Log.addNewLineIfNone();
   }
 }
 
@@ -315,10 +328,10 @@ async function shouldBailWhenUsingLatest(
   // Maybe bail out early if people are trying to update to the current version
   if (targetSdkVersionString === currentSdkVersionString) {
     if (program.nonInteractive) {
-      log.warn(
+      Log.warn(
         `You are already using the latest SDK version but the command will continue because nonInteractive is enabled.`
       );
-      log.newLine();
+      Log.newLine();
       return false;
     }
     const answer = await confirmAsync({
@@ -326,12 +339,12 @@ async function shouldBailWhenUsingLatest(
     });
 
     if (!answer) {
-      log('Follow the Expo blog at https://blog.expo.io for new release information!');
-      log.newLine();
+      Log.log('Follow the Expo blog at https://blog.expo.io for new release information!');
+      Log.newLine();
       return true;
     }
 
-    log.newLine();
+    Log.newLine();
   }
 
   return false;
@@ -343,18 +356,16 @@ async function shouldUpgradeSimulatorAsync(): Promise<boolean> {
     return false;
   }
   if (program.nonInteractive) {
-    log.warn(`Skipping attempt to upgrade the client app on iOS simulator.`);
+    Log.warn(`Skipping attempt to upgrade the client app on iOS simulator.`);
     return false;
   }
 
-  let answer = false;
-  try {
-    answer = await confirmAsync({
-      message: 'Would you like to upgrade the Expo app in the iOS simulator?',
-      initial: false,
-    });
-  } catch {}
-  log.newLine();
+  const answer = await confirmAsync({
+    message: 'Would you like to upgrade the Expo app in the iOS simulator?',
+    initial: false,
+  });
+
+  Log.newLine();
   return answer;
 }
 
@@ -366,12 +377,12 @@ async function maybeUpgradeSimulatorAsync(sdkVersion: TargetSDKVersion) {
       version: sdkVersion.iosClientVersion,
     });
     if (!result) {
-      log.error(
+      Log.error(
         "The upgrade of your simulator didn't go as planned. You might have to reinstall it manually with expo client:install:ios."
       );
     }
 
-    log.newLine();
+    Log.newLine();
   }
 }
 
@@ -381,19 +392,16 @@ async function shouldUpgradeEmulatorAsync(): Promise<boolean> {
     return false;
   }
   if (program.nonInteractive) {
-    log.warn(`Skipping attempt to upgrade the Expo app on the Android emulator.`);
+    Log.warn(`Skipping attempt to upgrade the Expo app on the Android emulator.`);
     return false;
   }
 
-  let answer = false;
-  try {
-    answer = await confirmAsync({
-      message: 'Would you like to upgrade the Expo app in the Android emulator?',
-      initial: false,
-    });
-  } catch {}
+  const answer = await confirmAsync({
+    message: 'Would you like to upgrade the Expo app in the Android emulator?',
+    initial: false,
+  });
 
-  log.newLine();
+  Log.newLine();
   return answer;
 }
 
@@ -405,11 +413,11 @@ async function maybeUpgradeEmulatorAsync(sdkVersion: TargetSDKVersion) {
       version: sdkVersion.androidClientVersion,
     });
     if (!result) {
-      log.error(
+      Log.error(
         "The upgrade of your Android client didn't go as planned. You might have to reinstall it manually with expo client:install:android."
       );
     }
-    log.newLine();
+    Log.newLine();
   }
 }
 
@@ -464,8 +472,7 @@ export async function upgradeAsync(
 
   const previousReactNativeVersion = await getExactInstalledModuleVersionAsync(
     'react-native',
-    projectRoot,
-    exp
+    projectRoot
   );
 
   // Maybe bail out early if people are trying to update to the current version
@@ -482,7 +489,7 @@ export async function upgradeAsync(
       message: `You are currently using SDK ${currentSdkVersionString}. Would you like to update to the latest version, ${latestSdkVersion.version}?`,
     });
 
-    log.newLine();
+    Log.newLine();
 
     if (!answer) {
       const selectedSdkVersionString = await promptSelectSDKVersionAsync(
@@ -493,7 +500,7 @@ export async function upgradeAsync(
       // This has to exist because it's based on keys already present in sdkVersions
       targetSdkVersion = sdkVersions[selectedSdkVersionString];
       targetSdkVersionString = selectedSdkVersionString;
-      log.newLine();
+      Log.newLine();
     }
   } else if (!targetSdkVersion) {
     // This is useful when testing the beta internally, before actually
@@ -538,11 +545,11 @@ export async function upgradeAsync(
   const packageManager = PackageManager.createForProject(projectRoot, {
     npm: options.npm,
     yarn: options.yarn,
-    log,
+    log: Log.log,
     silent: !getenv.boolish('EXPO_DEBUG', false),
   });
 
-  log.addNewLineIfNone();
+  Log.addNewLineIfNone();
 
   const expoPackageToInstall = getenv.boolish('EXPO_BETA', false)
     ? `expo@next`
@@ -555,7 +562,7 @@ export async function upgradeAsync(
     const installingPackageStep = logNewSection(
       `Installing the ${expoPackageToInstall} package...`
     );
-    log.addNewLineIfNone();
+    Log.addNewLineIfNone();
     try {
       await packageManager.addAsync(expoPackageToInstall);
     } catch (e) {
@@ -574,7 +581,7 @@ export async function upgradeAsync(
       !Versions.gteSdkVersion(currentExp, targetSdkVersionString) &&
       currentExp.sdkVersion !== 'UNVERSIONED'
     ) {
-      log.addNewLineIfNone();
+      Log.addNewLineIfNone();
       removingSdkVersionStep.warn(
         'Please manually delete the sdkVersion field in your project app config file. It is now automatically determined based on the expo package version in your package.json.'
       );
@@ -583,9 +590,9 @@ export async function upgradeAsync(
     }
   } else if (staticConfigPath) {
     try {
-      const { rootConfig } = await readConfigJsonAsync(projectRoot);
+      const { rootConfig } = readConfigJson(projectRoot);
       if (rootConfig.expo.sdkVersion && rootConfig.expo.sdkVersion !== 'UNVERSIONED') {
-        log.addNewLineIfNone();
+        Log.addNewLineIfNone();
         await writeConfigJsonAsync(projectRoot, { sdkVersion: undefined });
         removingSdkVersionStep.succeed('Removed deprecated sdkVersion field from app.json.');
       } else {
@@ -605,10 +612,10 @@ export async function upgradeAsync(
     'Updating packages to compatible versions (where known).'
   );
 
-  log.addNewLineIfNone();
+  Log.addNewLineIfNone();
 
   // Get all updated packages
-  const updates = await getUpdatedDependenciesAsync(
+  const { dependencies: updates, removed } = await getUpdatedDependenciesAsync(
     projectRoot,
     workflow,
     targetSdkVersion,
@@ -649,6 +656,14 @@ export async function upgradeAsync(
     }
   }
 
+  if (removed.length) {
+    try {
+      await packageManager.removeAsync(...removed);
+    } catch (e) {
+      updatingPackagesStep.fail(`Failed to remove JavaScript dependencies: ${removed.join(' ')}`);
+    }
+  }
+
   updatingPackagesStep.succeed('Updated known packages to compatible versions.');
 
   // Remove package-lock.json and node_modules if using npm instead of yarn. See the function
@@ -674,15 +689,27 @@ export async function upgradeAsync(
     clearingCacheStep.succeed('Cleared packager cache.');
   }
 
-  log.newLine();
-  log(chalk.bold.green(`👏 Automated upgrade steps complete.`));
-  log(chalk.bold.grey(`...but this doesn't mean everything is done yet!`));
-  log.newLine();
+  // Warn about extensions out of sync. Remove after dropping support for SDK 41
+  if (!isLegacyImportsEnabled(exp)) {
+    await assertProjectHasExpoExtensionFilesAsync(projectRoot, true);
+  }
+
+  Log.newLine();
+  Log.log(chalk.bold.green(`👏 Automated upgrade steps complete.`));
+  Log.log(chalk.bold.grey(`...but this doesn't mean everything is done yet!`));
+  Log.newLine();
 
   // List packages that were updated
-  log(chalk.bold(`✅ The following packages were updated:`));
-  log(chalk.grey.bold([...Object.keys(updates), ...['expo']].join(', ')));
-  log.addNewLineIfNone();
+  Log.log(chalk.bold(`✅ The following packages were updated:`));
+  Log.log(chalk.grey.bold([...Object.keys(updates), ...['expo']].join(', ')));
+  Log.addNewLineIfNone();
+
+  if (removed.length) {
+    Log.addNewLineIfNone();
+    Log.log(chalk.bold(`🗑️ The following packages were removed:`));
+    Log.log(chalk.grey.bold(removed.join(', ')));
+    Log.addNewLineIfNone();
+  }
 
   // List packages that were not updated
   const allDependencies = { ...pkg.dependencies, ...pkg.devDependencies };
@@ -691,28 +718,37 @@ export async function upgradeAsync(
     'expo',
   ]);
   if (untouchedDependencies.length) {
-    log.addNewLineIfNone();
-    log(
+    Log.addNewLineIfNone();
+    Log.log(
       chalk.bold(
         `🚨 The following packages were ${chalk.underline(
           'not'
         )} updated. You should check the READMEs for those repositories to determine what version is compatible with your new set of packages:`
       )
     );
-    log(chalk.grey.bold(untouchedDependencies.join(', ')));
-    log.addNewLineIfNone();
+    Log.log(chalk.grey.bold(untouchedDependencies.join(', ')));
+    Log.addNewLineIfNone();
+  }
+
+  if (removed.includes('@react-native-community/async-storage')) {
+    Log.addNewLineIfNone();
+    Log.log(
+      chalk.bold(
+        `🚨 @react-native-community/async-storage has been renamed to @react-native-async-storage/async-storage. The dependency has been updated automatically, you will now need to either update the imports in your source code manually, or run \`npx expo-codemod sdk41-async-storage './**/*'\`.`
+      )
+    );
+    Log.addNewLineIfNone();
   }
 
   // Add some basic additional instructions for bare workflow
   if (workflow === 'bare') {
-    log.addNewLineIfNone();
+    Log.addNewLineIfNone();
 
     // The upgrade helper only accepts exact version, so in case we use version range expressions in our
     // versions data let's read the version from the source of truth - package.json in node_modules.
     const newReactNativeVersion = await getExactInstalledModuleVersionAsync(
       'react-native',
-      projectRoot,
-      exp
+      projectRoot
     );
 
     // It's possible that the developer has upgraded react-native already because it's bare workflow.
@@ -726,19 +762,19 @@ export async function upgradeAsync(
       const upgradeHelperUrl = `https://react-native-community.github.io/upgrade-helper/`;
 
       if (semver.lt(previousReactNativeVersion, newReactNativeVersion)) {
-        log(
+        Log.log(
           chalk.bold(
             `⬆️  To finish your react-native upgrade, update your native projects as outlined here:
 ${chalk.gray(`${upgradeHelperUrl}?from=${previousReactNativeVersion}&to=${newReactNativeVersion}`)}`
           )
         );
       } else {
-        log(
+        Log.log(
           chalk.bold(
             `👉 react-native has been changed from ${previousReactNativeVersion} to ${newReactNativeVersion} because this is the version used in SDK ${targetSdkVersionString}.`
           )
         );
-        log(
+        Log.log(
           chalk.bold(
             chalk.grey(
               `Bare workflow apps are free to adjust their react-native version at the developer's discretion. You may want to re-install react-native@${previousReactNativeVersion} before proceeding.`
@@ -747,31 +783,31 @@ ${chalk.gray(`${upgradeHelperUrl}?from=${previousReactNativeVersion}&to=${newRea
         );
       }
 
-      log.newLine();
+      Log.newLine();
     }
 
-    log(
+    Log.log(
       chalk.bold(
         `🏗  Run ${chalk.grey(
           'pod install'
         )} in your iOS directory and then re-build your native projects to compile the updated dependencies.`
       )
     );
-    log.addNewLineIfNone();
+    Log.addNewLineIfNone();
   }
 
   if (targetSdkVersion && targetSdkVersion.releaseNoteUrl) {
-    log(
+    Log.log(
       `Please refer to the release notes for information on any further required steps to update and information about breaking changes:`
     );
-    log(chalk.bold(targetSdkVersion.releaseNoteUrl));
+    Log.log(chalk.bold(targetSdkVersion.releaseNoteUrl));
   } else {
     if (getenv.boolish('EXPO_BETA', false)) {
-      log.gray(
+      Log.gray(
         `Release notes are not available for beta releases. Please refer to the CHANGELOG: https://github.com/expo/expo/blob/master/CHANGELOG.md.`
       );
     } else {
-      log.gray(
+      Log.gray(
         `Unable to find release notes for ${targetSdkVersionString}, please try to find them on https://blog.expo.io to learn more about other potentially important upgrade steps and breaking changes.`
       );
     }
@@ -786,21 +822,21 @@ ${chalk.gray(`${upgradeHelperUrl}?from=${previousReactNativeVersion}&to=${newRea
 
   const skippedSdkVersionKeys = Object.keys(skippedSdkVersions);
   if (skippedSdkVersionKeys.length) {
-    log.newLine();
+    Log.newLine();
 
     const releaseNotesUrls = Object.values(skippedSdkVersions)
       .map(data => data.releaseNoteUrl)
       .filter(releaseNoteUrl => releaseNoteUrl)
       .reverse();
     if (releaseNotesUrls.length === 1) {
-      log(`You should also look at the breaking changes from a release that you skipped:`);
-      log(chalk.bold(`- ${releaseNotesUrls[0]}`));
+      Log.log(`You should also look at the breaking changes from a release that you skipped:`);
+      Log.log(chalk.bold(`- ${releaseNotesUrls[0]}`));
     } else {
-      log(
+      Log.log(
         `In addition to the most recent release notes, you should go over the breaking changes from skipped releases:`
       );
       releaseNotesUrls.forEach(url => {
-        log(chalk.bold(`- ${url}`));
+        Log.log(chalk.bold(`- ${url}`));
       });
     }
   }

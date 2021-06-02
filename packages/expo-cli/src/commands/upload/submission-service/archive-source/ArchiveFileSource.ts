@@ -1,10 +1,10 @@
 import { Platform } from '@expo/config';
-import { StandaloneBuild } from '@expo/xdl';
-import validator from 'validator';
+import { StandaloneBuild, UrlUtils } from 'xdl';
 
-import log from '../../../../log';
+import Log from '../../../../log';
 import prompt from '../../../../prompts';
 import { existingFile } from '../../../../validators';
+import { isUUID } from '../../../utils/isUUID';
 import { getAppConfig } from '../utils/config';
 import {
   downloadAppArchiveAsync,
@@ -87,7 +87,7 @@ async function getArchiveLocationForUrlAsync(url: string): Promise<string> {
   if (!pathIsTar(url)) {
     return url;
   } else {
-    log('Downloading your app archive');
+    Log.log('Downloading your app archive');
     return downloadAppArchiveAsync(url);
   }
 }
@@ -95,7 +95,7 @@ async function getArchiveLocationForUrlAsync(url: string): Promise<string> {
 async function getArchiveLocationForPathAsync(path: string): Promise<string> {
   const resolvedPath = await extractLocalArchiveAsync(path);
 
-  log('Uploading your app archive to the Expo Submission Service');
+  Log.log('Uploading your app archive to the Expo Submission Service');
   return await uploadAppArchiveAsync(resolvedPath);
 }
 
@@ -114,8 +114,8 @@ async function handleLatestSourceAsync(source: ArchiveFileLatestSource): Promise
     1
   );
   if (builds.length === 0) {
-    log.error(
-      log.chalk.bold(
+    Log.error(
+      Log.chalk.bold(
         "Couldn't find any builds for this project on Expo servers. It looks like you haven't run expo build:android yet."
       )
     );
@@ -130,7 +130,7 @@ async function handleLatestSourceAsync(source: ArchiveFileLatestSource): Promise
 
 async function handlePathSourceAsync(source: ArchiveFilePathSource): Promise<string> {
   if (!(await existingFile(source.path))) {
-    log.error(log.chalk.bold(`${source.path} doesn't exist`));
+    Log.error(Log.chalk.bold(`${source.path} doesn't exist`));
     return getArchiveFileLocationAsync({
       sourceType: ArchiveFileSourceType.prompt,
       platform: source.platform,
@@ -151,12 +151,12 @@ async function handleBuildIdSourceAsync(source: ArchiveFileBuildIdSource): Promi
       slug,
     });
   } catch (err) {
-    log.error(err);
+    Log.error(err);
     throw err;
   }
 
   if (!build) {
-    log.error(log.chalk.bold(`Couldn't find build for id ${source.id}`));
+    Log.error(Log.chalk.bold(`Couldn't find build for id ${source.id}`));
     return getArchiveFileLocationAsync({
       sourceType: ArchiveFileSourceType.prompt,
       platform: source.platform,
@@ -275,7 +275,7 @@ async function askForBuildIdAsync(): Promise<string> {
     message: 'Build ID:',
     type: 'text',
     validate: (val: string): string | boolean => {
-      if (!validator.isUUID(val)) {
+      if (!isUUID(val)) {
         return `${val} is not a valid id`;
       } else {
         return true;
@@ -286,7 +286,7 @@ async function askForBuildIdAsync(): Promise<string> {
 }
 
 function validateUrl(url: string): boolean {
-  return validator.isURL(url, {
+  return UrlUtils.isURL(url, {
     protocols: ['http', 'https'],
   });
 }

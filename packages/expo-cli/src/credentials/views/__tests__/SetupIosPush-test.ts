@@ -1,6 +1,6 @@
-import { testAppLookupParams } from '../../test-fixtures/mocks-constants';
-import { getCtxMock } from '../../test-fixtures/mocks-context';
-import { testIosPushCredential, testPushKeysFromApple } from '../../test-fixtures/mocks-ios';
+import { testAppLookupParams } from '../../__tests__/fixtures/mocks-constants';
+import { getCtxMock } from '../../__tests__/fixtures/mocks-context';
+import { testIosPushCredential, testPushKeysFromApple } from '../../__tests__/fixtures/mocks-ios';
 import { SetupIosPush } from '../SetupIosPush';
 
 // these variables need to be prefixed with 'mock' if declared outside of the mock scope

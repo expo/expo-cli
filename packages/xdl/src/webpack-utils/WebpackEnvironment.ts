@@ -2,7 +2,7 @@ import chalk from 'chalk';
 import getenv from 'getenv';
 import { Configuration } from 'webpack';
 
-import { LogTag, logWarning } from '../project/ProjectUtils';
+import { ProjectUtils } from '../internal';
 
 export const HOST = getenv.string('WEB_HOST', '0.0.0.0');
 
@@ -23,9 +23,13 @@ export function shouldWebpackClearLogs(): boolean {
   return !isDebugModeEnabled() && !isInfoEnabled() && !getenv.boolish('EXPO_DEBUG', false);
 }
 
-export function logEnvironmentInfo(projectRoot: string, tag: LogTag, config: Configuration): void {
+export function logEnvironmentInfo(
+  projectRoot: string,
+  tag: ProjectUtils.LogTag,
+  config: Configuration
+): void {
   if (isDebugModeEnabled() && config.mode === 'production') {
-    logWarning(
+    ProjectUtils.logWarning(
       projectRoot,
       tag,
       `Webpack is bundling your project in \`production\` mode with the ${chalk.bold(

@@ -4,7 +4,7 @@ import { resolve } from 'path';
 
 import { ConfigPlugin } from '../Plugin.types';
 import { withAppBuildGradle, withProjectBuildGradle } from '../plugins/android-plugins';
-import { withDangerousMod } from '../plugins/core-plugins';
+import { withDangerousMod } from '../plugins/withDangerousMod';
 import * as WarningAggregator from '../utils/warnings';
 
 const DEFAULT_TARGET_PATH = './android/app/google-services.json';

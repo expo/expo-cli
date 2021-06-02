@@ -15,8 +15,8 @@ interface ProjectFile<L extends string = string> {
 
 export type AppDelegateProjectFile = ProjectFile<'objc' | 'swift'>;
 
-export function getAppDelegate(projectRoot: string): AppDelegateProjectFile {
-  const [using, ...extra] = globSync('ios/*/AppDelegate.{m,swift}', {
+export function getAppDelegateFilePath(projectRoot: string): string {
+  const [using, ...extra] = globSync('ios/*/AppDelegate.@(m|swift)', {
     absolute: true,
     cwd: projectRoot,
     ignore: ignoredPaths,
@@ -36,12 +36,32 @@ export function getAppDelegate(projectRoot: string): AppDelegateProjectFile {
     });
   }
 
-  const isSwift = using.match(/^.*\.(swift)$/);
+  return using;
+}
+
+function getLanguage(filePath: string): 'objc' | 'swift' {
+  const extension = path.extname(filePath);
+  switch (extension) {
+    case '.m':
+      return 'objc';
+    case '.swift':
+      return 'swift';
+    default:
+      throw new UnexpectedError(`Unexpected iOS file extension: ${extension}`);
+  }
+}
+
+export function getFileInfo(filePath: string) {
   return {
-    path: using,
-    contents: readFileSync(using, 'utf8'),
-    language: isSwift ? 'swift' : 'objc',
+    path: path.normalize(filePath),
+    contents: readFileSync(filePath, 'utf8'),
+    language: getLanguage(filePath),
   };
+}
+
+export function getAppDelegate(projectRoot: string): AppDelegateProjectFile {
+  const filePath = getAppDelegateFilePath(projectRoot);
+  return getFileInfo(filePath);
 }
 
 export function getSourceRoot(projectRoot: string): string {

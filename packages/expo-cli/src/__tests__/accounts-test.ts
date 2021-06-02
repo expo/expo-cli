@@ -1,8 +1,8 @@
-import { ApiV2 } from '@expo/xdl';
+import { ApiV2 } from 'xdl';
 
 import { _retryUsernamePasswordAuthWithOTPAsync, UserSecondFactorDeviceMethod } from '../accounts';
-import { jester } from '../credentials/test-fixtures/mocks-constants';
-import log from '../log';
+import { jester } from '../credentials/__tests__/fixtures/mocks-constants';
+import Log from '../log';
 import prompt, { selectAsync } from '../prompts';
 import { mockExpoXDL } from './mock-utils';
 
@@ -37,7 +37,7 @@ beforeEach(() => {
 
 describe(_retryUsernamePasswordAuthWithOTPAsync, () => {
   it('shows SMS OTP prompt when SMS is primary and code was automatically sent', async () => {
-    const logSpy = jest.spyOn(log, 'nested').mockImplementation(() => {});
+    const logSpy = jest.spyOn(Log, 'nested').mockImplementation(() => {});
 
     (prompt as any)
       .mockImplementationOnce(() => ({ otp: 'hello' }))
@@ -66,7 +66,7 @@ describe(_retryUsernamePasswordAuthWithOTPAsync, () => {
   });
 
   it('shows authenticator OTP prompt when authenticator is primary', async () => {
-    const logSpy = jest.spyOn(log, 'nested').mockImplementation(() => {});
+    const logSpy = jest.spyOn(Log, 'nested').mockImplementation(() => {});
 
     (prompt as any)
       .mockImplementationOnce(() => ({ otp: 'hello' }))

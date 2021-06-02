@@ -300,10 +300,6 @@ exports[`ProvisioningProfile module setProvisioningProfileForPbxproj configures 
 				SWIFT_OPTIMIZATION_LEVEL = \\"-Onone\\";
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = \\"apple-generic\\";
-				PROVISIONING_PROFILE_SPECIFIER = \\"*[expo] com.swmansion.dominik.abcd.v2 AppStore 2020-07-24T07:56:22.983Z\\";
-				DEVELOPMENT_TEAM = J5FM626PE2;
-				CODE_SIGN_IDENTITY = \\"iPhone Distribution\\";
-				CODE_SIGN_STYLE = Manual;
 			};
 			name = Debug;
 		};

@@ -1,4 +1,4 @@
-import log from '../../log';
+import Log from '../../log';
 import { Context, IView } from '../context';
 import * as credentialsJsonReader from '../credentialsJson/read';
 import validateKeystoreAsync from '../utils/validateKeystore';
@@ -21,7 +21,7 @@ export class SetupAndroidKeystore implements IView {
     }
     if (this.options.nonInteractive) {
       if (this.options.allowMissingKeystore) {
-        log.warn(
+        Log.warn(
           'There is no valid Keystore defined for this app, new one will be generated on Expo servers.'
         );
         return null;
@@ -48,7 +48,7 @@ export class SetupAndroidBuildCredentialsFromLocal implements IView {
     try {
       localCredentials = await credentialsJsonReader.readAndroidCredentialsAsync(ctx.projectDir);
     } catch (error) {
-      log.error(
+      Log.error(
         'Reading credentials from credentials.json failed. Make sure this file is correct and all credentials are present there.'
       );
       throw error;

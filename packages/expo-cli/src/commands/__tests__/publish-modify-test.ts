@@ -1,9 +1,9 @@
-import { ApiV2 } from '@expo/xdl';
 import { vol } from 'memfs';
+import { ApiV2 } from 'xdl';
 
 import { mockExpoXDL } from '../../__tests__/mock-utils';
 import { createTestProject } from '../../__tests__/project-utils';
-import { jester } from '../../credentials/test-fixtures/mocks-constants';
+import { jester } from '../../credentials/__tests__/fixtures/mocks-constants';
 import {
   rollbackPublicationFromChannelAsync,
   setPublishToChannelAsync,

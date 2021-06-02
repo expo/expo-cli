@@ -1,5 +1,5 @@
 import CommandError from '../../CommandError';
-import log from '../../log';
+import Log from '../../log';
 import { confirmAsync } from '../../prompts';
 import { AppLookupParams } from '../api/IosApi';
 import { Context, IView } from '../context';
@@ -30,7 +30,7 @@ export class SetupIosPush implements IView {
         message: `We've detected legacy Push Certificates on file. Would you like to upgrade to the newer standard?`,
       });
       if (!confirm) {
-        log(`Using Deprecated Push Cert: ${deprecatedPushId} on file`);
+        Log.log(`Using Deprecated Push Cert: ${deprecatedPushId} on file`);
         return null;
       }
     }
