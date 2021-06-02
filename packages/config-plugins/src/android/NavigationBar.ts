@@ -5,10 +5,9 @@ import { withAndroidColors, withAndroidStyles } from '../plugins/android-plugins
 import * as WarningAggregator from '../utils/warnings';
 import { setColorItem } from './Colors';
 import { buildResourceItem, ResourceXML } from './Resources';
-import { setStylesItem } from './Styles';
+import { assignStylesValue, getAppThemeLightNoActionBarParent } from './Styles';
 
 const NAVIGATION_BAR_COLOR = 'navigationBarColor';
-const WINDOW_LIGHT_NAVIGATION_BAR = 'android:windowLightNavigationBar';
 
 export const withNavigationBar: ConfigPlugin = config => {
   const immersiveMode = getNavigationBarImmersiveMode(config);
@@ -61,30 +60,19 @@ export function setNavigationBarStyles(
   config: Pick<ExpoConfig, 'androidNavigationBar'>,
   styles: ResourceXML
 ): ResourceXML {
-  const hexString = getNavigationBarColor(config);
-  const barStyle = getNavigationBarStyle(config);
-  const parent = { name: 'AppTheme', parent: 'Theme.AppCompat.Light.NoActionBar' };
-  if (hexString) {
-    styles = setStylesItem({
-      xml: styles,
-      parent,
-      item: buildResourceItem({
-        name: `android:${NAVIGATION_BAR_COLOR}`,
-        value: `@color/${NAVIGATION_BAR_COLOR}`,
-      }),
-    });
-  }
+  styles = assignStylesValue(styles, {
+    add: !!getNavigationBarColor(config),
+    parent: getAppThemeLightNoActionBarParent(),
+    name: `android:${NAVIGATION_BAR_COLOR}`,
+    value: `@color/${NAVIGATION_BAR_COLOR}`,
+  });
 
-  if (barStyle === 'dark-content') {
-    styles = setStylesItem({
-      xml: styles,
-      parent,
-      item: buildResourceItem({
-        name: WINDOW_LIGHT_NAVIGATION_BAR,
-        value: 'true',
-      }),
-    });
-  }
+  styles = assignStylesValue(styles, {
+    add: getNavigationBarStyle(config) === 'dark-content',
+    parent: getAppThemeLightNoActionBarParent(),
+    name: 'android:windowLightNavigationBar',
+    value: 'true',
+  });
 
   return styles;
 }

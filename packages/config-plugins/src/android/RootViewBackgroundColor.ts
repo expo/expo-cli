@@ -3,8 +3,8 @@ import { ExpoConfig } from '@expo/config-types';
 import { ConfigPlugin } from '../Plugin.types';
 import { withAndroidColors, withAndroidStyles } from '../plugins/android-plugins';
 import { assignColorValue } from './Colors';
-import { buildResourceItem, ResourceXML } from './Resources';
-import { removeStylesItem, setStylesItem } from './Styles';
+import { ResourceXML } from './Resources';
+import { assignStylesValue, getAppThemeLightNoActionBarParent } from './Styles';
 
 const ANDROID_WINDOW_BACKGROUND = 'android:windowBackground';
 const WINDOW_BACKGROUND_COLOR = 'activityBackground';
@@ -43,23 +43,11 @@ export function setRootViewBackgroundColorStyles(
   config: Pick<ExpoConfig, 'android' | 'backgroundColor'>,
   styles: ResourceXML
 ) {
-  const hexString = getRootViewBackgroundColor(config);
-  const parent = { name: 'AppTheme', parent: 'Theme.AppCompat.Light.NoActionBar' };
-  if (!hexString) {
-    return removeStylesItem({
-      xml: styles,
-      parent,
-      name: ANDROID_WINDOW_BACKGROUND,
-    });
-  }
-
-  return setStylesItem({
-    xml: styles,
-    parent,
-    item: buildResourceItem({
-      name: ANDROID_WINDOW_BACKGROUND,
-      value: `@color/${WINDOW_BACKGROUND_COLOR}`,
-    }),
+  return assignStylesValue(styles, {
+    add: !!getRootViewBackgroundColor(config),
+    parent: getAppThemeLightNoActionBarParent(),
+    name: ANDROID_WINDOW_BACKGROUND,
+    value: `@color/${WINDOW_BACKGROUND_COLOR}`,
   });
 }
 

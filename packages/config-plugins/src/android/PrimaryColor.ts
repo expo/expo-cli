@@ -3,8 +3,8 @@ import { ExpoConfig } from '@expo/config-types';
 import { ConfigPlugin } from '../Plugin.types';
 import { withAndroidColors, withAndroidStyles } from '../plugins/android-plugins';
 import { assignColorValue } from './Colors';
-import { buildResourceItem, ResourceXML } from './Resources';
-import { removeStylesItem, setStylesItem } from './Styles';
+import { ResourceXML } from './Resources';
+import { assignStylesValue, getAppThemeLightNoActionBarParent } from './Styles';
 
 const COLOR_PRIMARY_KEY = 'colorPrimary';
 const DEFAULT_PRIMARY_COLOR = '#023c69';
@@ -47,22 +47,10 @@ export function setPrimaryColorStyles(
   config: Pick<ExpoConfig, 'primaryColor'>,
   xml: ResourceXML
 ): ResourceXML {
-  const hexString = getPrimaryColor(config);
-  const parent = { name: 'AppTheme', parent: 'Theme.AppCompat.Light.NoActionBar' };
-  if (!hexString) {
-    return removeStylesItem({
-      xml,
-      parent,
-      name: COLOR_PRIMARY_KEY,
-    });
-  }
-
-  return setStylesItem({
-    xml,
-    parent,
-    item: buildResourceItem({
-      name: COLOR_PRIMARY_KEY,
-      value: `@color/${COLOR_PRIMARY_KEY}`,
-    }),
+  return assignStylesValue(xml, {
+    add: !!getPrimaryColor(config),
+    parent: getAppThemeLightNoActionBarParent(),
+    name: COLOR_PRIMARY_KEY,
+    value: `@color/${COLOR_PRIMARY_KEY}`,
   });
 }

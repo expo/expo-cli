@@ -3,8 +3,8 @@ import { ExpoConfig } from '@expo/config-types';
 import { ConfigPlugin } from '../Plugin.types';
 import { withAndroidColors, withAndroidStyles } from '../plugins/android-plugins';
 import { assignColorValue } from './Colors';
-import { buildResourceItem, ResourceXML } from './Resources';
-import { removeStylesItem, setStylesItem } from './Styles';
+import { ResourceXML } from './Resources';
+import { assignStylesValue, getAppThemeLightNoActionBarParent } from './Styles';
 
 const COLOR_PRIMARY_DARK_KEY = 'colorPrimaryDark';
 const WINDOW_TRANSLUCENT_STATUS = 'android:windowTranslucentStatus';
@@ -44,59 +44,31 @@ export function setStatusBarStyles(
   config: Pick<ExpoConfig, 'androidStatusBar'>,
   styles: ResourceXML
 ): ResourceXML {
-  const style = getStatusBarStyle(config);
   const hexString = getStatusBarColor(config);
 
-  const parent = { name: 'AppTheme', parent: 'Theme.AppCompat.Light.NoActionBar' };
+  styles = assignStylesValue(styles, {
+    parent: getAppThemeLightNoActionBarParent(),
+    name: WINDOW_LIGHT_STATUS_BAR,
+    value: 'true',
+    // Default is light-content, don't need to do anything to set it
+    add: getStatusBarStyle(config) === 'dark-content',
+  });
 
-  // Default is light-content, don't need to do anything to set it
-  if (style === 'dark-content') {
-    styles = setStylesItem({
-      xml: styles,
-      parent,
-      item: buildResourceItem({
-        name: WINDOW_LIGHT_STATUS_BAR,
-        value: `true`,
-      }),
-    });
-  } else {
-    styles = removeStylesItem({
-      xml: styles,
-      parent,
-      name: WINDOW_LIGHT_STATUS_BAR,
-    });
-  }
-
-  if (hexString === 'translucent') {
-    styles = removeStylesItem({
-      xml: styles,
-      parent,
-      name: COLOR_PRIMARY_DARK_KEY,
-    });
+  styles = assignStylesValue(styles, {
+    parent: getAppThemeLightNoActionBarParent(),
+    name: WINDOW_TRANSLUCENT_STATUS,
+    value: 'true',
     // translucent status bar set in theme
-    styles = setStylesItem({
-      xml: styles,
-      parent,
-      item: buildResourceItem({
-        name: WINDOW_TRANSLUCENT_STATUS,
-        value: 'true',
-      }),
-    });
-  } else {
-    styles = removeStylesItem({
-      xml: styles,
-      parent,
-      name: WINDOW_TRANSLUCENT_STATUS,
-    });
-    styles = setStylesItem({
-      xml: styles,
-      parent,
-      item: buildResourceItem({
-        name: COLOR_PRIMARY_DARK_KEY,
-        value: `@color/${COLOR_PRIMARY_DARK_KEY}`,
-      }),
-    });
-  }
+    add: hexString === 'translucent',
+  });
+
+  styles = assignStylesValue(styles, {
+    parent: getAppThemeLightNoActionBarParent(),
+    name: COLOR_PRIMARY_DARK_KEY,
+    value: `@color/${COLOR_PRIMARY_DARK_KEY}`,
+    // Remove the color if translucent is used
+    add: hexString !== 'translucent',
+  });
 
   return styles;
 }

@@ -1,6 +1,7 @@
 import { getResourceXMLPathAsync } from './Paths';
 import {
   buildResourceGroup,
+  buildResourceItem,
   ensureDefaultResourceXML,
   ResourceGroupXML,
   ResourceItemXML,
@@ -55,7 +56,7 @@ export function getStylesItem({
   }
 
   if (appTheme.item) {
-    const existingItem = appTheme.item.filter(_item => _item.$.name === name)[0];
+    const existingItem = appTheme.item.filter(({ $: head }) => head.name === name)[0];
 
     // Don't want to 2 of the same item, so if one exists, we overwrite it
     if (existingItem) {
@@ -84,7 +85,7 @@ export function setStylesItem({
   }
 
   if (appTheme.item) {
-    const existingItem = appTheme.item.filter(_item => _item.$.name === item.$.name)[0];
+    const existingItem = appTheme.item.filter(({ $: head }) => head.name === item.$.name)[0];
 
     // Don't want to 2 of the same item, so if one exists, we overwrite it
     if (existingItem) {
@@ -110,10 +111,46 @@ export function removeStylesItem({
   xml = ensureDefaultStyleResourceXML(xml);
   const appTheme = getStyleParent(xml, parent);
   if (appTheme?.item) {
-    const index = appTheme.item.findIndex((e: ResourceItemXML) => e.$.name === name);
+    const index = appTheme.item.findIndex(({ $: head }: ResourceItemXML) => head.name === name);
     if (index > -1) {
       appTheme.item.splice(index, 1);
     }
   }
   return xml;
+}
+
+// This is a very common theme so make it reusable.
+export function getAppThemeLightNoActionBarParent() {
+  return { name: 'AppTheme', parent: 'Theme.AppCompat.Light.NoActionBar' };
+}
+
+export function assignStylesValue(
+  xml: ResourceXML,
+  {
+    add,
+    value,
+    name,
+    parent,
+  }: {
+    add: boolean;
+    value: string;
+    name: string;
+    parent: { name: string; parent: string };
+  }
+): ResourceXML {
+  if (add) {
+    return setStylesItem({
+      xml,
+      parent,
+      item: buildResourceItem({
+        name,
+        value,
+      }),
+    });
+  }
+  return removeStylesItem({
+    xml,
+    parent,
+    name,
+  });
 }
