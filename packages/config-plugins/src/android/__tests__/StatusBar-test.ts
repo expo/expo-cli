@@ -1,8 +1,12 @@
+import { ExpoConfig } from '@expo/config-types';
 import { vol } from 'memfs';
 
-import { readResourcesXMLAsync } from '../Resources';
-import { getStatusBarColor, getStatusBarStyle, setStatusBarConfig } from '../StatusBar';
-import { getProjectStylesXMLPathAsync } from '../Styles';
+import {
+  getStatusBarColor,
+  getStatusBarStyle,
+  setStatusBarColors,
+  setStatusBarStyles,
+} from '../StatusBar';
 
 jest.mock('fs');
 
@@ -50,36 +54,66 @@ describe('Android status bar', () => {
     });
 
     it(`sets the colorPrimaryDark item in styles.xml and adds color to colors.xml if 'androidStatusBar.backgroundColor' is given`, async () => {
+      const config: ExpoConfig = {
+        name: 'foo',
+        slug: 'bar',
+        androidStatusBar: { backgroundColor: '#654321', barStyle: 'dark-content' },
+      };
+      const props = {
+        style: getStatusBarStyle(config),
+        hexString: getStatusBarColor(config),
+      };
+      const styles = setStatusBarStyles(props, { resources: {} });
+      const colors = setStatusBarColors(props, { resources: {} });
       expect(
-        await setStatusBarConfig(
-          { androidStatusBar: { backgroundColor: '#654321', barStyle: 'dark-content' } },
-          '/app'
-        )
-      ).toBe(true);
-
-      const stylesJSON = await readResourcesXMLAsync({
-        path: await getProjectStylesXMLPathAsync('/app'),
-      });
-      const colorsJSON = await readResourcesXMLAsync({
-        path: '/app/android/app/src/main/res/values/colors.xml',
-      });
-      expect(
-        stylesJSON.resources.style
+        styles.resources.style
           .filter(e => e.$.name === 'AppTheme')[0]
           .item.filter(item => item.$.name === 'colorPrimaryDark')[0]._
       ).toMatch('@color/colorPrimaryDark');
-      expect(colorsJSON.resources.color.filter(e => e.$.name === 'colorPrimaryDark')[0]._).toMatch(
+      expect(colors.resources.color.filter(e => e.$.name === 'colorPrimaryDark')[0]._).toMatch(
         '#654321'
       );
       expect(
-        stylesJSON.resources.style
+        styles.resources.style
           .filter(e => e.$.name === 'AppTheme')[0]
           .item.filter(item => item.$.name === 'android:windowLightStatusBar')[0]._
       ).toMatch('true');
     });
 
     it(`sets the status bar to translucent if no 'androidStatusBar.backgroundColor' is given`, async () => {
-      expect(await setStatusBarConfig({}, '/app')).toBe(true);
+      const config: ExpoConfig = {
+        name: 'foo',
+        slug: 'bar',
+        androidStatusBar: {},
+      };
+
+      const props = {
+        style: getStatusBarStyle(config),
+        hexString: getStatusBarColor(config),
+      };
+
+      const styles = setStatusBarStyles(props, { resources: {} });
+      const colors = setStatusBarColors(props, { resources: {} });
+
+      expect(styles.resources).toStrictEqual({
+        style: [
+          {
+            $: {
+              name: 'AppTheme',
+              parent: 'Theme.AppCompat.Light.NoActionBar',
+            },
+            item: [
+              {
+                $: {
+                  name: 'android:windowTranslucentStatus',
+                },
+                _: 'true',
+              },
+            ],
+          },
+        ],
+      });
+      expect(colors.resources).toStrictEqual({});
     });
   });
 });
