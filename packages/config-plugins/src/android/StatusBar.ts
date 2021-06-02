@@ -88,7 +88,7 @@ export async function setStatusBarConfig(
   return true;
 }
 
-async function setStatusBarStylesForThemeAsync({
+export async function setStatusBarStylesForThemeAsync({
   projectRoot,
   kind,
   hidden,
@@ -132,7 +132,7 @@ async function setStatusBarStylesForThemeAsync({
     xml = removeStylesItem({
       xml,
       name: 'android:windowFullscreen',
-      parent: styleResourceGroup,
+      parent,
     });
   } else {
     const hiddenItem = buildResourceItem({
@@ -142,7 +142,7 @@ async function setStatusBarStylesForThemeAsync({
     xml = setStylesItem({
       xml,
       item: hiddenItem,
-      parent: styleResourceGroup,
+      parent,
     });
   }
 
@@ -179,7 +179,7 @@ async function setStatusBarStylesForThemeAsync({
   return xml;
 }
 
-async function setStatusBarColorsForThemeAsync({
+export async function setStatusBarColorsForThemeAsync({
   projectRoot,
   kind,
   statusBarBackgroundColor,
