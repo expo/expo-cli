@@ -7,7 +7,7 @@ import type { PropertiesItem } from './Properties';
 export const JS_ENGINE_PROP_KEY = 'expo.jsEngine';
 export const DEFAULT_JS_ENGINE = 'jsc';
 
-export const withJsEngine: ConfigPlugin = config => {
+export const withJsEngineGradleProps: ConfigPlugin = config => {
   return withGradleProperties(config, config => {
     config.modResults = setJsEngine(config, config.modResults);
     return config;
