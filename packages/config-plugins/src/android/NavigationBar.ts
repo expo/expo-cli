@@ -1,52 +1,17 @@
 import { ExpoConfig } from '@expo/config-types';
 
 import { ConfigPlugin } from '../Plugin.types';
-import { withDangerousMod } from '../plugins/withDangerousMod';
-import { writeXMLAsync } from '../utils/XML';
+import { withAndroidColors, withAndroidStyles } from '../plugins/android-plugins';
 import * as WarningAggregator from '../utils/warnings';
-import { getProjectColorsXMLPathAsync, setColorItem } from './Colors';
-import { buildResourceItem, readResourcesXMLAsync } from './Resources';
-import { getProjectStylesXMLPathAsync, setStylesItem } from './Styles';
+import { setColorItem } from './Colors';
+import { buildResourceItem, ResourceXML } from './Resources';
+import { setStylesItem } from './Styles';
 
 const NAVIGATION_BAR_COLOR = 'navigationBarColor';
 const WINDOW_LIGHT_NAVIGATION_BAR = 'android:windowLightNavigationBar';
 
 export const withNavigationBar: ConfigPlugin = config => {
-  return withDangerousMod(config, [
-    'android',
-    async config => {
-      await setNavigationBarConfig(config, config.modRequest.projectRoot);
-      return config;
-    },
-  ]);
-};
-
-export function getNavigationBarImmersiveMode(config: Pick<ExpoConfig, 'androidNavigationBar'>) {
-  return config.androidNavigationBar?.visible || null;
-}
-
-export function getNavigationBarColor(config: Pick<ExpoConfig, 'androidNavigationBar'>) {
-  return config.androidNavigationBar?.backgroundColor || null;
-}
-
-export function getNavigationBarStyle(config: Pick<ExpoConfig, 'androidNavigationBar'>) {
-  return config.androidNavigationBar?.barStyle || 'light-content';
-}
-
-export async function setNavigationBarConfig(
-  config: Pick<ExpoConfig, 'androidNavigationBar'>,
-  projectRoot: string
-) {
   const immersiveMode = getNavigationBarImmersiveMode(config);
-  const hexString = getNavigationBarColor(config);
-  const barStyle = getNavigationBarStyle(config);
-
-  const stylesPath = await getProjectStylesXMLPathAsync(projectRoot);
-  const colorsPath = await getProjectColorsXMLPathAsync(projectRoot);
-
-  let stylesJSON = await readResourcesXMLAsync({ path: stylesPath });
-  let colorsJSON = await readResourcesXMLAsync({ path: colorsPath });
-
   if (immersiveMode) {
     // Immersive mode needs to be set programatically
     WarningAggregator.addWarningAndroid(
@@ -54,10 +19,44 @@ export async function setNavigationBarConfig(
       'Hiding the navigation bar must be done programmatically. Refer to the Android documentation - https://developer.android.com/training/system-ui/immersive - for instructions.'
     );
   }
+
+  config = withNavigationBarColors(config);
+  config = withNavigationBarStyles(config);
+  return config;
+};
+
+const withNavigationBarColors: ConfigPlugin = config =>
+  withAndroidColors(config, config => {
+    config.modResults = setNavigationBarColors(config, config.modResults);
+    return config;
+  });
+
+const withNavigationBarStyles: ConfigPlugin = config =>
+  withAndroidStyles(config, config => {
+    config.modResults = setNavigationBarStyles(config, config.modResults);
+    return config;
+  });
+
+export function setNavigationBarColors(
+  config: Pick<ExpoConfig, 'androidNavigationBar'>,
+  colorsJSON: ResourceXML
+): ResourceXML {
+  const hexString = getNavigationBarColor(config);
   if (hexString) {
     const colorItemToAdd = buildResourceItem({ name: NAVIGATION_BAR_COLOR, value: hexString });
     colorsJSON = setColorItem(colorItemToAdd, colorsJSON);
+  }
+  return colorsJSON;
+}
 
+export function setNavigationBarStyles(
+  config: Pick<ExpoConfig, 'androidNavigationBar'>,
+  stylesJSON: ResourceXML
+): ResourceXML {
+  const hexString = getNavigationBarColor(config);
+  const barStyle = getNavigationBarStyle(config);
+
+  if (hexString) {
     const styleItemToAdd = buildResourceItem({
       name: `android:${NAVIGATION_BAR_COLOR}`,
       value: `@color/${NAVIGATION_BAR_COLOR}`,
@@ -68,6 +67,7 @@ export async function setNavigationBarConfig(
       parent: { name: 'AppTheme', parent: 'Theme.AppCompat.Light.NoActionBar' },
     });
   }
+
   if (barStyle === 'dark-content') {
     const navigationBarStyleItem = buildResourceItem({
       name: WINDOW_LIGHT_NAVIGATION_BAR,
@@ -80,15 +80,17 @@ export async function setNavigationBarConfig(
     });
   }
 
-  try {
-    await Promise.all([
-      writeXMLAsync({ path: colorsPath, xml: colorsJSON }),
-      writeXMLAsync({ path: stylesPath, xml: stylesJSON }),
-    ]);
-  } catch (e) {
-    throw new Error(
-      `Error setting Android navigation bar color. Cannot write colors.xml to ${colorsPath}, or styles.xml to ${stylesPath}.`
-    );
-  }
-  return true;
+  return stylesJSON;
+}
+
+export function getNavigationBarImmersiveMode(config: Pick<ExpoConfig, 'androidNavigationBar'>) {
+  return config.androidNavigationBar?.visible || null;
+}
+
+export function getNavigationBarColor(config: Pick<ExpoConfig, 'androidNavigationBar'>) {
+  return config.androidNavigationBar?.backgroundColor || null;
+}
+
+export function getNavigationBarStyle(config: Pick<ExpoConfig, 'androidNavigationBar'>) {
+  return config.androidNavigationBar?.barStyle || 'light-content';
 }
