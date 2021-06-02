@@ -52,13 +52,13 @@ describe('Android navigation bar', () => {
 
       expect(
         stylesJSON.resources.style
-          .filter(e => e.$.name === 'AppTheme')[0]
-          .item.filter(item => item.$.name === 'android:navigationBarColor')[0]._
+          .filter(({ $: head }) => head.name === 'AppTheme')[0]
+          .item.filter(({ $: head }) => head.name === 'android:navigationBarColor')[0]._
       ).toMatch('@color/navigationBarColor');
       expect(
         stylesJSON.resources.style
-          .filter(e => e.$.name === 'AppTheme')[0]
-          .item.filter(item => item.$.name === 'android:windowLightNavigationBar')[0]._
+          .filter(({ $: head }) => head.name === 'AppTheme')[0]
+          .item.filter(({ $: head }) => head.name === 'android:windowLightNavigationBar')[0]._
       ).toMatch('true');
     });
     it(`sets the navigationBarColor item in styles.xml and adds color to colors.xml if 'androidNavigationBar.backgroundColor' is given. sets windowLightNavigation bar true`, async () => {

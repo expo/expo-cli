@@ -10,74 +10,66 @@ const ANDROID_WINDOW_BACKGROUND = 'android:windowBackground';
 const WINDOW_BACKGROUND_COLOR = 'activityBackground';
 
 export const withRootViewBackgroundColor: ConfigPlugin = config => {
-  const hexString = getRootViewBackgroundColor(config);
-  config = withRootViewBackgroundColorColors(config, { hexString });
-  config = withRootViewBackgroundColorStyles(config, { hexString });
+  config = withRootViewBackgroundColorColors(config);
+  config = withRootViewBackgroundColorStyles(config);
   return config;
 };
 
-const withRootViewBackgroundColorColors: ConfigPlugin<{ hexString: string | null }> = (
-  config,
-  props
-) => {
+const withRootViewBackgroundColorColors: ConfigPlugin = config => {
   return withAndroidColors(config, async config => {
-    config.modResults = setRootViewBackgroundColorColors(props, config.modResults);
+    config.modResults = setRootViewBackgroundColorColors(config, config.modResults);
     return config;
   });
 };
 
-const withRootViewBackgroundColorStyles: ConfigPlugin<{ hexString: string | null }> = (
-  config,
-  props
-) => {
+const withRootViewBackgroundColorStyles: ConfigPlugin = config => {
   return withAndroidStyles(config, async config => {
-    config.modResults = setRootViewBackgroundColorStyles(props, config.modResults);
+    config.modResults = setRootViewBackgroundColorStyles(config, config.modResults);
     return config;
   });
 };
 
 export function setRootViewBackgroundColorColors(
-  { hexString }: { hexString: string | null },
-  colorsJSON: ResourceXML
+  config: Pick<ExpoConfig, 'android' | 'backgroundColor'>,
+  colors: ResourceXML
 ) {
+  const hexString = getRootViewBackgroundColor(config);
+
   if (!hexString) {
-    return removeColorItem(WINDOW_BACKGROUND_COLOR, colorsJSON);
+    return removeColorItem(WINDOW_BACKGROUND_COLOR, colors);
   }
-  const colorItemToAdd = buildResourceItem({ name: WINDOW_BACKGROUND_COLOR, value: hexString });
-  return setColorItem(colorItemToAdd, colorsJSON);
+  return setColorItem(
+    buildResourceItem({ name: WINDOW_BACKGROUND_COLOR, value: hexString }),
+    colors
+  );
 }
 
 export function setRootViewBackgroundColorStyles(
-  { hexString }: { hexString: string | null },
-  stylesJSON: ResourceXML
+  config: Pick<ExpoConfig, 'android' | 'backgroundColor'>,
+  styles: ResourceXML
 ) {
+  const hexString = getRootViewBackgroundColor(config);
+  const parent = { name: 'AppTheme', parent: 'Theme.AppCompat.Light.NoActionBar' };
   if (!hexString) {
     return removeStylesItem({
+      xml: styles,
+      parent,
       name: ANDROID_WINDOW_BACKGROUND,
-      xml: stylesJSON,
-      parent: { name: 'AppTheme', parent: 'Theme.AppCompat.Light.NoActionBar' },
     });
   }
-  const styleItemToAdd = buildResourceItem({
-    name: ANDROID_WINDOW_BACKGROUND,
-    value: `@color/${WINDOW_BACKGROUND_COLOR}`,
-  });
+
   return setStylesItem({
-    item: styleItemToAdd,
-    xml: stylesJSON,
-    parent: { name: 'AppTheme', parent: 'Theme.AppCompat.Light.NoActionBar' },
+    xml: styles,
+    parent,
+    item: buildResourceItem({
+      name: ANDROID_WINDOW_BACKGROUND,
+      value: `@color/${WINDOW_BACKGROUND_COLOR}`,
+    }),
   });
 }
 
 export function getRootViewBackgroundColor(
   config: Pick<ExpoConfig, 'android' | 'backgroundColor'>
 ) {
-  if (config.android?.backgroundColor) {
-    return config.android.backgroundColor;
-  }
-  if (config.backgroundColor) {
-    return config.backgroundColor;
-  }
-
-  return null;
+  return config.android?.backgroundColor || config.backgroundColor || null;
 }

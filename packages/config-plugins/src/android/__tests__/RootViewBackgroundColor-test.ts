@@ -22,20 +22,19 @@ it(`returns the backgroundColor under android if provided`, () => {
 });
 
 describe('write colors.xml correctly', () => {
+  const config = { backgroundColor: '#654321' };
+  it(`sets the windowBackground in colors.xml if backgroundColor is given`, async () => {
+    const colors = setRootViewBackgroundColorColors(config, { resources: {} });
+    expect(
+      colors.resources.color.filter(({ $: head }) => head.name === 'activityBackground')[0]._
+    ).toMatch('#654321');
+  });
   it(`sets the android:windowBackground in styles.xml if backgroundColor is given`, async () => {
-    const config = { backgroundColor: '#654321' };
-    const props = {
-      hexString: getRootViewBackgroundColor(config),
-    };
-    const styles = setRootViewBackgroundColorStyles(props, { resources: {} });
-    const colors = setRootViewBackgroundColorColors(props, { resources: {} });
+    const styles = setRootViewBackgroundColorStyles(config, { resources: {} });
     expect(
       styles.resources.style
-        .filter(e => e.$.name === 'AppTheme')[0]
-        .item.filter(item => item.$.name === 'android:windowBackground')[0]._
+        .filter(({ $: head }) => head.name === 'AppTheme')[0]
+        .item.filter(({ $: head }) => head.name === 'android:windowBackground')[0]._
     ).toMatch('@color/activityBackground');
-    expect(colors.resources.color.filter(e => e.$.name === 'activityBackground')[0]._).toMatch(
-      '#654321'
-    );
   });
 });

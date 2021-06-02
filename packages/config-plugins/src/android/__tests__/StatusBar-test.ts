@@ -7,13 +7,6 @@ import {
   setStatusBarStyles,
 } from '../StatusBar';
 
-export const sampleStylesXML = `
-<resources>
-    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
-        <item name="android:windowBackground">#222222</item>
-    </style>
-</resources>`;
-
 it(`returns 'translucent' if no status bar color is provided`, () => {
   expect(getStatusBarColor({})).toMatch('translucent');
   expect(getStatusBarColor({ androidStatusBar: {} })).toMatch('translucent');
@@ -42,24 +35,20 @@ describe('e2e: write statusbar color and style to files correctly', () => {
       slug: 'bar',
       androidStatusBar: { backgroundColor: '#654321', barStyle: 'dark-content' },
     };
-    const props = {
-      style: getStatusBarStyle(config),
-      hexString: getStatusBarColor(config),
-    };
-    const styles = setStatusBarStyles(props, { resources: {} });
-    const colors = setStatusBarColors(props, { resources: {} });
+    const styles = setStatusBarStyles(config, { resources: {} });
+    const colors = setStatusBarColors(config, { resources: {} });
     expect(
       styles.resources.style
-        .filter(e => e.$.name === 'AppTheme')[0]
-        .item.filter(item => item.$.name === 'colorPrimaryDark')[0]._
+        .filter(({ $: head }) => head.name === 'AppTheme')[0]
+        .item.filter(({ $: head }) => head.name === 'colorPrimaryDark')[0]._
     ).toMatch('@color/colorPrimaryDark');
-    expect(colors.resources.color.filter(e => e.$.name === 'colorPrimaryDark')[0]._).toMatch(
-      '#654321'
-    );
+    expect(
+      colors.resources.color.filter(({ $: head }) => head.name === 'colorPrimaryDark')[0]._
+    ).toMatch('#654321');
     expect(
       styles.resources.style
-        .filter(e => e.$.name === 'AppTheme')[0]
-        .item.filter(item => item.$.name === 'android:windowLightStatusBar')[0]._
+        .filter(({ $: head }) => head.name === 'AppTheme')[0]
+        .item.filter(({ $: head }) => head.name === 'android:windowLightStatusBar')[0]._
     ).toMatch('true');
   });
 
@@ -70,13 +59,8 @@ describe('e2e: write statusbar color and style to files correctly', () => {
       androidStatusBar: {},
     };
 
-    const props = {
-      style: getStatusBarStyle(config),
-      hexString: getStatusBarColor(config),
-    };
-
-    const styles = setStatusBarStyles(props, { resources: {} });
-    const colors = setStatusBarColors(props, { resources: {} });
+    const styles = setStatusBarStyles(config, { resources: {} });
+    const colors = setStatusBarColors(config, { resources: {} });
 
     expect(styles.resources).toStrictEqual({
       style: [

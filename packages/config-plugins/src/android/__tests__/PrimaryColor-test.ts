@@ -15,8 +15,10 @@ it(`sets the colorPrimary item in styles.xml if backgroundColor is given`, async
 
   expect(
     styles.resources.style
-      .filter(e => e.$.name === 'AppTheme')[0]
-      .item.filter(item => item.$.name === 'colorPrimary')[0]._
+      .filter(({ $: head }) => head.name === 'AppTheme')[0]
+      .item.filter(({ $: head }) => head.name === 'colorPrimary')[0]._
   ).toMatch('@color/colorPrimary');
-  expect(colors.resources.color.filter(e => e.$.name === 'colorPrimary')[0]._).toMatch('#654321');
+  expect(colors.resources.color.filter(({ $: head }) => head.name === 'colorPrimary')[0]._).toMatch(
+    '#654321'
+  );
 });

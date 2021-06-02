@@ -15,17 +15,19 @@ export const withPrimaryColor: ConfigPlugin = config => {
   return config;
 };
 
-const withPrimaryColorColors: ConfigPlugin = config =>
-  withAndroidColors(config, config => {
+const withPrimaryColorColors: ConfigPlugin = config => {
+  return withAndroidColors(config, config => {
     config.modResults = setPrimaryColorColors(config, config.modResults);
     return config;
   });
+};
 
-const withPrimaryColorStyles: ConfigPlugin = config =>
-  withAndroidStyles(config, config => {
+const withPrimaryColorStyles: ConfigPlugin = config => {
+  return withAndroidStyles(config, config => {
     config.modResults = setPrimaryColorStyles(config, config.modResults);
     return config;
   });
+};
 
 export function getPrimaryColor(config: Pick<ExpoConfig, 'primaryColor'>) {
   return config.primaryColor ?? DEFAULT_PRIMARY_COLOR;
@@ -39,8 +41,7 @@ export function setPrimaryColorColors(
   if (!hexString) {
     return removeColorItem(COLOR_PRIMARY_KEY, xml);
   }
-  const item = buildResourceItem({ name: COLOR_PRIMARY_KEY, value: hexString });
-  return setColorItem(item, xml);
+  return setColorItem(buildResourceItem({ name: COLOR_PRIMARY_KEY, value: hexString }), xml);
 }
 
 export function setPrimaryColorStyles(
@@ -48,17 +49,21 @@ export function setPrimaryColorStyles(
   xml: ResourceXML
 ): ResourceXML {
   const hexString = getPrimaryColor(config);
+  const parent = { name: 'AppTheme', parent: 'Theme.AppCompat.Light.NoActionBar' };
   if (!hexString) {
     return removeStylesItem({
-      name: COLOR_PRIMARY_KEY,
       xml,
-      parent: { name: 'AppTheme', parent: 'Theme.AppCompat.Light.NoActionBar' },
+      parent,
+      name: COLOR_PRIMARY_KEY,
     });
   }
 
   return setStylesItem({
-    item: buildResourceItem({ name: COLOR_PRIMARY_KEY, value: `@color/${COLOR_PRIMARY_KEY}` }),
     xml,
-    parent: { name: 'AppTheme', parent: 'Theme.AppCompat.Light.NoActionBar' },
+    parent,
+    item: buildResourceItem({
+      name: COLOR_PRIMARY_KEY,
+      value: `@color/${COLOR_PRIMARY_KEY}`,
+    }),
   });
 }
