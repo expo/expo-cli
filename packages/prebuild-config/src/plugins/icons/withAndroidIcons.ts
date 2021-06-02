@@ -252,12 +252,14 @@ export async function configureAdaptiveIconAsync(
   await createAdaptiveIconXmlFiles(projectRoot, icLauncherXmlString);
 }
 
-function setBackgroundColor(colorsJson: ResourceXML, backgroundColor: string | null) {
+function setBackgroundColor(colors: ResourceXML, backgroundColor: string | null) {
   if (backgroundColor) {
-    const colorItemToAdd = buildResourceItem({ name: ICON_BACKGROUND, value: backgroundColor });
-    return Colors.setColorItem(colorItemToAdd, colorsJson);
+    return Colors.setColorItem(
+      buildResourceItem({ name: ICON_BACKGROUND, value: backgroundColor }),
+      colors
+    );
   }
-  return Colors.removeColorItem(ICON_BACKGROUND, colorsJson);
+  return Colors.removeColorItem(ICON_BACKGROUND, colors);
 }
 
 export const createAdaptiveIconXmlString = (backgroundImage: string | null) => {

@@ -47,11 +47,13 @@ export const withNotificationIconColor: ConfigPlugin = config => {
   });
 };
 
-export const withNotificationManifest: ConfigPlugin = config =>
-  withAndroidManifest(config, config => {
+export const withNotificationManifest: ConfigPlugin = config => {
+  return withAndroidManifest(config, config => {
     config.modResults = setNotificationConfig(config, config.modResults);
     return config;
   });
+};
+
 export function getNotificationIcon(config: ExpoConfig) {
   return config.notification?.icon || null;
 }
@@ -102,16 +104,20 @@ export function setNotificationConfig(config: ExpoConfig, manifest: AndroidManif
 
 export function setNotificationIconColor(
   config: ExpoConfig,
-  colorsJson: AndroidConfig.Resources.ResourceXML
+  colors: AndroidConfig.Resources.ResourceXML
 ) {
   const color = getNotificationColor(config);
   if (color) {
-    const colorItemToAdd = buildResourceItem({ name: NOTIFICATION_ICON_COLOR, value: color });
-    colorsJson = Colors.setColorItem(colorItemToAdd, colorsJson);
-  } else {
-    colorsJson = Colors.removeColorItem(NOTIFICATION_ICON_COLOR, colorsJson);
+    return Colors.setColorItem(
+      buildResourceItem({
+        name: NOTIFICATION_ICON_COLOR,
+        value: color,
+      }),
+      colors
+    );
   }
-  return colorsJson;
+
+  return Colors.removeColorItem(NOTIFICATION_ICON_COLOR, colors);
 }
 
 async function writeNotificationIconImageFilesAsync(icon: string, projectRoot: string) {
