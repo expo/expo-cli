@@ -1,11 +1,13 @@
 import { ExpoConfig } from '@expo/config-types';
 
+import { getColorsAsObject } from '../Colors';
 import {
   getStatusBarColor,
   getStatusBarStyle,
   setStatusBarColors,
   setStatusBarStyles,
 } from '../StatusBar';
+import { getAppThemeLightNoActionBarGroup, getStylesGroupAsObject } from '../Styles';
 
 it(`returns 'translucent' if no status bar color is provided`, () => {
   expect(getStatusBarColor({})).toMatch('translucent');
@@ -37,19 +39,11 @@ describe('e2e: write statusbar color and style to files correctly', () => {
     };
     const styles = setStatusBarStyles(config, { resources: {} });
     const colors = setStatusBarColors(config, { resources: {} });
-    expect(
-      styles.resources.style
-        .filter(({ $: head }) => head.name === 'AppTheme')[0]
-        .item.filter(({ $: head }) => head.name === 'colorPrimaryDark')[0]._
-    ).toMatch('@color/colorPrimaryDark');
-    expect(
-      colors.resources.color.filter(({ $: head }) => head.name === 'colorPrimaryDark')[0]._
-    ).toMatch('#654321');
-    expect(
-      styles.resources.style
-        .filter(({ $: head }) => head.name === 'AppTheme')[0]
-        .item.filter(({ $: head }) => head.name === 'android:windowLightStatusBar')[0]._
-    ).toMatch('true');
+
+    const group = getStylesGroupAsObject(styles, getAppThemeLightNoActionBarGroup());
+    expect(group.colorPrimaryDark).toBe('@color/colorPrimaryDark');
+    expect(group['android:windowLightStatusBar']).toBe('true');
+    expect(getColorsAsObject(colors).colorPrimaryDark).toBe('#654321');
   });
 
   it(`sets the status bar to translucent if no 'androidStatusBar.backgroundColor' is given`, async () => {
@@ -62,23 +56,10 @@ describe('e2e: write statusbar color and style to files correctly', () => {
     const styles = setStatusBarStyles(config, { resources: {} });
     const colors = setStatusBarColors(config, { resources: {} });
 
-    expect(styles.resources).toStrictEqual({
-      style: [
-        {
-          $: {
-            name: 'AppTheme',
-            parent: 'Theme.AppCompat.Light.NoActionBar',
-          },
-          item: [
-            {
-              $: {
-                name: 'android:windowTranslucentStatus',
-              },
-              _: 'true',
-            },
-          ],
-        },
-      ],
+    const group = getStylesGroupAsObject(styles, getAppThemeLightNoActionBarGroup());
+
+    expect(group).toStrictEqual({
+      'android:windowTranslucentStatus': 'true',
     });
     expect(colors.resources).toStrictEqual({});
   });

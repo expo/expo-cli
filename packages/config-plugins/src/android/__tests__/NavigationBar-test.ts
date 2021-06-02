@@ -1,3 +1,4 @@
+import { getColorsAsObject } from '../Colors';
 import {
   getNavigationBarColor,
   getNavigationBarImmersiveMode,
@@ -6,6 +7,7 @@ import {
   setNavigationBarStyles,
   withNavigationBar,
 } from '../NavigationBar';
+import { getAppThemeLightNoActionBarGroup, getStylesGroupAsObject } from '../Styles';
 
 jest.mock('../../utils/warnings');
 
@@ -50,31 +52,22 @@ describe('Android navigation bar', () => {
         { resources: {} }
       );
 
-      expect(
-        stylesJSON.resources.style
-          .filter(({ $: head }) => head.name === 'AppTheme')[0]
-          .item.filter(({ $: head }) => head.name === 'android:navigationBarColor')[0]._
-      ).toMatch('@color/navigationBarColor');
-      expect(
-        stylesJSON.resources.style
-          .filter(({ $: head }) => head.name === 'AppTheme')[0]
-          .item.filter(({ $: head }) => head.name === 'android:windowLightNavigationBar')[0]._
-      ).toMatch('true');
+      const group = getStylesGroupAsObject(stylesJSON, getAppThemeLightNoActionBarGroup());
+      expect(group['android:navigationBarColor']).toBe('@color/navigationBarColor');
+      expect(group['android:windowLightNavigationBar']).toBe('true');
     });
+
     it(`sets the navigationBarColor item in styles.xml and adds color to colors.xml if 'androidNavigationBar.backgroundColor' is given. sets windowLightNavigation bar true`, async () => {
       const colorsJSON = await setNavigationBarColors(
         { androidNavigationBar: { backgroundColor: '#111111', barStyle: 'dark-content' } },
         { resources: {} }
       );
 
-      expect(
-        colorsJSON.resources.color.filter(e => e.$.name === 'navigationBarColor')[0]._
-      ).toMatch('#111111');
+      expect(getColorsAsObject(colorsJSON).navigationBarColor).toBe('#111111');
     });
 
     it(`adds android warning androidNavigationBar.visible is provided`, async () => {
       addWarningAndroid.mockImplementationOnce();
-
       withNavigationBar({ androidNavigationBar: { visible: 'leanback' } } as any);
       expect(addWarningAndroid).toHaveBeenCalledTimes(1);
     });
