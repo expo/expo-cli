@@ -692,7 +692,7 @@ export interface Android {
   /**
    * Specifies the JavaScript engine. Supported only on EAS Build. Defaults to `jsc`. Valid values: `hermes`, `jsc`.
    */
-  engine?: 'hermes' | 'jsc';
+  jsEngine?: 'hermes' | 'jsc';
 }
 export interface AndroidIntentFiltersData {
   /**

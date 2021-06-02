@@ -72,7 +72,7 @@ export const withExpoAndroidPlugins: ConfigPlugin<{
 
   return withPlugins(config, [
     // gradle.properties
-    AndroidConfig.Engine.withEngine,
+    AndroidConfig.JsEngine.withJsEngine,
 
     // settings.gradle
     AndroidConfig.Name.withNameSettingsGradle,

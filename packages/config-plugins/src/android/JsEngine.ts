@@ -4,31 +4,31 @@ import type { ConfigPlugin } from '../Plugin.types';
 import { withGradleProperties } from '../plugins/android-plugins';
 import type { PropertiesItem } from './Properties';
 
-export const ENGINE_PROP_KEY = 'expo.jsEngine';
-export const DEFAULT_ENGINE = 'jsc';
+export const JS_ENGINE_PROP_KEY = 'expo.jsEngine';
+export const DEFAULT_JS_ENGINE = 'jsc';
 
-export const withEngine: ConfigPlugin = config => {
+export const withJsEngine: ConfigPlugin = config => {
   return withGradleProperties(config, config => {
-    config.modResults = setEngine(config, config.modResults);
+    config.modResults = setJsEngine(config, config.modResults);
     return config;
   });
 };
 
-export function getEngine(config: Pick<ExpoConfig, 'android'>) {
-  return config.android?.engine ?? DEFAULT_ENGINE;
+export function getJsEngine(config: Pick<ExpoConfig, 'android'>) {
+  return config.android?.jsEngine ?? DEFAULT_JS_ENGINE;
 }
 
-export function setEngine(
+export function setJsEngine(
   config: Pick<ExpoConfig, 'android'>,
   gradleProperties: PropertiesItem[]
 ): PropertiesItem[] {
   const oldPropIndex = gradleProperties.findIndex(
-    prop => prop.type === 'property' && prop.key === ENGINE_PROP_KEY
+    prop => prop.type === 'property' && prop.key === JS_ENGINE_PROP_KEY
   );
   const newProp: PropertiesItem = {
     type: 'property',
-    key: ENGINE_PROP_KEY,
-    value: config.android?.engine ?? DEFAULT_ENGINE,
+    key: JS_ENGINE_PROP_KEY,
+    value: config.android?.jsEngine ?? DEFAULT_JS_ENGINE,
   };
 
   if (oldPropIndex >= 0) {
