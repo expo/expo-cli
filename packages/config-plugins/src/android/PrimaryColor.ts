@@ -1,63 +1,64 @@
 import { ExpoConfig } from '@expo/config-types';
 
 import { ConfigPlugin } from '../Plugin.types';
-import { withDangerousMod } from '../plugins/withDangerousMod';
-import { writeXMLAsync } from '../utils/XML';
-import { getProjectColorsXMLPathAsync, setColorItem } from './Colors';
-import { buildResourceItem, readResourcesXMLAsync } from './Resources';
-import { getProjectStylesXMLPathAsync, setStylesItem } from './Styles';
+import { withAndroidColors, withAndroidStyles } from '../plugins/android-plugins';
+import { removeColorItem, setColorItem } from './Colors';
+import { buildResourceItem, ResourceXML } from './Resources';
+import { removeStylesItem, setStylesItem } from './Styles';
 
 const COLOR_PRIMARY_KEY = 'colorPrimary';
 const DEFAULT_PRIMARY_COLOR = '#023c69';
 
 export const withPrimaryColor: ConfigPlugin = config => {
-  return withDangerousMod(config, [
-    'android',
-    async config => {
-      await setPrimaryColor(config, config.modRequest.projectRoot);
-      return config;
-    },
-  ]);
+  config = withPrimaryColorColors(config);
+  config = withPrimaryColorStyles(config);
+  return config;
 };
+
+const withPrimaryColorColors: ConfigPlugin = config =>
+  withAndroidColors(config, config => {
+    config.modResults = setPrimaryColorColors(config, config.modResults);
+    return config;
+  });
+
+const withPrimaryColorStyles: ConfigPlugin = config =>
+  withAndroidStyles(config, config => {
+    config.modResults = setPrimaryColorStyles(config, config.modResults);
+    return config;
+  });
 
 export function getPrimaryColor(config: Pick<ExpoConfig, 'primaryColor'>) {
   return config.primaryColor ?? DEFAULT_PRIMARY_COLOR;
 }
 
-export async function setPrimaryColor(
+export function setPrimaryColorColors(
   config: Pick<ExpoConfig, 'primaryColor'>,
-  projectRoot: string
-) {
+  xml: ResourceXML
+): ResourceXML {
   const hexString = getPrimaryColor(config);
+  if (!hexString) {
+    return removeColorItem(COLOR_PRIMARY_KEY, xml);
+  }
+  const item = buildResourceItem({ name: COLOR_PRIMARY_KEY, value: hexString });
+  return setColorItem(item, xml);
+}
 
-  const stylesPath = await getProjectStylesXMLPathAsync(projectRoot);
-  const colorsPath = await getProjectColorsXMLPathAsync(projectRoot);
+export function setPrimaryColorStyles(
+  config: Pick<ExpoConfig, 'primaryColor'>,
+  xml: ResourceXML
+): ResourceXML {
+  const hexString = getPrimaryColor(config);
+  if (!hexString) {
+    return removeStylesItem({
+      name: COLOR_PRIMARY_KEY,
+      xml,
+      parent: { name: 'AppTheme', parent: 'Theme.AppCompat.Light.NoActionBar' },
+    });
+  }
 
-  let stylesJSON = await readResourcesXMLAsync({ path: stylesPath });
-  let colorsJSON = await readResourcesXMLAsync({ path: colorsPath });
-
-  const colorItemToAdd = buildResourceItem({ name: COLOR_PRIMARY_KEY, value: hexString });
-  const styleItemToAdd = buildResourceItem({
-    name: COLOR_PRIMARY_KEY,
-    value: `@color/${COLOR_PRIMARY_KEY}`,
-  });
-
-  colorsJSON = setColorItem(colorItemToAdd, colorsJSON);
-  stylesJSON = setStylesItem({
-    item: styleItemToAdd,
-    xml: stylesJSON,
+  return setStylesItem({
+    item: buildResourceItem({ name: COLOR_PRIMARY_KEY, value: `@color/${COLOR_PRIMARY_KEY}` }),
+    xml,
     parent: { name: 'AppTheme', parent: 'Theme.AppCompat.Light.NoActionBar' },
   });
-
-  try {
-    await Promise.all([
-      writeXMLAsync({ path: colorsPath, xml: colorsJSON }),
-      writeXMLAsync({ path: stylesPath, xml: stylesJSON }),
-    ]);
-  } catch (e) {
-    throw new Error(
-      `Error setting Android primary color. Cannot write new styles.xml to ${stylesPath}.`
-    );
-  }
-  return true;
 }
