@@ -32,6 +32,11 @@ export async function readXMLAsync(options: {
   return manifest;
 }
 
+export async function parseXMLAsync(contents: string): Promise<XMLObject> {
+  const xml = await new Parser().parseStringPromise(contents);
+  return xml;
+}
+
 const stringTimesN = (n: number, char: string) => Array(n + 1).join(char);
 
 export function format(manifest: any, { indentLevel = 2, newline = EOL } = {}): string {

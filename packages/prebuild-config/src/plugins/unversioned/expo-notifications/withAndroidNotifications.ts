@@ -1,9 +1,9 @@
 import {
   AndroidConfig,
   ConfigPlugin,
+  withAndroidColors,
   withAndroidManifest,
   withDangerousMod,
-  XML,
 } from '@expo/config-plugins';
 import { ExpoConfig } from '@expo/config-types';
 import { generateImageAsync } from '@expo/image-utils';
@@ -12,10 +12,7 @@ import path from 'path';
 
 import { ANDROID_RES_PATH, dpiValues } from '../../icons/withAndroidIcons';
 
-const { writeXMLAsync } = XML;
-
 const { Colors } = AndroidConfig;
-const { buildResourceItem, readResourcesXMLAsync } = AndroidConfig.Resources;
 const {
   addMetaDataItemToMainApplication,
   getMainApplicationOrThrow,
@@ -43,20 +40,19 @@ export const withNotificationIcons: ConfigPlugin = config => {
 };
 
 export const withNotificationIconColor: ConfigPlugin = config => {
-  return withDangerousMod(config, [
-    'android',
-    async config => {
-      await setNotificationIconColorAsync(config, config.modRequest.projectRoot);
-      return config;
-    },
-  ]);
-};
-
-export const withNotificationManifest: ConfigPlugin = config =>
-  withAndroidManifest(config, async config => {
-    config.modResults = await setNotificationConfigAsync(config, config.modResults);
+  return withAndroidColors(config, config => {
+    config.modResults = setNotificationIconColor(config, config.modResults);
     return config;
   });
+};
+
+export const withNotificationManifest: ConfigPlugin = config => {
+  return withAndroidManifest(config, config => {
+    config.modResults = setNotificationConfig(config, config.modResults);
+    return config;
+  });
+};
+
 export function getNotificationIcon(config: ExpoConfig) {
   return config.notification?.icon || null;
 }
@@ -78,7 +74,7 @@ export async function setNotificationIconAsync(config: ExpoConfig, projectRoot: 
   }
 }
 
-export async function setNotificationConfigAsync(config: ExpoConfig, manifest: AndroidManifest) {
+export function setNotificationConfig(config: ExpoConfig, manifest: AndroidManifest) {
   const icon = getNotificationIcon(config);
   const color = getNotificationColor(config);
   const mainApplication = getMainApplicationOrThrow(manifest);
@@ -105,17 +101,14 @@ export async function setNotificationConfigAsync(config: ExpoConfig, manifest: A
   return manifest;
 }
 
-export async function setNotificationIconColorAsync(config: ExpoConfig, projectRoot: string) {
-  const color = getNotificationColor(config);
-  const colorsXmlPath = await Colors.getProjectColorsXMLPathAsync(projectRoot);
-  let colorsJson = await readResourcesXMLAsync({ path: colorsXmlPath });
-  if (color) {
-    const colorItemToAdd = buildResourceItem({ name: NOTIFICATION_ICON_COLOR, value: color });
-    colorsJson = Colors.setColorItem(colorItemToAdd, colorsJson);
-  } else {
-    colorsJson = Colors.removeColorItem(NOTIFICATION_ICON_COLOR, colorsJson);
-  }
-  await writeXMLAsync({ path: colorsXmlPath, xml: colorsJson });
+export function setNotificationIconColor(
+  config: ExpoConfig,
+  colors: AndroidConfig.Resources.ResourceXML
+) {
+  return Colors.assignColorValue(colors, {
+    name: NOTIFICATION_ICON_COLOR,
+    value: getNotificationColor(config),
+  });
 }
 
 async function writeNotificationIconImageFilesAsync(icon: string, projectRoot: string) {

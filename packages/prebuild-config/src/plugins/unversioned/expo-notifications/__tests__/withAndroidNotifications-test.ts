@@ -1,4 +1,6 @@
 import { AndroidConfig } from '@expo/config-plugins';
+import { Colors } from '@expo/config-plugins/build/android';
+import { readResourcesXMLAsync } from '@expo/config-plugins/build/android/Resources';
 import { ExpoConfig } from '@expo/config-types';
 import { fs, vol } from 'memfs';
 import * as path from 'path';
@@ -14,9 +16,9 @@ import {
   NOTIFICATION_ICON_COLOR,
   NOTIFICATION_ICON_COLOR_RESOURCE,
   NOTIFICATION_ICON_RESOURCE,
-  setNotificationConfigAsync,
+  setNotificationConfig,
   setNotificationIconAsync,
-  setNotificationIconColorAsync,
+  setNotificationIconColor,
 } from '../withAndroidNotifications';
 
 jest.mock('fs');
@@ -57,7 +59,13 @@ describe('Android notifications configuration', () => {
       },
     };
     await setNotificationIconAsync(expoConfig, projectRoot);
-    await setNotificationIconColorAsync(expoConfig, projectRoot);
+
+    setNotificationIconColor(
+      expoConfig,
+      await readResourcesXMLAsync({
+        path: await Colors.getProjectColorsXMLPathAsync(projectRoot, {}),
+      })
+    );
   });
 
   afterAll(() => {
@@ -125,9 +133,9 @@ describe('Applies proper Android Notification configuration to AndroidManifest.x
       './AndroidManifest.xml'
     );
 
-    androidManifestJson = await setNotificationConfigAsync(notificationConfig, androidManifestJson);
+    androidManifestJson = setNotificationConfig(notificationConfig, androidManifestJson);
     // Run this twice to ensure copies don't get added.
-    androidManifestJson = await setNotificationConfigAsync(notificationConfig, androidManifestJson);
+    androidManifestJson = setNotificationConfig(notificationConfig, androidManifestJson);
 
     const mainApplication = getMainApplication(androidManifestJson);
 
@@ -149,9 +157,9 @@ describe('Applies proper Android Notification configuration to AndroidManifest.x
       './AndroidManifest.xml'
     );
 
-    androidManifestJson = await setNotificationConfigAsync(notificationConfig, androidManifestJson);
+    androidManifestJson = setNotificationConfig(notificationConfig, androidManifestJson);
     // Now let's get rid of the configuration:
-    androidManifestJson = await setNotificationConfigAsync({} as ExpoConfig, androidManifestJson);
+    androidManifestJson = setNotificationConfig({} as ExpoConfig, androidManifestJson);
 
     const mainApplication = getMainApplication(androidManifestJson);
 

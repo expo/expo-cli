@@ -1,15 +1,14 @@
-import { vol } from 'memfs';
-
+import { getColorsAsObject } from '../Colors';
 import {
   getNavigationBarColor,
   getNavigationBarImmersiveMode,
   getNavigationBarStyle,
-  setNavigationBarConfig,
+  setNavigationBarColors,
+  setNavigationBarStyles,
+  withNavigationBar,
 } from '../NavigationBar';
-import { readResourcesXMLAsync } from '../Resources';
-import { sampleStylesXML } from './StatusBar-test';
+import { getAppThemeLightNoActionBarGroup, getStylesGroupAsObject } from '../Styles';
 
-jest.mock('fs');
 jest.mock('../../utils/warnings');
 
 const { addWarningAndroid } = require('../../utils/warnings');
@@ -47,51 +46,29 @@ describe('Android navigation bar', () => {
   });
 
   describe('e2e: write navigation color and style to files correctly', () => {
-    beforeAll(async () => {
-      const directoryJSON = {
-        './android/app/src/main/res/values/styles.xml': sampleStylesXML,
-      };
-      vol.fromJSON(directoryJSON, '/app');
-    });
+    it(`sets the navigationBarColor item in styles.xml. sets windowLightNavigation bar true`, async () => {
+      const stylesJSON = await setNavigationBarStyles(
+        { androidNavigationBar: { backgroundColor: '#111111', barStyle: 'dark-content' } },
+        { resources: {} }
+      );
 
-    afterAll(async () => {
-      vol.reset();
+      const group = getStylesGroupAsObject(stylesJSON, getAppThemeLightNoActionBarGroup());
+      expect(group['android:navigationBarColor']).toBe('@color/navigationBarColor');
+      expect(group['android:windowLightNavigationBar']).toBe('true');
     });
 
     it(`sets the navigationBarColor item in styles.xml and adds color to colors.xml if 'androidNavigationBar.backgroundColor' is given. sets windowLightNavigation bar true`, async () => {
-      expect(
-        await setNavigationBarConfig(
-          { androidNavigationBar: { backgroundColor: '#111111', barStyle: 'dark-content' } },
-          '/app'
-        )
-      ).toBe(true);
+      const colorsJSON = await setNavigationBarColors(
+        { androidNavigationBar: { backgroundColor: '#111111', barStyle: 'dark-content' } },
+        { resources: {} }
+      );
 
-      const stylesJSON = await readResourcesXMLAsync({
-        path: '/app/android/app/src/main/res/values/styles.xml',
-      });
-      const colorsJSON = await readResourcesXMLAsync({
-        path: '/app/android/app/src/main/res/values/colors.xml',
-      });
-
-      expect(
-        stylesJSON.resources.style
-          .filter(e => e.$.name === 'AppTheme')[0]
-          .item.filter(item => item.$.name === 'android:navigationBarColor')[0]._
-      ).toMatch('@color/navigationBarColor');
-      expect(
-        colorsJSON.resources.color.filter(e => e.$.name === 'navigationBarColor')[0]._
-      ).toMatch('#111111');
-      expect(
-        stylesJSON.resources.style
-          .filter(e => e.$.name === 'AppTheme')[0]
-          .item.filter(item => item.$.name === 'android:windowLightNavigationBar')[0]._
-      ).toMatch('true');
+      expect(getColorsAsObject(colorsJSON).navigationBarColor).toBe('#111111');
     });
 
     it(`adds android warning androidNavigationBar.visible is provided`, async () => {
       addWarningAndroid.mockImplementationOnce();
-
-      await setNavigationBarConfig({ androidNavigationBar: { visible: 'leanback' } }, '/app');
+      withNavigationBar({ androidNavigationBar: { visible: 'leanback' } } as any);
       expect(addWarningAndroid).toHaveBeenCalledTimes(1);
     });
   });
