@@ -1,59 +1,41 @@
-import { vol } from 'memfs';
+import {
+  getRootViewBackgroundColor,
+  setRootViewBackgroundColorColors,
+  setRootViewBackgroundColorStyles,
+} from '../RootViewBackgroundColor';
 
-import { readResourcesXMLAsync } from '../Resources';
-import { getRootViewBackgroundColor, setRootViewBackgroundColor } from '../RootViewBackgroundColor';
-import { sampleStylesXML } from './StatusBar-test';
+it(`returns null if no backgroundColor is provided`, () => {
+  expect(getRootViewBackgroundColor({})).toBe(null);
+});
 
-jest.mock('fs');
+it(`returns backgroundColor if provided`, () => {
+  expect(getRootViewBackgroundColor({ backgroundColor: '#111111' })).toMatch('#111111');
+});
 
-describe('Root view background color', () => {
-  it(`returns null if no backgroundColor is provided`, () => {
-    expect(getRootViewBackgroundColor({})).toBe(null);
-  });
+it(`returns the backgroundColor under android if provided`, () => {
+  expect(
+    getRootViewBackgroundColor({
+      backgroundColor: '#111111',
+      android: { backgroundColor: '#222222' },
+    })
+  ).toMatch('#222222');
+});
 
-  it(`returns backgroundColor if provided`, () => {
-    expect(getRootViewBackgroundColor({ backgroundColor: '#111111' })).toMatch('#111111');
-  });
-
-  it(`returns the backgroundColor under android if provided`, () => {
+describe('write colors.xml correctly', () => {
+  it(`sets the android:windowBackground in styles.xml if backgroundColor is given`, async () => {
+    const config = { backgroundColor: '#654321' };
+    const props = {
+      hexString: getRootViewBackgroundColor(config),
+    };
+    const styles = setRootViewBackgroundColorStyles(props, { resources: {} });
+    const colors = setRootViewBackgroundColorColors(props, { resources: {} });
     expect(
-      getRootViewBackgroundColor({
-        backgroundColor: '#111111',
-        android: { backgroundColor: '#222222' },
-      })
-    ).toMatch('#222222');
-  });
-
-  describe('write colors.xml correctly', () => {
-    beforeAll(async () => {
-      const directoryJSON = {
-        './android/app/src/main/res/values/styles.xml': sampleStylesXML,
-      };
-      vol.fromJSON(directoryJSON, '/app');
-    });
-
-    afterAll(async () => {
-      vol.reset();
-    });
-
-    it(`sets the android:windowBackground in Styles.xml if backgroundColor is given`, async () => {
-      expect(await setRootViewBackgroundColor({ backgroundColor: '#654321' }, '/app')).toBe(true);
-
-      const stylesJSON = await readResourcesXMLAsync({
-        path: '/app/android/app/src/main/res/values/styles.xml',
-      });
-      const colorsJSON = await readResourcesXMLAsync({
-        path: '/app/android/app/src/main/res/values/colors.xml',
-      });
-
-      expect(
-        stylesJSON.resources.style
-          .filter(e => e.$.name === 'AppTheme')[0]
-          .item.filter(item => item.$.name === 'android:windowBackground')[0]._
-      ).toMatch('@color/activityBackground');
-      expect(
-        colorsJSON.resources.color.filter(e => e.$.name === 'activityBackground')[0]._
-      ).toMatch('#654321');
-    });
+      styles.resources.style
+        .filter(e => e.$.name === 'AppTheme')[0]
+        .item.filter(item => item.$.name === 'android:windowBackground')[0]._
+    ).toMatch('@color/activityBackground');
+    expect(colors.resources.color.filter(e => e.$.name === 'activityBackground')[0]._).toMatch(
+      '#654321'
+    );
   });
 });
