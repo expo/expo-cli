@@ -1,40 +1,99 @@
+import { compileMockModWithResultsAsync } from '../../plugins/__tests__/mockMods';
+import { withAndroidColors, withAndroidStyles } from '../../plugins/android-plugins';
+import { parseXMLAsync } from '../../utils/XML';
+import { getColorsAsObject, getObjectAsColorsXml } from '../Colors';
 import {
   getRootViewBackgroundColor,
-  setRootViewBackgroundColorColors,
-  setRootViewBackgroundColorStyles,
+  withRootViewBackgroundColorColors,
+  withRootViewBackgroundColorStyles,
 } from '../RootViewBackgroundColor';
+import { getAppThemeLightNoActionBarGroup, getStylesGroupAsObject } from '../Styles';
 
-it(`returns null if no backgroundColor is provided`, () => {
-  expect(getRootViewBackgroundColor({})).toBe(null);
-});
+jest.mock('../../plugins/android-plugins');
 
-it(`returns backgroundColor if provided`, () => {
-  expect(getRootViewBackgroundColor({ backgroundColor: '#111111' })).toMatch('#111111');
-});
-
-it(`returns the backgroundColor under android if provided`, () => {
-  expect(
-    getRootViewBackgroundColor({
-      backgroundColor: '#111111',
-      android: { backgroundColor: '#222222' },
-    })
-  ).toMatch('#222222');
-});
-
-describe('write colors.xml correctly', () => {
-  const config = { backgroundColor: '#654321' };
-  it(`sets the windowBackground in colors.xml if backgroundColor is given`, async () => {
-    const colors = setRootViewBackgroundColorColors(config, { resources: {} });
-    expect(
-      colors.resources.color.filter(({ $: head }) => head.name === 'activityBackground')[0]._
-    ).toMatch('#654321');
+describe(getRootViewBackgroundColor, () => {
+  it(`returns null if no backgroundColor is provided`, () => {
+    expect(getRootViewBackgroundColor({})).toBe(null);
   });
-  it(`sets the android:windowBackground in styles.xml if backgroundColor is given`, async () => {
-    const styles = setRootViewBackgroundColorStyles(config, { resources: {} });
+  it(`returns backgroundColor if provided`, () => {
+    expect(getRootViewBackgroundColor({ backgroundColor: '#111111' })).toMatch('#111111');
+  });
+  it(`returns the backgroundColor under android if provided`, () => {
     expect(
-      styles.resources.style
-        .filter(({ $: head }) => head.name === 'AppTheme')[0]
-        .item.filter(({ $: head }) => head.name === 'android:windowBackground')[0]._
-    ).toMatch('@color/activityBackground');
+      getRootViewBackgroundColor({
+        backgroundColor: '#111111',
+        android: { backgroundColor: '#222222' },
+      })
+    ).toMatch('#222222');
+  });
+});
+
+describe(withRootViewBackgroundColorColors, () => {
+  it(`applies a custom color`, async () => {
+    const { modResults } = await compileMockModWithResultsAsync(
+      { backgroundColor: '#FF00FF' },
+      {
+        plugin: withRootViewBackgroundColorColors,
+        mod: withAndroidColors,
+        modResults: { resources: {} },
+      }
+    );
+    expect(getColorsAsObject(modResults)).toStrictEqual({ activityBackground: '#FF00FF' });
+  });
+  it(`removes color`, async () => {
+    const { modResults } = await compileMockModWithResultsAsync(
+      {},
+      {
+        plugin: withRootViewBackgroundColorColors,
+        mod: withAndroidColors,
+        // Create a colors.xml JSON from a k/v pair
+        modResults: getObjectAsColorsXml({ activityBackground: '#FFF000' }),
+      }
+    );
+    expect(getColorsAsObject(modResults)).toStrictEqual({});
+  });
+});
+
+describe(withRootViewBackgroundColorStyles, () => {
+  it(`links a style to the custom color`, async () => {
+    const { modResults } = await compileMockModWithResultsAsync(
+      { backgroundColor: '#FF00FF' },
+      {
+        plugin: withRootViewBackgroundColorStyles,
+        mod: withAndroidStyles,
+        // Empty styles object
+        modResults: { resources: {} },
+      }
+    );
+    expect(getStylesGroupAsObject(modResults, getAppThemeLightNoActionBarGroup())).toStrictEqual({
+      'android:windowBackground': '@color/activityBackground',
+    });
+  });
+
+  it(`removes styles with empty string`, async () => {
+    // Parsed from a string for DX readability
+    const styles = [
+      '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>',
+      '<resources>',
+      '  <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">',
+      '    <item name="android:windowBackground">@color/activityBackground</item>',
+      '  </style>',
+      '</resources>',
+    ].join('\n');
+
+    const { modResults } = await compileMockModWithResultsAsync(
+      // Empty string in Expo config should disable the style
+      {},
+      {
+        plugin: withRootViewBackgroundColorStyles,
+        mod: withAndroidStyles,
+        modResults: (await parseXMLAsync(styles)) as any,
+      }
+    );
+    // Extract the styles group items given the group
+    expect(getStylesGroupAsObject(modResults, getAppThemeLightNoActionBarGroup())).toStrictEqual(
+      // Should be an empty k/v pair
+      {}
+    );
   });
 });
