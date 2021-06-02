@@ -239,7 +239,6 @@ Object {
     "androidCollapsedTitle": "#{unread_notifications} new interactions",
     "androidMode": "collapse",
     "color": "green",
-    "icon": "./icons/notification-icon.png",
     "iosDisplayInForeground": true,
   },
   "orientation": "default",
@@ -595,18 +594,6 @@ Object {
                     "$": Object {
                       "android:name": "expo.modules.updates.EXPO_UPDATE_URL",
                       "android:value": "https://exp.host/@bacon/mycoolapp",
-                    },
-                  },
-                  Object {
-                    "$": Object {
-                      "android:name": "expo.modules.notifications.default_notification_icon",
-                      "android:resource": "@drawable/notification_icon",
-                    },
-                  },
-                  Object {
-                    "$": Object {
-                      "android:name": "expo.modules.notifications.default_notification_color",
-                      "android:resource": "@color/notification_icon_color",
                     },
                   },
                   Object {
@@ -1027,7 +1014,6 @@ Object {
     "androidCollapsedTitle": "#{unread_notifications} new interactions",
     "androidMode": "collapse",
     "color": "green",
-    "icon": "./icons/notification-icon.png",
     "iosDisplayInForeground": true,
   },
   "orientation": "default",
@@ -1274,18 +1260,6 @@ Object {
                   },
                   Object {
                     "$": Object {
-                      "android:name": "expo.modules.notifications.default_notification_icon",
-                      "android:resource": "@drawable/notification_icon",
-                    },
-                  },
-                  Object {
-                    "$": Object {
-                      "android:name": "expo.modules.notifications.default_notification_color",
-                      "android:resource": "@color/notification_icon_color",
-                    },
-                  },
-                  Object {
-                    "$": Object {
                       "android:name": "com.google.android.gms.ads.APPLICATION_ID",
                       "android:value": "MY_GOOGLE_MOBILE_ADS_APP_ID",
                     },
@@ -1373,7 +1347,6 @@ Object {
       },
       "ios": Object {
         "entitlements": Object {
-          "aps-environment": "development",
           "com.apple.developer.applesignin": Array [
             "Default",
           ],
@@ -1575,7 +1548,6 @@ Object {
       "usesNonExemptEncryption": true,
     },
     "entitlements": Object {
-      "aps-environment": "development",
       "com.apple.developer.applesignin": Array [
         "Default",
       ],
@@ -1658,7 +1630,6 @@ Object {
     "androidCollapsedTitle": "#{unread_notifications} new interactions",
     "androidMode": "collapse",
     "color": "green",
-    "icon": "./icons/notification-icon.png",
     "iosDisplayInForeground": true,
   },
   "orientation": "default",
