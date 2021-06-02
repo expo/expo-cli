@@ -42,14 +42,12 @@ type ExpoConfigIosSplash = NonNullable<NonNullable<ExpoConfig['ios']>['splash']>
 
 const defaultResizeMode = 'contain';
 const defaultBackgroundColor = '#ffffff';
-const defaultUserInterfaceStyle = 'automatic';
 
 export interface IOSSplashConfig {
   image: string;
   // tabletImage: string | null;
   backgroundColor: string;
   resizeMode: NonNullable<ExpoConfigIosSplash['resizeMode']>;
-  userInterfaceStyle: NonNullable<ExpoConfigIosSplash['userInterfaceStyle']>;
   // TODO: These are here just to test the functionality, the API should be more robust and account for tablet images.
   darkImage: string | null;
   darkBackgroundColor: string | null;
@@ -85,19 +83,19 @@ export const withIosSplashScreen: ConfigPlugin<IOSSplashConfig | undefined | nul
 };
 
 const withSplashScreenInfoPlist: ConfigPlugin<IOSSplashConfig> = (config, splash) => {
-  return withInfoPlist(config, async config => {
-    config.modResults = await setSplashInfoPlist(config, config.modResults, splash);
+  return withInfoPlist(config, config => {
+    config.modResults = setSplashInfoPlist(config, config.modResults, splash);
     return config;
   });
 };
 
 const withSplashScreenAssets: ConfigPlugin<IOSSplashConfig> = (config, splash) => {
+  if (!splash) {
+    return config;
+  }
   return withDangerousMod(config, [
     'ios',
     async config => {
-      if (!splash) {
-        return config;
-      }
       const projectPath = IOSConfig.Paths.getSourceRoot(config.modRequest.projectRoot);
 
       await createSplashScreenBackgroundImageAsync({
@@ -134,7 +132,12 @@ export function setSplashInfoPlist(
   infoPlist: InfoPlist,
   splash: IOSSplashConfig
 ): InfoPlist {
-  const isDarkModeEnabled = !!splash?.darkImage;
+  const isDarkModeEnabled = !!(
+    splash?.darkImage ||
+    splash?.darkTabletImage ||
+    splash?.darkBackgroundColor ||
+    splash?.darkTabletBackgroundColor
+  );
 
   if (isDarkModeEnabled) {
     const existing = IOSConfig.UserInterfaceStyle.getUserInterfaceStyle(config);
@@ -181,7 +184,6 @@ export function getSplashConfig(config: ExpoConfig): IOSSplashConfig | null {
       image,
       resizeMode: splash.resizeMode ?? defaultResizeMode,
       backgroundColor: splash.backgroundColor ?? defaultBackgroundColor,
-      userInterfaceStyle: splash.userInterfaceStyle ?? defaultUserInterfaceStyle,
       // tabletImage: splash.tabletImage ?? image,
 
       darkImage: splash.darkImage ?? null,
@@ -210,7 +212,6 @@ export function getSplashConfig(config: ExpoConfig): IOSSplashConfig | null {
       image,
       resizeMode: splash.resizeMode ?? defaultResizeMode,
       backgroundColor: splash.backgroundColor ?? defaultBackgroundColor,
-      userInterfaceStyle: defaultUserInterfaceStyle,
 
       darkImage: splash.darkImage ?? null,
       darkBackgroundColor: splash.darkBackgroundColor,
@@ -239,36 +240,6 @@ export function warnUnsupportedSplashProperties(config: ExpoConfig) {
       'ios.splash.xib is not supported in prebuild. Please use ios.splash.image instead.'
     );
   }
-  if (config.ios?.splash?.userInterfaceStyle) {
-    WarningAggregator.addWarningIOS(
-      'splash',
-      'ios.splash.userInterfaceStyle is not supported in prebuild. Please use ios.splash.darkImage (TODO) instead.'
-    );
-  }
-}
-
-async function copyImageFiles({
-  projectPath,
-  image,
-  darkImage,
-  tabletImage,
-  darkTabletImage,
-}: {
-  projectPath: string;
-  image: string;
-  darkImage: string | null;
-  tabletImage: string | null;
-  darkTabletImage: string | null;
-}) {
-  await generateImagesAssetsAsync({
-    async generateImageAsset(item, fileName) {
-      await fs.copyFile(item, path.resolve(projectPath, IMAGESET_PATH, fileName));
-    },
-    anyItem: image,
-    darkItem: darkImage,
-    tabletItem: tabletImage,
-    darkTabletItem: darkTabletImage,
-  });
 }
 
 /**
@@ -332,6 +303,30 @@ async function createBackgroundImagesAsync({
     darkItem: darkColor,
     tabletItem: tabletColor,
     darkTabletItem: darkTabletColor,
+  });
+}
+
+async function copyImageFiles({
+  projectPath,
+  image,
+  darkImage,
+  tabletImage,
+  darkTabletImage,
+}: {
+  projectPath: string;
+  image: string;
+  darkImage: string | null;
+  tabletImage: string | null;
+  darkTabletImage: string | null;
+}) {
+  await generateImagesAssetsAsync({
+    async generateImageAsset(item, fileName) {
+      await fs.copyFile(item, path.resolve(projectPath, IMAGESET_PATH, fileName));
+    },
+    anyItem: image,
+    darkItem: darkImage,
+    tabletItem: tabletImage,
+    darkTabletItem: darkTabletImage,
   });
 }
 
@@ -411,7 +406,7 @@ export function buildContentsJsonImages({
   darkImage: string | null;
   darkTabletImage: string | null;
 }): ContentsJsonImage[] {
-  const images: ContentsJsonImage[] = [
+  return [
     // Phone light
     createContentsJsonItem({
       idiom: 'universal',
@@ -473,8 +468,6 @@ export function buildContentsJsonImages({
         scale: '2x',
       }),
   ].filter(Boolean) as ContentsJsonImage[];
-
-  return images;
 }
 
 async function writeContentsJsonFileAsync({
@@ -524,10 +517,8 @@ function getImageContentMode(resizeMode: string): ImageContentMode {
   switch (resizeMode) {
     case 'contain':
       return 'scaleAspectFit';
-
     case 'cover':
       return 'scaleAspectFill';
-
     default:
       throw new Error(`{ resizeMode: "${resizeMode}" } is not supported for iOS platform.`);
   }
