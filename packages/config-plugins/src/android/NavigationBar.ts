@@ -5,7 +5,7 @@ import { withAndroidColors, withAndroidStyles } from '../plugins/android-plugins
 import * as WarningAggregator from '../utils/warnings';
 import { setColorItem } from './Colors';
 import { buildResourceItem, ResourceXML } from './Resources';
-import { assignStylesValue, getAppThemeLightNoActionBarParent } from './Styles';
+import { assignStylesValue, getAppThemeLightNoActionBarGroup } from './Styles';
 
 const NAVIGATION_BAR_COLOR = 'navigationBarColor';
 
@@ -62,14 +62,14 @@ export function setNavigationBarStyles(
 ): ResourceXML {
   styles = assignStylesValue(styles, {
     add: !!getNavigationBarColor(config),
-    parent: getAppThemeLightNoActionBarParent(),
+    parent: getAppThemeLightNoActionBarGroup(),
     name: `android:${NAVIGATION_BAR_COLOR}`,
     value: `@color/${NAVIGATION_BAR_COLOR}`,
   });
 
   styles = assignStylesValue(styles, {
     add: getNavigationBarStyle(config) === 'dark-content',
-    parent: getAppThemeLightNoActionBarParent(),
+    parent: getAppThemeLightNoActionBarGroup(),
     name: 'android:windowLightNavigationBar',
     value: 'true',
   });

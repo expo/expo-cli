@@ -4,7 +4,7 @@ import { ConfigPlugin } from '../Plugin.types';
 import { withAndroidColors, withAndroidStyles } from '../plugins/android-plugins';
 import { assignColorValue } from './Colors';
 import { ResourceXML } from './Resources';
-import { assignStylesValue, getAppThemeLightNoActionBarParent } from './Styles';
+import { assignStylesValue, getAppThemeLightNoActionBarGroup } from './Styles';
 
 const ANDROID_WINDOW_BACKGROUND = 'android:windowBackground';
 const WINDOW_BACKGROUND_COLOR = 'activityBackground';
@@ -45,7 +45,7 @@ export function setRootViewBackgroundColorStyles(
 ) {
   return assignStylesValue(styles, {
     add: !!getRootViewBackgroundColor(config),
-    parent: getAppThemeLightNoActionBarParent(),
+    parent: getAppThemeLightNoActionBarGroup(),
     name: ANDROID_WINDOW_BACKGROUND,
     value: `@color/${WINDOW_BACKGROUND_COLOR}`,
   });

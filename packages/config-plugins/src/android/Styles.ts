@@ -3,6 +3,8 @@ import {
   buildResourceGroup,
   buildResourceItem,
   ensureDefaultResourceXML,
+  findResourceGroup,
+  getResourceItemsAsObject,
   ResourceGroupXML,
   ResourceItemXML,
   ResourceKind,
@@ -26,16 +28,9 @@ function ensureDefaultStyleResourceXML(xml: ResourceXML): ResourceXML {
 
 export function getStyleParent(
   xml: ResourceXML,
-  parent: { name: string; parent?: string }
+  group: { name: string; parent?: string }
 ): ResourceGroupXML | null {
-  const app = xml?.resources?.style?.filter?.((e: any) => {
-    let matches = e.$.name === parent.name;
-    if (parent.parent != null && matches) {
-      matches = e.$.parent === parent.parent;
-    }
-    return matches;
-  })?.[0];
-  return app ?? null;
+  return findResourceGroup(xml.resources.style, group);
 }
 
 export function getStylesItem({
@@ -120,7 +115,7 @@ export function removeStylesItem({
 }
 
 // This is a very common theme so make it reusable.
-export function getAppThemeLightNoActionBarParent() {
+export function getAppThemeLightNoActionBarGroup() {
   return { name: 'AppTheme', parent: 'Theme.AppCompat.Light.NoActionBar' };
 }
 
@@ -153,4 +148,19 @@ export function assignStylesValue(
     parent,
     name,
   });
+}
+
+/**
+ * Helper to convert a styles.xml parent's children into a simple k/v pair.
+ * Added for testing purposes.
+ *
+ * @param xml
+ * @returns
+ */
+export function getStylesGroupAsObject(
+  xml: ResourceXML,
+  group: { name: string; parent: string }
+): Record<string, string> | null {
+  const xmlGroup = getStyleParent(xml, group);
+  return xmlGroup?.item ? getResourceItemsAsObject(xmlGroup.item) : null;
 }
