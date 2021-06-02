@@ -689,6 +689,10 @@ export interface Android {
    * Determines how the software keyboard will impact the layout of your application. This maps to the `android:windowSoftInputMode` property. Defaults to `resize`. Valid values: `resize`, `pan`.
    */
   softwareKeyboardLayoutMode?: 'resize' | 'pan';
+  /**
+   * Specifies the JavaScript engine. Supported only on EAS Build. Defaults to `jsc`. Valid values: `hermes`, `jsc`.
+   */
+  jsEngine?: 'hermes' | 'jsc';
 }
 export interface AndroidIntentFiltersData {
   /**

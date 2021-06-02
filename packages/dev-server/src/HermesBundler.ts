@@ -18,7 +18,7 @@ export async function shouldBuildHermesBundleAsync(
       return false;
     }
     const properties = parseGradleProperties(await fs.readFile(gradlePropertiesPath, 'utf8'));
-    if (properties['JS_RUNTIME'] === 'hermes') {
+    if (properties['expo.jsEngine'] === 'hermes') {
       return true;
     }
   }
