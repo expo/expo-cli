@@ -2,7 +2,7 @@ import { ExpoConfig } from '@expo/config-types';
 
 import { ConfigPlugin } from '../Plugin.types';
 import { withAndroidColors, withAndroidStyles } from '../plugins/android-plugins';
-import { removeColorItem, setColorItem } from './Colors';
+import { assignColorValue } from './Colors';
 import { buildResourceItem, ResourceXML } from './Resources';
 import { removeStylesItem, setStylesItem } from './Styles';
 
@@ -35,13 +35,12 @@ export function getPrimaryColor(config: Pick<ExpoConfig, 'primaryColor'>) {
 
 export function setPrimaryColorColors(
   config: Pick<ExpoConfig, 'primaryColor'>,
-  xml: ResourceXML
+  colors: ResourceXML
 ): ResourceXML {
-  const hexString = getPrimaryColor(config);
-  if (!hexString) {
-    return removeColorItem(COLOR_PRIMARY_KEY, xml);
-  }
-  return setColorItem(buildResourceItem({ name: COLOR_PRIMARY_KEY, value: hexString }), xml);
+  return assignColorValue(colors, {
+    name: COLOR_PRIMARY_KEY,
+    value: getPrimaryColor(config),
+  });
 }
 
 export function setPrimaryColorStyles(

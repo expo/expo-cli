@@ -2,7 +2,7 @@ import { ExpoConfig } from '@expo/config-types';
 
 import { ConfigPlugin } from '../Plugin.types';
 import { withAndroidColors, withAndroidStyles } from '../plugins/android-plugins';
-import { removeColorItem, setColorItem } from './Colors';
+import { assignColorValue } from './Colors';
 import { buildResourceItem, ResourceXML } from './Resources';
 import { removeStylesItem, setStylesItem } from './Styles';
 
@@ -34,20 +34,10 @@ export function setStatusBarColors(
   config: Pick<ExpoConfig, 'androidStatusBar'>,
   colors: ResourceXML
 ): ResourceXML {
-  const hexString = getStatusBarColor(config);
-
-  if (hexString === 'translucent') {
-    return removeColorItem(COLOR_PRIMARY_DARK_KEY, colors);
-  }
-
-  // Need to add a color key to colors.xml to use in styles.xml
-  return setColorItem(
-    buildResourceItem({
-      name: COLOR_PRIMARY_DARK_KEY,
-      value: hexString,
-    }),
-    colors
-  );
+  return assignColorValue(colors, {
+    name: COLOR_PRIMARY_DARK_KEY,
+    value: config.androidStatusBar?.backgroundColor,
+  });
 }
 
 export function setStatusBarStyles(

@@ -2,7 +2,7 @@ import { ExpoConfig } from '@expo/config-types';
 
 import { ConfigPlugin } from '../Plugin.types';
 import { withAndroidColors, withAndroidStyles } from '../plugins/android-plugins';
-import { removeColorItem, setColorItem } from './Colors';
+import { assignColorValue } from './Colors';
 import { buildResourceItem, ResourceXML } from './Resources';
 import { removeStylesItem, setStylesItem } from './Styles';
 
@@ -33,15 +33,10 @@ export function setRootViewBackgroundColorColors(
   config: Pick<ExpoConfig, 'android' | 'backgroundColor'>,
   colors: ResourceXML
 ) {
-  const hexString = getRootViewBackgroundColor(config);
-
-  if (!hexString) {
-    return removeColorItem(WINDOW_BACKGROUND_COLOR, colors);
-  }
-  return setColorItem(
-    buildResourceItem({ name: WINDOW_BACKGROUND_COLOR, value: hexString }),
-    colors
-  );
+  return assignColorValue(colors, {
+    value: getRootViewBackgroundColor(config),
+    name: WINDOW_BACKGROUND_COLOR,
+  });
 }
 
 export function setRootViewBackgroundColorStyles(

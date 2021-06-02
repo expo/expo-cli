@@ -1,5 +1,5 @@
 import { getResourceXMLPathAsync } from './Paths';
-import { ResourceItemXML, ResourceKind, ResourceXML } from './Resources';
+import { buildResourceItem, ResourceItemXML, ResourceKind, ResourceXML } from './Resources';
 
 export function getProjectColorsXMLPathAsync(
   projectRoot: string,
@@ -37,4 +37,30 @@ export function removeColorItem(named: string, contents: ResourceXML) {
     }
   }
   return contents;
+}
+
+/**
+ * Set or remove value in XML based on nullish factor of the `value` property.
+ */
+export function assignColorValue(
+  xml: ResourceXML,
+  {
+    value,
+    name,
+  }: {
+    value?: string | null;
+    name: string;
+  }
+) {
+  if (value) {
+    return setColorItem(
+      buildResourceItem({
+        name,
+        value,
+      }),
+      xml
+    );
+  }
+
+  return removeColorItem(name, xml);
 }

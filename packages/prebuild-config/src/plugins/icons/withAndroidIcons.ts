@@ -11,7 +11,6 @@ import fs from 'fs-extra';
 import path from 'path';
 
 const { Colors } = AndroidConfig;
-const { buildResourceItem } = AndroidConfig.Resources;
 
 type DPIString = 'mdpi' | 'hdpi' | 'xhdpi' | 'xxhdpi' | 'xxxhdpi';
 type dpiMap = Record<DPIString, { folderName: string; scale: number }>;
@@ -55,7 +54,7 @@ export const withAndroidIcons: ConfigPlugin = config => {
 
 const withAndroidAdaptiveIconColors: ConfigPlugin<string | null> = (config, backgroundColor) => {
   return withAndroidColors(config, config => {
-    config.modResults = setBackgroundColor(config.modResults, backgroundColor ?? '#FFFFFF');
+    config.modResults = setBackgroundColor(backgroundColor ?? '#FFFFFF', config.modResults);
     return config;
   });
 };
@@ -252,14 +251,11 @@ export async function configureAdaptiveIconAsync(
   await createAdaptiveIconXmlFiles(projectRoot, icLauncherXmlString);
 }
 
-function setBackgroundColor(colors: ResourceXML, backgroundColor: string | null) {
-  if (backgroundColor) {
-    return Colors.setColorItem(
-      buildResourceItem({ name: ICON_BACKGROUND, value: backgroundColor }),
-      colors
-    );
-  }
-  return Colors.removeColorItem(ICON_BACKGROUND, colors);
+function setBackgroundColor(backgroundColor: string | null, colors: ResourceXML) {
+  return Colors.assignColorValue(colors, {
+    value: backgroundColor,
+    name: ICON_BACKGROUND,
+  });
 }
 
 export const createAdaptiveIconXmlString = (backgroundImage: string | null) => {

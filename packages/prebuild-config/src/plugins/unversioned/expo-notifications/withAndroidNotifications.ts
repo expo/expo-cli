@@ -13,7 +13,6 @@ import path from 'path';
 import { ANDROID_RES_PATH, dpiValues } from '../../icons/withAndroidIcons';
 
 const { Colors } = AndroidConfig;
-const { buildResourceItem } = AndroidConfig.Resources;
 const {
   addMetaDataItemToMainApplication,
   getMainApplicationOrThrow,
@@ -106,18 +105,10 @@ export function setNotificationIconColor(
   config: ExpoConfig,
   colors: AndroidConfig.Resources.ResourceXML
 ) {
-  const color = getNotificationColor(config);
-  if (color) {
-    return Colors.setColorItem(
-      buildResourceItem({
-        name: NOTIFICATION_ICON_COLOR,
-        value: color,
-      }),
-      colors
-    );
-  }
-
-  return Colors.removeColorItem(NOTIFICATION_ICON_COLOR, colors);
+  return Colors.assignColorValue(colors, {
+    name: NOTIFICATION_ICON_COLOR,
+    value: getNotificationColor(config),
+  });
 }
 
 async function writeNotificationIconImageFilesAsync(icon: string, projectRoot: string) {
