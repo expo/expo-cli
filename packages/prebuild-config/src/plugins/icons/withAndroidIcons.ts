@@ -1,12 +1,17 @@
-import { AndroidConfig, ConfigPlugin, withDangerousMod, XML } from '@expo/config-plugins';
+import {
+  AndroidConfig,
+  ConfigPlugin,
+  withAndroidColors,
+  withDangerousMod,
+} from '@expo/config-plugins';
+import { ResourceXML } from '@expo/config-plugins/build/android/Resources';
 import { ExpoConfig } from '@expo/config-types';
 import { compositeImagesAsync, generateImageAsync } from '@expo/image-utils';
 import fs from 'fs-extra';
 import path from 'path';
 
-const { writeXMLAsync } = XML;
 const { Colors } = AndroidConfig;
-const { buildResourceItem, readResourcesXMLAsync } = AndroidConfig.Resources;
+const { buildResourceItem } = AndroidConfig.Resources;
 
 type DPIString = 'mdpi' | 'hdpi' | 'xhdpi' | 'xxhdpi' | 'xxxhdpi';
 type dpiMap = Record<DPIString, { folderName: string; scale: number }>;
@@ -30,13 +35,29 @@ const IC_LAUNCHER_XML = 'ic_launcher.xml';
 const IC_LAUNCHER_ROUND_XML = 'ic_launcher_round.xml';
 
 export const withAndroidIcons: ConfigPlugin = config => {
+  const { foregroundImage, backgroundColor, backgroundImage } = getAdaptiveIcon(config);
+  const icon = foregroundImage ?? getIcon(config);
+
+  if (!icon) {
+    return config;
+  }
+
+  // Apply colors.xml changes
+  config = withAndroidAdaptiveIconColors(config, backgroundColor);
   return withDangerousMod(config, [
     'android',
     async config => {
-      await setIconAsync(config, config.modRequest.projectRoot);
+      await setIconAsync(config.modRequest.projectRoot, { icon, backgroundColor, backgroundImage });
       return config;
     },
   ]);
+};
+
+const withAndroidAdaptiveIconColors: ConfigPlugin<string | null> = (config, backgroundColor) => {
+  return withAndroidColors(config, config => {
+    config.modResults = setBackgroundColor(config.modResults, backgroundColor ?? '#FFFFFF');
+    return config;
+  });
 };
 
 export function getIcon(config: ExpoConfig) {
@@ -56,22 +77,21 @@ export function getAdaptiveIcon(config: ExpoConfig) {
  * their respective "mipmap" directories for <= Android 7, and creates a set of adaptive
  * icon files for > Android 7 from the adaptive icon files (if provided).
  */
-export async function setIconAsync(config: ExpoConfig, projectRoot: string) {
-  const { foregroundImage, backgroundColor, backgroundImage } = getAdaptiveIcon(config);
-  const icon = foregroundImage ?? getIcon(config);
-
+export async function setIconAsync(
+  projectRoot: string,
+  {
+    icon,
+    backgroundColor,
+    backgroundImage,
+  }: { icon: string | null; backgroundColor: string | null; backgroundImage: string | null }
+) {
   if (!icon) {
     return null;
   }
 
   await configureLegacyIconAsync(projectRoot, icon, backgroundImage, backgroundColor);
 
-  await configureAdaptiveIconAsync(
-    projectRoot,
-    icon,
-    backgroundImage,
-    backgroundColor ?? '#FFFFFF'
-  );
+  await configureAdaptiveIconAsync(projectRoot, icon, backgroundImage);
 
   return true;
 }
@@ -175,11 +195,8 @@ async function configureLegacyIconAsync(
 export async function configureAdaptiveIconAsync(
   projectRoot: string,
   foregroundImage: string,
-  backgroundImage: string | null,
-  backgroundColor: string
+  backgroundImage: string | null
 ) {
-  await setBackgroundColorAsync(projectRoot, backgroundColor);
-
   await Promise.all(
     Object.values(dpiValues).map(async ({ folderName, scale }) => {
       const dpiFolderPath = path.resolve(projectRoot, ANDROID_RES_PATH, folderName);
@@ -235,17 +252,12 @@ export async function configureAdaptiveIconAsync(
   await createAdaptiveIconXmlFiles(projectRoot, icLauncherXmlString);
 }
 
-async function setBackgroundColorAsync(projectRoot: string, backgroundColor: string | null) {
-  const colorsXmlPath = await Colors.getProjectColorsXMLPathAsync(projectRoot);
-  let colorsJson = await readResourcesXMLAsync({ path: colorsXmlPath });
+function setBackgroundColor(colorsJson: ResourceXML, backgroundColor: string | null) {
   if (backgroundColor) {
     const colorItemToAdd = buildResourceItem({ name: ICON_BACKGROUND, value: backgroundColor });
-    colorsJson = Colors.setColorItem(colorItemToAdd, colorsJson);
-  } else {
-    colorsJson = Colors.removeColorItem(ICON_BACKGROUND, colorsJson);
+    return Colors.setColorItem(colorItemToAdd, colorsJson);
   }
-
-  await writeXMLAsync({ path: colorsXmlPath, xml: colorsJson });
+  return Colors.removeColorItem(ICON_BACKGROUND, colorsJson);
 }
 
 export const createAdaptiveIconXmlString = (backgroundImage: string | null) => {
