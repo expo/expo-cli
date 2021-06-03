@@ -1,5 +1,5 @@
 import { PackageJSONConfig } from '@expo/config';
-import { withLegacyExpoPlugins } from '@expo/prebuild-config';
+import { getLegacyExpoPlugins } from '@expo/prebuild-config';
 import chalk from 'chalk';
 import semver from 'semver';
 
@@ -20,7 +20,7 @@ export function warnIfDependenciesRequireAdditionalSetup(
     pkg,
     sdkVersion,
     appliedPlugins: appliedPlugins ?? [],
-    autoPlugins: withLegacyExpoPlugins(),
+    autoPlugins: getLegacyExpoPlugins(),
   });
 
   logSetupWarnings(warnings);
