@@ -56,12 +56,13 @@ export function getAndroidDarkSplashConfig(
   if (config.android?.splash?.dark) {
     const splash = config.android?.splash?.dark;
     const lightTheme = getAndroidSplashConfig(config);
+    // TODO: Use less images
     return {
-      xxxhdpi: splash.image ?? null,
-      xxhdpi: splash.image ?? null,
-      xhdpi: splash.image ?? null,
-      hdpi: splash.image ?? null,
-      mdpi: splash.image ?? null,
+      xxxhdpi: splash.xxxhdpi ?? splash.image ?? null,
+      xxhdpi: splash.xxhdpi ?? splash.image ?? null,
+      xhdpi: splash.xhdpi ?? splash.image ?? null,
+      hdpi: splash.hdpi ?? splash.image ?? null,
+      mdpi: splash.mdpi ?? splash.image ?? null,
       backgroundColor: splash.backgroundColor ?? null,
       // Can't support dark resizeMode because the resize mode is hardcoded into the MainActivity.java
       resizeMode: lightTheme?.resizeMode ?? defaultResizeMode,

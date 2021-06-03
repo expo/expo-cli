@@ -33,20 +33,8 @@ describe(setSplashScreenMainActivity, () => {
     expect(contents).toMatch(
       /SplashScreen.show\(this, SplashScreenImageResizeMode.NATIVE, false\);/
     );
-    // TODO: Support removing the code
-    // contents = await setSplashMainActivity(
-    //   {
-    //     slug: '',
-    //     name: '',
-    //     android: {
-    //       // no splash
-    //     },
-    //   },
-    //   contents,
-    //   mainActivity.language
-    // );
-    // expect(contents).not.toMatch(
-    //   /SplashScreen.show\(this, SplashScreenImageResizeMode.NATIVE, false\);/
-    // );
+    // Try it twice...
+    const nextContents = await setSplashScreenMainActivity(exp, contents, mainActivity.language);
+    expect(nextContents).toMatch(contents);
   });
 });

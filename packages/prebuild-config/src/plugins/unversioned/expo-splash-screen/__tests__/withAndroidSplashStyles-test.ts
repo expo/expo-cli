@@ -15,49 +15,47 @@ export const sampleStylesXML = `
     </style>
 </resources>`;
 
-describe('Android status bar', () => {
-  beforeEach(async () => {
-    vol.fromJSON(
-      {
-        './android/app/src/main/res/values/styles.xml': sampleStylesXML,
-      },
-      '/app'
-    );
+beforeEach(async () => {
+  vol.fromJSON(
+    {
+      './android/app/src/main/res/values/styles.xml': sampleStylesXML,
+    },
+    '/app'
+  );
+});
+
+afterEach(async () => {
+  vol.reset();
+});
+
+it(`sets colors`, async () => {
+  const colors = await setSplashColorsForThemeAsync({
+    projectRoot: '/app',
+    backgroundColor: '#ff0000',
   });
 
-  afterEach(async () => {
-    vol.reset();
+  expect(colors.resources.color?.[0]).toStrictEqual(
+    AndroidConfig.Resources.buildResourceItem({
+      name: 'splashscreen_background',
+      value: '#ff0000',
+    })
+  );
+});
+
+it(`sets styles`, async () => {
+  const styles = await setSplashStylesForThemeAsync({
+    projectRoot: '/app',
   });
 
-  it(`sets colors`, async () => {
-    const colors = await setSplashColorsForThemeAsync({
-      projectRoot: '/app',
-      backgroundColor: '#ff0000',
-    });
+  const parent = {
+    name: 'Theme.App.SplashScreen',
+    parent: 'Theme.AppCompat.Light.NoActionBar',
+  };
 
-    expect(colors.resources.color?.[0]).toStrictEqual(
-      AndroidConfig.Resources.buildResourceItem({
-        name: 'splashscreen_background',
-        value: '#ff0000',
-      })
-    );
-  });
-
-  it(`sets styles`, async () => {
-    const styles = await setSplashStylesForThemeAsync({
-      projectRoot: '/app',
-    });
-
-    const parent = {
-      name: 'Theme.App.SplashScreen',
-      parent: 'Theme.AppCompat.Light.NoActionBar',
-    };
-
-    expect(AndroidConfig.Styles.getStyleParent(styles, parent).item[0]).toStrictEqual(
-      AndroidConfig.Resources.buildResourceItem({
-        name: 'android:windowBackground',
-        value: '@drawable/splashscreen',
-      })
-    );
-  });
+  expect(AndroidConfig.Styles.getStyleParent(styles, parent).item[0]).toStrictEqual(
+    AndroidConfig.Resources.buildResourceItem({
+      name: 'android:windowBackground',
+      value: '@drawable/splashscreen',
+    })
+  );
 });

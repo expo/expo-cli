@@ -109,7 +109,10 @@ export const withAndroidSplashImages: ConfigPlugin = config => {
  *
  * @param androidMainPath Absolute path to the main directory containing code and resources in Android project. In general that would be `android/app/src/main`.
  */
-export async function setSplashImageDrawablesAsync(config: ExpoConfig, projectRoot: string) {
+export async function setSplashImageDrawablesAsync(
+  config: Pick<ExpoConfig, 'android' | 'splash'>,
+  projectRoot: string
+) {
   await clearAllExistingSplashImagesAsync(projectRoot);
 
   const splash = getAndroidSplashConfig(config);
@@ -142,19 +145,26 @@ export async function setSplashImageDrawablesForThemeAsync(
   theme: 'dark' | 'light',
   projectRoot: string
 ) {
-  // Only run if an image exists
-  if (!config?.mdpi) {
-    return;
-  }
+  if (!config) return;
   const androidMainPath = path.join(projectRoot, 'android/app/src/main');
 
-  await Promise.all([
-    // TODO: Support all the other image sizes that are provided.
-    copyDrawableFile(
-      config.mdpi,
-      path.resolve(androidMainPath, DRAWABLES_CONFIGS.default.modes[theme].path)
-    ),
-  ]);
+  await Promise.all(
+    ['mdpi', 'hdpi', 'xhdpi', 'xxhdpi', 'xxxhdpi'].map(async imageKey => {
+      // @ts-ignore
+      const image = config[imageKey];
+      if (image) {
+        return copyDrawableFile(
+          path.join(projectRoot, image),
+          path.join(
+            androidMainPath,
+            // @ts-ignore
+            DRAWABLES_CONFIGS[imageKey].modes[theme].path
+          )
+        );
+      }
+      return null;
+    })
+  );
 }
 
 /**

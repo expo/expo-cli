@@ -1,4 +1,5 @@
 import { AndroidConfig, ConfigPlugin, withMainActivity } from '@expo/config-plugins';
+import { mergeContents } from '@expo/config-plugins/build/utils/generateCode';
 import { ExpoConfig } from '@expo/config-types';
 
 import { getAndroidSplashConfig } from './getSplashConfig';
@@ -14,37 +15,6 @@ export const withAndroidSplashMainActivity: ConfigPlugin = config => {
   });
 };
 
-function replace(
-  content: string,
-  { replaceContent, replacePattern }: { replaceContent: string; replacePattern: string | RegExp }
-): [boolean, string] {
-  const replacePatternOccurrence = content.search(replacePattern);
-  if (replacePatternOccurrence !== -1) {
-    return [true, content.replace(replacePattern, replaceContent)];
-  }
-  return [false, content];
-}
-
-/**
- * Inserts content just before first occurrence of provided pattern.
- * @returns [`true`, modifiedContent: string] if insertion is successful, [`false`, originalContent] otherwise.
- */
-function insert(
-  content: string,
-  { insertContent, insertPattern }: { insertContent: string; insertPattern: RegExp | string }
-): [boolean, string] {
-  const insertPatternOccurrence = content.search(insertPattern);
-  if (insertPatternOccurrence !== -1) {
-    return [
-      true,
-      `${content.slice(0, insertPatternOccurrence)}${insertContent}${content.slice(
-        insertPatternOccurrence
-      )}`,
-    ];
-  }
-  return [false, content];
-}
-
 export function setSplashScreenMainActivity(
   config: Pick<ExpoConfig, 'android' | 'androidStatusBar' | 'userInterfaceStyle'>,
   mainActivity: string,
@@ -52,7 +22,7 @@ export function setSplashScreenMainActivity(
 ): string {
   const splashConfig = getAndroidSplashConfig(config);
   // TODO: Translucent is weird
-  const statusBarTranslucent = config.androidStatusBar?.translucent;
+  const statusBarTranslucent = !!config.androidStatusBar?.translucent;
   if (!splashConfig) {
     // TODO: Remove splash screen code.
     return mainActivity;
@@ -72,40 +42,42 @@ export function setSplashScreenMainActivity(
     isJava
   );
 
-  const [replacedInOnCreate, newContent] = replace(mainActivity, {
-    replacePattern: /(?<=super\.onCreate(.|\n)*?)SplashScreen\.show\(this, SplashScreenImageResizeMode\..*\).*$/m,
-    replaceContent: `SplashScreen.show(this, SplashScreenImageResizeMode.${resizeMode.toUpperCase()}, ${statusBarTranslucent})${LE}`,
-  });
-  mainActivity = newContent;
+  if (!mainActivity.match(/(?<=^.*super\.onCreate.*$)/m)) {
+    const onCreateBlock = isJava
+      ? [
+          '    @Override',
+          '    protected void onCreate(Bundle savedInstanceState) {',
+          '      super.onCreate(savedInstanceState);',
+          '    }',
+        ]
+      : [
+          '    override fun onCreate(savedInstanceState: Bundle?) {',
+          '      super.onCreate(savedInstanceState)',
+          '    }',
+        ];
 
-  if (!replacedInOnCreate) {
-    const [insertedInOnCreate, nextContent] = insert(mainActivity, {
-      insertPattern: /(?<=^.*super\.onCreate.*$)/m, // insert just below super.onCreate
-      insertContent: `
-        // SplashScreen.show(...) has to be called after super.onCreate(...)
-        // Below line is handled by '@expo/config' command and it's discouraged to modify it manually
-        SplashScreen.show(this, SplashScreenImageResizeMode.${resizeMode.toUpperCase()}, ${statusBarTranslucent})${LE}`,
-    });
-    mainActivity = nextContent;
-  } else {
-    const [succeeded, newContent] = insert(mainActivity, {
-      insertPattern: isJava ? /(?<=public class .* extends .* {.*$)/m : /(?<=class .* : .* {.*$)/m,
-      insertContent: `
-        ${
-          isJava
-            ? `@Override
-        protected void onCreate(Bundle savedInstanceState`
-            : 'override fun onCreate(savedInstanceState: Bundle?'
-        }) {
-          super.onCreate(savedInstanceState)${LE}
-          // SplashScreen.show(...) has to be called after super.onCreate(...)
-          // Below line is handled by '@expo/config' command and it's discouraged to modify it manually
-          SplashScreen.show(this, SplashScreenImageResizeMode.${resizeMode.toUpperCase()}, ${statusBarTranslucent})${LE}
-        }
-      `,
-    });
-    mainActivity = newContent;
+    mainActivity = mergeContents({
+      src: mainActivity,
+      // insert just below super.onCreate
+      anchor: isJava ? /(?<=public class .* extends .* {.*$)/m : /(?<=class .* : .* {.*$)/m,
+      offset: 1,
+      comment: '//',
+      tag: 'expo-splash-screen-mainActivity-onCreate',
+      newSrc: onCreateBlock.join('\n'),
+    }).contents;
   }
+
+  mainActivity = mergeContents({
+    src: mainActivity,
+    // insert just below super.onCreate
+    anchor: /(?<=^.*super\.onCreate.*$)/m,
+    offset: 1,
+    comment: '//',
+    tag: 'expo-splash-screen-mainActivity-onCreate-show-splash',
+    newSrc: `          SplashScreen.show(this, SplashScreenImageResizeMode.${resizeMode.toUpperCase()}, ${statusBarTranslucent})${LE}`,
+  }).contents;
+
+  // TODO: Remove old `SplashScreen.show`
 
   return mainActivity;
 }
