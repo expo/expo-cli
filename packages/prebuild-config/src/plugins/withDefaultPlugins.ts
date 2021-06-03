@@ -28,7 +28,7 @@ import withMaps from './unversioned/react-native-maps';
  * Config plugin to apply all of the custom Expo iOS config plugins we support by default.
  * TODO: In the future most of this should go into versioned packages like expo-facebook, expo-updates, etc...
  */
-export const withExpoIOSPlugins: ConfigPlugin<{
+export const withIosExpoPlugins: ConfigPlugin<{
   bundleIdentifier: string;
 }> = (config, { bundleIdentifier }) => {
   // Set the bundle ID ahead of time.
@@ -63,7 +63,7 @@ export const withExpoIOSPlugins: ConfigPlugin<{
  * Config plugin to apply all of the custom Expo Android config plugins we support by default.
  * TODO: In the future most of this should go into versioned packages like expo-facebook, expo-updates, etc...
  */
-export const withExpoAndroidPlugins: ConfigPlugin<{
+export const withAndroidExpoPlugins: ConfigPlugin<{
   package: string;
 }> = (config, props) => {
   // Set the package name ahead of time.
@@ -118,7 +118,7 @@ export const withExpoAndroidPlugins: ConfigPlugin<{
   ]);
 };
 
-export const withExpoVersionedSDKPlugins: ConfigPlugin<{ expoUsername: string | null }> = (
+export const withVersionedExpoSDKPlugins: ConfigPlugin<{ expoUsername: string | null }> = (
   config,
   { expoUsername }
 ) => {
@@ -136,13 +136,13 @@ export const withExpoVersionedSDKPlugins: ConfigPlugin<{ expoUsername: string | 
   ]);
 };
 
-export function getExpoLegacyPlugins() {
-  return expoLegacyPlugins;
+export function getLegacyExpoPlugins() {
+  return legacyExpoPlugins;
 }
 
 // Expo managed packages that require extra update.
 // These get applied automatically to create parity with expo build in eas build.
-const expoLegacyPlugins = [
+const legacyExpoPlugins = [
   'expo-app-auth',
   'expo-av',
   'expo-background-fetch',
@@ -184,8 +184,8 @@ const withOptionalLegacyPlugins: ConfigPlugin<(StaticPlugin | string)[]> = (conf
   }, config);
 };
 
-export function withExpoLegacyPlugins(config: ExpoConfig) {
+export function withLegacyExpoPlugins(config: ExpoConfig) {
   return withOptionalLegacyPlugins(config, [
-    ...new Set(expoManagedVersionedPlugins.concat(expoLegacyPlugins)),
+    ...new Set(expoManagedVersionedPlugins.concat(legacyExpoPlugins)),
   ]);
 }

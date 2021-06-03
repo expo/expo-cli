@@ -14,9 +14,9 @@ import * as path from 'path';
 import xcode from 'xcode';
 
 import {
-  withExpoAndroidPlugins,
-  withExpoIOSPlugins,
-  withExpoVersionedSDKPlugins,
+  withAndroidExpoPlugins,
+  withIosExpoPlugins,
+  withVersionedExpoSDKPlugins,
 } from '../withDefaultPlugins';
 import { PodfileBasic } from './fixtures/Podfile';
 import rnFixture from './fixtures/react-native-project';
@@ -172,12 +172,12 @@ function getLargeConfig(): ExportedConfig {
 
 function getPrebuildConfig() {
   let config = { ...getLargeConfig() };
-  config = withExpoVersionedSDKPlugins(config, { expoUsername: 'bacon' });
+  config = withVersionedExpoSDKPlugins(config, { expoUsername: 'bacon' });
 
-  config = withExpoIOSPlugins(config, {
+  config = withIosExpoPlugins(config, {
     bundleIdentifier: 'com.bacon.todo',
   });
-  config = withExpoAndroidPlugins(config, {
+  config = withAndroidExpoPlugins(config, {
     package: 'com.bacon.todo',
   });
   return config;
@@ -260,7 +260,7 @@ describe('built-in plugins', () => {
       },
     };
 
-    config = withExpoIOSPlugins(config, {
+    config = withIosExpoPlugins(config, {
       bundleIdentifier: 'com.bacon.todo',
     });
     // Apply mod
