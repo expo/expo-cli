@@ -32,7 +32,7 @@ type ManifestData = {
   };
 };
 
-type ManifestReciever = {
+type ManifestReceiver = {
   $: AndroidManifestAttributes & {
     'android:exported'?: StringBoolean;
     'android:enabled'?: StringBoolean;
@@ -94,7 +94,7 @@ export type ManifestApplication = {
   $: ManifestApplicationAttributes;
   activity?: ManifestActivity[];
   service?: ManifestService[];
-  receiver?: ManifestReciever[];
+  receiver?: ManifestReceiver[];
   'meta-data'?: ManifestMetaData[];
   'uses-library'?: ManifestUsesLibrary[];
   // ...
