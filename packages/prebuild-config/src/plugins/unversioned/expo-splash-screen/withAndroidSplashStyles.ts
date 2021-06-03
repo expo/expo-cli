@@ -89,14 +89,7 @@ export async function setSplashColorsForThemeAsync({
 
   let colors = await readResourcesXMLAsync({ path: colorsPath });
 
-  if (backgroundColor) {
-    colors = Colors.setColorItem(
-      buildResourceItem({ name: SPLASH_COLOR_NAME, value: backgroundColor }),
-      colors
-    );
-  } else {
-    colors = Colors.removeColorItem(SPLASH_COLOR_NAME, colors);
-  }
+  colors = Colors.assignColorValue(colors, { value: backgroundColor, name: SPLASH_COLOR_NAME });
 
   await XML.writeXMLAsync({ path: colorsPath, xml: colors });
 
