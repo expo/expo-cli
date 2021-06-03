@@ -91,7 +91,6 @@ export async function action(
   });
 
   const url = result.url;
-  const projectPageUrl = result.projectPageUrl;
 
   if (options.quiet) {
     simpleSpinner.stop();
@@ -102,19 +101,22 @@ export async function action(
 
   logManifestUrl({ url, sdkVersion: exp.sdkVersion });
 
-  if (target === 'managed' && projectPageUrl) {
+  if (target === 'managed') {
+    // TODO: replace with websiteUrl from server when it is available, if that makes sense.
+    const websiteUrl = url.replace('exp.host', 'expo.io');
+
     // note(brentvatne): disable copy to clipboard functionality for now, need to think more about
     // whether this is desirable.
     //
     // Attempt to copy the URL to the clipboard, if it succeeds then append a notice to the log.
     // const copiedToClipboard = copyToClipboard(websiteUrl);
 
-    logProjectPageUrl({ url: projectPageUrl, copiedToClipboard: false });
+    logProjectPageUrl({ url: websiteUrl, copiedToClipboard: false });
 
     // Only send the link for managed projects.
     const recipient = await sendTo.getRecipient(options.sendTo);
     if (recipient) {
-      await sendTo.sendUrlAsync(projectPageUrl, recipient);
+      await sendTo.sendUrlAsync(websiteUrl, recipient);
     }
   }
 
@@ -152,7 +154,7 @@ function logManifestUrl({ url, sdkVersion }: { url: string; sdkVersion?: string 
 
 /**
  *
- * @example ⚙️   Project page: https://expo.io/@bacon/projects/my-app [copied to clipboard] Learn more: https://expo.fyi/project-page
+ * @example ⚙️   Project page: https://expo.io/@bacon/my-app [copied to clipboard] Learn more: https://expo.fyi/project-page
  * @param options
  */
 function logProjectPageUrl({
