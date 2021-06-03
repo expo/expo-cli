@@ -22,11 +22,10 @@ export async function shouldBuildHermesBundleAsync(
     const gradlePropertiesPath = path.join(projectRoot, 'android', 'gradle.properties');
     if (fs.existsSync(gradlePropertiesPath)) {
       const properties = parseGradleProperties(await fs.readFile(gradlePropertiesPath, 'utf8'));
-      if (properties['expo.jsEngine'] === 'hermes') {
-        return true;
-      }
+      return properties['expo.jsEngine'] === 'hermes';
     }
   }
+
   return false;
 }
 

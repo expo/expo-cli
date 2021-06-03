@@ -99,8 +99,8 @@ export async function exportAppAsync(
 
   printBundleSizes(bundles, /* isHermesPreferable */ true);
 
-  const iosBundle = bundles.ios.hermesBytecodeBundle || bundles.ios.code;
-  const androidBundle = bundles.android.hermesBytecodeBundle || bundles.android.code;
+  const iosBundle = bundles.ios.hermesBytecodeBundle ?? bundles.ios.code;
+  const androidBundle = bundles.android.hermesBytecodeBundle ?? bundles.android.code;
 
   const iosBundleHash = crypto.createHash('md5').update(iosBundle).digest('hex');
   const iosBundleUrl = `ios-${iosBundleHash}.js`;
@@ -173,8 +173,8 @@ export async function exportAppAsync(
     );
   }
 
-  const iosSourceMap = bundles.ios.hermesSourcemap || bundles.ios.map;
-  const androidSourceMap = bundles.android.hermesSourcemap || bundles.android.map;
+  const iosSourceMap = bundles.ios.hermesSourcemap ?? bundles.ios.map;
+  const androidSourceMap = bundles.android.hermesSourcemap ?? bundles.android.map;
 
   // build source maps
   if (options.dumpSourcemap) {
