@@ -54,8 +54,7 @@ describe(getEntitlementsPath, () => {
     // New file has the contents of the old entitlements file
     const data = plist.parse(await fs.readFile(entitlementsPath, 'utf8'));
     expect(data).toStrictEqual({
-      // Push notifications enabled by default
-      'aps-environment': 'development',
+      // No entitlements enabled by default
     });
   });
 
