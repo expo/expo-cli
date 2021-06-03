@@ -181,7 +181,7 @@ function getDebugPluginStackFromStackTrace(stacktrace?: string): string {
         return pluginName;
       })
       // Join the results:
-      // withExpoAndroidPlugins ➜ withPlugins ➜ withIcons ➜ withDangerousMod ➜ withMod
+      // withAndroidExpoPlugins ➜ withPlugins ➜ withIcons ➜ withDangerousMod ➜ withMod
       .join(' ➜ ')
   );
 }

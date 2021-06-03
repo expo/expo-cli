@@ -3,10 +3,10 @@ import { ModPlatform } from '@expo/config-plugins';
 import { ExpoConfig } from '@expo/config-types';
 
 import {
-  withExpoAndroidPlugins,
-  withExpoIOSPlugins,
-  withExpoLegacyPlugins,
-  withExpoVersionedSDKPlugins,
+  withAndroidExpoPlugins,
+  withIosExpoPlugins,
+  withLegacyExpoPlugins,
+  withVersionedExpoSDKPlugins,
 } from './plugins/withDefaultPlugins';
 
 export function getPrebuildConfig(
@@ -37,10 +37,10 @@ export function getPrebuildConfig(
 
   // Add all built-in plugins first because they should take
   // priority over the unversioned plugins.
-  config = withExpoVersionedSDKPlugins(config, {
+  config = withVersionedExpoSDKPlugins(config, {
     expoUsername: resolvedExpoUsername,
   });
-  config = withExpoLegacyPlugins(config);
+  config = withLegacyExpoPlugins(config);
 
   if (platforms.includes('ios')) {
     if (!config.ios) config.ios = {};
@@ -48,7 +48,7 @@ export function getPrebuildConfig(
       bundleIdentifier ?? config.ios.bundleIdentifier ?? `com.placeholder.appid`;
 
     // Add all built-in plugins
-    config = withExpoIOSPlugins(config, {
+    config = withIosExpoPlugins(config, {
       bundleIdentifier: config.ios.bundleIdentifier,
     });
   }
@@ -58,7 +58,7 @@ export function getPrebuildConfig(
     config.android.package = packageName ?? config.android.package ?? `com.placeholder.appid`;
 
     // Add all built-in plugins
-    config = withExpoAndroidPlugins(config, {
+    config = withAndroidExpoPlugins(config, {
       package: config.android.package,
     });
   }
