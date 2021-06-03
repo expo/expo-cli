@@ -93,17 +93,17 @@ export async function publishAsync(
     useDevServer: Env.shouldUseDevServer(exp),
   });
 
-  printBundleSizes(bundles, true);
+  printBundleSizes(bundles,  /* isHermesPreferable* / true);
 
   await ProjectAssets.publishAssetsAsync({ projectRoot, exp, bundles });
 
-  const androidBundle = bundles.android.hermesBytecodeBundle || bundles.android.code;
-  const iosBundle = bundles.ios.hermesBytecodeBundle || bundles.ios.code;
+  const androidBundle = bundles.android.hermesBytecodeBundle ?? bundles.android.code;
+  const iosBundle = bundles.ios.hermesBytecodeBundle ?? bundles.ios.code;
 
   const hasHooks = validPostPublishHooks.length > 0;
 
-  const androidSourceMap = hasHooks ? bundles.android.hermesSourcemap || bundles.android.map : null;
-  const iosSourceMap = hasHooks ? bundles.ios.hermesSourcemap || bundles.ios.map : null;
+  const androidSourceMap = hasHooks ? bundles.android.hermesSourcemap ?? bundles.android.map : null;
+  const iosSourceMap = hasHooks ? bundles.ios.hermesSourcemap ?? bundles.ios.map : null;
 
   let response;
   try {

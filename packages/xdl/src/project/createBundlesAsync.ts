@@ -120,7 +120,7 @@ export async function createBundlesAsync(
     projectRoot,
     publishOptions.target ?? getDefaultTarget(projectRoot),
     {
-      // If not legacy, delete the target option to prevent warnings from being thrown.
+      // If not legacy, ignore the target option to prevent warnings from being thrown.
       target: !isLegacy ? undefined : publishOptions.target,
       resetCache: publishOptions.resetCache,
       logger: ProjectUtils.getLogger(projectRoot),
