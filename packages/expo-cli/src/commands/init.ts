@@ -384,11 +384,12 @@ async function checkSkipInitializeGitTree(
     }
   }
 
-  Log.log(`Your project will be initialized inside an existing git repository (${process.cwd()})`);
-
   let shouldSkipInitializeGitTree = false;
 
   if (insideGitTree) {
+    Log.log(
+      `Your project will be initialized inside an existing git repository (${process.cwd()})`
+    );
     shouldSkipInitializeGitTree =
       program.nonInteractive ||
       (await confirmAsync({
