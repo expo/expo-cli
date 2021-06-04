@@ -24,59 +24,30 @@ type PackagerOptions = {
   minify: boolean;
 };
 
-// If `isHermesPreferable` is true, will try use hermes bytecode bundle as primary output.
-// This if for classic `expo export` or `expo publish` flows.
-export function printBundleSizes(
-  bundles: { android: BundleOutput; ios: BundleOutput },
-  isHermesPreferable: boolean
-) {
+export function printBundleSizes(bundles: { android: BundleOutput; ios: BundleOutput }) {
   const files: [string, string | Uint8Array][] = [];
 
-  if (isHermesPreferable) {
-    if (bundles.ios.hermesBytecodeBundle) {
-      files.push(['index.ios.js (Hermes)', bundles.ios.hermesBytecodeBundle]);
-    } else {
-      files.push(['index.ios.js', bundles.ios.code]);
-    }
-    if (bundles.android.hermesBytecodeBundle) {
-      files.push(['index.android.js (Hermes)', bundles.android.hermesBytecodeBundle]);
-    } else {
-      files.push(['index.android.js', bundles.android.code]);
-    }
-
-    // Account for inline source maps
-    if (bundles.ios.hermesSourcemap) {
-      files.push([chalk.dim('index.ios.js.map (Hermes)'), bundles.ios.hermesSourcemap]);
-    } else if (bundles.ios.map) {
-      files.push([chalk.dim('index.ios.js.map'), bundles.ios.map]);
-    }
-    if (bundles.android.hermesSourcemap) {
-      files.push([chalk.dim('index.android.js.map (Hermes)'), bundles.android.hermesSourcemap]);
-    } else if (bundles.android.map) {
-      files.push([chalk.dim('index.android.js.map'), bundles.android.map]);
-    }
+  if (bundles.ios.hermesBytecodeBundle) {
+    files.push(['index.ios.js (Hermes)', bundles.ios.hermesBytecodeBundle]);
   } else {
-    files.push(['index.ios.js', bundles.ios.code], ['index.android.js', bundles.android.code]);
-    if (bundles.ios.hermesBytecodeBundle) {
-      files.push(['index.ios.js (Hermes)', bundles.ios.hermesBytecodeBundle]);
-    }
-    if (bundles.android.hermesBytecodeBundle) {
-      files.push(['index.android.js (Hermes)', bundles.android.hermesBytecodeBundle]);
-    }
+    files.push(['index.ios.js', bundles.ios.code]);
+  }
+  if (bundles.android.hermesBytecodeBundle) {
+    files.push(['index.android.js (Hermes)', bundles.android.hermesBytecodeBundle]);
+  } else {
+    files.push(['index.android.js', bundles.android.code]);
+  }
 
-    // Account for inline source maps
-    if (bundles.ios.map) {
-      files.push([chalk.dim('index.ios.js.map'), bundles.ios.map]);
-    }
-    if (bundles.android.map) {
-      files.push([chalk.dim('index.android.js.map'), bundles.android.map]);
-    }
-    if (bundles.ios.hermesSourcemap) {
-      files.push([chalk.dim('index.ios.js.map (Hermes)'), bundles.ios.hermesSourcemap]);
-    }
-    if (bundles.android.hermesSourcemap) {
-      files.push([chalk.dim('index.android.js.map (Hermes)'), bundles.android.hermesSourcemap]);
-    }
+  // Account for inline source maps
+  if (bundles.ios.hermesSourcemap) {
+    files.push([chalk.dim('index.ios.js.map (Hermes)'), bundles.ios.hermesSourcemap]);
+  } else if (bundles.ios.map) {
+    files.push([chalk.dim('index.ios.js.map'), bundles.ios.map]);
+  }
+  if (bundles.android.hermesSourcemap) {
+    files.push([chalk.dim('index.android.js.map (Hermes)'), bundles.android.hermesSourcemap]);
+  } else if (bundles.android.map) {
+    files.push([chalk.dim('index.android.js.map'), bundles.android.map]);
   }
 
   logger.global.info('');

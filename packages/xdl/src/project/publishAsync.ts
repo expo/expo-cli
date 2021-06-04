@@ -93,7 +93,7 @@ export async function publishAsync(
     useDevServer: Env.shouldUseDevServer(exp),
   });
 
-  printBundleSizes(bundles, /* isHermesPreferable */ true);
+  printBundleSizes(bundles);
 
   await ProjectAssets.publishAssetsAsync({ projectRoot, exp, bundles });
 

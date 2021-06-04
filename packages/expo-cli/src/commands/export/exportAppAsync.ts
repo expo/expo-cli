@@ -97,7 +97,7 @@ export async function exportAppAsync(
     useDevServer: Env.shouldUseDevServer(exp),
   });
 
-  printBundleSizes(bundles, /* isHermesPreferable */ true);
+  printBundleSizes(bundles);
 
   const iosBundle = bundles.ios.hermesBytecodeBundle ?? bundles.ios.code;
   const androidBundle = bundles.android.hermesBytecodeBundle ?? bundles.android.code;
