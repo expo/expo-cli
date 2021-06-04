@@ -13,6 +13,7 @@ export type HistoryOptions = {
   platform?: 'android' | 'ios';
   raw?: boolean;
   sdkVersion?: string;
+  runtimeVersion?: string;
 };
 
 export type DetailOptions = {
@@ -25,6 +26,7 @@ export type SetOptions = { releaseChannel: string; publishId: string };
 export type RollbackOptions = {
   releaseChannel: string;
   sdkVersion: string;
+  runtimeVersion?: string;
   platform?: 'android' | 'ios';
   parent?: { nonInteractive?: boolean };
 };
@@ -36,6 +38,7 @@ export type Publication = {
   publicationId: string;
   appVersion: string;
   sdkVersion: string;
+  runtimeVersion?: string;
   publishedTime: string;
   platform: 'android' | 'ios';
 };
@@ -51,6 +54,7 @@ export type PublicationDetail = {
   fullName: string;
   hash: string;
   sdkVersion: string;
+  runtimeVersion?: string;
   s3Key: string;
   s3Url: string;
   abiVersion: string | null;
@@ -87,6 +91,7 @@ export async function getPublishHistoryAsync(
     count: options.count,
     platform: options.platform,
     sdkVersion: options.sdkVersion,
+    runtimeVersion: options.runtimeVersion,
   });
 }
 
@@ -109,12 +114,13 @@ async function _rollbackPublicationFromChannelForPlatformAsync(
   platform: 'android' | 'ios',
   options: Omit<RollbackOptions, 'platform'>
 ) {
-  const { releaseChannel, sdkVersion } = options;
+  const { releaseChannel, sdkVersion, runtimeVersion } = options;
   // get the 2 most recent things in the channel history
   const historyQueryResult = await getPublishHistoryAsync(projectRoot, {
     releaseChannel,
     platform,
     sdkVersion,
+    runtimeVersion,
     count: 2,
   });
 

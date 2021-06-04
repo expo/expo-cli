@@ -30,11 +30,20 @@ export async function getPublishExpConfigAsync(
   options.releaseChannel = options.releaseChannel || 'default';
 
   // Verify that exp/app.json and package.json exist
-  const { exp: privateExp } = getConfig(projectRoot);
-  const { hooks } = privateExp;
-  const { exp, pkg } = getConfig(projectRoot, { isPublicConfig: true });
-
+  const {
+    exp: { hooks, runtimeVersion },
+  } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
+  const { exp, pkg } = getConfig(projectRoot, {
+    isPublicConfig: true,
+    // enforce sdk validation if user is not using runtimeVersion
+    skipSDKVersionRequirement: !!runtimeVersion,
+  });
   const { sdkVersion } = exp;
+  if (!sdkVersion) {
+    throw new Error(
+      'Config is missing an SDK version. See https://docs.expo.io/bare/installing-updates/'
+    );
+  }
 
   // Only allow projects to be published with UNVERSIONED if a correct token is set in env
   if (sdkVersion === 'UNVERSIONED' && !Env.maySkipManifestValidation()) {
