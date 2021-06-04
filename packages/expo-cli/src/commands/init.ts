@@ -175,8 +175,8 @@ async function action(incomingProjectRoot: string, command: Command) {
 
   const cdPath = CreateApp.getChangeDirectoryPath(projectRoot);
 
-  // Check if we're within an existing git repo
-  const shouldSkipInitializeGitTree = await checkWithinExistingGitRepoAsync(projectRoot, cdPath, {
+  // Check if we should skip initializing the git tree
+  const shouldSkipInitializeGitTree = await checkSkipInitializeGitTree(projectRoot, cdPath, {
     silent: true,
   });
 
@@ -363,7 +363,7 @@ async function installNodeDependenciesAsync(projectRoot: string, packageManager:
   }
 }
 
-async function checkWithinExistingGitRepoAsync(
+async function checkSkipInitializeGitTree(
   root: string,
   cdPath: string,
   flags: { silent: boolean } = { silent: false }
