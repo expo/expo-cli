@@ -15,14 +15,20 @@ export async function shouldBuildHermesBundleAsync(
 ): Promise<boolean> {
   if (target === 'managed') {
     const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
-    return platform === 'android' && exp.android?.jsEngine === 'hermes';
+    switch (platform) {
+      case 'android':
+        return exp.android?.jsEngine === 'hermes';
+      default:
+        return false;
+    }
   }
 
-  if (platform === 'android') {
-    const gradlePropertiesPath = path.join(projectRoot, 'android', 'gradle.properties');
-    if (fs.existsSync(gradlePropertiesPath)) {
-      const properties = parseGradleProperties(await fs.readFile(gradlePropertiesPath, 'utf8'));
-      return properties['expo.jsEngine'] === 'hermes';
+  if (target === 'bare') {
+    switch (platform) {
+      case 'android':
+        return isHermesEnabledForBareAndroidAsync(projectRoot);
+      default:
+        return false;
     }
   }
 
@@ -120,6 +126,15 @@ export function parseGradleProperties(content: string): Record<string, string> {
     result[key] = value;
   }
   return result;
+}
+
+async function isHermesEnabledForBareAndroidAsync(projectRoot: string): Promise<boolean> {
+  const gradlePropertiesPath = path.join(projectRoot, 'android', 'gradle.properties');
+  if (fs.existsSync(gradlePropertiesPath)) {
+    const props = parseGradleProperties(await fs.readFile(gradlePropertiesPath, 'utf8'));
+    return props['export.jsEngine'] === 'hermes';
+  }
+  return false;
 }
 
 function importMetroSourceMapFromProject(projectRoot: string): typeof composeSourceMaps {
