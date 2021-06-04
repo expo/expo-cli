@@ -389,9 +389,11 @@ async function checkWithinExistingGitRepoAsync(
   let shouldSkipInitializeGitTree = false;
 
   if (insideGitTree) {
-    shouldSkipInitializeGitTree = await confirmAsync({
-      message: `Skip initializing a git repository for ${cdPath}?`,
-    });
+    shouldSkipInitializeGitTree =
+      program.nonInteractive ||
+      (await confirmAsync({
+        message: `Skip initializing a git repository for ${cdPath}?`,
+      }));
   }
 
   return shouldSkipInitializeGitTree;
