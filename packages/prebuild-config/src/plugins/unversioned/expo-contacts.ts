@@ -24,5 +24,5 @@ function setAccessesContactNotes(config: ExpoConfig, entitlementsPlist: JSONObje
 
 export default createLegacyPlugin({
   packageName: 'expo-contacts',
-  fallback: [withAccessesContactNotes],
+  fallback: withAccessesContactNotes,
 });

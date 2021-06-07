@@ -41,7 +41,7 @@ export async function attemptAddingPluginsAsync(
     skipSDKVersionRequirement: true,
   });
   if (modification.type === 'success') {
-    Log.log(`\u203A Added config plugins: ${plugins.join(', ')}`);
+    Log.log(`\u203A Added config plugin${plugins.length === 1 ? '' : 's'}: ${plugins.join(', ')}`);
   } else {
     const exactEdits = {
       plugins,
