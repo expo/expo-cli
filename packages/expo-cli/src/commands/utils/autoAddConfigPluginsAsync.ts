@@ -3,6 +3,7 @@ import {
   normalizeStaticPlugin,
   resolveConfigPluginFunctionWithInfo,
 } from '@expo/config-plugins/build/utils/plugin-resolver';
+import { getAutoPlugins } from '@expo/prebuild-config';
 
 import Log from '../../log';
 import { attemptAddingPluginsAsync } from './modifyConfigAsync';
@@ -42,6 +43,8 @@ export function getNamedPlugins(plugins: NonNullable<ExpoConfig['plugins']>): st
   return namedPlugins;
 }
 
+const autoPlugins = getAutoPlugins();
+
 export async function autoAddConfigPluginsAsync(
   projectRoot: string,
   exp: Pick<ExpoConfig, 'plugins'>,
@@ -65,6 +68,12 @@ export async function autoAddConfigPluginsAsync(
     Log.debug(
       `Package "${pkg}" has plugin: ${!!plugin}` + (plugin ? ` (args: ${plugin.length})` : '')
     );
+
+    if (autoPlugins.includes(pkg)) {
+      Log.debug(`Package "${pkg}" is an auto plugin, skipping...`);
+      return false;
+    }
+
     return !!plugin;
   });
 

@@ -118,6 +118,20 @@ export const withAndroidExpoPlugins: ConfigPlugin<{
   ]);
 };
 
+// Must keep in sync with `withVersionedExpoSDKPlugins`
+const versionedExpoSDKPackages: string[] = [
+  'react-native-maps',
+  'expo-ads-admob',
+  'expo-apple-authentication',
+  'expo-contacts',
+  'expo-notifications',
+  'expo-updates',
+  'expo-branch',
+  'expo-document-picker',
+  'expo-facebook',
+  'expo-splash-screen',
+];
+
 export const withVersionedExpoSDKPlugins: ConfigPlugin<{ expoUsername: string | null }> = (
   config,
   { expoUsername }
@@ -135,6 +149,10 @@ export const withVersionedExpoSDKPlugins: ConfigPlugin<{ expoUsername: string | 
     withSplashScreen,
   ]);
 };
+
+export function getAutoPlugins() {
+  return versionedExpoSDKPackages.concat(legacyExpoPlugins).concat(expoManagedVersionedPlugins);
+}
 
 export function getLegacyExpoPlugins() {
   return legacyExpoPlugins;
