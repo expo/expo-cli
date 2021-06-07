@@ -150,6 +150,7 @@ const legacyExpoPlugins = [
   'expo-brightness',
   'expo-calendar',
   'expo-camera',
+  'expo-cellular',
   'expo-dev-menu',
   'expo-dev-launcher',
   'expo-dev-client',
