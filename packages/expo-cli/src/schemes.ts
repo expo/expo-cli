@@ -100,44 +100,15 @@ async function getManagedDevClientSchemeAsync(projectRoot: string): Promise<stri
   }
 
   Log.warn(
-    '\nDev Client: No URI schemes could be found in configuration, this is required for opening the project\n'
+    `\nDev Client: No URI scheme could be found in configuration, this is required for opening the project.`
   );
-  if (dynamicConfigPath && !staticConfigPath) {
-    // Dynamic config (app.config.js/app.config.ts) can't be automatically updated.
-    Log.log(
-      `Add a common scheme in ${dynamicConfigPath} or provide a scheme with the ${Log.chalk.cyan(
-        '--scheme'
-      )} flag\n`
-    );
-    throw new AbortCommandError();
-  }
-
-  const { scheme } = await prompt({
-    type: 'text',
-    name: 'scheme',
-    validate: value =>
-      /^[a-z0-9-]+$/.test(value) || 'Only lowercase characters/numbers (a-z, 0-9) or hyphen (-)',
-    message: `Please choose a URI scheme for your app`,
-    initial: slugify(exp.slug, {
-      // Remove non-allowed characters and additionally hyphens, which are allowed but not idiomatic.
-      remove: /[^a-z0-9]/,
-      // Convert to lower case.
-      lower: true,
-    }),
-  });
-  if (staticConfigPath) {
-    // if app.json exists we can update it
-    const config = JsonFile.read(staticConfigPath, { json5: true });
-    config.expo = { ...(config.expo as object), scheme };
-    await JsonFile.writeAsync(staticConfigPath, config);
-    Log.log(`Scheme '${scheme}' updated in ${path.basename(staticConfigPath)}`);
-  } else {
-    // otherwise we'll create a new app.json
-    const newConfigPath = path.join(projectRoot, 'app.json');
-    await JsonFile.writeAsync(newConfigPath, { expo: { scheme } });
-    Log.log(`Created ${path.basename(newConfigPath)}`);
-  }
-  return scheme;
+  Log.log(
+    `Add the 'scheme' property in ${
+      dynamicConfigPath ?? staticConfigPath ?? 'app.json'
+    } or provide a scheme with the ${Log.chalk.cyan('--scheme')} flag.`
+  );
+  Log.log(`Note: you'll need to rebuild the app after adding a scheme.\n`);
+  throw new AbortCommandError();
 }
 
 // sort longest to ensure uniqueness.
