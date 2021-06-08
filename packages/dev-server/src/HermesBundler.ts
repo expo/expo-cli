@@ -1,5 +1,4 @@
-import type { Platform, ProjectTarget } from '@expo/config';
-import { getConfig } from '@expo/config';
+import type { ExpoConfig, Platform } from '@expo/config';
 import spawnAsync from '@expo/spawn-async';
 import fs from 'fs-extra';
 import type { composeSourceMaps } from 'metro-source-map';
@@ -8,11 +7,10 @@ import path from 'path';
 import process from 'process';
 import resolveFrom from 'resolve-from';
 
-export function shouldBuildHermesBundle(projectRoot: string, platform: Platform): boolean {
-  const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
+export function isEnableHermesManaged(expoConfig: ExpoConfig, platform: Platform): boolean {
   switch (platform) {
     case 'android':
-      return exp.android?.jsEngine === 'hermes';
+      return expoConfig.android?.jsEngine === 'hermes';
     default:
       return false;
   }
@@ -111,12 +109,41 @@ export function parseGradleProperties(content: string): Record<string, string> {
   return result;
 }
 
-async function isHermesEnabledForBareAndroidAsync(projectRoot: string): Promise<boolean> {
+export async function maybeInconsistentEngineAsync(
+  projectRoot: string,
+  platform: string,
+  isHermesManaged: boolean
+): Promise<boolean> {
+  switch (platform) {
+    case 'android':
+      return maybeInconsistentEngineAndroidAsync(projectRoot, isHermesManaged);
+    default:
+      return false;
+  }
+}
+
+async function maybeInconsistentEngineAndroidAsync(
+  projectRoot: string,
+  isHermesManaged: boolean
+): Promise<boolean> {
+  // Trying best to check android native project if by chance to be consistent between app config
+
+  // Check android/app/build.gradle for "enableHermes: true"
+  const appBuildGradlePath = path.join(projectRoot, 'android', 'app', 'build.gradle');
+  if (fs.existsSync(appBuildGradlePath)) {
+    const content = await fs.readFile(appBuildGradlePath, 'utf8');
+    const isHermesBare = content.search(/^\s*enableHermes:\s*true,?\s+/m) >= 0;
+    return isHermesManaged !== isHermesBare;
+  }
+
+  // Check gradle.properties from prebuild template
   const gradlePropertiesPath = path.join(projectRoot, 'android', 'gradle.properties');
   if (fs.existsSync(gradlePropertiesPath)) {
     const props = parseGradleProperties(await fs.readFile(gradlePropertiesPath, 'utf8'));
-    return props['export.jsEngine'] === 'hermes';
+    const isHermesBare = props['expo.jsEngine'] === 'hermes';
+    return isHermesManaged !== isHermesBare;
   }
+
   return false;
 }
 

@@ -1,4 +1,5 @@
 import Log from '@expo/bunyan';
+import { ExpoConfig } from '@expo/config';
 import * as ExpoMetroConfig from '@expo/metro-config';
 import {
   createDevServerMiddleware,
@@ -12,7 +13,11 @@ import type Metro from 'metro';
 import resolveFrom from 'resolve-from';
 import { parse as parseUrl } from 'url';
 
-import { buildHermesBundleAsync, shouldBuildHermesBundle } from './HermesBundler';
+import {
+  buildHermesBundleAsync,
+  isEnableHermesManaged,
+  maybeInconsistentEngineAsync,
+} from './HermesBundler';
 import LogReporter from './LogReporter';
 import clientLogsMiddleware from './middleware/clientLogsMiddleware';
 import createJsInspectorMiddleware from './middleware/createJsInspectorMiddleware';
@@ -100,6 +105,7 @@ let nextBuildID = 0;
 // TODO: deprecate options.target
 export async function bundleAsync(
   projectRoot: string,
+  expoConfig: ExpoConfig,
   options: MetroDevServerOptions,
   bundles: BundleOptions[]
 ): Promise<BundleOutput[]> {
@@ -162,8 +168,24 @@ export async function bundleAsync(
     return await Promise.all(
       bundles.map(async (bundle: BundleOptions) => {
         const bundleOutput = await buildAsync(bundle);
+        const isHermesManaged = isEnableHermesManaged(expoConfig, bundle.platform);
 
-        if (shouldBuildHermesBundle(projectRoot, bundle.platform)) {
+        const maybeInconsistentEngine = await maybeInconsistentEngineAsync(
+          projectRoot,
+          bundle.platform,
+          isHermesManaged
+        );
+        if (maybeInconsistentEngine) {
+          throw new Error(
+            `Inconsistent Hermes settings between app config and ${bundle.platform} native project.\n` +
+              `Enabling Hermes in app.json or app.config.js: ${isHermesManaged.toString()}\n` +
+              `Please check the following native project settings if there are any inconsistencies:\n` +
+              '  - android/gradle.properties\n' +
+              '  - android/app/build.gradle\n'
+          );
+        }
+
+        if (isHermesManaged) {
           options.logger.info(
             { tag: 'expo' },
             `💿 Building Hermes bytecode for the bundle - platform[${bundle.platform}]`

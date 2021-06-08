@@ -89,6 +89,7 @@ export async function createBundlesAsync(
   const platforms: Platform[] = ['android', 'ios'];
   const [android, ios] = await bundleAsync(
     projectRoot,
+    config.exp,
     {
       // If not legacy, ignore the target option to prevent warnings from being thrown.
       target: !isLegacy ? undefined : publishOptions.target,
