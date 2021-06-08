@@ -49,7 +49,7 @@ it(`sets styles`, async () => {
 
   const parent = {
     name: 'Theme.App.SplashScreen',
-    parent: 'Theme.AppCompat.Light.NoActionBar',
+    parent: 'AppTheme',
   };
 
   expect(AndroidConfig.Styles.getStyleParent(styles, parent).item[0]).toStrictEqual(

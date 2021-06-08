@@ -7,7 +7,7 @@ import { getAndroidDarkSplashConfig, getAndroidSplashConfig } from './getSplashC
 const { buildResourceItem, readResourcesXMLAsync } = AndroidConfig.Resources;
 const styleResourceGroup = {
   name: 'Theme.App.SplashScreen',
-  parent: 'Theme.AppCompat.Light.NoActionBar',
+  parent: 'AppTheme',
 };
 const SPLASH_COLOR_NAME = 'splashscreen_background';
 
