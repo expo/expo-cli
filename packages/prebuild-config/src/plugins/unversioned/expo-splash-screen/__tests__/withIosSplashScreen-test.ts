@@ -148,8 +148,8 @@ describe(warnUnsupportedSplashProperties, () => {
 
 describe(buildContentsJsonImages, () => {
   it(`supports dark mode`, () => {
-    expect(buildContentsJsonImages({ image: 'somn', darkImage: 'other' }).length).toBe(6);
-    expect(buildContentsJsonImages({ image: 'somn', darkImage: null }).length).toBe(3);
+    expect(buildContentsJsonImages({ image: 'somn', darkImage: 'other' } as any).length).toBe(6);
+    expect(buildContentsJsonImages({ image: 'somn', darkImage: null } as any).length).toBe(3);
   });
 });
 
@@ -186,13 +186,19 @@ describe(withIosSplashScreen, () => {
       backgroundColor: '#ff00ff',
       darkImage: '/app/assets/splash.png',
       darkBackgroundColor: '#00ff00',
-      userInterfaceStyle: 'automatic',
+      tabletImage: null,
+      tabletBackgroundColor: null,
+      darkTabletImage: null,
+      darkTabletBackgroundColor: null,
+      // userInterfaceStyle: 'automatic',
     });
 
     // compile all plugins and mods
     config = await compileModsAsync(config, { projectRoot, platforms: ['ios', 'android'] });
 
     // Test Results
+
+    expect(config).toBeDefined();
 
     const infoPlist = await readPlistAsync('/app/ios/ReactNativeProject/Info.plist');
     expect(infoPlist.UILaunchStoryboardName).toBe('SplashScreen');
