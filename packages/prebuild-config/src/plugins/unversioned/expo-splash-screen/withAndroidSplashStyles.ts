@@ -33,7 +33,6 @@ export async function setSplashStylesAsync(config: ExpoConfig, projectRoot: stri
   const backgroundColor = getSplashBackgroundColor(config);
   const darkBackgroundColor = getSplashDarkBackgroundColor(config);
 
-  // TODO: Does this need to be themed?
   await setSplashStylesForThemeAsync({
     projectRoot,
   });
@@ -42,7 +41,6 @@ export async function setSplashStylesAsync(config: ExpoConfig, projectRoot: stri
     { kind: 'values', color: backgroundColor },
     { kind: 'values-night', color: darkBackgroundColor },
   ]) {
-    // TODO: use kind: values-night, values-night-v23, and values-v23
     await setSplashColorsForThemeAsync({
       projectRoot,
       kind: theme.kind as AndroidConfig.Resources.ResourceKind,
