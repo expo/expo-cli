@@ -8,31 +8,14 @@ import path from 'path';
 import process from 'process';
 import resolveFrom from 'resolve-from';
 
-export async function shouldBuildHermesBundleAsync(
-  projectRoot: string,
-  target: ProjectTarget,
-  platform: Platform
-): Promise<boolean> {
-  if (target === 'managed') {
-    const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
-    switch (platform) {
-      case 'android':
-        return exp.android?.jsEngine === 'hermes';
-      default:
-        return false;
-    }
+export function shouldBuildHermesBundle(projectRoot: string, platform: Platform): boolean {
+  const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
+  switch (platform) {
+    case 'android':
+      return exp.android?.jsEngine === 'hermes';
+    default:
+      return false;
   }
-
-  if (target === 'bare') {
-    switch (platform) {
-      case 'android':
-        return isHermesEnabledForBareAndroidAsync(projectRoot);
-      default:
-        return false;
-    }
-  }
-
-  return false;
 }
 
 interface HermesBundleOutput {

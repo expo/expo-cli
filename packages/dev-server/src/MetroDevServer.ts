@@ -1,5 +1,4 @@
 import Log from '@expo/bunyan';
-import type { ProjectTarget } from '@expo/config';
 import * as ExpoMetroConfig from '@expo/metro-config';
 import {
   createDevServerMiddleware,
@@ -13,7 +12,7 @@ import type Metro from 'metro';
 import resolveFrom from 'resolve-from';
 import { parse as parseUrl } from 'url';
 
-import { buildHermesBundleAsync, shouldBuildHermesBundleAsync } from './HermesBundler';
+import { buildHermesBundleAsync, shouldBuildHermesBundle } from './HermesBundler';
 import LogReporter from './LogReporter';
 import clientLogsMiddleware from './middleware/clientLogsMiddleware';
 import createJsInspectorMiddleware from './middleware/createJsInspectorMiddleware';
@@ -101,7 +100,6 @@ let nextBuildID = 0;
 // TODO: deprecate options.target
 export async function bundleAsync(
   projectRoot: string,
-  target: ProjectTarget,
   options: MetroDevServerOptions,
   bundles: BundleOptions[]
 ): Promise<BundleOutput[]> {
@@ -164,13 +162,8 @@ export async function bundleAsync(
     return await Promise.all(
       bundles.map(async (bundle: BundleOptions) => {
         const bundleOutput = await buildAsync(bundle);
-        const shouldBuildHermesBundle = await shouldBuildHermesBundleAsync(
-          projectRoot,
-          target,
-          bundle.platform
-        );
 
-        if (shouldBuildHermesBundle) {
+        if (shouldBuildHermesBundle(projectRoot, bundle.platform)) {
           options.logger.info(
             { tag: 'expo' },
             `💿 Building Hermes bytecode for the bundle - platform[${bundle.platform}]`
