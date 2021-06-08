@@ -2,7 +2,7 @@ import { AndroidConfig, ConfigPlugin, withDangerousMod, XML } from '@expo/config
 import { Colors } from '@expo/config-plugins/build/android';
 import { ExpoConfig } from '@expo/config-types';
 
-import { getAndroidDarkSplashConfig, getAndroidSplashConfig } from './getSplashConfig';
+import { getAndroidDarkSplashConfig, getAndroidSplashConfig } from './getAndroidSplashConfig';
 
 const { buildResourceItem, readResourcesXMLAsync } = AndroidConfig.Resources;
 const styleResourceGroup = {

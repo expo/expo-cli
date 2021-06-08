@@ -1,6 +1,6 @@
 import { AndroidConfig, ConfigPlugin, withDangerousMod, XML } from '@expo/config-plugins';
 
-import { SplashScreenConfig } from './getSplashConfig';
+import { SplashScreenConfig } from './getAndroidSplashConfig';
 
 export const withAndroidSplashDrawables: ConfigPlugin<Pick<SplashScreenConfig, 'resizeMode'>> = (
   config,

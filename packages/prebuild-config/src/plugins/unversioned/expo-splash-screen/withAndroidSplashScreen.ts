@@ -1,6 +1,6 @@
 import { ConfigPlugin, withPlugins } from '@expo/config-plugins';
 
-import { getAndroidSplashConfig } from './getSplashConfig';
+import { getAndroidSplashConfig } from './getAndroidSplashConfig';
 import { withAndroidSplashDrawables } from './withAndroidSplashDrawables';
 import { withAndroidSplashImages } from './withAndroidSplashImages';
 import { withAndroidSplashMainActivity } from './withAndroidSplashMainActivity';

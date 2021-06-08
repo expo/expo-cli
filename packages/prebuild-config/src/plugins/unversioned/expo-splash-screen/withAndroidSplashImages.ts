@@ -7,7 +7,7 @@ import {
   getAndroidDarkSplashConfig,
   getAndroidSplashConfig,
   SplashScreenConfig,
-} from './getSplashConfig';
+} from './getAndroidSplashConfig';
 
 const SPLASH_SCREEN_FILENAME = 'splashscreen_image.png';
 
