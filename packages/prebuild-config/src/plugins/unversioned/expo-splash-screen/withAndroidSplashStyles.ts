@@ -36,8 +36,8 @@ export async function setSplashStylesAsync(config: ExpoConfig, projectRoot: stri
   // TODO: Does this need to be themed?
   await setSplashStylesForThemeAsync({
     projectRoot,
-    // kind: theme.kind,
   });
+
   for (const theme of [
     { kind: 'values', color: backgroundColor },
     { kind: 'values-night', color: darkBackgroundColor },
