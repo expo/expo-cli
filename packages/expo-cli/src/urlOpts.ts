@@ -1,10 +1,9 @@
-import { getDefaultTarget } from '@expo/config';
 import { Command } from 'commander';
 import indentString from 'indent-string';
 import qrcodeTerminal from 'qrcode-terminal';
 import { Android, ConnectionStatus, ProjectSettings, Simulator, Webpack } from 'xdl';
 
-import CommandError, { AbortCommandError } from './CommandError';
+import CommandError from './CommandError';
 import Log from './log';
 import { getDevClientSchemeAsync } from './schemes';
 
