@@ -59,7 +59,7 @@ async function configureImageAssets({
   darkTabletImage,
 }: {
   projectPath: string;
-  image: string;
+  image?: string | null;
   darkImage?: string | null;
   tabletImage: string | null;
   darkTabletImage?: string | null;

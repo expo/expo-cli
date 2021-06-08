@@ -7,7 +7,7 @@ const defaultResizeMode = 'contain';
 const defaultBackgroundColor = '#ffffff';
 
 export interface IOSSplashConfig {
-  image: string;
+  image?: string | null;
   // tabletImage: string | null;
   backgroundColor: string;
   resizeMode: NonNullable<ExpoConfigIosSplash['resizeMode']>;
@@ -29,15 +29,6 @@ export function getIosSplashConfig(config: ExpoConfig): IOSSplashConfig | null {
   if (config.ios?.splash) {
     const splash = config.ios?.splash;
     const image = splash.image ?? null;
-    if (!image) {
-      // If the user defined other properties but failed to define an image, warn.
-      if (Object.keys(splash).length) {
-        warnSplashMissingImage();
-      }
-      // currently we don't support using a splash screen object if it doesn't have an image defined.
-      return null;
-    }
-
     return {
       image,
       resizeMode: splash.resizeMode ?? defaultResizeMode,
@@ -56,14 +47,6 @@ export function getIosSplashConfig(config: ExpoConfig): IOSSplashConfig | null {
   if (config.splash) {
     const splash = config.splash;
     const image = splash.image ?? null;
-    if (!image) {
-      // If the user defined other properties but failed to define an image, warn.
-      if (Object.keys(splash).length) {
-        warnSplashMissingImage();
-      }
-      return null;
-    }
-
     return {
       image,
       resizeMode: splash.resizeMode ?? defaultResizeMode,
@@ -80,13 +63,6 @@ export function getIosSplashConfig(config: ExpoConfig): IOSSplashConfig | null {
   }
 
   return null;
-}
-
-function warnSplashMissingImage() {
-  WarningAggregator.addWarningIOS(
-    'splash-config',
-    'splash config object is missing an image property'
-  );
 }
 
 export function warnUnsupportedSplashProperties(config: ExpoConfig) {

@@ -64,7 +64,6 @@ describe(withIosSplashScreen, () => {
         tabletImage: null,
         tabletBackgroundColor: null,
       },
-
       // userInterfaceStyle: 'automatic',
     });
 
