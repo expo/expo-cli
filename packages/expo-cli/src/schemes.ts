@@ -1,10 +1,7 @@
 import { getConfig } from '@expo/config';
 import { AndroidConfig, IOSConfig } from '@expo/config-plugins';
-import JsonFile from '@expo/json-file';
 import plist from '@expo/plist';
 import fs from 'fs';
-import path from 'path';
-import slugify from 'slugify';
 
 import { AbortCommandError } from './CommandError';
 import {
@@ -12,7 +9,6 @@ import {
   hasRequiredIOSFilesAsync,
 } from './commands/eject/clearNativeFolder';
 import Log from './log';
-import prompt from './prompts';
 
 export async function getSchemesForIosAsync(projectRoot: string) {
   try {
