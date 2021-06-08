@@ -1,6 +1,7 @@
+import { getConfig } from '@expo/config';
 import { AndroidConfig, IOSConfig } from '@expo/config-plugins';
 import plist from '@expo/plist';
-import * as fs from 'fs-extra';
+import fs from 'fs';
 
 import { AbortCommandError } from './CommandError';
 import {
@@ -48,6 +49,11 @@ export async function getDevClientSchemeAsync(projectRoot: string): Promise<stri
     getSchemesForAndroidAsync(projectRoot),
   ]);
 
+  // Allow managed projects
+  if (!hasIos && !hasAndroid) {
+    return getManagedDevClientSchemeAsync(projectRoot);
+  }
+
   let matching: string;
   // Allow for only one native project to exist.
   if (!hasIos) {
@@ -60,7 +66,7 @@ export async function getDevClientSchemeAsync(projectRoot: string): Promise<stri
 
   if (!matching) {
     Log.warn(
-      '\nDev Client: No common URI schemes could be found for the native ios and android projects, this is required for opening the project\n'
+      '\nDev Client: No common URI schemes could be found for the native iOS and Android projects, this is required for opening the project\n'
     );
     Log.log(
       `Add a common scheme with ${Log.chalk.cyan(
@@ -79,6 +85,26 @@ export async function getDevClientSchemeAsync(projectRoot: string): Promise<stri
     throw new AbortCommandError();
   }
   return matching;
+}
+
+async function getManagedDevClientSchemeAsync(projectRoot: string): Promise<string> {
+  const { exp, staticConfigPath, dynamicConfigPath } = getConfig(projectRoot, {
+    skipSDKVersionRequirement: true,
+  });
+  if (exp.scheme) {
+    return exp.scheme;
+  }
+
+  Log.warn(
+    `\nDev Client: No URI scheme could be found in configuration, this is required for opening the project.`
+  );
+  Log.log(
+    `Add the 'scheme' property in ${
+      dynamicConfigPath ?? staticConfigPath ?? 'app.json'
+    } or provide a scheme with the ${Log.chalk.cyan('--scheme')} flag.`
+  );
+  Log.log(`Note: you'll need to rebuild the app after adding a scheme.\n`);
+  throw new AbortCommandError();
 }
 
 // sort longest to ensure uniqueness.
