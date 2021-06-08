@@ -1,4 +1,4 @@
-import { compileModsAsync, WarningAggregator } from '@expo/config-plugins';
+import { compileModsAsync } from '@expo/config-plugins';
 import { ExpoConfig } from '@expo/config-types';
 import plist from '@expo/plist';
 import * as fs from 'fs';
@@ -7,16 +7,17 @@ import * as path from 'path';
 
 import projectFixtures from '../../../__tests__/fixtures/react-native-project';
 import { getDirFromFS } from '../../../icons/__tests__/utils/getDirFromFS';
-import {
-  buildContentsJsonImages,
-  getSplashConfig,
-  getSplashStoryboardContentsAsync,
-  setSplashInfoPlist,
-  warnUnsupportedSplashProperties,
-  withIosSplashScreen,
-} from '../withIosSplashScreen';
+import { withIosSplashScreen } from '../withIosSplashScreen';
 
 const fsReal = jest.requireActual('fs') as typeof fs;
+
+jest.mock('@expo/config-plugins', () => {
+  const plugins = jest.requireActual('@expo/config-plugins');
+  return {
+    ...plugins,
+    WarningAggregator: { addWarningIOS: jest.fn() },
+  };
+});
 
 jest.mock('fs');
 
@@ -24,137 +25,8 @@ afterAll(() => {
   jest.unmock('fs');
 });
 
-describe(getSplashStoryboardContentsAsync, () => {
-  it(`gets a splash screen without options`, () => {
-    const contents = getSplashStoryboardContentsAsync({});
-    expect(contents).not.toMatch(/contentMode="scaleAspectFit"/);
-  });
-  it(`gets a splash screen with image and resize`, () => {
-    const contents = getSplashStoryboardContentsAsync({
-      image: './my-image.png',
-      resizeMode: 'contain',
-    });
-    // Test the splash screen XML
-    expect(contents).toMatch(/contentMode="scaleAspectFit"/);
-    expect(contents).toMatch(/id="EXPO-SplashScreen"/);
-  });
-});
-
-describe(getSplashConfig, () => {
-  it(`uses the more specific splash`, () => {
-    const config = getSplashConfig({
-      slug: '',
-      name: '',
-      splash: { backgroundColor: 'red', image: 'a' },
-      ios: { splash: { image: 'b' } },
-    });
-    expect(config.image).toBe('b');
-    // ensure the background color from the general splash config is not used if the ios splash config is defined.
-    expect(config.backgroundColor).toBe('#ffffff');
-    expect(config.resizeMode).toBe('contain');
-  });
-});
-
-describe(setSplashInfoPlist, () => {
-  it(`skips warning if dark mode isn't defined`, () => {
-    // @ts-ignore: jest
-    WarningAggregator.addWarningIOS.mockImplementationOnce();
-    const config: ExpoConfig = {
-      slug: '',
-      name: '',
-      userInterfaceStyle: 'light',
-      ios: { splash: { image: 'b' } },
-    };
-    const infoPlist = setSplashInfoPlist(config, {}, {
-      userInterfaceStyle: 'light',
-      image: 'b',
-    } as any);
-
-    // Check if the warning was thrown
-    expect(WarningAggregator.addWarningIOS).toHaveBeenCalledTimes(0);
-
-    // Ensure these values are set
-    expect(infoPlist.UIUserInterfaceStyle).not.toBeDefined();
-    expect(infoPlist.UILaunchStoryboardName).toBe('SplashScreen');
-  });
-  it(`warns about dark mode conflicts and resets the interface style`, () => {
-    // @ts-ignore: jest
-    WarningAggregator.addWarningIOS.mockImplementationOnce();
-
-    const config: ExpoConfig = {
-      slug: '',
-      name: '',
-      userInterfaceStyle: 'light',
-
-      ios: { splash: { image: 'b', darkImage: 'v' } },
-    };
-
-    const infoPlist = setSplashInfoPlist(config, {}, {
-      userInterfaceStyle: 'light',
-      image: 'b',
-      darkImage: 'v',
-    } as any);
-
-    // Check if the warning was thrown
-    expect(WarningAggregator.addWarningIOS).toHaveBeenCalledWith(
-      'splash',
-      'The existing `userInterfaceStyle` property is preventing splash screen from working properly. Please remove it or disable dark mode splash screens.'
-    );
-
-    // Ensure these values are set
-    expect(infoPlist.UIUserInterfaceStyle).toBe('Automatic');
-    expect(infoPlist.UILaunchStoryboardName).toBe('SplashScreen');
-  });
-});
-
-describe(warnUnsupportedSplashProperties, () => {
-  it(`warns about currently unsupported properties`, () => {
-    Object.defineProperty(WarningAggregator, 'addWarningIOS', {
-      value: jest.fn(),
-    });
-    const config: ExpoConfig = {
-      slug: '',
-      name: '',
-      //   userInterfaceStyle: 'light',
-      ios: {
-        splash: {
-          xib: './somn',
-          userInterfaceStyle: 'light',
-          tabletImage: 'tabletImg',
-          image: 'b',
-        },
-      },
-    };
-
-    warnUnsupportedSplashProperties(config);
-
-    expect(WarningAggregator.addWarningIOS).toHaveBeenNthCalledWith(
-      1,
-      'splash',
-      'ios.splash.xib is not supported in bare workflow. Please use ios.splash.image instead.'
-    );
-    expect(WarningAggregator.addWarningIOS).toHaveBeenNthCalledWith(
-      2,
-      'splash',
-      'ios.splash.tabletImage is not supported in bare workflow. Please use ios.splash.image instead.'
-    );
-    expect(WarningAggregator.addWarningIOS).toHaveBeenNthCalledWith(
-      3,
-      'splash',
-      'ios.splash.userInterfaceStyle is not supported in bare workflow. Please use ios.splash.darkImage (TODO) instead.'
-    );
-  });
-});
-
-describe(buildContentsJsonImages, () => {
-  it(`supports dark mode`, () => {
-    expect(buildContentsJsonImages({ image: 'somn', darkImage: 'other' } as any).length).toBe(6);
-    expect(buildContentsJsonImages({ image: 'somn', darkImage: null } as any).length).toBe(3);
-  });
-});
-
 describe(withIosSplashScreen, () => {
-  const iconPath = path.resolve(__dirname, './fixtures/icons/icon.png');
+  const iconPath = path.resolve(__dirname, '../../../__tests__/fixtures/icon.png');
   const icon = fsReal.readFileSync(iconPath, 'utf8');
   const projectRoot = '/app';
   beforeAll(async () => {
@@ -171,11 +43,64 @@ describe(withIosSplashScreen, () => {
     vol.reset();
   });
 
+  it(`supports color only mode`, async () => {
+    let config: ExpoConfig = {
+      name: 'foo',
+      slug: 'bar',
+      _internal: { projectRoot },
+    };
+
+    // Apply the splash plugin
+    config = withIosSplashScreen(config, {
+      // must use full path for mock fs
+      image: null,
+      resizeMode: 'contain',
+      backgroundColor: '#ff00ff',
+      tabletImage: null,
+      tabletBackgroundColor: null,
+      dark: {
+        image: null,
+        backgroundColor: null,
+        tabletImage: null,
+        tabletBackgroundColor: null,
+      },
+
+      // userInterfaceStyle: 'automatic',
+    });
+
+    // compile all plugins and mods
+    config = await compileModsAsync(config, {
+      projectRoot,
+      platforms: ['ios'],
+      assertMissingModProviders: false,
+    });
+
+    // Test Results
+
+    expect(config).toBeDefined();
+
+    const infoPlist = await readPlistAsync('/app/ios/ReactNativeProject/Info.plist');
+    expect(infoPlist.UILaunchStoryboardName).toBe('SplashScreen');
+
+    const after = getDirFromFS(vol.toJSON(), path.join(projectRoot, 'ios'));
+
+    // Image is not defined
+    expect(
+      after['ReactNativeProject/Images.xcassets/SplashScreen.imageset/image.png']
+    ).not.toBeDefined();
+    // Ensure colors are created
+
+    expect(
+      after['ReactNativeProject/Images.xcassets/SplashScreenBackground.imageset/image.png']
+    ).toBeDefined();
+  });
+
   it(`runs entire process`, async () => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     let config: ExpoConfig = {
       name: 'foo',
       slug: 'bar',
+      _internal: { projectRoot },
     };
 
     // Apply the splash plugin
@@ -184,12 +109,14 @@ describe(withIosSplashScreen, () => {
       image: '/app/assets/splash.png',
       resizeMode: 'contain',
       backgroundColor: '#ff00ff',
-      darkImage: '/app/assets/splash.png',
-      darkBackgroundColor: '#00ff00',
-      tabletImage: null,
-      tabletBackgroundColor: null,
-      darkTabletImage: null,
-      darkTabletBackgroundColor: null,
+      tabletImage: '/app/assets/splash.png',
+      tabletBackgroundColor: '#ff0000',
+      dark: {
+        image: '/app/assets/splash.png',
+        backgroundColor: '#00ff00',
+        tabletImage: '/app/assets/splash.png',
+        tabletBackgroundColor: '#0000ff',
+      },
       // userInterfaceStyle: 'automatic',
     });
 
@@ -204,6 +131,11 @@ describe(withIosSplashScreen, () => {
     expect(infoPlist.UILaunchStoryboardName).toBe('SplashScreen');
 
     const after = getDirFromFS(vol.toJSON(), path.join(projectRoot, 'ios'));
+
+    // Image is defined
+    expect(
+      after['ReactNativeProject/Images.xcassets/SplashScreen.imageset/image.png']
+    ).toBeDefined();
 
     // Ensure colors are created
     expect(
