@@ -7,25 +7,23 @@ import {
 } from '@expo/configure-splash-screen';
 
 export const withAndroidSplashScreen: ConfigPlugin = config => {
+  // Update the android status bar to match the splash screen
+  // androidStatusBar applies info to the app activity style.
+  const backgroundColor = getSplashBackgroundColor(config);
+  if (config.androidStatusBar?.backgroundColor) {
+    if (backgroundColor.toLowerCase() !== config.androidStatusBar?.backgroundColor.toLowerCase()) {
+      WarningAggregator.addWarningAndroid(
+        'androidStatusBar.backgroundColor',
+        'The androidStatusBar.backgroundColor color conflicts with the splash backgroundColor on Android'
+      );
+    }
+  } else {
+    if (!config.androidStatusBar) config.androidStatusBar = {};
+    config.androidStatusBar.backgroundColor = backgroundColor;
+  }
   return withDangerousMod(config, [
     'android',
     async config => {
-      // Update the android status bar to match the splash screen
-      // androidStatusBar applies info to the app activity style.
-      const backgroundColor = getSplashBackgroundColor(config);
-      if (config.androidStatusBar?.backgroundColor) {
-        if (
-          backgroundColor.toLowerCase() !== config.androidStatusBar?.backgroundColor.toLowerCase()
-        ) {
-          WarningAggregator.addWarningAndroid(
-            'androidStatusBar.backgroundColor',
-            'The androidStatusBar.backgroundColor color conflicts with the splash backgroundColor on Android'
-          );
-        }
-      } else {
-        if (!config.androidStatusBar) config.androidStatusBar = {};
-        config.androidStatusBar.backgroundColor = backgroundColor;
-      }
       await setSplashScreenAsync(config, config.modRequest.projectRoot);
       return config;
     },
