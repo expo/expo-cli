@@ -1,9 +1,12 @@
+import { ConfigPlugin, InfoPlist, withInfoPlist } from '@expo/config-plugins';
 import { ExpoConfig } from '@expo/config-types';
 
-import { createInfoPlistPlugin } from '../plugins/ios-plugins';
-import { InfoPlist } from './IosConfig.types';
-
-export const withAdMob = createInfoPlistPlugin(setAdMobConfig, 'withAdMob');
+export const withIosAdMob: ConfigPlugin = config => {
+  return withInfoPlist(config, config => {
+    config.modResults = setAdMobConfig(config, config.modResults);
+    return config;
+  });
+};
 
 // NOTE(brentvatne): if the developer has installed the google ads sdk and does
 // not provide an app id their app will crash. Standalone apps get around this by
