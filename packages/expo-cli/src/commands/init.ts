@@ -51,14 +51,9 @@ const FEATURED_TEMPLATES = [
     name: 'expo-template-bare-minimum',
     description: 'bare and minimal, just the essentials to get you started',
   },
-  {
-    shortName: 'minimal (TypeScript)',
-    name: 'expo-template-bare-typescript',
-    description: 'same as minimal but with TypeScript configuration',
-  },
 ];
 
-const BARE_WORKFLOW_TEMPLATES = ['expo-template-bare-minimum', 'expo-template-bare-typescript'];
+const BARE_WORKFLOW_TEMPLATES = ['expo-template-bare-minimum'];
 const isMacOS = process.platform === 'darwin';
 
 function assertValidName(folderName: string) {
@@ -559,7 +554,7 @@ export default function (program: Command) {
     .description('Create a new Expo project')
     .option(
       '-t, --template [name]',
-      'Specify which template to use. Valid options are "blank", "tabs", "bare-minimum" or a package on npm (e.g. "expo-template-bare-typescript") that includes an Expo project template.'
+      'Specify which template to use. Valid options are "blank", "tabs", "bare-minimum" or a package on npm (e.g. "expo-template-bare-minimum") that includes an Expo project template.'
     )
     .option('--npm', 'Use npm to install dependencies. (default when Yarn is not installed)')
     .option('--yarn', 'Use Yarn to install dependencies. (default when Yarn is installed)')
