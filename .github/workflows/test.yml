@@ -47,6 +47,7 @@ jobs:
             json-file,
             metro-config,
             package-manager,
+            prebuild-config,
             pkcs12,
             plist,
             pwa,

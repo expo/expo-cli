@@ -148,11 +148,4 @@ describe('e2e: android adaptive icon', () => {
     const after = getDirFromFS(vol.toJSON(), projectRoot);
     expect(Object.keys(after)).toEqual(LIST_OF_ANDROID_ADAPTIVE_ICON_FILES_FINAL);
   });
-
-  it('writes to colors.xml correctly', () => {
-    const after = getDirFromFS(vol.toJSON(), projectRoot);
-    expect(after['android/app/src/main/res/values/colors.xml']).toContain(
-      '<color name="iconBackground">#123456</color>'
-    );
-  });
 });
