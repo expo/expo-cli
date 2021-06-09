@@ -1,4 +1,3 @@
-import * as AdMob from './AdMob';
 import * as AllowBackup from './AllowBackup';
 import * as Branch from './Branch';
 import * as Colors from './Colors';
@@ -35,7 +34,6 @@ export {
   Colors,
   Facebook,
   GoogleMapsApiKey,
-  AdMob,
   GoogleServices,
   IntentFilters,
   Name,

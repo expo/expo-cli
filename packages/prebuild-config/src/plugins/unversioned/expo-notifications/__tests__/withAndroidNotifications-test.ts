@@ -13,7 +13,6 @@ import {
   getNotificationIcon,
   META_DATA_NOTIFICATION_ICON,
   META_DATA_NOTIFICATION_ICON_COLOR,
-  NOTIFICATION_ICON_COLOR,
   NOTIFICATION_ICON_COLOR_RESOURCE,
   NOTIFICATION_ICON_RESOURCE,
   setNotificationConfig,
@@ -87,12 +86,7 @@ describe('Android notifications configuration', () => {
       '#123456'
     );
   });
-  it('writes to colors.xml correctly', () => {
-    const after = getDirFromFS(vol.toJSON(), projectRoot);
-    expect(after['android/app/src/main/res/values/colors.xml']).toContain(
-      `<color name="${NOTIFICATION_ICON_COLOR}">#00ff00</color>`
-    );
-  });
+
   it('writes all the image files expected', async () => {
     const after = getDirFromFS(vol.toJSON(), projectRoot);
     Object.keys(after).forEach(path => {
