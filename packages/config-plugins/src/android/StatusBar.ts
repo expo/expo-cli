@@ -76,11 +76,13 @@ export function setStatusBarStyles(
 
 export function getStatusBarColor(config: Pick<ExpoConfig, 'androidStatusBar'>) {
   const backgroundColor = config.androidStatusBar?.backgroundColor;
-  // Drop support for translucent
-  assert(
-    backgroundColor === 'translucent',
-    'androidStatusBar.backgroundColor must be a valid hex string'
-  );
+  if (backgroundColor) {
+    // Drop support for translucent
+    assert(
+      backgroundColor !== 'translucent',
+      `androidStatusBar.backgroundColor must be a valid hex string, instead got: "${backgroundColor}"`
+    );
+  }
   return backgroundColor;
 }
 
