@@ -10,7 +10,7 @@ import { withDangerousMod } from '../plugins/withDangerousMod';
 import { directoryExistsAsync } from '../utils/modules';
 import * as WarningAggregator from '../utils/warnings';
 import { AndroidManifest } from './Manifest';
-import { getAppBuildGradleFilePath, getMainApplicationAsync, getProjectFilePath } from './Paths';
+import { getAppBuildGradleFilePath, getProjectFilePath } from './Paths';
 
 const debug = Debug('config-plugins:android:package');
 
