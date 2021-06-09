@@ -72,7 +72,12 @@ describe('Android Icon', () => {
 
   it('returns null if no icon config provided', async () => {
     expect(
-      await setIconAsync('./', { icon: null, backgroundImage: null, backgroundColor: null })
+      await setIconAsync('./', {
+        icon: null,
+        backgroundImage: null,
+        backgroundColor: null,
+        isAdaptive: false,
+      })
     ).toBe(null);
   });
 });
@@ -96,6 +101,7 @@ describe('e2e: ONLY android legacy icon', () => {
       icon: '/app/assets/iconForeground.png',
       backgroundColor: null,
       backgroundImage: null,
+      isAdaptive: true,
     });
   });
 
@@ -137,6 +143,7 @@ describe('e2e: android adaptive icon', () => {
       icon: '/app/assets/iconForeground.png',
       backgroundImage: '/app/assets/iconBackground.png',
       backgroundColor: '#123456',
+      isAdaptive: true,
     });
   });
 
