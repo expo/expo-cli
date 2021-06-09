@@ -695,26 +695,6 @@ Object {
                   "android:name": "com.sec.android.provider.badge.permission.WRITE",
                 },
               },
-              Object {
-                "$": Object {
-                  "android:name": "android.permission.ACCESS_NETWORK_STATE",
-                },
-              },
-              Object {
-                "$": Object {
-                  "android:name": "android.permission.SYSTEM_ALERT_WINDOW",
-                },
-              },
-              Object {
-                "$": Object {
-                  "android:name": "android.permission.WAKE_LOCK",
-                },
-              },
-              Object {
-                "$": Object {
-                  "android:name": "com.google.android.c2dm.permission.RECEIVE",
-                },
-              },
             ],
           },
         },
@@ -1460,26 +1440,6 @@ Object {
               Object {
                 "$": Object {
                   "android:name": "com.sec.android.provider.badge.permission.WRITE",
-                },
-              },
-              Object {
-                "$": Object {
-                  "android:name": "android.permission.ACCESS_NETWORK_STATE",
-                },
-              },
-              Object {
-                "$": Object {
-                  "android:name": "android.permission.SYSTEM_ALERT_WINDOW",
-                },
-              },
-              Object {
-                "$": Object {
-                  "android:name": "android.permission.WAKE_LOCK",
-                },
-              },
-              Object {
-                "$": Object {
-                  "android:name": "com.google.android.c2dm.permission.RECEIVE",
                 },
               },
             ],
