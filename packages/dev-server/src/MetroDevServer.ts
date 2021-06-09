@@ -1,5 +1,5 @@
 import Log from '@expo/bunyan';
-import { ExpoConfig } from '@expo/config';
+import { ExpoConfig, getConfigFilePaths } from '@expo/config';
 import * as ExpoMetroConfig from '@expo/metro-config';
 import {
   createDevServerMiddleware,
@@ -10,6 +10,7 @@ import type { Server as ConnectServer, HandleFunction } from 'connect';
 import http from 'http';
 import type { IncomingMessage, ServerResponse } from 'http';
 import type Metro from 'metro';
+import path from 'path';
 import resolveFrom from 'resolve-from';
 import { parse as parseUrl } from 'url';
 
@@ -176,12 +177,20 @@ export async function bundleAsync(
           isHermesManaged
         );
         if (maybeInconsistentEngine) {
+          const platform = bundle.platform === 'ios' ? 'iOS' : 'Android';
+          const paths = getConfigFilePaths(projectRoot);
+          const configFilePath = paths.dynamicConfigPath ?? paths.staticConfigPath ?? 'app.json';
+          const configFileName = path.basename(configFilePath);
           throw new Error(
-            `Inconsistent Hermes settings between app config and ${bundle.platform} native project.\n` +
-              `Enabling Hermes in app.json or app.config.js: ${isHermesManaged.toString()}\n` +
-              `Please check the following native project settings if there are any inconsistencies:\n` +
-              '  - android/gradle.properties\n' +
-              '  - android/app/build.gradle\n'
+            `JavaScript engine configuration is inconsistent between ${configFileName} and ${platform} native project.\n` +
+              `In ${configFileName}: Hermes is ${isHermesManaged ? 'enabled' : 'not enabled'}\n` +
+              `In ${platform} native project: Hermes is ${
+                isHermesManaged ? 'not enabled' : 'enabled'
+              }\n` +
+              `Please check the following files for inconsistencies:\n` +
+              `  - ${configFilePath}\n` +
+              `  - ${path.join(projectRoot, 'android', 'gradle.properties')}\n` +
+              `  - ${path.join(projectRoot, 'android', 'app', 'build.gradle')}\n`
           );
         }
 
