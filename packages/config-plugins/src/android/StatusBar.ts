@@ -1,5 +1,5 @@
 import { ExpoConfig } from '@expo/config-types';
-import { assert } from 'console';
+import assert from 'assert';
 
 import { ConfigPlugin } from '../Plugin.types';
 import { withAndroidColors, withAndroidStyles } from '../plugins/android-plugins';
