@@ -10,7 +10,7 @@ import Debug from 'debug';
 
 import { IOSSplashConfig } from './getIosSplashConfig';
 
-const debug = Debug('@expo/prebuild-config:expo-splash-screen:ios:infoPlist');
+const debug = Debug('expo:prebuild-config:expo-splash-screen:ios:infoPlist');
 
 export const withIosSplashInfoPlist: ConfigPlugin<IOSSplashConfig> = (config, splash) => {
   return withInfoPlist(config, config => {

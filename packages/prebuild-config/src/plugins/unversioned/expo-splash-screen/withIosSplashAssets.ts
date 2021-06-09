@@ -12,7 +12,7 @@ import {
 } from '../../icons/AssetContents';
 import { IOSSplashConfig } from './getIosSplashConfig';
 
-const debug = Debug('@expo/prebuild-config:expo-splash-screen:ios:assets');
+const debug = Debug('expo:prebuild-config:expo-splash-screen:ios:assets');
 
 const IMAGESET_PATH = 'Images.xcassets/SplashScreen.imageset';
 const BACKGROUND_IMAGESET_PATH = 'Images.xcassets/SplashScreenBackground.imageset';

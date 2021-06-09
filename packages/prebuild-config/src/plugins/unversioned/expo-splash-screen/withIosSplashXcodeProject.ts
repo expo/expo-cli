@@ -12,7 +12,7 @@ import {
 } from './InterfaceBuilder';
 import { IOSSplashConfig } from './getIosSplashConfig';
 
-const debug = Debug('@expo/prebuild-config:expo-splash-screen:ios:xcodeproj');
+const debug = Debug('expo:prebuild-config:expo-splash-screen:ios:xcodeproj');
 
 const STORYBOARD_FILE_PATH = './SplashScreen.storyboard';
 

@@ -10,7 +10,7 @@ import { withIosSplashAssets } from './withIosSplashAssets';
 import { withIosSplashInfoPlist } from './withIosSplashInfoPlist';
 import { withIosSplashXcodeProject } from './withIosSplashXcodeProject';
 
-const debug = Debug('@expo/prebuild-config:expo-splash-screen:ios');
+const debug = Debug('expo:prebuild-config:expo-splash-screen:ios');
 
 export const withIosSplashScreen: ConfigPlugin<IOSSplashConfig | undefined | null | void> = (
   config,
