@@ -98,7 +98,7 @@ async function _checkWatchmanVersionAsync(projectRoot: string) {
     !validSemver && /[0-9]{4}\.[0-9]{2}\.[0-9]{2}\.[0-9]{2}/.test(watchmanVersion);
 
   if (!validSemver && !validNewVersion) {
-    let warningMessage = `Warning: You are using an old version of watchman (v${watchmanVersion}). This may cause problems for you.\n\nWe recommend that you either uninstall watchman (and XDE will try to use a copy it is bundled with) or upgrade watchman to a newer version, at least v${MIN_WATCHMAN_VERSION}.`;
+    let warningMessage = `Warning: You are using an old version of watchman (v${watchmanVersion}).\n\nIt is recommend to always use the latest version, or at least v${MIN_WATCHMAN_VERSION}.`;
 
     // Add a note about homebrew if the user is on a Mac
     if (process.platform === 'darwin') {
