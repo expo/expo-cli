@@ -3,7 +3,6 @@ import { ExpoConfig } from '@expo/config-types';
 
 const {
   addMetaDataItemToMainApplication,
-
   getMainApplicationOrThrow,
   removeMetaDataItemFromMainApplication,
 } = AndroidConfig.Manifest;
