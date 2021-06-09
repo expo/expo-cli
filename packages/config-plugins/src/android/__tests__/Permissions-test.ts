@@ -8,7 +8,6 @@ import {
   getAndroidPermissions,
   getPermissions,
   removePermissions,
-  requiredPermissions,
   setAndroidPermissions,
 } from '../Permissions';
 
@@ -41,11 +40,13 @@ describe('Android permissions', () => {
     const manifestPermissionsJSON = androidManifestJson.manifest['uses-permission'];
     const manifestPermissions = manifestPermissionsJSON.map(e => e.$['android:name']);
 
-    expect(
-      manifestPermissions.every(permission =>
-        givenPermissions.concat(requiredPermissions).includes(permission)
-      )
-    ).toBe(true);
+    expect(manifestPermissions.length).toBe(
+      // Account for INTERNET permission in fixture
+      givenPermissions.length + 1
+    );
+    expect(manifestPermissions.every(permission => givenPermissions.includes(permission))).toBe(
+      true
+    );
     expect(
       manifestPermissions.filter(e => e === 'com.android.launcher.permission.INSTALL_SHORTCUT')
     ).toHaveLength(1);
