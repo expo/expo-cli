@@ -14,8 +14,6 @@ export type Rect = {
   key: string;
   x: number;
   y: number;
-  // x: string;
-  // y: string;
   width: number;
   height: number;
 };
