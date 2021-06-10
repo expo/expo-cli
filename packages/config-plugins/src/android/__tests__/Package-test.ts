@@ -1,5 +1,7 @@
-import { resolve } from 'path';
+import { vol } from 'memfs';
 
+import { renamePackageOnDiskForType } from '../../../build/android/Package';
+import rnFixture from '../../plugins/__tests__/fixtures/react-native-project';
 import { readAndroidManifestAsync } from '../Manifest';
 import {
   getApplicationIdAsync,
@@ -7,9 +9,9 @@ import {
   setPackageInAndroidManifest,
   setPackageInBuildGradle,
 } from '../Package';
+import { getAndroidManifestAsync } from '../Paths';
 
-const fixturesPath = resolve(__dirname, 'fixtures');
-const sampleManifestPath = resolve(fixturesPath, 'react-native-AndroidManifest.xml');
+jest.mock('fs');
 
 const EXAMPLE_BUILD_GRADLE = `
   android {
@@ -27,6 +29,9 @@ const EXAMPLE_BUILD_GRADLE = `
   `;
 
 describe('package', () => {
+  afterAll(async () => {
+    vol.reset();
+  });
   it(`returns null if no package is provided`, () => {
     expect(getPackage({})).toBe(null);
   });
@@ -36,7 +41,10 @@ describe('package', () => {
   });
 
   it(`returns the applicationId defined in build.gradle`, () => {
-    expect(getApplicationIdAsync(fixturesPath)).resolves.toBe('com.helloworld');
+    const projectRoot = '/';
+    vol.fromJSON(rnFixture, projectRoot);
+
+    expect(getApplicationIdAsync(projectRoot)).resolves.toBe('com.bacon.mydevicefamilyproject');
   });
 
   it(`sets the applicationId in build.gradle if package is given`, () => {
@@ -46,12 +54,61 @@ describe('package', () => {
   });
 
   it('adds package to android manifest', async () => {
-    let androidManifestJson = await readAndroidManifestAsync(sampleManifestPath);
+    const projectRoot = '/';
+    vol.fromJSON(rnFixture, projectRoot);
+
+    let androidManifestJson = await readAndroidManifestAsync(
+      await getAndroidManifestAsync(projectRoot)
+    );
     androidManifestJson = await setPackageInAndroidManifest(
       { android: { package: 'com.test.package' } },
       androidManifestJson
     );
 
     expect(androidManifestJson.manifest.$.package).toMatch('com.test.package');
+  });
+});
+
+describe(renamePackageOnDiskForType, () => {
+  afterAll(async () => {
+    vol.reset();
+  });
+  it(`refactors a main project`, async () => {
+    const projectRoot = '/';
+    vol.fromJSON(rnFixture, projectRoot);
+
+    // Ensure the path that will be deleted exists before we
+    // delete it, this helps prevent the test from accidentally breaking.
+    const originalPath = '/android/app/src/main/java/com/reactnativeproject/MainActivity.java';
+
+    expect(vol.toJSON()[originalPath]).toBeDefined();
+    await renamePackageOnDiskForType({
+      projectRoot,
+      type: 'main',
+      packageName: 'com.bacon.foobar',
+    });
+
+    const results = vol.toJSON();
+    // Ensure the file exists in the new location with the new package name
+    expect(results['/android/app/src/main/java/com/bacon/foobar/MainActivity.java']).toMatch(
+      /^package com.bacon.foobar;/
+    );
+    expect(results[originalPath]).toBeUndefined();
+    // Ensure the BUCK file is rewritten
+    expect(results['/android/app/BUCK']).toMatch(/package = "com.bacon.foobar"/);
+  });
+  it(`refactors a debug project`, async () => {
+    const projectRoot = '/';
+    vol.fromJSON(rnFixture, projectRoot);
+    await renamePackageOnDiskForType({
+      projectRoot,
+      type: 'debug',
+      packageName: 'com.bacon.foobar',
+    });
+
+    const results = vol.toJSON();
+    expect(results['/android/app/src/debug/java/com/bacon/foobar/ReactNativeFlipper.java']).toMatch(
+      /package com.bacon.foobar;/
+    );
   });
 });
