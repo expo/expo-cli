@@ -2,6 +2,7 @@ import { getConfig } from '@expo/config';
 import { AndroidConfig, IOSConfig } from '@expo/config-plugins';
 import plist from '@expo/plist';
 import fs from 'fs';
+import resolveFrom from 'resolve-from';
 
 import { AbortCommandError } from './CommandError';
 import {
@@ -88,23 +89,21 @@ export async function getDevClientSchemeAsync(projectRoot: string): Promise<stri
 }
 
 async function getManagedDevClientSchemeAsync(projectRoot: string): Promise<string> {
-  const { exp, staticConfigPath, dynamicConfigPath } = getConfig(projectRoot, {
+  const { exp } = getConfig(projectRoot, {
     skipSDKVersionRequirement: true,
   });
-  if (exp.scheme) {
-    return exp.scheme;
+  try {
+    const getDefaultScheme = require(resolveFrom(projectRoot, 'expo-dev-client/getDefaultScheme'));
+    const scheme = getDefaultScheme(exp);
+    return scheme;
+  } catch (error) {
+    Log.warn(
+      '\nDev Client: Unable to get the default URI scheme for the project. Please make sure the expo-dev-client package is installed.'
+    );
+    Log.error(error);
+    Log.newLine();
+    throw new AbortCommandError();
   }
-
-  Log.warn(
-    `\nDev Client: No URI scheme could be found in configuration, this is required for opening the project.`
-  );
-  Log.log(
-    `Add the 'scheme' property in ${
-      dynamicConfigPath ?? staticConfigPath ?? 'app.json'
-    } or provide a scheme with the ${Log.chalk.cyan('--scheme')} flag.`
-  );
-  Log.log(`Note: you'll need to rebuild the app after adding a scheme.\n`);
-  throw new AbortCommandError();
 }
 
 // sort longest to ensure uniqueness.
