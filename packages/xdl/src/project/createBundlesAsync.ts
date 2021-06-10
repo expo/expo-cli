@@ -25,15 +25,28 @@ type PackagerOptions = {
 };
 
 export function printBundleSizes(bundles: { android: BundleOutput; ios: BundleOutput }) {
-  const files = [
-    ['index.ios.js', bundles.ios.code],
-    ['index.android.js', bundles.android.code],
-  ];
+  const files: [string, string | Uint8Array][] = [];
+
+  if (bundles.ios.hermesBytecodeBundle) {
+    files.push(['index.ios.js (Hermes)', bundles.ios.hermesBytecodeBundle]);
+  } else {
+    files.push(['index.ios.js', bundles.ios.code]);
+  }
+  if (bundles.android.hermesBytecodeBundle) {
+    files.push(['index.android.js (Hermes)', bundles.android.hermesBytecodeBundle]);
+  } else {
+    files.push(['index.android.js', bundles.android.code]);
+  }
+
   // Account for inline source maps
-  if (bundles.ios.map) {
+  if (bundles.ios.hermesSourcemap) {
+    files.push([chalk.dim('index.ios.js.map (Hermes)'), bundles.ios.hermesSourcemap]);
+  } else if (bundles.ios.map) {
     files.push([chalk.dim('index.ios.js.map'), bundles.ios.map]);
   }
-  if (bundles.android.map) {
+  if (bundles.android.hermesSourcemap) {
+    files.push([chalk.dim('index.android.js.map (Hermes)'), bundles.android.hermesSourcemap]);
+  } else if (bundles.android.map) {
     files.push([chalk.dim('index.android.js.map'), bundles.android.map]);
   }
 
@@ -71,18 +84,15 @@ export async function createBundlesAsync(
     }
   }
 
-  const isLegacy = isLegacyImportsEnabled(
-    getConfig(projectRoot, { skipSDKVersionRequirement: true }).exp
-  );
-  // If not legacy, delete the target option to prevent warnings from being thrown.
-  if (!isLegacy) {
-    delete publishOptions.target;
-  }
+  const config = getConfig(projectRoot, { skipSDKVersionRequirement: true });
+  const isLegacy = isLegacyImportsEnabled(config.exp);
   const platforms: Platform[] = ['android', 'ios'];
   const [android, ios] = await bundleAsync(
     projectRoot,
+    config.exp,
     {
-      target: publishOptions.target,
+      // If not legacy, ignore the target option to prevent warnings from being thrown.
+      target: !isLegacy ? undefined : publishOptions.target,
       resetCache: publishOptions.resetCache,
       logger: ProjectUtils.getLogger(projectRoot),
       quiet: publishOptions.quiet,

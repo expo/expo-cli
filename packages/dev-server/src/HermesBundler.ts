@@ -1,4 +1,4 @@
-import type { Platform } from '@expo/config';
+import type { ExpoConfig, Platform } from '@expo/config';
 import spawnAsync from '@expo/spawn-async';
 import fs from 'fs-extra';
 import type { composeSourceMaps } from 'metro-source-map';
@@ -7,22 +7,13 @@ import path from 'path';
 import process from 'process';
 import resolveFrom from 'resolve-from';
 
-export async function shouldBuildHermesBundleAsync(
-  projectRoot: string,
-  platform: Platform
-): Promise<boolean> {
-  if (platform === 'android') {
-    const gradlePropertiesPath = path.join(projectRoot, 'android', 'gradle.properties');
-    if (!fs.existsSync(gradlePropertiesPath)) {
-      // TODO(kudo): Clarify default behavior in managed workflow for gradle.properties not exist
+export function isEnableHermesManaged(expoConfig: ExpoConfig, platform: Platform): boolean {
+  switch (platform) {
+    case 'android':
+      return expoConfig.android?.jsEngine === 'hermes';
+    default:
       return false;
-    }
-    const properties = parseGradleProperties(await fs.readFile(gradlePropertiesPath, 'utf8'));
-    if (properties['expo.jsEngine'] === 'hermes') {
-      return true;
-    }
   }
-  return false;
 }
 
 interface HermesBundleOutput {
@@ -116,6 +107,44 @@ export function parseGradleProperties(content: string): Record<string, string> {
     result[key] = value;
   }
   return result;
+}
+
+export async function maybeInconsistentEngineAsync(
+  projectRoot: string,
+  platform: string,
+  isHermesManaged: boolean
+): Promise<boolean> {
+  switch (platform) {
+    case 'android':
+      return maybeInconsistentEngineAndroidAsync(projectRoot, isHermesManaged);
+    default:
+      return false;
+  }
+}
+
+async function maybeInconsistentEngineAndroidAsync(
+  projectRoot: string,
+  isHermesManaged: boolean
+): Promise<boolean> {
+  // Trying best to check android native project if by chance to be consistent between app config
+
+  // Check android/app/build.gradle for "enableHermes: true"
+  const appBuildGradlePath = path.join(projectRoot, 'android', 'app', 'build.gradle');
+  if (fs.existsSync(appBuildGradlePath)) {
+    const content = await fs.readFile(appBuildGradlePath, 'utf8');
+    const isHermesBare = content.search(/^\s*enableHermes:\s*true,?\s+/m) >= 0;
+    return isHermesManaged !== isHermesBare;
+  }
+
+  // Check gradle.properties from prebuild template
+  const gradlePropertiesPath = path.join(projectRoot, 'android', 'gradle.properties');
+  if (fs.existsSync(gradlePropertiesPath)) {
+    const props = parseGradleProperties(await fs.readFile(gradlePropertiesPath, 'utf8'));
+    const isHermesBare = props['expo.jsEngine'] === 'hermes';
+    return isHermesManaged !== isHermesBare;
+  }
+
+  return false;
 }
 
 function importMetroSourceMapFromProject(projectRoot: string): typeof composeSourceMaps {
