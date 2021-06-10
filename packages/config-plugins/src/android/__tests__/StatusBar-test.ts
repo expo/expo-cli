@@ -9,11 +9,6 @@ import {
 } from '../StatusBar';
 import { getAppThemeLightNoActionBarGroup, getStylesGroupAsObject } from '../Styles';
 
-it(`returns 'translucent' if no status bar color is provided`, () => {
-  expect(getStatusBarColor({})).toMatch('translucent');
-  expect(getStatusBarColor({ androidStatusBar: {} })).toMatch('translucent');
-});
-
 it(`returns statusbar color if provided`, () => {
   expect(getStatusBarColor({ androidStatusBar: { backgroundColor: '#111111' } })).toMatch(
     '#111111'

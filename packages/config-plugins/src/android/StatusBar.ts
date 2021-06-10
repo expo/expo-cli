@@ -1,4 +1,5 @@
 import { ExpoConfig } from '@expo/config-types';
+import assert from 'assert';
 
 import { ConfigPlugin } from '../Plugin.types';
 import { withAndroidColors, withAndroidStyles } from '../plugins/android-plugins';
@@ -17,14 +18,14 @@ export const withStatusBar: ConfigPlugin = config => {
 };
 
 const withStatusBarColors: ConfigPlugin = config => {
-  return withAndroidColors(config, async config => {
+  return withAndroidColors(config, config => {
     config.modResults = setStatusBarColors(config, config.modResults);
     return config;
   });
 };
 
 const withStatusBarStyles: ConfigPlugin = config => {
-  return withAndroidStyles(config, async config => {
+  return withAndroidStyles(config, config => {
     config.modResults = setStatusBarStyles(config, config.modResults);
     return config;
   });
@@ -36,7 +37,7 @@ export function setStatusBarColors(
 ): ResourceXML {
   return assignColorValue(colors, {
     name: COLOR_PRIMARY_DARK_KEY,
-    value: config.androidStatusBar?.backgroundColor,
+    value: getStatusBarColor(config),
   });
 }
 
@@ -59,7 +60,7 @@ export function setStatusBarStyles(
     name: WINDOW_TRANSLUCENT_STATUS,
     value: 'true',
     // translucent status bar set in theme
-    add: hexString === 'translucent',
+    add: !hexString,
   });
 
   styles = assignStylesValue(styles, {
@@ -67,14 +68,22 @@ export function setStatusBarStyles(
     name: COLOR_PRIMARY_DARK_KEY,
     value: `@color/${COLOR_PRIMARY_DARK_KEY}`,
     // Remove the color if translucent is used
-    add: hexString !== 'translucent',
+    add: !!hexString,
   });
 
   return styles;
 }
 
 export function getStatusBarColor(config: Pick<ExpoConfig, 'androidStatusBar'>) {
-  return config.androidStatusBar?.backgroundColor || 'translucent';
+  const backgroundColor = config.androidStatusBar?.backgroundColor;
+  if (backgroundColor) {
+    // Drop support for translucent
+    assert(
+      backgroundColor !== 'translucent',
+      `androidStatusBar.backgroundColor must be a valid hex string, instead got: "${backgroundColor}"`
+    );
+  }
+  return backgroundColor;
 }
 
 export function getStatusBarStyle(config: Pick<ExpoConfig, 'androidStatusBar'>) {
