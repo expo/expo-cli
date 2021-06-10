@@ -45,6 +45,8 @@ export {
 export {
   withAndroidManifest,
   withStringsXml,
+  withAndroidColors,
+  withAndroidStyles,
   withMainActivity,
   withProjectBuildGradle,
   withAppBuildGradle,

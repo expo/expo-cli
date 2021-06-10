@@ -1,4 +1,7 @@
+import { isHermesBytecodeBundleAsync } from '@expo/dev-server/build/HermesBundler';
 import JsonFile from '@expo/json-file';
+import fs from 'fs-extra';
+import { sync as globSync } from 'glob';
 import klawSync from 'klaw-sync';
 import path from 'path';
 import prettyBytes from 'pretty-bytes';
@@ -50,6 +53,66 @@ it('exports the project for a self-hosted production deployment', async () => {
     entry => `${path.posix.relative(projectRoot, entry.path)} (${formatFileSize(entry)})`
   );
   expect(distFiles).toMatchSnapshot();
+});
+
+it('should export hbc bundle if running with hermes', async () => {
+  jest.setTimeout(5 * 60e3);
+  const tempDir = temporary.directory();
+  try {
+    // Require sdk 40+ to use @expo/dev-server for generating hbc
+    const projectRoot = await createMinimalProjectAsync(
+      tempDir,
+      'export-test-app',
+      {
+        sdkVersion: '41.0.0',
+      },
+      {
+        expo: '41.0.1',
+        'react-native': '0.63.2',
+      }
+    );
+    const androidRoot = path.join(projectRoot, 'android');
+    await fs.ensureDir(androidRoot);
+    await fs.writeFile(path.join(androidRoot, 'gradle.properties'), 'expo.jsEngine=hermes');
+    await fs.writeFile(
+      path.join(projectRoot, 'babel.config.js'),
+      `
+module.exports = function(api) {
+  api.cache(true);
+  return {
+    presets: ['babel-preset-expo'],
+  };
+};
+`
+    );
+
+    const dotExpoHomeDirectory = path.join(projectRoot, '../.expo');
+    await runAsync(
+      [
+        'export',
+        '--public-url',
+        'https://example.com/export-test-app/',
+        '--dump-assetmap',
+        '--max-workers',
+        '1',
+      ],
+      {
+        cwd: projectRoot,
+        env: {
+          ...process.env,
+          // Isolate the test from global state such as the currently signed in user.
+          __UNSAFE_EXPO_HOME_DIRECTORY: dotExpoHomeDirectory,
+        },
+      }
+    );
+    const distPath = path.join(projectRoot, 'dist');
+
+    const bundleFile = globSync('bundles/android-*.js', { absolute: true, cwd: distPath })[0];
+    const isHermesBytecodeBundle = await isHermesBytecodeBundleAsync(bundleFile);
+    expect(isHermesBytecodeBundle).toBe(true);
+  } finally {
+    await fs.remove(tempDir);
+  }
 });
 
 function formatFileSize(item: klawSync.Item) {

@@ -79,16 +79,19 @@ export function addResourceFileToGroup({
   // Should add to `PBXBuildFile Section`
   isBuildFile,
   project,
+  verbose,
 }: {
   filepath: string;
   groupName: string;
   isBuildFile?: boolean;
   project: XcodeProject;
+  verbose?: boolean;
 }): XcodeProject {
   return addFileToGroupAndLink({
     filepath,
     groupName,
     project,
+    verbose,
     addFileToProject({ project, file }) {
       project.addToPbxFileReferenceSection(file);
       if (isBuildFile) {
@@ -107,15 +110,18 @@ export function addBuildSourceFileToGroup({
   filepath,
   groupName,
   project,
+  verbose,
 }: {
   filepath: string;
   groupName: string;
   project: XcodeProject;
+  verbose?: boolean;
 }): XcodeProject {
   return addFileToGroupAndLink({
     filepath,
     groupName,
     project,
+    verbose,
     addFileToProject({ project, file }) {
       project.addToPbxFileReferenceSection(file);
       project.addToPbxBuildFileSection(file);
@@ -131,11 +137,13 @@ export function addFileToGroupAndLink({
   filepath,
   groupName,
   project,
+  verbose,
   addFileToProject,
 }: {
   filepath: string;
   groupName: string;
   project: XcodeProject;
+  verbose?: boolean;
   addFileToProject: (props: { file: PBXFile; project: XcodeProject }) => void;
 }): XcodeProject {
   const group = pbxGroupByPathOrAssert(project, groupName);
@@ -143,12 +151,14 @@ export function addFileToGroupAndLink({
   const file = createProjectFileForGroup({ filepath, group });
 
   if (!file) {
-    // This can happen when a file like the GoogleService-Info.plist needs to be added and the eject command is run twice.
-    // Not much we can do here since it might be a conflicting file.
-    addWarningIOS(
-      'ios-xcode-project',
-      `Skipped adding duplicate file "${filepath}" to PBXGroup named "${groupName}"`
-    );
+    if (verbose) {
+      // This can happen when a file like the GoogleService-Info.plist needs to be added and the eject command is run twice.
+      // Not much we can do here since it might be a conflicting file.
+      addWarningIOS(
+        'ios-xcode-project',
+        `Skipped adding duplicate file "${filepath}" to PBXGroup named "${groupName}"`
+      );
+    }
     return project;
   }
 
@@ -333,7 +343,6 @@ export function getBuildConfigurationsForListId(
   return Object.entries(project.pbxXCBuildConfigurationSection())
     .filter(isNotComment)
     .filter(isBuildConfig)
-    .filter(isNotTestHost)
     .filter(([key]: ConfigurationSectionEntry) => buildConfigurations.includes(key));
 }
 
@@ -350,7 +359,7 @@ export function getBuildConfigurationForListIdAndName(
   ).find(i => i[1].name === buildConfiguration);
   if (!xcBuildConfigurationEntry) {
     throw new Error(
-      `Build configuration '${buildConfiguration} does not exist in list with id '${configurationListId}'`
+      `Build configuration '${buildConfiguration}' does not exist in list with id '${configurationListId}'`
     );
   }
   return xcBuildConfigurationEntry;

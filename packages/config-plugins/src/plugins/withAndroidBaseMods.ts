@@ -2,7 +2,7 @@ import { promises } from 'fs';
 import path from 'path';
 
 import { ExportedConfig, ModConfig } from '../Plugin.types';
-import { Manifest, Paths, Properties, Resources, Strings } from '../android';
+import { Colors, Manifest, Paths, Properties, Resources, Strings, Styles } from '../android';
 import { writeXMLAsync } from '../utils/XML';
 import { ForwardedBaseModOptions, provider, withGeneratedBaseMods } from './createBaseMod';
 
@@ -51,6 +51,30 @@ const defaultProviders = {
   strings: provider<Resources.ResourceXML>({
     getFilePath({ modRequest: { projectRoot } }) {
       return Strings.getProjectStringsXMLPathAsync(projectRoot);
+    },
+    async read(filePath) {
+      return Resources.readResourcesXMLAsync({ path: filePath });
+    },
+    async write(filePath, { modResults }) {
+      await writeXMLAsync({ path: filePath, xml: modResults });
+    },
+  }),
+
+  colors: provider<Resources.ResourceXML>({
+    getFilePath({ modRequest: { projectRoot } }) {
+      return Colors.getProjectColorsXMLPathAsync(projectRoot);
+    },
+    async read(filePath) {
+      return Resources.readResourcesXMLAsync({ path: filePath });
+    },
+    async write(filePath, { modResults }) {
+      await writeXMLAsync({ path: filePath, xml: modResults });
+    },
+  }),
+
+  styles: provider<Resources.ResourceXML>({
+    getFilePath({ modRequest: { projectRoot } }) {
+      return Styles.getProjectStylesXMLPathAsync(projectRoot);
     },
     async read(filePath) {
       return Resources.readResourcesXMLAsync({ path: filePath });
@@ -236,6 +260,12 @@ export function getAndroidIntrospectModFileProviders(): Omit<
     }),
     gradleProperties: createIntrospectionProvider('gradleProperties', { fallbackContents: [] }),
     strings: createIntrospectionProvider('strings', {
+      fallbackContents: { resources: {} } as Resources.ResourceXML,
+    }),
+    colors: createIntrospectionProvider('colors', {
+      fallbackContents: { resources: {} } as Resources.ResourceXML,
+    }),
+    styles: createIntrospectionProvider('styles', {
       fallbackContents: { resources: {} } as Resources.ResourceXML,
     }),
     // projectBuildGradle: createIntrospectionProvider('projectBuildGradle', {

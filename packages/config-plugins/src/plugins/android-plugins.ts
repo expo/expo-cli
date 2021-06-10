@@ -79,6 +79,34 @@ export const withStringsXml: ConfigPlugin<Mod<Resources.ResourceXML>> = (config,
 };
 
 /**
+ * Provides the `android/app/src/main/res/values/colors.xml` as JSON (parsed with [`xml2js`](https://www.npmjs.com/package/xml2js)).
+ *
+ * @param config
+ * @param action
+ */
+export const withAndroidColors: ConfigPlugin<Mod<Resources.ResourceXML>> = (config, action) => {
+  return withMod(config, {
+    platform: 'android',
+    mod: 'colors',
+    action,
+  });
+};
+
+/**
+ * Provides the `android/app/src/main/res/values/styles.xml` as JSON (parsed with [`xml2js`](https://www.npmjs.com/package/xml2js)).
+ *
+ * @param config
+ * @param action
+ */
+export const withAndroidStyles: ConfigPlugin<Mod<Resources.ResourceXML>> = (config, action) => {
+  return withMod(config, {
+    platform: 'android',
+    mod: 'styles',
+    action,
+  });
+};
+
+/**
  * Provides the project MainActivity for modification.
  *
  * @param config

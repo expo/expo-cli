@@ -49,10 +49,10 @@ export type HookArguments = {
   config: any;
   url: any;
   exp: ExpoConfig;
-  iosBundle: string;
+  iosBundle: string | Uint8Array;
   iosSourceMap: string | null;
   iosManifest: any;
-  androidBundle: string;
+  androidBundle: string | Uint8Array;
   androidSourceMap: string | null;
   androidManifest: any;
   projectRoot: string;

@@ -142,6 +142,7 @@ Object {
         "applinks:https://pillarvalley.netlify.app",
       ],
       "com.apple.developer.contacts.notes": true,
+      "foo": "bar",
     },
     "googleServicesFile": "./config/GoogleService-Info.plist",
     "infoPlist": Object {
@@ -210,6 +211,11 @@ Object {
       ],
       "UIUserInterfaceStyle": "Automatic",
       "UIViewControllerBasedStatusBarAppearance": false,
+      "bar": Object {
+        "val": Array [
+          "foo",
+        ],
+      },
       "branch_key": Object {
         "live": "MY_BRANCH_KEY",
       },
@@ -263,6 +269,42 @@ Object {
   "_internal": Object {
     "modResults": Object {
       "android": Object {
+        "colors": Object {
+          "resources": Object {
+            "color": Array [
+              Object {
+                "$": Object {
+                  "name": "colorPrimary",
+                },
+                "_": "#fff000",
+              },
+              Object {
+                "$": Object {
+                  "name": "colorPrimaryDark",
+                },
+                "_": "#000FFF",
+              },
+              Object {
+                "$": Object {
+                  "name": "navigationBarColor",
+                },
+                "_": "#ff0000",
+              },
+              Object {
+                "$": Object {
+                  "name": "activityBackground",
+                },
+                "_": "#ff0000",
+              },
+              Object {
+                "$": Object {
+                  "name": "notification_icon_color",
+                },
+                "_": "green",
+              },
+            ],
+          },
+        },
         "gradleProperties": Array [
           Object {
             "type": "comment",
@@ -378,6 +420,11 @@ Object {
           },
           Object {
             "type": "empty",
+          },
+          Object {
+            "key": "expo.jsEngine",
+            "type": "property",
+            "value": "jsc",
           },
         ],
         "manifest": Object {
@@ -689,6 +736,56 @@ Object {
             ],
           },
         },
+        "styles": Object {
+          "resources": Object {
+            "style": Array [
+              Object {
+                "$": Object {
+                  "name": "AppTheme",
+                  "parent": "Theme.AppCompat.Light.NoActionBar",
+                },
+                "item": Array [
+                  Object {
+                    "$": Object {
+                      "name": "android:textColor",
+                    },
+                    "_": "#000000",
+                  },
+                  Object {
+                    "$": Object {
+                      "name": "colorPrimary",
+                    },
+                    "_": "@color/colorPrimary",
+                  },
+                  Object {
+                    "$": Object {
+                      "name": "colorPrimaryDark",
+                    },
+                    "_": "@color/colorPrimaryDark",
+                  },
+                  Object {
+                    "$": Object {
+                      "name": "android:navigationBarColor",
+                    },
+                    "_": "@color/navigationBarColor",
+                  },
+                  Object {
+                    "$": Object {
+                      "name": "android:windowLightNavigationBar",
+                    },
+                    "_": "true",
+                  },
+                  Object {
+                    "$": Object {
+                      "name": "android:windowBackground",
+                    },
+                    "_": "@color/activityBackground",
+                  },
+                ],
+              },
+            ],
+          },
+        },
       },
       "ios": Object {
         "entitlements": Object {
@@ -700,6 +797,7 @@ Object {
             "applinks:https://pillarvalley.netlify.app",
           ],
           "com.apple.developer.contacts.notes": true,
+          "foo": "bar",
         },
         "expoPlist": Object {
           "EXUpdatesCheckOnLaunch": "NEVER",
@@ -773,6 +871,11 @@ Object {
           ],
           "UIUserInterfaceStyle": "Automatic",
           "UIViewControllerBasedStatusBarAppearance": false,
+          "bar": Object {
+            "val": Array [
+              "foo",
+            ],
+          },
           "branch_key": Object {
             "live": "MY_BRANCH_KEY",
           },
@@ -918,6 +1021,7 @@ Object {
         "applinks:https://pillarvalley.netlify.app",
       ],
       "com.apple.developer.contacts.notes": true,
+      "foo": "bar",
     },
     "googleServicesFile": "./config/GoogleService-Info.plist",
     "infoPlist": Object {
@@ -986,6 +1090,11 @@ Object {
       ],
       "UIUserInterfaceStyle": "Automatic",
       "UIViewControllerBasedStatusBarAppearance": false,
+      "bar": Object {
+        "val": Array [
+          "foo",
+        ],
+      },
       "branch_key": Object {
         "live": "MY_BRANCH_KEY",
       },
@@ -1039,7 +1148,49 @@ Object {
   "_internal": Object {
     "modResults": Object {
       "android": Object {
-        "gradleProperties": Array [],
+        "colors": Object {
+          "resources": Object {
+            "color": Array [
+              Object {
+                "$": Object {
+                  "name": "colorPrimary",
+                },
+                "_": "#fff000",
+              },
+              Object {
+                "$": Object {
+                  "name": "colorPrimaryDark",
+                },
+                "_": "#000FFF",
+              },
+              Object {
+                "$": Object {
+                  "name": "navigationBarColor",
+                },
+                "_": "#ff0000",
+              },
+              Object {
+                "$": Object {
+                  "name": "activityBackground",
+                },
+                "_": "#ff0000",
+              },
+              Object {
+                "$": Object {
+                  "name": "notification_icon_color",
+                },
+                "_": "green",
+              },
+            ],
+          },
+        },
+        "gradleProperties": Array [
+          Object {
+            "key": "expo.jsEngine",
+            "type": "property",
+            "value": "jsc",
+          },
+        ],
         "manifest": Object {
           "manifest": Object {
             "$": Object {
@@ -1348,6 +1499,50 @@ Object {
                   "name": "facebook_app_id",
                 },
                 "_": "1234567890",
+              },
+            ],
+          },
+        },
+        "styles": Object {
+          "resources": Object {
+            "style": Array [
+              Object {
+                "$": Object {
+                  "name": "AppTheme",
+                  "parent": "Theme.AppCompat.Light.NoActionBar",
+                },
+                "item": Array [
+                  Object {
+                    "$": Object {
+                      "name": "colorPrimary",
+                    },
+                    "_": "@color/colorPrimary",
+                  },
+                  Object {
+                    "$": Object {
+                      "name": "colorPrimaryDark",
+                    },
+                    "_": "@color/colorPrimaryDark",
+                  },
+                  Object {
+                    "$": Object {
+                      "name": "android:navigationBarColor",
+                    },
+                    "_": "@color/navigationBarColor",
+                  },
+                  Object {
+                    "$": Object {
+                      "name": "android:windowLightNavigationBar",
+                    },
+                    "_": "true",
+                  },
+                  Object {
+                    "$": Object {
+                      "name": "android:windowBackground",
+                    },
+                    "_": "@color/activityBackground",
+                  },
+                ],
               },
             ],
           },

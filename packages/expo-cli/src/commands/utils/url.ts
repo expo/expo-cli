@@ -13,13 +13,16 @@ export function getExpoDomainUrl(): string {
 export function constructBuildLogsUrl({
   buildId,
   username,
-  v2 = false,
+  projectSlug,
 }: {
   buildId: string;
   username?: string;
+  projectSlug?: string;
   v2?: boolean;
 }): string {
-  if (username) {
+  if (username && projectSlug) {
+    return `${getExpoDomainUrl()}/accounts/${username}/projects/${projectSlug}/builds/${buildId}`;
+  } else if (username) {
     return `${getExpoDomainUrl()}/accounts/${username}/builds/${buildId}`;
   } else {
     return `${getExpoDomainUrl()}/builds/${buildId}`;

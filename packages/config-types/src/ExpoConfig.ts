@@ -249,6 +249,10 @@ export interface ExpoConfig {
    * An array of file glob strings which point to assets that will be bundled within your standalone app binary. Read more in the [Offline Support guide](https://docs.expo.io/guides/offline-support/)
    */
   assetBundlePatterns?: string[];
+  /**
+   * Config plugins for adding extra functionality to your project. [Learn more](https://docs.expo.io/guides/config-plugins/).
+   */
+  plugins?: (string | [] | [string] | [string, any])[];
   splash?: Splash;
   ios?: IOS;
   android?: Android;
@@ -281,10 +285,6 @@ export interface ExpoConfig {
     };
     [k: string]: any;
   };
-  /**
-   * Plugins for adding extra functionality to your project
-   */
-  plugins?: (string | [] | [string] | [string, any])[];
 }
 /**
  * Configuration for loading and splash screen for standalone apps.
@@ -422,7 +422,7 @@ export interface IOS {
     [k: string]: any;
   };
   /**
-   * An array that contains Associated Domains for the standalone app. See [Apple's docs for config](https://developer.apple.com/documentation/safariservices/supporting_associated_domains).
+   * An array that contains Associated Domains for the standalone app. [Learn more](https://developer.apple.com/documentation/safariservices/supporting_associated_domains).
    */
   associatedDomains?: string[];
   /**
@@ -461,10 +461,6 @@ export interface IOS {
      * Local path or remote URL to an image to fill the background of the loading screen. Image size and aspect ratio are up to you. Must be a .png.
      */
     tabletImage?: string;
-    /**
-     * Supported user interface styles. If left blank, `light` will be used. Use `automatic` if you would like to support either `light` or `dark` depending on iOS settings.
-     */
-    userInterfaceStyle?: 'light' | 'dark' | 'automatic';
     [k: string]: any;
   };
 }
@@ -689,6 +685,10 @@ export interface Android {
    * Determines how the software keyboard will impact the layout of your application. This maps to the `android:windowSoftInputMode` property. Defaults to `resize`. Valid values: `resize`, `pan`.
    */
   softwareKeyboardLayoutMode?: 'resize' | 'pan';
+  /**
+   * Specifies the JavaScript engine. Supported only on EAS Build. Defaults to `jsc`. Valid values: `hermes`, `jsc`.
+   */
+  jsEngine?: 'hermes' | 'jsc';
 }
 export interface AndroidIntentFiltersData {
   /**

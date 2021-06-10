@@ -1,6 +1,4 @@
-import { getGoogleMobileAdsAppId, setGoogleMobileAdsAppId } from '../AdMob';
-
-jest.mock('../Scheme');
+import { getGoogleMobileAdsAppId, setGoogleMobileAdsAppId } from '../withIosAdMob';
 
 describe(getGoogleMobileAdsAppId, () => {
   it(`returns null from all getters if no value provided`, () => {

@@ -71,6 +71,7 @@ export function setGoogleServicesFile(
       groupName: projectName,
       project,
       isBuildFile: true,
+      verbose: true,
     });
   }
   return project;

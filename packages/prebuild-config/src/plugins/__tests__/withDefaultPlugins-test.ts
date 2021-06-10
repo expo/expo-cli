@@ -7,15 +7,16 @@ import {
   XML,
 } from '@expo/config-plugins';
 import JsonFile from '@expo/json-file';
+import plist from '@expo/plist';
 import fs from 'fs-extra';
 import { vol } from 'memfs';
 import * as path from 'path';
 import xcode from 'xcode';
 
 import {
-  withExpoAndroidPlugins,
-  withExpoIOSPlugins,
-  withExpoVersionedSDKPlugins,
+  withAndroidExpoPlugins,
+  withIosExpoPlugins,
+  withVersionedExpoSDKPlugins,
 } from '../withDefaultPlugins';
 import { PodfileBasic } from './fixtures/Podfile';
 import rnFixture from './fixtures/react-native-project';
@@ -171,12 +172,12 @@ function getLargeConfig(): ExportedConfig {
 
 function getPrebuildConfig() {
   let config = { ...getLargeConfig() };
-  config = withExpoVersionedSDKPlugins(config, { expoUsername: 'bacon' });
+  config = withVersionedExpoSDKPlugins(config, { expoUsername: 'bacon' });
 
-  config = withExpoIOSPlugins(config, {
+  config = withIosExpoPlugins(config, {
     bundleIdentifier: 'com.bacon.todo',
   });
-  config = withExpoAndroidPlugins(config, {
+  config = withAndroidExpoPlugins(config, {
     package: 'com.bacon.todo',
   });
   return config;
@@ -259,7 +260,7 @@ describe('built-in plugins', () => {
       },
     };
 
-    config = withExpoIOSPlugins(config, {
+    config = withIosExpoPlugins(config, {
       bundleIdentifier: 'com.bacon.todo',
     });
     // Apply mod
@@ -381,6 +382,20 @@ describe('built-in plugins', () => {
       const isValid = await isValidXMLAsync(path.join(projectRoot, xmlPath));
       if (!isValid) throw new Error(`Invalid XML file format at: "${xmlPath}"`);
     }
+
+    // Ensure the infoPlist object is merged correctly
+    const infoPlist = await plist.parse(
+      fs.readFileSync(path.join(projectRoot, 'ios/ReactNativeProject/Info.plist'), 'utf8')
+    );
+    expect(infoPlist.bar).toStrictEqual({ val: ['foo'] });
+    // Ensure the entitlements object is merged correctly
+    const entitlements = await plist.parse(
+      fs.readFileSync(
+        path.join(projectRoot, 'ios/ReactNativeProject/ReactNativeProject.entitlements'),
+        'utf8'
+      )
+    );
+    expect(entitlements.foo).toStrictEqual('bar');
 
     // Ensure files are always written in the correct format
     for (const xmlPath of [

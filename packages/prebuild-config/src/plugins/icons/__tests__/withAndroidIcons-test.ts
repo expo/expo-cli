@@ -71,7 +71,9 @@ describe('Android Icon', () => {
   });
 
   it('returns null if no icon config provided', async () => {
-    expect(await setIconAsync({} as ExpoConfig, './')).toBe(null);
+    expect(
+      await setIconAsync('./', { icon: null, backgroundImage: null, backgroundColor: null })
+    ).toBe(null);
   });
 });
 
@@ -90,18 +92,11 @@ describe('e2e: ONLY android legacy icon', () => {
     vol.mkdirpSync('/app/assets');
     vol.writeFileSync('/app/assets/iconForeground.png', icon);
 
-    await setIconAsync(
-      {
-        slug: 'testproject',
-        version: '1',
-        name: 'testproject',
-        platforms: ['ios', 'android'],
-        android: {
-          icon: '/app/assets/iconForeground.png',
-        },
-      },
-      projectRoot
-    );
+    await setIconAsync(projectRoot, {
+      icon: '/app/assets/iconForeground.png',
+      backgroundColor: null,
+      backgroundImage: null,
+    });
   });
 
   afterAll(() => {
@@ -138,22 +133,11 @@ describe('e2e: android adaptive icon', () => {
     vol.writeFileSync('/app/assets/iconForeground.png', adaptiveIconForeground);
     vol.writeFileSync('/app/assets/iconBackground.png', adaptiveIconBackground);
 
-    await setIconAsync(
-      {
-        slug: 'testproject',
-        version: '1',
-        name: 'testproject',
-        platforms: ['ios', 'android'],
-        android: {
-          adaptiveIcon: {
-            foregroundImage: '/app/assets/iconForeground.png',
-            backgroundImage: '/app/assets/iconBackground.png',
-            backgroundColor: '#123456',
-          },
-        },
-      },
-      projectRoot
-    );
+    await setIconAsync(projectRoot, {
+      icon: '/app/assets/iconForeground.png',
+      backgroundImage: '/app/assets/iconBackground.png',
+      backgroundColor: '#123456',
+    });
   });
 
   afterAll(() => {
@@ -163,12 +147,5 @@ describe('e2e: android adaptive icon', () => {
   it('writes all the image files expected', () => {
     const after = getDirFromFS(vol.toJSON(), projectRoot);
     expect(Object.keys(after)).toEqual(LIST_OF_ANDROID_ADAPTIVE_ICON_FILES_FINAL);
-  });
-
-  it('writes to colors.xml correctly', () => {
-    const after = getDirFromFS(vol.toJSON(), projectRoot);
-    expect(after['android/app/src/main/res/values/colors.xml']).toContain(
-      '<color name="iconBackground">#123456</color>'
-    );
   });
 });
