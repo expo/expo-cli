@@ -50,6 +50,9 @@ function getLargeConfig(): ExportedConfig {
     // privacy?: 'public' | 'unlisted' | 'hidden';
     // sdkVersion?: string;
     // runtimeVersion?: string;
+    splash: {
+      backgroundColor: '#ff00ff',
+    },
     version: '1.0.0',
     platforms: ['android', 'ios', 'web'],
     githubUrl: 'https://github.com/expo/expo',
@@ -328,9 +331,12 @@ describe('built-in plugins', () => {
       'ios/ReactNativeProject/Base.lproj/LaunchScreen.xib',
       'ios/ReactNativeProject/Images.xcassets/AppIcon.appiconset/Contents.json',
       'ios/ReactNativeProject/Images.xcassets/Contents.json',
+      'ios/ReactNativeProject/Images.xcassets/SplashScreenBackground.imageset/image.png',
+      'ios/ReactNativeProject/Images.xcassets/SplashScreenBackground.imageset/Contents.json',
       'ios/ReactNativeProject/GoogleService-Info.plist',
       'ios/ReactNativeProject/noop-file.swift',
       'ios/ReactNativeProject/ReactNativeProject-Bridging-Header.h',
+      'ios/ReactNativeProject/SplashScreen.storyboard',
       'ios/ReactNativeProject/ReactNativeProject.entitlements',
       'ios/ReactNativeProject.xcodeproj/project.pbxproj',
       'ios/Podfile',
