@@ -33,7 +33,9 @@ export function setSplashInfoPlist(
   debug(`isDarkModeEnabled: `, isDarkModeEnabled);
 
   if (isDarkModeEnabled) {
-    const existing = IOSConfig.UserInterfaceStyle.getUserInterfaceStyle(config);
+    // IOSConfig.UserInterfaceStyle.getUserInterfaceStyle(config);
+    // Determine if the user manually defined the userInterfaceStyle incorrectly
+    const existing = config.ios?.userInterfaceStyle ?? config.userInterfaceStyle;
     // Add a warning to prevent the dark mode splash screen from not being shown -- this was learned the hard way.
     if (existing && existing !== 'automatic') {
       WarningAggregator.addWarningIOS(
