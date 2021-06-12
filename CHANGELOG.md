@@ -10,6 +10,63 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🧹 Chores
 
+## [Fri, 11 Jun 2021 18:33:29 -0700](https://github.com/expo/expo-cli/commit/d53eadc503c6ff895902a7627ff9326ec61776de)
+
+### 🛠 Breaking changes
+
+- [cli] Remove bare typescript template ([#3562](https://github.com/expo/expo-cli/issues/3562))
+
+### 🎉 New features
+
+- [cli] Add support for Android dev client on managed projects ([#3561](https://github.com/expo/expo-cli/issues/3561))
+- [cli] Allow `expo start --dev-client` in managed projects ([#3523](https://github.com/expo/expo-cli/issues/3523))
+- [cli] Allow auto plugin adding on install for any version ([#3557](https://github.com/expo/expo-cli/issues/3557))
+- [cli] Enhance Hermes support for expo export and publish ([#3536](https://github.com/expo/expo-cli/issues/3536))
+- [cli] Use the default scheme to launch managed dev client apps ([#3569](https://github.com/expo/expo-cli/issues/3569))
+- [config-plugins] Support android.jsEngine in app.json ([#3530](https://github.com/expo/expo-cli/issues/3530))
+- [config-plugins] add styles and colors mods ([#3539](https://github.com/expo/expo-cli/issues/3539))
+
+### 🧹 Chores
+
+- [cli] Add /projects to website build url ([#3542](https://github.com/expo/expo-cli/issues/3542))
+- [cli] Bump expo/xcpretty ([#3538](https://github.com/expo/expo-cli/issues/3538))
+- [config-plugins] Refactor debug contents on android ([#3566](https://github.com/expo/expo-cli/issues/3566))
+- [config-plugins] Removed default push notifications entitlement ([#3497](https://github.com/expo/expo-cli/issues/3497))
+- [config] ios splash screen plugin ([#2706](https://github.com/expo/expo-cli/issues/2706))
+- [contributing] Improve for newer developers ([#3224](https://github.com/expo/expo-cli/issues/3224))
+- [prebuild-config] Add prebuild-config to CI ([#3564](https://github.com/expo/expo-cli/issues/3564))
+- [prebuild-config] Added expo-cellular to the list of default plugins ([#3550](https://github.com/expo/expo-cli/issues/3550))
+- [prebuild-config] Migrate expo-ads-admob plugin to prebuild-config ([#3520](https://github.com/expo/expo-cli/issues/3520))
+- Remove nullthrows ([#3546](https://github.com/expo/expo-cli/issues/3546))
+- Update naming to reflect best practices ([#3544](https://github.com/expo/expo-cli/issues/3544))
+- Fix a typo in Manifest.ts ([#3541](https://github.com/expo/expo-cli/issues/3541))
+- Remove unused transformer ([#3535](https://github.com/expo/expo-cli/issues/3535))
+- Silence duplicate file warnings ([#3537](https://github.com/expo/expo-cli/issues/3537))
+
+### 🐛 Bug fixes
+
+- [config-plugins] Add support for legacy android icons ([#3567](https://github.com/expo/expo-cli/issues/3567))
+- [config-plugins] Patch android status bar to match the color of the splash screen ([#3563](https://github.com/expo/expo-cli/issues/3563))
+- [xdl] Prepend manifest handler to fix bug loading app when index.html in project root ([#3532](https://github.com/expo/expo-cli/issues/3532))
+- [xdl] Update watchman version check to allow new format ([#3553](https://github.com/expo/expo-cli/issues/3553))
+- Fix "Exception with debug remote enabled" ([#3545](https://github.com/expo/expo-cli/issues/3545))
+
+### 📦 Packages updated
+
+- @expo/config-plugins@2.0.3
+- @expo/config@4.0.3
+- @expo/dev-server@0.1.73
+- @expo/dev-tools@0.13.103
+- expo-cli@4.6.0-alpha.0
+- expo-optimize@0.1.95
+- @expo/metro-config@0.1.73
+- @expo/next-adapter@2.1.78
+- @expo/prebuild-config@1.0.4
+- expo-pwa@0.0.83
+- uri-scheme@1.0.84
+- @expo/webpack-config@0.12.77
+- xdl@59.0.43
+
 ## [Tue, 1 Jun 2021 13:02:23 +0200](https://github.com/expo/expo-cli/commit/6cd679038b3474954c8018f539432ff62b2ff72f)
 
 ### 🐛 Bug fixes
