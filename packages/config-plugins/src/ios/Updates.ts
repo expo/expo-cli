@@ -22,6 +22,7 @@ export enum Config {
   SDK_VERSION = 'EXUpdatesSDKVersion',
   UPDATE_URL = 'EXUpdatesURL',
   RELEASE_CHANNEL = 'EXUpdatesReleaseChannel',
+  UPDATES_CONFIGURATION_REQUEST_HEADERS_KEY = 'EXUpdatesRequestHeaders',
 }
 
 export function getUpdateUrl(

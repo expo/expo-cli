@@ -8,6 +8,8 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🎉 New features
 
+- [config-plugins] add config request headers to Updates Config enum ([#3571](https://github.com/expo/expo-cli/pull/3571))
+
 ### 🧹 Chores
 
 ## [Fri, 11 Jun 2021 18:33:29 -0700](https://github.com/expo/expo-cli/commit/d53eadc503c6ff895902a7627ff9326ec61776de)
