@@ -1,24 +1,38 @@
-import { AndroidConfig, ConfigPlugin, withDangerousMod, XML } from '@expo/config-plugins';
+import {
+  AndroidConfig,
+  ConfigPlugin,
+  withAndroidColors,
+  withAndroidColorsNight,
+  withAndroidStyles,
+} from '@expo/config-plugins';
 import { Colors } from '@expo/config-plugins/build/android';
 import { ExpoConfig } from '@expo/config-types';
 
 import { getAndroidDarkSplashConfig, getAndroidSplashConfig } from './getAndroidSplashConfig';
 
-const { buildResourceItem, readResourcesXMLAsync } = AndroidConfig.Resources;
 const styleResourceGroup = {
   name: 'Theme.App.SplashScreen',
   parent: 'AppTheme',
 };
+
 const SPLASH_COLOR_NAME = 'splashscreen_background';
 
 export const withAndroidSplashStyles: ConfigPlugin = config => {
-  return withDangerousMod(config, [
-    'android',
-    async config => {
-      await setSplashStylesAsync(config, config.modRequest.projectRoot);
-      return config;
-    },
-  ]);
+  config = withAndroidColors(config, config => {
+    const backgroundColor = getSplashBackgroundColor(config);
+    config.modResults = setSplashColorsForTheme(config.modResults, backgroundColor);
+    return config;
+  });
+  config = withAndroidColorsNight(config, config => {
+    const backgroundColor = getSplashDarkBackgroundColor(config);
+    config.modResults = setSplashColorsForTheme(config.modResults, backgroundColor);
+    return config;
+  });
+  config = withAndroidStyles(config, config => {
+    config.modResults = setSplashStylesForTheme(config.modResults);
+    return config;
+  });
+  return config;
 };
 
 export function getSplashBackgroundColor(config: ExpoConfig): string | null {
@@ -29,67 +43,19 @@ export function getSplashDarkBackgroundColor(config: ExpoConfig): string | null 
   return getAndroidDarkSplashConfig(config)?.backgroundColor ?? null;
 }
 
-export async function setSplashStylesAsync(config: ExpoConfig, projectRoot: string) {
-  const backgroundColor = getSplashBackgroundColor(config);
-  const darkBackgroundColor = getSplashDarkBackgroundColor(config);
-
-  await setSplashStylesForThemeAsync({
-    projectRoot,
-  });
-
-  for (const theme of [
-    { kind: 'values', color: backgroundColor },
-    { kind: 'values-night', color: darkBackgroundColor },
-  ]) {
-    await setSplashColorsForThemeAsync({
-      projectRoot,
-      kind: theme.kind as AndroidConfig.Resources.ResourceKind,
-      backgroundColor: theme.color,
-    });
-  }
-
-  return true;
-}
-
-export async function setSplashStylesForThemeAsync({
-  projectRoot,
-  kind,
-}: {
-  projectRoot: string;
-  kind?: AndroidConfig.Resources.ResourceKind;
-}): Promise<AndroidConfig.Resources.ResourceXML> {
-  const stylesPath = await AndroidConfig.Styles.getProjectStylesXMLPathAsync(projectRoot, { kind });
-
-  let xml = await readResourcesXMLAsync({ path: stylesPath });
-
+export function setSplashStylesForTheme(styles: AndroidConfig.Resources.ResourceXML) {
   // Add splash screen image
-  xml = AndroidConfig.Styles.setStylesItem({
-    xml,
-    item: buildResourceItem({ name: 'android:windowBackground', value: '@drawable/splashscreen' }),
+  return AndroidConfig.Styles.assignStylesValue(styles, {
+    add: true,
+    value: '@drawable/splashscreen',
+    name: 'android:windowBackground',
     parent: styleResourceGroup,
   });
-
-  await XML.writeXMLAsync({ path: stylesPath, xml });
-
-  return xml;
 }
 
-export async function setSplashColorsForThemeAsync({
-  projectRoot,
-  kind,
-  backgroundColor,
-}: {
-  projectRoot: string;
-  kind?: AndroidConfig.Resources.ResourceKind;
-  backgroundColor?: string | null;
-}): Promise<AndroidConfig.Resources.ResourceXML> {
-  const colorsPath = await Colors.getProjectColorsXMLPathAsync(projectRoot, { kind });
-
-  let colors = await readResourcesXMLAsync({ path: colorsPath });
-
-  colors = Colors.assignColorValue(colors, { value: backgroundColor, name: SPLASH_COLOR_NAME });
-
-  await XML.writeXMLAsync({ path: colorsPath, xml: colors });
-
-  return colors;
+export function setSplashColorsForTheme(
+  colors: AndroidConfig.Resources.ResourceXML,
+  backgroundColor: string | null
+): AndroidConfig.Resources.ResourceXML {
+  return Colors.assignColorValue(colors, { value: backgroundColor, name: SPLASH_COLOR_NAME });
 }
