@@ -29,11 +29,30 @@ export const withAndroidSplashStyles: ConfigPlugin = config => {
     return config;
   });
   config = withAndroidStyles(config, config => {
+    config.modResults = removeOldSplashStyleGroup(config.modResults);
     config.modResults = setSplashStylesForTheme(config.modResults);
     return config;
   });
   return config;
 };
+
+// Remove the old style group which didn't extend the base theme properly.
+function removeOldSplashStyleGroup(styles: AndroidConfig.Resources.ResourceXML) {
+  const group = {
+    name: 'Theme.App.SplashScreen',
+    parent: 'Theme.AppCompat.Light.NoActionBar',
+  };
+
+  styles.resources.style = styles.resources.style?.filter?.(({ $: head }) => {
+    let matches = head.name === group.name;
+    if (group.parent != null && matches) {
+      matches = head.parent === group.parent;
+    }
+    return !matches;
+  });
+
+  return styles;
+}
 
 export function getSplashBackgroundColor(config: ExpoConfig): string | null {
   return getAndroidSplashConfig(config)?.backgroundColor ?? null;
