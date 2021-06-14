@@ -1,24 +1,29 @@
 import { EventEmitter } from 'events';
 
-type StatusEvent =
-  | { type: 'bundleBuildFinish'; totalBuildTimeMs: number }
-  | { type: 'deviceLogReceive'; deviceId: string; deviceName: string };
-type StatusEventFields<T> = Omit<T, 'type'>;
+interface BundleBuildFinishEvent {
+  totalBuildTimeMs: number;
+}
+interface DeviceLogReceiveEvent {
+  deviceId: string;
+  deviceName: string;
+}
+interface StatusEvents {
+  bundleBuildFinish: BundleBuildFinishEvent;
+  deviceLogReceive: DeviceLogReceiveEvent;
+}
+type StatusEventKey = keyof StatusEvents;
 
 declare interface StatusEventEmitter {
-  addListener<T extends StatusEvent>(
-    event: StatusEvent['type'],
-    listener: (fields: StatusEventFields<T>) => void
+  addListener<K extends StatusEventKey>(
+    event: K,
+    listener: (fields: StatusEvents[K]) => void
   ): this;
-  once<T extends StatusEvent>(
-    event: StatusEvent['type'],
-    listener: (fields: StatusEventFields<T>) => void
+  once<K extends StatusEventKey>(event: K, listener: (fields: StatusEvents[K]) => void): this;
+  removeListener<K extends StatusEventKey>(
+    event: K,
+    listener: (fields: StatusEvents[K]) => void
   ): this;
-  removeListener<T extends StatusEvent>(
-    event: StatusEvent['type'],
-    listener: (fields: StatusEventFields<T>) => void
-  ): this;
-  emit<T extends StatusEvent>(event: T['type'], fields: StatusEventFields<T>): boolean;
+  emit<K extends StatusEventKey>(event: K, fields: StatusEvents[K]): boolean;
 }
 
 class StatusEventEmitter extends EventEmitter {}
