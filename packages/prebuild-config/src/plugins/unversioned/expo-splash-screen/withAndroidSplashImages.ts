@@ -175,9 +175,10 @@ async function copyDrawableFile(srcPath: string | undefined, dstPath: string) {
   if (!srcPath) {
     return;
   }
+  const folder = path.dirname(dstPath);
   // TODO: Generate optimal images, don't copy
-  if (!(await fs.pathExists(path.dirname(dstPath)))) {
-    await fs.mkdir(path.dirname(dstPath));
+  if (!(await fs.pathExists(folder))) {
+    await fs.mkdir(folder);
   }
   await fs.copyFile(srcPath, path.resolve(dstPath));
 }
