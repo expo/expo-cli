@@ -32,6 +32,8 @@ type DeviceLogRecord = {
   shouldHide: boolean;
   msg: any;
   level: number;
+  deviceId: string;
+  deviceName: string;
 };
 export type LogRecord = (MetroLogRecord | ExpoLogRecord | DeviceLogRecord) & ProjectUtils.LogFields;
 

@@ -88,11 +88,6 @@ export async function runIosActionAsync(projectRoot: string, options: Options) {
   if (props.shouldStartBundler) {
     Log.nested(`\nLogs for your project will appear below. ${chalk.dim(`Press Ctrl+C to exit.`)}`);
   }
-  UnifiedAnalytics.logEvent('dev client run command', {
-    status: 'ready',
-    platform: 'ios',
-    ...getDevClientProperties(projectRoot, exp),
-  });
 }
 
 function track(projectRoot: string, exp: ExpoConfig) {

@@ -668,6 +668,10 @@ Command.prototype.asyncActionProjectDir = function (
         write: (chunk: LogRecord) => {
           if (chunk.tag === 'device') {
             logWithLevel(chunk);
+            StatusEventEmitter.emit('deviceLogReceive', {
+              deviceId: chunk.deviceId,
+              deviceName: chunk.deviceName,
+            });
           }
         },
       },

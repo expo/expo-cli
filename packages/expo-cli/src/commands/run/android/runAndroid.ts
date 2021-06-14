@@ -107,13 +107,6 @@ export async function runAndroidActionAsync(projectRoot: string, options: Option
 
   await spawnGradleAsync({ androidProjectPath, variant: options.variant });
 
-  // Send the 'ready' event once the app is runing in the device.
-  UnifiedAnalytics.logEvent('dev client run command', {
-    status: 'ready',
-    platform: 'android',
-    ...getDevClientProperties(projectRoot, exp),
-  });
-
   if (props.bundler) {
     await startBundlerAsync(projectRoot, {
       metroPort: props.port,
