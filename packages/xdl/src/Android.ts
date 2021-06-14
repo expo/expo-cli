@@ -659,6 +659,15 @@ function logUnauthorized(device: Device) {
 // This can prevent annoying interactions when they don't want to upgrade for whatever reason.
 const hasPromptedToUpgrade: Record<string, boolean> = {};
 
+async function isManagedProjectAsync(projectRoot: string) {
+  try {
+    await AndroidConfig.Paths.getProjectPathOrThrowAsync(projectRoot);
+    return false;
+  } catch {
+    return true;
+  }
+}
+
 async function openUrlAsync({
   url,
   device,
@@ -693,18 +702,26 @@ async function openUrlAsync({
     let installedExpo = false;
     let clientApplicationId = 'host.exp.exponent';
     if (devClient) {
-      const applicationId = await AndroidConfig.Package.getApplicationIdAsync(projectRoot);
-      if (!applicationId) {
-        // TODO(ville): possibly need to compare Gradle project with app.json/config.ts
-        // and show a helpful error message, if there's a mismatch.
-        throw new Error(
-          `Could not find applicationId in ${AndroidConfig.Paths.getAppBuildGradleFilePath(
-            projectRoot
-          )}`
-        );
+      let applicationId;
+      const isManaged = await isManagedProjectAsync(projectRoot);
+      if (isManaged) {
+        applicationId = exp?.android?.package;
+        if (!applicationId) {
+          throw new Error(
+            `Could not find property android.package in app.config.js/app.json. This setting is required to launch the app.`
+          );
+        }
       } else {
-        clientApplicationId = applicationId;
+        applicationId = await AndroidConfig.Package.getApplicationIdAsync(projectRoot);
+        if (!applicationId) {
+          throw new Error(
+            `Could not find applicationId in ${AndroidConfig.Paths.getAppBuildGradleFilePath(
+              projectRoot
+            )}`
+          );
+        }
       }
+      clientApplicationId = applicationId;
       await ensureDevClientInstalledAsync(device, clientApplicationId);
     } else if (!isDetached) {
       let shouldInstall = !(await _isExpoInstalledAsync(device));

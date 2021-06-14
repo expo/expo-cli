@@ -1,7 +1,7 @@
 import { ExpoConfig, PackageJSONConfig } from '@expo/config';
 import JsonFile from '@expo/json-file';
+import assert from 'assert';
 import chalk from 'chalk';
-import nullthrows from 'nullthrows';
 import resolveFrom from 'resolve-from';
 import semver from 'semver';
 import { Versions } from 'xdl';
@@ -12,7 +12,7 @@ import { BundledNativeModules, getBundledNativeModulesAsync } from './bundledNat
 
 export async function validateDependenciesVersionsAsync(
   projectRoot: string,
-  exp: ExpoConfig,
+  exp: Pick<ExpoConfig, 'sdkVersion'>,
   pkg: PackageJSONConfig
 ): Promise<boolean> {
   // expo package for SDK < 33.0.0 does not have bundledNativeModules.json
@@ -22,10 +22,11 @@ export async function validateDependenciesVersionsAsync(
 
   let bundledNativeModules: BundledNativeModules | null = null;
   try {
+    assert(exp.sdkVersion);
     bundledNativeModules = await getBundledNativeModulesAsync(
       projectRoot,
       // sdkVersion is defined here because we ran the >= 33.0.0 check before
-      nullthrows(exp.sdkVersion)
+      exp.sdkVersion
     );
   } catch {
     Log.warn(

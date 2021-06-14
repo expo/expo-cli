@@ -27,6 +27,7 @@ export enum Config {
   RUNTIME_VERSION = 'expo.modules.updates.EXPO_RUNTIME_VERSION',
   UPDATE_URL = 'expo.modules.updates.EXPO_UPDATE_URL',
   RELEASE_CHANNEL = 'expo.modules.updates.EXPO_RELEASE_CHANNEL',
+  UPDATES_CONFIGURATION_REQUEST_HEADERS_KEY = 'expo.modules.updates.UPDATES_CONFIGURATION_REQUEST_HEADERS_KEY',
 }
 
 export const withUpdates: ConfigPlugin<{ expoUsername: string | null }> = (

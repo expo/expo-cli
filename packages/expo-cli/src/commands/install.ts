@@ -115,13 +115,11 @@ async function installAsync(packages: string[], options: PackageManager.CreateFo
   await packageManager.addAsync(...versionedPackages);
 
   // Only auto add plugins if the plugins array is defined or if the project is using SDK +42.
-  if (Versions.gteSdkVersion(exp, '42.0.0') || Array.isArray(exp.plugins)) {
-    await autoAddConfigPluginsAsync(
-      projectRoot,
-      exp,
-      versionedPackages.map(pkg => pkg.split('@')[0]).filter(Boolean)
-    );
-  }
+  await autoAddConfigPluginsAsync(
+    projectRoot,
+    exp,
+    versionedPackages.map(pkg => pkg.split('@')[0]).filter(Boolean)
+  );
 }
 
 export default function install(program: Command) {

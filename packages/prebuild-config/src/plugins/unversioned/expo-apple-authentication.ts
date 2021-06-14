@@ -24,5 +24,5 @@ function setAppleSignInEntitlement(config: ExpoConfig, entitlementsPlist: JSONOb
 
 export default createLegacyPlugin({
   packageName: 'expo-apple-authentication',
-  fallback: [withAppleSignInEntitlement],
+  fallback: withAppleSignInEntitlement,
 });

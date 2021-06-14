@@ -193,6 +193,7 @@ Please see the docs (${chalk.underline(
       Log.log(
         `### ${i} | ${platform} | ${UrlUtils.constructBuildLogsUrl({
           buildId: job.id,
+          projectSlug: this.manifest.slug,
           username: username ?? undefined,
         })} ###`
       );
@@ -386,6 +387,7 @@ ${job.id}
     if (buildId) {
       const url = UrlUtils.constructBuildLogsUrl({
         buildId,
+        projectSlug: this.manifest.slug,
         username: this.manifest.owner || (user?.kind === 'user' ? user.username : undefined),
       });
 

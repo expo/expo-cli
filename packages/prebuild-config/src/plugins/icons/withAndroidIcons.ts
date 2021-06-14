@@ -46,7 +46,12 @@ export const withAndroidIcons: ConfigPlugin = config => {
   return withDangerousMod(config, [
     'android',
     async config => {
-      await setIconAsync(config.modRequest.projectRoot, { icon, backgroundColor, backgroundImage });
+      await setIconAsync(config.modRequest.projectRoot, {
+        icon,
+        backgroundColor,
+        backgroundImage,
+        isAdaptive: !!config.android?.adaptiveIcon,
+      });
       return config;
     },
   ]);
@@ -82,7 +87,13 @@ export async function setIconAsync(
     icon,
     backgroundColor,
     backgroundImage,
-  }: { icon: string | null; backgroundColor: string | null; backgroundImage: string | null }
+    isAdaptive,
+  }: {
+    icon: string | null;
+    backgroundColor: string | null;
+    backgroundImage: string | null;
+    isAdaptive: boolean;
+  }
 ) {
   if (!icon) {
     return null;
@@ -90,7 +101,7 @@ export async function setIconAsync(
 
   await configureLegacyIconAsync(projectRoot, icon, backgroundImage, backgroundColor);
 
-  await configureAdaptiveIconAsync(projectRoot, icon, backgroundImage);
+  await configureAdaptiveIconAsync(projectRoot, icon, backgroundImage, isAdaptive);
 
   return true;
 }
@@ -194,7 +205,8 @@ async function configureLegacyIconAsync(
 export async function configureAdaptiveIconAsync(
   projectRoot: string,
   foregroundImage: string,
-  backgroundImage: string | null
+  backgroundImage: string | null,
+  isAdaptive: boolean
 ) {
   await Promise.all(
     Object.values(dpiValues).map(async ({ folderName, scale }) => {
@@ -248,7 +260,13 @@ export async function configureAdaptiveIconAsync(
 
   // create ic_launcher.xml and ic_launcher_round.xml
   const icLauncherXmlString = createAdaptiveIconXmlString(backgroundImage);
-  await createAdaptiveIconXmlFiles(projectRoot, icLauncherXmlString);
+  await createAdaptiveIconXmlFiles(
+    projectRoot,
+    icLauncherXmlString,
+    // If the user only defined icon and not android.adaptiveIcon, then skip enabling the layering system
+    // this will scale the image down and present it uncropped.
+    isAdaptive
+  );
 }
 
 function setBackgroundColor(backgroundColor: string | null, colors: ResourceXML) {
@@ -271,11 +289,28 @@ export const createAdaptiveIconXmlString = (backgroundImage: string | null) => {
 </adaptive-icon>`;
 };
 
-async function createAdaptiveIconXmlFiles(projectRoot: string, icLauncherXmlString: string) {
+async function createAdaptiveIconXmlFiles(
+  projectRoot: string,
+  icLauncherXmlString: string,
+  add: boolean
+) {
   const anyDpiV26Directory = path.resolve(projectRoot, ANDROID_RES_PATH, MIPMAP_ANYDPI_V26);
   await fs.ensureDir(anyDpiV26Directory);
-  await fs.writeFile(path.resolve(anyDpiV26Directory, IC_LAUNCHER_XML), icLauncherXmlString);
-  await fs.writeFile(path.resolve(anyDpiV26Directory, IC_LAUNCHER_ROUND_XML), icLauncherXmlString);
+  const launcherPath = path.resolve(anyDpiV26Directory, IC_LAUNCHER_XML);
+  const launcherRoundPath = path.resolve(anyDpiV26Directory, IC_LAUNCHER_ROUND_XML);
+  if (add) {
+    await fs.writeFile(launcherPath, icLauncherXmlString);
+    await fs.writeFile(launcherRoundPath, icLauncherXmlString);
+  } else {
+    // Remove the xml if the icon switches from adaptive to standard.
+    await Promise.all(
+      [launcherPath, launcherRoundPath].map(async path => {
+        if (fs.existsSync(path)) {
+          return await fs.remove(path);
+        }
+      })
+    );
+  }
 }
 
 async function removeBackgroundImageFilesAsync(projectRoot: string) {

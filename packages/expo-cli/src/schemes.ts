@@ -1,6 +1,8 @@
+import { getConfig } from '@expo/config';
 import { AndroidConfig, IOSConfig } from '@expo/config-plugins';
 import plist from '@expo/plist';
-import * as fs from 'fs-extra';
+import fs from 'fs';
+import resolveFrom from 'resolve-from';
 
 import { AbortCommandError } from './CommandError';
 import {
@@ -48,6 +50,11 @@ export async function getDevClientSchemeAsync(projectRoot: string): Promise<stri
     getSchemesForAndroidAsync(projectRoot),
   ]);
 
+  // Allow managed projects
+  if (!hasIos && !hasAndroid) {
+    return getManagedDevClientSchemeAsync(projectRoot);
+  }
+
   let matching: string;
   // Allow for only one native project to exist.
   if (!hasIos) {
@@ -60,7 +67,7 @@ export async function getDevClientSchemeAsync(projectRoot: string): Promise<stri
 
   if (!matching) {
     Log.warn(
-      '\nDev Client: No common URI schemes could be found for the native ios and android projects, this is required for opening the project\n'
+      '\nDev Client: No common URI schemes could be found for the native iOS and Android projects, this is required for opening the project\n'
     );
     Log.log(
       `Add a common scheme with ${Log.chalk.cyan(
@@ -79,6 +86,24 @@ export async function getDevClientSchemeAsync(projectRoot: string): Promise<stri
     throw new AbortCommandError();
   }
   return matching;
+}
+
+async function getManagedDevClientSchemeAsync(projectRoot: string): Promise<string> {
+  const { exp } = getConfig(projectRoot, {
+    skipSDKVersionRequirement: true,
+  });
+  try {
+    const getDefaultScheme = require(resolveFrom(projectRoot, 'expo-dev-client/getDefaultScheme'));
+    const scheme = getDefaultScheme(exp);
+    return scheme;
+  } catch (error) {
+    Log.warn(
+      '\nDev Client: Unable to get the default URI scheme for the project. Please make sure the expo-dev-client package is installed.'
+    );
+    Log.error(error);
+    Log.newLine();
+    throw new AbortCommandError();
+  }
 }
 
 // sort longest to ensure uniqueness.

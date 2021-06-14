@@ -14,9 +14,9 @@ import * as path from 'path';
 import xcode from 'xcode';
 
 import {
-  withExpoAndroidPlugins,
-  withExpoIOSPlugins,
-  withExpoVersionedSDKPlugins,
+  withAndroidExpoPlugins,
+  withIosExpoPlugins,
+  withVersionedExpoSDKPlugins,
 } from '../withDefaultPlugins';
 import { PodfileBasic } from './fixtures/Podfile';
 import rnFixture from './fixtures/react-native-project';
@@ -50,6 +50,9 @@ function getLargeConfig(): ExportedConfig {
     // privacy?: 'public' | 'unlisted' | 'hidden';
     // sdkVersion?: string;
     // runtimeVersion?: string;
+    splash: {
+      backgroundColor: '#ff00ff',
+    },
     version: '1.0.0',
     platforms: ['android', 'ios', 'web'],
     githubUrl: 'https://github.com/expo/expo',
@@ -172,12 +175,12 @@ function getLargeConfig(): ExportedConfig {
 
 function getPrebuildConfig() {
   let config = { ...getLargeConfig() };
-  config = withExpoVersionedSDKPlugins(config, { expoUsername: 'bacon' });
+  config = withVersionedExpoSDKPlugins(config, { expoUsername: 'bacon' });
 
-  config = withExpoIOSPlugins(config, {
+  config = withIosExpoPlugins(config, {
     bundleIdentifier: 'com.bacon.todo',
   });
-  config = withExpoAndroidPlugins(config, {
+  config = withAndroidExpoPlugins(config, {
     package: 'com.bacon.todo',
   });
   return config;
@@ -260,7 +263,7 @@ describe('built-in plugins', () => {
       },
     };
 
-    config = withExpoIOSPlugins(config, {
+    config = withIosExpoPlugins(config, {
       bundleIdentifier: 'com.bacon.todo',
     });
     // Apply mod
@@ -328,9 +331,12 @@ describe('built-in plugins', () => {
       'ios/ReactNativeProject/Base.lproj/LaunchScreen.xib',
       'ios/ReactNativeProject/Images.xcassets/AppIcon.appiconset/Contents.json',
       'ios/ReactNativeProject/Images.xcassets/Contents.json',
+      'ios/ReactNativeProject/Images.xcassets/SplashScreenBackground.imageset/image.png',
+      'ios/ReactNativeProject/Images.xcassets/SplashScreenBackground.imageset/Contents.json',
       'ios/ReactNativeProject/GoogleService-Info.plist',
       'ios/ReactNativeProject/noop-file.swift',
       'ios/ReactNativeProject/ReactNativeProject-Bridging-Header.h',
+      'ios/ReactNativeProject/SplashScreen.storyboard',
       'ios/ReactNativeProject/ReactNativeProject.entitlements',
       'ios/ReactNativeProject.xcodeproj/project.pbxproj',
       'ios/Podfile',

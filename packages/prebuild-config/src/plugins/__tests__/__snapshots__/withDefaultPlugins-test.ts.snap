@@ -198,7 +198,7 @@ Object {
         },
       },
       "NSLocationWhenInUseUsageDescription": "",
-      "UILaunchStoryboardName": "LaunchScreen",
+      "UILaunchStoryboardName": "SplashScreen",
       "UIRequiredDeviceCapabilities": Array [
         "armv7",
       ],
@@ -209,7 +209,6 @@ Object {
         "UIInterfaceOrientationLandscapeLeft",
         "UIInterfaceOrientationLandscapeRight",
       ],
-      "UIUserInterfaceStyle": "Automatic",
       "UIViewControllerBasedStatusBarAppearance": false,
       "bar": Object {
         "val": Array [
@@ -254,6 +253,9 @@ Object {
   "primaryColor": "#fff000",
   "scheme": "my-app-redirect",
   "slug": "mycoolapp",
+  "splash": Object {
+    "backgroundColor": "#ff00ff",
+  },
   "updates": Object {
     "checkAutomatically": "ON_ERROR_RECOVERY",
     "enabled": true,
@@ -269,6 +271,42 @@ Object {
   "_internal": Object {
     "modResults": Object {
       "android": Object {
+        "colors": Object {
+          "resources": Object {
+            "color": Array [
+              Object {
+                "$": Object {
+                  "name": "colorPrimary",
+                },
+                "_": "#fff000",
+              },
+              Object {
+                "$": Object {
+                  "name": "colorPrimaryDark",
+                },
+                "_": "#000FFF",
+              },
+              Object {
+                "$": Object {
+                  "name": "navigationBarColor",
+                },
+                "_": "#ff0000",
+              },
+              Object {
+                "$": Object {
+                  "name": "activityBackground",
+                },
+                "_": "#ff0000",
+              },
+              Object {
+                "$": Object {
+                  "name": "notification_icon_color",
+                },
+                "_": "green",
+              },
+            ],
+          },
+        },
         "gradleProperties": Array [
           Object {
             "type": "comment",
@@ -384,6 +422,11 @@ Object {
           },
           Object {
             "type": "empty",
+          },
+          Object {
+            "key": "expo.jsEngine",
+            "type": "property",
+            "value": "jsc",
           },
         ],
         "manifest": Object {
@@ -654,26 +697,6 @@ Object {
                   "android:name": "com.sec.android.provider.badge.permission.WRITE",
                 },
               },
-              Object {
-                "$": Object {
-                  "android:name": "android.permission.ACCESS_NETWORK_STATE",
-                },
-              },
-              Object {
-                "$": Object {
-                  "android:name": "android.permission.SYSTEM_ALERT_WINDOW",
-                },
-              },
-              Object {
-                "$": Object {
-                  "android:name": "android.permission.WAKE_LOCK",
-                },
-              },
-              Object {
-                "$": Object {
-                  "android:name": "com.google.android.c2dm.permission.RECEIVE",
-                },
-              },
             ],
           },
         },
@@ -691,6 +714,56 @@ Object {
                   "name": "facebook_app_id",
                 },
                 "_": "1234567890",
+              },
+            ],
+          },
+        },
+        "styles": Object {
+          "resources": Object {
+            "style": Array [
+              Object {
+                "$": Object {
+                  "name": "AppTheme",
+                  "parent": "Theme.AppCompat.Light.NoActionBar",
+                },
+                "item": Array [
+                  Object {
+                    "$": Object {
+                      "name": "android:textColor",
+                    },
+                    "_": "#000000",
+                  },
+                  Object {
+                    "$": Object {
+                      "name": "colorPrimary",
+                    },
+                    "_": "@color/colorPrimary",
+                  },
+                  Object {
+                    "$": Object {
+                      "name": "colorPrimaryDark",
+                    },
+                    "_": "@color/colorPrimaryDark",
+                  },
+                  Object {
+                    "$": Object {
+                      "name": "android:navigationBarColor",
+                    },
+                    "_": "@color/navigationBarColor",
+                  },
+                  Object {
+                    "$": Object {
+                      "name": "android:windowLightNavigationBar",
+                    },
+                    "_": "true",
+                  },
+                  Object {
+                    "$": Object {
+                      "name": "android:windowBackground",
+                    },
+                    "_": "@color/activityBackground",
+                  },
+                ],
               },
             ],
           },
@@ -767,7 +840,7 @@ Object {
             },
           },
           "NSLocationWhenInUseUsageDescription": "",
-          "UILaunchStoryboardName": "LaunchScreen",
+          "UILaunchStoryboardName": "SplashScreen",
           "UIRequiredDeviceCapabilities": Array [
             "armv7",
           ],
@@ -778,7 +851,6 @@ Object {
             "UIInterfaceOrientationLandscapeLeft",
             "UIInterfaceOrientationLandscapeRight",
           ],
-          "UIUserInterfaceStyle": "Automatic",
           "UIViewControllerBasedStatusBarAppearance": false,
           "bar": Object {
             "val": Array [
@@ -986,7 +1058,7 @@ Object {
         },
       },
       "NSLocationWhenInUseUsageDescription": "",
-      "UILaunchStoryboardName": "LaunchScreen",
+      "UILaunchStoryboardName": "SplashScreen",
       "UIRequiredDeviceCapabilities": Array [
         "armv7",
       ],
@@ -997,7 +1069,6 @@ Object {
         "UIInterfaceOrientationLandscapeLeft",
         "UIInterfaceOrientationLandscapeRight",
       ],
-      "UIUserInterfaceStyle": "Automatic",
       "UIViewControllerBasedStatusBarAppearance": false,
       "bar": Object {
         "val": Array [
@@ -1042,6 +1113,9 @@ Object {
   "primaryColor": "#fff000",
   "scheme": "my-app-redirect",
   "slug": "mycoolapp",
+  "splash": Object {
+    "backgroundColor": "#ff00ff",
+  },
   "updates": Object {
     "checkAutomatically": "ON_ERROR_RECOVERY",
     "enabled": true,
@@ -1057,7 +1131,49 @@ Object {
   "_internal": Object {
     "modResults": Object {
       "android": Object {
-        "gradleProperties": Array [],
+        "colors": Object {
+          "resources": Object {
+            "color": Array [
+              Object {
+                "$": Object {
+                  "name": "colorPrimary",
+                },
+                "_": "#fff000",
+              },
+              Object {
+                "$": Object {
+                  "name": "colorPrimaryDark",
+                },
+                "_": "#000FFF",
+              },
+              Object {
+                "$": Object {
+                  "name": "navigationBarColor",
+                },
+                "_": "#ff0000",
+              },
+              Object {
+                "$": Object {
+                  "name": "activityBackground",
+                },
+                "_": "#ff0000",
+              },
+              Object {
+                "$": Object {
+                  "name": "notification_icon_color",
+                },
+                "_": "green",
+              },
+            ],
+          },
+        },
+        "gradleProperties": Array [
+          Object {
+            "key": "expo.jsEngine",
+            "type": "property",
+            "value": "jsc",
+          },
+        ],
         "manifest": Object {
           "manifest": Object {
             "$": Object {
@@ -1329,26 +1445,6 @@ Object {
                   "android:name": "com.sec.android.provider.badge.permission.WRITE",
                 },
               },
-              Object {
-                "$": Object {
-                  "android:name": "android.permission.ACCESS_NETWORK_STATE",
-                },
-              },
-              Object {
-                "$": Object {
-                  "android:name": "android.permission.SYSTEM_ALERT_WINDOW",
-                },
-              },
-              Object {
-                "$": Object {
-                  "android:name": "android.permission.WAKE_LOCK",
-                },
-              },
-              Object {
-                "$": Object {
-                  "android:name": "com.google.android.c2dm.permission.RECEIVE",
-                },
-              },
             ],
           },
         },
@@ -1366,6 +1462,50 @@ Object {
                   "name": "facebook_app_id",
                 },
                 "_": "1234567890",
+              },
+            ],
+          },
+        },
+        "styles": Object {
+          "resources": Object {
+            "style": Array [
+              Object {
+                "$": Object {
+                  "name": "AppTheme",
+                  "parent": "Theme.AppCompat.Light.NoActionBar",
+                },
+                "item": Array [
+                  Object {
+                    "$": Object {
+                      "name": "colorPrimary",
+                    },
+                    "_": "@color/colorPrimary",
+                  },
+                  Object {
+                    "$": Object {
+                      "name": "colorPrimaryDark",
+                    },
+                    "_": "@color/colorPrimaryDark",
+                  },
+                  Object {
+                    "$": Object {
+                      "name": "android:navigationBarColor",
+                    },
+                    "_": "@color/navigationBarColor",
+                  },
+                  Object {
+                    "$": Object {
+                      "name": "android:windowLightNavigationBar",
+                    },
+                    "_": "true",
+                  },
+                  Object {
+                    "$": Object {
+                      "name": "android:windowBackground",
+                    },
+                    "_": "@color/activityBackground",
+                  },
+                ],
               },
             ],
           },
@@ -1425,6 +1565,7 @@ Object {
             "fbauth2",
             "fbshareextension",
           ],
+          "UILaunchStoryboardName": "SplashScreen",
           "UIRequiresFullScreen": true,
           "UISupportedInterfaceOrientations": Array [
             "UIInterfaceOrientationPortrait",
@@ -1432,7 +1573,6 @@ Object {
             "UIInterfaceOrientationLandscapeLeft",
             "UIInterfaceOrientationLandscapeRight",
           ],
-          "UIUserInterfaceStyle": "Automatic",
           "bar": Object {
             "val": Array [
               "foo",
@@ -1622,6 +1762,7 @@ Object {
         "fbauth2",
         "fbshareextension",
       ],
+      "UILaunchStoryboardName": "SplashScreen",
       "UIRequiresFullScreen": true,
       "UISupportedInterfaceOrientations": Array [
         "UIInterfaceOrientationPortrait",
@@ -1629,7 +1770,6 @@ Object {
         "UIInterfaceOrientationLandscapeLeft",
         "UIInterfaceOrientationLandscapeRight",
       ],
-      "UIUserInterfaceStyle": "Automatic",
       "bar": Object {
         "val": Array [
           "foo",
@@ -1673,6 +1813,9 @@ Object {
   "primaryColor": "#fff000",
   "scheme": "my-app-redirect",
   "slug": "mycoolapp",
+  "splash": Object {
+    "backgroundColor": "#ff00ff",
+  },
   "updates": Object {
     "checkAutomatically": "ON_ERROR_RECOVERY",
     "enabled": true,

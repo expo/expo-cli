@@ -1,4 +1,5 @@
 import Log from '@expo/bunyan';
+import { ExpoConfig, getConfigFilePaths } from '@expo/config';
 import * as ExpoMetroConfig from '@expo/metro-config';
 import {
   createDevServerMiddleware,
@@ -9,10 +10,15 @@ import type { Server as ConnectServer, HandleFunction } from 'connect';
 import http from 'http';
 import type { IncomingMessage, ServerResponse } from 'http';
 import type Metro from 'metro';
+import path from 'path';
 import resolveFrom from 'resolve-from';
 import { parse as parseUrl } from 'url';
 
-import { buildHermesBundleAsync, shouldBuildHermesBundleAsync } from './HermesBundler';
+import {
+  buildHermesBundleAsync,
+  isEnableHermesManaged,
+  maybeInconsistentEngineAsync,
+} from './HermesBundler';
 import LogReporter from './LogReporter';
 import clientLogsMiddleware from './middleware/clientLogsMiddleware';
 import createJsInspectorMiddleware from './middleware/createJsInspectorMiddleware';
@@ -100,6 +106,7 @@ let nextBuildID = 0;
 // TODO: deprecate options.target
 export async function bundleAsync(
   projectRoot: string,
+  expoConfig: ExpoConfig,
   options: MetroDevServerOptions,
   bundles: BundleOptions[]
 ): Promise<BundleOutput[]> {
@@ -162,12 +169,32 @@ export async function bundleAsync(
     return await Promise.all(
       bundles.map(async (bundle: BundleOptions) => {
         const bundleOutput = await buildAsync(bundle);
-        const shouldBuildHermesBundle = await shouldBuildHermesBundleAsync(
-          projectRoot,
-          bundle.platform
-        );
+        const isHermesManaged = isEnableHermesManaged(expoConfig, bundle.platform);
 
-        if (shouldBuildHermesBundle) {
+        const maybeInconsistentEngine = await maybeInconsistentEngineAsync(
+          projectRoot,
+          bundle.platform,
+          isHermesManaged
+        );
+        if (maybeInconsistentEngine) {
+          const platform = bundle.platform === 'ios' ? 'iOS' : 'Android';
+          const paths = getConfigFilePaths(projectRoot);
+          const configFilePath = paths.dynamicConfigPath ?? paths.staticConfigPath ?? 'app.json';
+          const configFileName = path.basename(configFilePath);
+          throw new Error(
+            `JavaScript engine configuration is inconsistent between ${configFileName} and ${platform} native project.\n` +
+              `In ${configFileName}: Hermes is ${isHermesManaged ? 'enabled' : 'not enabled'}\n` +
+              `In ${platform} native project: Hermes is ${
+                isHermesManaged ? 'not enabled' : 'enabled'
+              }\n` +
+              `Please check the following files for inconsistencies:\n` +
+              `  - ${configFilePath}\n` +
+              `  - ${path.join(projectRoot, 'android', 'gradle.properties')}\n` +
+              `  - ${path.join(projectRoot, 'android', 'app', 'build.gradle')}\n`
+          );
+        }
+
+        if (isHermesManaged) {
           options.logger.info(
             { tag: 'expo' },
             `💿 Building Hermes bytecode for the bundle - platform[${bundle.platform}]`

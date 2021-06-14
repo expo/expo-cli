@@ -26,6 +26,10 @@ export interface ContentsJson {
   };
 }
 
+export function createContentsJsonItem(item: ContentsJsonImage): ContentsJsonImage {
+  return item;
+}
+
 /**
  * Writes the Config.json which is used to assign images to their respective platform, dpi, and idiom.
  *

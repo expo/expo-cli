@@ -1,10 +1,18 @@
+import { AndroidConfig } from '@expo/config-plugins';
 import { resolve } from 'path';
 
-import { getGoogleMobileAdsAppId, getGoogleMobileAdsAutoInit, setAdMobConfig } from '../AdMob';
-import { getMainApplicationOrThrow, readAndroidManifestAsync } from '../Manifest';
+import {
+  getGoogleMobileAdsAppId,
+  getGoogleMobileAdsAutoInit,
+  setAdMobConfig,
+} from '../withAndroidAdMob';
+const { getMainApplicationOrThrow, readAndroidManifestAsync } = AndroidConfig.Manifest;
 
-const fixturesPath = resolve(__dirname, 'fixtures');
-const sampleManifestPath = resolve(fixturesPath, 'react-native-AndroidManifest.xml');
+const sampleManifestPath = resolve(
+  __dirname,
+  '../../../__tests__/fixtures',
+  'react-native-AndroidManifest.xml'
+);
 
 describe('Android permissions', () => {
   it(`returns falsey for both if no android GoogleMobileAds config is provided`, () => {
