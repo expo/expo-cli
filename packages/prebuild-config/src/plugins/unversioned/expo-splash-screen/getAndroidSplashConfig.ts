@@ -56,7 +56,6 @@ export function getAndroidDarkSplashConfig(
   if (config.android?.splash?.dark) {
     const splash = config.android?.splash?.dark;
     const lightTheme = getAndroidSplashConfig(config);
-    // TODO: Use less images
     return {
       xxxhdpi: splash.xxxhdpi ?? splash.image ?? null,
       xxhdpi: splash.xxhdpi ?? splash.image ?? null,

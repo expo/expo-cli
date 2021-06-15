@@ -1,8 +1,14 @@
 import { AndroidConfig, ConfigPlugin, withMainActivity } from '@expo/config-plugins';
 import { mergeContents, removeContents } from '@expo/config-plugins/build/utils/generateCode';
 import { ExpoConfig } from '@expo/config-types';
+import Debug from 'debug';
 
 import { getAndroidSplashConfig } from './getAndroidSplashConfig';
+
+const debug = Debug('expo:prebuild-config:expo-splash-screen:android:mainActivity');
+
+// DO NOT CHANGE
+const SHOW_SPLASH_ID = 'expo-splash-screen-mainActivity-onCreate-show-splash';
 
 export const withAndroidSplashMainActivity: ConfigPlugin = config => {
   return withMainActivity(config, config => {
@@ -20,9 +26,20 @@ export function setSplashScreenMainActivity(
   mainActivity: string,
   language: 'java' | 'kt'
 ): string {
+  debug(`Modify with language: "${language}"`);
   const splashConfig = getAndroidSplashConfig(config);
+
   if (!splashConfig) {
-    // TODO: Remove splash screen code.
+    // Remove our generated code safely...
+    const mod = removeContents({
+      src: mainActivity,
+      tag: SHOW_SPLASH_ID,
+    });
+
+    mainActivity = mod.contents;
+    if (mod.didClear) {
+      debug('Removed SplashScreen.show()');
+    }
     return mainActivity;
   }
   // TODO: Translucent is weird
@@ -67,13 +84,10 @@ export function setSplashScreenMainActivity(
     }).contents;
   }
 
-  // DO NOT CHANGE
-  const showSplash = 'expo-splash-screen-mainActivity-onCreate-show-splash';
-
   // Remove our generated code safely...
   mainActivity = removeContents({
     src: mainActivity,
-    tag: showSplash,
+    tag: SHOW_SPLASH_ID,
   }).contents;
 
   // Remove code from `@expo/configure-splash-screen`
@@ -91,7 +105,7 @@ export function setSplashScreenMainActivity(
     anchor: /(?<=^.*super\.onCreate.*$)/m,
     offset: 1,
     comment: '//',
-    tag: showSplash,
+    tag: SHOW_SPLASH_ID,
     newSrc: `    SplashScreen.show(this, SplashScreenImageResizeMode.${resizeMode.toUpperCase()}, ReactRootView${
       isJava ? '.class' : '::class.java'
     }, ${statusBarTranslucent})${LE}`,
