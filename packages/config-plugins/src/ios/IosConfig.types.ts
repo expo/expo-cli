@@ -47,6 +47,7 @@ export type ExpoPlist = {
   EXUpdatesLaunchWaitMs?: number;
   EXUpdatesReleaseChannel?: string;
   EXUpdatesRuntimeVersion?: string;
+  EXUpdatesRequestHeaders: Record<string, string>;
   EXUpdatesSDKVersion?: string;
   EXUpdatesURL?: string;
 };
