@@ -1,9 +1,10 @@
-import { AndroidConfig } from '@expo/config-plugins';
+import { AndroidConfig, XML } from '@expo/config-plugins';
 import { vol } from 'memfs';
 
 import {
-  setSplashColorsForThemeAsync,
-  setSplashStylesForThemeAsync,
+  removeOldSplashStyleGroup,
+  setSplashColorsForTheme,
+  setSplashStylesForTheme,
 } from '../withAndroidSplashStyles';
 
 jest.mock('fs');
@@ -28,34 +29,65 @@ afterEach(async () => {
   vol.reset();
 });
 
-it(`sets colors`, async () => {
-  const colors = await setSplashColorsForThemeAsync({
-    projectRoot: '/app',
-    backgroundColor: '#ff0000',
+describe(removeOldSplashStyleGroup, () => {
+  it(`removes old splash screen style`, async () => {
+    const xml = await XML.parseXMLAsync(`<resources>
+    <style name="Theme.App.SplashScreen" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="android:windowBackground">#222222</item>
+    </style>
+</resources>`);
+    expect(removeOldSplashStyleGroup(xml as any)).toStrictEqual({
+      resources: {
+        style: [],
+      },
+    });
   });
-
-  expect(colors.resources.color?.[0]).toStrictEqual(
-    AndroidConfig.Resources.buildResourceItem({
-      name: 'splashscreen_background',
-      value: '#ff0000',
-    })
-  );
 });
 
-it(`sets styles`, async () => {
-  const styles = await setSplashStylesForThemeAsync({
-    projectRoot: '/app',
+describe(setSplashColorsForTheme, () => {
+  it(`sets colors`, () => {
+    const xml = AndroidConfig.Colors.getColorsAsObject(
+      setSplashColorsForTheme(
+        {
+          resources: {
+            color: [],
+          },
+        },
+        '#fff000'
+      )
+    );
+    expect(xml).toStrictEqual({
+      splashscreen_background: '#fff000',
+    });
   });
+  it(`removes colors`, () => {
+    const xml = AndroidConfig.Colors.getColorsAsObject(
+      setSplashColorsForTheme(
+        AndroidConfig.Colors.getObjectAsColorsXml({
+          splashscreen_background: '#fff000',
+        }),
+        null
+      )
+    );
+    expect(xml).toStrictEqual({});
+  });
+});
 
-  const parent = {
-    name: 'Theme.App.SplashScreen',
-    parent: 'AppTheme',
-  };
+describe(setSplashStylesForTheme, () => {
+  it(`sets style`, () => {
+    // empty XML
+    const xml = {
+      resources: {},
+    };
 
-  expect(AndroidConfig.Styles.getStyleParent(styles, parent).item[0]).toStrictEqual(
-    AndroidConfig.Resources.buildResourceItem({
-      name: 'android:windowBackground',
-      value: '@drawable/splashscreen',
-    })
-  );
+    expect(
+      // Extract the style
+      AndroidConfig.Styles.getStylesGroupAsObject(setSplashStylesForTheme(xml), {
+        name: 'Theme.App.SplashScreen',
+        parent: 'AppTheme',
+      })
+    ).toStrictEqual({
+      'android:windowBackground': '@drawable/splashscreen',
+    });
+  });
 });

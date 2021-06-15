@@ -85,6 +85,12 @@ Object {
       "com.sec.android.provider.badge.permission.WRITE",
     ],
     "softwareKeyboardLayoutMode": "pan",
+    "splash": Object {
+      "backgroundColor": "#ff00ff",
+      "dark": Object {
+        "backgroundColor": "#00ffff",
+      },
+    },
     "userInterfaceStyle": "light",
     "versionCode": 6,
   },
@@ -300,9 +306,27 @@ Object {
               },
               Object {
                 "$": Object {
+                  "name": "splashscreen_background",
+                },
+                "_": "#ff00ff",
+              },
+              Object {
+                "$": Object {
                   "name": "notification_icon_color",
                 },
                 "_": "green",
+              },
+            ],
+          },
+        },
+        "colorsNight": Object {
+          "resources": Object {
+            "color": Array [
+              Object {
+                "$": Object {
+                  "name": "splashscreen_background",
+                },
+                "_": "#00ffff",
               },
             ],
           },
@@ -765,6 +789,20 @@ Object {
                   },
                 ],
               },
+              Object {
+                "$": Object {
+                  "name": "Theme.App.SplashScreen",
+                  "parent": "AppTheme",
+                },
+                "item": Array [
+                  Object {
+                    "$": Object {
+                      "name": "android:windowBackground",
+                    },
+                    "_": "@drawable/splashscreen",
+                  },
+                ],
+              },
             ],
           },
         },
@@ -945,6 +983,12 @@ Object {
       "com.sec.android.provider.badge.permission.WRITE",
     ],
     "softwareKeyboardLayoutMode": "pan",
+    "splash": Object {
+      "backgroundColor": "#ff00ff",
+      "dark": Object {
+        "backgroundColor": "#00ffff",
+      },
+    },
     "userInterfaceStyle": "light",
     "versionCode": 6,
   },
@@ -1160,9 +1204,27 @@ Object {
               },
               Object {
                 "$": Object {
+                  "name": "splashscreen_background",
+                },
+                "_": "#ff00ff",
+              },
+              Object {
+                "$": Object {
                   "name": "notification_icon_color",
                 },
                 "_": "green",
+              },
+            ],
+          },
+        },
+        "colorsNight": Object {
+          "resources": Object {
+            "color": Array [
+              Object {
+                "$": Object {
+                  "name": "splashscreen_background",
+                },
+                "_": "#00ffff",
               },
             ],
           },
@@ -1507,6 +1569,20 @@ Object {
                   },
                 ],
               },
+              Object {
+                "$": Object {
+                  "name": "Theme.App.SplashScreen",
+                  "parent": "AppTheme",
+                },
+                "item": Array [
+                  Object {
+                    "$": Object {
+                      "name": "android:windowBackground",
+                    },
+                    "_": "@drawable/splashscreen",
+                  },
+                ],
+              },
             ],
           },
         },
@@ -1666,6 +1742,12 @@ Object {
       "com.sec.android.provider.badge.permission.WRITE",
     ],
     "softwareKeyboardLayoutMode": "pan",
+    "splash": Object {
+      "backgroundColor": "#ff00ff",
+      "dark": Object {
+        "backgroundColor": "#00ffff",
+      },
+    },
     "userInterfaceStyle": "light",
     "versionCode": 6,
   },

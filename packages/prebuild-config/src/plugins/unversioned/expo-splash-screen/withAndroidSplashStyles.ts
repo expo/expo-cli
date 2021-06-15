@@ -37,7 +37,7 @@ export const withAndroidSplashStyles: ConfigPlugin = config => {
 };
 
 // Remove the old style group which didn't extend the base theme properly.
-function removeOldSplashStyleGroup(styles: AndroidConfig.Resources.ResourceXML) {
+export function removeOldSplashStyleGroup(styles: AndroidConfig.Resources.ResourceXML) {
   const group = {
     name: 'Theme.App.SplashScreen',
     parent: 'Theme.AppCompat.Light.NoActionBar',
