@@ -71,7 +71,7 @@ it('exports the project for a self-hosted production deployment', async () => {
   expect(distFiles).toMatchSnapshot();
 });
 
-xit('should export hbc bundle if jsEngine is hermes', async () => {
+it('should export hbc bundle if jsEngine is hermes', async () => {
   jest.setTimeout(5 * 60e3);
   const tempDir = temporary.directory();
   try {
