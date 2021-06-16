@@ -1,8 +1,10 @@
 import { ProjectTarget } from '@expo/config';
-import { MetroDevServerOptions, runMetroDevServerAsync } from '@expo/dev-server';
+import { MessageSocket, MetroDevServerOptions, runMetroDevServerAsync } from '@expo/dev-server';
+import http from 'http';
 
 import {
   assertValidProjectRoot,
+  ExpoUpdatesManifestHandler,
   getFreePortAsync,
   ManifestHandler,
   ProjectSettings,
@@ -23,7 +25,10 @@ export type StartOptions = {
   target?: ProjectTarget;
 };
 
-export async function startDevServerAsync(projectRoot: string, startOptions: StartOptions) {
+export async function startDevServerAsync(
+  projectRoot: string,
+  startOptions: StartOptions
+): Promise<[http.Server, any, MessageSocket]> {
   assertValidProjectRoot(projectRoot);
 
   let port: number;
@@ -56,6 +61,7 @@ export async function startDevServerAsync(projectRoot: string, startOptions: Sta
 
   const { server, middleware, messageSocket } = await runMetroDevServerAsync(projectRoot, options);
   middleware.use(ManifestHandler.getManifestHandler(projectRoot));
+  middleware.use(ExpoUpdatesManifestHandler.getManifestHandler(projectRoot));
 
   // We need the manifest handler to be the first middleware to run so our
   // routes take precedence over static files. For example, the manifest is
