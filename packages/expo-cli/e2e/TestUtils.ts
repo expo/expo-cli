@@ -46,9 +46,6 @@ export const minimumNativePkgJson = {
   devDependencies: {
     '@babel/core': '^7.9.0',
   },
-  resolutions: {
-    'hermes-engine': '0.0.0',
-  },
   scripts: {
     start: 'expo start',
     android: 'expo start --android',
