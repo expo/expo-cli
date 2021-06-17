@@ -39,9 +39,9 @@ export async function tryRunAsync(args: string[], options?: SpawnOptions): Promi
 export const minimumNativePkgJson = {
   main: 'node_modules/expo/AppEntry.js',
   dependencies: {
-    expo: '~41.0.0',
+    expo: '~40.0.0',
     react: '16.13.1',
-    'react-native': 'https://github.com/expo/react-native/archive/sdk-41.0.0.tar.gz',
+    'react-native': 'https://github.com/expo/react-native/archive/sdk-40.0.0.tar.gz',
   },
   devDependencies: {
     '@babel/core': '^7.9.0',
