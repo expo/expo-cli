@@ -6,6 +6,7 @@ import { getPbxproj, isNotComment, NativeTargetSectionEntry } from './utils/Xcod
 export enum TargetType {
   APPLICATION = 'com.apple.product-type.application',
   EXTENSION = 'com.apple.product-type.app-extension',
+  STICKER_PACK_EXTENSION = 'com.apple.product-type.app-extension.messages-sticker-pack',
   OTHER = 'other',
 }
 
@@ -54,6 +55,20 @@ function isTargetOfType(target: PBXNativeTarget, targetType: TargetType): boolea
 export function getNativeTargets(project: XcodeProject): NativeTargetSectionEntry[] {
   const section = project.pbxNativeTargetSection();
   return Object.entries(section).filter(isNotComment);
+}
+
+export function findSignableTargets(project: XcodeProject): NativeTargetSectionEntry[] {
+  const targets = getNativeTargets(project);
+  const applicationTargets = targets.filter(
+    ([, target]) =>
+      isTargetOfType(target, TargetType.APPLICATION) ||
+      isTargetOfType(target, TargetType.EXTENSION) ||
+      isTargetOfType(target, TargetType.STICKER_PACK_EXTENSION)
+  );
+  if (applicationTargets.length === 0) {
+    throw new Error(`Could not find any application targets in project.pbxproj`);
+  }
+  return applicationTargets;
 }
 
 export function findFirstNativeTarget(project: XcodeProject): NativeTargetSectionEntry {
