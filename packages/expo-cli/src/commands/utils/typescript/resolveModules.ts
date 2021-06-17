@@ -1,7 +1,8 @@
 import { stat } from 'fs-extra';
-import { Glob } from 'glob';
 import * as path from 'path';
 import resolveFrom from 'resolve-from';
+
+import { everyMatchAsync, wrapGlobWithTimeout } from '../glob';
 
 async function fileExistsAsync(file: string): Promise<boolean> {
   return (await stat(file).catch(() => null))?.isFile() ?? false;
@@ -20,30 +21,23 @@ export const baseTSConfigName = 'expo/tsconfig.base';
 export async function queryFirstProjectTypeScriptFileAsync(
   projectRoot: string
 ): Promise<null | string> {
-  return new Promise<null | string>((resolve, reject) => {
-    const mg = new Glob(
-      '**/*.@(ts|tsx)',
-      {
+  const results = await wrapGlobWithTimeout(
+    () =>
+      everyMatchAsync('**/*.@(ts|tsx)', {
         cwd: projectRoot,
         ignore: [
           '**/@(Carthage|Pods|node_modules)/**',
           '**/*.d.ts',
           '@(ios|android|web|web-build|dist)/**',
         ],
-      },
-      (error, matches) => {
-        if (error) {
-          reject(error);
-        } else {
-          resolve(matches[0] ?? null);
-        }
-      }
-    );
-    mg.once('match', matched => {
-      mg.abort();
-      resolve(matched);
-    });
-  });
+      }),
+    5000
+  );
+
+  if (results === false) {
+    return null;
+  }
+  return results[0] ?? null;
 }
 
 export function resolveBaseTSConfig(projectRoot: string): string | null {
