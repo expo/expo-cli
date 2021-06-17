@@ -37,8 +37,8 @@ Array [
   "dist/assets/f6c6f6c8cb7784254ad00056f6fbd74e (34.1 kB)",
   "dist/assets/fdc01171a7a7ea76b187afcd162dee7d (3.99 kB)",
   "dist/bundles (dir)",
-  "dist/bundles/android-4108b3f49a2b86ffb0954bf4347f41c3.js (1.17 MB)",
-  "dist/bundles/ios-d772c79218ba5f7a59963af6313ea18b.js (1.16 MB)",
+  "dist/bundles/android-XXX.js (1.17 MB)",
+  "dist/bundles/ios-XXX.js (1.16 MB)",
   "dist/ios-index.json (708 B)",
 ]
 `;
@@ -49,7 +49,7 @@ Object {
     "package": "com.example.minimal",
   },
   "assetUrlOverride": "./assets",
-  "bundleUrl": "https://example.com/export-test-app/bundles/android-4108b3f49a2b86ffb0954bf4347f41c3.js",
+  "bundleUrl": Any<String>,
   "commitTime": Any<String>,
   "currentFullName": "@anonymous/export-test-app",
   "dependencies": Array [

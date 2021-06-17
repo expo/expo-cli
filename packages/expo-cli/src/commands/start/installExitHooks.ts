@@ -21,3 +21,10 @@ export function installExitHooks(projectRoot: string): void {
     });
   }
 }
+
+export function installCustomExitHook(listener: NodeJS.SignalsListener) {
+  const killSignals: ['SIGINT', 'SIGTERM'] = ['SIGINT', 'SIGTERM'];
+  for (const signal of killSignals) {
+    process.on(signal, listener);
+  }
+}
