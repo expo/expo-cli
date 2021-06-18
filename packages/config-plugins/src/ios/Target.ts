@@ -48,7 +48,7 @@ export async function findApplicationTargetWithDependenciesAsync(
   };
 }
 
-function isTargetOfType(target: PBXNativeTarget, targetType: TargetType): boolean {
+export function isTargetOfType(target: PBXNativeTarget, targetType: TargetType): boolean {
   return target.productType === targetType || target.productType === `"${targetType}"`;
 }
 

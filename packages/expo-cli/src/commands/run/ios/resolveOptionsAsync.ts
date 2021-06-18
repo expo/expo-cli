@@ -1,4 +1,5 @@
 import { IOSConfig } from '@expo/config-plugins';
+import chalk from 'chalk';
 import { sync as globSync } from 'glob';
 import * as path from 'path';
 
@@ -90,19 +91,20 @@ export async function resolveOptionsAsync(
 
   // @ts-ignore
   if (options.scheme === true) {
-    const schemes = IOSConfig.BuildScheme.getSchemesFromXcodeproj(projectRoot);
+    const schemes = IOSConfig.BuildScheme.getRunnableSchemesFromXcodeproj(projectRoot);
     if (!schemes.length) {
       throw new CommandError('No native iOS build schemes found');
     }
-    options.scheme = schemes[0];
+    options.scheme = schemes[0].name;
     if (schemes.length > 1) {
       options.scheme = await selectAsync(
         {
           message: 'Select a scheme',
           choices: schemes.map(value => {
+            const isApp = value.type === IOSConfig.Target.TargetType.APPLICATION;
             return {
-              value,
-              title: value,
+              value: value.name,
+              title: isApp ? chalk.bold(value.name) + chalk.gray(' (default)') : value.name,
             };
           }),
         },
