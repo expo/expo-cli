@@ -7,7 +7,10 @@ import xcode, { XcodeProject } from 'xcode';
 
 import { ExportedConfig, ModConfig } from '../Plugin.types';
 import { Entitlements, Paths } from '../ios';
+import { getInfoPlistPathFromPbxproj } from '../ios/InfoPlist';
 import { InfoPlist } from '../ios/IosConfig.types';
+import { fileExists } from '../utils/modules';
+import { addWarningIOS } from '../utils/warnings';
 import { ForwardedBaseModOptions, provider, withGeneratedBaseMods } from './createBaseMod';
 
 const { readFile, writeFile } = promises;
@@ -66,6 +69,18 @@ const defaultProviders = {
   // Append a rule to supply Info.plist data to mods on `mods.ios.infoPlist`
   infoPlist: provider<InfoPlist, ForwardedBaseModOptions>({
     getFilePath(config) {
+      const infoPlistPath = getInfoPlistPathFromPbxproj(config.modRequest.projectRoot);
+      if (infoPlistPath) {
+        if (fileExists(infoPlistPath)) {
+          return infoPlistPath;
+        }
+        addWarningIOS(
+          'mods.ios.infoPlist',
+          `Info.plist file linked to Xcode project does not exist: ${infoPlistPath}`
+        );
+      } else {
+        addWarningIOS('mods.ios.infoPlist', 'Failed to find Info.plist linked to Xcode project.');
+      }
       return Paths.getInfoPlistPath(config.modRequest.projectRoot);
     },
     async read(filePath, config) {
