@@ -55,5 +55,14 @@ export async function startDevServerAsync(projectRoot: string, startOptions: Sta
 
   const { server, middleware, messageSocket } = await runMetroDevServerAsync(projectRoot, options);
   middleware.use(ManifestHandler.getManifestHandler(projectRoot));
+
+  // We need the manifest handler to be the first middleware to run so our
+  // routes take precedence over static files. For example, the manifest is
+  // served from '/' and if the user has an index.html file in their project
+  // then the manifest handler will never run, the static middleware will run
+  // and serve index.html instead of the manifest.
+  // https://github.com/expo/expo/issues/13114
+  middleware.stack.unshift(middleware.stack.pop());
+
   return [server, middleware, messageSocket];
 }

@@ -1,11 +1,8 @@
 import { ExpoConfig } from '@expo/config-types';
 
 import { ConfigPlugin, Mod } from '../Plugin.types';
-import { Properties } from '../android';
-import { AndroidManifest } from '../android/Manifest';
-import { ApplicationProjectFile, GradleProjectFile } from '../android/Paths';
-import { ResourceXML } from '../android/Resources';
-import { withExtendedMod } from './core-plugins';
+import { Manifest, Paths, Properties, Resources } from '../android';
+import { withMod } from './withMod';
 
 type OptionalPromise<T> = T | Promise<T>;
 
@@ -17,7 +14,7 @@ type MutateDataAction<T> = (expo: ExpoConfig, data: T) => OptionalPromise<T>;
  * @param action
  */
 export function createAndroidManifestPlugin(
-  action: MutateDataAction<AndroidManifest>,
+  action: MutateDataAction<Manifest.AndroidManifest>,
   name: string
 ): ConfigPlugin {
   const withUnknown: ConfigPlugin = config =>
@@ -34,7 +31,7 @@ export function createAndroidManifestPlugin(
 }
 
 export function createStringsXmlPlugin(
-  action: MutateDataAction<ResourceXML>,
+  action: MutateDataAction<Resources.ResourceXML>,
   name: string
 ): ConfigPlugin {
   const withUnknown: ConfigPlugin = config =>
@@ -56,8 +53,11 @@ export function createStringsXmlPlugin(
  * @param config
  * @param action
  */
-export const withAndroidManifest: ConfigPlugin<Mod<AndroidManifest>> = (config, action) => {
-  return withExtendedMod(config, {
+export const withAndroidManifest: ConfigPlugin<Mod<Manifest.AndroidManifest>> = (
+  config,
+  action
+) => {
+  return withMod(config, {
     platform: 'android',
     mod: 'manifest',
     action,
@@ -70,10 +70,38 @@ export const withAndroidManifest: ConfigPlugin<Mod<AndroidManifest>> = (config, 
  * @param config
  * @param action
  */
-export const withStringsXml: ConfigPlugin<Mod<ResourceXML>> = (config, action) => {
-  return withExtendedMod(config, {
+export const withStringsXml: ConfigPlugin<Mod<Resources.ResourceXML>> = (config, action) => {
+  return withMod(config, {
     platform: 'android',
     mod: 'strings',
+    action,
+  });
+};
+
+/**
+ * Provides the `android/app/src/main/res/values/colors.xml` as JSON (parsed with [`xml2js`](https://www.npmjs.com/package/xml2js)).
+ *
+ * @param config
+ * @param action
+ */
+export const withAndroidColors: ConfigPlugin<Mod<Resources.ResourceXML>> = (config, action) => {
+  return withMod(config, {
+    platform: 'android',
+    mod: 'colors',
+    action,
+  });
+};
+
+/**
+ * Provides the `android/app/src/main/res/values/styles.xml` as JSON (parsed with [`xml2js`](https://www.npmjs.com/package/xml2js)).
+ *
+ * @param config
+ * @param action
+ */
+export const withAndroidStyles: ConfigPlugin<Mod<Resources.ResourceXML>> = (config, action) => {
+  return withMod(config, {
+    platform: 'android',
+    mod: 'styles',
     action,
   });
 };
@@ -84,8 +112,11 @@ export const withStringsXml: ConfigPlugin<Mod<ResourceXML>> = (config, action) =
  * @param config
  * @param action
  */
-export const withMainActivity: ConfigPlugin<Mod<ApplicationProjectFile>> = (config, action) => {
-  return withExtendedMod(config, {
+export const withMainActivity: ConfigPlugin<Mod<Paths.ApplicationProjectFile>> = (
+  config,
+  action
+) => {
+  return withMod(config, {
     platform: 'android',
     mod: 'mainActivity',
     action,
@@ -98,8 +129,11 @@ export const withMainActivity: ConfigPlugin<Mod<ApplicationProjectFile>> = (conf
  * @param config
  * @param action
  */
-export const withProjectBuildGradle: ConfigPlugin<Mod<GradleProjectFile>> = (config, action) => {
-  return withExtendedMod(config, {
+export const withProjectBuildGradle: ConfigPlugin<Mod<Paths.GradleProjectFile>> = (
+  config,
+  action
+) => {
+  return withMod(config, {
     platform: 'android',
     mod: 'projectBuildGradle',
     action,
@@ -112,8 +146,8 @@ export const withProjectBuildGradle: ConfigPlugin<Mod<GradleProjectFile>> = (con
  * @param config
  * @param action
  */
-export const withAppBuildGradle: ConfigPlugin<Mod<GradleProjectFile>> = (config, action) => {
-  return withExtendedMod(config, {
+export const withAppBuildGradle: ConfigPlugin<Mod<Paths.GradleProjectFile>> = (config, action) => {
+  return withMod(config, {
     platform: 'android',
     mod: 'appBuildGradle',
     action,
@@ -126,8 +160,8 @@ export const withAppBuildGradle: ConfigPlugin<Mod<GradleProjectFile>> = (config,
  * @param config
  * @param action
  */
-export const withSettingsGradle: ConfigPlugin<Mod<GradleProjectFile>> = (config, action) => {
-  return withExtendedMod(config, {
+export const withSettingsGradle: ConfigPlugin<Mod<Paths.GradleProjectFile>> = (config, action) => {
+  return withMod(config, {
     platform: 'android',
     mod: 'settingsGradle',
     action,
@@ -144,7 +178,7 @@ export const withGradleProperties: ConfigPlugin<Mod<Properties.PropertiesItem[]>
   config,
   action
 ) => {
-  return withExtendedMod(config, {
+  return withMod(config, {
     platform: 'android',
     mod: 'gradleProperties',
     action,

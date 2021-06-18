@@ -22,7 +22,7 @@ import {
 import { ConfigError } from './Errors';
 import { getExpoSDKVersion } from './Project';
 import { getDynamicConfig, getStaticConfig } from './getConfig';
-import { getCurrentFullName } from './getCurrentFullName';
+import { getFullName } from './getFullName';
 import { withConfigPlugins } from './plugins/withConfigPlugins';
 import { withInternal } from './plugins/withInternal';
 import { getRootPackageJsonPath } from './resolvePackageJson';
@@ -143,9 +143,11 @@ export function getConfig(projectRoot: string, options: GetConfigOptions = {}): 
         delete configWithDefaultValues.exp.android.config;
       }
 
-      // This value will be overwritten when the manifest is being served from the host (i.e. not completely accurate).
+      // These value will be overwritten when the manifest is being served from the host (i.e. not completely accurate).
       // @ts-ignore: currentFullName not on type yet.
-      configWithDefaultValues.exp.currentFullName = getCurrentFullName(configWithDefaultValues.exp);
+      configWithDefaultValues.exp.currentFullName = getFullName(configWithDefaultValues.exp);
+      // @ts-ignore: originalFullName not on type yet.
+      configWithDefaultValues.exp.originalFullName = getFullName(configWithDefaultValues.exp);
     }
 
     return configWithDefaultValues;
@@ -375,7 +377,7 @@ export async function modifyConfigAsync(
 ): Promise<{
   type: 'success' | 'warn' | 'fail';
   message?: string;
-  config: ExpoConfig | AppJSONConfig | null;
+  config: AppJSONConfig | null;
 }> {
   const config = getConfig(projectRoot, readOptions);
   if (config.dynamicConfigPath) {
@@ -402,7 +404,7 @@ export async function modifyConfigAsync(
     };
   } else if (config.staticConfigPath) {
     // Static with no dynamic config, this means we can append to the config automatically.
-    let outputConfig: ExpoConfig | AppJSONConfig;
+    let outputConfig: AppJSONConfig;
     // If the config has an expo object (app.json) then append the options to that object.
     if (config.rootConfig.expo) {
       outputConfig = {

@@ -1,6 +1,6 @@
 {
   "name": "expo-pwa",
-  "version": "0.0.74",
+  "version": "0.0.83",
   "main": "build",
   "preferGlobal": true,
   "keywords": [
@@ -27,7 +27,7 @@
     "prepare": "yarn run clean && yarn run build",
     "test": "jest",
     "lint": "eslint .",
-    "watch": "tsc --watch",
+    "watch": "tsc --watch --preserveWatchOutput",
     "build": "tsc",
     "clean": "rimraf build ./tsconfig.tsbuildinfo"
   },
@@ -35,8 +35,8 @@
     "rimraf": "^3.0.2"
   },
   "dependencies": {
-    "@expo/config": "3.3.38",
-    "@expo/image-utils": "0.3.13",
+    "@expo/config": "4.0.3",
+    "@expo/image-utils": "0.3.14",
     "chalk": "^4.0.0",
     "commander": "2.20.0",
     "update-check": "1.5.3"

@@ -27,32 +27,46 @@ async function setLastDeveloperCodeSigningIdAsync(id: string) {
  */
 export function getCodeSigningInfoForPbxproj(projectRoot: string) {
   const project = IOSConfig.XcodeUtils.getPbxproj(projectRoot);
-  const [, nativeTarget] = IOSConfig.XcodeUtils.findFirstNativeTarget(project);
+  const targets = IOSConfig.Target.findSignableTargets(project);
 
-  const developmentTeams: string[] = [];
-  const provisioningProfiles: string[] = [];
+  const signingInfo: Record<
+    string,
+    { developmentTeams: string[]; provisioningProfiles: string[] }
+  > = {};
+  for (const [nativeTargetId, nativeTarget] of targets) {
+    const developmentTeams: string[] = [];
+    const provisioningProfiles: string[] = [];
 
-  IOSConfig.XcodeUtils.getBuildConfigurationForId(project, nativeTarget.buildConfigurationList)
-    .filter(
-      ([, item]: IOSConfig.XcodeUtils.ConfigurationSectionEntry) => item.buildSettings.PRODUCT_NAME
+    IOSConfig.XcodeUtils.getBuildConfigurationsForListId(
+      project,
+      nativeTarget.buildConfigurationList
     )
-    .forEach(([, item]: IOSConfig.XcodeUtils.ConfigurationSectionEntry) => {
-      const { DEVELOPMENT_TEAM, PROVISIONING_PROFILE } = item.buildSettings;
-      if (
-        typeof DEVELOPMENT_TEAM === 'string' &&
-        // If the user selects "Team: none" in Xcode, it'll be an empty string.
-        !!DEVELOPMENT_TEAM &&
-        // xcode package sometimes reads an empty string as a quoted empty string.
-        DEVELOPMENT_TEAM !== '""'
-      ) {
-        developmentTeams.push(DEVELOPMENT_TEAM);
-      }
-      if (typeof PROVISIONING_PROFILE === 'string' && !!PROVISIONING_PROFILE) {
-        provisioningProfiles.push(PROVISIONING_PROFILE);
-      }
-    });
+      .filter(
+        ([, item]: IOSConfig.XcodeUtils.ConfigurationSectionEntry) =>
+          item.buildSettings.PRODUCT_NAME
+      )
+      .forEach(([, item]: IOSConfig.XcodeUtils.ConfigurationSectionEntry) => {
+        const { DEVELOPMENT_TEAM, PROVISIONING_PROFILE } = item.buildSettings;
+        if (
+          typeof DEVELOPMENT_TEAM === 'string' &&
+          // If the user selects "Team: none" in Xcode, it'll be an empty string.
+          !!DEVELOPMENT_TEAM &&
+          // xcode package sometimes reads an empty string as a quoted empty string.
+          DEVELOPMENT_TEAM !== '""'
+        ) {
+          developmentTeams.push(DEVELOPMENT_TEAM);
+        }
+        if (typeof PROVISIONING_PROFILE === 'string' && !!PROVISIONING_PROFILE) {
+          provisioningProfiles.push(PROVISIONING_PROFILE);
+        }
+      });
+    signingInfo[nativeTargetId] = {
+      developmentTeams,
+      provisioningProfiles,
+    };
+  }
 
-  return { developmentTeams, provisioningProfiles };
+  return signingInfo;
 }
 
 /**
@@ -67,24 +81,33 @@ function setAutoCodeSigningInfoForPbxproj(
   { appleTeamId }: { appleTeamId: string }
 ): void {
   const project = IOSConfig.XcodeUtils.getPbxproj(projectRoot);
-  const [nativeTargetId, nativeTarget] = IOSConfig.XcodeUtils.findFirstNativeTarget(project);
+  const targets = IOSConfig.Target.findSignableTargets(project);
 
-  IOSConfig.XcodeUtils.getBuildConfigurationForId(project, nativeTarget.buildConfigurationList)
-    .filter(
-      ([, item]: IOSConfig.XcodeUtils.ConfigurationSectionEntry) => item.buildSettings.PRODUCT_NAME
+  for (const [nativeTargetId, nativeTarget] of targets) {
+    IOSConfig.XcodeUtils.getBuildConfigurationsForListId(
+      project,
+      nativeTarget.buildConfigurationList
     )
-    .forEach(([, item]: IOSConfig.XcodeUtils.ConfigurationSectionEntry) => {
-      item.buildSettings.DEVELOPMENT_TEAM = appleTeamId;
-      item.buildSettings.CODE_SIGN_IDENTITY = '"Apple Development"';
-      item.buildSettings.CODE_SIGN_STYLE = 'Automatic';
-    });
+      .filter(
+        ([, item]: IOSConfig.XcodeUtils.ConfigurationSectionEntry) =>
+          item.buildSettings.PRODUCT_NAME
+      )
+      .forEach(([, item]: IOSConfig.XcodeUtils.ConfigurationSectionEntry) => {
+        item.buildSettings.DEVELOPMENT_TEAM = appleTeamId;
+        item.buildSettings.CODE_SIGN_IDENTITY = '"Apple Development"';
+        item.buildSettings.CODE_SIGN_STYLE = 'Automatic';
+      });
 
-  Object.entries(IOSConfig.XcodeUtils.getProjectSection(project))
-    .filter(IOSConfig.XcodeUtils.isNotComment)
-    .forEach(([, item]: IOSConfig.XcodeUtils.ProjectSectionEntry) => {
-      item.attributes.TargetAttributes[nativeTargetId].DevelopmentTeam = appleTeamId;
-      item.attributes.TargetAttributes[nativeTargetId].ProvisioningStyle = 'Automatic';
-    });
+    Object.entries(IOSConfig.XcodeUtils.getProjectSection(project))
+      .filter(IOSConfig.XcodeUtils.isNotComment)
+      .forEach(([, item]: IOSConfig.XcodeUtils.ProjectSectionEntry) => {
+        if (!item.attributes.TargetAttributes[nativeTargetId]) {
+          item.attributes.TargetAttributes[nativeTargetId] = {};
+        }
+        item.attributes.TargetAttributes[nativeTargetId].DevelopmentTeam = appleTeamId;
+        item.attributes.TargetAttributes[nativeTargetId].ProvisioningStyle = 'Automatic';
+      });
+  }
 
   fs.writeFileSync(project.filepath, project.writeSync());
 }
@@ -93,13 +116,24 @@ export async function ensureDeviceIsCodeSignedForDeploymentAsync(
   projectRoot: string
 ): Promise<string | null> {
   // Check if the app already has a development team defined.
-  const { developmentTeams, provisioningProfiles } = getCodeSigningInfoForPbxproj(projectRoot);
-  if (developmentTeams.length) {
-    Log.log(chalk.dim`\u203A Auto signing app using team: ${developmentTeams[0]}`);
+  const signingInfo = getCodeSigningInfoForPbxproj(projectRoot);
+
+  const allTargetsHaveTeams = Object.values(signingInfo).reduce((prev, curr) => {
+    return prev && !!curr.developmentTeams.length;
+  }, true);
+
+  if (allTargetsHaveTeams) {
+    const teamList = Object.values(signingInfo).reduce<string[]>((prev, curr) => {
+      return prev.concat([curr.developmentTeams[0]]);
+    }, []);
+    Log.log(chalk.dim`\u203A Auto signing app using team(s): ${teamList.join(', ')}`);
     return null;
   }
 
-  if (provisioningProfiles.length) {
+  const allTargetsHaveProfiles = Object.values(signingInfo).reduce((prev, curr) => {
+    return prev && !!curr.provisioningProfiles.length;
+  }, true);
+  if (allTargetsHaveProfiles) {
     // this indicates that the user has manual code signing setup (possibly for production).
     return null;
   }

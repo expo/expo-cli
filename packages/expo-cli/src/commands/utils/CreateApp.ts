@@ -190,9 +190,7 @@ export async function installCocoaPodsAsync(projectRoot: string) {
     } catch (e) {
       step.stopAndPersist({
         symbol: '⚠️ ',
-        text: Log.chalk.red(
-          'Unable to install the CocoaPods CLI. Continuing with project sync, you can install CocoaPods CLI afterwards.'
-        ),
+        text: Log.chalk.red('Unable to install the CocoaPods CLI.'),
       });
       if (e instanceof PackageManager.CocoaPodsError) {
         Log.log(e.message);
@@ -212,9 +210,7 @@ export async function installCocoaPodsAsync(projectRoot: string) {
   } catch (e) {
     step.stopAndPersist({
       symbol: '⚠️ ',
-      text: Log.chalk.red(
-        'Something went wrong running `pod install` in the `ios` directory. Continuing with project sync, you can debug this afterwards.'
-      ),
+      text: Log.chalk.red('Something went wrong running `pod install` in the `ios` directory.'),
     });
     if (e instanceof PackageManager.CocoaPodsError) {
       Log.log(e.message);

@@ -32,7 +32,7 @@ export function validateOptions(options: any) {
     expIds: joi.array(),
     type: joi.any().valid('archive', 'simulator', 'client', 'app-bundle', 'apk'),
     releaseChannel: joi.string().regex(/[a-z\d][a-z\d._-]*/),
-    bundleIdentifier: joi.string().regex(/^[a-zA-Z][a-zA-Z0-9\-.]+$/),
+    bundleIdentifier: joi.string().regex(/^[a-zA-Z0-9-.]+$/),
     publicUrl: joi.string(),
     sdkVersion: joi.string().strict(),
   });

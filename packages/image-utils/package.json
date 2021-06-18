@@ -1,10 +1,10 @@
 {
   "name": "@expo/image-utils",
-  "version": "0.3.13",
+  "version": "0.3.14",
   "description": "A package used by Expo CLI for processing images",
   "main": "build/index.js",
   "scripts": {
-    "watch": "tsc --watch",
+    "watch": "tsc --watch --preserveWatchOutput",
     "build": "tsc",
     "test": "jest",
     "prepare": "yarn run clean && yarn build",

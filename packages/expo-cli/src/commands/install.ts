@@ -1,5 +1,4 @@
 import { getConfig } from '@expo/config';
-import JsonFile from '@expo/json-file';
 import * as PackageManager from '@expo/package-manager';
 import { Command } from 'commander';
 import npmPackageArg from 'npm-package-arg';
@@ -9,6 +8,8 @@ import { Versions } from 'xdl';
 import CommandError, { SilentError } from '../CommandError';
 import Log from '../log';
 import { findProjectRootAsync } from './utils/ProjectUtils';
+import { autoAddConfigPluginsAsync } from './utils/autoAddConfigPluginsAsync';
+import { getBundledNativeModulesAsync } from './utils/bundledNativeModules';
 
 async function resolveExpoProjectRootAsync() {
   try {
@@ -81,23 +82,7 @@ async function installAsync(packages: string[], options: PackageManager.CreateFo
     await packageManager.installAsync();
   }
 
-  const bundledNativeModulesPath = resolveFrom.silent(
-    projectRoot,
-    'expo/bundledNativeModules.json'
-  );
-
-  if (!bundledNativeModulesPath) {
-    Log.addNewLineIfNone();
-    throw new CommandError(
-      `The dependency map ${Log.chalk.bold(
-        `expo/bundledNativeModules.json`
-      )} cannot be found, please ensure you have the package "${Log.chalk
-        .bold`expo`}" installed in your project.\n`
-    );
-  }
-
-  const bundledNativeModules = await JsonFile.readAsync(bundledNativeModulesPath);
-
+  const bundledNativeModules = await getBundledNativeModulesAsync(projectRoot, exp.sdkVersion);
   const nativeModules = [];
   const others = [];
   const versionedPackages = packages.map(arg => {
@@ -128,6 +113,13 @@ async function installAsync(packages: string[], options: PackageManager.CreateFo
   }
   Log.log(`Installing ${messages.join(' and ')} using ${packageManager.name}.`);
   await packageManager.addAsync(...versionedPackages);
+
+  // Only auto add plugins if the plugins array is defined or if the project is using SDK +42.
+  await autoAddConfigPluginsAsync(
+    projectRoot,
+    exp,
+    versionedPackages.map(pkg => pkg.split('@')[0]).filter(Boolean)
+  );
 }
 
 export default function install(program: Command) {

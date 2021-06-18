@@ -24,8 +24,10 @@ describe(getCodeSigningInfoForPbxproj, () => {
     );
 
     expect(getCodeSigningInfoForPbxproj(projectRoot)).toStrictEqual({
-      developmentTeams: [],
-      provisioningProfiles: [],
+      '13B07F861A680F5B00A75B9A': {
+        developmentTeams: [],
+        provisioningProfiles: [],
+      },
     });
   });
   it(`returns the existing code signing info`, () => {
@@ -40,8 +42,10 @@ describe(getCodeSigningInfoForPbxproj, () => {
     );
 
     expect(getCodeSigningInfoForPbxproj(projectRoot)).toStrictEqual({
-      developmentTeams: ['QQ57RJ5UTD', 'QQ57RJ5UTD'],
-      provisioningProfiles: [],
+      '13B07F861A680F5B00A75B9A': {
+        developmentTeams: ['QQ57RJ5UTD', 'QQ57RJ5UTD'],
+        provisioningProfiles: [],
+      },
     });
   });
 });

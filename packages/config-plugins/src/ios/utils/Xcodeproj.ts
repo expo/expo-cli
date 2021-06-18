@@ -1,6 +1,6 @@
 import { ExpoConfig } from '@expo/config-types';
 import assert from 'assert';
-import * as path from 'path';
+import path from 'path';
 import xcode, {
   PBXFile,
   PBXGroup,
@@ -79,16 +79,19 @@ export function addResourceFileToGroup({
   // Should add to `PBXBuildFile Section`
   isBuildFile,
   project,
+  verbose,
 }: {
   filepath: string;
   groupName: string;
   isBuildFile?: boolean;
   project: XcodeProject;
+  verbose?: boolean;
 }): XcodeProject {
   return addFileToGroupAndLink({
     filepath,
     groupName,
     project,
+    verbose,
     addFileToProject({ project, file }) {
       project.addToPbxFileReferenceSection(file);
       if (isBuildFile) {
@@ -107,15 +110,18 @@ export function addBuildSourceFileToGroup({
   filepath,
   groupName,
   project,
+  verbose,
 }: {
   filepath: string;
   groupName: string;
   project: XcodeProject;
+  verbose?: boolean;
 }): XcodeProject {
   return addFileToGroupAndLink({
     filepath,
     groupName,
     project,
+    verbose,
     addFileToProject({ project, file }) {
       project.addToPbxFileReferenceSection(file);
       project.addToPbxBuildFileSection(file);
@@ -131,11 +137,13 @@ export function addFileToGroupAndLink({
   filepath,
   groupName,
   project,
+  verbose,
   addFileToProject,
 }: {
   filepath: string;
   groupName: string;
   project: XcodeProject;
+  verbose?: boolean;
   addFileToProject: (props: { file: PBXFile; project: XcodeProject }) => void;
 }): XcodeProject {
   const group = pbxGroupByPathOrAssert(project, groupName);
@@ -143,12 +151,14 @@ export function addFileToGroupAndLink({
   const file = createProjectFileForGroup({ filepath, group });
 
   if (!file) {
-    // This can happen when a file like the GoogleService-Info.plist needs to be added and the eject command is run twice.
-    // Not much we can do here since it might be a conflicting file.
-    addWarningIOS(
-      'ios-xcode-project',
-      `Skipped adding duplicate file "${filepath}" to PBXGroup named "${groupName}"`
-    );
+    if (verbose) {
+      // This can happen when a file like the GoogleService-Info.plist needs to be added and the eject command is run twice.
+      // Not much we can do here since it might be a conflicting file.
+      addWarningIOS(
+        'ios-xcode-project',
+        `Skipped adding duplicate file "${filepath}" to PBXGroup named "${groupName}"`
+      );
+    }
     return project;
   }
 
@@ -314,34 +324,12 @@ export function getProjectSection(project: XcodeProject) {
   return project.pbxProjectSection();
 }
 
-export function getNativeTargets(project: XcodeProject): NativeTargetSectionEntry[] {
-  const section = project.pbxNativeTargetSection();
-  return Object.entries(section).filter(isNotComment);
-}
-
-export function findFirstNativeTarget(project: XcodeProject): NativeTargetSectionEntry {
-  const { targets } = Object.values(getProjectSection(project))[0];
-  const target = targets[0].value;
-  const nativeTargets = getNativeTargets(project);
-  return nativeTargets.find(([key]) => key === target) as NativeTargetSectionEntry;
-}
-
-export function findNativeTargetByName(
-  project: XcodeProject,
-  targetName: string
-): NativeTargetSectionEntry {
-  const nativeTargets = getNativeTargets(project);
-  return nativeTargets.find(
-    ([, i]) => i.name === targetName || i.name === `"${targetName}"`
-  ) as NativeTargetSectionEntry;
-}
-
 export function getXCConfigurationListEntries(project: XcodeProject): ConfigurationListEntry[] {
   const lists = project.pbxXCConfigurationList();
   return Object.entries(lists).filter(isNotComment);
 }
 
-export function getBuildConfigurationForId(
+export function getBuildConfigurationsForListId(
   project: XcodeProject,
   configurationListId: string
 ): ConfigurationSectionEntry[] {
@@ -355,8 +343,26 @@ export function getBuildConfigurationForId(
   return Object.entries(project.pbxXCBuildConfigurationSection())
     .filter(isNotComment)
     .filter(isBuildConfig)
-    .filter(isNotTestHost)
     .filter(([key]: ConfigurationSectionEntry) => buildConfigurations.includes(key));
+}
+
+export function getBuildConfigurationForListIdAndName(
+  project: XcodeProject,
+  {
+    configurationListId,
+    buildConfiguration,
+  }: { configurationListId: string; buildConfiguration: string }
+): ConfigurationSectionEntry {
+  const xcBuildConfigurationEntry = getBuildConfigurationsForListId(
+    project,
+    configurationListId
+  ).find(i => i[1].name === buildConfiguration);
+  if (!xcBuildConfigurationEntry) {
+    throw new Error(
+      `Build configuration '${buildConfiguration}' does not exist in list with id '${configurationListId}'`
+    );
+  }
+  return xcBuildConfigurationEntry;
 }
 
 export function isBuildConfig([, sectionItem]: ConfigurationSectionEntry): boolean {

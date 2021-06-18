@@ -2,36 +2,12 @@ import { getPackageJson, PackageJSONConfig } from '@expo/config';
 import JsonFile from '@expo/json-file';
 import chalk from 'chalk';
 import fs from 'fs-extra';
-import { safeLoad } from 'js-yaml';
 import * as path from 'path';
 
+import { AbortCommandError } from '../../../CommandError';
 import Log from '../../../log';
 import { hashForDependencyMap } from '../../eject/updatePackageJson';
 import { installCocoaPodsAsync } from '../../utils/CreateApp';
-
-const EXTERNAL_SOURCES_KEY = 'EXTERNAL SOURCES';
-
-export function getDependenciesFromPodfileLock(podfileLockPath: string) {
-  Log.debug(`Reading ${podfileLockPath}`);
-  let fileContent;
-  try {
-    fileContent = fs.readFileSync(podfileLockPath, 'utf8');
-  } catch (err) {
-    Log.error(
-      `Could not find "Podfile.lock" at ${chalk.bold(podfileLockPath)}. Did you run "${chalk.bold(
-        'npx pod-install'
-      )}"?`
-    );
-    return {};
-  }
-
-  // Previous portions of the lock file could be invalid yaml.
-  // Only parse parts that are valid
-  const tail = fileContent.split(EXTERNAL_SOURCES_KEY).slice(1);
-  const checksumTail = EXTERNAL_SOURCES_KEY + tail;
-
-  return safeLoad(checksumTail)[EXTERNAL_SOURCES_KEY] || {};
-}
 
 function getTempPrebuildFolder(projectRoot: string) {
   return path.join(projectRoot, '.expo', 'prebuild');
@@ -87,6 +63,11 @@ function isLockfileCreated(projectRoot: string): boolean {
   return fs.existsSync(podfileLockPath);
 }
 
+function isPodFolderCreated(projectRoot: string): boolean {
+  const podFolderPath = path.join(projectRoot, 'ios', 'Pods');
+  return fs.existsSync(podFolderPath);
+}
+
 // TODO: Same process but with app.config changes + default plugins.
 // This will ensure the user is prompted for extra setup.
 export default async function maybePromptToSyncPodsAsync(projectRoot: string) {
@@ -94,8 +75,10 @@ export default async function maybePromptToSyncPodsAsync(projectRoot: string) {
     // Project does not use CocoaPods
     return;
   }
-  if (!isLockfileCreated(projectRoot)) {
-    await installCocoaPodsAsync(projectRoot);
+  if (!isLockfileCreated(projectRoot) || !isPodFolderCreated(projectRoot)) {
+    if (!(await installCocoaPodsAsync(projectRoot))) {
+      throw new AbortCommandError();
+    }
     return;
   }
 
@@ -117,7 +100,9 @@ async function promptToInstallPodsAsync(projectRoot: string, missingPods?: strin
   }
 
   try {
-    await installCocoaPodsAsync(projectRoot);
+    if (!(await installCocoaPodsAsync(projectRoot))) {
+      throw new AbortCommandError();
+    }
   } catch (error) {
     fs.removeSync(path.join(getTempPrebuildFolder(projectRoot), 'cached-packages.json'));
     throw error;

@@ -119,8 +119,15 @@ function getPlatformFromRequest(headers: http.IncomingHttpHeaders): string {
 export function getManifestHandler(projectRoot: string) {
   return async (
     req: express.Request | http.IncomingMessage,
-    res: express.Response | http.ServerResponse
+    res: express.Response | http.ServerResponse,
+    next: (err?: Error) => void
   ) => {
+    // Only support `/`, `/manifest`, `/index.exp` for the manifest middleware.
+    if (!req.url || !['/', '/manifest', '/index.exp'].includes(req.url)) {
+      next();
+      return;
+    }
+
     try {
       // We intentionally don't `await`. We want to continue trying even
       // if there is a potential error in the package.json and don't want to slow

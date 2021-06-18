@@ -33,6 +33,7 @@ import {
 } from 'xdl';
 
 import { AbortCommandError, SilentError } from './CommandError';
+import StatusEventEmitter from './StatusEventEmitter';
 import { loginOrRegisterAsync } from './accounts';
 import { registerCommands } from './commands';
 import { learnMore } from './commands/utils/TerminalLink';
@@ -351,6 +352,7 @@ Command.prototype.asyncAction = function (asyncFn: Action) {
       // After a command, flush the analytics queue so the program will not have any active timers
       // This allows node js to exit immediately
       Analytics.flush();
+      UnifiedAnalytics.flush();
     } catch (err) {
       // TODO: Find better ways to consolidate error messages
       if (err instanceof AbortCommandError || err instanceof SilentError) {
@@ -643,13 +645,9 @@ Command.prototype.asyncActionProjectDir = function (
           if (err) {
             Log.log(chalk.red('Failed building JavaScript bundle.'));
           } else {
-            Log.log(
-              chalk.green(
-                `Finished building JavaScript bundle in ${
-                  endTime.getTime() - startTime.getTime()
-                }ms.`
-              )
-            );
+            const totalBuildTimeMs = endTime.getTime() - startTime.getTime();
+            Log.log(chalk.green(`Finished building JavaScript bundle in ${totalBuildTimeMs}ms.`));
+            StatusEventEmitter.emit('bundleBuildFinish', { totalBuildTimeMs });
           }
         }
       },
@@ -670,6 +668,10 @@ Command.prototype.asyncActionProjectDir = function (
         write: (chunk: LogRecord) => {
           if (chunk.tag === 'device') {
             logWithLevel(chunk);
+            StatusEventEmitter.emit('deviceLogReceive', {
+              deviceId: chunk.deviceId,
+              deviceName: chunk.deviceName,
+            });
           }
         },
       },
@@ -708,13 +710,45 @@ Command.prototype.asyncActionProjectDir = function (
   });
 };
 
-function runAsync(programName: string) {
-  try {
-    Analytics.initializeClient('vGu92cdmVaggGA26s3lBX6Y5fILm8SQ7', packageJSON.version);
-    UnifiedAnalytics.initializeClient('u4e9dmCiNpwIZTXuyZPOJE7KjCMowdx5', packageJSON.version);
+export async function bootstrapAnalyticsAsync(): Promise<void> {
+  Analytics.initializeClient('vGu92cdmVaggGA26s3lBX6Y5fILm8SQ7', packageJSON.version);
+  UnifiedAnalytics.initializeClient('u4e9dmCiNpwIZTXuyZPOJE7KjCMowdx5', packageJSON.version);
 
+  const userData = await profileMethod(
+    UserManager.getCachedUserDataAsync,
+    'getCachedUserDataAsync'
+  )();
+
+  if (!userData?.userId) return;
+
+  UnifiedAnalytics.identifyUser(userData.userId, {
+    userId: userData.userId,
+    currentConnection: userData?.currentConnection,
+    username: userData?.username,
+    userType: '', // not available without hitting api
+  });
+}
+
+export function trackUsage(commands: Command[] = []) {
+  const input = process.argv[2];
+  const ExpoCommand = (cmd: Command): boolean =>
+    (cmd._name === input || cmd._alias === input) && input !== undefined;
+  const subCommand = commands.find(ExpoCommand)?._name;
+
+  if (!subCommand) return; // only track valid expo commands
+
+  UnifiedAnalytics.logEvent('action', {
+    action: `expo ${subCommand}`,
+    source: 'expo cli',
+    source_version: UnifiedAnalytics.version,
+  });
+}
+
+async function runAsync(programName: string) {
+  try {
     _registerLogs();
 
+    await bootstrapAnalyticsAsync();
     UserManager.setInteractiveAuthenticationCallback(loginOrRegisterAsync);
 
     if (process.env.SERVER_URL) {
@@ -740,6 +774,8 @@ function runAsync(programName: string) {
 
     // Load each module found in ./commands by 'registering' it with our commander instance
     profileMethod(registerCommands)(program);
+
+    trackUsage(program.commands); // must be after register commands
 
     program.on('command:detach', () => {
       Log.warn('To eject your project to ExpoKit (previously "detach"), use `expo eject`.');

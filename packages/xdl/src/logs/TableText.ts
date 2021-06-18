@@ -3,7 +3,7 @@ import prettyBytes from 'pretty-bytes';
 import stripAnsi from 'strip-ansi';
 import table from 'text-table';
 
-export function createFilesTable(files: string[][]): string {
+export function createFilesTable(files: [string, string | Uint8Array][]): string {
   const tableData = files.map((item, index) => {
     const fileBranch = index === 0 ? '┌' : index === files.length - 1 ? '└' : '├';
 

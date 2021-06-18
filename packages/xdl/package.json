@@ -1,6 +1,6 @@
 {
   "name": "xdl",
-  "version": "59.0.34",
+  "version": "59.0.43",
   "description": "The Expo Development Library",
   "main": "build/index.js",
   "files": [
@@ -16,7 +16,7 @@
     "prepare": "yarn run clean && yarn run build",
     "prepack": "node scripts/updateCaches.js",
     "clean": "rimraf build ./tsconfig.tsbuildinfo",
-    "watch": "tsc --watch",
+    "watch": "tsc --watch --preserveWatchOutput",
     "test": "jest",
     "integration-tests": "jest --config jest/integration-test-config.js"
   },
@@ -32,17 +32,17 @@
   "homepage": "https://github.com/expo/expo-cli/tree/master/packages/xdl#readme",
   "dependencies": {
     "@expo/bunyan": "4.0.0",
-    "@expo/config": "3.3.38",
-    "@expo/config-plugins": "1.0.28",
-    "@expo/dev-server": "0.1.64",
+    "@expo/config": "4.0.3",
+    "@expo/config-plugins": "2.0.3",
+    "@expo/dev-server": "0.1.73",
     "@expo/devcert": "^1.0.0",
-    "@expo/json-file": "8.2.29",
-    "@expo/osascript": "2.0.26",
-    "@expo/package-manager": "0.0.41",
-    "@expo/plist": "0.0.12",
-    "@expo/schemer": "1.3.28",
+    "@expo/json-file": "8.2.30",
+    "@expo/osascript": "2.0.28",
+    "@expo/package-manager": "0.0.43",
+    "@expo/plist": "0.0.13",
+    "@expo/schemer": "1.3.29",
     "@expo/spawn-async": "1.5.0",
-    "@expo/webpack-config": "0.12.68",
+    "@expo/webpack-config": "0.12.77",
     "@hapi/joi": "^17.1.1",
     "analytics-node": "3.5.0",
     "axios": "0.21.1",
@@ -127,6 +127,5 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "gitHead": "613642fe06827cc231405784b099cf71c29072df"
+  }
 }

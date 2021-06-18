@@ -250,11 +250,26 @@ export class CocoaPodsPackageManager implements PackageManager {
           error.message = `${reason}. ${solution}`;
           throw new CocoaPodsError('Command `pod repo update` failed.', 'COMMAND_FAILED', error);
         } else {
-          const stderr = error.stderr.trim();
-          if (error.message && stderr) {
-            error.message += '\n' + stderr;
+          let stderr = error.stderr.trim();
+
+          // CocoaPods CLI prints the useful error to stdout...
+          const usefulError = error.stdout.match(/\[!\]\s((?:.|\n)*)/)?.[1];
+
+          // If there is a useful error message then prune the less useful info.
+          if (usefulError) {
+            // Delete unhelpful CocoaPods CLI error message.
+            if (error.message.match(/pod exited with non-zero code: 1/)) {
+              error.message = null;
+            }
+            // Remove `<PBXResourcesBuildPhase UUID=`13B07F8E1A680F5B00A75B9A`>` type errors when useful messages exist.
+            if (stderr.match(/PBXResourcesBuildPhase/)) {
+              stderr = null;
+            }
           }
+
+          error.message = [usefulError, error.message, stderr].filter(Boolean).join('\n');
         }
+
         throw new CocoaPodsError('Command `pod install` failed.', 'COMMAND_FAILED', error);
       }
     }

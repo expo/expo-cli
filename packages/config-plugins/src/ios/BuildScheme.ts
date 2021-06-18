@@ -1,5 +1,3 @@
-import path from 'path';
-
 import { readXMLAsync } from '../utils/XML';
 import { findSchemeNames, findSchemePaths } from './Paths';
 
@@ -9,6 +7,11 @@ interface SchemeXML {
       BuildActionEntries?: {
         BuildActionEntry?: BuildActionEntryType[];
       }[];
+    }[];
+    ArchiveAction?: {
+      $?: {
+        buildConfiguration?: string;
+      };
     }[];
   };
 }
@@ -26,20 +29,27 @@ export function getSchemesFromXcodeproj(projectRoot: string): string[] {
   return findSchemeNames(projectRoot);
 }
 
-export async function getApplicationTargetForSchemeAsync(
+async function readSchemeAsync(
+  projectRoot: string,
+  scheme: string
+): Promise<SchemeXML | undefined> {
+  const allSchemePaths = findSchemePaths(projectRoot);
+  const re = new RegExp(`/${scheme}.xcscheme`, 'i');
+  const schemePath = allSchemePaths.find(i => re.exec(i));
+  if (schemePath) {
+    return ((await readXMLAsync({ path: schemePath })) as unknown) as SchemeXML | undefined;
+  } else {
+    throw new Error(`scheme '${scheme}' does not exist, make sure it's marked as shared`);
+  }
+}
+
+export async function getApplicationTargetNameForSchemeAsync(
   projectRoot: string,
   scheme: string
 ): Promise<string> {
-  const allSchemePaths = findSchemePaths(projectRoot);
-  const re = new RegExp(`/${scheme}.xcscheme`);
-  const schemePath = allSchemePaths.find(i => re.exec(i));
-  if (!schemePath) {
-    throw new Error(`scheme '${scheme}' does not exist`);
-  }
-
-  const schemeXML = ((await readXMLAsync({ path: schemePath })) as unknown) as SchemeXML;
+  const schemeXML = await readSchemeAsync(projectRoot, scheme);
   const buildActionEntry =
-    schemeXML.Scheme?.BuildAction?.[0]?.BuildActionEntries?.[0]?.BuildActionEntry;
+    schemeXML?.Scheme?.BuildAction?.[0]?.BuildActionEntries?.[0]?.BuildActionEntry;
   const targetName =
     buildActionEntry?.length === 1
       ? getBlueprintName(buildActionEntry[0])
@@ -49,10 +59,21 @@ export async function getApplicationTargetForSchemeAsync(
           })
         );
   if (!targetName) {
-    const schemeRelativePath = path.relative(projectRoot, schemePath);
-    throw new Error(`${schemeRelativePath} seems to be corrupted`);
+    throw new Error(`${scheme}.xcscheme seems to be corrupted`);
   }
   return targetName;
+}
+
+export async function getArchiveBuildConfigurationForSchemeAsync(
+  projectRoot: string,
+  scheme: string
+): Promise<string> {
+  const schemeXML = await readSchemeAsync(projectRoot, scheme);
+  const buildConfiguration = schemeXML?.Scheme?.ArchiveAction?.[0]?.['$']?.buildConfiguration;
+  if (!buildConfiguration) {
+    throw new Error(`${scheme}.xcscheme seems to be corrupted`);
+  }
+  return buildConfiguration;
 }
 
 function getBlueprintName(entry?: BuildActionEntryType): string | undefined {

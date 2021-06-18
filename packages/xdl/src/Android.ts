@@ -323,6 +323,7 @@ export async function getAdbFileOutputAsync(args: string[], encoding?: 'latin1')
   try {
     return await execFileSync(adb, args, {
       encoding,
+      stdio: 'pipe',
     });
   } catch (e) {
     let errorMessage = (e.stderr || e.stdout || e.message).trim();
@@ -495,7 +496,7 @@ export async function upgradeExpoAsync(options?: {
     await uninstallExpoAsync(device);
     await installExpoAsync({ device, url, version });
     if (_lastUrl) {
-      Logger.global.info(`Opening ${_lastUrl} in Expo.`);
+      Logger.global.info(`\u203A Opening ${_lastUrl} in Expo.`);
       await getAdbOutputAsync([
         'shell',
         'am',
@@ -528,20 +529,23 @@ async function _openUrlAsync({
   // launch the project!
   // https://github.com/expo/expo/issues/7772
   // adb shell monkey -p host.exp.exponent -c android.intent.category.LAUNCHER 1
-  const openClient = await getAdbOutputAsync(
-    adbPidArgs(
-      pid,
-      'shell',
-      'monkey',
-      '-p',
-      applicationId,
-      '-c',
-      'android.intent.category.LAUNCHER',
-      '1'
-    )
-  );
-  if (openClient.includes(CANT_START_ACTIVITY_ERROR)) {
-    throw new Error(openClient.substring(openClient.indexOf('Error: ')));
+  // Note: this is not needed in Expo Development Client, it only applies to Expo Go
+  if (applicationId === 'host.exp.exponent') {
+    const openClient = await getAdbOutputAsync(
+      adbPidArgs(
+        pid,
+        'shell',
+        'monkey',
+        '-p',
+        applicationId,
+        '-c',
+        'android.intent.category.LAUNCHER',
+        '1'
+      )
+    );
+    if (openClient.includes(CANT_START_ACTIVITY_ERROR)) {
+      throw new Error(openClient.substring(openClient.indexOf('Error: ')));
+    }
   }
 
   const openProject = await getAdbOutputAsync(
@@ -655,6 +659,15 @@ function logUnauthorized(device: Device) {
 // This can prevent annoying interactions when they don't want to upgrade for whatever reason.
 const hasPromptedToUpgrade: Record<string, boolean> = {};
 
+async function isManagedProjectAsync(projectRoot: string) {
+  try {
+    await AndroidConfig.Paths.getProjectPathOrThrowAsync(projectRoot);
+    return false;
+  } catch {
+    return true;
+  }
+}
+
 async function openUrlAsync({
   url,
   device,
@@ -678,6 +691,10 @@ async function openUrlAsync({
       return;
     }
 
+    Logger.global.info(
+      `\u203A Opening ${chalk.underline(url)} on ${chalk.bold(bootedDevice.name)}`
+    );
+
     await activateEmulatorWindowAsync(bootedDevice);
 
     device = bootedDevice;
@@ -685,16 +702,26 @@ async function openUrlAsync({
     let installedExpo = false;
     let clientApplicationId = 'host.exp.exponent';
     if (devClient) {
-      const applicationId = await AndroidConfig.Package.getApplicationIdAsync(projectRoot);
-      if (!applicationId) {
-        // TODO(ville): possibly need to compare Gradle project with app.json/config.ts
-        // and show a helpful error message, if there's a mismatch.
-        throw new Error(
-          `Could not find applicationId in ${AndroidConfig.Paths.getAppBuildGradle(projectRoot)}`
-        );
+      let applicationId;
+      const isManaged = await isManagedProjectAsync(projectRoot);
+      if (isManaged) {
+        applicationId = exp?.android?.package;
+        if (!applicationId) {
+          throw new Error(
+            `Could not find property android.package in app.config.js/app.json. This setting is required to launch the app.`
+          );
+        }
       } else {
-        clientApplicationId = applicationId;
+        applicationId = await AndroidConfig.Package.getApplicationIdAsync(projectRoot);
+        if (!applicationId) {
+          throw new Error(
+            `Could not find applicationId in ${AndroidConfig.Paths.getAppBuildGradleFilePath(
+              projectRoot
+            )}`
+          );
+        }
       }
+      clientApplicationId = applicationId;
       await ensureDevClientInstalledAsync(device, clientApplicationId);
     } else if (!isDetached) {
       let shouldInstall = !(await _isExpoInstalledAsync(device));
@@ -725,8 +752,6 @@ async function openUrlAsync({
       _lastUrl = url;
       // _checkExpoUpToDateAsync(); // let this run in background
     }
-
-    Logger.global.info(`Opening ${chalk.underline(url)} on ${chalk.bold(device.name)}`);
 
     try {
       await _openUrlAsync({ pid: device.pid!, url, applicationId: clientApplicationId });
@@ -775,16 +800,18 @@ export async function openProjectAsync({
   shouldPrompt,
   devClient = false,
   device,
+  scheme,
 }: {
   projectRoot: string;
   shouldPrompt?: boolean;
   devClient?: boolean;
   device?: Device;
+  scheme?: string;
 }): Promise<{ success: true; url: string } | { success: false; error: string }> {
   try {
     await startAdbReverseAsync(projectRoot);
 
-    const projectUrl = await UrlUtils.constructDeepLinkAsync(projectRoot);
+    const projectUrl = await UrlUtils.constructDeepLinkAsync(projectRoot, { scheme });
     const { exp } = getConfig(projectRoot, {
       skipSDKVersionRequirement: true,
     });

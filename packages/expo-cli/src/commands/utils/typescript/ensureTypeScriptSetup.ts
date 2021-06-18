@@ -110,7 +110,11 @@ async function ensureRequiredDependenciesAsync(
   if (!skipPrompt) {
     if (
       await confirmAsync({
-        message: title + ` Would you like to install ${chalk.cyan(readableMissingPackages)}?`,
+        message: wrapAnsi(
+          title + ` Would you like to install ${chalk.cyan(readableMissingPackages)}?`,
+          // This message is a bit too long, so wrap it to fit smaller terminals
+          process.stdout.columns || 80
+        ),
         initial: true,
       })
     ) {

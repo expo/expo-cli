@@ -173,7 +173,6 @@ export function setFacebookConfig(config: ExpoConfigFacebook, androidManifest: A
   const autoLogAppEvents = getFacebookAutoLogAppEvents(config);
   const advertiserIdCollection = getFacebookAdvertiserIDCollection(config);
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   let mainApplication = getMainApplicationOrThrow(androidManifest);
 
   mainApplication = ensureFacebookActivity({ scheme, mainApplication });
@@ -215,12 +214,14 @@ export function setFacebookConfig(config: ExpoConfigFacebook, androidManifest: A
     );
   }
   if (advertiserIdCollection !== null) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     mainApplication = addMetaDataItemToMainApplication(
       mainApplication,
       META_AD_ID_COLLECTION,
       advertiserIdCollection ? 'true' : 'false'
     );
   } else {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     mainApplication = removeMetaDataItemFromMainApplication(mainApplication, META_AD_ID_COLLECTION);
   }
 

@@ -21,9 +21,13 @@ export interface ExpoConfig {
    */
   owner?: string;
   /**
-   * The auto generated Expo account name and slug used for services like Notifications and AuthSession proxy. Formatted like `@username/slug`. When unauthenticated, the username is `@anonymous`.
+   * The auto generated Expo account name and slug used for display purposes. Formatted like `@username/slug`. When unauthenticated, the username is `@anonymous`. For published projects, this value may change when a project is transferred between accounts or renamed.
    */
   currentFullName?: string;
+  /**
+   * The auto generated Expo account name and slug used for services like Notifications and AuthSession proxy. Formatted like `@username/slug`. When unauthenticated, the username is `@anonymous`. For published projects, this value will not change when a project is transferred between accounts or renamed.
+   */
+  originalFullName?: string;
   /**
    * Defaults to `unlisted`. `unlisted` hides the project from search results. `hidden` restricts access to the project page to only the owner and other users that have been granted access. Valid values: `public`, `unlisted`, `hidden`.
    */
@@ -181,7 +185,7 @@ export interface ExpoConfig {
    */
   updates?: {
     /**
-     * If set to false, your standalone app will never download any code, and will only use code bundled locally on the device. In that case, all updates to your app must be submitted through Apple review. Defaults to true. (Note: This will not work out of the box with ExpoKit projects)
+     * If set to false, your standalone app will never download any code, and will only use code bundled locally on the device. In that case, all updates to your app must be submitted through app store review. Defaults to true. (Note: This will not work out of the box with ExpoKit projects)
      */
     enabled?: boolean;
     /**
@@ -192,6 +196,10 @@ export interface ExpoConfig {
      * How long (in ms) to allow for fetching OTA updates before falling back to a cached version of the app. Defaults to 30000 (30 sec). Must be between 0 and 300000 (5 minutes).
      */
     fallbackToCacheTimeout?: number;
+    /**
+     * URL from which expo-updates will fetch update manifests
+     */
+    url?: string;
   };
   /**
    * Provide overrides by locale for System Dialog prompts like Permissions Boxes
@@ -241,6 +249,10 @@ export interface ExpoConfig {
    * An array of file glob strings which point to assets that will be bundled within your standalone app binary. Read more in the [Offline Support guide](https://docs.expo.io/guides/offline-support/)
    */
   assetBundlePatterns?: string[];
+  /**
+   * Config plugins for adding extra functionality to your project. [Learn more](https://docs.expo.io/guides/config-plugins/).
+   */
+  plugins?: (string | [] | [string] | [string, any])[];
   splash?: Splash;
   ios?: IOS;
   android?: Android;
@@ -273,10 +285,6 @@ export interface ExpoConfig {
     };
     [k: string]: any;
   };
-  /**
-   * Plugins for adding extra functionality to your project
-   */
-  plugins?: (string | [] | [string] | [string, any])[];
 }
 /**
  * Configuration for loading and splash screen for standalone apps.
@@ -414,7 +422,7 @@ export interface IOS {
     [k: string]: any;
   };
   /**
-   * An array that contains Associated Domains for the standalone app. See [Apple's docs for config](https://developer.apple.com/documentation/safariservices/supporting_associated_domains).
+   * An array that contains Associated Domains for the standalone app. [Learn more](https://developer.apple.com/documentation/safariservices/supporting_associated_domains).
    */
   associatedDomains?: string[];
   /**
@@ -453,10 +461,6 @@ export interface IOS {
      * Local path or remote URL to an image to fill the background of the loading screen. Image size and aspect ratio are up to you. Must be a .png.
      */
     tabletImage?: string;
-    /**
-     * Supported user interface styles. If left blank, `light` will be used. Use `automatic` if you would like to support either `light` or `dark` depending on iOS settings.
-     */
-    userInterfaceStyle?: 'light' | 'dark' | 'automatic';
     [k: string]: any;
   };
 }
@@ -464,10 +468,6 @@ export interface IOS {
  * Configuration that is specific to the Android platform.
  */
 export interface Android {
-  /**
-   * If set to true, APK will contain only unimodules that are explicitly added in package.json and their dependecies
-   */
-  enableDangerousExperimentalLeanBuilds?: boolean;
   /**
    * The manifest for the Android version of your app will be written to this path during publish.
    */
@@ -685,6 +685,10 @@ export interface Android {
    * Determines how the software keyboard will impact the layout of your application. This maps to the `android:windowSoftInputMode` property. Defaults to `resize`. Valid values: `resize`, `pan`.
    */
   softwareKeyboardLayoutMode?: 'resize' | 'pan';
+  /**
+   * Specifies the JavaScript engine. Supported only on EAS Build. Defaults to `jsc`. Valid values: `hermes`, `jsc`.
+   */
+  jsEngine?: 'hermes' | 'jsc';
 }
 export interface AndroidIntentFiltersData {
   /**

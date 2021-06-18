@@ -71,7 +71,7 @@ export async function exportAppAsync(
   } = {},
   experimentalBundle: boolean
 ): Promise<void> {
-  const absoluteOutputDir = path.resolve(process.cwd(), outputDir);
+  const absoluteOutputDir = path.resolve(projectRoot, outputDir);
   const defaultTarget = getDefaultTarget(projectRoot);
   const target = options.publishOptions?.target ?? defaultTarget;
 
@@ -82,11 +82,9 @@ export async function exportAppAsync(
     Log.newLine();
   }
 
-  // build the bundles
-  // make output dirs if not exists
-  const assetPathToWrite = path.resolve(projectRoot, path.join(outputDir, 'assets'));
+  const assetPathToWrite = path.resolve(absoluteOutputDir, 'assets');
   await fs.ensureDir(assetPathToWrite);
-  const bundlesPathToWrite = path.resolve(projectRoot, path.join(outputDir, 'bundles'));
+  const bundlesPathToWrite = path.resolve(absoluteOutputDir, 'bundles');
   await fs.ensureDir(bundlesPathToWrite);
 
   const { exp, pkg, hooks } = await Project.getPublishExpConfigAsync(
@@ -101,24 +99,24 @@ export async function exportAppAsync(
 
   printBundleSizes(bundles);
 
-  const iosBundle = bundles.ios.code;
-  const androidBundle = bundles.android.code;
+  const iosBundle = bundles.ios.hermesBytecodeBundle ?? bundles.ios.code;
+  const androidBundle = bundles.android.hermesBytecodeBundle ?? bundles.android.code;
 
   const iosBundleHash = crypto.createHash('md5').update(iosBundle).digest('hex');
   const iosBundleUrl = `ios-${iosBundleHash}.js`;
-  const iosJsPath = path.join(absoluteOutputDir, 'bundles', iosBundleUrl);
+  const iosJsPath = path.join(bundlesPathToWrite, iosBundleUrl);
 
   const androidBundleHash = crypto.createHash('md5').update(androidBundle).digest('hex');
   const androidBundleUrl = `android-${androidBundleHash}.js`;
-  const androidJsPath = path.join(absoluteOutputDir, 'bundles', androidBundleUrl);
+  const androidJsPath = path.join(bundlesPathToWrite, androidBundleUrl);
 
   const relativeBundlePaths = {
     android: path.join('bundles', androidBundleUrl),
     ios: path.join('bundles', iosBundleUrl),
   };
 
-  await Project.writeArtifactSafelyAsync(projectRoot, null, iosJsPath, iosBundle);
-  await Project.writeArtifactSafelyAsync(projectRoot, null, androidJsPath, androidBundle);
+  await Project.writeArtifactSafelyAsync(bundlesPathToWrite, null, iosBundleUrl, iosBundle);
+  await Project.writeArtifactSafelyAsync(bundlesPathToWrite, null, androidJsPath, androidBundle);
 
   Log.log('Finished saving JS Bundles.');
 
@@ -175,8 +173,8 @@ export async function exportAppAsync(
     );
   }
 
-  const iosSourceMap = bundles.ios.map;
-  const androidSourceMap = bundles.android.map;
+  const iosSourceMap = bundles.ios.hermesSourcemap ?? bundles.ios.map;
+  const androidSourceMap = bundles.android.hermesSourcemap ?? bundles.android.map;
 
   // build source maps
   if (options.dumpSourcemap) {
@@ -317,11 +315,9 @@ export async function exportAppAsync(
       iosManifestUrl: urljoin(publicUrl, 'ios-index.json'),
       iosManifest,
       iosBundle,
-      iosSourceMap,
       androidManifestUrl: urljoin(publicUrl, 'android-index.json'),
       androidManifest,
       androidBundle,
-      androidSourceMap,
       target,
     });
   }

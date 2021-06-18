@@ -19,8 +19,6 @@ import {
   stopExpoServerAsync,
   stopReactNativeServerAsync,
   stopTunnelsAsync,
-  UnifiedAnalytics,
-  UserManager,
   Webpack,
 } from '../internal';
 
@@ -52,31 +50,6 @@ export async function startAsync(
   verbose: boolean = true
 ): Promise<ExpoConfig> {
   assertValidProjectRoot(projectRoot);
-
-  const userData = await UserManager.getCachedUserDataAsync();
-
-  if (userData?.userId) {
-    // analytics has probably not identified the user at this point, if so we need to bootstrap it
-    if (!UnifiedAnalytics.userId) {
-      UnifiedAnalytics.identifyUser(
-        userData.userId, // userId is used as the identifier in the other codebases (www/website) running unified analytics so we want to keep using it on the cli as well to avoid double counting users
-        {
-          userId: userData.userId,
-          currentConnection: userData?.currentConnection,
-          username: userData?.username,
-          userType: '', // not available without hitting api
-        }
-      );
-    }
-  }
-
-  UnifiedAnalytics.logEvent('action', {
-    organization: exp.owner,
-    project: exp.name,
-    action: 'expo start',
-    source: 'expo cli',
-    source_version: UnifiedAnalytics.version,
-  });
 
   Analytics.logEvent('Start Project', {
     projectRoot,
