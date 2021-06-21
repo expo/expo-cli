@@ -13,7 +13,9 @@ export const withAndroidSplashScreen: ConfigPlugin = config => {
   // androidStatusBar applies info to the app activity style.
   const backgroundColor = splashConfig?.backgroundColor || '#ffffff';
   if (config.androidStatusBar?.backgroundColor) {
-    if (backgroundColor !== config.androidStatusBar?.backgroundColor.toLowerCase()) {
+    if (
+      backgroundColor.toLowerCase() !== config.androidStatusBar?.backgroundColor?.toLowerCase?.()
+    ) {
       WarningAggregator.addWarningAndroid(
         'androidStatusBar.backgroundColor',
         'The androidStatusBar.backgroundColor color conflicts with the splash backgroundColor on Android'

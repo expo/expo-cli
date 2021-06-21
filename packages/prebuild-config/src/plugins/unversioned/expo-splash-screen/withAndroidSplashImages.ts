@@ -153,7 +153,7 @@ export async function setSplashImageDrawablesForThemeAsync(
       // @ts-ignore
       const image = config[imageKey];
       if (image) {
-        return copyDrawableFile(
+        return copyDrawableFileAsync(
           path.join(projectRoot, image),
           path.join(
             androidMainPath,
@@ -171,14 +171,11 @@ export async function setSplashImageDrawablesForThemeAsync(
  * @param srcPath Absolute path
  * @param dstPath Absolute path
  */
-async function copyDrawableFile(srcPath: string | undefined, dstPath: string) {
+async function copyDrawableFileAsync(srcPath: string | undefined, dstPath: string) {
   if (!srcPath) {
     return;
   }
   const folder = path.dirname(dstPath);
-  // TODO: Generate optimal images, don't copy
-  if (!(await fs.pathExists(folder))) {
-    await fs.mkdir(folder);
-  }
+  await fs.ensureDir(folder);
   await fs.copyFile(srcPath, path.resolve(dstPath));
 }
