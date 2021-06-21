@@ -380,3 +380,8 @@ export function isNotComment([key]:
   | NativeTargetSectionEntry): boolean {
   return !key.endsWith(`_comment`);
 }
+
+// Remove surrounding double quotes if they exist.
+export function unquote(value: string): string {
+  return value.match(/^"(.*)"$/)?.[1] ?? value;
+}

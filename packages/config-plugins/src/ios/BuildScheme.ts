@@ -1,7 +1,7 @@
 import { readXMLAsync } from '../utils/XML';
 import { findSchemeNames, findSchemePaths } from './Paths';
 import { findSignableTargets } from './Target';
-import { getPbxproj } from './utils/Xcodeproj';
+import { getPbxproj, unquote } from './utils/Xcodeproj';
 
 interface SchemeXML {
   Scheme?: {
@@ -36,15 +36,10 @@ export function getRunnableSchemesFromXcodeproj(
 ): { name: string; type: string }[] {
   const project = getPbxproj(projectRoot);
 
-  return findSignableTargets(project).map(([, target]) => {
-    // Remove surrounding double quotes if they exist.
-    const match = target.name.match(/^"(.*)"$/)?.[1];
-    const productType = target.productType.match(/^"(.*)"$/)?.[1];
-    return {
-      name: match || target.name,
-      type: productType || target.productType,
-    };
-  });
+  return findSignableTargets(project).map(([, target]) => ({
+    name: unquote(target.name),
+    type: unquote(target.productType),
+  }));
 }
 
 async function readSchemeAsync(
