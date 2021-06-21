@@ -356,7 +356,9 @@ class IOSBuilder extends BaseBuilder {
 
     Log.newLine();
     Log.log(
-      `You can now publish to the App Store with ${TerminalLink.transporterAppLink()}. ${TerminalLink.learnMore('https://docs.expo.io/distribution/uploading-apps/')}`
+      `You can now publish to the App Store with ${TerminalLink.transporterAppLink()} or ${chalk.bold(
+        'eas submit --platform ios'
+      )}. ${TerminalLink.learnMore('https://docs.expo.io/distribution/uploading-apps/')}`
     );
   }
 
