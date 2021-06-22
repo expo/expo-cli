@@ -76,7 +76,9 @@ export function setSplashScreenMainActivity(
     mainActivity = mergeContents({
       src: mainActivity,
       // insert just below super.onCreate
-      anchor: isJava ? /(?<=public class .* extends .* {.*$)/m : /(?<=class .* : .* {.*$)/m,
+      anchor: isJava
+        ? /(?<=public\s+class\s+.*\s+extends\s+.*\s+{.*$)/m
+        : /(?<=class\s+.*\s+:\s+.*\s+{.*$)/m,
       offset: 1,
       comment: '//',
       tag: 'expo-splash-screen-mainActivity-onCreate',
