@@ -1,4 +1,3 @@
-import chalk from 'chalk';
 import path from 'path';
 
 import { ExportedConfig, Mod, ModConfig, ModPlatform } from '../Plugin.types';
