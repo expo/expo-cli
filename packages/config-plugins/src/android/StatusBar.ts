@@ -54,6 +54,7 @@ export function setStatusBarStyles(
   styles = assignStylesValue(styles, {
     parent: getAppThemeLightNoActionBarGroup(),
     name: WINDOW_LIGHT_STATUS_BAR,
+    targetApi: '23',
     value: 'true',
     // Default is light-content, don't need to do anything to set it
     add: getStatusBarStyle(config) === 'dark-content',

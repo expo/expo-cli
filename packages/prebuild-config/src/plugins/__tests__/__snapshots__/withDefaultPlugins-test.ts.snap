@@ -744,6 +744,9 @@ Object {
         },
         "styles": Object {
           "resources": Object {
+            "$": Object {
+              "xmlns:tools": "http://schemas.android.com/tools",
+            },
             "style": Array [
               Object {
                 "$": Object {
@@ -1536,6 +1539,9 @@ Object {
         },
         "styles": Object {
           "resources": Object {
+            "$": Object {
+              "xmlns:tools": "http://schemas.android.com/tools",
+            },
             "style": Array [
               Object {
                 "$": Object {

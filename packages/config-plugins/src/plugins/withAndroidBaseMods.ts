@@ -89,7 +89,20 @@ const defaultProviders = {
       return Styles.getProjectStylesXMLPathAsync(projectRoot);
     },
     async read(filePath) {
-      return Resources.readResourcesXMLAsync({ path: filePath });
+      // Adds support for `tools:x`
+      const styles = await Resources.readResourcesXMLAsync({
+        path: filePath,
+        fallback: `<?xml version="1.0" encoding="utf-8"?><resources xmlns:tools="http://schemas.android.com/tools"></resources>`,
+      });
+
+      // Ensure support for tools is added...
+      if (!styles.resources.$) {
+        styles.resources.$ = {};
+      }
+      if (!styles.resources.$?.['xmlns:tools']) {
+        styles.resources.$['xmlns:tools'] = 'http://schemas.android.com/tools';
+      }
+      return styles;
     },
     async write(filePath, { modResults }) {
       await writeXMLAsync({ path: filePath, xml: modResults });

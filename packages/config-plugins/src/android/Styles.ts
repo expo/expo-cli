@@ -5,11 +5,25 @@ import {
   ensureDefaultResourceXML,
   findResourceGroup,
   getResourceItemsAsObject,
+  readResourcesXMLAsync,
   ResourceGroupXML,
   ResourceItemXML,
   ResourceKind,
   ResourceXML,
 } from './Resources';
+
+// Adds support for `tools:x`
+const fallbackResourceString = `<?xml version="1.0" encoding="utf-8"?><resources xmlns:tools="http://schemas.android.com/tools"></resources>`;
+
+export async function readStylesXMLAsync({
+  path,
+  fallback = fallbackResourceString,
+}: {
+  path: string;
+  fallback?: string | null;
+}): Promise<ResourceXML> {
+  return readResourcesXMLAsync({ path, fallback });
+}
 
 export async function getProjectStylesXMLPathAsync(
   projectRoot: string,
@@ -40,7 +54,7 @@ export function getStylesItem({
 }: {
   name: string;
   xml: ResourceXML;
-  parent: { name: string; parent: string };
+  parent: { name: string; parent?: string };
 }): ResourceItemXML | null {
   xml = ensureDefaultStyleResourceXML(xml);
 
@@ -85,6 +99,7 @@ export function setStylesItem({
     // Don't want to 2 of the same item, so if one exists, we overwrite it
     if (existingItem) {
       existingItem._ = item._;
+      existingItem.$ = item.$;
     } else {
       appTheme.item.push(item);
     }
@@ -124,11 +139,13 @@ export function assignStylesValue(
   {
     add,
     value,
+    targetApi,
     name,
     parent,
   }: {
     add: boolean;
     value: string;
+    targetApi?: string;
     name: string;
     parent: { name: string; parent: string };
   }
@@ -139,6 +156,7 @@ export function assignStylesValue(
       parent,
       item: buildResourceItem({
         name,
+        targetApi,
         value,
       }),
     });
@@ -159,7 +177,7 @@ export function assignStylesValue(
  */
 export function getStylesGroupAsObject(
   xml: ResourceXML,
-  group: { name: string; parent: string }
+  group: { name: string; parent?: string }
 ): Record<string, string> | null {
   const xmlGroup = getStyleParent(xml, group);
   return xmlGroup?.item ? getResourceItemsAsObject(xmlGroup.item) : null;
