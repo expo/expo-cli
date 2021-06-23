@@ -1,4 +1,4 @@
-import { Command } from 'commander';
+import type { Command } from 'commander';
 
 import CommandError from '../CommandError';
 import { openRegistrationInBrowser, REGISTRATION_URL } from '../accounts';

@@ -1,4 +1,4 @@
-import { Command } from 'commander';
+import type { Command } from 'commander';
 import { Detach } from 'xdl';
 
 type Options = {

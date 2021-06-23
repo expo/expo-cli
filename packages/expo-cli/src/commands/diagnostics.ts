@@ -1,5 +1,5 @@
 import { getDefaultTarget } from '@expo/config';
-import { Command } from 'commander';
+import type { Command } from 'commander';
 import envinfo from 'envinfo';
 
 import Log from '../log';

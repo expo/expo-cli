@@ -1,6 +1,6 @@
 import { getConfig } from '@expo/config';
 import chalk from 'chalk';
-import { Command } from 'commander';
+import type { Command } from 'commander';
 import { Doctor } from 'xdl';
 
 import Log from '../../log';
