@@ -1,6 +1,6 @@
 import { getConfig } from '@expo/config';
 import chalk from 'chalk';
-import { Command } from 'commander';
+import type { Command } from 'commander';
 import { Versions } from 'xdl';
 
 import CommandError from '../CommandError';
