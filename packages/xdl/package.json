@@ -12,7 +12,7 @@
   ],
   "scripts": {
     "start": "yarn run prepare && yarn run watch",
-    "build": "tsc",
+    "build": "tsc --emitDeclarationOnly && babel src --out-dir build --extensions \".ts\" --source-maps --ignore \"src/**/__mocks__/*\",\"src/**/__tests__/*\",\"src/**/__integration_tests__/*\"",
     "prepare": "yarn run clean && yarn run build",
     "prepack": "node scripts/updateCaches.js",
     "clean": "rimraf build ./tsconfig.tsbuildinfo",
