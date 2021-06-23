@@ -20,7 +20,6 @@ export function getAndroidSplashConfig(
   if (config.android?.splash) {
     const splash = config.android?.splash;
     return {
-      // TODO: Does this not support `image`?
       xxxhdpi: splash.xxxhdpi ?? splash.image ?? null,
       xxhdpi: splash.xxhdpi ?? splash.image ?? null,
       xhdpi: splash.xhdpi ?? splash.image ?? null,
