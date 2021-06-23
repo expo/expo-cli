@@ -12,6 +12,36 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+## [Wed, 23 Jun 2021 10:37:34 -0700](https://github.com/expo/expo-cli/commit/caa0173d89632764098ae313768ff9bb18d2fa40)
+
+### 🛠 Breaking changes
+
+- [splash-screen] Extend default theme ([#3558](https://github.com/expo/expo-cli/issues/3558))
+- [config-plugins] Make the status bar translucent by default ([#3578](https://github.com/expo/expo-cli/issues/3578))
+- [prebuild-config] Created android splash plugin ([#3576](https://github.com/expo/expo-cli/issues/3576))
+
+### 🎉 New features
+
+- [run] prompt for scheme ([#3587](https://github.com/expo/expo-cli/issues/3587))
+- [cli] Lazy load heavy modules to improve startup time ([#3598](https://github.com/expo/expo-cli/issues/3598))
+- [cli] Import Command as type to reduce bundle size ([#3597](https://github.com/expo/expo-cli/issues/3597))
+
+### 📦 Packages updated
+
+- @expo/config-plugins@3.0.0
+- @expo/config@5.0.0
+- @expo/dev-server@0.1.75
+- @expo/dev-tools@0.13.105
+- expo-cli@4.7.0
+- expo-optimize@0.1.97
+- @expo/metro-config@0.1.75
+- @expo/next-adapter@2.1.80
+- @expo/prebuild-config@2.0.0
+- expo-pwa@0.0.85
+- uri-scheme@1.0.86
+- @expo/webpack-config@0.12.79
+- xdl@59.0.45
+
 ## [Mon, 21 Jun 2021 16:24:32 -0700](https://github.com/expo/expo-cli/commit/86ff226740af46ad04f8953114f9f2b1e1c9741a)
 
 ### 🎉 New features
