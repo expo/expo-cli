@@ -168,7 +168,7 @@ export async function evalModsAsync(
             Warnings.addWarningForPlatform(
               platformName as ModPlatform,
               `${platformName}.${modName}`,
-              `Skipping: Initial base modifier for "${platformName}.${modName}" is not a provider and therefore will not provide modResults to child mods`
+              `Skipping: Initial base modifier for "${platformName}.${modName}" is not a provider and therefore will not provide modResults to child mods. This may be due to an outdated version of Expo CLI.`
             );
             // In loose mode, just skip the mod entirely.
             continue;
