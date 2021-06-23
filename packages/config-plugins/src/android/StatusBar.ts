@@ -49,6 +49,7 @@ export function setStatusBarStyles(
   styles: ResourceXML
 ): ResourceXML {
   const hexString = getStatusBarColor(config);
+  const floatElement = getStatusBarTranslucent(config);
 
   styles = assignStylesValue(styles, {
     parent: getAppThemeLightNoActionBarGroup(),
@@ -63,7 +64,7 @@ export function setStatusBarStyles(
     name: WINDOW_TRANSLUCENT_STATUS,
     value: 'true',
     // translucent status bar set in theme
-    add: !hexString,
+    add: floatElement,
   });
 
   styles = assignStylesValue(styles, {
@@ -87,6 +88,17 @@ export function getStatusBarColor(config: Pick<ExpoConfig, 'androidStatusBar'>) 
     );
   }
   return backgroundColor;
+}
+
+/**
+ * Specifies whether the status bar should be "translucent". When true, the status bar is drawn with `position: absolute`, when false `position: relative` (pushes content down).
+ *
+ * @default true (default iOS behavior, the iOS status bar cannot be set translucent by the system)
+ * @param config
+ * @returns
+ */
+export function getStatusBarTranslucent(config: Pick<ExpoConfig, 'androidStatusBar'>): boolean {
+  return config.androidStatusBar?.translucent ?? true;
 }
 
 export function getStatusBarStyle(config: Pick<ExpoConfig, 'androidStatusBar'>) {

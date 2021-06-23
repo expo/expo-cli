@@ -765,6 +765,12 @@ Object {
                   },
                   Object {
                     "$": Object {
+                      "name": "android:windowTranslucentStatus",
+                    },
+                    "_": "true",
+                  },
+                  Object {
+                    "$": Object {
                       "name": "colorPrimaryDark",
                     },
                     "_": "@color/colorPrimaryDark",
@@ -1542,6 +1548,12 @@ Object {
                       "name": "colorPrimary",
                     },
                     "_": "@color/colorPrimary",
+                  },
+                  Object {
+                    "$": Object {
+                      "name": "android:windowTranslucentStatus",
+                    },
+                    "_": "true",
                   },
                   Object {
                     "$": Object {
