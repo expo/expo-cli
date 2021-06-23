@@ -1,7 +1,11 @@
+import { IOSConfig } from '@expo/config-plugins';
+import chalk from 'chalk';
 import { sync as globSync } from 'glob';
 import * as path from 'path';
 
 import CommandError from '../../../CommandError';
+import Log from '../../../log';
+import { selectAsync } from '../../../prompts';
 import { resolvePortAsync } from '../utils/resolvePortAsync';
 import * as XcodeBuild from './XcodeBuild';
 import { resolveDeviceAsync } from './resolveDeviceAsync';
@@ -83,6 +87,36 @@ export async function resolveOptionsAsync(
   if (!port) {
     // any random number
     port = 8081;
+  }
+
+  // @ts-ignore
+  if (options.scheme === true) {
+    const schemes = IOSConfig.BuildScheme.getRunnableSchemesFromXcodeproj(projectRoot);
+    if (!schemes.length) {
+      throw new CommandError('No native iOS build schemes found');
+    }
+    options.scheme = schemes[0].name;
+    if (schemes.length > 1) {
+      options.scheme = await selectAsync(
+        {
+          message: 'Select a scheme',
+          choices: schemes.map(value => {
+            const isApp = value.type === IOSConfig.Target.TargetType.APPLICATION;
+            return {
+              value: value.name,
+              title: isApp ? chalk.bold(value.name) + chalk.gray(' (default)') : value.name,
+            };
+          }),
+        },
+        {
+          nonInteractiveHelp: `--scheme: argument must be provided with a string in non-interactive mode. Valid choices are: ${schemes.join(
+            ', '
+          )}`,
+        }
+      );
+    } else {
+      Log.log(`Auto selecting only available scheme: ${options.scheme}`);
+    }
   }
 
   const configuration = options.configuration || 'Debug';

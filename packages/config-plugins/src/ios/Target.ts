@@ -48,7 +48,7 @@ export async function findApplicationTargetWithDependenciesAsync(
   };
 }
 
-function isTargetOfType(target: PBXNativeTarget, targetType: TargetType): boolean {
+export function isTargetOfType(target: PBXNativeTarget, targetType: TargetType): boolean {
   return target.productType === targetType || target.productType === `"${targetType}"`;
 }
 
@@ -66,7 +66,7 @@ export function findSignableTargets(project: XcodeProject): NativeTargetSectionE
       isTargetOfType(target, TargetType.STICKER_PACK_EXTENSION)
   );
   if (applicationTargets.length === 0) {
-    throw new Error(`Could not find any application targets in project.pbxproj`);
+    throw new Error(`Could not find any signable targets in project.pbxproj`);
   }
   return applicationTargets;
 }
