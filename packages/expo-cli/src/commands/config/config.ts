@@ -29,6 +29,7 @@ async function actionAsync(projectRoot: string, options: Options) {
       projectRoot,
       introspect: true,
       platforms: ['ios', 'android'],
+      assertMissingModProviders: false,
     });
     // @ts-ignore
     delete config.modRequest;
