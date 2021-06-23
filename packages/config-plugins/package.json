@@ -5,7 +5,7 @@
   "main": "build/index.js",
   "scripts": {
     "watch": "tsc --watch --preserveWatchOutput",
-    "build": "tsc",
+    "build": "tsc --emitDeclarationOnly && babel src --out-dir build --extensions \".ts\" --source-maps --ignore \"src/**/__mocks__/*\",\"src/**/__tests__/*\",\"src/**/__integration_tests__/*\"",
     "prepare": "yarn run clean && yarn build",
     "clean": "rimraf build ./tsconfig.tsbuildinfo",
     "lint": "eslint .",
