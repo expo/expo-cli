@@ -72,6 +72,18 @@ const defaultProviders = {
     },
   }),
 
+  colorsNight: provider<Resources.ResourceXML>({
+    getFilePath({ modRequest: { projectRoot } }) {
+      return Colors.getProjectColorsXMLPathAsync(projectRoot, { kind: 'values-night' });
+    },
+    async read(filePath) {
+      return Resources.readResourcesXMLAsync({ path: filePath });
+    },
+    async write(filePath, { modResults }) {
+      await writeXMLAsync({ path: filePath, xml: modResults });
+    },
+  }),
+
   styles: provider<Resources.ResourceXML>({
     getFilePath({ modRequest: { projectRoot } }) {
       return Styles.getProjectStylesXMLPathAsync(projectRoot);
@@ -263,6 +275,9 @@ export function getAndroidIntrospectModFileProviders(): Omit<
       fallbackContents: { resources: {} } as Resources.ResourceXML,
     }),
     colors: createIntrospectionProvider('colors', {
+      fallbackContents: { resources: {} } as Resources.ResourceXML,
+    }),
+    colorsNight: createIntrospectionProvider('colorsNight', {
       fallbackContents: { resources: {} } as Resources.ResourceXML,
     }),
     styles: createIntrospectionProvider('styles', {

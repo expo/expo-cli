@@ -7,8 +7,11 @@ import { assignColorValue } from './Colors';
 import { ResourceXML } from './Resources';
 import { assignStylesValue, getAppThemeLightNoActionBarGroup } from './Styles';
 
+// https://developer.android.com/reference/android/R.attr#colorPrimaryDark
 const COLOR_PRIMARY_DARK_KEY = 'colorPrimaryDark';
+// https://developer.android.com/reference/android/R.attr#windowTranslucentStatus
 const WINDOW_TRANSLUCENT_STATUS = 'android:windowTranslucentStatus';
+// https://developer.android.com/reference/android/R.attr#windowLightStatusBar
 const WINDOW_LIGHT_STATUS_BAR = 'android:windowLightStatusBar';
 
 export const withStatusBar: ConfigPlugin = config => {

@@ -26,7 +26,12 @@ export type ResourceItemXML = {
 /**
  * Name of the resource folder.
  */
-export type ResourceKind = 'values' | 'values-night' | 'values-v23';
+export type ResourceKind =
+  | 'values'
+  | 'values-night'
+  | 'values-v23'
+  | 'values-night-v23'
+  | 'drawable';
 
 const fallbackResourceString = `<?xml version="1.0" encoding="utf-8"?><resources></resources>`;
 

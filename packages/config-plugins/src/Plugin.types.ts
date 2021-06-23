@@ -106,6 +106,10 @@ export interface ModConfig {
      */
     colors?: Mod<ResourceXML>;
     /**
+     * Modify the `android/app/src/main/res/values-night/colors.xml` as JSON (parsed with [`xml2js`](https://www.npmjs.com/package/xml2js)).
+     */
+    colorsNight?: Mod<ResourceXML>;
+    /**
      * Modify the `android/app/src/main/res/values/styles.xml` as JSON (parsed with [`xml2js`](https://www.npmjs.com/package/xml2js)).
      */
     styles?: Mod<ResourceXML>;
