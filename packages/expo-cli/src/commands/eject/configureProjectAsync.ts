@@ -61,7 +61,11 @@ export default async function configureManagedProjectAsync({
   });
 
   // compile all plugins and mods
-  config = await compileModsAsync(config, { projectRoot, platforms });
+  config = await compileModsAsync(config, {
+    projectRoot,
+    platforms,
+    assertMissingModProviders: false,
+  });
 
   if (Log.isDebug) {
     Log.debug();

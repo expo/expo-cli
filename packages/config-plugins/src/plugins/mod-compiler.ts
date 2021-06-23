@@ -1,8 +1,10 @@
+import chalk from 'chalk';
 import path from 'path';
 
 import { ExportedConfig, Mod, ModConfig, ModPlatform } from '../Plugin.types';
 import { getHackyProjectName } from '../ios/utils/Xcodeproj';
 import { PluginError } from '../utils/errors';
+import * as Warnings from '../utils/warnings';
 import { assertModResults, ForwardedBaseModOptions } from './createBaseMod';
 import { getAndroidIntrospectModFileProviders, withAndroidBaseMods } from './withAndroidBaseMods';
 import { getIosIntrospectModFileProviders, withIosBaseMods } from './withIosBaseMods';
@@ -164,9 +166,11 @@ export async function evalModsAsync(
           if (assertMissingModProviders !== false) {
             throw new PluginError(errorMessage, 'MISSING_PROVIDER');
           } else {
-            if (config._internal?.isDebug) {
-              console.warn(errorMessage);
-            }
+            Warnings.addWarningForPlatform(
+              platformName as ModPlatform,
+              `${platformName}.${modName}`,
+              `Skipping: Initial base modifier for "${platformName}.${modName}" is not a provider and therefore will not provide modResults to child mods`
+            );
             // In loose mode, just skip the mod entirely.
             continue;
           }
