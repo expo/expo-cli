@@ -1260,6 +1260,7 @@ Object {
                   "android:name": ".MainApplication",
                   "android:roundIcon": "@mipmap/ic_launcher_round",
                   "android:theme": "@style/AppTheme",
+                  "android:usesCleartextTraffic": "true",
                 },
                 "activity": Array [
                   Object {
@@ -1401,6 +1402,12 @@ Object {
                 "meta-data": Array [
                   Object {
                     "$": Object {
+                      "android:name": "expo.modules.updates.EXPO_UPDATE_URL",
+                      "android:value": "https://exp.host/@bacon/mycoolapp",
+                    },
+                  },
+                  Object {
+                    "$": Object {
                       "android:name": "com.facebook.sdk.ApplicationId",
                       "android:value": "@string/facebook_app_id",
                     },
@@ -1455,12 +1462,6 @@ Object {
                   },
                   Object {
                     "$": Object {
-                      "android:name": "expo.modules.updates.EXPO_UPDATE_URL",
-                      "android:value": "https://exp.host/@bacon/mycoolapp",
-                    },
-                  },
-                  Object {
-                    "$": Object {
                       "android:name": "expo.modules.notifications.default_notification_icon",
                       "android:resource": "@drawable/notification_icon",
                     },
@@ -1504,6 +1505,36 @@ Object {
               Object {
                 "$": Object {
                   "android:name": "android.permission.INTERNET",
+                },
+              },
+              Object {
+                "$": Object {
+                  "android:name": "android.permission.SYSTEM_ALERT_WINDOW",
+                },
+              },
+              Object {
+                "$": Object {
+                  "android:name": "android.permission.READ_PHONE_STATE",
+                },
+              },
+              Object {
+                "$": Object {
+                  "android:name": "android.permission.VIBRATE",
+                },
+              },
+              Object {
+                "$": Object {
+                  "android:name": "android.permission.MODIFY_AUDIO_SETTINGS",
+                },
+              },
+              Object {
+                "$": Object {
+                  "android:name": "android.permission.READ_EXTERNAL_STORAGE",
+                },
+              },
+              Object {
+                "$": Object {
+                  "android:name": "android.permission.WRITE_EXTERNAL_STORAGE",
                 },
               },
               Object {
