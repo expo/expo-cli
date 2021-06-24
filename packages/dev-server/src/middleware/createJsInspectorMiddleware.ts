@@ -1,6 +1,7 @@
 import type { NextHandleFunction } from 'connect';
 import fs from 'fs-extra';
 import type { IncomingMessage, ServerResponse } from 'http';
+import net from 'net';
 import fetch from 'node-fetch';
 import open from 'open';
 import path from 'path';
@@ -20,7 +21,7 @@ interface MetroInspectorProxyApp {
 
 export default function createJsInspectorMiddleware(): NextHandleFunction {
   return async function (req: IncomingMessage, res: ServerResponse, next: (err?: Error) => void) {
-    const { origin, searchParams } = new URL(req.url ?? '/', getRequestBase(req));
+    const { origin, searchParams } = new URL(req.url ?? '/', getServerBase(req));
     const applicationId = searchParams.get('applicationId');
     if (!applicationId) {
       res.writeHead(400).end('Missing applicationId');
@@ -79,11 +80,12 @@ async function queryInspectorTargetAsync(
   return target;
 }
 
-function getRequestBase(req: IncomingMessage): string {
+function getServerBase(req: IncomingMessage): string {
   const scheme =
     req.socket instanceof TLSSocket && req.socket.encrypted === true ? 'https' : 'http';
-  const host = req.headers.host;
-  return `${scheme}:${host}`;
+  const { localAddress, localPort } = req.socket;
+  const address = net.isIPv6(localAddress) ? `[${localAddress}]` : localAddress;
+  return `${scheme}:${address}:${localPort}`;
 }
 
 async function launchChromiumAsync(url: string): Promise<void> {
