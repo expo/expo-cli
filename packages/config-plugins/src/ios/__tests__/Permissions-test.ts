@@ -4,12 +4,18 @@ describe(applyPermissions, () => {
   it(`applies permissions`, () => {
     expect(
       applyPermissions(
-        { baz: 'new', foo: null, echo: 'delta' },
         {
-          foo: 'bar',
-          baz: 'fox',
-        }
+          foo: 'USE FOO',
+          bar: 'USE BAR',
+          sigma: 'USE SIGMA',
+        },
+        {
+          // @ts-expect-error
+          skip: 'invalid',
+          sigma: false,
+        },
+        { foo: 'bar', sigma: 'defined' }
       )
-    ).toStrictEqual({ baz: 'new', echo: 'delta' });
+    ).toStrictEqual({ foo: 'bar', bar: 'USE BAR' });
   });
 });
