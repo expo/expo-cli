@@ -33,9 +33,15 @@ export function getProjectName(projectRoot: string) {
   return path.basename(sourceRoot);
 }
 
-export function resolvePathOrProject(projectRootOrProject: string | XcodeProject): XcodeProject {
+export function resolvePathOrProject(
+  projectRootOrProject: string | XcodeProject
+): XcodeProject | null {
   if (typeof projectRootOrProject === 'string') {
-    return getPbxproj(projectRootOrProject);
+    try {
+      return getPbxproj(projectRootOrProject);
+    } catch {
+      return null;
+    }
   }
   return projectRootOrProject;
 }

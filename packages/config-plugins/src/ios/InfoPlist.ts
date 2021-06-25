@@ -18,6 +18,9 @@ export function getInfoPlistPathFromPbxproj(
   }: { targetName?: string; buildConfiguration?: string } = {}
 ): string | null {
   const project = resolvePathOrProject(projectRootOrProject);
+  if (!project) {
+    return null;
+  }
 
   const xcBuildConfiguration = getXCBuildConfigurationFromPbxproj(project, {
     targetName,

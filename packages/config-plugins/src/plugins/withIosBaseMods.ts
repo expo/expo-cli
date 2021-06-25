@@ -89,6 +89,7 @@ const defaultProviders = {
       } else {
         addWarningIOS('mods.ios.infoPlist', 'Failed to find Info.plist linked to Xcode project.');
       }
+      // Fallback on glob...
       return Paths.getInfoPlistPath(config.modRequest.projectRoot);
     },
     async read(filePath, config) {
