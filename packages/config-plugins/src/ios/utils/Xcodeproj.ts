@@ -111,11 +111,13 @@ export function addBuildSourceFileToGroup({
   groupName,
   project,
   verbose,
+  targetUuid,
 }: {
   filepath: string;
   groupName: string;
   project: XcodeProject;
   verbose?: boolean;
+  targetUuid?: string;
 }): XcodeProject {
   return addFileToGroupAndLink({
     filepath,
@@ -139,11 +141,13 @@ export function addFileToGroupAndLink({
   project,
   verbose,
   addFileToProject,
+  targetUuid,
 }: {
   filepath: string;
   groupName: string;
   project: XcodeProject;
   verbose?: boolean;
+  targetUuid?: string;
   addFileToProject: (props: { file: PBXFile; project: XcodeProject }) => void;
 }): XcodeProject {
   const group = pbxGroupByPathOrAssert(project, groupName);
@@ -160,6 +164,13 @@ export function addFileToGroupAndLink({
       );
     }
     return project;
+  }
+
+  if (targetUuid != null) {
+    file.target = targetUuid;
+  } else {
+    const applicationNativeTarget = project.getTarget('com.apple.product-type.application');
+    file.target = applicationNativeTarget?.uuid;
   }
 
   file.uuid = project.generateUuid();
