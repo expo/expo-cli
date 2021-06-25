@@ -1,7 +1,7 @@
 import { XcodeProject } from 'xcode';
 
-import { getXCBuildConfigurationFromPbxproj } from './Target';
-import { resolvePathOrProject } from './utils/Xcodeproj';
+import { getXCBuildConfigurationFromPbxproj } from '../Target';
+import { resolvePathOrProject } from './Xcodeproj';
 
 /**
  * Find the Info.plist path linked to a specific build configuration.
@@ -15,7 +15,7 @@ export function getInfoPlistPathFromPbxproj(
   {
     targetName,
     buildConfiguration = 'Release',
-  }: { targetName?: string; buildConfiguration?: string } = {}
+  }: { targetName?: string; buildConfiguration?: string | 'Release' | 'Debug' } = {}
 ): string | null {
   const project = resolvePathOrProject(projectRootOrProject);
   if (!project) {

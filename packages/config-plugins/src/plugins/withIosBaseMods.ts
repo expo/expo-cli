@@ -7,8 +7,8 @@ import xcode, { XcodeProject } from 'xcode';
 
 import { ExportedConfig, ModConfig } from '../Plugin.types';
 import { Entitlements, Paths } from '../ios';
-import { getInfoPlistPathFromPbxproj } from '../ios/InfoPlist';
 import { InfoPlist } from '../ios/IosConfig.types';
+import { getInfoPlistPathFromPbxproj } from '../ios/utils/getInfoPlistPath';
 import { fileExists } from '../utils/modules';
 import { addWarningIOS } from '../utils/warnings';
 import { ForwardedBaseModOptions, provider, withGeneratedBaseMods } from './createBaseMod';
