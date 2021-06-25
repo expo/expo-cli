@@ -8,16 +8,8 @@ import { ConfigPlugin } from '../Plugin.types';
 import { withDangerousMod } from '../plugins/withDangerousMod';
 import { InfoPlist } from './IosConfig.types';
 import { getAllInfoPlistPaths, getAllPBXProjectPaths, getPBXProjectPath } from './Paths';
-import {
-  findFirstNativeTarget,
-  findNativeTargetByName,
-  getXCBuildConfigurationFromPbxproj,
-} from './Target';
-import {
-  ConfigurationSectionEntry,
-  getBuildConfigurationForListIdAndName,
-  getBuildConfigurationsForListId,
-} from './utils/Xcodeproj';
+import { findFirstNativeTarget, getXCBuildConfigurationFromPbxproj } from './Target';
+import { ConfigurationSectionEntry, getBuildConfigurationsForListId } from './utils/Xcodeproj';
 
 export const withBundleIdentifier: ConfigPlugin<{ bundleIdentifier?: string }> = (
   config,
