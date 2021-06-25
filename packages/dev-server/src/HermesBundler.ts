@@ -132,8 +132,14 @@ async function maybeInconsistentEngineAndroidAsync(
   const appBuildGradlePath = path.join(projectRoot, 'android', 'app', 'build.gradle');
   if (fs.existsSync(appBuildGradlePath)) {
     const content = await fs.readFile(appBuildGradlePath, 'utf8');
+    const isPropsReference =
+      content.search(
+        /^\s*enableHermes:\s*\(findProperty\('expo.jsEngine'\) \?: "jsc"\) == "hermes",?\s+/m
+      ) >= 0;
     const isHermesBare = content.search(/^\s*enableHermes:\s*true,?\s+/m) >= 0;
-    return isHermesManaged !== isHermesBare;
+    if (!isPropsReference && isHermesManaged !== isHermesBare) {
+      return true;
+    }
   }
 
   // Check gradle.properties from prebuild template
@@ -141,7 +147,9 @@ async function maybeInconsistentEngineAndroidAsync(
   if (fs.existsSync(gradlePropertiesPath)) {
     const props = parseGradleProperties(await fs.readFile(gradlePropertiesPath, 'utf8'));
     const isHermesBare = props['expo.jsEngine'] === 'hermes';
-    return isHermesManaged !== isHermesBare;
+    if (isHermesManaged !== isHermesBare) {
+      return true;
+    }
   }
 
   return false;
