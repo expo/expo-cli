@@ -13,6 +13,7 @@ import type Metro from 'metro';
 import path from 'path';
 import resolveFrom from 'resolve-from';
 import { parse as parseUrl } from 'url';
+import { Versions } from 'xdl';
 
 import {
   buildHermesBundleAsync,
@@ -165,51 +166,61 @@ export async function bundleAsync(
     return { code, map, assets };
   };
 
+  const maybeAddHermesBundleAsync = async (
+    bundle: BundleOptions,
+    bundleOutput: BundleOutput
+  ): Promise<BundleOutput> => {
+    if (!Versions.gteSdkVersion(expoConfig, '42.0.0')) {
+      return bundleOutput;
+    }
+    const isHermesManaged = isEnableHermesManaged(expoConfig, bundle.platform);
+
+    const maybeInconsistentEngine = await maybeInconsistentEngineAsync(
+      projectRoot,
+      bundle.platform,
+      isHermesManaged
+    );
+    if (maybeInconsistentEngine) {
+      const platform = bundle.platform === 'ios' ? 'iOS' : 'Android';
+      const paths = getConfigFilePaths(projectRoot);
+      const configFilePath = paths.dynamicConfigPath ?? paths.staticConfigPath ?? 'app.json';
+      const configFileName = path.basename(configFilePath);
+      throw new Error(
+        `JavaScript engine configuration is inconsistent between ${configFileName} and ${platform} native project.\n` +
+          `In ${configFileName}: Hermes is ${isHermesManaged ? 'enabled' : 'not enabled'}\n` +
+          `In ${platform} native project: Hermes is ${
+            isHermesManaged ? 'not enabled' : 'enabled'
+          }\n` +
+          `Please check the following files for inconsistencies:\n` +
+          `  - ${configFilePath}\n` +
+          `  - ${path.join(projectRoot, 'android', 'gradle.properties')}\n` +
+          `  - ${path.join(projectRoot, 'android', 'app', 'build.gradle')}\n`
+      );
+    }
+
+    if (isHermesManaged) {
+      options.logger.info(
+        { tag: 'expo' },
+        `💿 Building Hermes bytecode for the bundle - platform[${bundle.platform}]`
+      );
+      const hermesBundleOutput = await buildHermesBundleAsync(
+        projectRoot,
+        bundleOutput.code,
+        bundleOutput.map,
+        bundle.minify
+      );
+      bundleOutput.hermesBytecodeBundle = hermesBundleOutput.hbc;
+      bundleOutput.hermesSourcemap = hermesBundleOutput.sourcemap;
+    }
+
+    return bundleOutput;
+  };
+
   try {
     return await Promise.all(
       bundles.map(async (bundle: BundleOptions) => {
         const bundleOutput = await buildAsync(bundle);
-        const isHermesManaged = isEnableHermesManaged(expoConfig, bundle.platform);
-
-        const maybeInconsistentEngine = await maybeInconsistentEngineAsync(
-          projectRoot,
-          bundle.platform,
-          isHermesManaged
-        );
-        if (maybeInconsistentEngine) {
-          const platform = bundle.platform === 'ios' ? 'iOS' : 'Android';
-          const paths = getConfigFilePaths(projectRoot);
-          const configFilePath = paths.dynamicConfigPath ?? paths.staticConfigPath ?? 'app.json';
-          const configFileName = path.basename(configFilePath);
-          throw new Error(
-            `JavaScript engine configuration is inconsistent between ${configFileName} and ${platform} native project.\n` +
-              `In ${configFileName}: Hermes is ${isHermesManaged ? 'enabled' : 'not enabled'}\n` +
-              `In ${platform} native project: Hermes is ${
-                isHermesManaged ? 'not enabled' : 'enabled'
-              }\n` +
-              `Please check the following files for inconsistencies:\n` +
-              `  - ${configFilePath}\n` +
-              `  - ${path.join(projectRoot, 'android', 'gradle.properties')}\n` +
-              `  - ${path.join(projectRoot, 'android', 'app', 'build.gradle')}\n`
-          );
-        }
-
-        if (isHermesManaged) {
-          options.logger.info(
-            { tag: 'expo' },
-            `💿 Building Hermes bytecode for the bundle - platform[${bundle.platform}]`
-          );
-          const hermesBundleOutput = await buildHermesBundleAsync(
-            projectRoot,
-            bundleOutput.code,
-            bundleOutput.map,
-            bundle.minify
-          );
-          bundleOutput.hermesBytecodeBundle = hermesBundleOutput.hbc;
-          bundleOutput.hermesSourcemap = hermesBundleOutput.sourcemap;
-        }
-
-        return bundleOutput;
+        return maybeAddHermesBundleAsync(bundle, bundleOutput);
       })
     );
   } finally {
