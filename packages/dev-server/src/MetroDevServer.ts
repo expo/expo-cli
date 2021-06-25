@@ -194,7 +194,8 @@ export async function bundleAsync(
           `Please check the following files for inconsistencies:\n` +
           `  - ${configFilePath}\n` +
           `  - ${path.join(projectRoot, 'android', 'gradle.properties')}\n` +
-          `  - ${path.join(projectRoot, 'android', 'app', 'build.gradle')}\n`
+          `  - ${path.join(projectRoot, 'android', 'app', 'build.gradle')}\n` +
+          'Learn more: https://expo.fyi/hermes-android-config'
       );
     }
 
