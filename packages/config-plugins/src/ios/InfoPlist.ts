@@ -1,4 +1,3 @@
-import path from 'path';
 import { XcodeProject } from 'xcode';
 
 import { getXCBuildConfigurationFromPbxproj } from './Target';
@@ -27,22 +26,10 @@ export function getInfoPlistPathFromPbxproj(
   if (!xcBuildConfiguration) {
     return null;
   }
-  const infoPlist = xcBuildConfiguration.buildSettings.INFOPLIST_FILE;
-  if (!infoPlist) {
-    return null;
-  }
   // The `INFOPLIST_FILE` is relative to the project folder, ex: app/Info.plist.
-  const xcodeProjectParentFolder = path.dirname(findUpPbxprojRoot(project.filepath));
-
-  const infoPlistPath = path.join(xcodeProjectParentFolder, infoPlist);
-  return infoPlistPath;
+  return sanitizeInfoPlistBuildProperty(xcBuildConfiguration.buildSettings.INFOPLIST_FILE);
 }
 
-function findUpPbxprojRoot(projPath: string) {
-  let root = projPath;
-
-  while (root.length > 2 && path.extname(root) !== '.xcodeproj') {
-    root = path.dirname(root);
-  }
-  return root;
+function sanitizeInfoPlistBuildProperty(infoPlist?: string): string | null {
+  return infoPlist?.replace(/"/g, '').replace('$(SRCROOT)', '') ?? null;
 }

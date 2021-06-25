@@ -69,8 +69,16 @@ const defaultProviders = {
   // Append a rule to supply Info.plist data to mods on `mods.ios.infoPlist`
   infoPlist: provider<InfoPlist, ForwardedBaseModOptions>({
     getFilePath(config) {
-      const infoPlistPath = getInfoPlistPathFromPbxproj(config.modRequest.projectRoot);
-      if (infoPlistPath) {
+      const infoPlistBuildProperty = getInfoPlistPathFromPbxproj(config.modRequest.projectRoot);
+
+      if (infoPlistBuildProperty) {
+        //: [root]/myapp/ios/MyApp/Info.plist
+        const infoPlistPath = path.join(
+          //: myapp/ios
+          config.modRequest.platformProjectRoot,
+          //: MyApp/Info.plist
+          infoPlistBuildProperty
+        );
         if (fileExists(infoPlistPath)) {
           return infoPlistPath;
         }
