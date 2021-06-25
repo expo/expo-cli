@@ -80,13 +80,13 @@ it('should export hbc bundle if jsEngine is hermes', async () => {
       tempDir,
       'export-test-app',
       {
-        sdkVersion: '41.0.0',
+        sdkVersion: '42.0.0',
         android: {
           jsEngine: 'hermes',
         },
       },
       {
-        expo: '41.0.1',
+        expo: '42.0.0-beta.1',
         'react-native': '0.63.2',
       }
     );
