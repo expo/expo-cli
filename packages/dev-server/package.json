@@ -42,9 +42,9 @@
     "fs-extra": "9.0.0",
     "open": "^8.2.0",
     "resolve-from": "^5.0.0",
+    "semver": "7.3.2",
     "serialize-error": "6.0.0",
-    "temp-dir": "^2.0.0",
-    "xdl": "59.0.46"
+    "temp-dir": "^2.0.0"
   },
   "devDependencies": {
     "@expo/babel-preset-cli": "0.2.20",

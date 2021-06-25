@@ -12,8 +12,8 @@ import type { IncomingMessage, ServerResponse } from 'http';
 import type Metro from 'metro';
 import path from 'path';
 import resolveFrom from 'resolve-from';
+import semver from 'semver';
 import { parse as parseUrl } from 'url';
-import { Versions } from 'xdl';
 
 import {
   buildHermesBundleAsync,
@@ -170,7 +170,7 @@ export async function bundleAsync(
     bundle: BundleOptions,
     bundleOutput: BundleOutput
   ): Promise<BundleOutput> => {
-    if (!Versions.gteSdkVersion(expoConfig, '42.0.0')) {
+    if (!gteSdkVersion(expoConfig, '42.0.0')) {
       return bundleOutput;
     }
     const isHermesManaged = isEnableHermesManaged(expoConfig, bundle.platform);
@@ -324,4 +324,21 @@ function remoteDevtoolsCorsMiddleware(
     }
   }
   next();
+}
+
+// Cloned from xdl/src/Versions.ts, we cannot use that because of circular dependency
+function gteSdkVersion(expJson: Pick<ExpoConfig, 'sdkVersion'>, sdkVersion: string): boolean {
+  if (!expJson.sdkVersion) {
+    return false;
+  }
+
+  if (expJson.sdkVersion === 'UNVERSIONED') {
+    return true;
+  }
+
+  try {
+    return semver.gte(expJson.sdkVersion, sdkVersion);
+  } catch (e) {
+    throw new Error(`${expJson.sdkVersion} is not a valid version. Must be in the form of x.y.z`);
+  }
 }
