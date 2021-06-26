@@ -33,6 +33,19 @@ export function getProjectName(projectRoot: string) {
   return path.basename(sourceRoot);
 }
 
+export function resolvePathOrProject(
+  projectRootOrProject: string | XcodeProject
+): XcodeProject | null {
+  if (typeof projectRootOrProject === 'string') {
+    try {
+      return getPbxproj(projectRootOrProject);
+    } catch {
+      return null;
+    }
+  }
+  return projectRootOrProject;
+}
+
 // TODO: come up with a better solution for using app.json expo.name in various places
 function sanitizedName(name: string) {
   return name
