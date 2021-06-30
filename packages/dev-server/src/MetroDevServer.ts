@@ -12,6 +12,7 @@ import type { IncomingMessage, ServerResponse } from 'http';
 import type Metro from 'metro';
 import path from 'path';
 import resolveFrom from 'resolve-from';
+import semver from 'semver';
 import { parse as parseUrl } from 'url';
 
 import {
@@ -165,51 +166,62 @@ export async function bundleAsync(
     return { code, map, assets };
   };
 
+  const maybeAddHermesBundleAsync = async (
+    bundle: BundleOptions,
+    bundleOutput: BundleOutput
+  ): Promise<BundleOutput> => {
+    if (!gteSdkVersion(expoConfig, '42.0.0')) {
+      return bundleOutput;
+    }
+    const isHermesManaged = isEnableHermesManaged(expoConfig, bundle.platform);
+
+    const maybeInconsistentEngine = await maybeInconsistentEngineAsync(
+      projectRoot,
+      bundle.platform,
+      isHermesManaged
+    );
+    if (maybeInconsistentEngine) {
+      const platform = bundle.platform === 'ios' ? 'iOS' : 'Android';
+      const paths = getConfigFilePaths(projectRoot);
+      const configFilePath = paths.dynamicConfigPath ?? paths.staticConfigPath ?? 'app.json';
+      const configFileName = path.basename(configFilePath);
+      throw new Error(
+        `JavaScript engine configuration is inconsistent between ${configFileName} and ${platform} native project.\n` +
+          `In ${configFileName}: Hermes is ${isHermesManaged ? 'enabled' : 'not enabled'}\n` +
+          `In ${platform} native project: Hermes is ${
+            isHermesManaged ? 'not enabled' : 'enabled'
+          }\n` +
+          `Please check the following files for inconsistencies:\n` +
+          `  - ${configFilePath}\n` +
+          `  - ${path.join(projectRoot, 'android', 'gradle.properties')}\n` +
+          `  - ${path.join(projectRoot, 'android', 'app', 'build.gradle')}\n` +
+          'Learn more: https://expo.fyi/hermes-android-config'
+      );
+    }
+
+    if (isHermesManaged) {
+      options.logger.info(
+        { tag: 'expo' },
+        `💿 Building Hermes bytecode for the bundle - platform[${bundle.platform}]`
+      );
+      const hermesBundleOutput = await buildHermesBundleAsync(
+        projectRoot,
+        bundleOutput.code,
+        bundleOutput.map,
+        bundle.minify
+      );
+      bundleOutput.hermesBytecodeBundle = hermesBundleOutput.hbc;
+      bundleOutput.hermesSourcemap = hermesBundleOutput.sourcemap;
+    }
+
+    return bundleOutput;
+  };
+
   try {
     return await Promise.all(
       bundles.map(async (bundle: BundleOptions) => {
         const bundleOutput = await buildAsync(bundle);
-        const isHermesManaged = isEnableHermesManaged(expoConfig, bundle.platform);
-
-        const maybeInconsistentEngine = await maybeInconsistentEngineAsync(
-          projectRoot,
-          bundle.platform,
-          isHermesManaged
-        );
-        if (maybeInconsistentEngine) {
-          const platform = bundle.platform === 'ios' ? 'iOS' : 'Android';
-          const paths = getConfigFilePaths(projectRoot);
-          const configFilePath = paths.dynamicConfigPath ?? paths.staticConfigPath ?? 'app.json';
-          const configFileName = path.basename(configFilePath);
-          throw new Error(
-            `JavaScript engine configuration is inconsistent between ${configFileName} and ${platform} native project.\n` +
-              `In ${configFileName}: Hermes is ${isHermesManaged ? 'enabled' : 'not enabled'}\n` +
-              `In ${platform} native project: Hermes is ${
-                isHermesManaged ? 'not enabled' : 'enabled'
-              }\n` +
-              `Please check the following files for inconsistencies:\n` +
-              `  - ${configFilePath}\n` +
-              `  - ${path.join(projectRoot, 'android', 'gradle.properties')}\n` +
-              `  - ${path.join(projectRoot, 'android', 'app', 'build.gradle')}\n`
-          );
-        }
-
-        if (isHermesManaged) {
-          options.logger.info(
-            { tag: 'expo' },
-            `💿 Building Hermes bytecode for the bundle - platform[${bundle.platform}]`
-          );
-          const hermesBundleOutput = await buildHermesBundleAsync(
-            projectRoot,
-            bundleOutput.code,
-            bundleOutput.map,
-            bundle.minify
-          );
-          bundleOutput.hermesBytecodeBundle = hermesBundleOutput.hbc;
-          bundleOutput.hermesSourcemap = hermesBundleOutput.sourcemap;
-        }
-
-        return bundleOutput;
+        return maybeAddHermesBundleAsync(bundle, bundleOutput);
       })
     );
   } finally {
@@ -313,4 +325,21 @@ function remoteDevtoolsCorsMiddleware(
     }
   }
   next();
+}
+
+// Cloned from xdl/src/Versions.ts, we cannot use that because of circular dependency
+function gteSdkVersion(expJson: Pick<ExpoConfig, 'sdkVersion'>, sdkVersion: string): boolean {
+  if (!expJson.sdkVersion) {
+    return false;
+  }
+
+  if (expJson.sdkVersion === 'UNVERSIONED') {
+    return true;
+  }
+
+  try {
+    return semver.gte(expJson.sdkVersion, sdkVersion);
+  } catch (e) {
+    throw new Error(`${expJson.sdkVersion} is not a valid version. Must be in the form of x.y.z`);
+  }
 }

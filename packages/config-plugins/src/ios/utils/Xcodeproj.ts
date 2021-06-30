@@ -33,6 +33,19 @@ export function getProjectName(projectRoot: string) {
   return path.basename(sourceRoot);
 }
 
+export function resolvePathOrProject(
+  projectRootOrProject: string | XcodeProject
+): XcodeProject | null {
+  if (typeof projectRootOrProject === 'string') {
+    try {
+      return getPbxproj(projectRootOrProject);
+    } catch {
+      return null;
+    }
+  }
+  return projectRootOrProject;
+}
+
 // TODO: come up with a better solution for using app.json expo.name in various places
 function sanitizedName(name: string) {
   return name
@@ -111,11 +124,13 @@ export function addBuildSourceFileToGroup({
   groupName,
   project,
   verbose,
+  targetUuid,
 }: {
   filepath: string;
   groupName: string;
   project: XcodeProject;
   verbose?: boolean;
+  targetUuid?: string;
 }): XcodeProject {
   return addFileToGroupAndLink({
     filepath,
@@ -139,11 +154,13 @@ export function addFileToGroupAndLink({
   project,
   verbose,
   addFileToProject,
+  targetUuid,
 }: {
   filepath: string;
   groupName: string;
   project: XcodeProject;
   verbose?: boolean;
+  targetUuid?: string;
   addFileToProject: (props: { file: PBXFile; project: XcodeProject }) => void;
 }): XcodeProject {
   const group = pbxGroupByPathOrAssert(project, groupName);
@@ -160,6 +177,13 @@ export function addFileToGroupAndLink({
       );
     }
     return project;
+  }
+
+  if (targetUuid != null) {
+    file.target = targetUuid;
+  } else {
+    const applicationNativeTarget = project.getTarget('com.apple.product-type.application');
+    file.target = applicationNativeTarget?.uuid;
   }
 
   file.uuid = project.generateUuid();

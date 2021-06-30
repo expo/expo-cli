@@ -8,12 +8,8 @@ import { ConfigPlugin } from '../Plugin.types';
 import { withDangerousMod } from '../plugins/withDangerousMod';
 import { InfoPlist } from './IosConfig.types';
 import { getAllInfoPlistPaths, getAllPBXProjectPaths, getPBXProjectPath } from './Paths';
-import { findFirstNativeTarget, findNativeTargetByName } from './Target';
-import {
-  ConfigurationSectionEntry,
-  getBuildConfigurationForListIdAndName,
-  getBuildConfigurationsForListId,
-} from './utils/Xcodeproj';
+import { findFirstNativeTarget, getXCBuildConfigurationFromPbxproj } from './Target';
+import { ConfigurationSectionEntry, getBuildConfigurationsForListId } from './utils/Xcodeproj';
 
 export const withBundleIdentifier: ConfigPlugin<{ bundleIdentifier?: string }> = (
   config,
@@ -85,13 +81,13 @@ function getBundleIdentifierFromPbxproj(
   const project = xcode.project(pbxprojPath);
   project.parseSync();
 
-  const [, nativeTarget] = targetName
-    ? findNativeTargetByName(project, targetName)
-    : findFirstNativeTarget(project);
-  const [, xcBuildConfiguration] = getBuildConfigurationForListIdAndName(project, {
-    configurationListId: nativeTarget.buildConfigurationList,
+  const xcBuildConfiguration = getXCBuildConfigurationFromPbxproj(project, {
+    targetName,
     buildConfiguration,
   });
+  if (!xcBuildConfiguration) {
+    return null;
+  }
   return getProductBundleIdentifierFromBuildConfiguration(xcBuildConfiguration);
 }
 

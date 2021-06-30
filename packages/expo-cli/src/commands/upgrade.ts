@@ -52,6 +52,9 @@ export type TargetSDKVersion = Pick<
 function logNewSection(title: string) {
   const spinner = ora(chalk.bold(title));
   spinner.start();
+  if (Log.isDebug) {
+    spinner.stop();
+  }
   return spinner;
 }
 
@@ -576,6 +579,7 @@ export async function upgradeAsync(
   const { exp: currentExp, dynamicConfigPath, staticConfigPath } = getConfig(projectRoot);
 
   const removingSdkVersionStep = logNewSection('Validating configuration.');
+
   if (dynamicConfigPath) {
     if (
       !Versions.gteSdkVersion(currentExp, targetSdkVersionString) &&
@@ -868,6 +872,7 @@ async function maybeCleanNpmStateAsync(packageManager: any) {
       const reinstallingNodeModulesStep = logNewSection(
         'Installing node_modules and rebuilding package-lock.json.'
       );
+
       try {
         await packageManager.installAsync();
         reinstallingNodeModulesStep.succeed(
