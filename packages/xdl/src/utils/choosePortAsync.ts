@@ -8,8 +8,15 @@ import { getRunningProcess } from './getRunningProcess';
 
 export async function choosePortAsync(
   projectRoot: string,
-  defaultPort: number,
-  host?: string
+  {
+    defaultPort,
+    host,
+    reuseExistingPort,
+  }: {
+    defaultPort: number;
+    host?: string;
+    reuseExistingPort?: boolean;
+  }
 ): Promise<number | null> {
   try {
     const port = await freeportAsync(defaultPort, { hostnames: [host ?? null] });
@@ -29,6 +36,9 @@ export async function choosePortAsync(
       const pidTag = chalk.gray(`(pid ${runningProcess.pid})`);
       if (runningProcess.directory === projectRoot) {
         message += ` running this app in another window`;
+        if (reuseExistingPort) {
+          return null;
+        }
       } else {
         message += ` running ${chalk.cyan(runningProcess.command)} in another window`;
       }

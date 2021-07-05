@@ -17,7 +17,10 @@ export async function resolvePortAsync(
   }
 
   // Only check the port when the bundler is running.
-  const resolvedPort = await choosePortAsync(projectRoot, port);
+  const resolvedPort = await choosePortAsync(projectRoot, {
+    defaultPort: port,
+    reuseExistingPort: true,
+  });
   if (resolvedPort == null) {
     Log.log('\u203A Skipping dev server');
     // Skip bundling if the port is null
