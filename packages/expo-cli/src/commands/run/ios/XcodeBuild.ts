@@ -6,7 +6,7 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import { SimControl } from 'xdl';
 
-import CommandError from '../../../CommandError';
+import CommandError, { AbortCommandError } from '../../../CommandError';
 import Log from '../../../log';
 import { ensureDeviceIsCodeSignedForDeploymentAsync } from './developmentCodeSigning';
 import { ProjectInfo, XcodeConfiguration } from './resolveOptionsAsync';
@@ -227,8 +227,17 @@ export async function buildAsync({
     });
 
     buildProcess.on('close', (code: number) => {
+      Log.debug(`Exited with code: ${code}`);
+
+      // User cancelled with ctrl-c
+      if (code === null) {
+        reject(new AbortCommandError());
+        return;
+      }
+
       Log.log(formatter.getBuildSummary());
       const logFilePath = writeBuildLogs(projectRoot, buildOutput, errorOutput);
+
       if (code !== 0) {
         // Determine if the logger found any errors;
         const wasErrorPresented = !!formatter.errors.length;

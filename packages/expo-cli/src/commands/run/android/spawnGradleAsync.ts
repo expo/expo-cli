@@ -1,6 +1,7 @@
 import spawnAsync from '@expo/spawn-async';
 import path from 'path';
 
+import { AbortCommandError } from '../../../CommandError';
 import Log from '../../../log';
 
 function capitalize(name: string) {
@@ -39,8 +40,17 @@ export async function spawnGradleAsync({
     args.push('--profile');
   }
   Log.debug(`  ${gradlew} ${args.join(' ')}`);
-  await spawnAsync(gradlew, args, {
-    cwd: androidProjectPath,
-    stdio: 'inherit',
-  });
+  try {
+    return await spawnAsync(gradlew, args, {
+      cwd: androidProjectPath,
+      stdio: 'inherit',
+    });
+  } catch (error) {
+    // User aborted the command with ctrl-c
+    if (error.status === 130) {
+      // Fail silently
+      throw new AbortCommandError();
+    }
+    throw error;
+  }
 }
