@@ -229,8 +229,12 @@ export async function buildAsync({
     buildProcess.on('close', (code: number) => {
       Log.debug(`Exited with code: ${code}`);
 
-      // User cancelled with ctrl-c
-      if (code === null) {
+      if (
+        // User cancelled with ctrl-c
+        code === null ||
+        // Build interrupted
+        code === 75
+      ) {
         reject(new AbortCommandError());
         return;
       }
