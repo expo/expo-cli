@@ -5,7 +5,13 @@ import Log from '../../../log';
 
 export async function resolvePortAsync(
   projectRoot: string,
-  defaultPort?: string | number
+  {
+    reuseExistingPort,
+    defaultPort,
+  }: {
+    reuseExistingPort?: boolean;
+    defaultPort?: string | number;
+  } = {}
 ): Promise<number | null> {
   let port: number;
   if (typeof defaultPort === 'string') {
@@ -19,7 +25,7 @@ export async function resolvePortAsync(
   // Only check the port when the bundler is running.
   const resolvedPort = await choosePortAsync(projectRoot, {
     defaultPort: port,
-    reuseExistingPort: true,
+    reuseExistingPort,
   });
   if (resolvedPort == null) {
     Log.log('\u203A Skipping dev server');
