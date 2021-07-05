@@ -1,6 +1,6 @@
 {
   "name": "@expo/next-adapter",
-  "version": "2.1.82",
+  "version": "2.1.83",
   "description": "Adapter for using Next.js with Unimodules",
   "main": "build/index.js",
   "types": "build/index.d.ts",
@@ -60,7 +60,7 @@
   },
   "dependencies": {
     "@expo/package-manager": "0.0.43",
-    "@expo/webpack-config": "0.12.81",
+    "@expo/webpack-config": "0.12.82",
     "chalk": "^4.0.0",
     "commander": "^4.0.1",
     "fs-extra": "9.0.0",
