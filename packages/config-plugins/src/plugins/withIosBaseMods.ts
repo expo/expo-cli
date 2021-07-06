@@ -10,6 +10,7 @@ import { Entitlements, Paths } from '../ios';
 import { InfoPlist } from '../ios/IosConfig.types';
 import { getInfoPlistPathFromPbxproj } from '../ios/utils/getInfoPlistPath';
 import { fileExists } from '../utils/modules';
+import { sortObject } from '../utils/sortObject';
 import { addWarningIOS } from '../utils/warnings';
 import { ForwardedBaseModOptions, provider, withGeneratedBaseMods } from './createBaseMod';
 
@@ -49,7 +50,7 @@ const defaultProviders = {
       return plist.parse(await readFile(filePath, 'utf8'));
     },
     async write(filePath, { modResults }) {
-      await writeFile(filePath, plist.build(modResults));
+      await writeFile(filePath, plist.build(sortObject(modResults)));
     },
   }),
   // Append a rule to supply .xcodeproj data to mods on `mods.ios.xcodeproj`
@@ -114,7 +115,7 @@ const defaultProviders = {
       if (!config.ios) config.ios = {};
       config.ios.infoPlist = config.modResults;
 
-      await writeFile(filePath, plist.build(config.modResults));
+      await writeFile(filePath, plist.build(sortObject(config.modResults)));
     },
   }),
   // Append a rule to supply .entitlements data to mods on `mods.ios.entitlements`
@@ -146,7 +147,7 @@ const defaultProviders = {
       }
       config.ios.entitlements = config.modResults;
 
-      await writeFile(filePath, plist.build(config.modResults));
+      await writeFile(filePath, plist.build(sortObject(config.modResults)));
     },
   }),
 };
