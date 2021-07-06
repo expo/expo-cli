@@ -90,23 +90,6 @@ type SimulatorDeviceList = {
   };
 };
 
-export async function isSimulatorRunningAsync() {
-  try {
-    const zeroMeansNo = (
-      await osascript.execAsync(
-        'tell app "System Events" to count processes whose name is "Simulator"'
-      )
-    ).trim();
-    if (zeroMeansNo === '0') {
-      return false;
-    }
-  } catch {
-    return false;
-  }
-
-  return true;
-}
-
 export async function getDefaultSimulatorDeviceUDIDAsync() {
   try {
     const { stdout: defaultDeviceUDID } = await spawnAsync('defaults', [
