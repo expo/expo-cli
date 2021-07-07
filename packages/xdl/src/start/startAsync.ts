@@ -21,6 +21,7 @@ import {
   stopTunnelsAsync,
   Webpack,
 } from '../internal';
+import { watchBabelConfigForProject } from './watchBabelConfig';
 
 let serverInstance: Server | null = null;
 let messageSocket: any | null = null;
@@ -56,6 +57,8 @@ export async function startAsync(
     developerTool: Config.developerTool,
     sdkVersion: exp.sdkVersion ?? null,
   });
+
+  watchBabelConfigForProject(projectRoot);
 
   if (options.webOnly) {
     await Webpack.restartAsync(projectRoot, options);
