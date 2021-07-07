@@ -72,7 +72,7 @@
     "webpack-deep-scope-plugin": "1.6.0",
     "webpack-manifest-plugin": "~2.2.0",
     "webpackbar": "^4.0.0",
-    "workbox-webpack-plugin": "^3.6.3",
+    "workbox-webpack-plugin": "^6.1.5",
     "worker-loader": "^2.0.0"
   },
   "devDependencies": {
@@ -85,7 +85,7 @@
     "@types/webpack": "4.41.18",
     "@types/webpack-dev-server": "3.11.0",
     "@types/webpack-manifest-plugin": "~2.1.0",
-    "@types/workbox-webpack-plugin": "^4.1.0",
+    "@types/workbox-webpack-plugin": "^5.1.8",
     "jest-puppeteer": "^4.4.0",
     "prettier": "^1.16.4",
     "rimraf": "^3.0.2",
