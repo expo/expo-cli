@@ -43,7 +43,7 @@
     "expo": "37",
     "metro": "^0.59.0",
     "metro-config": "^0.59.0",
-    "react-native": "0.61.4",
+    "react-native": "~0.63.4",
     "rimraf": "^3.0.2"
   },
   "publishConfig": {
