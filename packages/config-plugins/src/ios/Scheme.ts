@@ -88,7 +88,7 @@ export function hasScheme(scheme: string, infoPlist: InfoPlist): boolean {
 
   if (!Array.isArray(existingSchemes)) return false;
 
-  return existingSchemes.some(({ CFBundleURLSchemes: schemes }: any) => 
+  return existingSchemes.some(({ CFBundleURLSchemes: schemes }: any) =>
     Array.isArray(schemes) ? schemes.includes(scheme) : false
   );
 }
