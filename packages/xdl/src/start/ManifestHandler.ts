@@ -219,6 +219,13 @@ export async function getManifestResponseAsync({
   if (manifest.sdkVersion && Versions.lteSdkVersion(manifest, '40.0.0')) {
     manifest.env = getManifestEnvironment();
   }
+
+  // Add this string to make Flipper register React Native / Metro as "running".
+  // Can be tested by running:
+  // `METRO_SERVER_PORT=19000 open -a flipper.app`
+  // Where 19000 is the port where the Expo project is being hosted.
+  manifest.__flipperHack = 'React Native packager is running';
+
   // Add URLs to the manifest
   manifest.bundleUrl = await getBundleUrlAsync({
     projectRoot,
