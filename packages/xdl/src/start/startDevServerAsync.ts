@@ -33,7 +33,7 @@ export async function startDevServerAsync(projectRoot: string, startOptions: Sta
   } else {
     port = startOptions.devClient
       ? Number(process.env.RCT_METRO_PORT) || 8081
-      : await getFreePortAsync(19000);
+      : await getFreePortAsync(startOptions.metroPort || 19000);
   }
   await ProjectSettings.setPackagerInfoAsync(projectRoot, {
     expoServerPort: port,

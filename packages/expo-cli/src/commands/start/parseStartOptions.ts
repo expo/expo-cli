@@ -23,6 +23,7 @@ export type NormalizedOptions = URLOptions & {
 };
 
 export type RawStartOptions = NormalizedOptions & {
+  port?: number;
   parent?: { nonInteractive: boolean; rawArgs: string[] };
 };
 
@@ -63,13 +64,14 @@ export async function normalizeOptionsAsync(
 
   const opts = parseRawArguments(options, rawArgs);
 
-  if (opts.devClient) {
-    const metroPort = await resolvePortAsync(projectRoot);
-    if (!metroPort) {
-      throw new AbortCommandError();
-    }
-    opts.metroPort = metroPort;
+  const metroPort = await resolvePortAsync(projectRoot, {
+    defaultPort: options.port,
+    fallbackPort: options.devClient ? 8081 : 19000,
+  });
+  if (!metroPort) {
+    throw new AbortCommandError();
   }
+  opts.metroPort = metroPort;
 
   // Side-effect
   await cacheOptionsAsync(projectRoot, opts);

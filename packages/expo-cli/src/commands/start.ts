@@ -152,6 +152,10 @@ export default (program: any) => {
     .option('--minify', 'Minify code')
     .option('--no-minify', 'Do not minify code')
     .option('--https', 'To start webpack with https protocol')
+    .option(
+      '-p, --port <port>',
+      'Port to start the native Metro bundler on (does not apply to web or tunnel). Default: 19000'
+    )
     .option('--no-https', 'To start webpack with http protocol')
     .urlOpts()
     .allowOffline()
@@ -173,6 +177,7 @@ export default (program: any) => {
     .option('--no-minify', 'Do not minify code')
     .option('--https', 'To start webpack with https protocol')
     .option('--no-https', 'To start webpack with http protocol')
+    .option('--port', 'To start webpack with http protocol')
     .option('-s, --send-to [dest]', 'An email address to send a link to')
     .urlOpts()
     .allowOffline()
