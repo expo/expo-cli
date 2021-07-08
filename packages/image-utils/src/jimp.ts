@@ -119,9 +119,19 @@ export async function getJimpImageAsync(input: string | Buffer | Jimp): Promise<
 
 export async function resize(
   { input, quality = 100 }: JimpGlobalOptions,
-  { background, position, fit, width, height = Jimp.AUTO }: Omit<ResizeOptions, 'operation'>
+  { background, position, fit, width, height }: Omit<ResizeOptions, 'operation'>
 ): Promise<Jimp> {
   let initialImage = await getJimpImageAsync(input);
+
+  if (width && !height) {
+    height = Jimp.AUTO;
+  } else if (!width && height) {
+    width = Jimp.AUTO;
+  } else {
+    width = initialImage.bitmap.width;
+    height = initialImage.bitmap.height;
+  }
+
   const jimpPosition = convertPosition(position);
   const jimpQuality = typeof quality !== 'number' ? 100 : quality;
   if (fit === 'cover') {
