@@ -70,6 +70,10 @@ export type ExpoAppManifest = ExpoConfig & {
   releaseId?: string;
   revisionId?: string;
   mainModuleName?: string;
+  // A string that flipper checks to determine if Metro bundler is running
+  // by adding it to the manifest, we can trick Flipper into working properly.
+  // https://github.com/facebook/flipper/blob/9ca8bee208b7bfe2b8c0dab8eb4b79688a0c84bc/desktop/app/src/dispatcher/metroDevice.tsx#L37
+  __flipperHack?: 'React Native packager is running';
   env?: Record<string, any>;
   bundleUrl?: string;
   debuggerHost?: string;
