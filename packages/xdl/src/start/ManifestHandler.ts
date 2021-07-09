@@ -1,4 +1,4 @@
-import { ExpoAppManifest, ExpoConfig, getConfig } from '@expo/config';
+import { ExpoAppManifest, ExpoConfig, ExpoGoConfig, getConfig } from '@expo/config';
 import { JSONObject } from '@expo/json-file';
 import chalk from 'chalk';
 import express from 'express';
@@ -66,16 +66,16 @@ function shouldExposeEnvironmentVariableInManifest(key: string) {
   return key.startsWith('REACT_NATIVE_') || key.startsWith('EXPO_');
 }
 
-function stripPort(host: string | undefined): string | undefined {
+export function stripPort(host: string | undefined): string | undefined {
   if (!host) {
     return host;
   }
   return new URL('/', `http://${host}`).hostname;
 }
 
-async function getPackagerOptionsAsync(
+export async function getPackagerOptionsAsync(
   projectRoot: string
-): Promise<[PackagerOptions, PackagerOptions]> {
+): Promise<[ProjectSettings.ProjectSettings, PackagerOptions]> {
   // Get packager opts and then copy into bundleUrlPackagerOpts
   const projectSettings = await ProjectSettings.readAsync(projectRoot);
   const bundleUrlPackagerOpts = JSON.parse(JSON.stringify(projectSettings));
@@ -86,7 +86,7 @@ async function getPackagerOptionsAsync(
   return [projectSettings, bundleUrlPackagerOpts];
 }
 
-async function getBundleUrlAsync({
+export async function getBundleUrlAsync({
   projectRoot,
   platform,
   projectSettings,
@@ -184,6 +184,38 @@ async function getManifestResponseFromHeadersAsync({
   return getManifestResponseAsync({ projectRoot, host: headers.host, platform, acceptSignature });
 }
 
+export async function getExpoGoConfig({
+  projectRoot,
+  projectSettings,
+  mainModuleName,
+  hostname,
+}: {
+  projectRoot: string;
+  projectSettings: ProjectSettings.ProjectSettings;
+  mainModuleName: string;
+  hostname: string | undefined;
+}): Promise<ExpoGoConfig> {
+  const [debuggerHost, logUrl] = await Promise.all([
+    UrlUtils.constructDebuggerHostAsync(projectRoot, hostname),
+    UrlUtils.constructLogUrlAsync(projectRoot, hostname),
+  ]);
+  return {
+    developer: {
+      tool: Config.developerTool,
+      projectRoot,
+    },
+    packagerOpts: projectSettings,
+    mainModuleName,
+    // Add this string to make Flipper register React Native / Metro as "running".
+    // Can be tested by running:
+    // `METRO_SERVER_PORT=19000 open -a flipper.app`
+    // Where 19000 is the port where the Expo project is being hosted.
+    __flipperHack: 'React Native packager is running',
+    debuggerHost,
+    logUrl,
+  };
+}
+
 export async function getManifestResponseAsync({
   projectRoot,
   host,
@@ -194,10 +226,9 @@ export async function getManifestResponseAsync({
   platform: string;
   host?: string;
   acceptSignature?: string | string[];
-}): Promise<{ exp: ExpoConfig; manifestString: string; hostInfo: HostInfo }> {
+}): Promise<{ exp: ExpoAppManifest; manifestString: string; hostInfo: HostInfo }> {
   // Read the config
   const projectConfig = getConfig(projectRoot);
-  const manifest = projectConfig.exp as ExpoAppManifest;
   // Read from headers
   const hostname = stripPort(host);
 
@@ -207,24 +238,24 @@ export async function getManifestResponseAsync({
   // Gather packager and host info
   const hostInfo = await createHostInfoAsync();
   const [projectSettings, bundleUrlPackagerOpts] = await getPackagerOptionsAsync(projectRoot);
-  // Mutate the manifest
-  manifest.developer = {
-    tool: Config.developerTool,
+  // Create the manifest and set fields within it
+  const expoGoConfig = await getExpoGoConfig({
     projectRoot,
+    projectSettings,
+    mainModuleName,
+    hostname,
+  });
+  const hostUri = await UrlUtils.constructHostUriAsync(projectRoot, hostname);
+  const manifest: ExpoAppManifest = {
+    ...(projectConfig.exp as ExpoAppManifest),
+    ...expoGoConfig,
+    hostUri,
   };
-  manifest.packagerOpts = projectSettings;
-  manifest.mainModuleName = mainModuleName;
   // Adding the env variables to the Expo manifest is unsafe.
   // This feature is deprecated in SDK 41 forward.
   if (manifest.sdkVersion && Versions.lteSdkVersion(manifest, '40.0.0')) {
     manifest.env = getManifestEnvironment();
   }
-
-  // Add this string to make Flipper register React Native / Metro as "running".
-  // Can be tested by running:
-  // `METRO_SERVER_PORT=19000 open -a flipper.app`
-  // Where 19000 is the port where the Expo project is being hosted.
-  manifest.__flipperHack = 'React Native packager is running';
 
   // Add URLs to the manifest
   manifest.bundleUrl = await getBundleUrlAsync({
@@ -235,13 +266,11 @@ export async function getManifestResponseAsync({
     mainModuleName,
     hostname,
   });
-  manifest.debuggerHost = await UrlUtils.constructDebuggerHostAsync(projectRoot, hostname);
-  manifest.logUrl = await UrlUtils.constructLogUrlAsync(projectRoot, hostname);
-  manifest.hostUri = await UrlUtils.constructHostUriAsync(projectRoot, hostname);
+
   // Resolve all assets and set them on the manifest as URLs
   await ProjectAssets.resolveManifestAssets({
     projectRoot,
-    manifest: manifest as ExpoAppManifest,
+    manifest,
     async resolver(path) {
       return manifest.bundleUrl!.match(/^https?:\/\/.*?\//)![0] + 'assets/' + path;
     },
