@@ -61,7 +61,10 @@ export async function startAsync(
   watchBabelConfigForProject(projectRoot);
 
   if (options.webOnly) {
-    await Webpack.restartAsync(projectRoot, options);
+    await Webpack.restartAsync(projectRoot, {
+      ...options,
+      port: options.webpackPort,
+    });
     DevSession.startSession(projectRoot, exp, 'web');
     return exp;
   } else if (Env.shouldUseDevServer(exp) || options.devClient) {
