@@ -11,6 +11,7 @@ import {
 
 export type StartOptions = {
   metroPort?: number;
+  webpackPort?: number;
   isWebSocketsEnabled?: boolean;
   isRemoteReloadingEnabled?: boolean;
   devClient?: boolean;

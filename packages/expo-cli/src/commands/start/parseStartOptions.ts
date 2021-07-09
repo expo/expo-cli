@@ -1,6 +1,7 @@
 import { ExpoConfig, isLegacyImportsEnabled } from '@expo/config';
 import { Project, ProjectSettings, Versions } from 'xdl';
 
+import { WebpackEnvironment } from '../../../../xdl/build/internal';
 import { AbortCommandError } from '../../CommandError';
 import Log from '../../log';
 import { URLOptions } from '../../urlOpts';
@@ -20,6 +21,7 @@ export type NormalizedOptions = URLOptions & {
   localhost?: boolean;
   tunnel?: boolean;
   metroPort?: number;
+  webpackPort?: number;
 };
 
 export type RawStartOptions = NormalizedOptions & {
@@ -64,14 +66,25 @@ export async function normalizeOptionsAsync(
 
   const opts = parseRawArguments(options, rawArgs);
 
-  const metroPort = await resolvePortAsync(projectRoot, {
-    defaultPort: options.port,
-    fallbackPort: options.devClient ? 8081 : 19000,
-  });
-  if (!metroPort) {
-    throw new AbortCommandError();
+  if (options.webOnly) {
+    const webpackPort = await resolvePortAsync(projectRoot, {
+      defaultPort: options.port,
+      fallbackPort: WebpackEnvironment.DEFAULT_PORT,
+    });
+    if (!webpackPort) {
+      throw new AbortCommandError();
+    }
+    opts.webpackPort = webpackPort;
+  } else {
+    const metroPort = await resolvePortAsync(projectRoot, {
+      defaultPort: options.port,
+      fallbackPort: options.devClient ? 8081 : 19000,
+    });
+    if (!metroPort) {
+      throw new AbortCommandError();
+    }
+    opts.metroPort = metroPort;
   }
-  opts.metroPort = metroPort;
 
   // Side-effect
   await cacheOptionsAsync(projectRoot, opts);
@@ -137,6 +150,7 @@ export function parseStartOptions(
 ): Project.StartOptions {
   const startOpts: Project.StartOptions = {
     metroPort: options.metroPort,
+    webpackPort: options.webpackPort,
   };
 
   if (options.clear) {

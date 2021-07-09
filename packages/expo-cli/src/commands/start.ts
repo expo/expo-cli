@@ -177,7 +177,7 @@ export default (program: any) => {
     .option('--no-minify', 'Do not minify code')
     .option('--https', 'To start webpack with https protocol')
     .option('--no-https', 'To start webpack with http protocol')
-    .option('--port', 'To start webpack with http protocol')
+    .option('-p, --port <port>', 'Port to start the Webpack bundler on. Default: 19006')
     .option('-s, --send-to [dest]', 'An email address to send a link to')
     .urlOpts()
     .allowOffline()

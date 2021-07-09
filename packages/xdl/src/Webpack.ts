@@ -54,6 +54,7 @@ type CLIWebOptions = {
 type BundlingOptions = {
   dev?: boolean;
   clear?: boolean;
+  port?: number;
   pwa?: boolean;
   isImageEditingEnabled?: boolean;
   webpackEnv?: object;
