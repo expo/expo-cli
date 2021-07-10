@@ -1,4 +1,4 @@
-import fs from 'fs-extra';
+import fs from 'fs';
 import os from 'os';
 import path from 'path';
 
@@ -8,8 +8,8 @@ jasmine.DEFAULT_TIMEOUT_INTERVAL = 20 * 1000;
 
 const FIXTURES = path.join(os.tmpdir(), 'json-file-fixtures');
 
-beforeAll(() => fs.ensureDir(FIXTURES));
-afterAll(() => fs.remove(FIXTURES));
+beforeAll(() => fs.promises.mkdir(FIXTURES, { recursive: true }));
+afterAll(() => fs.promises.rmdir(FIXTURES, { recursive: true }));
 
 it(`is a class`, () => {
   const file = new JsonFile(path.join(__dirname, '../package.json'));
@@ -132,7 +132,7 @@ it('adds a new line at the eof', async () => {
   const file = new JsonFile(filename, { json5: true });
   await file.writeAsync(obj1);
   expect(fs.existsSync(filename)).toBe(true);
-  const data = await fs.readFile(filename, 'utf-8');
+  const data = await fs.promises.readFile(filename, 'utf-8');
   const lastChar = data[data.length - 1];
   expect(lastChar).toEqual('\n');
 });
