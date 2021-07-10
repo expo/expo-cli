@@ -146,6 +146,7 @@ export async function runAndroidActionAsync(projectRoot: string, options: Option
   } else {
     Log.debug('Opening app on device via package name: ' + props.device.name);
     // For now, just open the app with a matching package name
+    await Android.startAdbReverseAsync(projectRoot);
     await Android.openAppAsync(props.device, props);
   }
 
