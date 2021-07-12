@@ -282,7 +282,8 @@ async function adbAlreadyRunning(adb: string): Promise<boolean> {
     if (errorMessage.startsWith(BEGINNING_OF_ADB_ERROR_MESSAGE)) {
       errorMessage = errorMessage.substring(BEGINNING_OF_ADB_ERROR_MESSAGE.length);
     }
-    throw new Error(errorMessage);
+    e.message = errorMessage;
+    throw e;
   }
 }
 
@@ -302,12 +303,17 @@ export async function getAdbOutputAsync(args: string[]): Promise<string> {
     const result = await spawnAsync(adb, args);
     return result.stdout;
   } catch (e) {
+    // User pressed ctrl+c to cancel the process...
+    if (e.signal === 'SIGINT') {
+      e.isAbortError = true;
+    }
     // TODO: Support heap corruption for adb 29 (process exits with code -1073740940) (windows and linux)
     let errorMessage = (e.stderr || e.stdout || e.message).trim();
     if (errorMessage.startsWith(BEGINNING_OF_ADB_ERROR_MESSAGE)) {
       errorMessage = errorMessage.substring(BEGINNING_OF_ADB_ERROR_MESSAGE.length);
     }
-    throw new Error(errorMessage);
+    e.message = errorMessage;
+    throw e;
   }
 }
 
@@ -330,7 +336,8 @@ export async function getAdbFileOutputAsync(args: string[], encoding?: 'latin1')
     if (errorMessage.startsWith(BEGINNING_OF_ADB_ERROR_MESSAGE)) {
       errorMessage = errorMessage.substring(BEGINNING_OF_ADB_ERROR_MESSAGE.length);
     }
-    throw new Error(errorMessage);
+    e.message = errorMessage;
+    throw e;
   }
 }
 
@@ -401,11 +408,6 @@ export async function installExpoAsync({
   url?: string;
   version?: string;
 }) {
-  const bar = new ProgressBar('Downloading the Expo Go app [:bar] :percent :etas', {
-    total: 100,
-    width: 64,
-  });
-
   let warningTimer: NodeJS.Timeout;
   const setWarningTimer = () => {
     if (warningTimer) {
@@ -419,17 +421,22 @@ export async function installExpoAsync({
     }, INSTALL_WARNING_TIMEOUT);
   };
 
-  Logger.notifications.info({ code: NotificationCode.START_LOADING });
+  const bar = new ProgressBar('Downloading the Expo Go app [:bar] :percent :etas', {
+    width: 64,
+    total: 100,
+    clear: true,
+    complete: '=',
+    incomplete: ' ',
+  });
+
   warningTimer = setWarningTimer();
   const path = await downloadApkAsync(url, progress => bar.tick(1, progress));
-  Logger.notifications.info({ code: NotificationCode.STOP_LOADING });
 
-  if (version) {
-    Logger.global.info(`Installing Expo Go ${version} on device`);
-  } else {
-    Logger.global.info(`Installing Expo Go on device`);
-  }
-  Logger.notifications.info({ code: NotificationCode.START_LOADING });
+  const message = version
+    ? `Installing Expo Go ${version} on ${device.name}`
+    : `Installing Expo Go on ${device.name}`;
+
+  Logger.notifications.info({ code: NotificationCode.START_LOADING }, message);
   warningTimer = setWarningTimer();
   const result = await installOnDeviceAsync(device, { binaryPath: path });
   Logger.notifications.info({ code: NotificationCode.STOP_LOADING });
@@ -807,7 +814,7 @@ export async function openProjectAsync({
   devClient?: boolean;
   device?: Device;
   scheme?: string;
-}): Promise<{ success: true; url: string } | { success: false; error: string }> {
+}): Promise<{ success: true; url: string } | { success: false; error: Error | string }> {
   try {
     await startAdbReverseAsync(projectRoot);
 
@@ -845,7 +852,12 @@ export async function openProjectAsync({
     });
     return { success: true, url: projectUrl };
   } catch (e) {
-    Logger.global.error(`Couldn't start project on Android: ${e.message}`);
+    if (e.isAbortError) {
+      // Don't log anything when the user cancelled the process
+      return { success: false, error: 'escaped' };
+    } else {
+      Logger.global.error(`Couldn't start project on Android: ${e.message}`);
+    }
     return { success: false, error: e };
   }
 }

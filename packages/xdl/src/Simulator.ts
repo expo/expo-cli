@@ -477,16 +477,6 @@ export async function installExpoOnSimulatorAsync({
   url?: string;
   version?: string;
 }) {
-  const bar = new ProgressBar(
-    `Installing the Expo Go app on ${simulator.name} [:bar] :percent :etas`,
-    {
-      total: 100,
-      width: 64,
-      complete: '=',
-      incomplete: ' ',
-    }
-  );
-
   let warningTimer: NodeJS.Timeout;
   const setWarningTimer = () => {
     if (warningTimer) {
@@ -500,18 +490,22 @@ export async function installExpoOnSimulatorAsync({
     }, INSTALL_WARNING_TIMEOUT);
   };
 
-  Logger.notifications.info({ code: NotificationCode.START_LOADING });
+  const bar = new ProgressBar('Downloading the Expo Go app [:bar] :percent :etas', {
+    width: 64,
+    total: 100,
+    clear: true,
+    complete: '=',
+    incomplete: ' ',
+  });
+
   warningTimer = setWarningTimer();
+
   const dir = await _downloadSimulatorAppAsync(url, progress => bar.tick(1, progress));
-  Logger.notifications.info({ code: NotificationCode.STOP_LOADING });
 
-  if (version) {
-    Logger.global.info(`Installing Expo Go ${version} on ${simulator.name}`);
-  } else {
-    Logger.global.info(`Installing Expo Go on ${simulator.name}`);
-  }
-
-  Logger.notifications.info({ code: NotificationCode.START_LOADING });
+  const message = version
+    ? `Installing Expo Go ${version} on ${simulator.name}`
+    : `Installing Expo Go on ${simulator.name}`;
+  Logger.notifications.info({ code: NotificationCode.START_LOADING }, message);
   warningTimer = setWarningTimer();
 
   const result = await SimControl.installAsync({ udid: simulator.udid, dir });

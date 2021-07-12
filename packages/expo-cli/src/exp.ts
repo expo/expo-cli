@@ -1,7 +1,6 @@
 import bunyan from '@expo/bunyan';
 import { setCustomConfigPath } from '@expo/config';
 import { INTERNAL_CALLSITES_REGEX } from '@expo/metro-config';
-import simpleSpinner from '@expo/simple-spinner';
 import boxen from 'boxen';
 import chalk from 'chalk';
 import program, { Command } from 'commander';
@@ -42,7 +41,7 @@ import Log from './log';
 import update from './update';
 import urlOpts from './urlOpts';
 import { matchFileNameOrURLFromStackTrace } from './utils/matchFileNameOrURLFromStackTrace';
-import { ora } from './utils/ora';
+import { logNewSection, ora } from './utils/ora';
 
 // We use require() to exclude package.json from TypeScript's analysis since it lives outside the
 // src directory and would change the directory structure of the emitted files under the build
@@ -850,11 +849,15 @@ function _registerLogs() {
         if (chunk.code) {
           switch (chunk.code) {
             case NotificationCode.START_LOADING:
-              simpleSpinner.start();
+              logNewSection(chunk.msg || '');
               return;
-            case NotificationCode.STOP_LOADING:
-              simpleSpinner.stop();
+            case NotificationCode.STOP_LOADING: {
+              const spinner = Log.getSpinner();
+              if (spinner) {
+                spinner.stop();
+              }
               return;
+            }
             case NotificationCode.DOWNLOAD_CLI_PROGRESS:
               return;
           }

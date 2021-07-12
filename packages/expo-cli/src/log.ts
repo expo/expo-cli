@@ -77,6 +77,10 @@ export default class Log {
     }
   }
 
+  public static getSpinner() {
+    return Log._oraSpinner || null;
+  }
+
   public static error(...args: any[]) {
     Log.respectProgressBars(() => {
       Log.consoleError(...Log.withPrefixAndTextColor(args, chalk.red));
