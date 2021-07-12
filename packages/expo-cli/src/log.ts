@@ -203,11 +203,11 @@ export default class Log {
       if (progressBar.complete) {
         Log.setBundleProgressBar(null);
         progressBar = null;
-      } else {
+      } else if ('stream' in progressBar) {
         // @ts-ignore
-        progressBar.stream.clearLine();
+        progressBar.stream?.clearLine?.();
         // @ts-ignore
-        progressBar.stream.cursorTo(0);
+        progressBar.stream?.cursorTo?.(0);
       }
     }
 
