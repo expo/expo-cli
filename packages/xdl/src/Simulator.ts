@@ -5,7 +5,6 @@ import chalk from 'chalk';
 import { execSync } from 'child_process';
 import fs from 'fs-extra';
 import path from 'path';
-import ProgressBar from 'progress';
 import prompts from 'prompts';
 import semver from 'semver';
 
@@ -490,17 +489,18 @@ export async function installExpoOnSimulatorAsync({
     }, INSTALL_WARNING_TIMEOUT);
   };
 
-  const bar = new ProgressBar('Downloading the Expo Go app [:bar] :percent :etas', {
-    width: 64,
-    total: 100,
-    clear: true,
-    complete: '=',
-    incomplete: ' ',
-  });
+  Logger.notifications.info(
+    { code: NotificationCode.START_PROGRESS_BAR },
+    'Downloading the Expo Go app [:bar] :percent :etas'
+  );
 
   warningTimer = setWarningTimer();
 
-  const dir = await _downloadSimulatorAppAsync(url, progress => bar.tick(1, progress));
+  const dir = await _downloadSimulatorAppAsync(url, progress => {
+    Logger.notifications.info({ code: NotificationCode.TICK_PROGRESS_BAR }, progress);
+  });
+
+  Logger.notifications.info({ code: NotificationCode.STOP_PROGRESS_BAR });
 
   const message = version
     ? `Installing Expo Go ${version} on ${simulator.name}`

@@ -848,6 +848,31 @@ function _registerLogs() {
       write: (chunk: any) => {
         if (chunk.code) {
           switch (chunk.code) {
+            case NotificationCode.START_PROGRESS_BAR: {
+              const bar = new ProgressBar(chunk.msg, {
+                width: 64,
+                total: 100,
+                clear: true,
+                complete: '=',
+                incomplete: ' ',
+              });
+              Log.setBundleProgressBar(bar);
+              return;
+            }
+            case NotificationCode.TICK_PROGRESS_BAR: {
+              const spinner = Log.getProgress();
+              if (spinner) {
+                spinner.tick(1, chunk.msg);
+              }
+              return;
+            }
+            case NotificationCode.STOP_PROGRESS_BAR: {
+              const spinner = Log.getProgress();
+              if (spinner) {
+                spinner.terminate();
+              }
+              return;
+            }
             case NotificationCode.START_LOADING:
               logNewSection(chunk.msg || '');
               return;

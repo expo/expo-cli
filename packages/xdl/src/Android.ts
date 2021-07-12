@@ -7,7 +7,6 @@ import child_process, { execFileSync } from 'child_process';
 import trim from 'lodash/trim';
 import os from 'os';
 import path from 'path';
-import ProgressBar from 'progress';
 import prompts from 'prompts';
 import semver from 'semver';
 
@@ -421,16 +420,17 @@ export async function installExpoAsync({
     }, INSTALL_WARNING_TIMEOUT);
   };
 
-  const bar = new ProgressBar('Downloading the Expo Go app [:bar] :percent :etas', {
-    width: 64,
-    total: 100,
-    clear: true,
-    complete: '=',
-    incomplete: ' ',
-  });
+  Logger.notifications.info(
+    { code: NotificationCode.START_PROGRESS_BAR },
+    'Downloading the Expo Go app [:bar] :percent :etas'
+  );
 
   warningTimer = setWarningTimer();
-  const path = await downloadApkAsync(url, progress => bar.tick(1, progress));
+  const path = await downloadApkAsync(url, progress => {
+    Logger.notifications.info({ code: NotificationCode.TICK_PROGRESS_BAR }, progress);
+  });
+
+  Logger.notifications.info({ code: NotificationCode.STOP_PROGRESS_BAR });
 
   const message = version
     ? `Installing Expo Go ${version} on ${device.name}`
