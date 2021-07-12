@@ -203,7 +203,11 @@ export async function buildAsync({
 
   // Clean the build folder before building, this takes substantially longer.
   if (clean) {
-    args.push('clean');
+    args.push(
+      'clean',
+      // Without this the process just cleans and ends
+      'build'
+    );
   }
 
   logPrettyItem(chalk.bold`Planning build`);
