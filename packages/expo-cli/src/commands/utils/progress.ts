@@ -1,6 +1,8 @@
 import type { Progress } from 'got';
 import ProgressBar from 'progress';
 
+import Log from '../../log';
+
 type ProgressTracker = (progress: Progress) => void;
 
 function createProgressTracker(_total?: number): ProgressTracker {
@@ -15,6 +17,7 @@ function createProgressTracker(_total?: number): ProgressTracker {
         total,
         width: 64,
       });
+      Log.setBundleProgressBar(bar);
     }
     if (bar) {
       bar.tick(progress.transferred - transferredSoFar);
