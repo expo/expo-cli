@@ -3,6 +3,7 @@ import chalk from 'chalk';
 import temporary from 'tempy';
 
 import Log from '../../log';
+import { logNewSection } from '../../utils/ora';
 import * as CreateApp from '../utils/CreateApp';
 import { usesOldExpoUpdatesAsync } from '../utils/ProjectUtils';
 import { logConfigWarningsAndroid, logConfigWarningsIOS } from '../utils/logConfigWarnings';
@@ -84,11 +85,7 @@ export async function prebuildAsync(
   }
 
   // Apply Expo config to native projects
-  const configSyncingStep = CreateApp.logNewSection('Config syncing');
-  // Prevent the spinner from clashing with the debug traces
-  if (Log.isDebug) {
-    configSyncingStep.stop();
-  }
+  const configSyncingStep = logNewSection('Config syncing');
   const managedConfig = await configureProjectAsync({
     projectRoot,
     platforms,

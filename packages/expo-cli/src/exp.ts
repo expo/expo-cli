@@ -617,6 +617,7 @@ Command.prototype.asyncActionProjectDir = function (
     new PackagerLogsStream({
       projectRoot,
       onStartBuildBundle: () => {
+        // TODO: Unify with commands/utils/progress.ts
         bar = new ProgressBar('Building JavaScript bundle [:bar] :percent', {
           width: 64,
           total: 100,

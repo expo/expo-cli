@@ -1,4 +1,4 @@
-import { Progress } from 'got';
+import type { Progress } from 'got';
 import ProgressBar from 'progress';
 
 type ProgressTracker = (progress: Progress) => void;
