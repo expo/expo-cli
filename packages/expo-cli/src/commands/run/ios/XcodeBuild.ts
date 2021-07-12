@@ -13,6 +13,7 @@ import { ProjectInfo, XcodeConfiguration } from './resolveOptionsAsync';
 
 export type BuildProps = {
   projectRoot: string;
+  clean?: boolean;
   isSimulator: boolean;
   xcodeProject: ProjectInfo;
   device: Pick<SimControl.XCTraceDevice, 'name' | 'udid'>;
@@ -167,6 +168,7 @@ export async function buildAsync({
   xcodeProject,
   device,
   configuration,
+  clean,
   isSimulator,
   scheme,
   shouldSkipInitialBundling,
@@ -184,6 +186,10 @@ export async function buildAsync({
     `id=${device.udid}`,
   ];
 
+  if (Log.isProfiling) {
+    args.push('-showBuildTimingSummary');
+  }
+
   if (!isSimulator) {
     const developmentTeamId = await ensureDeviceIsCodeSignedForDeploymentAsync(projectRoot);
     if (developmentTeamId) {
@@ -193,6 +199,11 @@ export async function buildAsync({
         '-allowProvisioningDeviceRegistration'
       );
     }
+  }
+
+  // Clean the build folder before building, this takes substantially longer.
+  if (clean) {
+    args.push('clean');
   }
 
   logPrettyItem(chalk.bold`Planning build`);

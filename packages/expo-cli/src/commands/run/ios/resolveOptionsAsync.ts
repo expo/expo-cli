@@ -14,6 +14,7 @@ export type XcodeConfiguration = 'Debug' | 'Release';
 
 export type Options = {
   device?: string | boolean;
+  clean?: boolean;
   port?: number;
   scheme?: string;
   configuration?: XcodeConfiguration;
@@ -131,6 +132,7 @@ export async function resolveOptionsAsync(
     projectRoot,
     isSimulator,
     xcodeProject,
+    clean: options.clean,
     device,
     configuration: options.configuration || 'Debug',
     shouldStartBundler: options.bundler ?? false,
