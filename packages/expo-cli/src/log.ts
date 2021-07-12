@@ -2,6 +2,7 @@ import chalk from 'chalk';
 import program from 'commander';
 import { boolish } from 'getenv';
 import type { Ora } from 'ora';
+import type ProgressBar from 'progress';
 import terminalLink from 'terminal-link';
 
 type Color = (...text: string[]) => string;
@@ -51,7 +52,7 @@ export default class Log {
     Log._printNewLineBeforeNextLog = true;
   }
 
-  public static setBundleProgressBar(bar: any) {
+  public static setBundleProgressBar(bar: ProgressBar | null) {
     Log._bundleProgressBar = bar;
   }
 
@@ -126,7 +127,7 @@ export default class Log {
     process.stdout.write(process.platform === 'win32' ? '\x1B[2J\x1B[0f' : '\x1B[2J\x1B[3J\x1B[H');
   }
 
-  private static _bundleProgressBar: any;
+  private static _bundleProgressBar: ProgressBar | null;
   private static _oraSpinner: Ora | null;
 
   private static _printNewLineBeforeNextLog = false;
@@ -191,12 +192,14 @@ export default class Log {
 
     if (progressBar) {
       // Automatically unmount the bar if it's complete
-      if (!progressBar.complete) {
+      if (progressBar.complete) {
         Log.setBundleProgressBar(null);
         progressBar = null;
       } else {
-        progressBar.terminate();
-        progressBar.lastDraw = '';
+        // @ts-ignore
+        progressBar.stream.clearLine();
+        // @ts-ignore
+        progressBar.stream.cursorTo(0);
       }
     }
 
