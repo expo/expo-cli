@@ -1,16 +1,17 @@
 import { getConfig } from '@expo/config';
 import * as PackageManager from '@expo/package-manager';
-import { Versions } from '@expo/xdl';
 import chalk from 'chalk';
 import program from 'commander';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import wrapAnsi from 'wrap-ansi';
+import { Versions } from 'xdl';
 
 import CommandError from '../../../CommandError';
 import Log from '../../../log';
 import { confirmAsync } from '../../../prompts';
-import { logNewSection } from '../CreateApp';
+import { logNewSection } from '../../../utils/ora';
+import { profileMethod } from '../profileMethod';
 import {
   collectMissingPackages,
   hasTSConfig,
@@ -59,7 +60,7 @@ export async function shouldSetupTypeScriptAsync(
   }
   // This is a somewhat heavy check in larger projects.
   // Test that this is reasonably paced by running expo start in `expo/apps/native-component-list`
-  const typescriptFile = await queryFirstProjectTypeScriptFileAsync(projectRoot);
+  const typescriptFile = await profileMethod(queryFirstProjectTypeScriptFileAsync)(projectRoot);
   if (typescriptFile) {
     return { isBootstrapping: true };
   }
@@ -109,7 +110,11 @@ async function ensureRequiredDependenciesAsync(
   if (!skipPrompt) {
     if (
       await confirmAsync({
-        message: title + ` Would you like to install ${chalk.cyan(readableMissingPackages)}?`,
+        message: wrapAnsi(
+          title + ` Would you like to install ${chalk.cyan(readableMissingPackages)}?`,
+          // This message is a bit too long, so wrap it to fit smaller terminals
+          process.stdout.columns || 80
+        ),
         initial: true,
       })
     ) {

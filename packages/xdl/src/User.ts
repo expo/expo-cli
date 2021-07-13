@@ -2,13 +2,17 @@ import camelCase from 'lodash/camelCase';
 import isEmpty from 'lodash/isEmpty';
 import snakeCase from 'lodash/snakeCase';
 
-import Analytics from './Analytics';
-import ApiV2Client from './ApiV2';
-import Config from './Config';
-import Logger from './Logger';
-import UserSettings, { UserData } from './UserSettings';
-import { Semaphore } from './Utils';
-import XDLError from './XDLError';
+import {
+  Analytics,
+  ApiV2 as ApiV2Client,
+  ConnectionStatus,
+  Logger,
+  Semaphore,
+  UnifiedAnalytics,
+  UserData,
+  UserSettings,
+  XDLError,
+} from './internal';
 
 export type User = {
   kind: 'user';
@@ -173,7 +177,7 @@ export class UserManagerInstance {
    * If there are any issues with the login, this method throws.
    */
   async ensureLoggedInAsync(): Promise<User | RobotUser> {
-    if (Config.offline) {
+    if (ConnectionStatus.isOffline()) {
       throw new XDLError('NETWORK_REQUIRED', "Can't verify user without network access");
     }
 
@@ -209,6 +213,35 @@ export class UserManagerInstance {
   }
 
   /**
+   * Returns cached user data without hitting our backend. Only works for 'Username-Password-Authentication' flow. Does not work with 'Access-Token-Authentication' flow.
+   */
+  getCachedUserDataAsync = async (): Promise<UserData | null> => {
+    await this._getSessionLock.acquire();
+
+    try {
+      const currentUser = this._currentUser;
+      // If user is cached and there is an accessToken or sessionSecret, return the user
+      if (currentUser && (currentUser.accessToken || currentUser.sessionSecret)) {
+        return currentUser;
+      }
+
+      const userData = await this._readUserData();
+
+      // // No token, no session, no current user. Need to login
+      if (!userData?.sessionSecret) {
+        return null;
+      }
+
+      return userData;
+    } catch (e) {
+      Logger.global.warn(e);
+      return null;
+    } finally {
+      this._getSessionLock.release();
+    }
+  };
+
+  /**
    * Get the current user based on the available token.
    * If there is no current token, returns null.
    */
@@ -223,7 +256,7 @@ export class UserManagerInstance {
         return currentUser;
       }
 
-      if (Config.offline) {
+      if (ConnectionStatus.isOffline()) {
         return null;
       }
 
@@ -450,11 +483,23 @@ export class UserManagerInstance {
         });
       }
 
-      Analytics.setUserProperties(user.username, {
+      UnifiedAnalytics.identifyUser(
+        user.userId, // userId is used as the identifier in the other codebases (www/website) running unified analytics so we want to keep using it on the cli as well to avoid double counting users
+        {
+          userId: user.userId,
+          currentConnection: user.currentConnection,
+          username: user.username,
+          userType: user.kind,
+          primaryAccountId: user.primaryAccountId,
+        }
+      );
+
+      Analytics.identifyUser(user.username, {
         userId: user.userId,
         currentConnection: user.currentConnection,
         username: user.username,
         userType: user.kind,
+        primaryAccountId: user.primaryAccountId,
       });
     }
 

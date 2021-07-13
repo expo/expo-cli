@@ -1,11 +1,13 @@
 import * as osascript from '@expo/osascript';
 import spawnAsync, { SpawnOptions, SpawnResult } from '@expo/spawn-async';
 import chalk from 'chalk';
+import { exec, execSync } from 'child_process';
 import path from 'path';
+import { promisify } from 'util';
 
-import Logger from './Logger';
-import XDLError from './XDLError';
+import { Logger, XDLError } from './internal';
 
+const execAsync = promisify(exec);
 type DeviceState = 'Shutdown' | 'Booted';
 
 export type SimulatorDevice = {
@@ -87,23 +89,6 @@ type SimulatorDeviceList = {
     [runtime: string]: SimulatorDevice[];
   };
 };
-
-export async function isSimulatorRunningAsync() {
-  try {
-    const zeroMeansNo = (
-      await osascript.execAsync(
-        'tell app "System Events" to count processes whose name is "Simulator"'
-      )
-    ).trim();
-    if (zeroMeansNo === '0') {
-      return false;
-    }
-  } catch {
-    return false;
-  }
-
-  return true;
-}
 
 export async function getDefaultSimulatorDeviceUDIDAsync() {
   try {
@@ -192,6 +177,7 @@ export async function isSimulatorBootedAsync({
 export async function installAsync(options: { udid: string; dir: string }): Promise<any> {
   return simctlAsync(['install', deviceUDIDOrBooted(options.udid), options.dir]);
 }
+
 export async function uninstallAsync(options: {
   udid?: string;
   bundleIdentifier: string;
@@ -370,12 +356,12 @@ export async function isSimulatorAppRunningAsync(): Promise<boolean> {
 }
 
 export async function openSimulatorAppAsync({ udid }: { udid?: string }) {
-  const args = ['-a', 'Simulator'];
+  const args = ['open', '-a', 'Simulator'];
   if (udid) {
     // This has no effect if the app is already running.
     args.push('--args', '-CurrentDeviceUDID', udid);
   }
-  return await spawnAsync('open', args);
+  await execAsync(args.join(' '));
 }
 
 export async function killAllAsync() {
@@ -393,9 +379,9 @@ export function isLicenseOutOfDate(text: string) {
 
 export async function isXcrunInstalledAsync() {
   try {
-    await spawnAsync('xcrun', ['--version']);
+    execSync('xcrun --version', { stdio: 'ignore' });
     return true;
-  } catch (error) {
+  } catch {
     return false;
   }
 }

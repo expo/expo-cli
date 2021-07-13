@@ -1,23 +1,30 @@
-import { getConfig, readConfigJsonAsync, writeConfigJsonAsync } from '@expo/config';
+import {
+  getConfig,
+  isLegacyImportsEnabled,
+  readConfigJson,
+  writeConfigJsonAsync,
+} from '@expo/config';
 import { ExpoConfig } from '@expo/config-types';
 import JsonFile from '@expo/json-file';
 import * as PackageManager from '@expo/package-manager';
-import { Android, Project, ProjectSettings, Simulator, Versions } from '@expo/xdl';
 import chalk from 'chalk';
 import program, { Command } from 'commander';
 import getenv from 'getenv';
 import difference from 'lodash/difference';
 import omit from 'lodash/omit';
 import pickBy from 'lodash/pickBy';
-import ora from 'ora';
 import resolveFrom from 'resolve-from';
 import semver from 'semver';
 import terminalLink from 'terminal-link';
+import { Android, Project, ProjectSettings, Simulator, Versions } from 'xdl';
 
 import CommandError from '../CommandError';
 import Log from '../log';
 import { confirmAsync, selectAsync } from '../prompts';
+import { logNewSection } from '../utils/ora';
 import { findProjectRootAsync } from './utils/ProjectUtils';
+import { getBundledNativeModulesAsync } from './utils/bundledNativeModules';
+import { assertProjectHasExpoExtensionFilesAsync } from './utils/deprecatedExtensionWarnings';
 import maybeBailOnGitStatusAsync from './utils/maybeBailOnGitStatusAsync';
 
 type DependencyList = Record<string, string>;
@@ -41,12 +48,6 @@ export type TargetSDKVersion = Pick<
   | 'androidClientUrl'
   | 'beta'
 >;
-
-function logNewSection(title: string) {
-  const spinner = ora(chalk.bold(title));
-  spinner.start();
-  return spinner;
-}
 
 export function maybeFormatSdkVersion(sdkVersionString: string | null): string | null {
   if (typeof sdkVersionString !== 'string' || sdkVersionString === 'UNVERSIONED') {
@@ -79,12 +80,14 @@ export async function getUpdatedDependenciesAsync(
   workflow: ExpoWorkflow,
   targetSdkVersion: TargetSDKVersion | null,
   targetSdkVersionString: string
-): Promise<DependencyList> {
+): Promise<{ dependencies: DependencyList; removed: string[] }> {
   // Get the updated version for any bundled modules
   const { exp, pkg } = getConfig(projectRoot);
-  const bundledNativeModules = (await JsonFile.readAsync(
-    resolveFrom(projectRoot, 'expo/bundledNativeModules.json')
-  )) as DependencyList;
+
+  const bundledNativeModules = await getBundledNativeModulesAsync(
+    projectRoot,
+    targetSdkVersionString
+  );
 
   // Smoosh regular and dev dependencies together for now
   const projectDependencies = { ...pkg.dependencies, ...pkg.devDependencies };
@@ -96,6 +99,8 @@ export async function getUpdatedDependenciesAsync(
     workflow,
     targetSdkVersion,
   });
+
+  const removed: string[] = [];
 
   // Add expo-random as a dependency if using expo-auth-session and upgrading to
   // a version where it has been moved to a peer dependency.
@@ -109,7 +114,16 @@ export async function getUpdatedDependenciesAsync(
     dependencies['expo-random'] = bundledNativeModules['expo-random'];
   }
 
-  return dependencies;
+  if (
+    dependencies['@react-native-community/async-storage'] &&
+    semver.gte(targetSdkVersionString, '41.0.0')
+  ) {
+    dependencies['@react-native-async-storage/async-storage'] =
+      bundledNativeModules['@react-native-async-storage/async-storage'];
+    removed.push('@react-native-community/async-storage');
+  }
+
+  return { dependencies, removed };
 }
 
 export type UpgradeDependenciesOptions = {
@@ -214,7 +228,7 @@ async function makeBreakingChangesToConfigAsync(
     return;
   }
 
-  const { rootConfig } = await readConfigJsonAsync(projectRoot);
+  const { rootConfig } = readConfigJson(projectRoot);
   try {
     switch (targetSdkVersionString) {
       // IMPORTANT: adding a new case here? be sure to update the dynamic config situation above
@@ -556,6 +570,7 @@ export async function upgradeAsync(
   const { exp: currentExp, dynamicConfigPath, staticConfigPath } = getConfig(projectRoot);
 
   const removingSdkVersionStep = logNewSection('Validating configuration.');
+
   if (dynamicConfigPath) {
     if (
       !Versions.gteSdkVersion(currentExp, targetSdkVersionString) &&
@@ -570,7 +585,7 @@ export async function upgradeAsync(
     }
   } else if (staticConfigPath) {
     try {
-      const { rootConfig } = await readConfigJsonAsync(projectRoot);
+      const { rootConfig } = readConfigJson(projectRoot);
       if (rootConfig.expo.sdkVersion && rootConfig.expo.sdkVersion !== 'UNVERSIONED') {
         Log.addNewLineIfNone();
         await writeConfigJsonAsync(projectRoot, { sdkVersion: undefined });
@@ -595,7 +610,7 @@ export async function upgradeAsync(
   Log.addNewLineIfNone();
 
   // Get all updated packages
-  const updates = await getUpdatedDependenciesAsync(
+  const { dependencies: updates, removed } = await getUpdatedDependenciesAsync(
     projectRoot,
     workflow,
     targetSdkVersion,
@@ -636,6 +651,14 @@ export async function upgradeAsync(
     }
   }
 
+  if (removed.length) {
+    try {
+      await packageManager.removeAsync(...removed);
+    } catch (e) {
+      updatingPackagesStep.fail(`Failed to remove JavaScript dependencies: ${removed.join(' ')}`);
+    }
+  }
+
   updatingPackagesStep.succeed('Updated known packages to compatible versions.');
 
   // Remove package-lock.json and node_modules if using npm instead of yarn. See the function
@@ -661,6 +684,11 @@ export async function upgradeAsync(
     clearingCacheStep.succeed('Cleared packager cache.');
   }
 
+  // Warn about extensions out of sync. Remove after dropping support for SDK 41
+  if (!isLegacyImportsEnabled(exp)) {
+    await assertProjectHasExpoExtensionFilesAsync(projectRoot, true);
+  }
+
   Log.newLine();
   Log.log(chalk.bold.green(`👏 Automated upgrade steps complete.`));
   Log.log(chalk.bold.grey(`...but this doesn't mean everything is done yet!`));
@@ -670,6 +698,13 @@ export async function upgradeAsync(
   Log.log(chalk.bold(`✅ The following packages were updated:`));
   Log.log(chalk.grey.bold([...Object.keys(updates), ...['expo']].join(', ')));
   Log.addNewLineIfNone();
+
+  if (removed.length) {
+    Log.addNewLineIfNone();
+    Log.log(chalk.bold(`🗑️ The following packages were removed:`));
+    Log.log(chalk.grey.bold(removed.join(', ')));
+    Log.addNewLineIfNone();
+  }
 
   // List packages that were not updated
   const allDependencies = { ...pkg.dependencies, ...pkg.devDependencies };
@@ -687,6 +722,16 @@ export async function upgradeAsync(
       )
     );
     Log.log(chalk.grey.bold(untouchedDependencies.join(', ')));
+    Log.addNewLineIfNone();
+  }
+
+  if (removed.includes('@react-native-community/async-storage')) {
+    Log.addNewLineIfNone();
+    Log.log(
+      chalk.bold(
+        `🚨 @react-native-community/async-storage has been renamed to @react-native-async-storage/async-storage. The dependency has been updated automatically, you will now need to either update the imports in your source code manually, or run \`npx expo-codemod sdk41-async-storage './**/*'\`.`
+      )
+    );
     Log.addNewLineIfNone();
   }
 
@@ -818,6 +863,7 @@ async function maybeCleanNpmStateAsync(packageManager: any) {
       const reinstallingNodeModulesStep = logNewSection(
         'Installing node_modules and rebuilding package-lock.json.'
       );
+
       try {
         await packageManager.installAsync();
         reinstallingNodeModulesStep.succeed(

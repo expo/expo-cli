@@ -1,26 +1,62 @@
-import { getDefaultTarget, ProjectTarget } from '@expo/config';
+import { getConfig, getDefaultTarget, isLegacyImportsEnabled, ProjectTarget } from '@expo/config';
 import { getBareExtensions, getManagedExtensions } from '@expo/config/paths';
+import chalk from 'chalk';
+import { boolish } from 'getenv';
 import { Reporter } from 'metro';
 import type MetroConfig from 'metro-config';
 import path from 'path';
 import resolveFrom from 'resolve-from';
 
+export const EXPO_DEBUG = boolish('EXPO_DEBUG', false);
+
 // Import only the types here, the values will be imported from the project, at runtime.
-const INTERNAL_CALLSITES_REGEX = new RegExp(
+export const INTERNAL_CALLSITES_REGEX = new RegExp(
   [
     '/Libraries/Renderer/implementations/.+\\.js$',
     '/Libraries/BatchedBridge/MessageQueue\\.js$',
     '/Libraries/YellowBox/.+\\.js$',
     '/Libraries/LogBox/.+\\.js$',
     '/Libraries/Core/Timers/.+\\.js$',
-    '/node_modules/react-devtools-core/.+\\.js$',
-    '/node_modules/react-refresh/.+\\.js$',
-    '/node_modules/scheduler/.+\\.js$',
+    'node_modules/react-devtools-core/.+\\.js$',
+    'node_modules/react-refresh/.+\\.js$',
+    'node_modules/scheduler/.+\\.js$',
+    // Metro replaces `require()` with a different method,
+    // we want to omit this method from the stack trace.
+    // This is akin to most React tooling.
+    '/metro/.*/polyfills/require.js$',
+    // Hide frames related to a fast refresh.
+    '/metro/.*/lib/bundle-modules/.+\\.js$',
+    'node_modules/eventemitter3/index.js',
+    'node_modules/event-target-shim/dist/.+\\.js$',
+    // Ignore the log forwarder used in the Expo Go app
+    '/expo/build/environment/react-native-logs.fx.js$',
+    '/expo/build/logs/RemoteConsole.js$',
+    // Improve errors thrown by invariant (ex: `Invariant Violation: "main" has not been registered`).
+    'node_modules/invariant/.+\\.js$',
+    // Remove babel runtime additions
+    'node_modules/regenerator-runtime/.+\\.js$',
+    // Remove react native setImmediate ponyfill
+    'node_modules/promise/setimmediate/.+\\.js$',
+    // Babel helpers that implement language features
+    'node_modules/@babel/runtime/.+\\.js$',
   ].join('|')
 );
 
 export interface DefaultConfigOptions {
   target?: ProjectTarget;
+}
+
+function readIsLegacyImportsEnabled(projectRoot: string): boolean {
+  const config = getConfig(projectRoot, { skipSDKVersionRequirement: true });
+  return isLegacyImportsEnabled(config.exp);
+}
+
+function getProjectBabelConfigFile(projectRoot: string): string | undefined {
+  return (
+    resolveFrom.silent(projectRoot, './babel.config.js') ||
+    resolveFrom.silent(projectRoot, './.babelrc') ||
+    resolveFrom.silent(projectRoot, './.babelrc.js')
+  );
 }
 
 export function getDefaultConfig(
@@ -30,6 +66,16 @@ export function getDefaultConfig(
   const MetroConfig = importMetroConfigFromProject(projectRoot);
 
   const reactNativePath = path.dirname(resolveFrom(projectRoot, 'react-native/package.json'));
+
+  try {
+    // Set the `EXPO_METRO_CACHE_KEY_VERSION` variable for use in the custom babel transformer.
+    // This hack is used because there doesn't appear to be anyway to resolve
+    // `babel-preset-fbjs` relative to the project root later (in `metro-expo-babel-transformer`).
+    const babelPresetFbjsPath = resolveFrom(projectRoot, 'babel-preset-fbjs/package.json');
+    process.env.EXPO_METRO_CACHE_KEY_VERSION = String(require(babelPresetFbjsPath).version);
+  } catch {
+    // noop -- falls back to a hardcoded value.
+  }
 
   let hashAssetFilesPath;
   try {
@@ -41,13 +87,44 @@ export function getDefaultConfig(
     // it is not needed
   }
 
-  const target = options.target ?? process.env.EXPO_TARGET ?? getDefaultTarget(projectRoot);
+  const isLegacy = readIsLegacyImportsEnabled(projectRoot);
+  // Deprecated -- SDK 41 --
+  if (options.target) {
+    if (!isLegacy) {
+      console.warn(
+        chalk.yellow(
+          `The target option is deprecated. Learn more: http://expo.fyi/expo-extension-migration`
+        )
+      );
+      delete options.target;
+    }
+  } else if (process.env.EXPO_TARGET) {
+    console.error(
+      'EXPO_TARGET is deprecated. Learn more: http://expo.fyi/expo-extension-migration'
+    );
+    if (isLegacy) {
+      // EXPO_TARGET is used by @expo/metro-config to determine the target when getDefaultConfig is
+      // called from metro.config.js.
+      // @ts-ignore
+      options.target = process.env.EXPO_TARGET;
+    }
+  } else if (isLegacy) {
+    // Fall back to guessing based on the project structure in legacy mode.
+    options.target = getDefaultTarget(projectRoot);
+  }
+
+  if (!options.target) {
+    // Default to bare -- no .expo extension.
+    options.target = 'bare';
+  }
+  // End deprecated -- SDK 41 --
+
+  const { target } = options;
   if (!(target === 'managed' || target === 'bare')) {
     throw new Error(
       `Invalid target: '${target}'. Debug info: \n${JSON.stringify(
         {
           'options.target': options.target,
-          EXPO_TARGET: process.env.EXPO_TARGET,
           default: getDefaultTarget(projectRoot),
         },
         null,
@@ -61,7 +138,26 @@ export function getDefaultConfig(
       ? getBareExtensions([], sourceExtsConfig)
       : getManagedExtensions([], sourceExtsConfig);
 
-  const metroDefaultValues = MetroConfig.getDefaultConfig.getDefaultValues(projectRoot);
+  const babelConfigPath = getProjectBabelConfigFile(projectRoot);
+  const isCustomBabelConfigDefined = !!babelConfigPath;
+
+  if (EXPO_DEBUG) {
+    console.log();
+    console.log(`Expo Metro config:`);
+    console.log(`- Bundler target: ${target}`);
+    console.log(`- Legacy: ${isLegacy}`);
+    console.log(`- Extensions: ${sourceExts.join(', ')}`);
+    console.log(`- React Native: ${reactNativePath}`);
+    console.log(`- Babel config: ${babelConfigPath || 'babel-preset-expo (default)'}`);
+    console.log();
+  }
+  const {
+    // Remove the default reporter which metro always resolves to be the react-native-community/cli reporter.
+    // This prints a giant React logo which is less accessible to users on smaller terminals.
+    reporter,
+    ...metroDefaultValues
+  } = MetroConfig.getDefaultConfig.getDefaultValues(projectRoot);
+
   // Merge in the default config from Metro here, even though loadConfig uses it as defaults.
   // This is a convenience for getDefaultConfig use in metro.config.js, e.g. to modify assetExts.
   return MetroConfig.mergeConfig(metroDefaultValues, {
@@ -81,16 +177,34 @@ export function getDefaultConfig(
       port: Number(process.env.RCT_METRO_PORT) || 8081,
     },
     symbolicator: {
-      customizeFrame: (frame: { file: string | null }) => {
-        const collapse = Boolean(frame.file && INTERNAL_CALLSITES_REGEX.test(frame.file));
-        return { collapse };
+      customizeFrame: frame => {
+        let collapse = Boolean(frame.file && INTERNAL_CALLSITES_REGEX.test(frame.file));
+
+        if (!collapse) {
+          // This represents the first frame of the stacktrace.
+          // Often this looks like: `__r(0);`.
+          // The URL will also be unactionable in the app and therefore not very useful to the developer.
+          if (
+            frame.column === 3 &&
+            frame.methodName === 'global code' &&
+            frame.file?.match(/^https?:\/\//g)
+          ) {
+            collapse = true;
+          }
+        }
+
+        return { ...(frame || {}), collapse };
       },
     },
     transformer: {
       allowOptionalDependencies: true,
-      babelTransformerPath: require.resolve('metro-react-native-babel-transformer'),
-      // TODO: Bacon: Add path for web platform
-      assetRegistryPath: path.join(reactNativePath, 'Libraries/Image/AssetRegistry'),
+      babelTransformerPath: isCustomBabelConfigDefined
+        ? // If the user defined a babel config file in their project,
+          // then use the default transformer.
+          require.resolve('metro-react-native-babel-transformer')
+        : // Otherwise, use a custom transformer that uses `babel-preset-expo` by default for projects.
+          require.resolve('./metro-expo-babel-transformer'),
+      assetRegistryPath: 'react-native/Libraries/Image/AssetRegistry',
       assetPlugins: hashAssetFilesPath ? [hashAssetFilesPath] : undefined,
     },
   });

@@ -1,6 +1,8 @@
 import { ExpoConfig } from '@expo/config-types';
-import * as path from 'path';
+import assert from 'assert';
+import path from 'path';
 import xcode, {
+  PBXFile,
   PBXGroup,
   PBXNativeTarget,
   PBXProject,
@@ -11,7 +13,6 @@ import xcode, {
 } from 'xcode';
 import pbxFile from 'xcode/lib/pbxFile';
 
-import { assert } from '../../utils/errors';
 import { addWarningIOS } from '../../utils/warnings';
 import * as Paths from '../Paths';
 
@@ -30,6 +31,19 @@ export type ConfigurationSectionEntry = [string, XCBuildConfiguration];
 export function getProjectName(projectRoot: string) {
   const sourceRoot = Paths.getSourceRoot(projectRoot);
   return path.basename(sourceRoot);
+}
+
+export function resolvePathOrProject(
+  projectRootOrProject: string | XcodeProject
+): XcodeProject | null {
+  if (typeof projectRootOrProject === 'string') {
+    try {
+      return getPbxproj(projectRootOrProject);
+    } catch {
+      return null;
+    }
+  }
+  return projectRootOrProject;
 }
 
 // TODO: come up with a better solution for using app.json expo.name in various places
@@ -56,36 +70,126 @@ export function getHackyProjectName(projectRoot: string, config: ExpoConfig): st
   }
 }
 
-// TODO(brentvatne): I couldn't figure out how to do this with an existing
-// higher level function exposed by the xcode library, but we should find out how to do
-// that and replace this with it
-export function addResourceFileToGroup(
-  filepath: string,
-  groupName: string,
-  project: XcodeProject
-): XcodeProject {
-  const group = pbxGroupByPath(project, groupName);
-  if (!group) {
-    throw Error(`Xcode PBXGroup with name "${groupName}" could not be found in the Xcode project.`);
-  }
+function createProjectFileForGroup({ filepath, group }: { filepath: string; group: PBXGroup }) {
   const file = new pbxFile(filepath);
 
   const conflictingFile = group.children.find(child => child.comment === file.basename);
   if (conflictingFile) {
     // This can happen when a file like the GoogleService-Info.plist needs to be added and the eject command is run twice.
     // Not much we can do here since it might be a conflicting file.
-    addWarningIOS(
-      'ios-xcode-project',
-      `Skipped adding duplicate file "${filepath}" to PBXGroup named "${groupName}"`
-    );
+    return null;
+  }
+  return file;
+}
+
+/**
+ * Add a resource file (ex: `SplashScreen.storyboard`, `Images.xcassets`) to an Xcode project.
+ * This is akin to creating a new code file in Xcode with `⌘+n`.
+ */
+export function addResourceFileToGroup({
+  filepath,
+  groupName,
+  // Should add to `PBXBuildFile Section`
+  isBuildFile,
+  project,
+  verbose,
+}: {
+  filepath: string;
+  groupName: string;
+  isBuildFile?: boolean;
+  project: XcodeProject;
+  verbose?: boolean;
+}): XcodeProject {
+  return addFileToGroupAndLink({
+    filepath,
+    groupName,
+    project,
+    verbose,
+    addFileToProject({ project, file }) {
+      project.addToPbxFileReferenceSection(file);
+      if (isBuildFile) {
+        project.addToPbxBuildFileSection(file);
+      }
+      project.addToPbxResourcesBuildPhase(file);
+    },
+  });
+}
+
+/**
+ * Add a build source file (ex: `AppDelegate.m`, `ViewController.swift`) to an Xcode project.
+ * This is akin to creating a new code file in Xcode with `⌘+n`.
+ */
+export function addBuildSourceFileToGroup({
+  filepath,
+  groupName,
+  project,
+  verbose,
+  targetUuid,
+}: {
+  filepath: string;
+  groupName: string;
+  project: XcodeProject;
+  verbose?: boolean;
+  targetUuid?: string;
+}): XcodeProject {
+  return addFileToGroupAndLink({
+    filepath,
+    groupName,
+    project,
+    verbose,
+    addFileToProject({ project, file }) {
+      project.addToPbxFileReferenceSection(file);
+      project.addToPbxBuildFileSection(file);
+      project.addToPbxSourcesBuildPhase(file);
+    },
+  });
+}
+
+// TODO(brentvatne): I couldn't figure out how to do this with an existing
+// higher level function exposed by the xcode library, but we should find out how to do
+// that and replace this with it
+export function addFileToGroupAndLink({
+  filepath,
+  groupName,
+  project,
+  verbose,
+  addFileToProject,
+  targetUuid,
+}: {
+  filepath: string;
+  groupName: string;
+  project: XcodeProject;
+  verbose?: boolean;
+  targetUuid?: string;
+  addFileToProject: (props: { file: PBXFile; project: XcodeProject }) => void;
+}): XcodeProject {
+  const group = pbxGroupByPathOrAssert(project, groupName);
+
+  const file = createProjectFileForGroup({ filepath, group });
+
+  if (!file) {
+    if (verbose) {
+      // This can happen when a file like the GoogleService-Info.plist needs to be added and the eject command is run twice.
+      // Not much we can do here since it might be a conflicting file.
+      addWarningIOS(
+        'ios-xcode-project',
+        `Skipped adding duplicate file "${filepath}" to PBXGroup named "${groupName}"`
+      );
+    }
     return project;
+  }
+
+  if (targetUuid != null) {
+    file.target = targetUuid;
+  } else {
+    const applicationNativeTarget = project.getTarget('com.apple.product-type.application');
+    file.target = applicationNativeTarget?.uuid;
   }
 
   file.uuid = project.generateUuid();
   file.fileRef = project.generateUuid();
-  project.addToPbxFileReferenceSection(file);
-  project.addToPbxBuildFileSection(file);
-  project.addToPbxResourcesBuildPhase(file);
+
+  addFileToProject({ project, file });
 
   group.children.push({
     value: file.fileRef,
@@ -165,7 +269,7 @@ function findGroupInsideGroup(
   return null;
 }
 
-function pbxGroupByPath(project: XcodeProject, path: string): null | PBXGroup {
+function pbxGroupByPathOrAssert(project: XcodeProject, path: string): PBXGroup {
   const { firstProject } = project.getFirstProject();
 
   let group = project.getPBXGroupByKey(firstProject.mainGroup);
@@ -176,11 +280,15 @@ function pbxGroupByPath(project: XcodeProject, path: string): null | PBXGroup {
     if (nextGroup) {
       group = nextGroup;
     } else {
-      return null;
+      break;
     }
   }
 
-  return group ?? null;
+  if (!group) {
+    throw Error(`Xcode PBXGroup with name "${path}" could not be found in the Xcode project.`);
+  }
+
+  return group;
 }
 
 export function ensureGroupRecursively(project: XcodeProject, filepath: string): PBXGroup | null {
@@ -219,11 +327,18 @@ export function getPbxproj(projectRoot: string): XcodeProject {
  * @param project
  */
 export function getProductName(project: XcodeProject): string {
-  let productName = project.productName;
+  let productName = '$(TARGET_NAME)';
+  try {
+    // If the product name is numeric, this will fail (it's a getter).
+    // If the bundle identifier' final component is only numeric values, then the PRODUCT_NAME
+    // will be a numeric value, this results in a bug where the product name isn't useful,
+    // i.e. `com.bacon.001` -> `1` -- in this case, use the first target name.
+    productName = project.productName;
+  } catch {}
 
   if (productName === '$(TARGET_NAME)') {
     const targetName = project.getFirstTarget()?.firstTarget?.productName;
-    productName = targetName ?? project.productName;
+    productName = targetName ?? productName;
   }
 
   return productName;
@@ -233,32 +348,12 @@ export function getProjectSection(project: XcodeProject) {
   return project.pbxProjectSection();
 }
 
-export function getNativeTargets(project: XcodeProject): NativeTargetSectionEntry[] {
-  const section = project.pbxNativeTargetSection();
-  return Object.entries(section).filter(isNotComment);
-}
-
-export function findFirstNativeTarget(project: XcodeProject): NativeTargetSectionEntry {
-  const { targets } = Object.values(getProjectSection(project))[0];
-  const target = targets[0].value;
-  const nativeTargets = getNativeTargets(project);
-  return nativeTargets.find(([key]) => key === target) as NativeTargetSectionEntry;
-}
-
-export function findNativeTargetByName(
-  project: XcodeProject,
-  targetName: string
-): NativeTargetSectionEntry {
-  const nativeTargets = getNativeTargets(project);
-  return nativeTargets.find(([, i]) => i.name === targetName) as NativeTargetSectionEntry;
-}
-
 export function getXCConfigurationListEntries(project: XcodeProject): ConfigurationListEntry[] {
   const lists = project.pbxXCConfigurationList();
   return Object.entries(lists).filter(isNotComment);
 }
 
-export function getBuildConfigurationForId(
+export function getBuildConfigurationsForListId(
   project: XcodeProject,
   configurationListId: string
 ): ConfigurationSectionEntry[] {
@@ -272,8 +367,26 @@ export function getBuildConfigurationForId(
   return Object.entries(project.pbxXCBuildConfigurationSection())
     .filter(isNotComment)
     .filter(isBuildConfig)
-    .filter(isNotTestHost)
     .filter(([key]: ConfigurationSectionEntry) => buildConfigurations.includes(key));
+}
+
+export function getBuildConfigurationForListIdAndName(
+  project: XcodeProject,
+  {
+    configurationListId,
+    buildConfiguration,
+  }: { configurationListId: string; buildConfiguration: string }
+): ConfigurationSectionEntry {
+  const xcBuildConfigurationEntry = getBuildConfigurationsForListId(
+    project,
+    configurationListId
+  ).find(i => i[1].name === buildConfiguration);
+  if (!xcBuildConfigurationEntry) {
+    throw new Error(
+      `Build configuration '${buildConfiguration}' does not exist in list with id '${configurationListId}'`
+    );
+  }
+  return xcBuildConfigurationEntry;
 }
 
 export function isBuildConfig([, sectionItem]: ConfigurationSectionEntry): boolean {
@@ -290,4 +403,9 @@ export function isNotComment([key]:
   | ConfigurationListEntry
   | NativeTargetSectionEntry): boolean {
   return !key.endsWith(`_comment`);
+}
+
+// Remove surrounding double quotes if they exist.
+export function unquote(value: string): string {
+  return value.match(/^"(.*)"$/)?.[1] ?? value;
 }

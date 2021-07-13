@@ -3,8 +3,7 @@ import chalk from 'chalk';
 import getenv from 'getenv';
 import path from 'path';
 
-import Logger from '../Logger';
-import * as ProjectUtils from '../project/ProjectUtils';
+import { Logger, ProjectUtils } from '../internal';
 
 type BuildEventType =
   | 'METRO_INITIALIZE_STARTED'
@@ -33,6 +32,8 @@ type DeviceLogRecord = {
   shouldHide: boolean;
   msg: any;
   level: number;
+  deviceId: string;
+  deviceName: string;
 };
 export type LogRecord = (MetroLogRecord | ExpoLogRecord | DeviceLogRecord) & ProjectUtils.LogFields;
 

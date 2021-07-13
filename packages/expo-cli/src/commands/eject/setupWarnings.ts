@@ -1,11 +1,11 @@
 import { PackageJSONConfig } from '@expo/config';
+import { getLegacyExpoPlugins } from '@expo/prebuild-config';
 import chalk from 'chalk';
 import semver from 'semver';
 
 import Log from '../../log';
-import * as CreateApp from '../utils/CreateApp';
+import { logNewSection } from '../../utils/ora';
 import { learnMore } from '../utils/TerminalLink';
-import { expoManagedPlugins } from './configureProjectAsync';
 
 /**
  * Some packages are not configured automatically on eject and may require
@@ -20,7 +20,7 @@ export function warnIfDependenciesRequireAdditionalSetup(
     pkg,
     sdkVersion,
     appliedPlugins: appliedPlugins ?? [],
-    autoPlugins: expoManagedPlugins,
+    autoPlugins: getLegacyExpoPlugins(),
   });
 
   logSetupWarnings(warnings);
@@ -81,7 +81,7 @@ function logSetupWarnings(warnings: Record<string, string>) {
   }
 
   Log.newLine();
-  const warnAdditionalSetupStep = CreateApp.logNewSection(
+  const warnAdditionalSetupStep = logNewSection(
     'Checking if any additional setup steps are required for installed SDK packages.'
   );
 

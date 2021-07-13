@@ -17,9 +17,9 @@ function getAppConfig(projecDir: string): AppConfig {
 }
 
 let exp: ExpoConfig;
-function getExpoConfig(projectDir: string): ExpoConfig {
+function getExpoConfig(projectRoot: string): ExpoConfig {
   if (!exp) {
-    const { exp: _exp } = getConfig(projectDir, { skipSDKVersionRequirement: true });
+    const { exp: _exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
     exp = _exp;
   }
   return exp;

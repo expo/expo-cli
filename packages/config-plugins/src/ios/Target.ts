@@ -1,56 +1,128 @@
-import path from 'path';
+import { PBXNativeTarget, PBXTargetDependency, XCBuildConfiguration, XcodeProject } from 'xcode';
 
-import { readXMLAsync } from '../utils/XML';
-import { findSchemePaths } from './Paths';
+import { getApplicationTargetNameForSchemeAsync } from './BuildScheme';
+import {
+  getBuildConfigurationForListIdAndName,
+  getPbxproj,
+  isNotComment,
+  NativeTargetSectionEntry,
+} from './utils/Xcodeproj';
 
-interface SchemeXML {
-  Scheme?: {
-    BuildAction?: {
-      BuildActionEntries?: {
-        BuildActionEntry?: BuildActionEntryType[];
-      }[];
-    }[];
+export enum TargetType {
+  APPLICATION = 'com.apple.product-type.application',
+  EXTENSION = 'com.apple.product-type.app-extension',
+  STICKER_PACK_EXTENSION = 'com.apple.product-type.app-extension.messages-sticker-pack',
+  OTHER = 'other',
+}
+
+export interface Target {
+  name: string;
+  type: TargetType;
+  dependencies?: Target[];
+}
+
+export function getXCBuildConfigurationFromPbxproj(
+  project: XcodeProject,
+  {
+    targetName,
+    buildConfiguration = 'Release',
+  }: { targetName?: string; buildConfiguration?: string } = {}
+): XCBuildConfiguration | null {
+  const [, nativeTarget] = targetName
+    ? findNativeTargetByName(project, targetName)
+    : findFirstNativeTarget(project);
+  const [, xcBuildConfiguration] = getBuildConfigurationForListIdAndName(project, {
+    configurationListId: nativeTarget.buildConfigurationList,
+    buildConfiguration,
+  });
+  return xcBuildConfiguration ?? null;
+}
+
+export async function findApplicationTargetWithDependenciesAsync(
+  projectRoot: string,
+  scheme: string
+): Promise<Target> {
+  const applicationTargetName = await getApplicationTargetNameForSchemeAsync(projectRoot, scheme);
+  const project = getPbxproj(projectRoot);
+  const [, applicationTarget] = findNativeTargetByName(project, applicationTargetName);
+
+  const dependencies: Target[] = applicationTarget.dependencies.map(({ value }) => {
+    const { target: targetId } = project.getPBXGroupByKeyAndType(
+      value,
+      'PBXTargetDependency'
+    ) as PBXTargetDependency;
+
+    const [, target] = findNativeTargetById(project, targetId);
+
+    const type = isTargetOfType(target, TargetType.EXTENSION)
+      ? TargetType.EXTENSION
+      : TargetType.OTHER;
+    return {
+      name: target.name,
+      type,
+    };
+  });
+
+  return {
+    name: applicationTarget.name,
+    type: TargetType.APPLICATION,
+    dependencies,
   };
 }
 
-interface BuildActionEntryType {
-  BuildableReference?: {
-    $?: {
-      BlueprintName?: string;
-      BuildableName?: string;
-    };
-  }[];
+export function isTargetOfType(target: PBXNativeTarget, targetType: TargetType): boolean {
+  return target.productType === targetType || target.productType === `"${targetType}"`;
 }
 
-export async function getApplicationTargetForSchemeAsync(
-  projectRoot: string,
-  scheme: string
-): Promise<string> {
-  const allSchemePaths = findSchemePaths(projectRoot);
-  const re = new RegExp(`/${scheme}.xcscheme`);
-  const schemePath = allSchemePaths.find(i => re.exec(i));
-  if (!schemePath) {
-    throw new Error(`scheme '${scheme}' does not exist`);
-  }
-
-  const schemeXML = ((await readXMLAsync({ path: schemePath })) as unknown) as SchemeXML;
-  const buildActionEntry =
-    schemeXML.Scheme?.BuildAction?.[0]?.BuildActionEntries?.[0]?.BuildActionEntry;
-  const targetName =
-    buildActionEntry?.length === 1
-      ? getBlueprintName(buildActionEntry[0])
-      : getBlueprintName(
-          buildActionEntry?.find(entry => {
-            return entry.BuildableReference?.[0]?.['$']?.BuildableName?.endsWith('.app');
-          })
-        );
-  if (!targetName) {
-    const schemeRelativePath = path.relative(projectRoot, schemePath);
-    throw new Error(`${schemeRelativePath} seems to be corrupted`);
-  }
-  return targetName;
+export function getNativeTargets(project: XcodeProject): NativeTargetSectionEntry[] {
+  const section = project.pbxNativeTargetSection();
+  return Object.entries(section).filter(isNotComment);
 }
 
-function getBlueprintName(entry?: BuildActionEntryType): string | undefined {
-  return entry?.BuildableReference?.[0]?.['$']?.BlueprintName;
+export function findSignableTargets(project: XcodeProject): NativeTargetSectionEntry[] {
+  const targets = getNativeTargets(project);
+  const applicationTargets = targets.filter(
+    ([, target]) =>
+      isTargetOfType(target, TargetType.APPLICATION) ||
+      isTargetOfType(target, TargetType.EXTENSION) ||
+      isTargetOfType(target, TargetType.STICKER_PACK_EXTENSION)
+  );
+  if (applicationTargets.length === 0) {
+    throw new Error(`Could not find any signable targets in project.pbxproj`);
+  }
+  return applicationTargets;
+}
+
+export function findFirstNativeTarget(project: XcodeProject): NativeTargetSectionEntry {
+  const targets = getNativeTargets(project);
+  const applicationTargets = targets.filter(([, target]) =>
+    isTargetOfType(target, TargetType.APPLICATION)
+  );
+  if (applicationTargets.length === 0) {
+    throw new Error(`Could not find any application target in project.pbxproj`);
+  }
+  return applicationTargets[0];
+}
+
+export function findNativeTargetByName(
+  project: XcodeProject,
+  targetName: string
+): NativeTargetSectionEntry {
+  const nativeTargets = getNativeTargets(project);
+  const nativeTargetEntry = nativeTargets.find(
+    ([, i]) => i.name === targetName || i.name === `"${targetName}"`
+  );
+  if (!nativeTargetEntry) {
+    throw new Error(`Could not find target '${targetName}' in project.pbxproj`);
+  }
+  return nativeTargetEntry;
+}
+
+function findNativeTargetById(project: XcodeProject, targetId: string): NativeTargetSectionEntry {
+  const nativeTargets = getNativeTargets(project);
+  const nativeTargetEntry = nativeTargets.find(([key]) => key === targetId);
+  if (!nativeTargetEntry) {
+    throw new Error(`Could not find target with id '${targetId}' in project.pbxproj`);
+  }
+  return nativeTargetEntry;
 }

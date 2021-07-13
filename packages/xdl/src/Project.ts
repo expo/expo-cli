@@ -1,15 +1,14 @@
-import * as ProjectSettings from './ProjectSettings';
-import XDLError from './XDLError';
-import { assertValidProjectRoot } from './project/errors';
-import { startTunnelsAsync, stopTunnelsAsync } from './start/ngrok';
-import { StartOptions } from './start/startDevServerAsync';
-import { startExpoServerAsync } from './start/startLegacyExpoServerAsync';
 import {
+  assertValidProjectRoot,
+  ProjectSettings,
+  startExpoServerAsync,
+  StartOptions,
   startReactNativeServerAsync,
+  startTunnelsAsync,
   stopReactNativeServerAsync,
-} from './start/startLegacyReactNativeServerAsync';
-
-export { startAsync, stopWebOnlyAsync, stopAsync } from './start/startAsync';
+  stopTunnelsAsync,
+  XDLError,
+} from './internal';
 
 /**
  * @deprecated Use `ProjectSettings.setPackagerInfoAsync`
@@ -45,7 +44,16 @@ export {
   startReactNativeServerAsync,
   stopReactNativeServerAsync,
 };
-export { PublishedProjectResult, publishAsync } from './project/publishAsync';
-export { exportAppAsync } from './project/exportAppAsync';
-export { runHook } from './project/runHook';
-export { mergeAppDistributions } from './project/mergeAppDistributions';
+export {
+  broadcastMessage,
+  createBundlesAsync,
+  getPublishExpConfigAsync,
+  prepareHooks,
+  publishAsync,
+  PublishedProjectResult,
+  PublishOptions,
+  runHook,
+  startAsync,
+  stopAsync,
+  writeArtifactSafelyAsync,
+} from './internal';

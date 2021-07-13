@@ -1,13 +1,13 @@
-import { UserManager } from '@expo/xdl';
 import Table from 'cli-table3';
 import fs from 'fs-extra';
 import chunk from 'lodash/chunk';
 import omit from 'lodash/omit';
 import pick from 'lodash/pick';
-import ora from 'ora';
+import { UserManager } from 'xdl';
 
 import Log from '../../../../log';
 import { ensureProjectExistsAsync, getProjectOwner } from '../../../../projects';
+import { ora } from '../../../../utils/ora';
 import { sleep } from '../../../utils/promise';
 import SubmissionService, { DEFAULT_CHECK_INTERVAL_MS } from '../SubmissionService';
 import { Platform, Submission, SubmissionStatus } from '../SubmissionService.types';

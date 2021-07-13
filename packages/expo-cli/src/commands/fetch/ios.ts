@@ -5,7 +5,7 @@ import * as path from 'path';
 import CommandError from '../../CommandError';
 import { Context } from '../../credentials/context';
 import Log from '../../log';
-import { getOrPromptForBundleIdentifier } from '../eject/ConfigValidation';
+import { getOrPromptForBundleIdentifier } from '../utils/getOrPromptApplicationId';
 
 async function fetchIosCertsAsync(projectRoot: string): Promise<void> {
   const inProjectDir = (filename: string): string => path.resolve(projectRoot, filename);

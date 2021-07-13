@@ -1,10 +1,10 @@
 import { getConfig } from '@expo/config';
-import { ApiV2, UserManager } from '@expo/xdl';
-import ora from 'ora';
+import { ApiV2, UserManager } from 'xdl';
 
 import Log from '../../log';
 import { getProjectOwner } from '../../projects';
 import { confirmAsync } from '../../prompts';
+import { ora } from '../../utils/ora';
 import * as table from './cli-table';
 
 export type HistoryOptions = {
@@ -41,7 +41,7 @@ export type Publication = {
 };
 
 export type PublicationDetail = {
-  manifest: {
+  manifest?: {
     [key: string]: string;
   };
   publishedTime: string;
@@ -105,13 +105,13 @@ export async function setPublishToChannelAsync(
 }
 
 async function _rollbackPublicationFromChannelForPlatformAsync(
-  projectDir: string,
+  projectRoot: string,
   platform: 'android' | 'ios',
   options: Omit<RollbackOptions, 'platform'>
 ) {
   const { releaseChannel, sdkVersion } = options;
   // get the 2 most recent things in the channel history
-  const historyQueryResult = await getPublishHistoryAsync(projectDir, {
+  const historyQueryResult = await getPublishHistoryAsync(projectRoot, {
     releaseChannel,
     platform,
     sdkVersion,
@@ -135,7 +135,7 @@ async function _rollbackPublicationFromChannelForPlatformAsync(
   const nonInteractiveOptions = options.parent ? { parent: options.parent } : {};
   // confirm that users will be receiving the secondMostRecent item in the Publish history
   await _printAndConfirm(
-    projectDir,
+    projectRoot,
     secondMostRecent.publicationId,
     releaseChannel,
     platform,
@@ -146,7 +146,7 @@ async function _rollbackPublicationFromChannelForPlatformAsync(
   const revertProgress = ora(
     `${platform}: Applying a revert publication to channel ${releaseChannel}`
   ).start();
-  await setPublishToChannelAsync(projectDir, {
+  await setPublishToChannelAsync(projectRoot, {
     releaseChannel,
     publishId: secondMostRecent.publicationId,
   });
@@ -156,14 +156,14 @@ async function _rollbackPublicationFromChannelForPlatformAsync(
 }
 
 export async function rollbackPublicationFromChannelAsync(
-  projectDir: string,
+  projectRoot: string,
   options: RollbackOptions
 ) {
   const { platform, ...restOfTheOptions } = options;
 
   if (platform) {
     return await _rollbackPublicationFromChannelForPlatformAsync(
-      projectDir,
+      projectRoot,
       platform,
       restOfTheOptions
     );
@@ -173,7 +173,11 @@ export async function rollbackPublicationFromChannelAsync(
   const completedPlatforms = [] as ('android' | 'ios')[];
   try {
     for (const platform of platforms) {
-      await _rollbackPublicationFromChannelForPlatformAsync(projectDir, platform, restOfTheOptions);
+      await _rollbackPublicationFromChannelForPlatformAsync(
+        projectRoot,
+        platform,
+        restOfTheOptions
+      );
       completedPlatforms.push(platform);
     }
   } catch (e) {
@@ -189,7 +193,7 @@ export async function rollbackPublicationFromChannelAsync(
 }
 
 async function _printAndConfirm(
-  projectDir: string,
+  projectRoot: string,
   publicationId: string,
   channel: string,
   platform: string,
@@ -198,7 +202,7 @@ async function _printAndConfirm(
   const detailOptions = {
     publishId: publicationId,
   };
-  const detail = await getPublicationDetailAsync(projectDir, detailOptions);
+  const detail = await getPublicationDetailAsync(projectRoot, detailOptions);
   await printPublicationDetailAsync(detail, detailOptions);
 
   if (partialOptions.parent && partialOptions.parent.nonInteractive) {
@@ -253,7 +257,9 @@ export async function printPublicationDetailAsync(
   const generalTableString = table.printTableJson(detail, 'Release Description');
   Log.log(generalTableString);
 
-  // Print manifest info
-  const manifestTableString = table.printTableJson(manifest, 'Manifest Details');
-  Log.log(manifestTableString);
+  if (manifest) {
+    // Print manifest info
+    const manifestTableString = table.printTableJson(manifest, 'Manifest Details');
+    Log.log(manifestTableString);
+  }
 }

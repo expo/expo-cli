@@ -10,8 +10,8 @@ export const withUserInterfaceStyle = createInfoPlistPlugin(
 
 export function getUserInterfaceStyle(
   config: Pick<ExpoConfig, 'ios' | 'userInterfaceStyle'>
-): string | null {
-  return config.ios?.userInterfaceStyle ?? config.userInterfaceStyle ?? null;
+): string {
+  return config.ios?.userInterfaceStyle ?? config.userInterfaceStyle ?? 'light';
 }
 
 export function setUserInterfaceStyle(
@@ -31,9 +31,7 @@ export function setUserInterfaceStyle(
   };
 }
 
-function mapUserInterfaceStyleForInfoPlist(
-  userInterfaceStyle: string | null
-): InterfaceStyle | null {
+function mapUserInterfaceStyleForInfoPlist(userInterfaceStyle: string): InterfaceStyle | null {
   switch (userInterfaceStyle) {
     case 'light':
       return 'Light';

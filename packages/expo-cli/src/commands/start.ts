@@ -1,199 +1,101 @@
-import { ExpoConfig, getConfig, PackageJSONConfig } from '@expo/config';
-// @ts-ignore: not typed
-import { DevToolsServer } from '@expo/dev-tools';
-import JsonFile from '@expo/json-file';
-import { Project, ProjectSettings, UrlUtils, UserSettings, Versions } from '@expo/xdl';
+import { ConfigError, ExpoConfig, getConfig, isLegacyImportsEnabled } from '@expo/config';
 import chalk from 'chalk';
-import intersection from 'lodash/intersection';
 import path from 'path';
 import resolveFrom from 'resolve-from';
-import semver from 'semver';
+import { Project, UnifiedAnalytics, UrlUtils, Versions } from 'xdl';
 
-import { installExitHooks } from '../exit';
+import getDevClientProperties from '../analytics/getDevClientProperties';
 import Log from '../log';
 import * as sendTo from '../sendTo';
-import urlOpts, { URLOptions } from '../urlOpts';
+import urlOpts from '../urlOpts';
 import * as TerminalUI from './start/TerminalUI';
+import { installCustomExitHook, installExitHooks } from './start/installExitHooks';
+import { tryOpeningDevToolsAsync } from './start/openDevTools';
+import {
+  NormalizedOptions,
+  normalizeOptionsAsync,
+  parseStartOptions,
+  RawStartOptions,
+} from './start/parseStartOptions';
+import { assertProjectHasExpoExtensionFilesAsync } from './utils/deprecatedExtensionWarnings';
+import { profileMethod } from './utils/profileMethod';
 import { ensureTypeScriptSetupAsync } from './utils/typescript/ensureTypeScriptSetup';
+import { validateDependenciesVersionsAsync } from './utils/validateDependenciesVersions';
 
-type NormalizedOptions = URLOptions & {
-  webOnly?: boolean;
-  dev?: boolean;
-  minify?: boolean;
-  https?: boolean;
-  nonInteractive?: boolean;
-  clear?: boolean;
-  maxWorkers?: number;
-  sendTo?: string;
-  host?: string;
-  lan?: boolean;
-  localhost?: boolean;
-  tunnel?: boolean;
-};
+async function action(projectRoot: string, options: NormalizedOptions): Promise<void> {
+  Log.log(chalk.gray(`Starting project at ${projectRoot}`));
 
-type Options = NormalizedOptions & {
-  parent?: { nonInteractive: boolean; rawArgs: string[] };
-};
+  // Add clean up hooks
+  installExitHooks(projectRoot);
 
-type OpenDevToolsOptions = {
-  rootPath: string;
-  exp: ExpoConfig;
-  options: NormalizedOptions;
-};
+  // Find expo binary in project/workspace node_modules
+  const hasExpoInstalled = resolveFrom.silent(projectRoot, 'expo');
 
-function hasBooleanArg(rawArgs: string[], argName: string): boolean {
-  return rawArgs.includes('--' + argName) || rawArgs.includes('--no-' + argName);
-}
-
-function getBooleanArg(rawArgs: string[], argName: string): boolean {
-  if (rawArgs.includes('--' + argName)) {
-    return true;
-  } else {
-    return false;
-  }
-}
-
-// The main purpose of this function is to take existing options object and
-// support boolean args with as defined in the hasBooleanArg and getBooleanArg
-// functions.
-async function normalizeOptionsAsync(
-  projectDir: string,
-  options: Options
-): Promise<NormalizedOptions> {
-  const opts: NormalizedOptions = {
-    ...options, // This is necessary to ensure we don't drop any options
-    webOnly: !!options.webOnly, // This is only ever true in the start:web command
-    nonInteractive: options.parent?.nonInteractive,
-  };
-
-  const rawArgs = options.parent?.rawArgs || [];
-
-  if (hasBooleanArg(rawArgs, 'dev')) {
-    opts.dev = getBooleanArg(rawArgs, 'dev');
-  } else {
-    opts.dev = true;
-  }
-  if (hasBooleanArg(rawArgs, 'minify')) {
-    opts.minify = getBooleanArg(rawArgs, 'minify');
-  } else {
-    opts.minify = false;
-  }
-  if (hasBooleanArg(rawArgs, 'https')) {
-    opts.https = getBooleanArg(rawArgs, 'https');
-  } else {
-    opts.https = false;
+  if (!hasExpoInstalled) {
+    throw new ConfigError(
+      `Unable to find expo in this project - have you run yarn / npm install yet?`,
+      'MODULE_NOT_FOUND'
+    );
   }
 
-  if (hasBooleanArg(rawArgs, 'android')) {
-    opts.android = getBooleanArg(rawArgs, 'android');
-  }
-
-  if (hasBooleanArg(rawArgs, 'ios')) {
-    opts.ios = getBooleanArg(rawArgs, 'ios');
-  }
-
-  if (hasBooleanArg(rawArgs, 'web')) {
-    opts.web = getBooleanArg(rawArgs, 'web');
-  }
-
-  if (hasBooleanArg(rawArgs, 'localhost')) {
-    opts.localhost = getBooleanArg(rawArgs, 'localhost');
-  }
-
-  if (hasBooleanArg(rawArgs, 'lan')) {
-    opts.lan = getBooleanArg(rawArgs, 'lan');
-  }
-
-  if (hasBooleanArg(rawArgs, 'tunnel')) {
-    opts.tunnel = getBooleanArg(rawArgs, 'tunnel');
-  }
-
-  await cacheOptionsAsync(projectDir, opts);
-  return opts;
-}
-
-async function cacheOptionsAsync(projectDir: string, options: NormalizedOptions): Promise<void> {
-  await ProjectSettings.setAsync(projectDir, {
-    devClient: options.devClient,
-    scheme: options.scheme,
-    dev: options.dev,
-    minify: options.minify,
-    https: options.https,
+  const { exp, pkg } = profileMethod(getConfig)(projectRoot, {
+    skipSDKVersionRequirement: options.webOnly,
   });
-}
-
-function parseStartOptions(options: NormalizedOptions): Project.StartOptions {
-  const startOpts: Project.StartOptions = {};
-
-  if (options.clear) {
-    startOpts.reset = true;
-  }
-
-  if (options.nonInteractive) {
-    startOpts.nonInteractive = true;
-  }
-
-  if (options.webOnly) {
-    startOpts.webOnly = true;
-  }
-
-  if (options.maxWorkers) {
-    startOpts.maxWorkers = options.maxWorkers;
-  }
 
   if (options.devClient) {
-    startOpts.devClient = true;
-
-    // TODO: is this redundant?
-    startOpts.target = 'bare';
-  } else {
-    // For `expo start`, the default target is 'managed', for both managed *and* bare apps.
-    // See: https://docs.expo.io/bare/using-expo-client
-    startOpts.target = 'managed';
+    track(projectRoot, exp);
   }
 
-  return startOpts;
-}
+  // Assert various random things
+  // TODO: split up this method
+  await profileMethod(urlOpts.optsAsync)(projectRoot, options);
 
-async function startWebAction(projectDir: string, options: NormalizedOptions): Promise<void> {
-  const { exp, rootPath } = await configureProjectAsync(projectDir, options);
-  if (Versions.gteSdkVersion(exp, '34.0.0')) {
-    await ensureTypeScriptSetupAsync(projectDir);
-  }
-  const startOpts = parseStartOptions(options);
-  await Project.startAsync(rootPath, { ...startOpts, exp });
-  await urlOpts.handleMobileOptsAsync(projectDir, options);
+  // TODO: This is useless on mac, check if useless on win32
+  const rootPath = path.resolve(projectRoot);
 
-  if (!options.nonInteractive && !exp.isDetached) {
-    await TerminalUI.startAsync(projectDir, startOpts);
-  }
-}
-
-async function action(projectDir: string, options: NormalizedOptions): Promise<void> {
-  const { exp, pkg, rootPath } = await configureProjectAsync(projectDir, options);
+  // Optionally open the developer tools UI.
+  await profileMethod(tryOpeningDevToolsAsync)(rootPath, {
+    exp,
+    options,
+  });
 
   if (Versions.gteSdkVersion(exp, '34.0.0')) {
-    await ensureTypeScriptSetupAsync(projectDir);
+    await profileMethod(ensureTypeScriptSetupAsync)(projectRoot);
   }
 
-  // TODO: only validate dependencies if starting in managed workflow
-  await validateDependenciesVersions(projectDir, exp, pkg);
+  if (!options.webOnly) {
+    // TODO: only validate dependencies if starting in managed workflow
+    await profileMethod(validateDependenciesVersionsAsync)(projectRoot, exp, pkg);
+    // Warn about expo extensions.
+    if (!isLegacyImportsEnabled(exp)) {
+      // Adds a few seconds in basic projects so we should
+      // drop this in favor of the upgrade version as soon as possible.
+      await profileMethod(assertProjectHasExpoExtensionFilesAsync)(projectRoot);
+    }
+  }
 
-  const startOpts = parseStartOptions(options);
+  const startOptions = profileMethod(parseStartOptions)(options, exp);
 
-  await Project.startAsync(rootPath, { ...startOpts, exp });
+  await profileMethod(Project.startAsync)(rootPath, { ...startOptions, exp });
 
-  const url = await UrlUtils.constructDeepLinkAsync(projectDir);
-
-  const recipient = await sendTo.getRecipient(options.sendTo);
+  // Send to option...
+  const url = await profileMethod(
+    UrlUtils.constructDeepLinkAsync,
+    'UrlUtils.constructDeepLinkAsync'
+  )(projectRoot);
+  const recipient = await profileMethod(sendTo.getRecipient)(options.sendTo);
   if (recipient) {
     await sendTo.sendUrlAsync(url, recipient);
   }
 
-  await urlOpts.handleMobileOptsAsync(projectDir, options);
+  // Open project on devices.
+  await profileMethod(urlOpts.handleMobileOptsAsync)(projectRoot, options);
 
-  if (!startOpts.nonInteractive && !exp.isDetached) {
-    await TerminalUI.startAsync(projectDir, startOpts);
+  // Present the Terminal UI.
+  const isTerminalUIEnabled = !options.nonInteractive && !exp.isDetached;
+
+  if (isTerminalUIEnabled) {
+    await profileMethod(TerminalUI.startAsync, 'TerminalUI.startAsync')(projectRoot, startOptions);
   } else {
     if (!exp.isDetached) {
       Log.newLine();
@@ -201,119 +103,38 @@ async function action(projectDir: string, options: NormalizedOptions): Promise<v
     }
     Log.log(`Your native app is running at ${chalk.underline(url)}`);
   }
-  Log.nested(`Logs for your project will appear below. ${chalk.dim(`Press Ctrl+C to exit.`)}`);
-}
 
-async function validateDependenciesVersions(
-  projectDir: string,
-  exp: ExpoConfig,
-  pkg: PackageJSONConfig
-): Promise<void> {
-  if (!Versions.gteSdkVersion(exp, '33.0.0')) {
-    return;
-  }
-
-  const bundleNativeModulesPath = resolveFrom.silent(projectDir, 'expo/bundledNativeModules.json');
-  if (!bundleNativeModulesPath) {
-    Log.warn(
-      `Your project is in SDK version >= 33.0.0, but the ${chalk.underline(
-        'expo'
-      )} package version seems to be older.`
-    );
-    return;
-  }
-
-  const bundledNativeModules = await JsonFile.readAsync(bundleNativeModulesPath);
-  const bundledNativeModulesNames = Object.keys(bundledNativeModules);
-  const projectDependencies = Object.keys(pkg.dependencies || []);
-
-  const modulesToCheck = intersection(bundledNativeModulesNames, projectDependencies);
-  const incorrectDeps = [];
-  for (const moduleName of modulesToCheck) {
-    const expectedRange = bundledNativeModules[moduleName];
-    const actualRange = pkg.dependencies[moduleName];
-    if (
-      (semver.valid(actualRange) || semver.validRange(actualRange)) &&
-      typeof expectedRange === 'string' &&
-      !semver.intersects(expectedRange, actualRange)
-    ) {
-      incorrectDeps.push({
-        moduleName,
-        expectedRange,
-        actualRange,
-      });
-    }
-  }
-  if (incorrectDeps.length > 0) {
-    Log.warn('Some dependencies are incompatible with the installed expo package version:');
-    incorrectDeps.forEach(({ moduleName, expectedRange, actualRange }) => {
-      Log.warn(
-        ` - ${chalk.underline(moduleName)} - expected version range: ${chalk.underline(
-          expectedRange
-        )} - actual version installed: ${chalk.underline(actualRange)}`
-      );
-    });
-    Log.warn(
-      'Your project may not work correctly until you install the correct versions of the packages.\n' +
-        `To install the correct versions of these packages, please run: ${chalk.inverse(
-          'expo install [package-name ...]'
-        )}`
-    );
-  }
-}
-
-async function tryOpeningDevToolsAsync({
-  rootPath,
-  exp,
-  options,
-}: OpenDevToolsOptions): Promise<void> {
-  const devToolsUrl = await DevToolsServer.startAsync(rootPath);
-  Log.log(`Developer tools running on ${chalk.underline(devToolsUrl)}`);
-
-  if (!options.nonInteractive && !exp.isDetached) {
-    if (await UserSettings.getAsync('openDevToolsAtStartup', true)) {
-      TerminalUI.openDeveloperTools(devToolsUrl);
-    }
-  }
-}
-
-async function configureProjectAsync(
-  projectDir: string,
-  options: NormalizedOptions
-): Promise<{ rootPath: string; exp: ExpoConfig; pkg: PackageJSONConfig }> {
-  if (options.webOnly) {
-    installExitHooks(projectDir, Project.stopWebOnlyAsync);
+  // Final note about closing the server.
+  if (!options.webOnly) {
+    Log.nested(`Logs for your project will appear below. ${chalk.dim(`Press Ctrl+C to exit.`)}`);
   } else {
-    installExitHooks(projectDir);
+    Log.nested(
+      `\nLogs for your project will appear in the browser console. ${chalk.dim(
+        `Press Ctrl+C to exit.`
+      )}`
+    );
   }
-  await urlOpts.optsAsync(projectDir, options);
+  if (options.devClient) {
+    UnifiedAnalytics.logEvent('dev client start command', {
+      status: 'ready',
+      ...getDevClientProperties(projectRoot, exp),
+    });
+  }
+}
 
-  Log.log(chalk.gray(`Starting project at ${projectDir}`));
-
-  const projectConfig = getConfig(projectDir, {
-    skipSDKVersionRequirement: options.webOnly,
+function track(projectRoot: string, exp: ExpoConfig) {
+  UnifiedAnalytics.logEvent('dev client start command', {
+    status: 'started',
+    platform: 'ios',
+    ...getDevClientProperties(projectRoot, exp),
   });
-  const { exp, pkg } = projectConfig;
-
-  // TODO: move this function over to CLI
-  // const message = getProjectConfigDescription(projectDir, projectConfig);
-  // if (message) {
-  //   log.log(chalk.magenta(`\u203A ${message}`));
-  // }
-
-  const rootPath = path.resolve(projectDir);
-
-  await tryOpeningDevToolsAsync({
-    rootPath,
-    exp,
-    options,
+  installCustomExitHook(() => {
+    UnifiedAnalytics.logEvent('dev client start command', {
+      status: 'finished',
+      ...getDevClientProperties(projectRoot, exp),
+    });
+    UnifiedAnalytics.flush();
   });
-
-  return {
-    rootPath,
-    exp,
-    pkg,
-  };
 }
 
 export default (program: any) => {
@@ -331,13 +152,17 @@ export default (program: any) => {
     .option('--minify', 'Minify code')
     .option('--no-minify', 'Do not minify code')
     .option('--https', 'To start webpack with https protocol')
+    .option(
+      '-p, --port <port>',
+      'Port to start the native Metro bundler on (does not apply to web or tunnel). Default: 19000'
+    )
     .option('--no-https', 'To start webpack with http protocol')
     .urlOpts()
     .allowOffline()
     .asyncActionProjectDir(
-      async (projectDir: string, options: Options): Promise<void> => {
-        const normalizedOptions = await normalizeOptionsAsync(projectDir, options);
-        return await action(projectDir, normalizedOptions);
+      async (projectRoot: string, options: RawStartOptions): Promise<void> => {
+        const normalizedOptions = await normalizeOptionsAsync(projectRoot, options);
+        return await action(projectRoot, normalizedOptions);
       }
     );
 
@@ -352,14 +177,17 @@ export default (program: any) => {
     .option('--no-minify', 'Do not minify code')
     .option('--https', 'To start webpack with https protocol')
     .option('--no-https', 'To start webpack with http protocol')
+    .option('-p, --port <port>', 'Port to start the Webpack bundler on. Default: 19006')
+    .option('-s, --send-to [dest]', 'An email address to send a link to')
     .urlOpts()
     .allowOffline()
     .asyncActionProjectDir(
-      async (projectDir: string, options: Options): Promise<void> => {
-        return startWebAction(
-          projectDir,
-          await normalizeOptionsAsync(projectDir, { ...options, webOnly: true })
-        );
+      async (projectRoot: string, options: RawStartOptions): Promise<void> => {
+        const normalizedOptions = await normalizeOptionsAsync(projectRoot, {
+          ...options,
+          webOnly: true,
+        });
+        return await action(projectRoot, normalizedOptions);
       }
     );
 };

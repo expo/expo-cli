@@ -1,4 +1,5 @@
 import maybeBailOnGitStatusAsync from '../utils/maybeBailOnGitStatusAsync';
+import { promptToClearMalformedNativeProjectsAsync } from './clearNativeFolder';
 import { logNextSteps } from './logNextSteps';
 import { assertPlatforms } from './platformOptions';
 import { EjectAsyncOptions, prebuildAsync } from './prebuildAsync';
@@ -15,7 +16,9 @@ export async function ejectAsync(
   { platforms, ...options }: EjectAsyncOptions
 ): Promise<void> {
   assertPlatforms(platforms);
+
   if (await maybeBailOnGitStatusAsync()) return;
+  await promptToClearMalformedNativeProjectsAsync(projectRoot);
 
   const results = await prebuildAsync(projectRoot, { platforms, ...options });
   logNextSteps(results);

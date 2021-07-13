@@ -210,8 +210,8 @@ export async function generateFaviconAsync(
         const { source, name } = await Image.generateImageAsync(
           { projectRoot, cacheType },
           {
-            backgroundColor: 'transparent',
             ...icon,
+            backgroundColor: icon.backgroundColor || 'transparent',
             width: size,
             height: size,
             name: `favicon-${size}.png`,

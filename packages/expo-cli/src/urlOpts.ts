@@ -1,8 +1,7 @@
-import { getDefaultTarget } from '@expo/config';
-import { Android, ConnectionStatus, ProjectSettings, Simulator, Webpack } from '@expo/xdl';
-import { Command } from 'commander';
+import type { Command } from 'commander';
 import indentString from 'indent-string';
 import qrcodeTerminal from 'qrcode-terminal';
+import { Android, ConnectionStatus, ProjectSettings, Simulator, Webpack } from 'xdl';
 
 import CommandError, { AbortCommandError } from './CommandError';
 import Log from './log';
@@ -28,10 +27,10 @@ function addOptions(program: Command) {
       'Experimental: Starts the bundler for use with the expo-development-client'
     )
     .option('--scheme <scheme>', 'Custom URI protocol to use with a dev client')
-    .option('-a, --android', 'Opens your app in Expo client on a connected Android device')
+    .option('-a, --android', 'Opens your app in Expo Go on a connected Android device')
     .option(
       '-i, --ios',
-      'Opens your app in Expo client in a currently running iOS simulator on your computer'
+      'Opens your app in Expo Go in a currently running iOS simulator on your computer'
     )
     .option('-w, --web', 'Opens your app in a web browser')
     .option(
@@ -43,8 +42,8 @@ function addOptions(program: Command) {
     .option('--localhost', 'Same as --host localhost');
 }
 
-async function optsAsync(projectDir: string, options: any) {
-  var opts = await ProjectSettings.readAsync(projectDir);
+async function optsAsync(projectRoot: string, options: any) {
+  const opts = await ProjectSettings.readAsync(projectRoot);
 
   if ([options.host, options.lan, options.localhost, options.tunnel].filter(i => i).length > 1) {
     throw new CommandError(
@@ -71,33 +70,18 @@ async function optsAsync(projectDir: string, options: any) {
     opts.hostType = 'localhost';
   }
 
-  // Prevent using --dev-client in a managed app.
-  if (options.devClient) {
-    const defaultTarget = getDefaultTarget(projectDir);
-    if (defaultTarget !== 'bare') {
-      Log.warn(
-        `\nOption ${Log.chalk.cyan(
-          '--dev-client'
-        )} can only be used in bare workflow apps. Run ${Log.chalk.cyan(
-          'expo eject'
-        )} and try again\n`
-      );
-      throw new AbortCommandError();
-    }
-  }
-
   if (typeof options.scheme === 'string') {
     // Use the custom scheme
     opts.scheme = options.scheme ?? null;
   } else if (options.devClient) {
     // Attempt to find the scheme or warn the user how to setup a custom scheme
-    opts.scheme = await getDevClientSchemeAsync(projectDir);
+    opts.scheme = await getDevClientSchemeAsync(projectRoot);
   } else {
     // Ensure this is reset when users don't use `--scheme` or `--dev-client`
     opts.scheme = null;
   }
 
-  await ProjectSettings.setAsync(projectDir, opts);
+  await ProjectSettings.setAsync(projectRoot, opts);
 
   return opts;
 }
@@ -108,33 +92,63 @@ function printQRCode(url: string) {
 
 async function handleMobileOptsAsync(
   projectRoot: string,
-  options: Pick<URLOptions, 'ios' | 'android' | 'web'> & { webOnly?: boolean }
+  options: Pick<URLOptions, 'devClient' | 'ios' | 'android' | 'web'> & { webOnly?: boolean }
 ) {
-  await Promise.all([
+  const results = await Promise.all([
     (async () => {
       if (options.android) {
         if (options.webOnly) {
-          await Android.openWebProjectAsync({ projectRoot });
+          return await Android.openWebProjectAsync({ projectRoot });
         } else {
-          await Android.openProjectAsync({ projectRoot });
+          return await Android.openProjectAsync({
+            projectRoot,
+            devClient: options.devClient ?? false,
+          });
         }
       }
+      return null;
     })(),
     (async () => {
       if (options.ios) {
         if (options.webOnly) {
-          await Simulator.openWebProjectAsync({ projectRoot, shouldPrompt: false });
+          return await Simulator.openWebProjectAsync({ projectRoot, shouldPrompt: false });
         } else {
-          await Simulator.openProjectAsync({ projectRoot, shouldPrompt: false });
+          return await Simulator.openProjectAsync({
+            projectRoot,
+            devClient: options.devClient ?? false,
+            shouldPrompt: false,
+          });
         }
       }
+      return null;
     })(),
     (async () => {
       if (options.web) {
-        await Webpack.openAsync(projectRoot);
+        return await Webpack.openAsync(projectRoot);
       }
+      return null;
     })(),
   ]);
+
+  const errors = results
+    .reduce<(string | Error)[]>((prev, curr) => {
+      if (curr && !curr.success) {
+        return prev.concat([curr.error]);
+      }
+      return prev;
+    }, [])
+    .filter(Boolean);
+
+  if (errors.length) {
+    // ctrl+c
+    const isEscapedError = errors.some(error => error === 'escaped');
+    if (isEscapedError) {
+      throw new AbortCommandError();
+    } else {
+      // Throw the first error
+      throw errors[0];
+    }
+  }
 
   return !!options.android || !!options.ios;
 }

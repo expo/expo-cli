@@ -3,6 +3,7 @@ import chalk from 'chalk';
 import temporary from 'tempy';
 
 import Log from '../../log';
+import { logNewSection } from '../../utils/ora';
 import * as CreateApp from '../utils/CreateApp';
 import { usesOldExpoUpdatesAsync } from '../utils/ProjectUtils';
 import { logConfigWarningsAndroid, logConfigWarningsIOS } from '../utils/logConfigWarnings';
@@ -11,14 +12,17 @@ import { createNativeProjectsFromTemplateAsync } from './createNativeProjectsFro
 import { ensureConfigAsync } from './ensureConfigAsync';
 import { installNodeDependenciesAsync } from './installNodeDependenciesAsync';
 import { assertPlatforms, ensureValidPlatforms } from './platformOptions';
+import { resolveTemplateOption } from './resolveTemplate';
 import { warnIfDependenciesRequireAdditionalSetup } from './setupWarnings';
 
 export type EjectAsyncOptions = {
   verbose?: boolean;
   force?: boolean;
+  template?: string;
   install?: boolean;
   packageManager?: 'npm' | 'yarn';
   platforms: ModPlatform[];
+  skipDependencyUpdate?: string[];
 };
 
 export type PrebuildResults = {
@@ -57,8 +61,10 @@ export async function prebuildAsync(
     projectRoot,
     exp,
     pkg,
+    template: options.template != null ? resolveTemplateOption(options.template) : undefined,
     tempDir,
     platforms,
+    skipDependencyUpdate: options.skipDependencyUpdate,
   });
 
   // Install node modules
@@ -79,20 +85,20 @@ export async function prebuildAsync(
   }
 
   // Apply Expo config to native projects
-  const applyingAndroidConfigStep = CreateApp.logNewSection('Config syncing');
+  const configSyncingStep = logNewSection('Config syncing');
   const managedConfig = await configureProjectAsync({
     projectRoot,
     platforms,
   });
   if (WarningAggregator.hasWarningsAndroid() || WarningAggregator.hasWarningsIOS()) {
-    applyingAndroidConfigStep.stopAndPersist({
+    configSyncingStep.stopAndPersist({
       symbol: '⚠️ ',
-      text: chalk.red('Config synced with warnings that should be fixed:'),
+      text: chalk.yellow('Config synced with warnings that should be fixed:'),
     });
     logConfigWarningsAndroid();
     logConfigWarningsIOS();
   } else {
-    applyingAndroidConfigStep.succeed('Config synced');
+    configSyncingStep.succeed('Config synced');
   }
 
   // Install CocoaPods

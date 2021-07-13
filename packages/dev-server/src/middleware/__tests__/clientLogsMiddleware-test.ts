@@ -94,7 +94,7 @@ async function createServerAsync() {
   const app = connect().use(bodyParser.json()).use(clientLogsMiddleware(logger));
 
   const server = http.createServer(app);
-  await new Promise((resolve, reject) =>
+  await new Promise<void>((resolve, reject) =>
     server.listen((error: any) => {
       if (error) reject(error);
       else resolve();

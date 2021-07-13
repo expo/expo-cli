@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 import * as Scheme from '@expo/config-plugins/build/ios/Scheme';
-import plist, { PlistObject } from '@expo/plist';
+import plist from '@expo/plist';
 import spawnAsync from '@expo/spawn-async';
 import chalk from 'chalk';
 import fs from 'fs';
 import { sync as globSync } from 'glob';
 import * as path from 'path';
 
-import { Options } from './Options';
+import { CommandError, Options } from './Options';
 
 const ignoredPaths = ['**/@(Carthage|Pods|node_modules)/**'];
 
@@ -32,7 +32,6 @@ export async function addAsync({
   dryRun,
 }: Pick<Options, 'uri' | 'infoPath' | 'projectRoot' | 'dryRun'>): Promise<boolean> {
   const infoPlistPath = infoPath ?? getConfigPath(projectRoot);
-
   let config = readConfig(infoPlistPath);
 
   if (Scheme.hasScheme(uri, config)) {
@@ -97,7 +96,7 @@ export async function getAsync({
 }: Pick<Options, 'projectRoot' | 'infoPath'>): Promise<string[]> {
   const infoPlistPath = infoPath ?? getConfigPath(projectRoot);
   const rawPlist = fs.readFileSync(infoPlistPath, 'utf8');
-  const plistObject = plist.parse(rawPlist) as PlistObject;
+  const plistObject = plist.parse(rawPlist);
   const schemes = Scheme.getSchemesFromPlist(plistObject);
   return schemes;
 }
@@ -116,6 +115,9 @@ export function getConfigPath(projectRoot: string): string {
     return rnInfoPlistPaths[0];
   }
   const infoPlistPaths = getInfoPlistsInDirectory(projectRoot);
+  if (!infoPlistPaths.length) {
+    throw new CommandError(`iOS: No Info.plist found for project at root: ${projectRoot}`);
+  }
   return infoPlistPaths[0];
 }
 

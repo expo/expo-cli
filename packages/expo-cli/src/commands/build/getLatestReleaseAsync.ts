@@ -1,5 +1,5 @@
 import { getConfig } from '@expo/config';
-import { ApiV2, UserManager } from '@expo/xdl';
+import { ApiV2, UserManager } from 'xdl';
 
 type Release = {
   fullName: string;

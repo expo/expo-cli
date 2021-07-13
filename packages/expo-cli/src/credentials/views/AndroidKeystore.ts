@@ -1,4 +1,3 @@
-import { AndroidCredentials } from '@expo/xdl';
 import chalk from 'chalk';
 import commandExists from 'command-exists';
 import fs from 'fs-extra';
@@ -6,6 +5,7 @@ import omit from 'lodash/omit';
 import os from 'os';
 import path from 'path';
 import { v4 as uuid } from 'uuid';
+import { AndroidCredentials } from 'xdl';
 
 import CommandError from '../../CommandError';
 import Log from '../../log';

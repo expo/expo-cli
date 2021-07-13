@@ -1,5 +1,5 @@
 import { Platform } from '@expo/config';
-import { StandaloneBuild, UrlUtils } from '@expo/xdl';
+import { StandaloneBuild, UrlUtils } from 'xdl';
 
 import Log from '../../../../log';
 import prompt from '../../../../prompts';

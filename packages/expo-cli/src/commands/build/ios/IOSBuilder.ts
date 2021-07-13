@@ -1,8 +1,8 @@
-import { XDLError } from '@expo/xdl';
 import chalk from 'chalk';
 import pickBy from 'lodash/pickBy';
 import os from 'os';
 import semver from 'semver';
+import { XDLError } from 'xdl';
 
 import CommandError, { ErrorCodes } from '../../../CommandError';
 import * as apple from '../../../appleApi';
@@ -29,8 +29,8 @@ import { SetupIosProvisioningProfile } from '../../../credentials/views/SetupIos
 import { SetupIosPush } from '../../../credentials/views/SetupIosPush';
 import Log from '../../../log';
 import { confirmAsync } from '../../../prompts';
-import { getOrPromptForBundleIdentifier } from '../../eject/ConfigValidation';
 import * as TerminalLink from '../../utils/TerminalLink';
+import { getOrPromptForBundleIdentifier } from '../../utils/getOrPromptApplicationId';
 import BaseBuilder from '../BaseBuilder';
 import { PLATFORMS } from '../constants';
 import * as utils from '../utils';
@@ -357,7 +357,7 @@ class IOSBuilder extends BaseBuilder {
     Log.newLine();
     Log.log(
       `You can now publish to the App Store with ${TerminalLink.transporterAppLink()} or ${chalk.bold(
-        'expo upload:ios'
+        'eas submit --platform ios'
       )}. ${TerminalLink.learnMore('https://docs.expo.io/distribution/uploading-apps/')}`
     );
   }

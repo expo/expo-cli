@@ -2,7 +2,6 @@ import { ExpoConfig } from '@expo/config-types';
 
 import { createInfoPlistPlugin } from '../plugins/ios-plugins';
 import { InfoPlist, URLScheme } from './IosConfig.types';
-import { findSchemeNames } from './Paths';
 
 export const withScheme = createInfoPlistPlugin(setScheme, 'withScheme');
 
@@ -89,7 +88,9 @@ export function hasScheme(scheme: string, infoPlist: InfoPlist): boolean {
 
   if (!Array.isArray(existingSchemes)) return false;
 
-  return existingSchemes.some(({ CFBundleURLSchemes: schemes }: any) => schemes.includes(scheme));
+  return existingSchemes.some(({ CFBundleURLSchemes: schemes }: any) =>
+    Array.isArray(schemes) ? schemes.includes(scheme) : false
+  );
 }
 
 export function getSchemesFromPlist(infoPlist: InfoPlist): string[] {
@@ -102,8 +103,4 @@ export function getSchemesFromPlist(infoPlist: InfoPlist): string[] {
     }, []);
   }
   return [];
-}
-
-export function getSchemesFromXcodeproj(projectRoot: string): string[] {
-  return findSchemeNames(projectRoot);
 }

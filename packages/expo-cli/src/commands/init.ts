@@ -2,7 +2,6 @@ import { BareAppConfig, getConfig } from '@expo/config';
 import { AndroidConfig, IOSConfig } from '@expo/config-plugins';
 import plist from '@expo/plist';
 import spawnAsync from '@expo/spawn-async';
-import { UserManager, Versions } from '@expo/xdl';
 import chalk from 'chalk';
 import program, { Command } from 'commander';
 import fs from 'fs-extra';
@@ -11,11 +10,13 @@ import pacote from 'pacote';
 import path from 'path';
 import stripAnsi from 'strip-ansi';
 import terminalLink from 'terminal-link';
+import { UserManager, Versions } from 'xdl';
 
 import CommandError, { SilentError } from '../CommandError';
 import Log from '../log';
 import prompts, { selectAsync } from '../prompts';
 import { extractAndPrepareTemplateAppAsync } from '../utils/extractTemplateAppAsync';
+import { logNewSection } from '../utils/ora';
 import * as CreateApp from './utils/CreateApp';
 import { usesOldExpoUpdatesAsync } from './utils/ProjectUtils';
 
@@ -51,14 +52,9 @@ const FEATURED_TEMPLATES = [
     name: 'expo-template-bare-minimum',
     description: 'bare and minimal, just the essentials to get you started',
   },
-  {
-    shortName: 'minimal (TypeScript)',
-    name: 'expo-template-bare-typescript',
-    description: 'same as minimal but with TypeScript configuration',
-  },
 ];
 
-const BARE_WORKFLOW_TEMPLATES = ['expo-template-bare-minimum', 'expo-template-bare-typescript'];
+const BARE_WORKFLOW_TEMPLATES = ['expo-template-bare-minimum'];
 const isMacOS = process.platform === 'darwin';
 
 function assertValidName(folderName: string) {
@@ -159,18 +155,18 @@ function padEnd(str: string, width: number): string {
   return str + Array(len + 1).join(' ');
 }
 
-async function action(projectDir: string, command: Command) {
+async function action(incomingProjectRoot: string, command: Command) {
   const options = parseOptions(command);
 
   // Resolve the name, and projectRoot
   let projectRoot: string;
-  if (!projectDir && options.yes) {
+  if (!incomingProjectRoot && options.yes) {
     projectRoot = path.resolve(process.cwd());
     const folderName = path.basename(projectRoot);
     assertValidName(folderName);
     await assertFolderEmptyAsync(projectRoot, folderName);
   } else {
-    projectRoot = await resolveProjectRootAsync(projectDir || options.name);
+    projectRoot = await resolveProjectRootAsync(incomingProjectRoot || options.name);
   }
 
   let resolvedTemplate: string | null = options.template ?? null;
@@ -264,7 +260,7 @@ async function action(projectDir: string, command: Command) {
     initialConfig.name = projectName;
   }
 
-  const extractTemplateStep = CreateApp.logNewSection('Downloading and extracting project files.');
+  const extractTemplateStep = logNewSection('Downloading and extracting project files.');
   let projectPath;
   try {
     projectPath = await extractAndPrepareTemplateAppAsync(templateSpec, projectRoot, initialConfig);
@@ -346,7 +342,7 @@ async function action(projectDir: string, command: Command) {
 }
 
 async function installNodeDependenciesAsync(projectRoot: string, packageManager: 'yarn' | 'npm') {
-  const installJsDepsStep = CreateApp.logNewSection('Installing JavaScript dependencies.');
+  const installJsDepsStep = logNewSection('Installing JavaScript dependencies.');
   try {
     await CreateApp.installNodeDependenciesAsync(projectRoot, packageManager);
     installJsDepsStep.succeed('Installed JavaScript dependencies.');
@@ -385,9 +381,11 @@ export async function initGitRepoAsync(
         cwd: root,
         stdio: 'ignore',
       });
+      await spawnAsync('git', ['branch', '-M', 'main'], { cwd: root, stdio: 'ignore' });
     }
     return true;
   } catch (e) {
+    Log.debug('git error:', e);
     // no-op -- this is just a convenience and we don't care if it fails
     return false;
   }
@@ -557,7 +555,7 @@ export default function (program: Command) {
     .description('Create a new Expo project')
     .option(
       '-t, --template [name]',
-      'Specify which template to use. Valid options are "blank", "tabs", "bare-minimum" or a package on npm (e.g. "expo-template-bare-typescript") that includes an Expo project template.'
+      'Specify which template to use. Valid options are "blank", "tabs", "bare-minimum" or a package on npm (e.g. "expo-template-bare-minimum") that includes an Expo project template.'
     )
     .option('--npm', 'Use npm to install dependencies. (default when Yarn is not installed)')
     .option('--yarn', 'Use Yarn to install dependencies. (default when Yarn is installed)')

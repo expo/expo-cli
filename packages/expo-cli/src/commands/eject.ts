@@ -1,7 +1,7 @@
 import { getConfig } from '@expo/config';
-import { Versions } from '@expo/xdl';
 import chalk from 'chalk';
-import { Command } from 'commander';
+import type { Command } from 'commander';
+import { Versions } from 'xdl';
 
 import CommandError from '../CommandError';
 import Log from '../log';
@@ -20,7 +20,7 @@ async function userWantsToEjectWithoutUpgradingAsync() {
 }
 
 export async function actionAsync(
-  projectDir: string,
+  projectRoot: string,
   {
     platform,
     ...options
@@ -29,7 +29,7 @@ export async function actionAsync(
     platform?: string;
   }
 ) {
-  const { exp } = getConfig(projectDir);
+  const { exp } = getConfig(projectRoot);
 
   if (options.npm) {
     options.packageManager = 'npm';
@@ -44,7 +44,7 @@ export async function actionAsync(
     }
   } else {
     Log.debug('Eject Mode: Latest');
-    await ejectAsync(projectDir, {
+    await ejectAsync(projectRoot, {
       ...options,
       platforms: platformsFromPlatform(platform),
     } as EjectAsyncOptions);
@@ -56,7 +56,7 @@ export default function (program: Command) {
     .command('eject [path]')
     .description(
       `Create native iOS and Android project files. ${chalk.dim(
-        learnMore('https://docs.expo.io/bare/customizing/')
+        learnMore('https://docs.expo.io/workflow/customizing/')
       )}`
     )
     .longDescription(

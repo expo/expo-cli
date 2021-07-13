@@ -6,9 +6,9 @@
   "scripts": {
     "format": "prettier --write .",
     "build": "lerna run prepare --stream",
-    "postinstall": "expo-yarn-workspaces check-workspace-dependencies",
+    "postinstall": "yarn-deduplicate && expo-yarn-workspaces check-workspace-dependencies",
     "publish": "echo \"This script is deprecated. Run \\\"node ./scripts/publish.js\\\" instead.\"; exit 1",
-    "start": "lerna --ignore \"@expo/{dev-tools,next-adapter,electron-adapter}\" --ignore expo-optimize --ignore pod-install --ignore uri-scheme run watch --parallel",
+    "start": "lerna --ignore \"@expo/{dev-tools,next-adapter}\" --ignore expo-optimize --ignore pod-install --ignore uri-scheme run watch --parallel",
     "tsc": "echo 'You are trying to run \"tsc\" in the workspace root. Run it from an individual package instead.' && exit 1",
     "lint": "eslint . --ext js,ts",
     "test": "jest"
@@ -25,22 +25,24 @@
       "git add"
     ]
   },
-  "devDependencies": {
+  "dependencies": {
     "@expo/spawn-async": "^1.5.0",
-    "@types/node": "^12",
     "@types/jest": "^26.0.8",
+    "@types/node": "^12",
+    "@tsconfig/node12": "^1.0.7",
     "@vercel/ncc": "^0.27.0",
     "codecov": "^3.6.5",
-    "eslint": "^6.6.0",
-    "eslint-config-universe": "^4.0.0",
+    "eslint": "^7.25.0",
+    "eslint-config-universe": "^5.0.0",
     "expo-yarn-workspaces": "^1.2.1",
     "husky": "^1.1.3",
     "jest": "^26.2.2",
     "jest-watch-typeahead": "^0.6.0",
     "lerna": "3.4.1",
     "lint-staged": "^8.0.4",
-    "prettier": "^2.0.5",
-    "typescript": "^3.8.3"
+    "prettier": "^2.2.1",
+    "typescript": "^4.2.4",
+    "yarn-deduplicate": "^3.1.0"
   },
   "resolutions": {
     "@types/webpack": "4.41.18",

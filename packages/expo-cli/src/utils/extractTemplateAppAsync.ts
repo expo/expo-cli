@@ -1,6 +1,5 @@
 import { BareAppConfig, ExpoConfig } from '@expo/config';
 import JsonFile from '@expo/json-file';
-import { UserSettings } from '@expo/xdl';
 import fs from 'fs-extra';
 import merge from 'lodash/merge';
 import Minipass from 'minipass';
@@ -8,6 +7,7 @@ import pacote, { PackageSpec } from 'pacote';
 import path from 'path';
 import { Readable } from 'stream';
 import tar, { ReadEntry } from 'tar';
+import { UserSettings } from 'xdl';
 
 type AppJsonInput = { expo: Partial<ExpoConfig> & { name: string } };
 type TemplateConfig = { name: string };
@@ -60,7 +60,7 @@ class Transformer extends Minipass {
 // Binary files, don't process these (avoid decoding as utf8)
 const binaryExtensions = ['.png', '.jar', '.keystore', '.otf', '.ttf'];
 
-function createFileTransform(config: TemplateConfig) {
+export function createFileTransform(config: TemplateConfig) {
   return function transformFile(entry: ReadEntry) {
     const extension = path.extname(entry.path);
     if (!binaryExtensions.includes(extension) && config.name) {
@@ -113,7 +113,7 @@ export async function extractAndPrepareTemplateAppAsync(
 export async function extractTemplateAppAsync(
   templateSpec: PackageSpec,
   targetPath: string,
-  config: { name?: string }
+  config: TemplateConfig
 ) {
   await pacote.tarball.stream(
     templateSpec,
@@ -128,9 +128,38 @@ export async function extractTemplateAppAsync(
   return targetPath;
 }
 
+export async function extractTemplateAppFolderAsync(
+  tarFilePath: string,
+  targetPath: string,
+  config: TemplateConfig
+) {
+  const readStream = fs.createReadStream(tarFilePath);
+  await extractTemplateAppAsyncImpl(targetPath, config, readStream);
+  return targetPath;
+}
+
+export function createEntryResolver(name: string) {
+  return (entry: ReadEntry) => {
+    if (name) {
+      // Rewrite paths for bare workflow
+      entry.path = entry.path
+        .replace(
+          /HelloWorld/g,
+          entry.path.includes('android') ? sanitizedName(name.toLowerCase()) : sanitizedName(name)
+        )
+        .replace(/helloworld/g, sanitizedName(name).toLowerCase());
+    }
+    if (entry.type && /^file$/i.test(entry.type) && path.basename(entry.path) === 'gitignore') {
+      // Rename `gitignore` because npm ignores files named `.gitignore` when publishing.
+      // See: https://github.com/npm/npm/issues/1862
+      entry.path = entry.path.replace(/gitignore$/, '.gitignore');
+    }
+  };
+}
+
 async function extractTemplateAppAsyncImpl(
   targetPath: string,
-  config: { name?: string },
+  config: TemplateConfig,
   tarStream: Readable
 ) {
   await fs.mkdirp(targetPath);
@@ -139,26 +168,8 @@ async function extractTemplateAppAsyncImpl(
       cwd: targetPath,
       strip: 1,
       // TODO(ville): pending https://github.com/DefinitelyTyped/DefinitelyTyped/pull/36598
-      // @ts-ignore property missing from the type definition
       transform: createFileTransform(config),
-      onentry(entry: ReadEntry) {
-        if (config.name) {
-          // Rewrite paths for bare workflow
-          entry.path = entry.path
-            .replace(
-              /HelloWorld/g,
-              entry.path.includes('android')
-                ? sanitizedName(config.name.toLowerCase())
-                : sanitizedName(config.name)
-            )
-            .replace(/helloworld/g, sanitizedName(config.name).toLowerCase());
-        }
-        if (entry.type && /^file$/i.test(entry.type) && path.basename(entry.path) === 'gitignore') {
-          // Rename `gitignore` because npm ignores files named `.gitignore` when publishing.
-          // See: https://github.com/npm/npm/issues/1862
-          entry.path = entry.path.replace(/gitignore$/, '.gitignore');
-        }
-      },
+      onentry: createEntryResolver(config.name),
     });
     tarStream.on('error', reject);
     extractStream.on('error', reject);

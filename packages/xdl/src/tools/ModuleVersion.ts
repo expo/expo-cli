@@ -3,11 +3,11 @@ import pTimeout from 'p-timeout';
 import npmPackageJson from 'package-json';
 import semver from 'semver';
 
-import { Cacher } from './FsCache';
+import { FsCache } from '../internal';
 
 /** @deprecated just use the update-check npm package */
 function createModuleVersionChecker(name: string, currentVersion: string) {
-  const UpdateCacher = new Cacher(
+  const UpdateCacher = new FsCache.Cacher(
     async () => {
       const pkgJson = await pTimeout(npmPackageJson(name, { version: currentVersion }), 2000);
       return {

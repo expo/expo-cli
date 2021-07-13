@@ -1,4 +1,4 @@
-import { ExpoAppManifest, ExpoConfig, getConfig } from '@expo/config';
+import { ExpoAppManifest, ExpoConfig, ExpoGoConfig, getConfig } from '@expo/config';
 import { JSONObject } from '@expo/json-file';
 import chalk from 'chalk';
 import express from 'express';
@@ -6,19 +6,23 @@ import http from 'http';
 import os from 'os';
 import { URL } from 'url';
 
-import Analytics from '../Analytics';
-import ApiV2 from '../ApiV2';
-import Config from '../Config';
-import { resolveGoogleServicesFile, resolveManifestAssets } from '../ProjectAssets';
-import * as ProjectSettings from '../ProjectSettings';
-import * as UrlUtils from '../UrlUtils';
-import UserManager, { ANONYMOUS_USERNAME } from '../User';
-import UserSettings from '../UserSettings';
-import * as Versions from '../Versions';
-import { learnMore } from '../logs/TerminalLink';
-import * as Doctor from '../project/Doctor';
-import * as ProjectUtils from '../project/ProjectUtils';
-import { resolveEntryPoint } from '../tools/resolveEntryPoint';
+import {
+  Analytics,
+  ANONYMOUS_USERNAME,
+  ApiV2,
+  Config,
+  ConnectionStatus,
+  Doctor,
+  learnMore,
+  ProjectAssets,
+  ProjectSettings,
+  ProjectUtils,
+  resolveEntryPoint,
+  UrlUtils,
+  UserManager,
+  UserSettings,
+  Versions,
+} from '../internal';
 
 interface HostInfo {
   host: string;
@@ -62,16 +66,16 @@ function shouldExposeEnvironmentVariableInManifest(key: string) {
   return key.startsWith('REACT_NATIVE_') || key.startsWith('EXPO_');
 }
 
-function stripPort(host: string | undefined): string | undefined {
+export function stripPort(host: string | undefined): string | undefined {
   if (!host) {
     return host;
   }
   return new URL('/', `http://${host}`).hostname;
 }
 
-async function getPackagerOptionsAsync(
+export async function getPackagerOptionsAsync(
   projectRoot: string
-): Promise<[PackagerOptions, PackagerOptions]> {
+): Promise<[ProjectSettings.ProjectSettings, PackagerOptions]> {
   // Get packager opts and then copy into bundleUrlPackagerOpts
   const projectSettings = await ProjectSettings.readAsync(projectRoot);
   const bundleUrlPackagerOpts = JSON.parse(JSON.stringify(projectSettings));
@@ -82,7 +86,7 @@ async function getPackagerOptionsAsync(
   return [projectSettings, bundleUrlPackagerOpts];
 }
 
-async function getBundleUrlAsync({
+export async function getBundleUrlAsync({
   projectRoot,
   platform,
   projectSettings,
@@ -115,8 +119,15 @@ function getPlatformFromRequest(headers: http.IncomingHttpHeaders): string {
 export function getManifestHandler(projectRoot: string) {
   return async (
     req: express.Request | http.IncomingMessage,
-    res: express.Response | http.ServerResponse
+    res: express.Response | http.ServerResponse,
+    next: (err?: Error) => void
   ) => {
+    // Only support `/`, `/manifest`, `/index.exp` for the manifest middleware.
+    if (!req.url || !['/', '/manifest', '/index.exp'].includes(req.url)) {
+      next();
+      return;
+    }
+
     try {
       // We intentionally don't `await`. We want to continue trying even
       // if there is a potential error in the package.json and don't want to slow
@@ -173,6 +184,38 @@ async function getManifestResponseFromHeadersAsync({
   return getManifestResponseAsync({ projectRoot, host: headers.host, platform, acceptSignature });
 }
 
+export async function getExpoGoConfig({
+  projectRoot,
+  projectSettings,
+  mainModuleName,
+  hostname,
+}: {
+  projectRoot: string;
+  projectSettings: ProjectSettings.ProjectSettings;
+  mainModuleName: string;
+  hostname: string | undefined;
+}): Promise<ExpoGoConfig> {
+  const [debuggerHost, logUrl] = await Promise.all([
+    UrlUtils.constructDebuggerHostAsync(projectRoot, hostname),
+    UrlUtils.constructLogUrlAsync(projectRoot, hostname),
+  ]);
+  return {
+    developer: {
+      tool: Config.developerTool,
+      projectRoot,
+    },
+    packagerOpts: projectSettings,
+    mainModuleName,
+    // Add this string to make Flipper register React Native / Metro as "running".
+    // Can be tested by running:
+    // `METRO_SERVER_PORT=19000 open -a flipper.app`
+    // Where 19000 is the port where the Expo project is being hosted.
+    __flipperHack: 'React Native packager is running',
+    debuggerHost,
+    logUrl,
+  };
+}
+
 export async function getManifestResponseAsync({
   projectRoot,
   host,
@@ -183,10 +226,9 @@ export async function getManifestResponseAsync({
   platform: string;
   host?: string;
   acceptSignature?: string | string[];
-}): Promise<{ exp: ExpoConfig; manifestString: string; hostInfo: HostInfo }> {
+}): Promise<{ exp: ExpoAppManifest; manifestString: string; hostInfo: HostInfo }> {
   // Read the config
   const projectConfig = getConfig(projectRoot);
-  const manifest = projectConfig.exp as ExpoAppManifest;
   // Read from headers
   const hostname = stripPort(host);
 
@@ -196,19 +238,25 @@ export async function getManifestResponseAsync({
   // Gather packager and host info
   const hostInfo = await createHostInfoAsync();
   const [projectSettings, bundleUrlPackagerOpts] = await getPackagerOptionsAsync(projectRoot);
-  // Mutate the manifest
-  manifest.xde = true; // deprecated
-  manifest.developer = {
-    tool: Config.developerTool,
+  // Create the manifest and set fields within it
+  const expoGoConfig = await getExpoGoConfig({
     projectRoot,
+    projectSettings,
+    mainModuleName,
+    hostname,
+  });
+  const hostUri = await UrlUtils.constructHostUriAsync(projectRoot, hostname);
+  const manifest: ExpoAppManifest = {
+    ...(projectConfig.exp as ExpoAppManifest),
+    ...expoGoConfig,
+    hostUri,
   };
-  manifest.packagerOpts = projectSettings;
-  manifest.mainModuleName = mainModuleName;
   // Adding the env variables to the Expo manifest is unsafe.
   // This feature is deprecated in SDK 41 forward.
   if (manifest.sdkVersion && Versions.lteSdkVersion(manifest, '40.0.0')) {
     manifest.env = getManifestEnvironment();
   }
+
   // Add URLs to the manifest
   manifest.bundleUrl = await getBundleUrlAsync({
     projectRoot,
@@ -218,19 +266,17 @@ export async function getManifestResponseAsync({
     mainModuleName,
     hostname,
   });
-  manifest.debuggerHost = await UrlUtils.constructDebuggerHostAsync(projectRoot, hostname);
-  manifest.logUrl = await UrlUtils.constructLogUrlAsync(projectRoot, hostname);
-  manifest.hostUri = await UrlUtils.constructHostUriAsync(projectRoot, hostname);
+
   // Resolve all assets and set them on the manifest as URLs
-  await resolveManifestAssets({
+  await ProjectAssets.resolveManifestAssets({
     projectRoot,
-    manifest: manifest as ExpoAppManifest,
+    manifest,
     async resolver(path) {
       return manifest.bundleUrl!.match(/^https?:\/\/.*?\//)![0] + 'assets/' + path;
     },
   });
   // The server normally inserts this but if we're offline we'll do it here
-  await resolveGoogleServicesFile(projectRoot, manifest);
+  await ProjectAssets.resolveGoogleServicesFile(projectRoot, manifest);
 
   // Create the final string
   let manifestString;
@@ -247,7 +293,7 @@ export async function getManifestResponseAsync({
           `Please request access from an admin of @${manifest.owner} or change the "owner" field to an account you belong to.\n` +
           learnMore('https://docs.expo.io/versions/latest/config/app/#owner')
       );
-      Config.offline = true;
+      ConnectionStatus.setIsOffline(true);
       manifestString = await getManifestStringAsync(manifest, hostInfo.host, acceptSignature);
     } else if (error.code === 'ENOTFOUND') {
       // Got a DNS error, i.e. can't access exp.host, warn and enable offline mode.
@@ -257,7 +303,7 @@ export async function getManifestResponseAsync({
           error.hostname || 'exp.host'
         }.`
       );
-      Config.offline = true;
+      ConnectionStatus.setIsOffline(true);
       manifestString = await getManifestStringAsync(manifest, hostInfo.host, acceptSignature);
     } else {
       throw error;
@@ -301,12 +347,12 @@ async function getManifestStringAsync(
   acceptSignature?: string | string[]
 ): Promise<string> {
   const currentSession = await UserManager.getSessionAsync();
-  if (!currentSession || Config.offline) {
+  if (!currentSession || ConnectionStatus.isOffline()) {
     manifest.id = `@${ANONYMOUS_USERNAME}/${manifest.slug}-${hostUUID}`;
   }
   if (!acceptSignature) {
     return JSON.stringify(manifest);
-  } else if (!currentSession || Config.offline) {
+  } else if (!currentSession || ConnectionStatus.isOffline()) {
     return getUnsignedManifestString(manifest);
   } else {
     return await getSignedManifestStringAsync(manifest, currentSession);
@@ -314,12 +360,12 @@ async function getManifestStringAsync(
 }
 
 async function createHostInfoAsync(): Promise<HostInfo> {
-  const host = await UserSettings.anonymousIdentifier();
+  const host = await UserSettings.getAnonymousIdentifierAsync();
 
   return {
     host,
     server: 'xdl',
-    serverVersion: require('@expo/xdl/package.json').version,
+    serverVersion: require('xdl/package.json').version,
     serverDriver: Config.developerTool,
     serverOS: os.platform(),
     serverOSVersion: os.release(),

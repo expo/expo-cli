@@ -5,10 +5,10 @@ import {
   Session,
   Teams,
 } from '@expo/apple-utils';
+import assert from 'assert';
 import chalk from 'chalk';
 
 import { AbortCommandError } from '../CommandError';
-import { assert } from '../assert';
 import Log from '../log';
 import { toggleConfirmAsync } from '../prompts';
 import {

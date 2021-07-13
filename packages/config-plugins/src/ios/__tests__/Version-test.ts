@@ -5,8 +5,8 @@ describe('version', () => {
     expect(getVersion({ version: '1.2.3' })).toBe('1.2.3');
   });
 
-  it(`uses 0.0.0 if no version is given`, () => {
-    expect(getVersion({})).toBe('0.0.0');
+  it(`uses 1.0.0 if no version is given`, () => {
+    expect(getVersion({})).toBe('1.0.0');
   });
 
   it(`sets the CFBundleShortVersionString`, () => {

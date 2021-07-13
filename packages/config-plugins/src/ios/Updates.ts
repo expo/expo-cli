@@ -21,6 +21,8 @@ export enum Config {
   RUNTIME_VERSION = 'EXUpdatesRuntimeVersion',
   SDK_VERSION = 'EXUpdatesSDKVersion',
   UPDATE_URL = 'EXUpdatesURL',
+  RELEASE_CHANNEL = 'EXUpdatesReleaseChannel',
+  UPDATES_CONFIGURATION_REQUEST_HEADERS_KEY = 'EXUpdatesRequestHeaders',
 }
 
 export function getUpdateUrl(
@@ -123,7 +125,8 @@ function formatConfigurationScriptPath(projectRoot: string): string {
     );
   }
 
-  return path.relative(path.join(projectRoot, 'ios'), buildScriptPath);
+  const relativePath = path.relative(path.join(projectRoot, 'ios'), buildScriptPath);
+  return process.platform === 'win32' ? relativePath.replace(/\\/g, '/') : relativePath;
 }
 
 interface ShellScriptBuildPhase {
@@ -208,10 +211,15 @@ export function isPlistVersionConfigurationSynced(
 ): boolean {
   const expectedRuntimeVersion = getRuntimeVersion(config);
   const expectedSdkVersion = getSDKVersion(config);
+
   const currentRuntimeVersion = expoPlist.EXUpdatesRuntimeVersion ?? null;
   const currentSdkVersion = expoPlist.EXUpdatesSDKVersion ?? null;
 
-  return (
-    currentSdkVersion === expectedSdkVersion && currentRuntimeVersion === expectedRuntimeVersion
-  );
+  if (expectedRuntimeVersion !== null) {
+    return currentRuntimeVersion === expectedRuntimeVersion && currentSdkVersion === null;
+  } else if (expectedSdkVersion !== null) {
+    return currentSdkVersion === expectedSdkVersion && currentRuntimeVersion === null;
+  } else {
+    return true;
+  }
 }

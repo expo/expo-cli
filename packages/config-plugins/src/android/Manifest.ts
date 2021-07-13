@@ -1,8 +1,8 @@
+import assert from 'assert';
 import fs from 'fs-extra';
 import path from 'path';
 
 import * as XML from '../utils/XML';
-import { assert } from '../utils/errors';
 
 export type StringBoolean = 'true' | 'false';
 
@@ -32,7 +32,7 @@ type ManifestData = {
   };
 };
 
-type ManifestReciever = {
+type ManifestReceiver = {
   $: AndroidManifestAttributes & {
     'android:exported'?: StringBoolean;
     'android:enabled'?: StringBoolean;
@@ -94,7 +94,7 @@ export type ManifestApplication = {
   $: ManifestApplicationAttributes;
   activity?: ManifestActivity[];
   service?: ManifestService[];
-  receiver?: ManifestReciever[];
+  receiver?: ManifestReceiver[];
   'meta-data'?: ManifestMetaData[];
   'uses-library'?: ManifestUsesLibrary[];
   // ...
@@ -123,6 +123,7 @@ export type AndroidManifest = {
     $: { 'xmlns:android': string; package?: string; [key: string]: string | undefined };
     permission?: ManifestPermission[];
     'uses-permission'?: ManifestUsesPermission[];
+    'uses-permission-sdk-23'?: ManifestUsesPermission[];
     'uses-feature'?: ManifestUsesFeature[];
     application?: ManifestApplication[];
   };

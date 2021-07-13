@@ -1,4 +1,4 @@
-import { assert } from '../Errors';
+import assert from 'assert';
 
 export type LanguageOptions = {
   isTS: boolean;

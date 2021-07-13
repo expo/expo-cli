@@ -1,13 +1,13 @@
-import { Detach } from '@expo/xdl';
-import { Command } from 'commander';
+import type { Command } from 'commander';
+import { Detach } from 'xdl';
 
 type Options = {
   platform?: string;
   skipXcodeConfig: boolean;
 };
 
-async function action(projectDir: string, options: Options) {
-  await Detach.prepareDetachedBuildAsync(projectDir, options);
+async function action(projectRoot: string, options: Options) {
+  await Detach.prepareDetachedBuildAsync(projectRoot, options);
 }
 
 export default function (program: Command) {

@@ -1,4 +1,4 @@
-import { Command } from 'commander';
+import type { Command } from 'commander';
 
 import CommandError from '../CommandError';
 import { Context } from '../credentials/context';
@@ -10,13 +10,13 @@ export default function (program: Command) {
     .description('Upload an FCM key for Android push notifications')
     .helpGroup('notifications')
     .option('--api-key [api-key]', 'Server API key for FCM.')
-    .asyncActionProjectDir(async (projectDir: string, options: { apiKey?: string }) => {
+    .asyncActionProjectDir(async (projectRoot: string, options: { apiKey?: string }) => {
       if (!options.apiKey || options.apiKey.length === 0) {
         throw new Error('Must specify an API key to upload with --api-key.');
       }
 
       const ctx = new Context();
-      await ctx.init(projectDir);
+      await ctx.init(projectRoot);
       const experienceName = `@${ctx.projectOwner}/${ctx.manifest.slug}`;
 
       await ctx.android.updateFcmKey(experienceName, options.apiKey);
@@ -27,9 +27,9 @@ export default function (program: Command) {
     .command('push:android:show [path]')
     .description('Log the value currently in use for FCM notifications for this project')
     .helpGroup('notifications')
-    .asyncActionProjectDir(async (projectDir: string) => {
+    .asyncActionProjectDir(async (projectRoot: string) => {
       const ctx = new Context();
-      await ctx.init(projectDir);
+      await ctx.init(projectRoot);
       const experienceName = `@${ctx.projectOwner}/${ctx.manifest.slug}`;
 
       const fcmCredentials = await ctx.android.fetchFcmKey(experienceName);
@@ -44,9 +44,9 @@ export default function (program: Command) {
     .command('push:android:clear [path]')
     .description('Delete a previously uploaded FCM credential')
     .helpGroup('notifications')
-    .asyncActionProjectDir(async (projectDir: string) => {
+    .asyncActionProjectDir(async (projectRoot: string) => {
       const ctx = new Context();
-      await ctx.init(projectDir);
+      await ctx.init(projectRoot);
       const experienceName = `@${ctx.projectOwner}/${ctx.manifest.slug}`;
 
       await ctx.android.removeFcmKey(experienceName);

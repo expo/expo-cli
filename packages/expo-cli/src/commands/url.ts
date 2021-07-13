@@ -1,6 +1,6 @@
-import { ProjectSettings, UrlUtils } from '@expo/xdl';
 import chalk from 'chalk';
-import { Command } from 'commander';
+import type { Command } from 'commander';
+import { ProjectSettings, UrlUtils } from 'xdl';
 
 import CommandError from '../CommandError';
 import Log from '../log';
@@ -16,62 +16,77 @@ type ArtifactUrlOptions = {
   publicUrl?: string;
 };
 
-const logArtifactUrl = (platform: 'ios' | 'android') => async (
-  projectDir: string,
-  options: ArtifactUrlOptions
-) => {
-  if (options.publicUrl && !UrlUtils.isHttps(options.publicUrl)) {
+function assertHTTPS(url?: string) {
+  if (url && !UrlUtils.isHttps(url)) {
     throw new CommandError('INVALID_PUBLIC_URL', '--public-url must be a valid HTTPS URL.');
   }
+}
 
-  const result = await getBuildStatusAsync(projectDir, {
+async function assertProjectRunningAsync(projectRoot: string) {
+  if ((await ProjectSettings.getCurrentStatusAsync(projectRoot)) !== 'running') {
+    throw new CommandError(
+      'NOT_RUNNING',
+      `Project is not running. Please start it with \`expo start\`.`
+    );
+  }
+}
+
+const logArtifactUrl = (platform: 'ios' | 'android') => async (
+  projectRoot: string,
+  options: ArtifactUrlOptions
+) => {
+  assertHTTPS(options.publicUrl);
+
+  const result = await getBuildStatusAsync(projectRoot, {
     current: false,
     ...(options.publicUrl ? { publicUrl: options.publicUrl } : {}),
   });
 
   const url = result.jobs?.filter((job: BuildJobFields) => job.platform === platform)[0]?.artifacts
     ?.url;
-  if (url) {
-    Log.nested(url);
-  } else {
-    throw new Error(
+
+  if (!url) {
+    throw new CommandError(
       `No ${platform} binary file found. Use "expo build:${platform}" to create one.`
     );
   }
+
+  Log.nested(url);
 };
 
-async function getWebAppUrlAsync(projectDir: string): Promise<string> {
-  const webAppUrl = await UrlUtils.constructWebAppUrlAsync(projectDir);
-  if (!webAppUrl) {
+async function getWebAppUrlAsync(projectRoot: string): Promise<string> {
+  const url = await UrlUtils.constructWebAppUrlAsync(projectRoot);
+  if (!url) {
     throw new CommandError(
       'NOT_RUNNING',
-      `Expo web server is not running. Please start it with \`expo start:web\`.`
+      `Webpack dev server is not running. Please start it with \`expo start:web\`.`
     );
   }
-  return webAppUrl;
+  return url;
 }
 
-async function action(projectDir: string, options: ProjectUrlOptions & URLOptions) {
-  await urlOpts.optsAsync(projectDir, options);
-
-  if ((await ProjectSettings.getCurrentStatusAsync(projectDir)) !== 'running') {
-    throw new CommandError(
-      'NOT_RUNNING',
-      `Project is not running. Please start it with \`expo start\`.`
-    );
-  }
-  const url = options.web
-    ? await getWebAppUrlAsync(projectDir)
-    : await UrlUtils.constructDeepLinkAsync(projectDir);
-
+function logUrl(url: string) {
   Log.newLine();
+
   urlOpts.printQRCode(url);
 
   Log.log('Your URL is\n\n' + chalk.underline(url) + '\n');
+}
+
+async function action(projectRoot: string, options: ProjectUrlOptions & URLOptions) {
+  await urlOpts.optsAsync(projectRoot, options);
+
+  await assertProjectRunningAsync(projectRoot);
+
+  const url = options.web
+    ? await getWebAppUrlAsync(projectRoot)
+    : await UrlUtils.constructDeepLinkAsync(projectRoot);
+
+  logUrl(url);
 
   if (!options.web) {
     await printRunInstructionsAsync();
-    await urlOpts.handleMobileOptsAsync(projectDir, options);
+    await urlOpts.handleMobileOptsAsync(projectRoot, options);
   }
 }
 

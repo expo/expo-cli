@@ -1,6 +1,6 @@
-import { UrlUtils, UserSettings } from '@expo/xdl';
 import chalk from 'chalk';
-import { Command } from 'commander';
+import type { Command } from 'commander';
+import { UrlUtils, UserSettings } from 'xdl';
 
 import { askForSendToAsync } from '../askUser';
 import Log from '../log';

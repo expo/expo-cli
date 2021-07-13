@@ -1,10 +1,11 @@
-import { Command } from 'commander';
+import type { Command } from 'commander';
 
 const COMMANDS = [
   require('./build'),
   require('./ios'),
   require('./bundle-assets'),
   require('./client'),
+  require('./config/config'),
   require('./credentials'),
   require('./customize'),
   require('./diagnostics'),
@@ -23,6 +24,7 @@ const COMMANDS = [
   require('./publish-modify'),
   require('./push-creds'),
   require('./register'),
+  require('./run'),
   require('./send'),
   require('./start'),
   require('./upgrade'),

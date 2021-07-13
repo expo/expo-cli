@@ -122,6 +122,10 @@ export class NpmPackageManager implements PackageManager {
     }
   }
 
+  async removeAsync(...names: string[]) {
+    await this._runAsync(['uninstall', ...names]);
+  }
+
   async versionAsync() {
     const { stdout } = await spawnAsync('npm', ['--version'], { stdio: 'pipe' });
     return stdout.trim();
@@ -259,6 +263,10 @@ export class YarnPackageManager implements PackageManager {
     const args = await this.withOfflineSupportAsync('add', '--dev');
     args.push(...names);
     await this._runAsync(args);
+  }
+
+  async removeAsync(...names: string[]) {
+    await this._runAsync(['remove', ...names]);
   }
 
   async versionAsync() {

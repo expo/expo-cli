@@ -1,11 +1,11 @@
-import { ApiV2 } from '@expo/xdl';
+import assert from 'assert';
 import forEach from 'lodash/forEach';
 import keyBy from 'lodash/keyBy';
 import omit from 'lodash/omit';
 import pick from 'lodash/pick';
+import { ApiV2 } from 'xdl';
 
 import * as appleApi from '../../appleApi';
-import { assert } from '../../assert';
 import {
   IosAppCredentials,
   IosCredentials,
@@ -13,10 +13,6 @@ import {
   IosPushCredentials,
 } from '../credentials';
 import ApiClient from './IosApiV2Wrapper';
-
-type CredentialFields = {
-  credentials: { [key: string]: any };
-};
 
 export interface AppLookupParams {
   accountName: string;
@@ -44,7 +40,7 @@ export function getAppLookupParams(experienceName: string, bundleIdentifier: str
 // - when accessing user or app credentials identified by AppLookupParams fetch all credentials for that app (user and app credentials)
 // - when updating userCredentials refetch only userCredentials
 // - when deleting userCredentials modify prefetched appCredentials without calling api
-// - when updating provisioningProfile refetch all credentials for that app (user and app crednetials)
+// - when updating provisioningProfile refetch all credentials for that app (user and app credentials)
 // - when deleting provisioningProfile modify appCredentials in cache
 // - when deleting pushCert refetch all credentials for app (app + user)
 //

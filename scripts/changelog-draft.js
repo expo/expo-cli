@@ -79,6 +79,8 @@ async function draftChangelogAsync() {
 
 ### 🎉 New features
 
+### 🧹 Chores
+
 ### 🐛 Bug fixes
 
 ${commits.map(commit => `- ${commit}`).join('\n')}

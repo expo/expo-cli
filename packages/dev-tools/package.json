@@ -1,13 +1,13 @@
 {
   "name": "@expo/dev-tools",
-  "version": "0.13.82",
+  "version": "0.13.108",
   "main": "build/server/index.js",
   "scripts": {
-    "dev": "cross-env NODE_ENV=development ts-node ./server/dev-server",
+    "dev": "cross-env NODE_ENV=development ts-node -T ./server/dev-server",
     "build": "yarn clean && yarn build-server && yarn extract-fragment-types && yarn build-client",
     "build-client": "cross-env NODE_ENV=production next build && next export -o ./build/client",
     "build-server": "cross-env NODE_ENV=production tsc",
-    "extract-fragment-types": "ts-node ./server/extract-fragment-types",
+    "extract-fragment-types": "ts-node -T ./server/extract-fragment-types",
     "clean": "rimraf .next build",
     "prepare": "yarn run clean && yarn run build",
     "start": "yarn dev",
@@ -17,7 +17,7 @@
     "build"
   ],
   "dependencies": {
-    "@expo/config": "3.3.28",
+    "@expo/config": "5.0.3",
     "base64url": "3.0.1",
     "express": "4.16.4",
     "freeport-async": "2.0.0",
@@ -28,12 +28,12 @@
     "subscriptions-transport-ws": "0.9.8"
   },
   "peerDependencies": {
-    "@expo/xdl": "*"
+    "xdl": "*"
   },
   "devDependencies": {
     "@babel/plugin-proposal-decorators": "^7.8.3",
-    "@expo/babel-preset-cli": "0.2.18",
-    "@expo/xdl": "59.0.22",
+    "@expo/babel-preset-cli": "0.2.20",
+    "@types/react": "^16.9.56",
     "anser": "^1.4.7",
     "apollo-cache-inmemory": "^1.1.12",
     "apollo-client": "^2.2.8",
@@ -49,7 +49,7 @@
     "graphql-tag": "^2.9.1",
     "has-ansi": "^3.0.0",
     "http-proxy-middleware": "^0.18.0",
-    "next": "^8.0.0",
+    "next": "^9.0.0",
     "p-timeout": "3.1.0",
     "qrcode.react": "0.8.0",
     "react": "^16.8.1",
@@ -63,8 +63,9 @@
     "redux": "^3.7.2",
     "rimraf": "^3.0.2",
     "slugify": "^1.0.2",
-    "ts-node": "^8.6.2",
-    "velocity-react": "^1.4.1"
+    "ts-node": "^9.1.1",
+    "velocity-react": "^1.4.1",
+    "xdl": "59.0.48"
   },
   "license": "MIT",
   "repository": {
@@ -72,7 +73,6 @@
     "url": "https://github.com/expo/expo-cli.git",
     "directory": "packages/dev-tools"
   },
-  "gitHead": "613642fe06827cc231405784b099cf71c29072df",
   "publishConfig": {
     "access": "public"
   }

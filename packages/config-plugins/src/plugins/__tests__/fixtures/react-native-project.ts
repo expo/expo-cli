@@ -1,4 +1,11 @@
 export default {
+  'ios/ReactNativeProject/Supporting/Expo.plist': `<?xml version="1.0" encoding="UTF-8"?>
+  <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+  <plist version="1.0">
+  <dict>
+  </dict>
+  </plist>
+  `,
   'ios/ReactNativeProject/Info.plist': `<?xml version="1.0" encoding="UTF-8"?>
   <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
   <plist version="1.0">
@@ -843,6 +850,130 @@ public class MainActivity extends ReactActivity {
   }
 }
 `,
+  'android/app/BUCK': `# To learn about Buck see [Docs](https://buckbuild.com/).
+# To run your application with Buck:
+# - install Buck
+# - \`npm start\` - to start the packager
+# - \`cd android\`
+# - \`keytool -genkey -v -keystore keystores/debug.keystore -storepass android -alias androiddebugkey -keypass android -dname "CN=Android Debug,O=Android,C=US"\`
+# - \`./gradlew :app:copyDownloadableDepsToLibs\` - make all Gradle compile dependencies available to Buck
+# - \`buck install -r android/app\` - compile, install and run application
+#
+
+load(":build_defs.bzl", "create_aar_targets", "create_jar_targets")
+
+lib_deps = []
+
+create_aar_targets(glob(["libs/*.aar"]))
+
+create_jar_targets(glob(["libs/*.jar"]))
+
+android_library(
+    name = "all-libs",
+    exported_deps = lib_deps,
+)
+
+android_library(
+    name = "app-code",
+    srcs = glob([
+        "src/main/java/**/*.java",
+    ]),
+    deps = [
+        ":all-libs",
+        ":build_config",
+        ":res",
+    ],
+)
+
+android_build_config(
+    name = "build_config",
+    package = "com.reactnativeproject",
+)
+
+android_resource(
+    name = "res",
+    package = "com.reactnativeproject",
+    res = "src/main/res",
+)
+
+android_binary(
+    name = "app",
+    keystore = "//android/keystores:debug",
+    manifest = "src/main/AndroidManifest.xml",
+    package_type = "debug",
+    deps = [
+        ":app-code",
+    ],
+)`,
+  'android/app/src/debug/java/com/reactnativeproject/ReactNativeFlipper.java': `/**
+* Copyright (c) Facebook, Inc. and its affiliates.
+*
+* <p>This source code is licensed under the MIT license found in the LICENSE file in the root
+* directory of this source tree.
+*/
+package com.reactnativeproject;
+
+import android.content.Context;
+import com.facebook.flipper.android.AndroidFlipperClient;
+import com.facebook.flipper.android.utils.FlipperUtils;
+import com.facebook.flipper.core.FlipperClient;
+import com.facebook.flipper.plugins.crashreporter.CrashReporterPlugin;
+import com.facebook.flipper.plugins.databases.DatabasesFlipperPlugin;
+import com.facebook.flipper.plugins.fresco.FrescoFlipperPlugin;
+import com.facebook.flipper.plugins.inspector.DescriptorMapping;
+import com.facebook.flipper.plugins.inspector.InspectorFlipperPlugin;
+import com.facebook.flipper.plugins.network.FlipperOkhttpInterceptor;
+import com.facebook.flipper.plugins.network.NetworkFlipperPlugin;
+import com.facebook.flipper.plugins.react.ReactFlipperPlugin;
+import com.facebook.flipper.plugins.sharedpreferences.SharedPreferencesFlipperPlugin;
+import com.facebook.react.ReactInstanceManager;
+import com.facebook.react.bridge.ReactContext;
+import com.facebook.react.modules.network.NetworkingModule;
+import okhttp3.OkHttpClient;
+
+public class ReactNativeFlipper {
+ public static void initializeFlipper(Context context, ReactInstanceManager reactInstanceManager) {
+   if (FlipperUtils.shouldEnableFlipper(context)) {
+     final FlipperClient client = AndroidFlipperClient.getInstance(context);
+     client.addPlugin(new InspectorFlipperPlugin(context, DescriptorMapping.withDefaults()));
+     client.addPlugin(new ReactFlipperPlugin());
+     client.addPlugin(new DatabasesFlipperPlugin(context));
+     client.addPlugin(new SharedPreferencesFlipperPlugin(context));
+     client.addPlugin(CrashReporterPlugin.getInstance());
+     NetworkFlipperPlugin networkFlipperPlugin = new NetworkFlipperPlugin();
+     NetworkingModule.setCustomClientBuilder(
+         new NetworkingModule.CustomClientBuilder() {
+           @Override
+           public void apply(OkHttpClient.Builder builder) {
+             builder.addNetworkInterceptor(new FlipperOkhttpInterceptor(networkFlipperPlugin));
+           }
+         });
+     client.addPlugin(networkFlipperPlugin);
+     client.start();
+     // Fresco Plugin needs to ensure that ImagePipelineFactory is initialized
+     // Hence we run if after all native modules have been initialized
+     ReactContext reactContext = reactInstanceManager.getCurrentReactContext();
+     if (reactContext == null) {
+       reactInstanceManager.addReactInstanceEventListener(
+           new ReactInstanceManager.ReactInstanceEventListener() {
+             @Override
+             public void onReactContextInitialized(ReactContext reactContext) {
+               reactInstanceManager.removeReactInstanceEventListener(this);
+               reactContext.runOnNativeModulesQueueThread(
+                   new Runnable() {
+                     @Override
+                     public void run() {
+                       client.addPlugin(new FrescoFlipperPlugin());
+                     }
+                   });
+             }
+           });
+     } else {
+       client.addPlugin(new FrescoFlipperPlugin());
+     }
+   }
+ }
+}`,
   'android/app/src/main/java/com/reactnativeproject/MainApplication.java': `package com.reactnativeproject;
 
   import android.app.Application;
@@ -997,6 +1128,37 @@ public class MainActivity extends ReactActivity {
   </style>
 </resources>
 `,
+  'android/gradle.properties': `# Project-wide Gradle settings.
+
+  # IDE (e.g. Android Studio) users:
+  # Gradle settings configured through the IDE *will override*
+  # any settings specified in this file.
+  
+  # For more details on how to configure your build environment visit
+  # http://www.gradle.org/docs/current/userguide/build_environment.html
+  
+  # Specifies the JVM arguments used for the daemon process.
+  # The setting is particularly useful for tweaking memory settings.
+  # Default value: -Xmx10248m -XX:MaxPermSize=256m
+  # org.gradle.jvmargs=-Xmx2048m -XX:MaxPermSize=512m -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8
+  
+  # When configured, Gradle will run in incubating parallel mode.
+  # This option should only be used with decoupled projects. More details, visit
+  # http://www.gradle.org/docs/current/userguide/multi_project_builds.html#sec:decoupled_projects
+  # org.gradle.parallel=true
+  
+  # AndroidX package structure to make it clearer which packages are bundled with the
+  # Android operating system, and which are packaged with your app's APK
+  # https://developer.android.com/topic/libraries/support-library/androidx-rn
+  android.useAndroidX=true
+  
+  # Automatically convert third-party libraries to use AndroidX
+  android.enableJetifier=true
+  
+  # Version of flipper SDK to use with React Native
+  FLIPPER_VERSION=0.54.0
+  `,
+
   'android/settings.gradle': `rootProject.name = 'HelloWorld'
 
 apply from: '../node_modules/react-native-unimodules/gradle.groovy'

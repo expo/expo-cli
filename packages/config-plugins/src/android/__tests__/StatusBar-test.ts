@@ -1,85 +1,61 @@
-import { vol } from 'memfs';
+import { ExpoConfig } from '@expo/config-types';
 
-import { readResourcesXMLAsync } from '../Resources';
-import { getStatusBarColor, getStatusBarStyle, setStatusBarConfig } from '../StatusBar';
-import { getProjectStylesXMLPathAsync } from '../Styles';
+import { getColorsAsObject } from '../Colors';
+import {
+  getStatusBarColor,
+  getStatusBarStyle,
+  setStatusBarColors,
+  setStatusBarStyles,
+} from '../StatusBar';
+import { getAppThemeLightNoActionBarGroup, getStylesGroupAsObject } from '../Styles';
 
-jest.mock('fs');
+it(`returns statusbar color if provided`, () => {
+  expect(getStatusBarColor({ androidStatusBar: { backgroundColor: '#111111' } })).toMatch(
+    '#111111'
+  );
+});
 
-export const sampleStylesXML = `
-<resources>
-    <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
-        <!-- Customize your theme here. -->
-        <item name="android:windowBackground">#222222</item>
-    </style>
-</resources>`;
+it(`returns statusbar style if provided`, () => {
+  expect(getStatusBarStyle({ androidStatusBar: { barStyle: 'dark-content' } })).toMatch(
+    'dark-content'
+  );
+});
 
-describe('Android status bar', () => {
-  it(`returns 'translucent' if no status bar color is provided`, () => {
-    expect(getStatusBarColor({})).toMatch('translucent');
-    expect(getStatusBarColor({ androidStatusBar: {} })).toMatch('translucent');
+it(`default statusbar style to light-content if none provided`, () => {
+  expect(getStatusBarStyle({})).toMatch('light-content');
+});
+
+describe('e2e: write statusbar color and style to files correctly', () => {
+  it(`sets the colorPrimaryDark item in styles.xml and adds color to colors.xml if 'androidStatusBar.backgroundColor' is given`, async () => {
+    const config: ExpoConfig = {
+      name: 'foo',
+      slug: 'bar',
+      androidStatusBar: { backgroundColor: '#654321', barStyle: 'dark-content' },
+    };
+    const styles = setStatusBarStyles(config, { resources: {} });
+    const colors = setStatusBarColors(config, { resources: {} });
+
+    const group = getStylesGroupAsObject(styles, getAppThemeLightNoActionBarGroup());
+    expect(group.colorPrimaryDark).toBe('@color/colorPrimaryDark');
+    expect(group['android:windowLightStatusBar']).toBe('true');
+    // Ensure the version guard is added
+    expect(styles.resources.style[0].item[0].$['tools:targetApi']).toBe('23');
+    expect(getColorsAsObject(colors).colorPrimaryDark).toBe('#654321');
   });
 
-  it(`returns statusbar color if provided`, () => {
-    expect(getStatusBarColor({ androidStatusBar: { backgroundColor: '#111111' } })).toMatch(
-      '#111111'
-    );
-  });
+  it(`skips setting the status bar to translucent if no 'androidStatusBar.backgroundColor' is given`, async () => {
+    const config: ExpoConfig = {
+      name: 'foo',
+      slug: 'bar',
+      androidStatusBar: {},
+    };
 
-  it(`returns statusbar style if provided`, () => {
-    expect(getStatusBarStyle({ androidStatusBar: { barStyle: 'dark-content' } })).toMatch(
-      'dark-content'
-    );
-  });
+    const styles = setStatusBarStyles(config, { resources: {} });
+    const colors = setStatusBarColors(config, { resources: {} });
 
-  it(`default statusbar style to light-content if none provided`, () => {
-    expect(getStatusBarStyle({})).toMatch('light-content');
-  });
+    const group = getStylesGroupAsObject(styles, getAppThemeLightNoActionBarGroup());
 
-  describe('e2e: write statusbar color and style to files correctly', () => {
-    beforeAll(async () => {
-      const directoryJSON = {
-        './android/app/src/main/res/values/styles.xml': sampleStylesXML,
-      };
-      vol.fromJSON(directoryJSON, '/app');
-    });
-
-    afterAll(async () => {
-      vol.reset();
-    });
-
-    it(`sets the colorPrimaryDark item in styles.xml and adds color to colors.xml if 'androidStatusBar.backgroundColor' is given`, async () => {
-      expect(
-        await setStatusBarConfig(
-          { androidStatusBar: { backgroundColor: '#654321', barStyle: 'dark-content' } },
-          '/app'
-        )
-      ).toBe(true);
-
-      const stylesJSON = await readResourcesXMLAsync({
-        path: await getProjectStylesXMLPathAsync('/app'),
-      });
-      const colorsJSON = await readResourcesXMLAsync({
-        path: '/app/android/app/src/main/res/values/colors.xml',
-      });
-      expect(
-        stylesJSON.resources.style
-          .filter(e => e.$.name === 'AppTheme')[0]
-          .item.filter(item => item.$.name === 'colorPrimaryDark')[0]._
-      ).toMatch('@color/colorPrimaryDark');
-      expect(colorsJSON.resources.color.filter(e => e.$.name === 'colorPrimaryDark')[0]._).toMatch(
-        '#654321'
-      );
-      expect(
-        stylesJSON.resources.style
-          .filter(e => e.$.name === 'AppTheme')[0]
-          .item.filter(item => item.$.name === 'android:windowLightStatusBar')[0]._
-      ).toMatch('true');
-    });
-
-    it(`sets the status bar to translucent if no 'androidStatusBar.backgroundColor' is given`, async () => {
-      expect(await setStatusBarConfig({}, '/app')).toBe(true);
-    });
+    expect(group).toStrictEqual(null);
+    expect(colors.resources).toStrictEqual({});
   });
 });

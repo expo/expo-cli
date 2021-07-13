@@ -1,5 +1,5 @@
 import program from 'commander';
-import prompts, { Choice, Options, PromptObject, PromptType } from 'prompts';
+import prompts, { Options, PromptObject, PromptType } from 'prompts';
 
 import CommandError, { AbortCommandError } from './CommandError';
 

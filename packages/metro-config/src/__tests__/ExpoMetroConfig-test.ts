@@ -4,7 +4,15 @@ import { getDefaultConfig, loadAsync } from '../ExpoMetroConfig';
 
 const projectRoot = path.join(__dirname, '__fixtures__', 'hello-world');
 
+const consoleError = console.error;
+
+beforeEach(() => {
+  delete process.env.EXPO_TARGET;
+});
 describe('getDefaultConfig', () => {
+  afterAll(() => {
+    console.error = consoleError;
+  });
   it('loads default configuration', () => {
     expect(getDefaultConfig(projectRoot)).toEqual(
       expect.objectContaining({
@@ -28,6 +36,12 @@ describe('getDefaultConfig', () => {
       // @ts-ignore incorrect `target` value passed on purpose
       getDefaultConfig(projectRoot, { target: 'blooper' })
     ).toThrowErrorMatchingSnapshot();
+  });
+  it('logs an error if the environment variable is used', () => {
+    console.error = jest.fn();
+    process.env.EXPO_TARGET = 'bare';
+    getDefaultConfig(projectRoot, {});
+    expect(console.error).toBeCalled();
   });
 });
 

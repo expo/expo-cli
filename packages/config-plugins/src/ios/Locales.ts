@@ -63,7 +63,13 @@ export async function setLocalesAsync(
     // Ensure the file doesn't already exist
     if (!group?.children.some(({ comment }) => comment === stringName)) {
       // Only write the file if it doesn't already exist.
-      project = addResourceFileToGroup(strings, `${projectName}/Supporting/${lang}.lproj`, project);
+      project = addResourceFileToGroup({
+        filepath: strings,
+        groupName: `${projectName}/Supporting/${lang}.lproj`,
+        project,
+        isBuildFile: true,
+        verbose: true,
+      });
     }
   }
 

@@ -1,16 +1,21 @@
-import { getConfig, getDefaultTarget, PackageJSONConfig, ProjectTarget } from '@expo/config';
+import {
+  getConfig,
+  getDefaultTarget,
+  isLegacyImportsEnabled,
+  PackageJSONConfig,
+  ProjectTarget,
+} from '@expo/config';
 import simpleSpinner from '@expo/simple-spinner';
-import { Project, UserManager } from '@expo/xdl';
 import chalk from 'chalk';
-import { Command } from 'commander';
+import type { Command } from 'commander';
 import fs from 'fs';
 import path from 'path';
+import { Project, UserManager } from 'xdl';
 
 import CommandError from '../CommandError';
 import Log from '../log';
 import { getProjectOwner } from '../projects';
 import * as sendTo from '../sendTo';
-import { getBuildStatusAsync } from './build/getBuildStatusAsync';
 import * as TerminalLink from './utils/TerminalLink';
 import { formatNamedWarning } from './utils/logConfigWarnings';
 
@@ -26,17 +31,17 @@ type Options = {
 };
 
 export async function action(
-  projectDir: string,
+  projectRoot: string,
   options: Options = {}
 ): Promise<Project.PublishedProjectResult> {
   assertValidReleaseChannel(options.releaseChannel);
 
-  const { exp, pkg } = getConfig(projectDir, {
+  const { exp, pkg } = getConfig(projectRoot, {
     skipSDKVersionRequirement: true,
   });
-  const { sdkVersion, isDetached } = exp;
+  const { sdkVersion } = exp;
 
-  const target = options.target ?? getDefaultTarget(projectDir);
+  const target = options.target ?? getDefaultTarget(projectRoot);
 
   // note: this validates the exp.owner when the user is a robot
   const user = await UserManager.ensureLoggedInAsync();
@@ -47,33 +52,24 @@ export async function action(
   // Log building info before building.
   // This gives the user sometime to bail out if the info is unexpected.
 
-  if (sdkVersion && target === 'managed') {
-    Log.log(`- Expo SDK: ${Log.chalk.bold(exp.sdkVersion)}`);
+  if (sdkVersion) {
+    Log.log(`\u203A Expo SDK: ${Log.chalk.bold(exp.sdkVersion)}`);
   }
-  Log.log(`- Release channel: ${Log.chalk.bold(options.releaseChannel)}`);
-  Log.log(`- Workflow: ${Log.chalk.bold(target.replace(/\b\w/g, l => l.toUpperCase()))}`);
+  Log.log(`\u203A Release channel: ${Log.chalk.bold(options.releaseChannel)}`);
+  Log.log(`\u203A Workflow: ${Log.chalk.bold(target.replace(/\b\w/g, l => l.toUpperCase()))}`);
   if (user.kind === 'robot') {
-    Log.log(`- Owner: ${Log.chalk.bold(owner)}`);
+    Log.log(`\u203A Owner: ${Log.chalk.bold(owner)}`);
   }
 
   Log.newLine();
 
   // Log warnings.
 
-  if (!isDetached && !options.duringBuild) {
-    // Check for SDK version and release channel mismatches only after displaying the values.
-    await logSDKMismatchWarningsAsync({
-      projectRoot: projectDir,
-      releaseChannel: options.releaseChannel,
-      sdkVersion,
-    });
-  }
-
   logExpoUpdatesWarnings(pkg);
 
-  logOptimizeWarnings({ projectRoot: projectDir });
+  logOptimizeWarnings({ projectRoot });
 
-  if (!options.target && target === 'bare') {
+  if (!options.target && target === 'bare' && isLegacyImportsEnabled(exp)) {
     logBareWorkflowWarnings(pkg);
   }
 
@@ -87,7 +83,7 @@ export async function action(
     simpleSpinner.start();
   }
 
-  const result = await Project.publishAsync(projectDir, {
+  const result = await Project.publishAsync(projectRoot, {
     releaseChannel: options.releaseChannel,
     quiet: options.quiet,
     target,
@@ -95,6 +91,7 @@ export async function action(
   });
 
   const url = result.url;
+  const projectPageUrl = result.projectPageUrl;
 
   if (options.quiet) {
     simpleSpinner.stop();
@@ -105,22 +102,19 @@ export async function action(
 
   logManifestUrl({ url, sdkVersion: exp.sdkVersion });
 
-  if (target === 'managed') {
-    // TODO: replace with websiteUrl from server when it is available, if that makes sense.
-    const websiteUrl = url.replace('exp.host', 'expo.io');
-
+  if (target === 'managed' && projectPageUrl) {
     // note(brentvatne): disable copy to clipboard functionality for now, need to think more about
     // whether this is desirable.
     //
     // Attempt to copy the URL to the clipboard, if it succeeds then append a notice to the log.
     // const copiedToClipboard = copyToClipboard(websiteUrl);
 
-    logProjectPageUrl({ url: websiteUrl, copiedToClipboard: false });
+    logProjectPageUrl({ url: projectPageUrl, copiedToClipboard: false });
 
     // Only send the link for managed projects.
     const recipient = await sendTo.getRecipient(options.sendTo);
     if (recipient) {
-      await sendTo.sendUrlAsync(websiteUrl, recipient);
+      await sendTo.sendUrlAsync(projectPageUrl, recipient);
     }
   }
 
@@ -158,7 +152,7 @@ function logManifestUrl({ url, sdkVersion }: { url: string; sdkVersion?: string 
 
 /**
  *
- * @example ⚙️   Project page: https://expo.io/@bacon/my-app [copied to clipboard] Learn more: https://expo.fyi/project-page
+ * @example ⚙️   Project page: https://expo.io/@bacon/projects/my-app [copied to clipboard] Learn more: https://expo.fyi/project-page
  * @param options
  */
 function logProjectPageUrl({
@@ -197,46 +191,6 @@ function getExampleManifestUrl(url: string, sdkVersion: string | undefined): str
   } else {
     return `${url}/index.exp?sdkVersion=${sdkVersion}`;
   }
-}
-
-/**
- * A convenient warning reminding people that they're publishing with an SDK that their published app does not support.
- *
- * @param options
- */
-async function logSDKMismatchWarningsAsync({
-  projectRoot,
-  releaseChannel,
-  sdkVersion,
-}: {
-  projectRoot: string;
-  releaseChannel?: string;
-  sdkVersion?: string;
-}) {
-  if (!sdkVersion) {
-    return;
-  }
-
-  const buildStatus = await getBuildStatusAsync(projectRoot, {
-    platform: 'all',
-    current: true,
-    releaseChannel,
-    sdkVersion,
-  });
-  const hasMismatch =
-    buildStatus.userHasBuiltExperienceBefore && !buildStatus.userHasBuiltAppBefore;
-  if (!hasMismatch) {
-    return;
-  }
-
-  // A convenient warning reminding people that they're publishing with an SDK that their published app does not support.
-  Log.nestedWarn(
-    formatNamedWarning(
-      'URL mismatch',
-      `No standalone app has been built with SDK ${sdkVersion} and release channel "${releaseChannel}" for this project before.\n  OTA updates only work for native projects that have the same SDK version and release channel.`,
-      'https://docs.expo.io/workflow/publishing/#limitations'
-    )
-  );
 }
 
 export function logExpoUpdatesWarnings(pkg: PackageJSONConfig): void {
@@ -279,9 +233,9 @@ export function logOptimizeWarnings({ projectRoot }: { projectRoot: string }): v
 
 /**
  * Warn users if they attempt to publish in a bare project that may also be
- * using Expo client and does not If the developer does not have the Expo
+ * using Expo Go and does not If the developer does not have the Expo
  * package installed then we do not need to warn them as there is no way that
- * it will run in Expo client in development even. We should revisit this with
+ * it will run in Expo Go in development even. We should revisit this with
  * dev client, and possibly also by excluding SDK version for bare
  * expo-updates usage in the future (and then surfacing this as an error in
  * the Expo Go app instead)
@@ -301,7 +255,7 @@ export function logBareWorkflowWarnings(pkg: PackageJSONConfig) {
       'Workflow target',
       `This is a ${chalk.bold(
         'bare workflow'
-      )} project. The resulting publish will only run properly inside of a native build of your project. If you want to publish a version of your app that will run in Expo client, please use ${chalk.bold(
+      )} project. The resulting publish will only run properly inside of a native build of your project. If you want to publish a version of your app that will run in Expo Go, please use ${chalk.bold(
         'expo publish --target managed'
       )}. You can skip this warning by explicitly running ${chalk.bold(
         'expo publish --target bare'

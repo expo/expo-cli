@@ -1,9 +1,9 @@
 import { ExpoConfig, ProjectPrivacy } from '@expo/config';
-import { ApiV2, RobotUser, User } from '@expo/xdl';
-import ora from 'ora';
+import { ApiV2, RobotUser, User } from 'xdl';
 
 import CommandError from './CommandError';
 import Log from './log';
+import { ora } from './utils/ora';
 
 interface ProjectData {
   accountName: string;

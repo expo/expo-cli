@@ -1,6 +1,6 @@
-import { Versions } from '@expo/xdl';
 import chalk from 'chalk';
 import program from 'commander';
+import { Versions } from 'xdl';
 
 import Log from '../../log';
 import prompts from '../../prompts';

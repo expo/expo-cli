@@ -1,8 +1,8 @@
 import { ExpoConfig, getConfig, ProjectConfig } from '@expo/config';
-import { RobotUser, User, UserManager, Versions } from '@expo/xdl';
 import chalk from 'chalk';
 import ora from 'ora';
 import semver from 'semver';
+import { RobotUser, User, UserManager, Versions } from 'xdl';
 
 import Log from '../../log';
 import { getProjectOwner } from '../../projects';
@@ -193,6 +193,7 @@ Please see the docs (${chalk.underline(
       Log.log(
         `### ${i} | ${platform} | ${UrlUtils.constructBuildLogsUrl({
           buildId: job.id,
+          projectSlug: this.manifest.slug,
           username: username ?? undefined,
         })} ###`
       );
@@ -386,6 +387,7 @@ ${job.id}
     if (buildId) {
       const url = UrlUtils.constructBuildLogsUrl({
         buildId,
+        projectSlug: this.manifest.slug,
         username: this.manifest.owner || (user?.kind === 'user' ? user.username : undefined),
       });
 

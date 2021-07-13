@@ -5,9 +5,10 @@ import fs from 'fs-extra';
 import path from 'path';
 
 import Log from '../../log';
-import * as CreateApp from '../utils/CreateApp';
+import { logNewSection } from '../../utils/ora';
+import { isModuleSymlinked } from '../utils/isModuleSymlinked';
 
-type DependenciesMap = { [key: string]: string | number };
+export type DependenciesMap = { [key: string]: string | number };
 
 export type DependenciesModificationResults = {
   hasNewDependencies: boolean;
@@ -18,23 +19,35 @@ export async function updatePackageJSONAsync({
   projectRoot,
   tempDir,
   pkg,
+  skipDependencyUpdate,
 }: {
   projectRoot: string;
   tempDir: string;
   pkg: PackageJSONConfig;
+  skipDependencyUpdate?: string[];
 }): Promise<DependenciesModificationResults> {
   // NOTE(brentvatne): Removing spaces between steps for now, add back when
   // there is some additional context for steps
-  const updatingPackageJsonStep = CreateApp.logNewSection(
+  const updatingPackageJsonStep = logNewSection(
     'Updating your package.json scripts, dependencies, and main file'
   );
 
   updatePackageJSONScripts({ pkg });
 
-  const results = updatePackageJSONDependencies({ pkg, tempDir });
+  const results = updatePackageJSONDependencies({
+    projectRoot,
+    pkg,
+    tempDir,
+    skipDependencyUpdate,
+  });
 
   const removedPkgMain = updatePackageJSONEntryPoint({ pkg });
-  await fs.writeFile(path.resolve(projectRoot, 'package.json'), JSON.stringify(pkg, null, 2));
+  await fs.writeFile(
+    path.resolve(projectRoot, 'package.json'),
+    // Add new line to match the format of running yarn.
+    // This prevents the `package.json` from changing when running `prebuild --no-install` multiple times.
+    JSON.stringify(pkg, null, 2) + '\n'
+  );
 
   updatingPackageJsonStep.succeed(
     'Updated package.json and added index.js entry point for iOS and Android.'
@@ -62,12 +75,16 @@ export async function updatePackageJSONAsync({
  * - The same applies to expo-updates -- since some native project configuration may depend on the
  *   version, we should always use the version of expo-updates in the template.
  */
-function updatePackageJSONDependencies({
+export function updatePackageJSONDependencies({
+  projectRoot,
   tempDir,
   pkg,
+  skipDependencyUpdate = [],
 }: {
+  projectRoot: string;
   tempDir: string;
   pkg: PackageJSONConfig;
+  skipDependencyUpdate?: string[];
 }): DependenciesModificationResults {
   if (!pkg.devDependencies) {
     pkg.devDependencies = {};
@@ -83,16 +100,36 @@ function updatePackageJSONDependencies({
 
   const requiredDependencies = ['react', 'react-native-unimodules', 'react-native', 'expo-updates'];
 
+  const symlinkedPackages: string[] = [];
+
   for (const dependenciesKey of requiredDependencies) {
-    // Only overwrite the react-native version if it's an Expo fork.
-    if (dependenciesKey === 'react-native' && pkg.dependencies?.[dependenciesKey]) {
-      const dependencyVersion = pkg.dependencies[dependenciesKey];
-      if (!dependencyVersion.includes('github.com/expo/react-native')) {
+    if (
+      // If the local package.json defined the dependency that we want to overwrite...
+      pkg.dependencies?.[dependenciesKey]
+    ) {
+      if (
+        // Then ensure it isn't symlinked (i.e. the user has a custom version in their yarn workspace).
+        isModuleSymlinked({ projectRoot, moduleId: dependenciesKey, isSilent: true })
+      ) {
+        // If the package is in the project's package.json and it's symlinked, then skip overwriting it.
+        symlinkedPackages.push(dependenciesKey);
+        continue;
+      }
+      if (skipDependencyUpdate.includes(dependenciesKey)) {
         continue;
       }
     }
     combinedDependencies[dependenciesKey] = defaultDependencies[dependenciesKey];
   }
+
+  if (symlinkedPackages.length) {
+    Log.log(
+      `\u203A Using symlinked ${symlinkedPackages
+        .map(pkg => chalk.bold(pkg))
+        .join(', ')} instead of recommended version(s).`
+    );
+  }
+
   const combinedDevDependencies: DependenciesMap = createDependenciesMap({
     ...defaultDevDependencies,
     ...pkg.devDependencies,
@@ -124,7 +161,7 @@ function updatePackageJSONDependencies({
  *
  * @param dependencies - ideally an object of type {[key]: string} - if not then this will error.
  */
-function createDependenciesMap(dependencies: any): DependenciesMap {
+export function createDependenciesMap(dependencies: any): DependenciesMap {
   if (typeof dependencies !== 'object') {
     throw new Error(`Dependency map is invalid, expected object but got ${typeof dependencies}`);
   } else if (!dependencies) {
@@ -156,9 +193,15 @@ function updatePackageJSONScripts({ pkg }: { pkg: PackageJSONConfig }) {
   if (!pkg.scripts) {
     pkg.scripts = {};
   }
-  pkg.scripts.start = 'react-native start';
-  pkg.scripts.ios = 'react-native run-ios';
-  pkg.scripts.android = 'react-native run-android';
+  if (!pkg.scripts.start?.includes('--dev-client')) {
+    pkg.scripts.start = 'react-native start';
+  }
+  if (!pkg.scripts.android?.includes('run')) {
+    pkg.scripts.android = 'react-native run-android';
+  }
+  if (!pkg.scripts.ios?.includes('run')) {
+    pkg.scripts.ios = 'react-native run-ios';
+  }
 }
 
 /**

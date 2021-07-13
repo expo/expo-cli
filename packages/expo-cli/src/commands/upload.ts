@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-import { Command } from 'commander';
+import type { Command } from 'commander';
 
 import Log from '../log';
 import AndroidSubmitCommand from './upload/submission-service/android/AndroidSubmitCommand';
@@ -40,13 +40,13 @@ export default function (program: Command) {
     )
     .option('--verbose', 'Always print logs from Submission Service')
     // TODO: make this work outside the project directory (if someone passes all necessary options for upload)
-    .asyncActionProjectDir(async (projectDir: string, options: AndroidSubmitCommandOptions) => {
+    .asyncActionProjectDir(async (projectRoot: string, options: AndroidSubmitCommandOptions) => {
       if (options.useSubmissionService) {
         Log.warn(
           '\n`--use-submission-service is now the default and the flag will be deprecated in the future.`'
         );
       }
-      const ctx = AndroidSubmitCommand.createContext(projectDir, options);
+      const ctx = AndroidSubmitCommand.createContext(projectRoot, options);
       const command = new AndroidSubmitCommand(ctx);
       await command.runAsync();
     });
@@ -99,7 +99,7 @@ export default function (program: Command) {
     )
     .option('--public-url <url>', 'The URL of an externally hosted manifest (for self-hosted apps)')
     // TODO: make this work outside the project directory (if someone passes all necessary options for upload)
-    .asyncActionProjectDir(async (projectDir: string, options: any) => {
+    .asyncActionProjectDir(async () => {
       const logItem = (name: string, link: string) => {
         Log.log(`\u203A ${TerminalLink.linkedText(name, link)}`);
       };

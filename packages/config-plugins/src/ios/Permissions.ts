@@ -1,46 +1,52 @@
+import Debug from 'debug';
+
 import { ConfigPlugin } from '../Plugin.types';
 import { withInfoPlist } from '../plugins/ios-plugins';
 import { InfoPlist } from './IosConfig.types';
 
-/**
- * Apply permissions and their respective descriptions to the iOS Info.plist.
- * Providing a null description will remove the permission from the Info.plist.
- *
- * @param config
- * @param permissions record of strings where the key matches Info.plist permissions and the values are the permission descriptions.
- */
-export const withPermissions: ConfigPlugin<Record<string, string | null>> = (
-  config,
-  permissions
-) => {
-  return withInfoPlist(config, async config => {
-    config.modResults = applyPermissions(permissions, config.modResults);
-    return config;
-  });
-};
+const debug = Debug('config-plugins:ios:permissions');
 
-export function applyPermissions(
-  permissions: Record<string, string | null>,
-  infoPlist: Record<string, any>
+export function applyPermissions<Defaults extends Record<string, string> = Record<string, string>>(
+  defaults: Defaults,
+  permissions: Partial<Record<keyof Defaults, string | false>>,
+  infoPlist: InfoPlist
 ): InfoPlist {
-  const entries = Object.entries(permissions);
+  const entries = Object.entries(defaults);
   if (entries.length === 0) {
-    // TODO: Debug warn
-    // console.warn('[withPermissions] no permissions were provided');
+    debug(`No defaults provided: ${JSON.stringify(permissions)}`);
   }
   for (const [permission, description] of entries) {
-    if (description == null) {
+    if (permissions[permission] === false) {
+      debug(`Deleting "${permission}"`);
       delete infoPlist[permission];
     } else {
-      const existingPermission = infoPlist[permission];
-      if (existingPermission && existingPermission !== description) {
-        // TODO: Debug warn
-        //   console.warn(
-        //     `[withPermissionsIos][conflict] permission "${permission}" is already defined in the Info.plist with description "${existingPermission}"`
-        //   );
-      }
-      infoPlist[permission] = description;
+      infoPlist[permission] = permissions[permission] || infoPlist[permission] || description;
+      debug(`Setting "${permission}" to "${infoPlist[permission]}"`);
     }
   }
   return infoPlist;
+}
+
+/**
+ * Helper method for creating mods to apply default permissions.
+ *
+ * @param action
+ */
+export function createPermissionsPlugin<
+  Defaults extends Record<string, string> = Record<string, string>
+>(defaults: Defaults, name?: string) {
+  const withIosPermissions: ConfigPlugin<Record<keyof Defaults, string | undefined | false>> = (
+    config,
+    permissions
+  ) =>
+    withInfoPlist(config, async config => {
+      config.modResults = applyPermissions(defaults, permissions, config.modResults);
+      return config;
+    });
+  if (name) {
+    Object.defineProperty(withIosPermissions, 'name', {
+      value: name,
+    });
+  }
+  return withIosPermissions;
 }

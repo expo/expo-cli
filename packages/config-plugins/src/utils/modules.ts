@@ -1,13 +1,13 @@
-import { stat, Stats, statSync } from 'fs-extra';
+import fs from 'fs';
 
 /**
  * A non-failing version of async FS stat.
  *
  * @param file
  */
-async function statAsync(file: string): Promise<Stats | null> {
+async function statAsync(file: string): Promise<fs.Stats | null> {
   try {
-    return await stat(file);
+    return await fs.promises.stat(file);
   } catch {
     return null;
   }
@@ -23,7 +23,7 @@ export async function directoryExistsAsync(file: string): Promise<boolean> {
 
 export function fileExists(file: string): boolean {
   try {
-    return statSync(file).isFile();
+    return fs.statSync(file).isFile();
   } catch (e) {
     return false;
   }

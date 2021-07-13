@@ -8,17 +8,22 @@ import pacote from 'pacote';
 import path from 'path';
 import semver from 'semver';
 
-import { SilentError } from '../../CommandError';
+import { AbortCommandError, SilentError } from '../../CommandError';
 import Log from '../../log';
 import { extractTemplateAppAsync } from '../../utils/extractTemplateAppAsync';
-import * as CreateApp from '../utils/CreateApp';
+import { logNewSection } from '../../utils/ora';
 import * as GitIgnore from '../utils/GitIgnore';
+import { resolveTemplateArgAsync } from './Github';
 import {
   DependenciesModificationResults,
   isPkgMainExpoAppEntry,
   updatePackageJSONAsync,
 } from './updatePackageJson';
 import { writeMetroConfig } from './writeMetroConfig';
+
+async function directoryExistsAsync(file: string): Promise<boolean> {
+  return (await fs.stat(file).catch(() => null))?.isDirectory() ?? false;
+}
 
 /**
  *
@@ -31,19 +36,24 @@ export async function createNativeProjectsFromTemplateAsync({
   projectRoot,
   exp,
   pkg,
+  template,
   tempDir,
   platforms,
+  skipDependencyUpdate,
 }: {
   projectRoot: string;
   exp: ExpoConfig;
   pkg: PackageJSONConfig;
+  template?: string;
   tempDir: string;
   platforms: ModPlatform[];
+  skipDependencyUpdate?: string[];
 }): Promise<
   { hasNewProjectFiles: boolean; needsPodInstall: boolean } & DependenciesModificationResults
 > {
   const copiedPaths = await cloneNativeDirectoriesAsync({
     projectRoot,
+    template,
     tempDir,
     exp,
     pkg,
@@ -52,7 +62,12 @@ export async function createNativeProjectsFromTemplateAsync({
 
   writeMetroConfig({ projectRoot, pkg, tempDir });
 
-  const depsResults = await updatePackageJSONAsync({ projectRoot, tempDir, pkg });
+  const depsResults = await updatePackageJSONAsync({
+    projectRoot,
+    tempDir,
+    pkg,
+    skipDependencyUpdate,
+  });
 
   return {
     hasNewProjectFiles: !!copiedPaths.length,
@@ -74,21 +89,21 @@ export async function createNativeProjectsFromTemplateAsync({
 async function cloneNativeDirectoriesAsync({
   projectRoot,
   tempDir,
+  template,
   exp,
   pkg,
   platforms,
 }: {
   projectRoot: string;
   tempDir: string;
+  template?: string;
   exp: Pick<ExpoConfig, 'name' | 'sdkVersion'>;
   pkg: PackageJSONConfig;
   platforms: ModPlatform[];
 }): Promise<string[]> {
-  const templateSpec = await validateBareTemplateExistsAsync(exp.sdkVersion!);
-
   // NOTE(brentvatne): Removing spaces between steps for now, add back when
   // there is some additional context for steps
-  const creatingNativeProjectStep = CreateApp.logNewSection(
+  const creatingNativeProjectStep = logNewSection(
     'Creating native project directories (./ios and ./android) and updating .gitignore'
   );
 
@@ -97,8 +112,17 @@ async function cloneNativeDirectoriesAsync({
   let copiedPaths: string[] = [];
   let skippedPaths: string[] = [];
   try {
-    await extractTemplateAppAsync(templateSpec, tempDir, exp);
-    [copiedPaths, skippedPaths] = copyPathsFromTemplate(projectRoot, tempDir, targetPaths);
+    if (template) {
+      await resolveTemplateArgAsync(tempDir, creatingNativeProjectStep, exp.name, template);
+    } else {
+      const templateSpec = await validateBareTemplateExistsAsync(exp.sdkVersion!);
+      await extractTemplateAppAsync(templateSpec, tempDir, exp);
+    }
+    [copiedPaths, skippedPaths] = await copyPathsFromTemplateAsync(
+      projectRoot,
+      tempDir,
+      targetPaths
+    );
     const results = GitIgnore.mergeGitIgnorePaths(
       path.join(projectRoot, '.gitignore'),
       path.join(tempDir, '.gitignore')
@@ -118,13 +142,13 @@ async function cloneNativeDirectoriesAsync({
     }
     creatingNativeProjectStep.succeed(message);
   } catch (e) {
-    Log.error(e.message);
-    creatingNativeProjectStep.fail(
-      'Failed to create the native project - see the output above for more information.'
-    );
+    if (!(e instanceof AbortCommandError)) {
+      Log.error(e.message);
+    }
+    creatingNativeProjectStep.fail('Failed to create the native project.');
     Log.log(
       chalk.yellow(
-        'You may want to delete the `./ios` and/or `./android` directories before running eject again.'
+        'You may want to delete the `./ios` and/or `./android` directories before trying again.'
       )
     );
     throw new SilentError(e);
@@ -152,16 +176,16 @@ async function validateBareTemplateExistsAsync(sdkVersion: string): Promise<npmP
   return templateSpec;
 }
 
-function copyPathsFromTemplate(
+async function copyPathsFromTemplateAsync(
   projectRoot: string,
   templatePath: string,
   paths: string[]
-): [string[], string[]] {
+): Promise<[string[], string[]]> {
   const copiedPaths = [];
   const skippedPaths = [];
   for (const targetPath of paths) {
     const projectPath = path.join(projectRoot, targetPath);
-    if (!fs.existsSync(projectPath)) {
+    if (!(await directoryExistsAsync(projectPath))) {
       copiedPaths.push(targetPath);
       fs.copySync(path.join(templatePath, targetPath), projectPath);
     } else {

@@ -2,10 +2,12 @@ import { ExpoConfig } from '@expo/config-types';
 import { JSONObject } from '@expo/json-file';
 import { XcodeProject } from 'xcode';
 
+import { Properties } from './android';
 import { AndroidManifest } from './android/Manifest';
 import * as AndroidPaths from './android/Paths';
 import { ResourceXML } from './android/Resources';
 import { ExpoPlist, InfoPlist } from './ios/IosConfig.types';
+import { AppDelegateProjectFile } from './ios/Paths';
 
 type OptionalPromise<T> = Promise<T> | T;
 
@@ -33,6 +35,12 @@ export interface ModProps<T = any> {
   readonly platform: ModPlatform;
 
   /**
+   * If the mod is being evaluated in introspection mode.
+   * No file system modifications should be made when introspect is `true`.
+   */
+  readonly introspect: boolean;
+
+  /**
    * [iOS]: The path component used for querying project files.
    *
    * @example projectRoot/ios/[projectName]/
@@ -47,7 +55,7 @@ export interface ExportedConfig extends ExpoConfig {
   mods?: ModConfig | null;
 }
 
-export interface ExportedConfigWithProps<Data = any> extends ExpoConfig {
+export interface ExportedConfigWithProps<Data = any> extends ExportedConfig {
   /**
    * The Object representation of a complex file type.
    */
@@ -55,16 +63,36 @@ export interface ExportedConfigWithProps<Data = any> extends ExpoConfig {
   modRequest: ModProps<Data>;
 }
 
+/**
+ * A helper type to get the properties of a plugin.
+ */
+export type PluginParameters<T extends ConfigPlugin<any>> = T extends (
+  config: any,
+  props: infer P
+) => any
+  ? P
+  : never;
+
 export type ConfigPlugin<Props = void> = (config: ExpoConfig, props: Props) => ExpoConfig;
 
 export type StaticPlugin<T = any> = [string | ConfigPlugin<T>, T];
 
-export type Mod<Props = any> = (
+export type Mod<Props = any> = ((
   config: ExportedConfigWithProps<Props>
-) => OptionalPromise<ExportedConfigWithProps<Props>>;
+) => OptionalPromise<ExportedConfigWithProps<Props>>) & {
+  /**
+   * Indicates that the mod provides data upstream to other mods.
+   * This mod should always be the last one added.
+   */
+  isProvider?: boolean;
+};
 
 export interface ModConfig {
   android?: {
+    /**
+     * Dangerously make a modification before any other android mods have been run.
+     */
+    dangerous?: Mod<unknown>;
     /**
      * Modify the `android/app/src/main/AndroidManifest.xml` as JSON (parsed with [`xml2js`](https://www.npmjs.com/package/xml2js)).
      */
@@ -73,6 +101,18 @@ export interface ModConfig {
      * Modify the `android/app/src/main/res/values/strings.xml` as JSON (parsed with [`xml2js`](https://www.npmjs.com/package/xml2js)).
      */
     strings?: Mod<ResourceXML>;
+    /**
+     * Modify the `android/app/src/main/res/values/colors.xml` as JSON (parsed with [`xml2js`](https://www.npmjs.com/package/xml2js)).
+     */
+    colors?: Mod<ResourceXML>;
+    /**
+     * Modify the `android/app/src/main/res/values-night/colors.xml` as JSON (parsed with [`xml2js`](https://www.npmjs.com/package/xml2js)).
+     */
+    colorsNight?: Mod<ResourceXML>;
+    /**
+     * Modify the `android/app/src/main/res/values/styles.xml` as JSON (parsed with [`xml2js`](https://www.npmjs.com/package/xml2js)).
+     */
+    styles?: Mod<ResourceXML>;
     /**
      * Modify the `android/app/src/main/<package>/MainActivity.java` as a string.
      */
@@ -89,8 +129,16 @@ export interface ModConfig {
      * Modify the `android/settings.gradle` as a string.
      */
     settingsGradle?: Mod<AndroidPaths.GradleProjectFile>;
+    /**
+     * Modify the `android/gradle.properties` as a `Properties.PropertiesItem[]`.
+     */
+    gradleProperties?: Mod<Properties.PropertiesItem[]>;
   };
   ios?: {
+    /**
+     * Dangerously make a modification before any other android mods have been run.
+     */
+    dangerous?: Mod<unknown>;
     /**
      * Modify the `ios/<name>/Info.plist` as JSON (parsed with [`@expo/plist`](https://www.npmjs.com/package/@expo/plist)).
      */
@@ -110,7 +158,7 @@ export interface ModConfig {
     /**
      * Modify the `ios/<name>/AppDelegate.m` as a string (dangerous)
      */
-    appDelegate?: Mod<XcodeProject>;
+    appDelegate?: Mod<AppDelegateProjectFile>;
   };
 }
 
