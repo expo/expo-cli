@@ -60,6 +60,7 @@ export { withStaticPlugin } from './plugins/withStaticPlugin';
 export { compileModsAsync, withDefaultBaseMods, evalModsAsync } from './plugins/mod-compiler';
 
 export { PluginError } from './utils/errors';
+export { findMatchingBracketPosition, replaceContentsWithOffset } from './utils/matchBrackets';
 
 export const BaseMods = {
   withAndroidBaseMods,

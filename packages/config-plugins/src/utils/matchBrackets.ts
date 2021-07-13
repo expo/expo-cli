@@ -5,9 +5,13 @@ type LeftBracket = typeof LEFT_BRACKETS[number];
 type RightBracket = typeof RIGHT_BRACKETS[number];
 type Bracket = LeftBracket | RightBracket;
 
-export function findMatchingBracketPosition(content: string, bracket: Bracket): number {
+export function findMatchingBracketPosition(
+  contents: string,
+  bracket: Bracket,
+  offset: number = 0
+): number {
   // search first occurrence of `bracket`
-  const firstBracketPos = content.indexOf(bracket);
+  const firstBracketPos = contents.indexOf(bracket, offset);
   if (firstBracketPos < 0) {
     return -1;
   }
@@ -16,10 +20,10 @@ export function findMatchingBracketPosition(content: string, bracket: Bracket): 
   const matchingBracket = getMatchingBracket(bracket);
 
   if (isLeftBracket(bracket)) {
-    const contentLength = content.length;
+    const contentsLength = contents.length;
     // search forward
-    for (let i = firstBracketPos + 1; i < contentLength; ++i) {
-      const c = content[i];
+    for (let i = firstBracketPos + 1; i < contentsLength; ++i) {
+      const c = contents[i];
       if (c === bracket) {
         stackCounter += 1;
       } else if (c === matchingBracket) {
@@ -32,7 +36,7 @@ export function findMatchingBracketPosition(content: string, bracket: Bracket): 
   } else {
     // search backward
     for (let i = firstBracketPos - 1; i >= 0; --i) {
-      const c = content[i];
+      const c = contents[i];
       if (c === bracket) {
         stackCounter += 1;
       } else if (c === matchingBracket) {
@@ -45,6 +49,28 @@ export function findMatchingBracketPosition(content: string, bracket: Bracket): 
   }
 
   return -1;
+}
+
+export function replaceContentsWithOffset(
+  contents: string,
+  replacement: string,
+  startOffset: number,
+  endOffset: number
+): string {
+  const contentsLength = contents.length;
+  if (
+    startOffset < 0 ||
+    endOffset < 0 ||
+    startOffset >= contentsLength ||
+    endOffset >= contentsLength ||
+    startOffset > endOffset
+  ) {
+    throw new Error('Invalid parameters.');
+  }
+  const prefix = contents.substring(0, startOffset);
+  const suffix = contents.substring(endOffset + 1);
+
+  return `${prefix}${replacement}${suffix}`;
 }
 
 function isLeftBracket(bracket: Bracket): boolean {
@@ -62,5 +88,7 @@ function getMatchingBracket(bracket: Bracket): Bracket {
       return '}';
     case '}':
       return '{';
+    default:
+      throw new Error(`Unsupported bracket - ${bracket}`);
   }
 }

@@ -1,6 +1,6 @@
-import { findMatchingBracketPosition } from '../matchBrackets';
+import { findMatchingBracketPosition, replaceContentsWithOffset } from '../matchBrackets';
 
-describe('findMatchingBracketPosition', () => {
+describe(findMatchingBracketPosition, () => {
   it('should handle one line search', () => {
     expect(findMatchingBracketPosition('foo()', '(')).toBe(4);
     expect(findMatchingBracketPosition('withParameter("a", 1, null)', '(')).toBe(26);
@@ -42,5 +42,25 @@ void foo() {
     expect(findMatchingBracketPosition('foo()', '{')).toBe(-1);
     expect(findMatchingBracketPosition('foo()', '}')).toBe(-1);
     expect(findMatchingBracketPosition('foo(bar()', '(')).toBe(-1);
+  });
+});
+
+describe(replaceContentsWithOffset, () => {
+  it('should support replacement in the middle', () => {
+    expect(replaceContentsWithOffset('aabbcc', '', 2, 3)).toEqual('aacc');
+    expect(replaceContentsWithOffset('aabbcc', 'dd', 2, 3)).toEqual('aaddcc');
+    expect(replaceContentsWithOffset('aabbcc', 'ExtendString', 2, 3)).toEqual('aaExtendStringcc');
+  });
+
+  it('should throw for boundary errors', () => {
+    expect(() => {
+      replaceContentsWithOffset('aabbcc', 'dd', -1, -1);
+    }).toThrow();
+    expect(() => {
+      replaceContentsWithOffset('aabbcc', 'dd', 0, 999);
+    }).toThrow();
+    expect(() => {
+      replaceContentsWithOffset('aabbcc', 'dd', 2, 1);
+    }).toThrow();
   });
 });
