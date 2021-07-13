@@ -30,7 +30,7 @@ export function findMatchingBracketPosition(content: string, bracket: Bracket): 
       }
     }
   } else {
-    // search bakcward
+    // search backward
     for (let i = firstBracketPos - 1; i >= 0; --i) {
       const c = content[i];
       if (c === bracket) {
