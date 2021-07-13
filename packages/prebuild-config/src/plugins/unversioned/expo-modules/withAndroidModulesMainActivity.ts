@@ -5,8 +5,7 @@ import {
   replaceContentsWithOffset,
   withMainActivity,
 } from '@expo/config-plugins';
-import { mergeContents, removeContents } from '@expo/config-plugins/build/utils/generateCode';
-import { start } from 'repl';
+import { mergeContents } from '@expo/config-plugins/build/utils/generateCode';
 
 export const withAndroidModulesMainActivity: ConfigPlugin = config => {
   return withMainActivity(config, config => {
