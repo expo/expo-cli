@@ -94,7 +94,6 @@
     "dateformat": "3.0.3",
     "env-editor": "^0.4.1",
     "envinfo": "7.5.0",
-    "esbuild": "~0.5.0",
     "find-up": "^5.0.0",
     "find-yarn-workspace-root": "~2.0.0",
     "form-data": "^2.3.2",

@@ -1,5 +1,6 @@
 import { ProjectTarget } from '@expo/config';
 import { MessageSocket, MetroDevServerOptions, runMetroDevServerAsync } from '@expo/dev-server';
+import * as EsbuildDevServer from '@expo/dev-server/build/esbuild/EsbuildDevServer';
 import http from 'http';
 
 import {
@@ -59,7 +60,20 @@ export async function startDevServerAsync(
     options.maxWorkers = startOptions.maxWorkers;
   }
 
-  const { server, middleware, messageSocket } = await runMetroDevServerAsync(projectRoot, options);
+  let serverInfo: {
+    server: http.Server;
+    middleware: any;
+    messageSocket: MessageSocket;
+  };
+
+  if (process.env.EXPO_BUNDLER === 'esbuild') {
+    serverInfo = await EsbuildDevServer.startDevServerAsync(projectRoot, options);
+  } else {
+    serverInfo = await runMetroDevServerAsync(projectRoot, options);
+  }
+
+  const { server, middleware, messageSocket } = serverInfo;
+
   middleware.use(ManifestHandler.getManifestHandler(projectRoot));
   middleware.use(ExpoUpdatesManifestHandler.getManifestHandler(projectRoot));
 
