@@ -21,7 +21,7 @@ import { Android, Project, ProjectSettings, Simulator, Versions } from 'xdl';
 import CommandError from '../CommandError';
 import Log from '../log';
 import { confirmAsync, selectAsync } from '../prompts';
-import { ora } from '../utils/ora';
+import { logNewSection } from '../utils/ora';
 import { findProjectRootAsync } from './utils/ProjectUtils';
 import { getBundledNativeModulesAsync } from './utils/bundledNativeModules';
 import { assertProjectHasExpoExtensionFilesAsync } from './utils/deprecatedExtensionWarnings';
@@ -48,12 +48,6 @@ export type TargetSDKVersion = Pick<
   | 'androidClientUrl'
   | 'beta'
 >;
-
-function logNewSection(title: string) {
-  const spinner = ora(chalk.bold(title));
-  spinner.start();
-  return spinner;
-}
 
 export function maybeFormatSdkVersion(sdkVersionString: string | null): string | null {
   if (typeof sdkVersionString !== 'string' || sdkVersionString === 'UNVERSIONED') {
@@ -576,6 +570,7 @@ export async function upgradeAsync(
   const { exp: currentExp, dynamicConfigPath, staticConfigPath } = getConfig(projectRoot);
 
   const removingSdkVersionStep = logNewSection('Validating configuration.');
+
   if (dynamicConfigPath) {
     if (
       !Versions.gteSdkVersion(currentExp, targetSdkVersionString) &&
@@ -868,6 +863,7 @@ async function maybeCleanNpmStateAsync(packageManager: any) {
       const reinstallingNodeModulesStep = logNewSection(
         'Installing node_modules and rebuilding package-lock.json.'
       );
+
       try {
         await packageManager.installAsync();
         reinstallingNodeModulesStep.succeed(

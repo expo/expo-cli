@@ -8,9 +8,77 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🎉 New features
 
+### 🧹 Chores
+
+### 🐛 Bug fixes
+
+## [Wed, 23 Jun 2021 10:37:34 -0700](https://github.com/expo/expo-cli/commit/caa0173d89632764098ae313768ff9bb18d2fa40)
+
+### 🛠 Breaking changes
+
+- [splash-screen] Extend default theme ([#3558](https://github.com/expo/expo-cli/issues/3558))
+- [config-plugins] Make the status bar translucent by default ([#3578](https://github.com/expo/expo-cli/issues/3578))
+- [prebuild-config] Created android splash plugin ([#3576](https://github.com/expo/expo-cli/issues/3576))
+
+### 🎉 New features
+
+- [run] prompt for scheme ([#3587](https://github.com/expo/expo-cli/issues/3587))
+- [cli] Lazy load heavy modules to improve startup time ([#3598](https://github.com/expo/expo-cli/issues/3598))
+- [cli] Import Command as type to reduce bundle size ([#3597](https://github.com/expo/expo-cli/issues/3597))
+
+### 📦 Packages updated
+
+- @expo/config-plugins@3.0.0
+- @expo/config@5.0.0
+- @expo/dev-server@0.1.75
+- @expo/dev-tools@0.13.105
+- expo-cli@4.7.0
+- expo-optimize@0.1.97
+- @expo/metro-config@0.1.75
+- @expo/next-adapter@2.1.80
+- @expo/prebuild-config@2.0.0
+- expo-pwa@0.0.85
+- uri-scheme@1.0.86
+- @expo/webpack-config@0.12.79
+- xdl@59.0.45
+
+## [Mon, 21 Jun 2021 16:24:32 -0700](https://github.com/expo/expo-cli/commit/86ff226740af46ad04f8953114f9f2b1e1c9741a)
+
+### 🎉 New features
+
 - [config-plugins] add config request headers to Updates Config Enum and ExpoPlist Type ([#3571](https://github.com/expo/expo-cli/pull/3571))([##3577](https://github.com/expo/expo-cli/pull/3577))
+- [metro] Created a custom metro babel transformer ([#3282](https://github.com/expo/expo-cli/issues/3282))
+- [config-plugins] Default version number to 1.0.0 ([#3582](https://github.com/expo/expo-cli/issues/3582))
+- [config-plugins] add EXUpdatesRequestHeaders to ExpoPlist type ([#3577](https://github.com/expo/expo-cli/issues/3577))
+- [run:ios] Improve multi-target support by signing all targets at once ([#3583](https://github.com/expo/expo-cli/issues/3583))
+- [config-plugins] add config request headers enum ([#3571](https://github.com/expo/expo-cli/issues/3571))
+- [config-plugins] Remove permission side effects ([#3565](https://github.com/expo/expo-cli/issues/3565))
 
 ### 🧹 Chores
+
+- [expo-cli][export] Prevent testing against bundle hashes ([#3580](https://github.com/expo/expo-cli/issues/3580))
+- [cli] Add analytics to dev client commands ([#3521](https://github.com/expo/expo-cli/issues/3521))
+
+### 🐛 Bug fixes
+
+- [cli] Remove expo upload:ios cmd copy ([#3593](https://github.com/expo/expo-cli/issues/3593))
+- [cli] Add workaround for glob library ([#3585](https://github.com/expo/expo-cli/issues/3585))
+
+### 📦 Packages updated
+
+- @expo/config-plugins@2.0.4
+- @expo/config@4.0.4
+- @expo/dev-server@0.1.74
+- @expo/dev-tools@0.13.104
+- expo-cli@4.6.0
+- expo-optimize@0.1.96
+- @expo/metro-config@0.1.74
+- @expo/next-adapter@2.1.79
+- @expo/prebuild-config@1.0.5
+- expo-pwa@0.0.84
+- uri-scheme@1.0.85
+- @expo/webpack-config@0.12.78
+- xdl@59.0.44
 
 ## [Fri, 11 Jun 2021 18:33:29 -0700](https://github.com/expo/expo-cli/commit/d53eadc503c6ff895902a7627ff9326ec61776de)
 

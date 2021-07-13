@@ -1,9 +1,9 @@
-import { Command } from 'commander';
+import type { Command } from 'commander';
 import indentString from 'indent-string';
 import qrcodeTerminal from 'qrcode-terminal';
 import { Android, ConnectionStatus, ProjectSettings, Simulator, Webpack } from 'xdl';
 
-import CommandError from './CommandError';
+import CommandError, { AbortCommandError } from './CommandError';
 import Log from './log';
 import { getDevClientSchemeAsync } from './schemes';
 
@@ -94,35 +94,61 @@ async function handleMobileOptsAsync(
   projectRoot: string,
   options: Pick<URLOptions, 'devClient' | 'ios' | 'android' | 'web'> & { webOnly?: boolean }
 ) {
-  await Promise.all([
+  const results = await Promise.all([
     (async () => {
       if (options.android) {
         if (options.webOnly) {
-          await Android.openWebProjectAsync({ projectRoot });
+          return await Android.openWebProjectAsync({ projectRoot });
         } else {
-          await Android.openProjectAsync({ projectRoot, devClient: options.devClient ?? false });
+          return await Android.openProjectAsync({
+            projectRoot,
+            devClient: options.devClient ?? false,
+          });
         }
       }
+      return null;
     })(),
     (async () => {
       if (options.ios) {
         if (options.webOnly) {
-          await Simulator.openWebProjectAsync({ projectRoot, shouldPrompt: false });
+          return await Simulator.openWebProjectAsync({ projectRoot, shouldPrompt: false });
         } else {
-          await Simulator.openProjectAsync({
+          return await Simulator.openProjectAsync({
             projectRoot,
             devClient: options.devClient ?? false,
             shouldPrompt: false,
           });
         }
       }
+      return null;
     })(),
     (async () => {
       if (options.web) {
-        await Webpack.openAsync(projectRoot);
+        return await Webpack.openAsync(projectRoot);
       }
+      return null;
     })(),
   ]);
+
+  const errors = results
+    .reduce<(string | Error)[]>((prev, curr) => {
+      if (curr && !curr.success) {
+        return prev.concat([curr.error]);
+      }
+      return prev;
+    }, [])
+    .filter(Boolean);
+
+  if (errors.length) {
+    // ctrl+c
+    const isEscapedError = errors.some(error => error === 'escaped');
+    if (isEscapedError) {
+      throw new AbortCommandError();
+    } else {
+      // Throw the first error
+      throw errors[0];
+    }
+  }
 
   return !!options.android || !!options.ios;
 }

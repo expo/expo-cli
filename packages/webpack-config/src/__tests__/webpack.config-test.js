@@ -20,6 +20,25 @@ function normalizeConfig(config) {
   // Make the paths be relative to the project
   const normalized = normalizePaths(config, value => value.split('cli/').pop());
 
+  // Strip out any path issues that come from testing in a monorepo.
+  function normalizeLoaders(loaders) {
+    return loaders.map(rule => {
+      if (rule.use) {
+        rule.use = normalizePaths(rule.use, value => {
+          if (value.includes('node_modules')) {
+            return `node_modules` + value.split('node_modules').pop();
+          }
+          return value;
+        });
+      } else if (rule.oneOf) {
+        rule.oneOf = normalizeLoaders(rule.oneOf);
+      }
+      return rule;
+    });
+  }
+
+  normalized.module.rules = normalizeLoaders(normalized.module.rules);
+
   delete normalized.devServer?.watchOptions;
 
   // performance is disabled in CI

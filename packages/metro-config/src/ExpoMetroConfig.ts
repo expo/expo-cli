@@ -51,6 +51,14 @@ function readIsLegacyImportsEnabled(projectRoot: string): boolean {
   return isLegacyImportsEnabled(config.exp);
 }
 
+function getProjectBabelConfigFile(projectRoot: string): string | undefined {
+  return (
+    resolveFrom.silent(projectRoot, './babel.config.js') ||
+    resolveFrom.silent(projectRoot, './.babelrc') ||
+    resolveFrom.silent(projectRoot, './.babelrc.js')
+  );
+}
+
 export function getDefaultConfig(
   projectRoot: string,
   options: DefaultConfigOptions = {}
@@ -58,6 +66,16 @@ export function getDefaultConfig(
   const MetroConfig = importMetroConfigFromProject(projectRoot);
 
   const reactNativePath = path.dirname(resolveFrom(projectRoot, 'react-native/package.json'));
+
+  try {
+    // Set the `EXPO_METRO_CACHE_KEY_VERSION` variable for use in the custom babel transformer.
+    // This hack is used because there doesn't appear to be anyway to resolve
+    // `babel-preset-fbjs` relative to the project root later (in `metro-expo-babel-transformer`).
+    const babelPresetFbjsPath = resolveFrom(projectRoot, 'babel-preset-fbjs/package.json');
+    process.env.EXPO_METRO_CACHE_KEY_VERSION = String(require(babelPresetFbjsPath).version);
+  } catch {
+    // noop -- falls back to a hardcoded value.
+  }
 
   let hashAssetFilesPath;
   try {
@@ -120,6 +138,9 @@ export function getDefaultConfig(
       ? getBareExtensions([], sourceExtsConfig)
       : getManagedExtensions([], sourceExtsConfig);
 
+  const babelConfigPath = getProjectBabelConfigFile(projectRoot);
+  const isCustomBabelConfigDefined = !!babelConfigPath;
+
   if (EXPO_DEBUG) {
     console.log();
     console.log(`Expo Metro config:`);
@@ -127,6 +148,7 @@ export function getDefaultConfig(
     console.log(`- Legacy: ${isLegacy}`);
     console.log(`- Extensions: ${sourceExts.join(', ')}`);
     console.log(`- React Native: ${reactNativePath}`);
+    console.log(`- Babel config: ${babelConfigPath || 'babel-preset-expo (default)'}`);
     console.log();
   }
   const {
@@ -176,7 +198,12 @@ export function getDefaultConfig(
     },
     transformer: {
       allowOptionalDependencies: true,
-      babelTransformerPath: require.resolve('metro-react-native-babel-transformer'),
+      babelTransformerPath: isCustomBabelConfigDefined
+        ? // If the user defined a babel config file in their project,
+          // then use the default transformer.
+          require.resolve('metro-react-native-babel-transformer')
+        : // Otherwise, use a custom transformer that uses `babel-preset-expo` by default for projects.
+          require.resolve('./metro-expo-babel-transformer'),
       assetRegistryPath: 'react-native/Libraries/Image/AssetRegistry',
       assetPlugins: hashAssetFilesPath ? [hashAssetFilesPath] : undefined,
     },

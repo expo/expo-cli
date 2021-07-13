@@ -19,6 +19,7 @@ export { default as NotificationCode } from './NotificationCode';
 export { learnMore } from './logs/TerminalLink';
 export { default as Analytics, AnalyticsClient } from './Analytics';
 export { default as UnifiedAnalytics } from './UnifiedAnalytics';
+export { watchBabelConfigForProject } from './start/watchBabelConfig';
 export * as Android from './Android';
 export { default as ApiV2 } from './ApiV2';
 export * as Binaries from './Binaries';
@@ -99,5 +100,6 @@ export {
 } from './start/startDevServerAsync';
 export { startAsync, stopAsync, broadcastMessage } from './start/startAsync';
 export * as ManifestHandler from './start/ManifestHandler';
+export * as ExpoUpdatesManifestHandler from './start/ExpoUpdatesManifestHandler';
 export { getFreePortAsync } from './start/getFreePortAsync';
 export * as Project from './Project';

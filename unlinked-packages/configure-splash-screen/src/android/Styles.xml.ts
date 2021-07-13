@@ -38,7 +38,7 @@ function configureStyle(
             name: 'style',
             attributes: {
               name: STYLE_NAME,
-              parent: 'Theme.AppCompat.Light.NoActionBar',
+              parent: 'AppTheme',
             },
             elements: [
               {

@@ -7,8 +7,11 @@ import { assignColorValue } from './Colors';
 import { ResourceXML } from './Resources';
 import { assignStylesValue, getAppThemeLightNoActionBarGroup } from './Styles';
 
+// https://developer.android.com/reference/android/R.attr#colorPrimaryDark
 const COLOR_PRIMARY_DARK_KEY = 'colorPrimaryDark';
+// https://developer.android.com/reference/android/R.attr#windowTranslucentStatus
 const WINDOW_TRANSLUCENT_STATUS = 'android:windowTranslucentStatus';
+// https://developer.android.com/reference/android/R.attr#windowLightStatusBar
 const WINDOW_LIGHT_STATUS_BAR = 'android:windowLightStatusBar';
 
 export const withStatusBar: ConfigPlugin = config => {
@@ -46,10 +49,12 @@ export function setStatusBarStyles(
   styles: ResourceXML
 ): ResourceXML {
   const hexString = getStatusBarColor(config);
+  const floatElement = getStatusBarTranslucent(config);
 
   styles = assignStylesValue(styles, {
     parent: getAppThemeLightNoActionBarGroup(),
     name: WINDOW_LIGHT_STATUS_BAR,
+    targetApi: '23',
     value: 'true',
     // Default is light-content, don't need to do anything to set it
     add: getStatusBarStyle(config) === 'dark-content',
@@ -60,7 +65,7 @@ export function setStatusBarStyles(
     name: WINDOW_TRANSLUCENT_STATUS,
     value: 'true',
     // translucent status bar set in theme
-    add: !hexString,
+    add: floatElement,
   });
 
   styles = assignStylesValue(styles, {
@@ -84,6 +89,17 @@ export function getStatusBarColor(config: Pick<ExpoConfig, 'androidStatusBar'>) 
     );
   }
   return backgroundColor;
+}
+
+/**
+ * Specifies whether the status bar should be "translucent". When true, the status bar is drawn with `position: absolute` and a gray underlay, when false `position: relative` (pushes content down).
+ *
+ * @default false
+ * @param config
+ * @returns
+ */
+export function getStatusBarTranslucent(config: Pick<ExpoConfig, 'androidStatusBar'>): boolean {
+  return config.androidStatusBar?.translucent ?? false;
 }
 
 export function getStatusBarStyle(config: Pick<ExpoConfig, 'androidStatusBar'>) {

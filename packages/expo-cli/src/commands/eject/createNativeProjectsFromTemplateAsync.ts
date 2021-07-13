@@ -11,7 +11,7 @@ import semver from 'semver';
 import { AbortCommandError, SilentError } from '../../CommandError';
 import Log from '../../log';
 import { extractTemplateAppAsync } from '../../utils/extractTemplateAppAsync';
-import * as CreateApp from '../utils/CreateApp';
+import { logNewSection } from '../../utils/ora';
 import * as GitIgnore from '../utils/GitIgnore';
 import { resolveTemplateArgAsync } from './Github';
 import {
@@ -103,7 +103,7 @@ async function cloneNativeDirectoriesAsync({
 }): Promise<string[]> {
   // NOTE(brentvatne): Removing spaces between steps for now, add back when
   // there is some additional context for steps
-  const creatingNativeProjectStep = CreateApp.logNewSection(
+  const creatingNativeProjectStep = logNewSection(
     'Creating native project directories (./ios and ./android) and updating .gitignore'
   );
 

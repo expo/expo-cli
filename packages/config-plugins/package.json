@@ -1,11 +1,11 @@
 {
   "name": "@expo/config-plugins",
-  "version": "2.0.3",
+  "version": "3.0.3",
   "description": "A library for Expo config plugins",
   "main": "build/index.js",
   "scripts": {
     "watch": "tsc --watch --preserveWatchOutput",
-    "build": "tsc",
+    "build": "tsc --emitDeclarationOnly && babel src --out-dir build --extensions \".ts\" --source-maps --ignore \"src/**/__mocks__/*\",\"src/**/__tests__/*\",\"src/**/__integration_tests__/*\"",
     "prepare": "yarn run clean && yarn build",
     "clean": "rimraf build ./tsconfig.tsbuildinfo",
     "lint": "eslint .",
@@ -41,6 +41,7 @@
     "getenv": "^1.0.0",
     "glob": "7.1.6",
     "resolve-from": "^5.0.0",
+    "semver": "^7.3.5",
     "slash": "^3.0.0",
     "xcode": "^3.0.1",
     "xml2js": "^0.4.23"

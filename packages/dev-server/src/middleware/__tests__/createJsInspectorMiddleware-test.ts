@@ -1,5 +1,6 @@
 import { ChildProcess } from 'child_process';
 import type { IncomingMessage, ServerResponse } from 'http';
+import type { Socket } from 'net';
 import fetch from 'node-fetch';
 import open from 'open';
 import { URL } from 'url';
@@ -21,6 +22,23 @@ describe('createJsInspectorMiddleware', () => {
     const entity = entities.find(object => object.description === appId);
 
     const req = createRequest(`http://localhost:8081/inspector?applicationId=${appId}`);
+    const res = createMockedResponse();
+    const next = jest.fn();
+    const mockFetch = fetch as jest.MockedFunction<typeof fetch>;
+    mockFetch.mockReturnValue(Promise.resolve(new Response(RESPONSE_FIXTURE)));
+
+    const middlewareAsync = createJsInspectorMiddleware();
+    await middlewareAsync(req, res as ServerResponse, next);
+
+    expectMockedResponse(res, 200, JSON.stringify(entity));
+  });
+
+  it('should handle ipv6 address', async () => {
+    const appId = 'io.expo.test.devclient';
+    const entities = JSON.parse(RESPONSE_FIXTURE) as { [key: string]: string }[];
+    const entity = entities.find(object => object.description === appId);
+
+    const req = createRequest(`http://[::ffff:127.0.0.1]/inspector?applicationId=${appId}`);
     const res = createMockedResponse();
     const next = jest.fn();
     const mockFetch = fetch as jest.MockedFunction<typeof fetch>;
@@ -138,6 +156,10 @@ function createRequest(requestUrl: string, method?: 'GET' | 'POST' | 'PUT'): Inc
     headers: {
       host: url.host,
     },
+    socket: {
+      localAddress: url.hostname,
+      localPort: Number(url.port || 80),
+    } as Socket,
     url: `${url.pathname}${url.search}`,
   };
   return req as IncomingMessage;

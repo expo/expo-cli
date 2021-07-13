@@ -222,13 +222,18 @@ export function areVersionsSynced(
 ): boolean {
   const expectedRuntimeVersion = getRuntimeVersion(config);
   const expectedSdkVersion = getSDKVersion(config);
+
   const currentRuntimeVersion = getMainApplicationMetaDataValue(
     androidManifest,
     Config.RUNTIME_VERSION
   );
   const currentSdkVersion = getMainApplicationMetaDataValue(androidManifest, Config.SDK_VERSION);
 
-  return (
-    currentRuntimeVersion === expectedRuntimeVersion && currentSdkVersion === expectedSdkVersion
-  );
+  if (expectedRuntimeVersion !== null) {
+    return currentRuntimeVersion === expectedRuntimeVersion && currentSdkVersion === null;
+  } else if (expectedSdkVersion !== null) {
+    return currentSdkVersion === expectedSdkVersion && currentRuntimeVersion === null;
+  } else {
+    return true;
+  }
 }

@@ -1,11 +1,15 @@
+import Debug from 'debug';
 import path from 'path';
 
 import { ExportedConfig, Mod, ModConfig, ModPlatform } from '../Plugin.types';
 import { getHackyProjectName } from '../ios/utils/Xcodeproj';
 import { PluginError } from '../utils/errors';
+import * as Warnings from '../utils/warnings';
 import { assertModResults, ForwardedBaseModOptions } from './createBaseMod';
 import { getAndroidIntrospectModFileProviders, withAndroidBaseMods } from './withAndroidBaseMods';
 import { getIosIntrospectModFileProviders, withIosBaseMods } from './withIosBaseMods';
+
+const debug = Debug('config-plugins:mod-compiler');
 
 export function withDefaultBaseMods(
   config: ExportedConfig,
@@ -136,6 +140,7 @@ export async function evalModsAsync(
 ): Promise<ExportedConfig> {
   for (const [platformName, platform] of Object.entries(config.mods ?? ({} as ModConfig))) {
     if (platforms && !platforms.includes(platformName as any)) {
+      debug(`skip platform: ${platformName}`);
       continue;
     }
 
@@ -143,7 +148,7 @@ export async function evalModsAsync(
     if (entries.length) {
       // Move dangerous item to the first position if it exists, this ensures that all dangerous code runs first.
       entries = sortMods(entries, orders[platformName]!);
-
+      debug(`run in order: ${entries.map(([name]) => name).join(', ')}`);
       const platformProjectRoot = path.join(projectRoot, platformName);
       const projectName =
         platformName === 'ios' ? getHackyProjectName(projectRoot, config) : undefined;
@@ -164,9 +169,11 @@ export async function evalModsAsync(
           if (assertMissingModProviders !== false) {
             throw new PluginError(errorMessage, 'MISSING_PROVIDER');
           } else {
-            if (config._internal?.isDebug) {
-              console.warn(errorMessage);
-            }
+            Warnings.addWarningForPlatform(
+              platformName as ModPlatform,
+              `${platformName}.${modName}`,
+              `Skipping: Initial base modifier for "${platformName}.${modName}" is not a provider and therefore will not provide modResults to child mods. This may be due to an outdated version of Expo CLI.`
+            );
             // In loose mode, just skip the mod entirely.
             continue;
           }

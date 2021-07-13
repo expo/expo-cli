@@ -167,7 +167,7 @@ describe('getManifestResponseAsync', () => {
     // This value is blacklisted
     expect(res.exp.env.EXPO_APPLE_PASSWORD).not.toBeDefined();
     // Users should use app.config.js + extras now so test that it always works
-    expect(res.exp.extras.myExtra).toBe('123');
+    expect((res.exp as any).extras.myExtra).toBe('123');
 
     // Ensure the bundle URL is built correctly
     expect(res.exp.bundleUrl).toBe(
@@ -183,7 +183,7 @@ describe('getManifestResponseAsync', () => {
     expect(res.exp.developer.projectRoot).toBe('/alpha');
 
     // ProjectAssets gathered URLs
-    expect(res.exp.iconUrl).toBe('http://127.0.0.1:80/assets/./icon.png');
+    expect((res.exp as any).iconUrl).toBe('http://127.0.0.1:80/assets/./icon.png');
     expect(res.exp.splash.imageUrl).toBe('http://127.0.0.1:80/assets/./assets/splash.png');
   });
 });

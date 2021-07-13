@@ -2,7 +2,7 @@ import { getConfig } from '@expo/config';
 import * as PackageManager from '@expo/package-manager';
 import spawnAsync from '@expo/spawn-async';
 import chalk from 'chalk';
-import { Command } from 'commander';
+import type { Command } from 'commander';
 import fs from 'fs-extra';
 import path from 'path';
 import prompts from 'prompts';

@@ -1,4 +1,5 @@
 import { ExpoConfig, getConfig } from '@expo/config';
+import { MessageSocket } from '@expo/dev-server';
 import { Server } from 'http';
 
 import {
@@ -21,9 +22,10 @@ import {
   stopTunnelsAsync,
   Webpack,
 } from '../internal';
+import { watchBabelConfigForProject } from './watchBabelConfig';
 
 let serverInstance: Server | null = null;
-let messageSocket: any | null = null;
+let messageSocket: MessageSocket | null = null;
 
 /**
  * Sends a message over web sockets to any connected device,
@@ -57,8 +59,13 @@ export async function startAsync(
     sdkVersion: exp.sdkVersion ?? null,
   });
 
+  watchBabelConfigForProject(projectRoot);
+
   if (options.webOnly) {
-    await Webpack.restartAsync(projectRoot, options);
+    await Webpack.restartAsync(projectRoot, {
+      ...options,
+      port: options.webpackPort,
+    });
     DevSession.startSession(projectRoot, exp, 'web');
     return exp;
   } else if (Env.shouldUseDevServer(exp) || options.devClient) {

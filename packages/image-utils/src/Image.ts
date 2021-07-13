@@ -126,6 +126,11 @@ async function ensureImageOptionsAsync(imageOptions: ImageOptions): Promise<Imag
     src: await Download.downloadOrUseCachedImage(imageOptions.src),
   };
 
+  // Default to contain
+  if (!icon.resizeMode) {
+    icon.resizeMode = 'contain';
+  }
+
   const mimeType = mime.getType(icon.src);
 
   if (!mimeType) {

@@ -1,6 +1,6 @@
 {
   "name": "@expo/next-adapter",
-  "version": "2.1.78",
+  "version": "2.1.83",
   "description": "Adapter for using Next.js with Unimodules",
   "main": "build/index.js",
   "types": "build/index.d.ts",

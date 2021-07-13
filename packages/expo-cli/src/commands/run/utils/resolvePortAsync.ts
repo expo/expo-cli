@@ -5,7 +5,15 @@ import Log from '../../../log';
 
 export async function resolvePortAsync(
   projectRoot: string,
-  defaultPort?: string | number
+  {
+    reuseExistingPort,
+    defaultPort,
+    fallbackPort,
+  }: {
+    reuseExistingPort?: boolean;
+    defaultPort?: string | number;
+    fallbackPort?: number;
+  } = {}
 ): Promise<number | null> {
   let port: number;
   if (typeof defaultPort === 'string') {
@@ -13,11 +21,14 @@ export async function resolvePortAsync(
   } else if (typeof defaultPort === 'number') {
     port = defaultPort;
   } else {
-    port = getenv.int('RCT_METRO_PORT', 8081);
+    port = getenv.int('RCT_METRO_PORT', fallbackPort || 8081);
   }
 
   // Only check the port when the bundler is running.
-  const resolvedPort = await choosePortAsync(projectRoot, port);
+  const resolvedPort = await choosePortAsync(projectRoot, {
+    defaultPort: port,
+    reuseExistingPort,
+  });
   if (resolvedPort == null) {
     Log.log('\u203A Skipping dev server');
     // Skip bundling if the port is null

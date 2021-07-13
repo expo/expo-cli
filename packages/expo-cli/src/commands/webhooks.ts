@@ -2,7 +2,7 @@ import { findConfigFile, getConfig } from '@expo/config';
 import assert from 'assert';
 import chalk from 'chalk';
 import CliTable from 'cli-table3';
-import { Command } from 'commander';
+import type { Command } from 'commander';
 import crypto from 'crypto';
 import { ApiV2, UserManager } from 'xdl';
 

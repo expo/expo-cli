@@ -38,7 +38,6 @@ export const ADAPTIVE_ICON_XML_WITH_BACKGROUND_COLOR = `<?xml version="1.0" enco
 </adaptive-icon>`;
 export const SAMPLE_COLORS_XML = `<?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <!-- Below line is handled by '@expo/configure-splash-screen' command and it's discouraged to modify it manually -->
   <color name="splashscreen_background">#FFFFFF</color>
 </resources>`;
 export const defaultDirectoryJSON = {

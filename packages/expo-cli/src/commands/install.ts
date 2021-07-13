@@ -1,6 +1,6 @@
 import { getConfig } from '@expo/config';
 import * as PackageManager from '@expo/package-manager';
-import { Command } from 'commander';
+import type { Command } from 'commander';
 import npmPackageArg from 'npm-package-arg';
 import resolveFrom from 'resolve-from';
 import { Versions } from 'xdl';

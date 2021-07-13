@@ -54,6 +54,7 @@ type CLIWebOptions = {
 type BundlingOptions = {
   dev?: boolean;
   clear?: boolean;
+  port?: number;
   pwa?: boolean;
   isImageEditingEnabled?: boolean;
   webpackEnv?: object;
@@ -439,11 +440,10 @@ async function getAvailablePortAsync(options: {
       'defaultPort' in options && options.defaultPort
         ? options.defaultPort
         : WebpackEnvironment.DEFAULT_PORT;
-    const port = await choosePortAsync(
-      options.projectRoot,
+    const port = await choosePortAsync(options.projectRoot, {
       defaultPort,
-      'host' in options && options.host ? options.host : WebpackEnvironment.HOST
-    );
+      host: 'host' in options && options.host ? options.host : WebpackEnvironment.HOST,
+    });
     if (!port) {
       throw new Error(`Port ${defaultPort} not available.`);
     }

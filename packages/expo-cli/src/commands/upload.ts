@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-import { Command } from 'commander';
+import type { Command } from 'commander';
 
 import Log from '../log';
 import AndroidSubmitCommand from './upload/submission-service/android/AndroidSubmitCommand';
