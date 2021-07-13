@@ -6,14 +6,14 @@ import * as path from 'path';
 
 import Log from '../../log';
 import { confirmAsync } from '../../prompts';
-import * as CreateApp from '../utils/CreateApp';
+import { logNewSection } from '../../utils/ora';
 
 export async function directoryExistsAsync(file: string): Promise<boolean> {
   return (await fs.stat(file).catch(() => null))?.isDirectory() ?? false;
 }
 
 export async function clearNativeFolder(projectRoot: string, folders: string[]) {
-  const step = CreateApp.logNewSection(`Clearing ${folders.join(', ')}`);
+  const step = logNewSection(`Clearing ${folders.join(', ')}`);
   try {
     await Promise.all(folders.map(folderName => fs.remove(path.join(projectRoot, folderName))));
     step.succeed(`Cleared ${folders.join(', ')} code`);
