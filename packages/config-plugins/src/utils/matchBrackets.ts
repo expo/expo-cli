@@ -51,28 +51,6 @@ export function findMatchingBracketPosition(
   return -1;
 }
 
-export function replaceContentsWithOffset(
-  contents: string,
-  replacement: string,
-  startOffset: number,
-  endOffset: number
-): string {
-  const contentsLength = contents.length;
-  if (
-    startOffset < 0 ||
-    endOffset < 0 ||
-    startOffset >= contentsLength ||
-    endOffset >= contentsLength ||
-    startOffset > endOffset
-  ) {
-    throw new Error('Invalid parameters.');
-  }
-  const prefix = contents.substring(0, startOffset);
-  const suffix = contents.substring(endOffset + 1);
-
-  return `${prefix}${replacement}${suffix}`;
-}
-
 function isLeftBracket(bracket: Bracket): boolean {
   const leftBracketList: readonly Bracket[] = LEFT_BRACKETS;
   return leftBracketList.includes(bracket);

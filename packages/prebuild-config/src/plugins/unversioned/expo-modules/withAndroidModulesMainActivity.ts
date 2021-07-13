@@ -2,6 +2,7 @@ import {
   AndroidConfig,
   ConfigPlugin,
   findMatchingBracketPosition,
+  findNewInstanceCodeBlock,
   replaceContentsWithOffset,
   withMainActivity,
 } from '@expo/config-plugins';
@@ -63,7 +64,7 @@ export function setModulesMainActivity(mainActivity: string, language: 'java' | 
     return mainActivity;
   }
 
-  // If override `createReactActivityDelegate()` already, return original delegate with wrapper.
+  // If override `createReactActivityDelegate()` already, wrap it with `ReactActivityDelegateWrapper`
   if (!mainActivity.match(/\s+ReactActivityDelegateWrapper\(/m)) {
     mainActivity = AndroidConfig.UserInterfaceStyle.addJavaImports(
       mainActivity,
@@ -71,24 +72,24 @@ export function setModulesMainActivity(mainActivity: string, language: 'java' | 
       isJava
     );
 
-    const startOffset =
-      (isJava
-        ? mainActivity.indexOf(' new ReactActivityDelegate(')
-        : mainActivity.search(/ (object\s*:\s*)?ReactActivityDelegate\(/)) + 1; // `+ 1` for the prefix space
-    let endOffset = findMatchingBracketPosition(mainActivity, '(', startOffset);
-
-    const nextBrace = mainActivity.indexOf('{', endOffset + 1);
-    const isAnonymousClassObject =
-      nextBrace >= endOffset && !!mainActivity.substring(endOffset + 1, nextBrace).match(/^\s*$/m);
-    if (isAnonymousClassObject) {
-      endOffset = findMatchingBracketPosition(mainActivity, '{', endOffset);
+    const newInstanceCodeBlock = findNewInstanceCodeBlock(
+      mainActivity,
+      'ReactActivityDelegate',
+      language
+    );
+    if (newInstanceCodeBlock == null) {
+      throw new Error('Unable to find ReactActivityDelegate new instance code block.');
     }
 
-    const wrappedContent = mainActivity.substring(startOffset, endOffset + 1);
     const replacement = isJava
-      ? `new ReactActivityDelegateWrapper(this, ${wrappedContent})`
-      : `ReactActivityDelegateWrapper(this, ${wrappedContent})`;
-    mainActivity = replaceContentsWithOffset(mainActivity, replacement, startOffset, endOffset);
+      ? `new ReactActivityDelegateWrapper(this, ${newInstanceCodeBlock.code})`
+      : `ReactActivityDelegateWrapper(this, ${newInstanceCodeBlock.code})`;
+    mainActivity = replaceContentsWithOffset(
+      mainActivity,
+      replacement,
+      newInstanceCodeBlock.start,
+      newInstanceCodeBlock.end
+    );
 
     return mainActivity;
   }
