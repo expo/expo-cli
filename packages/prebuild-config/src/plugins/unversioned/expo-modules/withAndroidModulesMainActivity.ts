@@ -1,7 +1,6 @@
 import {
   AndroidConfig,
   ConfigPlugin,
-  findMatchingBracketPosition,
   findNewInstanceCodeBlock,
   replaceContentsWithOffset,
   withMainActivity,
