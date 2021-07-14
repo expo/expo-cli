@@ -49,6 +49,7 @@ export {
   withAndroidColorsNight,
   withAndroidStyles,
   withMainActivity,
+  withMainApplication,
   withProjectBuildGradle,
   withAppBuildGradle,
   withSettingsGradle,
