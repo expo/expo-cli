@@ -1,122 +1,117 @@
 import Log from '@expo/bunyan';
 import { getBareExtensions } from '@expo/config/paths';
-import merge from 'deepmerge';
 import { BuildOptions } from 'esbuild';
-import fs from 'fs-extra';
+import fs from 'fs';
 import path from 'path';
 import resolveFrom from 'resolve-from';
 import { resolveEntryPoint } from 'xdl/build/tools/resolveEntryPoint';
 
-import { mergePlugins, setAssetLoaders, setPlugins } from './utils';
+import {
+  getAssetExtensions,
+  getBundleEnvironment,
+  getMainFields,
+  isDebug,
+} from './bundlerSettings';
+import aliasPlugin from './plugins/aliasPlugin';
+import loggingPlugin from './plugins/loggingPlugin';
+import patchPlugin from './plugins/patchPlugin';
+import reactNativeAssetsPlugin from './plugins/reactNativeAssetsPlugin';
+import stripFlowTypesPlugin from './plugins/stripFlowTypesPlugin';
 
-const assetExts =  ['bmp', 'gif', 'jpg', 'jpeg', 'png', 'psd', 'svg', 'webp', 'm4v', 'mov', 'mp4', 'mpeg', 'mpg', 'webm', 'aac', 'aiff', 'caf', 'm4a', 'mp3',  'wav', 'html', 'pdf', 'yaml', 'yml', 'otf', 'ttf', 'zip', 'db'] //prettier-ignore
+function setAssetLoaders(assetExts: string[]) {
+  return assetExts.reduce<Record<string, string>>(
+    (loaders, ext) => ({ ...loaders, ['.' + ext]: 'file' }),
+    {}
+  );
+}
 
-const native = {
-  target: 'esnext',
-  format: 'iife',
-  plugins: [
-    { name: 'expoLogging' },
-    {
-      name: 'stripFlowTypes',
-      params: [
-        'react-native',
-        '@react-native-community/masked-view',
-        'expo-asset-utils',
-        '@react-native-picker/picker',
-        '@react-native-segmented-control/segmented-control',
-        '@react-native-community/datetimepicker',
-        '@react-native-async-storage/async-storage',
-        'react-native-view-shot',
-        'react-native-gesture-handler',
-        '@react-native-community/toolbar-android',
-        '@react-native/normalize-color',
-        '@react-native/assets',
-        '@react-native/polyfills',
-      ],
-    },
-    {
-      name: 'reactNativeAssets',
-      params: assetExts,
-    },
-    { name: 'patches' },
-  ],
-};
-
-const config: { ios: any; android: any; web: any; native: any } = {
-  web: {
-    target: 'es2020',
-    format: 'esm',
-    plugins: [
-      { name: 'expoLogging' },
-      {
-        name: 'alias',
-        params: {
-          // TODO: Dynamic
-          'react-native': './node_modules/react-native-web/dist/index.js',
-        },
-      },
-    ],
-  },
-  native,
-  ios: native,
-  android: native,
-};
-
-async function getBuildOptions(
+export function loadConfig(
   projectRoot: string,
-  logger: Log,
   {
+    logger,
     platform,
-    minify,
+    isDev,
     cleanCache,
-  }: { platform: keyof typeof config; minify?: boolean; cleanCache?: boolean },
-  customConfig?: any
+    config,
+  }: {
+    logger: Log;
+    platform: 'ios' | 'android' | 'web';
+    isDev: boolean;
+    cleanCache?: boolean;
+    config?: Partial<BuildOptions>;
+  }
 ) {
-  const filename = resolveEntryPoint(projectRoot, platform);
-
+  const distFolder = path.resolve(projectRoot, `dist`);
   const outputPath = path.resolve(`dist/index.${platform}.js`);
-  await fs.ensureDir(path.dirname(outputPath));
+  fs.mkdirSync(path.dirname(outputPath), { recursive: true });
 
-  const base: BuildOptions = {
-    entryPoints: [filename || 'App.js'],
+  const assetExtensions = getAssetExtensions();
+  const buildOptions: BuildOptions = {
+    ...(config || {}),
+    entryPoints: [resolveEntryPoint(projectRoot, platform)],
     outfile: outputPath,
     assetNames: 'assets/[name]',
     publicPath: '/',
-    minify,
+    minify: !isDev,
     write: true,
     bundle: true,
-    legalComments: 'none',
+    // For now, remove all comments so the client can download the bundle faster.
+    legalComments: isDev ? 'none' : 'eof',
+    // This helps the source maps be located in the correct place.
+    // Without it, tapping the stack traces will open to the wrong place.
+    sourceRoot: distFolder,
     sourcemap: true,
     incremental: true,
-    logLevel: 'debug',
-    mainFields: ['react-native', 'browser', 'module', 'main'],
-    define: {
-      'process.env.JEST_WORKER_ID': 'false',
-      'process.env.NODE_DEV': minify ? '"production"' : '"development"',
-      __DEV__: minify ? 'false' : 'true',
-      global: 'window',
-    },
-    loader: { '.js': 'jsx', ...setAssetLoaders(assetExts) },
-    resolveExtensions: getBareExtensions([platform, 'native'], {
+    logLevel: isDebug ? 'verbose' : 'debug',
+    mainFields: getMainFields(platform),
+    define: getBundleEnvironment({ isDev }),
+    loader: { '.js': 'jsx', ...setAssetLoaders(assetExtensions) },
+  };
+  if (!buildOptions.plugins) {
+    buildOptions.plugins = [];
+  }
+
+  if (platform !== 'web') {
+    buildOptions.target = 'esnext';
+    buildOptions.format = 'iife';
+
+    buildOptions.resolveExtensions = getBareExtensions([platform, 'native'], {
       isModern: false,
       isTS: true,
       isReact: true,
-    }).map(value => '.' + value),
-  };
+    }).map(value => '.' + value);
 
-  if (platform !== 'web') {
-    if (!base.plugins) {
-      base.plugins = [];
-    }
+    buildOptions.plugins.push(
+      stripFlowTypesPlugin(
+        projectRoot,
+        [
+          'react-native',
+          '@react-native-community/masked-view',
+          'expo-asset-utils',
+          '@react-native-picker/picker',
+          '@react-native-segmented-control/segmented-control',
+          '@react-native-community/datetimepicker',
+          '@react-native-async-storage/async-storage',
+          'react-native-view-shot',
+          'react-native-gesture-handler',
+          '@react-native-community/toolbar-android',
+          '@react-native/normalize-color',
+          '@react-native/assets',
+          '@react-native/polyfills',
+        ],
+        cleanCache
+      ),
+      loggingPlugin(logger),
+      reactNativeAssetsPlugin(projectRoot, platform, assetExtensions),
+      patchPlugin(),
+      aliasPlugin({
+        // TODO: Make this interface more like { 'react-native-vector-icons': '@expo/vector-icons' }
+        // TODO: Make optional
+        'react-native-vector-icons/': resolveFrom(projectRoot, '@expo/vector-icons'),
+      })
+    );
 
-    base.plugins.push({
-      name: 'alias',
-      params: {
-        'react-native-vector-icons/': resolveFrom.silent(projectRoot, '@expo/vector-icons'),
-      },
-    });
-
-    base.inject = [
+    buildOptions.inject = [
       resolveRelative(projectRoot, 'react-native/Libraries/polyfills/console.js'),
       resolveRelative(projectRoot, 'react-native/Libraries/polyfills/error-guard.js'),
       resolveRelative(projectRoot, 'react-native/Libraries/polyfills/Object.es7.js'),
@@ -124,19 +119,31 @@ async function getBuildOptions(
       resolveRelative(projectRoot, 'react-native/Libraries/Core/InitializeCore.js'),
     ];
   } else {
-    base.inject = [resolveFrom(projectRoot, 'setimmediate/setImmediate.js')];
-  }
+    buildOptions.target = 'es2020';
+    buildOptions.format = 'esm';
 
-  const buildOptions: BuildOptions = merge.all([base, config[platform], customConfig]);
-  const mergedPlugins = mergePlugins(config[platform].plugins, customConfig?.plugins);
-  buildOptions.plugins = setPlugins(projectRoot, logger, mergedPlugins, platform, cleanCache);
+    buildOptions.resolveExtensions = getBareExtensions([platform], {
+      isModern: false,
+      isTS: true,
+      isReact: true,
+    }).map(value => '.' + value);
+
+    buildOptions.plugins.push(
+      loggingPlugin(logger),
+      aliasPlugin({
+        'react-native-vector-icons/': resolveFrom(projectRoot, '@expo/vector-icons'),
+      })
+    );
+
+    buildOptions.inject = [resolveFrom(projectRoot, 'setimmediate/setImmediate.js')];
+  }
 
   // Append to the top of the bundle
   if (!buildOptions.banner) {
     buildOptions.banner = { js: '' };
   }
 
-  if (platform === 'web' && !minify) {
+  if (platform === 'web' && isDev) {
     buildOptions.banner.js =
       `(() => new EventSource("/esbuild").onmessage = () => location.reload())();\n` +
       buildOptions.banner.js;
@@ -149,7 +156,7 @@ async function getBuildOptions(
 var window = typeof globalThis !== 'undefined' ? globalThis : typeof global !== 'undefined' ? global : typeof window !== 'undefined' ? window : this;`;
   }
 
-  return { buildOptions, mergedPlugins };
+  return buildOptions;
 }
 
 function resolveRelative(projectRoot: string, moduleId: string): string {
@@ -157,5 +164,3 @@ function resolveRelative(projectRoot: string, moduleId: string): string {
   if (_path.startsWith('.')) return _path;
   return './' + _path;
 }
-
-export default getBuildOptions;

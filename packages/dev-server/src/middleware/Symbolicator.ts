@@ -1,11 +1,8 @@
 import { codeFrameColumns } from '@babel/code-frame';
+import type Log from '@expo/bunyan';
 import fs from 'fs';
-import path from 'path';
 import { SourceMapConsumer } from 'source-map';
 import { URL } from 'url';
-import { promisify } from 'util';
-
-const readFileAsync = promisify(fs.readFile);
 
 /**
  * Raw React Native stack frame.
@@ -20,7 +17,7 @@ export interface ReactNativeStackFrame {
 /**
  * React Native stack frame used as input when processing by {@link Symbolicator}.
  */
-export interface InputStackFrame extends ReactNativeStackFrame {
+interface InputStackFrame extends ReactNativeStackFrame {
   file: string;
 }
 
@@ -92,21 +89,13 @@ export class Symbolicator {
    */
   sourceMapConsumerCache: Record<string, SourceMapConsumer> = {};
 
-  /**
-   * Constructs new `Symbolicator` instance.
-   *
-   * @param projectRoot Absolute path to root directory of the project.
-   * @param logger Fastify logger instance.
-   * @param readFileFromBundler Function to read arbitrary file from the bundler.
-   * @param readSourceMapFromBundler Function to read Source Map file from bundler.
-   */
   constructor(
-    private projectRoot: string,
-    private distFolder: string,
-    private logger: { error: (message: string) => void },
-    private customizeFrame: (frame: StackFrame) => StackFrame,
-    private readFileFromBundler: (fileUrl: string) => Promise<string>,
-    private readSourceMapFromBundler: (fileUrl: string) => Promise<string>
+    private props: {
+      logger: Log;
+      customizeFrame: (frame: StackFrame) => StackFrame;
+      readFileFromBundler: (fileUrl: string) => Promise<string>;
+      readSourceMapFromBundler: (fileUrl: string) => Promise<string>;
+    }
   ) {}
 
   /**
@@ -125,7 +114,7 @@ export class Symbolicator {
     const frames: InputStackFrame[] = [];
     for (const frame of stack) {
       const { file } = frame;
-      if (file?.startsWith('http') && !file.includes('debuggerWorker')) {
+      if (file?.startsWith('http')) {
         frames.push(frame as InputStackFrame);
       }
     }
@@ -134,11 +123,11 @@ export class Symbolicator {
       const processedFrames: StackFrame[] = [];
       for (const frame of frames) {
         if (!this.sourceMapConsumerCache[frame.file]) {
-          const rawSourceMap = await this.readSourceMapFromBundler(frame.file);
+          const rawSourceMap = await this.props.readSourceMapFromBundler(frame.file);
           const sourceMapConsumer = await new SourceMapConsumer(rawSourceMap as any);
           this.sourceMapConsumerCache[frame.file] = sourceMapConsumer;
         }
-        const processedFrame = this.customizeFrame(this.processFrame(frame));
+        const processedFrame = this.props.customizeFrame(this.processFrame(frame));
         processedFrames.push(processedFrame);
       }
 
@@ -148,7 +137,6 @@ export class Symbolicator {
       };
     } finally {
       for (const key in this.sourceMapConsumerCache) {
-        // this.sourceMapConsumerCache[key].destroy();
         delete this.sourceMapConsumerCache[key];
       }
     }
@@ -189,7 +177,7 @@ export class Symbolicator {
     return {
       lineNumber: lookup.line || frame.lineNumber,
       column: lookup.column || frame.column,
-      file: path.join(this.distFolder, lookup.source),
+      file: lookup.source,
       methodName: lookup.name || frame.methodName,
       collapse: false,
     };
@@ -206,10 +194,10 @@ export class Symbolicator {
         let source;
         if (frame.file.startsWith('http') && frame.file.includes('index.bundle')) {
           filename = frame.file;
-          source = await this.readFileFromBundler('/index.bundle');
+          source = await this.props.readFileFromBundler('/index.bundle');
         } else {
           filename = frame.file;
-          source = await readFileAsync(filename, 'utf8');
+          source = await fs.promises.readFile(filename, 'utf8');
         }
 
         return {
@@ -227,7 +215,10 @@ export class Symbolicator {
           fileName: filename,
         };
       } catch (error) {
-        this.logger.error('Failed to create code frame: ' + error.message);
+        this.props.logger.error(
+          { tag: 'dev-server' },
+          'Failed to create code frame: ' + error.message
+        );
       }
     }
     return undefined;

@@ -7,7 +7,7 @@ export default function loggingPlugin(logger: Log) {
     setup(build) {
       build.onStart(() => {
         logger.info(
-          { tag: 'metro' },
+          { tag: 'dev-server' },
           JSON.stringify({
             type: 'bundle_build_started',
             id: Date.now(),
@@ -18,7 +18,7 @@ export default function loggingPlugin(logger: Log) {
       build.onEnd((result: any) => {
         if (result.errors.length) {
           logger.info(
-            { tag: 'metro' },
+            { tag: 'dev-server' },
             JSON.stringify({
               type: 'bundle_build_failed',
               id: Date.now(),
@@ -26,7 +26,7 @@ export default function loggingPlugin(logger: Log) {
           );
         } else {
           logger.info(
-            { tag: 'metro' },
+            { tag: 'dev-server' },
             JSON.stringify({
               type: 'bundle_build_done',
               id: Date.now(),

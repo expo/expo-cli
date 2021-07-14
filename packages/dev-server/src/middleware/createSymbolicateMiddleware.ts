@@ -15,25 +15,26 @@ function getFilenameFromUrl(url: string): string {
 
 // TODO: For some reason the LogBox shows the error as unsymbolicated until you interact with the page.
 
-export function createSymbolicateMiddleware(
-  projectRoot: string,
-  logger: Log,
-  customizeFrame: (frame: StackFrame) => StackFrame,
-  hostedDirectory: string
-) {
-  const symbolicator = new Symbolicator(
-    projectRoot,
-    hostedDirectory,
+export function createSymbolicateMiddleware({
+  logger,
+  customizeFrame,
+  dist,
+}: {
+  logger: Log;
+  customizeFrame: (frame: StackFrame) => StackFrame;
+  dist: string;
+}) {
+  const symbolicator = new Symbolicator({
     logger,
     customizeFrame,
-    async fileUrl => {
+    async readFileFromBundler(fileUrl: string) {
       throw new Error('unimplemented -- TODO');
     },
-    async (fileUrl: string) => {
+    async readSourceMapFromBundler(fileUrl: string) {
       // http://127.0.0.1:19000/index.bundle?platform=ios&dev=true&hot=false&minify=false
       const fileName = getFilenameFromUrl(fileUrl);
       if (fileName) {
-        const filePath = path.join(hostedDirectory, fileName);
+        const filePath = path.join(dist, fileName);
         const fallbackSourceMapFilename = `${filePath}.map`;
         // TODO: Read from some kinda cache
         const bundle = await fs.promises.readFile(fallbackSourceMapFilename, 'utf8');
@@ -64,8 +65,8 @@ export function createSymbolicateMiddleware(
       } else {
         throw new Error(`Cannot infer filename from url: ${fileUrl}`);
       }
-    }
-  );
+    },
+  });
   return async function (
     req: IncomingMessage & { body?: any; rawBody?: any },
     res: ServerResponse
@@ -86,8 +87,7 @@ export function createSymbolicateMiddleware(
         return;
       }
 
-      const results = await symbolicator.process(stack);
-      res.end(JSON.stringify(results));
+      res.end(JSON.stringify(await symbolicator.process(stack)));
     } catch (error) {
       logger.error({ tag: 'expo' }, `Failed to symbolicate: ${error} ${error.stack}`);
       res.statusCode = 500;

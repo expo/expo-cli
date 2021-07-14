@@ -9,11 +9,11 @@ function camelize(text: string) {
   return text.substr(0, 1).toLowerCase() + text.substr(1);
 }
 
-function assetsPlugin(projectRoot: string, platform: string, assetExts: string[]) {
+function reactNativeAssetsPlugin(projectRoot: string, platform: string, assetExts: string[]) {
   const filter = new RegExp(assetExts.map(ext => `[.]${ext}$`).join('|'));
 
   const plugin: Plugin = {
-    name: 'assets',
+    name: 'reactNativeAssets',
     setup(build) {
       build.onResolve({ filter }, args => {
         let assetFile;
@@ -60,4 +60,4 @@ function assetsPlugin(projectRoot: string, platform: string, assetExts: string[]
   return plugin;
 }
 
-export default assetsPlugin;
+export default reactNativeAssetsPlugin;

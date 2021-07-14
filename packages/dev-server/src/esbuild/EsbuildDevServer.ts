@@ -24,7 +24,7 @@ import { createSymbolicateMiddleware } from '../middleware/createSymbolicateMidd
 import { remoteDevtoolsCorsMiddleware } from '../middleware/remoteDevtoolsCorsMiddleware';
 import { remoteDevtoolsSecurityHeadersMiddleware } from '../middleware/remoteDevtoolsSecurityHeadersMiddleware';
 import { replaceMiddlewareWith } from '../middleware/replaceMiddlewareWith';
-import getBuildOptions from './EsbuildConfig';
+import { loadConfig } from './EsbuildConfig';
 
 const nativeMiddleware = (port: number, _platform: string) => (
   req: IncomingMessage,
@@ -112,17 +112,13 @@ export async function startDevServerAsync(
 
   ensureDirSync(path.join(projectRoot, '.expo/esbuild/cache'));
 
-  const { buildOptions } = await getBuildOptions(
-    projectRoot,
-    options.logger,
-    {
-      platform,
-      // TODO: dev
-      minify: false,
-      cleanCache: options.resetCache,
-    },
-    {}
-  );
+  const buildOptions = loadConfig(projectRoot, {
+    logger: options.logger,
+    platform,
+    isDev: true,
+    cleanCache: options.resetCache,
+    // config: {}
+  });
 
   let reload: Function;
   const liveReload = true;
@@ -131,14 +127,13 @@ export async function startDevServerAsync(
     watch: {
       onRebuild(error, result) {
         if (error) {
-          options.logger.error({ tag: 'esbuild' }, `watch build failed: ${error}`);
-
+          options.logger.error({ tag: 'dev-server' }, `Failed to watch build changes: ${error}`);
           throw error;
         }
 
         options.logger.info(
-          { tag: 'esbuild' },
-          `rebuild succeeded. errors: ${result?.errors.length}, warnings: ${result?.warnings.length}`
+          { tag: 'dev-server' },
+          `Rebuild succeeded. errors: ${result?.errors.length}, warnings: ${result?.warnings.length}`
         );
 
         if (liveReload && reload) {
@@ -151,7 +146,7 @@ export async function startDevServerAsync(
   const dist = './dist';
   return new Promise((res, rej) => {
     esbuild
-      .serve({ servedir: dist }, buildOptions)
+      .serve({ servedir: dist }, {})
       .then(() => {
         const { middleware, attachToServer } = createDevServerMiddleware({
           host: '127.0.0.1',
@@ -175,12 +170,11 @@ export async function startDevServerAsync(
         middleware.use(bodyParser.json());
         middleware.use(
           '/symbolicate',
-          createSymbolicateMiddleware(
-            projectRoot,
-            options.logger,
+          createSymbolicateMiddleware({
+            logger: options.logger,
             customizeFrame,
-            path.join(projectRoot, dist)
-          )
+            dist: path.join(projectRoot, dist),
+          })
         );
         middleware.use('/logs', clientLogsMiddleware(options.logger));
         middleware.use('/inspector', createJsInspectorMiddleware());

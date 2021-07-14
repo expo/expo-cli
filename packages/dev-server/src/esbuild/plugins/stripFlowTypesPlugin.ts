@@ -26,7 +26,7 @@ function moduleRoot(projectRoot: string, moduleId: string) {
   return null;
 }
 
-function removeFlowPlugin(projectRoot: string, modules: string[], cleanCache?: boolean) {
+function stripFlowTypesPlugin(projectRoot: string, modules: string[], cleanCache?: boolean) {
   if (fs.existsSync(cacheFile) && !cleanCache) {
     cache = new Map(JSON.parse(fs.readFileSync(cacheFile).toString()));
   }
@@ -43,7 +43,7 @@ function removeFlowPlugin(projectRoot: string, modules: string[], cleanCache?: b
   );
 
   const plugin: Plugin = {
-    name: 'removeFlow',
+    name: 'stripFlowTypes',
     setup(build) {
       build.onLoad({ filter: packagesRemoveFlow, namespace: 'file' }, async args => {
         const relpath = path.relative(process.cwd(), args.path);
@@ -70,4 +70,4 @@ function removeFlowPlugin(projectRoot: string, modules: string[], cleanCache?: b
   return plugin;
 }
 
-export default removeFlowPlugin;
+export default stripFlowTypesPlugin;
