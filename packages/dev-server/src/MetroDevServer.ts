@@ -6,7 +6,7 @@ import {
   securityHeadersMiddleware,
 } from '@react-native-community/cli-server-api';
 import bodyParser from 'body-parser';
-import type { Server as ConnectServer, HandleFunction } from 'connect';
+import type { Server as ConnectServer } from 'connect';
 import http from 'http';
 import type Metro from 'metro';
 import path from 'path';
