@@ -1,4 +1,9 @@
-import { findNewInstanceCodeBlock, replaceContentsWithOffset } from '../androidCode';
+import {
+  appendCodeInsideMethodBlock,
+  findNewInstanceCodeBlock,
+  insertContentsAtOffset,
+  replaceContentsWithOffset,
+} from '../androidCode';
 
 describe(findNewInstanceCodeBlock, () => {
   it('should support classic new instance - java', () => {
@@ -69,8 +74,59 @@ describe(findNewInstanceCodeBlock, () => {
   });
 });
 
+describe(appendCodeInsideMethodBlock, () => {
+  it('should', () => {
+    const contents = `
+public class App {
+  public static void main(String[] args) {
+    System.out.println("Hello App!");
+  }
+}`;
+
+    const expectContents = `
+public class App {
+  public static void main(String[] args) {
+    System.out.println("Hello App!");
+    System.out.println("Hello from generated code.");
+  }
+}`;
+
+    expect(
+      appendCodeInsideMethodBlock(
+        contents,
+        'main',
+        '  System.out.println("Hello from generated code.");\n  '
+      )
+    ).toEqual(expectContents);
+  });
+});
+
+describe(insertContentsAtOffset, () => {
+  it('should insert in the middle', () => {
+    expect(insertContentsAtOffset('aabbcc', 'dd', 4)).toEqual('aabbddcc');
+  });
+
+  it('should insert at the head', () => {
+    expect(insertContentsAtOffset('aabbcc', 'dd', 0)).toEqual('ddaabbcc');
+  });
+
+  it('should insert at the tail', () => {
+    expect(insertContentsAtOffset('aabbcc', 'dd', 6)).toEqual('aabbccdd');
+  });
+
+  it('should throw for boundary errors', () => {
+    expect(() => {
+      insertContentsAtOffset('aabbcc', 'dd', -1);
+    }).toThrow();
+    expect(() => {
+      insertContentsAtOffset('aabbcc', 'dd', 999);
+    }).toThrow();
+  });
+});
+
 describe(replaceContentsWithOffset, () => {
   it('should support replacement in the middle', () => {
+    expect(replaceContentsWithOffset('abc', 'd', 1, 1)).toEqual('adc');
     expect(replaceContentsWithOffset('aabbcc', '', 2, 3)).toEqual('aacc');
     expect(replaceContentsWithOffset('aabbcc', 'dd', 2, 3)).toEqual('aaddcc');
     expect(replaceContentsWithOffset('aabbcc', 'ExtendString', 2, 3)).toEqual('aaExtendStringcc');

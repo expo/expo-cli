@@ -49,7 +49,39 @@ export function findNewInstanceCodeBlock(
   };
 }
 
-// export function
+export function appendCodeInsideMethodBlock(
+  srcContents: string,
+  methodName: string,
+  code: string
+): string {
+  const start = srcContents.indexOf(` ${methodName}(`);
+  if (start < 0) {
+    throw new Error(`Unable to find method block - methodName[${methodName}]`);
+  }
+  const end = findMatchingBracketPosition(srcContents, '{', start);
+  return insertContentsAtOffset(srcContents, code, end);
+}
+
+export function insertContentsAtOffset(
+  srcContents: string,
+  insertion: string,
+  offset: number
+): string {
+  const srcContentsLength = srcContents.length;
+  if (offset < 0 || offset > srcContentsLength) {
+    throw new Error('Invalid parameters.');
+  }
+  if (offset === 0) {
+    return `${insertion}${srcContents}`;
+  } else if (offset === srcContentsLength) {
+    return `${srcContents}${insertion}`;
+  }
+
+  const prefix = srcContents.substring(0, offset);
+  const suffix = srcContents.substring(offset);
+  return `${prefix}${insertion}${suffix}`;
+}
+
 export function replaceContentsWithOffset(
   contents: string,
   replacement: string,
@@ -68,6 +100,5 @@ export function replaceContentsWithOffset(
   }
   const prefix = contents.substring(0, startOffset);
   const suffix = contents.substring(endOffset + 1);
-
   return `${prefix}${replacement}${suffix}`;
 }
