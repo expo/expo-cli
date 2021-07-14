@@ -1,4 +1,4 @@
-import Log from '@expo/bunyan';
+import type Log from '@expo/bunyan';
 import { ExpoConfig, getConfigFilePaths } from '@expo/config';
 import * as ExpoMetroConfig from '@expo/metro-config';
 import {
@@ -7,7 +7,7 @@ import {
 } from '@react-native-community/cli-server-api';
 import bodyParser from 'body-parser';
 import type { Server as ConnectServer } from 'connect';
-import http from 'http';
+import type http from 'http';
 import type Metro from 'metro';
 import path from 'path';
 import resolveFrom from 'resolve-from';
