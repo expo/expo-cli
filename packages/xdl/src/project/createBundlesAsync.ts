@@ -87,6 +87,30 @@ export async function createBundlesAsync(
   const config = getConfig(projectRoot, { skipSDKVersionRequirement: true });
   const isLegacy = isLegacyImportsEnabled(config.exp);
   const platforms: Platform[] = ['android', 'ios'];
+  if (process.env.EXPO_BUNDLER === 'esbuild') {
+    const { bundleAsync } = await import('@expo/dev-server/build/esbuild/EsbuildDevServer');
+    const [android, ios] = await bundleAsync(
+      projectRoot,
+      config.exp,
+      {
+        // If not legacy, ignore the target option to prevent warnings from being thrown.
+        target: !isLegacy ? undefined : publishOptions.target,
+        resetCache: publishOptions.resetCache,
+        logger: ProjectUtils.getLogger(projectRoot),
+        quiet: publishOptions.quiet,
+      },
+      platforms.map((platform: Platform) => ({
+        platform,
+        entryPoint: resolveEntryPoint(projectRoot, platform),
+        dev: bundleOptions.dev,
+      }))
+    );
+
+    return {
+      android,
+      ios,
+    };
+  }
   const [android, ios] = await bundleAsync(
     projectRoot,
     config.exp,

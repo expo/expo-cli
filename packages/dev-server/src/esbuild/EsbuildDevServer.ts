@@ -82,7 +82,7 @@ const nativeMiddleware = (port: number, _platform: string) => (
 
 export async function startDevServerAsync(
   projectRoot: string,
-  options: MetroDevServerOptions
+  options: MetroDevServerOptions & { isDev?: boolean }
 ): Promise<{
   server: http.Server;
   middleware: any;
@@ -115,13 +115,13 @@ export async function startDevServerAsync(
   const buildOptions = loadConfig(projectRoot, {
     logger: options.logger,
     platform,
-    isDev: true,
+    isDev: !!options.isDev,
     cleanCache: options.resetCache,
     // config: {}
   });
 
   let reload: Function;
-  const liveReload = true;
+  const liveReload = !!options.isDev;
   await esbuild.build({
     ...buildOptions,
     watch: {
@@ -201,7 +201,22 @@ export async function bundleAsync(
   bundles: BundleOptions[]
 ): Promise<BundleOutput[]> {
   // TODO
-  throw new Error('no imp');
+
+  throw new Error('unimp');
+  // const { server } = await startDevServerAsync(projectRoot, { ...options, isDev: false });
+
+  // async function buildAsync(bundle: BundleOptions) {}
+
+  // try {
+  //   return await Promise.all(
+  //     bundles.map(async (bundle: BundleOptions) => {
+  //       const bundleOutput = await buildAsync(bundle);
+  //       return maybeAddHermesBundleAsync(bundle, bundleOutput);
+  //     })
+  //   );
+  // } finally {
+  //   server.close();
+  // }
 }
 
 // TODO: Import from project

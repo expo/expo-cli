@@ -68,7 +68,7 @@ export async function startDevServerAsync(
   if (process.env.EXPO_BUNDLER === 'esbuild') {
     // lazy load esbuild
     const { startDevServerAsync } = await import('@expo/dev-server/build/esbuild/EsbuildDevServer');
-    serverInfo = await startDevServerAsync(projectRoot, options);
+    serverInfo = await startDevServerAsync(projectRoot, { ...options, isDev: true });
   } else {
     // lazy load metro
     const { runMetroDevServerAsync } = await import('@expo/dev-server');
