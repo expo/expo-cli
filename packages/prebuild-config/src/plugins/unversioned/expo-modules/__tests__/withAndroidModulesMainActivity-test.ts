@@ -10,7 +10,7 @@ package com.helloworld;
 import com.facebook.react.ReactActivity;
 	
 public class MainActivity extends ReactActivity {
-	
+
   /**
    * Returns the name of the main component registered from JavaScript. This is used to schedule
    * rendering of the component.
@@ -29,13 +29,7 @@ import com.facebook.react.ReactActivityDelegate;
 import com.facebook.react.ReactActivity;
 	
 public class MainActivity extends ReactActivity {
-  @Override
-  protected ReactActivityDelegate createReactActivityDelegate() {
-    return new ReactActivityDelegateWrapper(this,
-      new ReactActivityDelegate(this, getMainComponentName())
-    );
-  }
-	
+
   /**
    * Returns the name of the main component registered from JavaScript. This is used to schedule
    * rendering of the component.
@@ -44,13 +38,20 @@ public class MainActivity extends ReactActivity {
   protected String getMainComponentName() {
     return "HelloWorld";
   }
+
+  @Override
+  protected ReactActivityDelegate createReactActivityDelegate() {
+    return new ReactActivityDelegateWrapper(this,
+      new ReactActivityDelegate(this, getMainComponentName())
+    );
+  }
 }`;
 
     const contents = setModulesMainActivity(rawContents, 'java');
-    expect(stripGeneratedComment(contents, '//')).toEqual(expectContents);
+    expect(contents).toEqual(expectContents);
     // Try it twice...
     const nextContents = setModulesMainActivity(contents, 'java');
-    expect(stripGeneratedComment(nextContents, '//')).toEqual(expectContents);
+    expect(nextContents).toEqual(expectContents);
   });
 
   it(`should add createReactActivityDelegate code block if not overridden yet - kotlin`, () => {
@@ -78,11 +79,6 @@ import com.facebook.react.ReactActivityDelegate
 import com.facebook.react.ReactActivity
 
 class MainActivity : ReactActivity() {
-  override fun createReactActivityDelegate(): ReactActivityDelegate {
-    return ReactActivityDelegateWrapper(this,
-      ReactActivityDelegate(this, getMainComponentName())
-    );
-  }
 
   /**
    * Returns the name of the main component registered from JavaScript. This is used to schedule
@@ -91,13 +87,19 @@ class MainActivity : ReactActivity() {
   override fun mainComponentName: String {
     return "HelloWorld"
   }
+
+  override fun createReactActivityDelegate(): ReactActivityDelegate {
+    return ReactActivityDelegateWrapper(this,
+      ReactActivityDelegate(this, getMainComponentName())
+    );
+  }
 }`;
 
     const contents = setModulesMainActivity(rawContents, 'kt');
-    expect(stripGeneratedComment(contents, '//')).toEqual(expectContents);
+    expect(contents).toEqual(expectContents);
     // Try it twice...
     const nextContents = setModulesMainActivity(contents, 'kt');
-    expect(stripGeneratedComment(nextContents, '//')).toEqual(expectContents);
+    expect(nextContents).toEqual(expectContents);
   });
 
   it(`should add ReactActivityDelegateWrapper - java`, () => {
@@ -149,10 +151,10 @@ public class MainActivity extends ReactActivity {
 }`;
 
     const contents = setModulesMainActivity(rawContents, 'java');
-    expect(stripGeneratedComment(contents, '//')).toEqual(expectContents);
+    expect(contents).toEqual(expectContents);
     // Try it twice...
     const nextContents = setModulesMainActivity(contents, 'java');
-    expect(stripGeneratedComment(nextContents, '//')).toEqual(expectContents);
+    expect(nextContents).toEqual(expectContents);
   });
 
   it(`should add ReactActivityDelegateWrapper - kotlin`, () => {
@@ -200,10 +202,10 @@ class MainActivity : ReactActivity() {
 }`;
 
     const contents = setModulesMainActivity(rawContents, 'kt');
-    expect(stripGeneratedComment(contents, '//')).toEqual(expectContents);
+    expect(contents).toEqual(expectContents);
     // Try it twice...
     const nextContents = setModulesMainActivity(contents, 'kt');
-    expect(stripGeneratedComment(nextContents, '//')).toEqual(expectContents);
+    expect(nextContents).toEqual(expectContents);
   });
 
   it(`should add ReactActivityDelegateWrapper for anonymous class - java`, () => {
@@ -269,10 +271,10 @@ public class MainActivity extends ReactActivity {
 }`;
 
     const contents = setModulesMainActivity(rawContents, 'java');
-    expect(stripGeneratedComment(contents, '//')).toEqual(expectContents);
+    expect(contents).toEqual(expectContents);
     // Try it twice...
     const nextContents = setModulesMainActivity(contents, 'java');
-    expect(stripGeneratedComment(nextContents, '//')).toEqual(expectContents);
+    expect(nextContents).toEqual(expectContents);
   });
 
   it(`should add ReactActivityDelegateWrapper for anonymous class - kotlin`, () => {
@@ -332,17 +334,9 @@ class MainActivity : ReactActivity() {
 }`;
 
     const contents = setModulesMainActivity(rawContents, 'kt');
-    expect(stripGeneratedComment(contents, '//')).toEqual(expectContents);
+    expect(contents).toEqual(expectContents);
     // Try it twice...
     const nextContents = setModulesMainActivity(contents, 'kt');
-    expect(stripGeneratedComment(nextContents, '//')).toEqual(expectContents);
+    expect(nextContents).toEqual(expectContents);
   });
 });
-
-function stripGeneratedComment(contents: string, comment: string): string {
-  const pattern = new RegExp(`^\\s*${comment} @generated (begin|end) `);
-  return contents
-    .split('\n')
-    .filter(line => !line.match(pattern))
-    .join('\n');
-}

@@ -1,11 +1,11 @@
 import {
   AndroidConfig,
+  appendContentsInsideDeclarationBlock,
   ConfigPlugin,
   findNewInstanceCodeBlock,
   replaceContentsWithOffset,
   withMainActivity,
 } from '@expo/config-plugins';
-import { mergeContents } from '@expo/config-plugins/build/utils/generateCode';
 
 export const withAndroidModulesMainActivity: ConfigPlugin = config => {
   return withMainActivity(config, config => {
@@ -20,8 +20,8 @@ export const withAndroidModulesMainActivity: ConfigPlugin = config => {
 export function setModulesMainActivity(mainActivity: string, language: 'java' | 'kt'): string {
   const isJava = language === 'java';
 
-  // If not override `createReactActivityDelegate()`, tries to override with wrapper
-  if (!mainActivity.match(/\s+createReactActivityDelegate\(\)/m)) {
+  if (mainActivity.match(/\s+createReactActivityDelegate\(\)/m) == null) {
+    // If not override `createReactActivityDelegate()`, tries to override with wrapper
     mainActivity = AndroidConfig.UserInterfaceStyle.addJavaImports(
       mainActivity,
       [
@@ -33,38 +33,28 @@ export function setModulesMainActivity(mainActivity: string, language: 'java' | 
 
     const addReactActivityDelegateBlock = isJava
       ? [
-          '  @Override',
+          '\n  @Override',
           '  protected ReactActivityDelegate createReactActivityDelegate() {',
           '    return new ReactActivityDelegateWrapper(this,',
           '      new ReactActivityDelegate(this, getMainComponentName())',
           '    );',
-          '  }',
+          '  }\n',
         ]
       : [
-          '  override fun createReactActivityDelegate(): ReactActivityDelegate {',
+          '\n  override fun createReactActivityDelegate(): ReactActivityDelegate {',
           '    return ReactActivityDelegateWrapper(this,',
           '      ReactActivityDelegate(this, getMainComponentName())',
           '    );',
-          '  }',
+          '  }\n',
         ];
 
-    mainActivity = mergeContents({
-      src: mainActivity,
-      // insert just below ReactActivity declaration
-      anchor: isJava
-        ? /^\s*public\s+class\s+.*\s+extends\s+ReactActivity\s+{.*$/m
-        : /^\s*class\s+.*\s+:\s+ReactActivity\(\)\s+{.*$/m,
-      offset: 1,
-      comment: '//',
-      tag: 'expo-modules-mainActivity-createReactActivityDelegate',
-      newSrc: addReactActivityDelegateBlock.join('\n'),
-    }).contents;
-
-    return mainActivity;
-  }
-
-  // If override `createReactActivityDelegate()` already, wrap it with `ReactActivityDelegateWrapper`
-  if (!mainActivity.match(/\s+ReactActivityDelegateWrapper\(/m)) {
+    mainActivity = appendContentsInsideDeclarationBlock(
+      mainActivity,
+      'class MainActivity',
+      addReactActivityDelegateBlock.join('\n')
+    );
+  } else if (mainActivity.match(/\s+ReactActivityDelegateWrapper\(/m) == null) {
+    // If override `createReactActivityDelegate()` already, wrap it with `ReactActivityDelegateWrapper`
     mainActivity = AndroidConfig.UserInterfaceStyle.addJavaImports(
       mainActivity,
       ['org.unimodules.adapters.react.ReactActivityDelegateWrapper'],
