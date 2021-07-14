@@ -1,11 +1,9 @@
+import { AndroidConfig, ConfigPlugin, withMainApplication } from '@expo/config-plugins';
 import {
-  AndroidConfig,
   appendContentsInsideDeclarationBlock,
-  ConfigPlugin,
   findNewInstanceCodeBlock,
   replaceContentsWithOffset,
-  withMainApplication,
-} from '@expo/config-plugins';
+} from '@expo/config-plugins/build/utils/androidCode';
 
 export const withAndroidModulesMainApplication: ConfigPlugin = config => {
   return withMainApplication(config, config => {

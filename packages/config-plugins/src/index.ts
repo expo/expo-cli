@@ -61,12 +61,6 @@ export { withStaticPlugin } from './plugins/withStaticPlugin';
 export { compileModsAsync, withDefaultBaseMods, evalModsAsync } from './plugins/mod-compiler';
 
 export { PluginError } from './utils/errors';
-export {
-  appendContentsInsideDeclarationBlock,
-  findNewInstanceCodeBlock,
-  replaceContentsWithOffset,
-} from './utils/androidCode';
-export { findMatchingBracketPosition } from './utils/matchBrackets';
 
 export const BaseMods = {
   withAndroidBaseMods,
