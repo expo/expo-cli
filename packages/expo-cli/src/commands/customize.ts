@@ -9,7 +9,7 @@ import prompts from 'prompts';
 
 import Log from '../log';
 
-type Options = { force: boolean };
+type Options = { force: boolean; yes: boolean };
 
 async function maybeWarnToCommitAsync(projectRoot: string) {
   let workingTreeStatus = 'unknown';
@@ -82,7 +82,10 @@ async function generateFilesAsync({
   await Promise.all(promises);
 }
 
-export async function action(projectRoot: string = './', options: Options = { force: false }) {
+export async function action(
+  projectRoot: string = './',
+  options: Options = { force: false, yes: false }
+) {
   // Get the static path (defaults to 'web/')
   // Doesn't matter if expo is installed or which mode is used.
   const { exp } = getConfig(projectRoot, {
@@ -110,9 +113,11 @@ export async function action(projectRoot: string = './', options: Options = { fo
       title: file,
       value: file,
       // @ts-ignore: broken types
-      disabled: !options.force && exists,
+      disabled: !options.force && !options.yes && exists,
       description:
-        options.force && exists ? chalk.red('This will overwrite the existing file') : '',
+        (options.force || options.yes) && exists
+          ? chalk.red('This will overwrite the existing file')
+          : '',
     });
   }
 
@@ -127,21 +132,31 @@ export async function action(projectRoot: string = './', options: Options = { fo
 
   await maybeWarnToCommitAsync(projectRoot);
 
-  const { answer } = await prompts({
-    type: 'multiselect',
-    name: 'answer',
-    message: 'Which files would you like to generate?',
-    hint: '- Space to select. Return to submit',
-    // @ts-ignore: broken types
-    warn: 'File exists, use --force to overwrite it.',
-    limit: values.length,
-    instructions: '',
-    choices: values,
-  });
-  if (!answer || answer.length === 0) {
-    Log.log('\n\u203A Exiting with no change...\n');
-    return;
+  let answer: string[] = [];
+
+  if (options.yes === true) {
+    answer = values.map(({ title }) => title);
+  } else {
+    const { answer: promptsAnswer } = await prompts({
+      type: 'multiselect',
+      name: 'answer',
+      message: 'Which files would you like to generate?',
+      hint: '- Space to select. Return to submit',
+      // @ts-ignore: broken types
+      warn: 'File exists, use --force to overwrite it.',
+      limit: values.length,
+      instructions: '',
+      choices: values,
+    });
+
+    if (!answer || answer.length === 0) {
+      Log.log('\n\u203A Exiting with no change...\n');
+      return;
+    }
+
+    answer = [...promptsAnswer];
   }
+
   await generateFilesAsync({
     projectRoot,
     staticPath,
@@ -157,6 +172,7 @@ export default function (program: Command) {
     .description('Eject the default web files for customization')
     .helpGroup('eject')
     .option('-f, --force', 'Allows replacing existing files')
+    .option('-y, --yes', 'Runs in non-interactive mode and assumes "Yes" as all responses')
     .allowOffline()
     .asyncAction(action);
 }
