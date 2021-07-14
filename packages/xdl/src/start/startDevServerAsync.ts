@@ -1,7 +1,6 @@
-import { ProjectTarget } from '@expo/config';
-import { MessageSocket, MetroDevServerOptions, runMetroDevServerAsync } from '@expo/dev-server';
-import * as EsbuildDevServer from '@expo/dev-server/build/esbuild/EsbuildDevServer';
-import http from 'http';
+import type { ProjectTarget } from '@expo/config';
+import type { MessageSocket, MetroDevServerOptions } from '@expo/dev-server';
+import type http from 'http';
 
 import {
   assertValidProjectRoot,
@@ -67,8 +66,12 @@ export async function startDevServerAsync(
   };
 
   if (process.env.EXPO_BUNDLER === 'esbuild') {
-    serverInfo = await EsbuildDevServer.startDevServerAsync(projectRoot, options);
+    // lazy load esbuild
+    const { startDevServerAsync } = await import('@expo/dev-server/build/esbuild/EsbuildDevServer');
+    serverInfo = await startDevServerAsync(projectRoot, options);
   } else {
+    // lazy load metro
+    const { runMetroDevServerAsync } = await import('@expo/dev-server');
     serverInfo = await runMetroDevServerAsync(projectRoot, options);
   }
 

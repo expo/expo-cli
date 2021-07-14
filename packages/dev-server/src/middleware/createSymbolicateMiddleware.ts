@@ -54,7 +54,7 @@ export function createSymbolicateMiddleware({
         } catch {
           logger.warn(
             {
-              tag: 'expo',
+              tag: 'dev-server',
               sourceMappingUrl,
               sourceMapFilename,
             },
@@ -89,7 +89,7 @@ export function createSymbolicateMiddleware({
 
       res.end(JSON.stringify(await symbolicator.process(stack)));
     } catch (error) {
-      logger.error({ tag: 'expo' }, `Failed to symbolicate: ${error} ${error.stack}`);
+      logger.error({ tag: 'dev-server' }, `Failed to symbolicate: ${error} ${error.stack}`);
       res.statusCode = 500;
       res.end(JSON.stringify({ error: error.message }));
     }
