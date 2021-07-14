@@ -22,6 +22,7 @@ export type BuildProps = {
   terminal?: string;
   port: number;
   scheme: string;
+  prebundle?: boolean;
 };
 
 type XcodeSDKName = 'iphoneos' | 'iphonesimulator';

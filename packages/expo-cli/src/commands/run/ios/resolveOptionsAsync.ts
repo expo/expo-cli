@@ -1,5 +1,6 @@
 import { IOSConfig } from '@expo/config-plugins';
 import chalk from 'chalk';
+import { boolish } from 'getenv';
 import { sync as globSync } from 'glob';
 import * as path from 'path';
 
@@ -76,6 +77,14 @@ export async function resolveOptionsAsync(
   projectRoot: string,
   options: Options
 ): Promise<XcodeBuild.BuildProps> {
+  const configuration = options.configuration || 'Debug';
+  const prebundle = boolish('EXPO_PREBUNDLE', false) && configuration === 'Release';
+
+  // Disable bundler and port resolution in prebundle mode.
+  if (prebundle) {
+    options.bundler = false;
+  }
+
   const xcodeProject = resolveXcodeProject(projectRoot);
   const device = await resolveDeviceAsync(options.device);
 
@@ -121,17 +130,17 @@ export async function resolveOptionsAsync(
     }
   }
 
-  const configuration = options.configuration || 'Debug';
   // This optimization skips resetting the Metro cache needlessly.
   // The cache is reset in `../node_modules/react-native/scripts/react-native-xcode.sh` when the
   // project is running in Debug and built onto a physical device. It seems that this is done because
   // the script is run from Xcode and unaware of the CLI instance.
-  const shouldSkipInitialBundling = configuration === 'Debug' && !isSimulator;
+  const shouldSkipInitialBundling = !!prebundle || (configuration === 'Debug' && !isSimulator);
   return {
     projectRoot,
     isSimulator,
     xcodeProject,
     device,
+    prebundle,
     configuration: options.configuration || 'Debug',
     shouldStartBundler: options.bundler ?? false,
     shouldSkipInitialBundling,

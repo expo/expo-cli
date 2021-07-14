@@ -2,7 +2,9 @@ import { ExpoConfig, getConfig } from '@expo/config';
 import chalk from 'chalk';
 import fs from 'fs-extra';
 import * as path from 'path';
+import tempy from 'tempy';
 import { SimControl, Simulator, UnifiedAnalytics } from 'xdl';
+import { resolveEntryPoint } from 'xdl/build/tools/resolveEntryPoint';
 
 import CommandError from '../../../CommandError';
 import StatusEventEmitter from '../../../StatusEventEmitter';
@@ -17,13 +19,15 @@ import { isDevMenuInstalled } from '../utils/isDevMenuInstalled';
 import * as IOSDeploy from './IOSDeploy';
 import maybePromptToSyncPodsAsync from './Podfile';
 import * as XcodeBuild from './XcodeBuild';
+import { bundleAppAsync, embedBundleAsync } from './embed';
 import { Options, resolveOptionsAsync } from './resolveOptionsAsync';
 import { startBundlerAsync } from './startBundlerAsync';
 
 const isMac = process.platform === 'darwin';
 
 export async function runIosActionAsync(projectRoot: string, options: Options) {
-  const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
+  const projectConfig = getConfig(projectRoot, { skipSDKVersionRequirement: true });
+  const { exp } = projectConfig;
   track(projectRoot, exp);
 
   if (!isMac) {
@@ -52,6 +56,19 @@ export async function runIosActionAsync(projectRoot: string, options: Options) {
     await IOSDeploy.assertInstalledAsync();
   }
 
+  const tempDir: string = tempy.directory();
+  if (props.prebundle) {
+    // Prebundle the app
+    Log.debug('Bundling JS before building: ' + tempDir);
+    await profileMethod(bundleAppAsync)(projectRoot, {
+      // resetCache: false,
+      dev: props.configuration === 'Debug',
+      destination: tempDir,
+      entryFile: resolveEntryPoint(projectRoot, 'ios'),
+    });
+    Log.debug('JS bundling complete');
+  }
+
   const buildOutput = await profileMethod(XcodeBuild.buildAsync, 'XcodeBuild.buildAsync')(props);
 
   const binaryPath = await profileMethod(
@@ -59,11 +76,16 @@ export async function runIosActionAsync(projectRoot: string, options: Options) {
     'XcodeBuild.getAppBinaryPath'
   )(buildOutput);
 
+  if (props.prebundle) {
+    await embedBundleAsync(tempDir, binaryPath);
+  }
+
   if (props.shouldStartBundler) {
     await startBundlerAsync(projectRoot, {
       metroPort: props.port,
     });
   }
+
   const bundleIdentifier = await profileMethod(getBundleIdentifierForBinaryAsync)(binaryPath);
 
   if (props.isSimulator) {
