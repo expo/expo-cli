@@ -9,6 +9,7 @@ import bodyParser from 'body-parser';
 import type { Server as ConnectServer } from 'connect';
 import type http from 'http';
 import type Metro from 'metro';
+import outputBundle from 'metro/src/shared/output/bundle';
 import path from 'path';
 import resolveFrom from 'resolve-from';
 import semver from 'semver';
@@ -19,6 +20,8 @@ import {
   maybeInconsistentEngineAsync,
 } from './HermesBundler';
 import LogReporter from './LogReporter';
+import { BundleAssetWithFileHashes } from './assets/copyAssetsAsync';
+import { saveAssetsAsync } from './assets/saveAssetsAsync';
 import clientLogsMiddleware from './middleware/clientLogsMiddleware';
 import createJsInspectorMiddleware from './middleware/createJsInspectorMiddleware';
 import { remoteDevtoolsCorsMiddleware } from './middleware/remoteDevtoolsCorsMiddleware';
@@ -35,10 +38,18 @@ export type BundleOptions = {
   dev?: boolean;
   minify?: boolean;
   sourceMapUrl?: string;
+  assetOutput?: string;
+
+  bundleOutput?: string;
+  bundleEncoding?: 'utf8' | 'utf16le' | 'ascii';
+  indexedRamBundle?: boolean;
+  sourcemapOutput?: string;
+  sourcemapSourcesRoot?: string;
+  sourcemapUseAbsolutePath?: boolean;
 };
-export type BundleAssetWithFileHashes = Metro.AssetData & {
-  fileHashes: string[]; // added by the hashAssets asset plugin
-};
+
+export { BundleAssetWithFileHashes };
+
 export type BundleOutput = {
   code: string;
   map: string;
@@ -156,14 +167,45 @@ export async function bundleAsync(
         minify: bundle.minify ?? false,
       },
     });
-    const { code, map } = await metroServer.build(bundleOptions);
+    const { code, map } = await outputBundle.build(metroServer, bundleOptions);
+
+    if (bundle.bundleOutput) {
+      await outputBundle.save(
+        { code, map },
+        {
+          dev: bundle.dev,
+          bundleOutput: bundle.bundleOutput,
+          bundleEncoding: bundle.bundleEncoding,
+          indexedRamBundle: bundle.indexedRamBundle,
+          platform: bundle.platform,
+          sourcemapOutput: bundle.sourcemapOutput,
+          sourcemapSourcesRoot: bundle.sourcemapSourcesRoot,
+          sourcemapUseAbsolutePath: bundle.sourcemapUseAbsolutePath,
+        },
+        (...messages: string[]) => options.logger.info({ tag: 'metro' }, ...messages)
+      );
+    }
+
     const assets = (await metroServer.getAssets(
       bundleOptions
     )) as readonly BundleAssetWithFileHashes[];
+
     reporter.update({
       buildID,
       type: 'bundle_build_done',
     });
+
+    if (bundle.assetOutput) {
+      await saveAssetsAsync({
+        logger: options.logger,
+        assets,
+        platform: bundle.platform,
+        assetOutput: bundle.assetOutput,
+      });
+    } else {
+      options.logger.warn({ tag: 'metro' }, 'Assets destination folder is not set, skipping...');
+    }
+
     return { code, map, assets };
   };
 
