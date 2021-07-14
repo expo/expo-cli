@@ -50,7 +50,7 @@ export function setModulesMainActivity(mainActivity: string, language: 'java' | 
 
     mainActivity = mergeContents({
       src: mainActivity,
-      // insert just below super.onCreate
+      // insert just below ReactActivity declaration
       anchor: isJava
         ? /^\s*public\s+class\s+.*\s+extends\s+ReactActivity\s+{.*$/m
         : /^\s*class\s+.*\s+:\s+ReactActivity\(\)\s+{.*$/m,

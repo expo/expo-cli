@@ -6,15 +6,23 @@ interface CodeBlock {
   code: string;
 }
 
+/**
+ * Find java or kotlin new class instance code block
+ *
+ * @param contents source contents
+ * @param classDeclaration class declaration or just a class name
+ * @param language 'java' | 'kt'
+ * @returns `CodeBlock` for start/end offset and code block contents
+ */
 export function findNewInstanceCodeBlock(
   contents: string,
-  className: string,
+  classDeclaration: string,
   language: 'java' | 'kt'
 ): CodeBlock | null {
   const isJava = language === 'java';
   let start = isJava
-    ? contents.indexOf(` new ${className}(`)
-    : contents.search(new RegExp(` (object\\s*:\\s*)?${className}\\(`));
+    ? contents.indexOf(` new ${classDeclaration}(`)
+    : contents.search(new RegExp(` (object\\s*:\\s*)?${classDeclaration}\\(`));
   if (start < 0) {
     return null;
   }
@@ -49,19 +57,34 @@ export function findNewInstanceCodeBlock(
   };
 }
 
-export function appendCodeInsideMethodBlock(
+/**
+ * Append contents to the end of code declaration block, support class or method declarations.
+ *
+ * @param srcContents source contents
+ * @param declaration class declaration or method declaration
+ * @param insertion code to append
+ * @returns updated contents
+ */
+export function appendContentsInsideDeclarationBlock(
   srcContents: string,
-  methodName: string,
-  code: string
+  declaration: string,
+  insertion: string
 ): string {
-  const start = srcContents.indexOf(` ${methodName}(`);
+  const start = srcContents.search(new RegExp(`\\s*${declaration}.*?[\\(\\{]`));
   if (start < 0) {
-    throw new Error(`Unable to find method block - methodName[${methodName}]`);
+    throw new Error(`Unable to find code block - declaration[${declaration}]`);
   }
   const end = findMatchingBracketPosition(srcContents, '{', start);
-  return insertContentsAtOffset(srcContents, code, end);
+  return insertContentsAtOffset(srcContents, insertion, end);
 }
 
+/**
+ * Insert contents at given offset
+ * @param srcContents source contents
+ * @param insertion content to insert
+ * @param offset `srcContents` offset to insert `insertion`
+ * @returns updated contents
+ */
 export function insertContentsAtOffset(
   srcContents: string,
   insertion: string,
@@ -82,6 +105,15 @@ export function insertContentsAtOffset(
   return `${prefix}${insertion}${suffix}`;
 }
 
+/**
+ * Replace contents at given start and end offset
+ *
+ * @param contents source contents
+ * @param replacement new contents to place in [startOffset:endOffset]
+ * @param startOffset `contents` start offset for replacement
+ * @param endOffset `contents` end offset for replacement
+ * @returns updated contents
+ */
 export function replaceContentsWithOffset(
   contents: string,
   replacement: string,

@@ -1,5 +1,5 @@
 import {
-  appendCodeInsideMethodBlock,
+  appendContentsInsideDeclarationBlock,
   findNewInstanceCodeBlock,
   insertContentsAtOffset,
   replaceContentsWithOffset,
@@ -74,8 +74,39 @@ describe(findNewInstanceCodeBlock, () => {
   });
 });
 
-describe(appendCodeInsideMethodBlock, () => {
-  it('should', () => {
+describe(appendContentsInsideDeclarationBlock, () => {
+  it('should support class declaration', () => {
+    const contents = `
+public class App {
+  public static void main(String[] args) {
+    System.out.println("Hello App!");
+  }
+}`;
+
+    const expectContents = `
+public class App {
+  public static void main(String[] args) {
+    System.out.println("Hello App!");
+  }
+
+  public void foo() {
+    System.out.println("Hello foo!");
+  }
+}`;
+
+    expect(
+      appendContentsInsideDeclarationBlock(
+        contents,
+        'public class App',
+        `
+  public void foo() {
+    System.out.println("Hello foo!");
+  }\n`
+      )
+    ).toEqual(expectContents);
+  });
+
+  it('should support method declaration', () => {
     const contents = `
 public class App {
   public static void main(String[] args) {
@@ -92,9 +123,9 @@ public class App {
 }`;
 
     expect(
-      appendCodeInsideMethodBlock(
+      appendContentsInsideDeclarationBlock(
         contents,
-        'main',
+        'public static void main',
         '  System.out.println("Hello from generated code.");\n  '
       )
     ).toEqual(expectContents);
