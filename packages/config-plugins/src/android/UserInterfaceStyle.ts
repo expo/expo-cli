@@ -92,7 +92,7 @@ export function addOnConfigurationChangedMainActivity(
 // TODO: we should have a generic utility for doing this
 export function addJavaImports(javaSource: string, javaImports: string[], isJava: boolean): string {
   const lines = javaSource.split('\n');
-  const lineIndexWithPackageDeclaration = lines.findIndex(line => line.match(/^package .*;$/));
+  const lineIndexWithPackageDeclaration = lines.findIndex(line => line.match(/^package .*;?$/));
   for (const javaImport of javaImports) {
     if (!javaSource.includes(javaImport)) {
       const importStatement = `import ${javaImport}${isJava ? ';' : ''}`;
