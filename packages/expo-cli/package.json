@@ -49,7 +49,6 @@
     "@types/dateformat": "^3.0.0",
     "@types/form-data": "^2.2.0",
     "@types/fs-extra": "^9.0.1",
-    "@types/hapi__joi": "^17.1.2",
     "@types/hashids": "^1.0.30",
     "@types/js-yaml": "^3.12.2",
     "@types/klaw-sync": "^6.0.0",
