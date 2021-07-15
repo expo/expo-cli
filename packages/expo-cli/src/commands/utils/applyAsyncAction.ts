@@ -2,8 +2,6 @@ import type { Command } from 'commander';
 
 import { profileMethod } from '../utils/profileMethod';
 
-export { Command };
-
 export function applyAsyncActionProjectDir<Options = Record<string, any>>(
   command: Command,
   resolve: () => Promise<{ actionAsync: (projectRoot: string, options: Options) => Promise<void> }>,
