@@ -53,7 +53,6 @@ export async function getInitialProps({ renderPage }) {
 }
 
 export class Document extends NextDocument {
-  static getInitialProps = getInitialProps;
   render() {
     return (
       <Html>
@@ -68,5 +67,7 @@ export class Document extends NextDocument {
     );
   }
 }
+
+Document.getInitialProps = getInitialProps;
 
 export default Document;
