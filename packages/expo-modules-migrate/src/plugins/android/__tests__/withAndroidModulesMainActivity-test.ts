@@ -1,7 +1,5 @@
 import { setModulesMainActivity } from '../withAndroidModulesMainActivity';
 
-jest.mock('fs');
-
 describe(setModulesMainActivity, () => {
   it(`should add createReactActivityDelegate code block if not overridden yet - java`, () => {
     const rawContents = `
