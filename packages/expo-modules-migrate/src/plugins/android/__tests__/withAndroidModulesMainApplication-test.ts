@@ -200,10 +200,10 @@ class MainApplication : Application(), ReactApplication {
     ApplicationLifecycleDispatcher.onConfigurationChanged(this, newConfig)
   }
 }`;
-    const contents = setModulesMainApplication(rawContents, 'kotlin');
+    const contents = setModulesMainApplication(rawContents, 'kt');
     expect(contents).toEqual(expectContents);
     // Try it twice...
-    const nextContents = setModulesMainApplication(contents, 'kotlin');
+    const nextContents = setModulesMainApplication(contents, 'kt');
     expect(nextContents).toEqual(expectContents);
   });
 });

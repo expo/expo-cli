@@ -1,0 +1,48 @@
+{
+  "name": "expo-modules-migrate",
+  "version": "0.0.1",
+  "description": "Tools to migrate existing react-native projects for expo-modules adoption",
+  "main": "build/index.js",
+  "scripts": {
+    "watch": "tsc --watch --preserveWatchOutput",
+    "build": "tsc",
+    "prepare": "yarn run clean && yarn build",
+    "clean": "rimraf build ./tsconfig.tsbuildinfo",
+    "lint": "eslint .",
+    "test": "jest"
+  },
+  "bin": {
+    "expo-modules-migrate": "./bin/migrate.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/expo/expo-cli.git",
+    "directory": "packages/expo-modules-migrate"
+  },
+  "keywords": [
+    "expo",
+    "react-native",
+    "react"
+  ],
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/expo/expo-cli/issues"
+  },
+  "homepage": "https://github.com/expo/expo-cli/tree/master/packages/expo-modules-migrate#readme",
+  "files": [
+    "build",
+    "!*/__tests__/*"
+  ],
+  "dependencies": {
+    "@expo/babel-preset-cli": "^0.2.20",
+    "@expo/config": "^5.0.3",
+    "@expo/config-plugins": "^3.0.3",
+    "find-up": "^5.0.0"
+  },
+  "devDependencies": {
+    "rimraf": "^3.0.2"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
