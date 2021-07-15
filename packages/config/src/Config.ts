@@ -122,7 +122,10 @@ export function getConfig(projectRoot: string, options: GetConfigOptions = {}): 
     }
 
     // Apply static json plugins, should be done after _internal
-    configWithDefaultValues.exp = withConfigPlugins(configWithDefaultValues.exp);
+    configWithDefaultValues.exp = withConfigPlugins(
+      configWithDefaultValues.exp,
+      !!options.skipPlugins
+    );
 
     if (!options.isModdedConfig) {
       // @ts-ignore: Delete mods added by static plugins when they won't have a chance to be evaluated

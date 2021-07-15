@@ -39,7 +39,12 @@ async function installAsync(packages: string[], options: PackageManager.CreateFo
     log: Log.log,
   });
 
-  const { exp, pkg } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
+  let { exp, pkg } = getConfig(projectRoot, {
+    skipSDKVersionRequirement: true,
+    // Sometimes users will add a plugin to the config before installing the library,
+    // this wouldn't work unless we dangerously disable plugin serialization.
+    skipPlugins: true,
+  });
 
   // If using `expo install` in a project without the expo package even listed
   // in package.json, just fall through to npm/yarn.
@@ -114,12 +119,22 @@ async function installAsync(packages: string[], options: PackageManager.CreateFo
   Log.log(`Installing ${messages.join(' and ')} using ${packageManager.name}.`);
   await packageManager.addAsync(...versionedPackages);
 
-  // Only auto add plugins if the plugins array is defined or if the project is using SDK +42.
-  await autoAddConfigPluginsAsync(
-    projectRoot,
-    exp,
-    versionedPackages.map(pkg => pkg.split('@')[0]).filter(Boolean)
-  );
+  try {
+    exp = getConfig(projectRoot, { skipSDKVersionRequirement: true }).exp;
+
+    // Only auto add plugins if the plugins array is defined or if the project is using SDK +42.
+    await autoAddConfigPluginsAsync(
+      projectRoot,
+      exp,
+      versionedPackages.map(pkg => pkg.split('@')[0]).filter(Boolean)
+    );
+  } catch (error) {
+    if (error.isPluginError) {
+      Log.error(`Skipping plugin check: ` + error.message);
+      return;
+    }
+    throw error;
+  }
 }
 
 export default function install(program: Command) {
