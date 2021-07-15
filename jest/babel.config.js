@@ -5,7 +5,6 @@ module.exports = function (api) {
     env: {
       test: {
         presets: ['../packages/babel-preset-cli'],
-        plugins: ['babel-plugin-transform-dynamic-import'],
       },
     },
   };

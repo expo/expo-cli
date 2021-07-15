@@ -31,7 +31,6 @@
     "@types/node": "^12",
     "@tsconfig/node12": "^1.0.7",
     "@vercel/ncc": "^0.27.0",
-    "babel-plugin-transform-dynamic-import": "^2.1.0",
     "codecov": "^3.6.5",
     "eslint": "^7.25.0",
     "eslint-config-universe": "^5.0.0",
