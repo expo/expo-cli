@@ -28,18 +28,18 @@ public class MainApplication extends Application implements ReactApplication {
           List<ReactPackage> packages = new PackageList(this).getPackages();
           return packages;
         }
- 
+
         @Override
         protected String getJSMainModuleName() {
           return "index";
         }
   };
- 
+
   @Override
   public ReactNativeHost getReactNativeHost() {
     return mReactNativeHost;
   }
- 
+
   @Override
   public void onCreate() {
     super.onCreate();
@@ -78,18 +78,18 @@ public class MainApplication extends Application implements ReactApplication {
           List<ReactPackage> packages = new PackageList(this).getPackages();
           return packages;
         }
- 
+
         @Override
         protected String getJSMainModuleName() {
           return "index";
         }
   });
- 
+
   @Override
   public ReactNativeHost getReactNativeHost() {
     return mReactNativeHost;
   }
- 
+
   @Override
   public void onCreate() {
     super.onCreate();

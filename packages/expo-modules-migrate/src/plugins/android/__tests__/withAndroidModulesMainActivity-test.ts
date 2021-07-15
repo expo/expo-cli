@@ -8,7 +8,7 @@ describe(setModulesMainActivity, () => {
 package com.helloworld;
 
 import com.facebook.react.ReactActivity;
-	
+
 public class MainActivity extends ReactActivity {
 
   /**
@@ -27,7 +27,7 @@ import org.unimodules.adapters.react.ReactActivityDelegateWrapper;
 import com.facebook.react.ReactActivityDelegate;
 
 import com.facebook.react.ReactActivity;
-	
+
 public class MainActivity extends ReactActivity {
 
   /**
