@@ -33,6 +33,8 @@ export function evalConfig(
     ignore: [/node_modules/],
     filename: 'unknown',
     presets: [getBabelPreset()],
+    // Retain lines for improved error reporting.
+    retainLines: true,
   });
 
   const result = requireString(code, configFile);

@@ -18,7 +18,7 @@ const supportedVersions =
   '* >=15.0.0 <17.0.0 (Current Release)\n';
 
 // If newer than the current release
-if (major > 15) {
+if (major > 16) {
   // eslint-disable-next-line no-console
   console.warn(
     yellow(

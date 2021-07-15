@@ -1,6 +1,6 @@
 import { ExpoConfig, getConfig } from '@expo/config';
-import joi from '@hapi/joi';
 import assert from 'assert';
+import Joi from 'joi';
 import os from 'os';
 import QueryString from 'querystring';
 import resolveFrom from 'resolve-from';
@@ -242,18 +242,18 @@ export async function constructWebAppUrlAsync(
 }
 
 function assertValidOptions(opts: Partial<URLOptions>): URLOptions {
-  const schema = joi.object().keys({
-    devClient: joi.boolean().optional(),
-    scheme: joi.string().optional().allow(null),
+  const schema = Joi.object().keys({
+    devClient: Joi.boolean().optional(),
+    scheme: Joi.string().optional().allow(null),
     // Replaced by `scheme`
-    urlType: joi.any().valid('exp', 'http', 'redirect', 'no-protocol').allow(null),
-    lanType: joi.any().valid('ip', 'hostname'),
-    hostType: joi.any().valid('localhost', 'lan', 'tunnel'),
-    dev: joi.boolean(),
-    strict: joi.boolean(),
-    minify: joi.boolean(),
-    https: joi.boolean().optional(),
-    urlRandomness: joi.string().optional().allow(null),
+    urlType: Joi.any().valid('exp', 'http', 'redirect', 'no-protocol').allow(null),
+    lanType: Joi.any().valid('ip', 'hostname'),
+    hostType: Joi.any().valid('localhost', 'lan', 'tunnel'),
+    dev: Joi.boolean(),
+    strict: Joi.boolean(),
+    minify: Joi.boolean(),
+    https: Joi.boolean().optional(),
+    urlRandomness: Joi.string().optional().allow(null),
   });
 
   const { error } = schema.validate(opts);

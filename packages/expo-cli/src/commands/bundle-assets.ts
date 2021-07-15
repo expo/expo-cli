@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-import { Command } from 'commander';
+import type { Command } from 'commander';
 import terminalLink from 'terminal-link';
 import { Detach } from 'xdl';
 

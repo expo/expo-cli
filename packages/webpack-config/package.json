@@ -1,6 +1,6 @@
 {
   "name": "@expo/webpack-config",
-  "version": "0.12.77",
+  "version": "0.12.82",
   "description": "The default Webpack configuration used to build Expo apps targeting the web.",
   "main": "webpack.config.js",
   "types": "webpack.config.d.ts",
@@ -42,14 +42,14 @@
   "dependencies": {
     "@babel/core": "7.9.0",
     "@babel/runtime": "7.9.0",
-    "@expo/config": "4.0.3",
+    "@expo/config": "5.0.3",
     "@pmmmwh/react-refresh-webpack-plugin": "^0.3.3",
     "babel-loader": "8.1.0",
     "chalk": "^4.0.0",
     "clean-webpack-plugin": "^3.0.0",
     "copy-webpack-plugin": "~6.0.3",
     "css-loader": "~3.6.0",
-    "expo-pwa": "0.0.83",
+    "expo-pwa": "0.0.88",
     "file-loader": "~6.0.0",
     "find-yarn-workspace-root": "~2.0.0",
     "getenv": "^1.0.0",
@@ -72,7 +72,7 @@
     "webpack-deep-scope-plugin": "1.6.0",
     "webpack-manifest-plugin": "~2.2.0",
     "webpackbar": "^4.0.0",
-    "workbox-webpack-plugin": "^3.6.3",
+    "workbox-webpack-plugin": "^6.1.5",
     "worker-loader": "^2.0.0"
   },
   "devDependencies": {
@@ -85,7 +85,7 @@
     "@types/webpack": "4.41.18",
     "@types/webpack-dev-server": "3.11.0",
     "@types/webpack-manifest-plugin": "~2.1.0",
-    "@types/workbox-webpack-plugin": "^4.1.0",
+    "@types/workbox-webpack-plugin": "^5.1.8",
     "jest-puppeteer": "^4.4.0",
     "prettier": "^1.16.4",
     "rimraf": "^3.0.2",

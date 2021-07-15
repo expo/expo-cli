@@ -1,3 +1,5 @@
+import Debug from 'debug';
+
 import {
   ConfigPlugin,
   ExportedConfig,
@@ -5,6 +7,8 @@ import {
   ModPlatform,
 } from '../Plugin.types';
 import { BaseModOptions, withBaseMod } from './withMod';
+
+const debug = Debug('config-plugins:base-mods');
 
 export type ForwardedBaseModOptions = Partial<
   Pick<BaseModOptions, 'saveToInternal' | 'skipEmptyMod'>
@@ -63,7 +67,7 @@ export function createBaseMod<
           };
 
           const filePath = await getFilePath(results, props);
-
+          debug(`mods.${platform}.${modName}: file path: ${filePath || '[skipped]'}`);
           const modResults = await read(filePath, results, props);
 
           results = await nextMod!({

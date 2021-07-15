@@ -1,4 +1,4 @@
-import { Command } from 'commander';
+import type { Command } from 'commander';
 import uniqBy from 'lodash/uniqBy';
 
 import * as table from '../commands/utils/cli-table';

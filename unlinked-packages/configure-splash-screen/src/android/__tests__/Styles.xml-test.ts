@@ -33,7 +33,7 @@ describe('Styles.xml', () => {
     <item name="android:textColor">#000000</item>
   </style>`
       }
-  <style name="Theme.App.SplashScreen" parent="Theme.AppCompat.Light.NoActionBar">
+  <style name="Theme.App.SplashScreen" parent="AppTheme">
     <!-- Below line is handled by '@expo/configure-splash-screen' command and it's discouraged to modify it manually -->
     <item name="android:windowBackground">@drawable/splashscreen</item>${
       windowFullscreenItemValue === undefined

@@ -71,7 +71,9 @@ async function resolveOptionsAsync(
     throw new CommandError(`Could not find package name in AndroidManifest.xml at "${filePath}"`);
   }
 
-  let port = options.bundler ? await resolvePortAsync(projectRoot, options.port) : null;
+  let port = options.bundler
+    ? await resolvePortAsync(projectRoot, { defaultPort: options.port, reuseExistingPort: true })
+    : null;
   options.bundler = !!port;
   if (!port) {
     // Skip bundling if the port is null
@@ -139,11 +141,14 @@ export async function runAndroidActionAsync(projectRoot: string, options: Option
     });
     if (!result.success) {
       // TODO: Maybe fallback on using the package name.
-      throw new CommandError(result.error);
+      throw new CommandError(
+        typeof result.error === 'string' ? result.error : result.error.message
+      );
     }
   } else {
     Log.debug('Opening app on device via package name: ' + props.device.name);
     // For now, just open the app with a matching package name
+    await Android.startAdbReverseAsync(projectRoot);
     await Android.openAppAsync(props.device, props);
   }
 

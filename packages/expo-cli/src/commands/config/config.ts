@@ -1,7 +1,7 @@
 import { getConfig, ProjectConfig } from '@expo/config';
 import { compileModsAsync } from '@expo/config-plugins/build/plugins/mod-compiler';
 import { getPrebuildConfig } from '@expo/prebuild-config';
-import { Command } from 'commander';
+import type { Command } from 'commander';
 
 import CommandError from '../../CommandError';
 import Log from '../../log';
@@ -29,6 +29,7 @@ async function actionAsync(projectRoot: string, options: Options) {
       projectRoot,
       introspect: true,
       platforms: ['ios', 'android'],
+      assertMissingModProviders: false,
     });
     // @ts-ignore
     delete config.modRequest;

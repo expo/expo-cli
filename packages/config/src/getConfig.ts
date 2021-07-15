@@ -1,29 +1,24 @@
 import JsonFile from '@expo/json-file';
+import { existsSync } from 'fs';
 
 import { AppJSONConfig, ConfigContext, ExpoConfig } from './Config.types';
 import { ConfigError } from './Errors';
 import { DynamicConfigResults, evalConfig } from './evalConfig';
 
-function isMissingFileCode(code: string): boolean {
-  return ['ENOENT', 'MODULE_NOT_FOUND', 'ENOTDIR'].includes(code);
-}
-
 // We cannot use async config resolution right now because Next.js doesn't support async configs.
 // If they don't add support for async Webpack configs then we may need to pull support for Next.js.
 function readConfigFile(configFile: string, context: ConfigContext): null | DynamicConfigResults {
+  // If the file doesn't exist then we should skip it and continue searching.
+  if (!existsSync(configFile)) {
+    return null;
+  }
   try {
     return evalConfig(configFile, context);
   } catch (error) {
-    // If the file doesn't exist then we should skip it and continue searching.
-    if (!isMissingFileCode(error.code)) {
-      // @ts-ignore
-      error.isConfigError = true;
-      // @ts-ignore: Replace the babel stack with a more relevant stack.
-      error.stack = new Error().stack;
-      throw error;
-    }
+    // @ts-ignore
+    error.isConfigError = true;
+    throw error;
   }
-  return null;
 }
 
 export function getDynamicConfig(configPath: string, request: ConfigContext): DynamicConfigResults {

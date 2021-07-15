@@ -1,7 +1,6 @@
 import bunyan from '@expo/bunyan';
 import { setCustomConfigPath } from '@expo/config';
 import { INTERNAL_CALLSITES_REGEX } from '@expo/metro-config';
-import simpleSpinner from '@expo/simple-spinner';
 import boxen from 'boxen';
 import chalk from 'chalk';
 import program, { Command } from 'commander';
@@ -42,7 +41,7 @@ import Log from './log';
 import update from './update';
 import urlOpts from './urlOpts';
 import { matchFileNameOrURLFromStackTrace } from './utils/matchFileNameOrURLFromStackTrace';
-import { ora } from './utils/ora';
+import { logNewSection, ora } from './utils/ora';
 
 // We use require() to exclude package.json from TypeScript's analysis since it lives outside the
 // src directory and would change the directory structure of the emitted files under the build
@@ -357,7 +356,7 @@ Command.prototype.asyncAction = function (asyncFn: Action) {
       // TODO: Find better ways to consolidate error messages
       if (err instanceof AbortCommandError || err instanceof SilentError) {
         // Do nothing when a prompt is cancelled or the error is logged in a pretty way.
-      } else if (err.isCommandError) {
+      } else if (err.isCommandError || err.isPluginError) {
         Log.error(err.message);
       } else if (err._isApiError) {
         Log.error(chalk.red(err.message));
@@ -617,6 +616,7 @@ Command.prototype.asyncActionProjectDir = function (
     new PackagerLogsStream({
       projectRoot,
       onStartBuildBundle: () => {
+        // TODO: Unify with commands/utils/progress.ts
         bar = new ProgressBar('Building JavaScript bundle [:bar] :percent', {
           width: 64,
           total: 100,
@@ -848,12 +848,41 @@ function _registerLogs() {
       write: (chunk: any) => {
         if (chunk.code) {
           switch (chunk.code) {
+            case NotificationCode.START_PROGRESS_BAR: {
+              const bar = new ProgressBar(chunk.msg, {
+                width: 64,
+                total: 100,
+                clear: true,
+                complete: '=',
+                incomplete: ' ',
+              });
+              Log.setBundleProgressBar(bar);
+              return;
+            }
+            case NotificationCode.TICK_PROGRESS_BAR: {
+              const spinner = Log.getProgress();
+              if (spinner) {
+                spinner.tick(1, chunk.msg);
+              }
+              return;
+            }
+            case NotificationCode.STOP_PROGRESS_BAR: {
+              const spinner = Log.getProgress();
+              if (spinner) {
+                spinner.terminate();
+              }
+              return;
+            }
             case NotificationCode.START_LOADING:
-              simpleSpinner.start();
+              logNewSection(chunk.msg || '');
               return;
-            case NotificationCode.STOP_LOADING:
-              simpleSpinner.stop();
+            case NotificationCode.STOP_LOADING: {
+              const spinner = Log.getSpinner();
+              if (spinner) {
+                spinner.stop();
+              }
               return;
+            }
             case NotificationCode.DOWNLOAD_CLI_PROGRESS:
               return;
           }

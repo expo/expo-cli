@@ -1,4 +1,4 @@
-import Log from '@expo/bunyan';
+import type Log from '@expo/bunyan';
 import { ExpoConfig, getConfigFilePaths } from '@expo/config';
 import * as ExpoMetroConfig from '@expo/metro-config';
 import {
@@ -6,13 +6,12 @@ import {
   securityHeadersMiddleware,
 } from '@react-native-community/cli-server-api';
 import bodyParser from 'body-parser';
-import type { Server as ConnectServer, HandleFunction } from 'connect';
-import http from 'http';
-import type { IncomingMessage, ServerResponse } from 'http';
+import type { Server as ConnectServer } from 'connect';
+import type http from 'http';
 import type Metro from 'metro';
 import path from 'path';
 import resolveFrom from 'resolve-from';
-import { parse as parseUrl } from 'url';
+import semver from 'semver';
 
 import {
   buildHermesBundleAsync,
@@ -22,6 +21,9 @@ import {
 import LogReporter from './LogReporter';
 import clientLogsMiddleware from './middleware/clientLogsMiddleware';
 import createJsInspectorMiddleware from './middleware/createJsInspectorMiddleware';
+import { remoteDevtoolsCorsMiddleware } from './middleware/remoteDevtoolsCorsMiddleware';
+import { remoteDevtoolsSecurityHeadersMiddleware } from './middleware/remoteDevtoolsSecurityHeadersMiddleware';
+import { replaceMiddlewareWith } from './middleware/replaceMiddlewareWith';
 
 export type MetroDevServerOptions = ExpoMetroConfig.LoadOptions & {
   logger: Log;
@@ -165,51 +167,62 @@ export async function bundleAsync(
     return { code, map, assets };
   };
 
+  const maybeAddHermesBundleAsync = async (
+    bundle: BundleOptions,
+    bundleOutput: BundleOutput
+  ): Promise<BundleOutput> => {
+    if (!gteSdkVersion(expoConfig, '42.0.0')) {
+      return bundleOutput;
+    }
+    const isHermesManaged = isEnableHermesManaged(expoConfig, bundle.platform);
+
+    const maybeInconsistentEngine = await maybeInconsistentEngineAsync(
+      projectRoot,
+      bundle.platform,
+      isHermesManaged
+    );
+    if (maybeInconsistentEngine) {
+      const platform = bundle.platform === 'ios' ? 'iOS' : 'Android';
+      const paths = getConfigFilePaths(projectRoot);
+      const configFilePath = paths.dynamicConfigPath ?? paths.staticConfigPath ?? 'app.json';
+      const configFileName = path.basename(configFilePath);
+      throw new Error(
+        `JavaScript engine configuration is inconsistent between ${configFileName} and ${platform} native project.\n` +
+          `In ${configFileName}: Hermes is ${isHermesManaged ? 'enabled' : 'not enabled'}\n` +
+          `In ${platform} native project: Hermes is ${
+            isHermesManaged ? 'not enabled' : 'enabled'
+          }\n` +
+          `Please check the following files for inconsistencies:\n` +
+          `  - ${configFilePath}\n` +
+          `  - ${path.join(projectRoot, 'android', 'gradle.properties')}\n` +
+          `  - ${path.join(projectRoot, 'android', 'app', 'build.gradle')}\n` +
+          'Learn more: https://expo.fyi/hermes-android-config'
+      );
+    }
+
+    if (isHermesManaged) {
+      options.logger.info(
+        { tag: 'expo' },
+        `💿 Building Hermes bytecode for the bundle - platform[${bundle.platform}]`
+      );
+      const hermesBundleOutput = await buildHermesBundleAsync(
+        projectRoot,
+        bundleOutput.code,
+        bundleOutput.map,
+        bundle.minify
+      );
+      bundleOutput.hermesBytecodeBundle = hermesBundleOutput.hbc;
+      bundleOutput.hermesSourcemap = hermesBundleOutput.sourcemap;
+    }
+
+    return bundleOutput;
+  };
+
   try {
     return await Promise.all(
       bundles.map(async (bundle: BundleOptions) => {
         const bundleOutput = await buildAsync(bundle);
-        const isHermesManaged = isEnableHermesManaged(expoConfig, bundle.platform);
-
-        const maybeInconsistentEngine = await maybeInconsistentEngineAsync(
-          projectRoot,
-          bundle.platform,
-          isHermesManaged
-        );
-        if (maybeInconsistentEngine) {
-          const platform = bundle.platform === 'ios' ? 'iOS' : 'Android';
-          const paths = getConfigFilePaths(projectRoot);
-          const configFilePath = paths.dynamicConfigPath ?? paths.staticConfigPath ?? 'app.json';
-          const configFileName = path.basename(configFilePath);
-          throw new Error(
-            `JavaScript engine configuration is inconsistent between ${configFileName} and ${platform} native project.\n` +
-              `In ${configFileName}: Hermes is ${isHermesManaged ? 'enabled' : 'not enabled'}\n` +
-              `In ${platform} native project: Hermes is ${
-                isHermesManaged ? 'not enabled' : 'enabled'
-              }\n` +
-              `Please check the following files for inconsistencies:\n` +
-              `  - ${configFilePath}\n` +
-              `  - ${path.join(projectRoot, 'android', 'gradle.properties')}\n` +
-              `  - ${path.join(projectRoot, 'android', 'app', 'build.gradle')}\n`
-          );
-        }
-
-        if (isHermesManaged) {
-          options.logger.info(
-            { tag: 'expo' },
-            `💿 Building Hermes bytecode for the bundle - platform[${bundle.platform}]`
-          );
-          const hermesBundleOutput = await buildHermesBundleAsync(
-            projectRoot,
-            bundleOutput.code,
-            bundleOutput.map,
-            bundle.minify
-          );
-          bundleOutput.hermesBytecodeBundle = hermesBundleOutput.hbc;
-          bundleOutput.hermesSourcemap = hermesBundleOutput.sourcemap;
-        }
-
-        return bundleOutput;
+        return maybeAddHermesBundleAsync(bundle, bundleOutput);
       })
     );
   } finally {
@@ -245,72 +258,19 @@ function importMetroServerFromProject(projectRoot: string): typeof Metro.Server 
   return require(resolvedPath);
 }
 
-function replaceMiddlewareWith(
-  app: ConnectServer,
-  sourceMiddleware: HandleFunction,
-  targetMiddleware: HandleFunction
-) {
-  const item = app.stack.find(middleware => middleware.handle === sourceMiddleware);
-  if (item) {
-    item.handle = targetMiddleware;
-  }
-}
-
-// Like securityHeadersMiddleware but further allow cross-origin requests
-// from https://chrome-devtools-frontend.appspot.com/
-function remoteDevtoolsSecurityHeadersMiddleware(
-  req: IncomingMessage,
-  res: ServerResponse,
-  next: (err?: Error) => void
-) {
-  // Block any cross origin request.
-  if (
-    typeof req.headers.origin === 'string' &&
-    !req.headers.origin.match(/^https?:\/\/localhost:/) &&
-    !req.headers.origin.match(/^https:\/\/chrome-devtools-frontend\.appspot\.com/)
-  ) {
-    next(
-      new Error(
-        `Unauthorized request from ${req.headers.origin}. ` +
-          'This may happen because of a conflicting browser extension to intercept HTTP requests. ' +
-          'Please try again without browser extensions or using incognito mode.'
-      )
-    );
-    return;
+// Cloned from xdl/src/Versions.ts, we cannot use that because of circular dependency
+function gteSdkVersion(expJson: Pick<ExpoConfig, 'sdkVersion'>, sdkVersion: string): boolean {
+  if (!expJson.sdkVersion) {
+    return false;
   }
 
-  // Block MIME-type sniffing.
-  res.setHeader('X-Content-Type-Options', 'nosniff');
-
-  next();
-}
-
-// Middleware that accepts multiple Access-Control-Allow-Origin for processing *.map.
-// This is a hook middleware before metro processing *.map,
-// which originally allow only devtools://devtools
-function remoteDevtoolsCorsMiddleware(
-  req: IncomingMessage,
-  res: ServerResponse,
-  next: (err?: Error) => void
-) {
-  if (req.url) {
-    const url = parseUrl(req.url);
-    const origin = req.headers.origin;
-    const isValidOrigin =
-      origin &&
-      ['devtools://devtools', 'https://chrome-devtools-frontend.appspot.com'].includes(origin);
-    if (url.pathname?.endsWith('.map') && origin && isValidOrigin) {
-      res.setHeader('Access-Control-Allow-Origin', origin);
-
-      // Prevent metro overwrite Access-Control-Allow-Origin header
-      const setHeader = res.setHeader.bind(res);
-      res.setHeader = (key, ...args) => {
-        if (key === 'Access-Control-Allow-Origin') {
-          return;
-        }
-        setHeader(key, ...args);
-      };
-    }
+  if (expJson.sdkVersion === 'UNVERSIONED') {
+    return true;
   }
-  next();
+
+  try {
+    return semver.gte(expJson.sdkVersion, sdkVersion);
+  } catch (e) {
+    throw new Error(`${expJson.sdkVersion} is not a valid version. Must be in the form of x.y.z`);
+  }
 }

@@ -142,6 +142,12 @@ function getLargeConfig(): ExportedConfig {
         foregroundImage: './icons/foreground.png',
         backgroundImage: './icons/background.png',
       },
+      splash: {
+        backgroundColor: '#ff00ff',
+        dark: {
+          backgroundColor: '#00ffff',
+        },
+      },
       permissions: ['CAMERA', 'com.sec.android.provider.badge.permission.WRITE'],
       googleServicesFile: './config/google-services.json',
       config: {
@@ -346,6 +352,8 @@ describe('built-in plugins', () => {
       'android/app/src/main/res/values/styles.xml',
       'android/app/src/main/res/values/colors.xml',
       'android/app/src/main/res/values/strings.xml',
+      'android/app/src/main/res/drawable/splashscreen.xml',
+      'android/app/src/main/res/values-night/colors.xml',
       'android/app/build.gradle',
       'android/app/google-services.json',
       'android/gradle.properties',

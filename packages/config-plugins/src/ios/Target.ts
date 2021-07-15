@@ -1,11 +1,17 @@
-import { PBXNativeTarget, PBXTargetDependency, XcodeProject } from 'xcode';
+import { PBXNativeTarget, PBXTargetDependency, XCBuildConfiguration, XcodeProject } from 'xcode';
 
 import { getApplicationTargetNameForSchemeAsync } from './BuildScheme';
-import { getPbxproj, isNotComment, NativeTargetSectionEntry } from './utils/Xcodeproj';
+import {
+  getBuildConfigurationForListIdAndName,
+  getPbxproj,
+  isNotComment,
+  NativeTargetSectionEntry,
+} from './utils/Xcodeproj';
 
 export enum TargetType {
   APPLICATION = 'com.apple.product-type.application',
   EXTENSION = 'com.apple.product-type.app-extension',
+  STICKER_PACK_EXTENSION = 'com.apple.product-type.app-extension.messages-sticker-pack',
   OTHER = 'other',
 }
 
@@ -13,6 +19,23 @@ export interface Target {
   name: string;
   type: TargetType;
   dependencies?: Target[];
+}
+
+export function getXCBuildConfigurationFromPbxproj(
+  project: XcodeProject,
+  {
+    targetName,
+    buildConfiguration = 'Release',
+  }: { targetName?: string; buildConfiguration?: string } = {}
+): XCBuildConfiguration | null {
+  const [, nativeTarget] = targetName
+    ? findNativeTargetByName(project, targetName)
+    : findFirstNativeTarget(project);
+  const [, xcBuildConfiguration] = getBuildConfigurationForListIdAndName(project, {
+    configurationListId: nativeTarget.buildConfigurationList,
+    buildConfiguration,
+  });
+  return xcBuildConfiguration ?? null;
 }
 
 export async function findApplicationTargetWithDependenciesAsync(
@@ -47,13 +70,27 @@ export async function findApplicationTargetWithDependenciesAsync(
   };
 }
 
-function isTargetOfType(target: PBXNativeTarget, targetType: TargetType): boolean {
+export function isTargetOfType(target: PBXNativeTarget, targetType: TargetType): boolean {
   return target.productType === targetType || target.productType === `"${targetType}"`;
 }
 
 export function getNativeTargets(project: XcodeProject): NativeTargetSectionEntry[] {
   const section = project.pbxNativeTargetSection();
   return Object.entries(section).filter(isNotComment);
+}
+
+export function findSignableTargets(project: XcodeProject): NativeTargetSectionEntry[] {
+  const targets = getNativeTargets(project);
+  const applicationTargets = targets.filter(
+    ([, target]) =>
+      isTargetOfType(target, TargetType.APPLICATION) ||
+      isTargetOfType(target, TargetType.EXTENSION) ||
+      isTargetOfType(target, TargetType.STICKER_PACK_EXTENSION)
+  );
+  if (applicationTargets.length === 0) {
+    throw new Error(`Could not find any signable targets in project.pbxproj`);
+  }
+  return applicationTargets;
 }
 
 export function findFirstNativeTarget(project: XcodeProject): NativeTargetSectionEntry {

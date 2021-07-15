@@ -93,6 +93,23 @@ export const withAndroidColors: ConfigPlugin<Mod<Resources.ResourceXML>> = (conf
 };
 
 /**
+ * Provides the `android/app/src/main/res/values-night/colors.xml` as JSON (parsed with [`xml2js`](https://www.npmjs.com/package/xml2js)).
+ *
+ * @param config
+ * @param action
+ */
+export const withAndroidColorsNight: ConfigPlugin<Mod<Resources.ResourceXML>> = (
+  config,
+  action
+) => {
+  return withMod(config, {
+    platform: 'android',
+    mod: 'colorsNight',
+    action,
+  });
+};
+
+/**
  * Provides the `android/app/src/main/res/values/styles.xml` as JSON (parsed with [`xml2js`](https://www.npmjs.com/package/xml2js)).
  *
  * @param config

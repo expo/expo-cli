@@ -7,7 +7,7 @@ import {
 } from '@expo/config';
 import simpleSpinner from '@expo/simple-spinner';
 import chalk from 'chalk';
-import { Command } from 'commander';
+import type { Command } from 'commander';
 import fs from 'fs';
 import path from 'path';
 import { Project, UserManager } from 'xdl';

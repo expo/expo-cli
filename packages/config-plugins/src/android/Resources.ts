@@ -10,6 +10,9 @@ export type ResourceGroupXML = {
 
 export type ResourceXML = {
   resources: {
+    $?: {
+      'xmlns:tools'?: string;
+    };
     color?: ResourceItemXML[];
     string?: ResourceItemXML[];
     style?: ResourceGroupXML[];
@@ -21,12 +24,18 @@ export type ResourceItemXML = {
   _: string;
   $: {
     name: string;
+    'tools:targetApi'?: string;
   };
 };
 /**
  * Name of the resource folder.
  */
-export type ResourceKind = 'values' | 'values-night' | 'values-v23';
+export type ResourceKind =
+  | 'values'
+  | 'values-night'
+  | 'values-v23'
+  | 'values-night-v23'
+  | 'drawable';
 
 const fallbackResourceString = `<?xml version="1.0" encoding="utf-8"?><resources></resources>`;
 
@@ -77,11 +86,17 @@ export function ensureDefaultResourceXML(xml: XMLObject): ResourceXML {
 export function buildResourceItem({
   name,
   value,
+  targetApi,
 }: {
   name: string;
   value: string;
+  targetApi?: string;
 }): ResourceItemXML {
-  return { $: { name }, _: value };
+  const item: ResourceItemXML = { $: { name }, _: value };
+  if (targetApi) {
+    item.$['tools:targetApi'] = targetApi;
+  }
+  return item;
 }
 
 export function buildResourceGroup(parent: {

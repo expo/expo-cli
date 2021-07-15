@@ -85,6 +85,12 @@ Object {
       "com.sec.android.provider.badge.permission.WRITE",
     ],
     "softwareKeyboardLayoutMode": "pan",
+    "splash": Object {
+      "backgroundColor": "#ff00ff",
+      "dark": Object {
+        "backgroundColor": "#00ffff",
+      },
+    },
     "userInterfaceStyle": "light",
     "versionCode": 6,
   },
@@ -300,9 +306,27 @@ Object {
               },
               Object {
                 "$": Object {
+                  "name": "splashscreen_background",
+                },
+                "_": "#ff00ff",
+              },
+              Object {
+                "$": Object {
                   "name": "notification_icon_color",
                 },
                 "_": "green",
+              },
+            ],
+          },
+        },
+        "colorsNight": Object {
+          "resources": Object {
+            "color": Array [
+              Object {
+                "$": Object {
+                  "name": "splashscreen_background",
+                },
+                "_": "#00ffff",
               },
             ],
           },
@@ -720,6 +744,9 @@ Object {
         },
         "styles": Object {
           "resources": Object {
+            "$": Object {
+              "xmlns:tools": "http://schemas.android.com/tools",
+            },
             "style": Array [
               Object {
                 "$": Object {
@@ -738,6 +765,12 @@ Object {
                       "name": "colorPrimary",
                     },
                     "_": "@color/colorPrimary",
+                  },
+                  Object {
+                    "$": Object {
+                      "name": "android:windowTranslucentStatus",
+                    },
+                    "_": "true",
                   },
                   Object {
                     "$": Object {
@@ -762,6 +795,20 @@ Object {
                       "name": "android:windowBackground",
                     },
                     "_": "@color/activityBackground",
+                  },
+                ],
+              },
+              Object {
+                "$": Object {
+                  "name": "Theme.App.SplashScreen",
+                  "parent": "AppTheme",
+                },
+                "item": Array [
+                  Object {
+                    "$": Object {
+                      "name": "android:windowBackground",
+                    },
+                    "_": "@drawable/splashscreen",
                   },
                 ],
               },
@@ -945,6 +992,12 @@ Object {
       "com.sec.android.provider.badge.permission.WRITE",
     ],
     "softwareKeyboardLayoutMode": "pan",
+    "splash": Object {
+      "backgroundColor": "#ff00ff",
+      "dark": Object {
+        "backgroundColor": "#00ffff",
+      },
+    },
     "userInterfaceStyle": "light",
     "versionCode": 6,
   },
@@ -1160,9 +1213,27 @@ Object {
               },
               Object {
                 "$": Object {
+                  "name": "splashscreen_background",
+                },
+                "_": "#ff00ff",
+              },
+              Object {
+                "$": Object {
                   "name": "notification_icon_color",
                 },
                 "_": "green",
+              },
+            ],
+          },
+        },
+        "colorsNight": Object {
+          "resources": Object {
+            "color": Array [
+              Object {
+                "$": Object {
+                  "name": "splashscreen_background",
+                },
+                "_": "#00ffff",
               },
             ],
           },
@@ -1189,6 +1260,7 @@ Object {
                   "android:name": ".MainApplication",
                   "android:roundIcon": "@mipmap/ic_launcher_round",
                   "android:theme": "@style/AppTheme",
+                  "android:usesCleartextTraffic": "true",
                 },
                 "activity": Array [
                   Object {
@@ -1330,6 +1402,12 @@ Object {
                 "meta-data": Array [
                   Object {
                     "$": Object {
+                      "android:name": "expo.modules.updates.EXPO_UPDATE_URL",
+                      "android:value": "https://exp.host/@bacon/mycoolapp",
+                    },
+                  },
+                  Object {
+                    "$": Object {
                       "android:name": "com.facebook.sdk.ApplicationId",
                       "android:value": "@string/facebook_app_id",
                     },
@@ -1384,12 +1462,6 @@ Object {
                   },
                   Object {
                     "$": Object {
-                      "android:name": "expo.modules.updates.EXPO_UPDATE_URL",
-                      "android:value": "https://exp.host/@bacon/mycoolapp",
-                    },
-                  },
-                  Object {
-                    "$": Object {
                       "android:name": "expo.modules.notifications.default_notification_icon",
                       "android:resource": "@drawable/notification_icon",
                     },
@@ -1437,6 +1509,36 @@ Object {
               },
               Object {
                 "$": Object {
+                  "android:name": "android.permission.SYSTEM_ALERT_WINDOW",
+                },
+              },
+              Object {
+                "$": Object {
+                  "android:name": "android.permission.READ_PHONE_STATE",
+                },
+              },
+              Object {
+                "$": Object {
+                  "android:name": "android.permission.VIBRATE",
+                },
+              },
+              Object {
+                "$": Object {
+                  "android:name": "android.permission.MODIFY_AUDIO_SETTINGS",
+                },
+              },
+              Object {
+                "$": Object {
+                  "android:name": "android.permission.READ_EXTERNAL_STORAGE",
+                },
+              },
+              Object {
+                "$": Object {
+                  "android:name": "android.permission.WRITE_EXTERNAL_STORAGE",
+                },
+              },
+              Object {
+                "$": Object {
                   "android:name": "android.permission.CAMERA",
                 },
               },
@@ -1468,6 +1570,9 @@ Object {
         },
         "styles": Object {
           "resources": Object {
+            "$": Object {
+              "xmlns:tools": "http://schemas.android.com/tools",
+            },
             "style": Array [
               Object {
                 "$": Object {
@@ -1480,6 +1585,12 @@ Object {
                       "name": "colorPrimary",
                     },
                     "_": "@color/colorPrimary",
+                  },
+                  Object {
+                    "$": Object {
+                      "name": "android:windowTranslucentStatus",
+                    },
+                    "_": "true",
                   },
                   Object {
                     "$": Object {
@@ -1504,6 +1615,20 @@ Object {
                       "name": "android:windowBackground",
                     },
                     "_": "@color/activityBackground",
+                  },
+                ],
+              },
+              Object {
+                "$": Object {
+                  "name": "Theme.App.SplashScreen",
+                  "parent": "AppTheme",
+                },
+                "item": Array [
+                  Object {
+                    "$": Object {
+                      "name": "android:windowBackground",
+                    },
+                    "_": "@drawable/splashscreen",
                   },
                 ],
               },
@@ -1666,6 +1791,12 @@ Object {
       "com.sec.android.provider.badge.permission.WRITE",
     ],
     "softwareKeyboardLayoutMode": "pan",
+    "splash": Object {
+      "backgroundColor": "#ff00ff",
+      "dark": Object {
+        "backgroundColor": "#00ffff",
+      },
+    },
     "userInterfaceStyle": "light",
     "versionCode": 6,
   },
