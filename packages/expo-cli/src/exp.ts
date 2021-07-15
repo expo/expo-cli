@@ -356,7 +356,7 @@ Command.prototype.asyncAction = function (asyncFn: Action) {
       // TODO: Find better ways to consolidate error messages
       if (err instanceof AbortCommandError || err instanceof SilentError) {
         // Do nothing when a prompt is cancelled or the error is logged in a pretty way.
-      } else if (err.isCommandError) {
+      } else if (err.isCommandError || err.isPluginError) {
         Log.error(err.message);
       } else if (err._isApiError) {
         Log.error(chalk.red(err.message));
