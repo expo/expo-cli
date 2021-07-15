@@ -24,6 +24,7 @@
     "build"
   ],
   "devDependencies": {
+    "@types/lodash": "^4.14.171",
     "@expo/babel-preset-cli": "0.2.20"
   },
   "dependencies": {
