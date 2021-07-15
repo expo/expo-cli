@@ -40,7 +40,7 @@
   },
   "devDependencies": {
     "@expo/babel-preset-cli": "0.2.20",
-    "expo": "37",
+    "expo": "42",
     "metro": "^0.59.0",
     "metro-config": "^0.59.0",
     "react-native": "~0.63.4",
