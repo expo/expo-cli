@@ -3,8 +3,8 @@ import {
   addImports,
   appendContentsInsideDeclarationBlock,
   findNewInstanceCodeBlock,
-  replaceContentsWithOffset,
-} from '@expo/config-plugins/build/utils/androidCode';
+} from '@expo/config-plugins/build/android/codeMod';
+import { replaceContentsWithOffset } from '@expo/config-plugins/build/utils/commonCodeMod';
 
 export const withAndroidModulesMainActivity: ConfigPlugin = config => {
   return withMainActivity(config, config => {
