@@ -3,7 +3,7 @@ import type { Command } from 'commander';
 import { applyAsyncAction } from './utils/applyAsyncAction';
 
 export default function (program: Command) {
-  applyAsyncAction(
+  applyAsyncAction<string[]>(
     program
       .command('install [packages...]')
       .alias('add')

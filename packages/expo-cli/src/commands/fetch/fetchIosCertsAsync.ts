@@ -7,7 +7,7 @@ import { Context } from '../../credentials/context';
 import Log from '../../log';
 import { getOrPromptForBundleIdentifier } from '../utils/getOrPromptApplicationId';
 
-async function fetchIosCertsAsync(projectRoot: string): Promise<void> {
+export async function actionAsync(projectRoot: string): Promise<void> {
   const inProjectDir = (filename: string): string => path.resolve(projectRoot, filename);
 
   const bundleIdentifier = await getOrPromptForBundleIdentifier(projectRoot);
@@ -85,5 +85,3 @@ Push P12 password:         ${
 
   Log.log('All done!');
 }
-
-export default fetchIosCertsAsync;

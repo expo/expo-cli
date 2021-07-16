@@ -6,7 +6,7 @@ import { RobotUser, User, UserManager, Versions } from 'xdl';
 
 import Log from '../../log';
 import { getProjectOwner } from '../../projects';
-import { action as publishAction } from '../publish';
+import { actionAsync as publishAction } from '../publishAsync';
 import { sleep } from '../utils/promise';
 import * as UrlUtils from '../utils/url';
 import { BuilderOptions } from './BaseBuilder.types';
