@@ -4,17 +4,15 @@ import fs from 'fs-extra';
 import { sync as globSync } from 'glob';
 import path from 'path';
 
-import {
-  AssetBundle,
-  EmbeddedAssets,
-  ExponentTools,
-  IosPlist,
-  IosWorkspace,
-  LoggerDetach as logger,
-  StandaloneBuildFlags,
-  StandaloneContext,
-  UrlUtils,
-} from '../internal';
+import * as EmbeddedAssets from '../EmbeddedAssets';
+import * as UrlUtils from '../UrlUtils';
+import * as AssetBundle from './AssetBundle';
+import * as ExponentTools from './ExponentTools';
+import * as IosPlist from './IosPlist';
+import * as IosWorkspace from './IosWorkspace';
+import logger from './Logger';
+import StandaloneBuildFlags from './StandaloneBuildFlags';
+import StandaloneContext from './StandaloneContext';
 
 const SERVICE_CONTEXT_PROJECT_NAME = 'exponent-view-template';
 

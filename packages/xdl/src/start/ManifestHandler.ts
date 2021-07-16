@@ -6,23 +6,20 @@ import http from 'http';
 import os from 'os';
 import { URL } from 'url';
 
-import {
-  Analytics,
-  ANONYMOUS_USERNAME,
-  ApiV2,
-  Config,
-  ConnectionStatus,
-  Doctor,
-  learnMore,
-  ProjectAssets,
-  ProjectSettings,
-  ProjectUtils,
-  resolveEntryPoint,
-  UrlUtils,
-  UserManager,
-  UserSettings,
-  Versions,
-} from '../internal';
+import Analytics from '../Analytics';
+import ApiV2 from '../ApiV2';
+import Config from '../Config';
+import * as ConnectionStatus from '../ConnectionStatus';
+import * as ProjectAssets from '../ProjectAssets';
+import * as ProjectSettings from '../ProjectSettings';
+import * as UrlUtils from '../UrlUtils';
+import UserManager, { ANONYMOUS_USERNAME } from '../User';
+import UserSettings from '../UserSettings';
+import * as Versions from '../Versions';
+import { learnMore } from '../logs/TerminalLink';
+import * as Doctor from '../project/Doctor';
+import * as ProjectUtils from '../project/ProjectUtils';
+import { resolveEntryPoint } from '../tools/resolveEntryPoint';
 
 interface HostInfo {
   host: string;

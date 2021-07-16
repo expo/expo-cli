@@ -1,4 +1,4 @@
-import { ProjectTarget } from '@expo/config';
+import type { ProjectTarget } from '@expo/config';
 import JsonFile from '@expo/json-file';
 import fs from 'fs-extra';
 import path from 'path';

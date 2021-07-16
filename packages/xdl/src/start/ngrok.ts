@@ -2,20 +2,16 @@ import { readExpRcAsync } from '@expo/config';
 import * as path from 'path';
 import { promisify } from 'util';
 
-import {
-  Android,
-  ANONYMOUS_USERNAME,
-  assertValidProjectRoot,
-  delayAsync,
-  NgrokOptions,
-  ProjectSettings,
-  ProjectUtils,
-  resolveNgrokAsync,
-  UrlUtils,
-  UserManager,
-  UserSettings,
-  XDLError,
-} from '../internal';
+import * as Android from '../Android';
+import * as ProjectSettings from '../ProjectSettings';
+import * as UrlUtils from '../UrlUtils';
+import UserManager, { ANONYMOUS_USERNAME } from '../User';
+import UserSettings from '../UserSettings';
+import XDLError from '../XDLError';
+import * as ProjectUtils from '../project/ProjectUtils';
+import { assertValidProjectRoot } from '../project/errors';
+import { delayAsync } from '../utils/delayAsync';
+import { NgrokOptions, resolveNgrokAsync } from './resolveNgrok';
 
 const NGROK_CONFIG = {
   authToken: '5W1bR67GNbWcXqmxZzBG1_56GezNeaX6sSRvn8npeQ8',

@@ -2,26 +2,23 @@ import { ExpoConfig, getConfig } from '@expo/config';
 import { MessageSocket } from '@expo/dev-server';
 import { Server } from 'http';
 
+import Analytics from '../Analytics';
+import * as Android from '../Android';
+import Config from '../Config';
+import * as ConnectionStatus from '../ConnectionStatus';
+import * as DevSession from '../DevSession';
+import * as Env from '../Env';
+import * as ProjectSettings from '../ProjectSettings';
+import * as Webpack from '../Webpack';
+import * as ProjectUtils from '../project/ProjectUtils';
+import { assertValidProjectRoot } from '../project/errors';
+import { startTunnelsAsync, stopTunnelsAsync } from './ngrok';
+import { startDevServerAsync, StartOptions as StartDevServerOptions } from './startDevServerAsync';
+import { startExpoServerAsync, stopExpoServerAsync } from './startLegacyExpoServerAsync';
 import {
-  Analytics,
-  Android,
-  assertValidProjectRoot,
-  Config,
-  ConnectionStatus,
-  DevSession,
-  Env,
-  ProjectSettings,
-  ProjectUtils,
-  startDevServerAsync,
-  StartDevServerOptions,
-  startExpoServerAsync,
   startReactNativeServerAsync,
-  startTunnelsAsync,
-  stopExpoServerAsync,
   stopReactNativeServerAsync,
-  stopTunnelsAsync,
-  Webpack,
-} from '../internal';
+} from './startLegacyReactNativeServerAsync';
 import { watchBabelConfigForProject } from './watchBabelConfig';
 
 let serverInstance: Server | null = null;

@@ -9,28 +9,21 @@ import FormData from 'form-data';
 import fs from 'fs-extra';
 import path from 'path';
 
-import {
-  Analytics,
-  ApiV2,
-  Config,
-  createBundlesAsync,
-  Doctor,
-  EmbeddedAssets,
-  Env,
-  ExponentTools,
-  getPublishExpConfigAsync,
-  LoadedHook,
-  Logger as logger,
-  prepareHooks,
-  printBundleSizes,
-  ProjectAssets,
-  PublishOptions,
-  runHook,
-  Sentry,
-  User,
-  UserManager,
-  XDLError,
-} from '../internal';
+import Analytics from '../Analytics';
+import ApiV2 from '../ApiV2';
+import Config from '../Config';
+import * as EmbeddedAssets from '../EmbeddedAssets';
+import * as Env from '../Env';
+import logger from '../Logger';
+import * as ProjectAssets from '../ProjectAssets';
+import * as Sentry from '../Sentry';
+import UserManager, { User } from '../User';
+import XDLError from '../XDLError';
+import * as ExponentTools from '../detach/ExponentTools';
+import * as Doctor from './Doctor';
+import { createBundlesAsync, printBundleSizes } from './createBundlesAsync';
+import { getPublishExpConfigAsync, PublishOptions } from './getPublishExpConfigAsync';
+import { LoadedHook, prepareHooks, runHook } from './runHook';
 
 export interface PublishedProjectResult {
   /**

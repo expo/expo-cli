@@ -5,14 +5,12 @@ import http from 'http';
 import { parse } from 'url';
 import uuid from 'uuid';
 
-import {
-  Analytics,
-  Config,
-  ProjectAssets,
-  ProjectUtils,
-  resolveEntryPoint,
-  UrlUtils,
-} from '../internal';
+import Analytics from '../Analytics';
+import Config from '../Config';
+import * as ProjectAssets from '../ProjectAssets';
+import * as UrlUtils from '../UrlUtils';
+import * as ProjectUtils from '../project/ProjectUtils';
+import { resolveEntryPoint } from '../tools/resolveEntryPoint';
 import {
   getBundleUrlAsync,
   getExpoGoConfig,

@@ -1,7 +1,7 @@
-import { ExpoConfig } from '@expo/config';
+import type { ExpoConfig } from '@expo/config';
 import getenv from 'getenv';
 
-import { Versions } from './internal';
+import { gteSdkVersion } from './utils/gteSdkVersion';
 
 export function isDebug(): boolean {
   return getenv.boolish('EXPO_DEBUG', false);
@@ -24,6 +24,6 @@ export function maySkipManifestValidation(): boolean {
  * way), false if we should fall back to spawning it as a subprocess (supported for backwards
  * compatibility with SDK39 and older).
  */
-export function shouldUseDevServer(exp: ExpoConfig) {
-  return Versions.gteSdkVersion(exp, '40.0.0') || getenv.boolish('EXPO_USE_DEV_SERVER', false);
+export function shouldUseDevServer(exp: Pick<ExpoConfig, 'sdkVersion'>) {
+  return gteSdkVersion(exp, '40.0.0') || getenv.boolish('EXPO_USE_DEV_SERVER', false);
 }

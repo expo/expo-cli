@@ -5,7 +5,8 @@ import path from 'path';
 import url from 'url';
 import urlJoin from 'url-join';
 
-import { AnyStandaloneContext, ExponentTools } from '../internal';
+import * as ExponentTools from '../detach/ExponentTools';
+import { AnyStandaloneContext } from '../detach/StandaloneContext';
 
 const EXPO_DOMAINS = ['expo.io', 'exp.host', 'expo.test', 'localhost'];
 export const DEFAULT_CDN_HOST = 'https://d1wp6m56sqw74a.cloudfront.net';

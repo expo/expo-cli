@@ -6,7 +6,9 @@ import {
   ProjectTarget,
 } from '@expo/config';
 
-import { Env, ExponentTools, XDLError } from '../internal';
+import * as Env from '../Env';
+import XDLError from '../XDLError';
+import * as ExponentTools from '../detach/ExponentTools';
 
 export type PublishOptions = {
   releaseChannel?: string;

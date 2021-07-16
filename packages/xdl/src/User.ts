@@ -2,17 +2,14 @@ import camelCase from 'lodash/camelCase';
 import isEmpty from 'lodash/isEmpty';
 import snakeCase from 'lodash/snakeCase';
 
-import {
-  Analytics,
-  ApiV2 as ApiV2Client,
-  ConnectionStatus,
-  Logger,
-  Semaphore,
-  UnifiedAnalytics,
-  UserData,
-  UserSettings,
-  XDLError,
-} from './internal';
+import Analytics from './Analytics';
+import ApiV2Client from './ApiV2';
+import * as ConnectionStatus from './ConnectionStatus';
+import Logger from './Logger';
+import UnifiedAnalytics from './UnifiedAnalytics';
+import UserSettings, { UserData } from './UserSettings';
+import XDLError from './XDLError';
+import { Semaphore } from './utils/Semaphore';
 
 export type User = {
   kind: 'user';

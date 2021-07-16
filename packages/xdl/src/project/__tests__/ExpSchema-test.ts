@@ -1,4 +1,4 @@
-import { ExpSchema } from '../../internal';
+import * as ExpSchema from '../ExpSchema';
 
 describe(`getAssetSchemasAsync return array of strings including some known values`, () => {
   test.each([

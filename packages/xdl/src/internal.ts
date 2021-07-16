@@ -1,3 +1,11 @@
+import { install as installSourceMapSupport } from 'source-map-support';
+
+if (process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test') {
+  installSourceMapSupport();
+}
+
+// throw new Error('LOADED');
+
 /*
   All imports of XDL modules *within* XDL should be imported from this module.
   This file exists so that we can control the loading order of modules: without

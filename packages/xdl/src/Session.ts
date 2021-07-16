@@ -1,6 +1,6 @@
 import slugid from 'slugid';
 
-import { UserSettings } from './internal';
+import UserSettings from './UserSettings';
 
 function _newIdentifier(type = 'c') {
   return type + '-' + slugid.v4();

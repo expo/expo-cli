@@ -3,7 +3,7 @@ import { vol } from 'memfs';
 import path from 'path';
 
 import UserSettings from '../../UserSettings';
-import { ExpoUpdatesManifestHandler } from '../../internal';
+import * as ExpoUpdatesManifestHandler from '../ExpoUpdatesManifestHandler';
 import { getManifestResponseAsync } from '../ManifestHandler';
 
 const actualFs = jest.requireActual('fs') as typeof fs;

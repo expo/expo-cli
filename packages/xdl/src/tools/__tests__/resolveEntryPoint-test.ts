@@ -1,6 +1,6 @@
 import { vol } from 'memfs';
 
-import { resolveEntryPoint } from '../../internal';
+import { resolveEntryPoint } from '../../tools/resolveEntryPoint';
 
 jest.mock('fs');
 

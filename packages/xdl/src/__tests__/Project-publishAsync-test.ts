@@ -4,7 +4,10 @@ import { copyFileSync, ensureDirSync } from 'fs-extra';
 import path from 'path';
 import temporary from 'tempy';
 
-import { LogRecord, ProjectUtils, publishAsync, UserManager } from '../internal';
+import UserManager from '../User';
+import { LogRecord } from '../logs/PackagerLogsStream';
+import * as ProjectUtils from '../project/ProjectUtils';
+import { publishAsync } from '../project/publishAsync';
 
 jest.dontMock('fs');
 jest.dontMock('resolve-from');

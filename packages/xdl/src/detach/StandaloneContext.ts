@@ -1,4 +1,4 @@
-import { StandaloneBuildFlags } from '../internal';
+import StandaloneBuildFlags from './StandaloneBuildFlags';
 
 type StandaloneContextDataType = 'user' | 'service';
 

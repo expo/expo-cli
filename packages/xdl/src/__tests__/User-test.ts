@@ -1,11 +1,8 @@
 import fs from 'fs-extra';
 
-import {
-  ApiV2,
-  UserManager as GlobalUserManager,
-  UserManagerInstance,
-  UserSettings,
-} from '../internal';
+import ApiV2 from '../ApiV2';
+import GlobalUserManager, { UserManagerInstance } from '../User';
+import UserSettings from '../UserSettings';
 
 jest.mock('../ApiV2', () => ({
   clientForUser: jest.fn(),

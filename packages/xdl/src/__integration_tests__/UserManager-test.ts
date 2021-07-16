@@ -3,7 +3,8 @@ import HashIds from 'hashids';
 import path from 'path';
 import uuid from 'uuid';
 
-import { ApiV2 as ApiV2Client, User, UserManagerInstance } from '../internal';
+import ApiV2Client from '../ApiV2';
+import { User, UserManagerInstance } from '../User';
 
 const _makeShortId = (salt: string, minLength = 10) => {
   const hashIds = new HashIds(salt, minLength);

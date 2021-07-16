@@ -1,7 +1,9 @@
 import fs from 'fs-extra';
 import path from 'path';
 
-import { downloadAppAsync, UserSettings, Versions } from '../internal';
+import UserSettings from '../UserSettings';
+import * as Versions from '../Versions';
+import { downloadAppAsync } from './downloadAppAsync';
 
 function _apkCacheDirectory() {
   const dotExpoHomeDirectory = UserSettings.dotExpoHomeDirectory();

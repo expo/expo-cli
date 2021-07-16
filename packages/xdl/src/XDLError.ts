@@ -1,4 +1,4 @@
-import { ErrorCode } from './internal';
+import { ErrorCode } from './ErrorCode';
 
 const ERROR_PREFIX = 'Error: ';
 

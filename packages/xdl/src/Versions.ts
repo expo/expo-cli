@@ -4,7 +4,9 @@ import pickBy from 'lodash/pickBy';
 import path from 'path';
 import semver from 'semver';
 
-import { ApiV2 as ApiV2Client, FsCache, XDLError } from './internal';
+import ApiV2Client from './ApiV2';
+import XDLError from './XDLError';
+import { Cacher } from './tools/FsCache';
 
 export type SDKVersion = {
   androidExpoViewUrl?: string;
@@ -45,7 +47,7 @@ type Versions = {
 
 export async function versionsAsync(options?: { skipCache?: boolean }): Promise<Versions> {
   const api = new ApiV2Client();
-  const versionCache = new FsCache.Cacher(
+  const versionCache = new Cacher(
     () => api.getAsync('versions/latest'),
     'versions.json',
     0,

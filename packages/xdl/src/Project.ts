@@ -1,14 +1,6 @@
-import {
-  assertValidProjectRoot,
-  ProjectSettings,
-  startExpoServerAsync,
-  StartOptions,
-  startReactNativeServerAsync,
-  startTunnelsAsync,
-  stopReactNativeServerAsync,
-  stopTunnelsAsync,
-  XDLError,
-} from './internal';
+import * as ProjectSettings from './ProjectSettings';
+import XDLError from './XDLError';
+import { assertValidProjectRoot } from './project/errors';
 
 /**
  * @deprecated Use `ProjectSettings.setPackagerInfoAsync`
@@ -36,24 +28,18 @@ export async function currentStatus(projectRoot: string) {
   return ProjectSettings.getCurrentStatusAsync(projectRoot);
 }
 
+export { publishAsync, PublishedProjectResult } from './project/publishAsync';
+export { createBundlesAsync, printBundleSizes } from './project/createBundlesAsync';
+export { getPublishExpConfigAsync, PublishOptions } from './project/getPublishExpConfigAsync';
+export { runHook, prepareHooks, LoadedHook } from './project/runHook';
+export { writeArtifactSafelyAsync } from './tools/ArtifactUtils';
+
+export { startTunnelsAsync, stopTunnelsAsync } from './start/ngrok';
+export { StartOptions } from './start/startDevServerAsync';
+export { startExpoServerAsync, stopExpoServerAsync } from './start/startLegacyExpoServerAsync';
 export {
-  startTunnelsAsync,
-  stopTunnelsAsync,
-  startExpoServerAsync,
-  StartOptions,
   startReactNativeServerAsync,
   stopReactNativeServerAsync,
-};
-export {
-  broadcastMessage,
-  createBundlesAsync,
-  getPublishExpConfigAsync,
-  prepareHooks,
-  publishAsync,
-  PublishedProjectResult,
-  PublishOptions,
-  runHook,
-  startAsync,
-  stopAsync,
-  writeArtifactSafelyAsync,
-} from './internal';
+} from './start/startLegacyReactNativeServerAsync';
+
+export { startAsync, stopAsync, broadcastMessage } from './start/startAsync';

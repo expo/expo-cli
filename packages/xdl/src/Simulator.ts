@@ -8,23 +8,21 @@ import path from 'path';
 import prompts from 'prompts';
 import semver from 'semver';
 
-import {
-  Analytics,
-  BundleIdentifier,
-  delayAsync,
-  downloadAppAsync,
-  learnMore,
-  Logger,
-  NotificationCode,
-  Prompts,
-  SimControl,
-  SimControlLogs,
-  UrlUtils,
-  UserSettings,
-  Versions,
-  Webpack,
-  Xcode,
-} from './internal';
+import Analytics from './Analytics';
+import * as BundleIdentifier from './BundleIdentifier';
+import Logger from './Logger';
+import NotificationCode from './NotificationCode';
+import * as Prompts from './Prompts';
+import * as SimControl from './SimControl';
+import * as SimControlLogs from './SimControlLogs';
+import * as UrlUtils from './UrlUtils';
+import UserSettings from './UserSettings';
+import * as Versions from './Versions';
+import * as Webpack from './Webpack';
+import * as Xcode from './Xcode';
+import { learnMore } from './logs/TerminalLink';
+import { delayAsync } from './utils/delayAsync';
+import { downloadAppAsync } from './utils/downloadAppAsync';
 import { profileMethod } from './utils/profileMethod';
 
 let _lastUrl: string | null = null;

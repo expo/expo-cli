@@ -3,7 +3,7 @@ import crypto from 'crypto';
 import fs from 'fs-extra';
 import uuidv4 from 'uuid/v4';
 
-import { Logger as logger } from '../internal';
+import logger from '../Logger';
 
 const log = logger.global;
 

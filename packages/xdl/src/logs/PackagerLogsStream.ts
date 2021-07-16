@@ -3,7 +3,8 @@ import chalk from 'chalk';
 import getenv from 'getenv';
 import path from 'path';
 
-import { Logger, ProjectUtils } from '../internal';
+import Logger from '../Logger';
+import * as ProjectUtils from '../project/ProjectUtils';
 
 type BuildEventType =
   | 'METRO_INITIALIZE_STARTED'

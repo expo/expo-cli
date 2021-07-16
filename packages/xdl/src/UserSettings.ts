@@ -4,7 +4,8 @@ import os from 'os';
 import path from 'path';
 import uuid from 'uuid';
 
-import { ConnectionType, Env } from './internal';
+import * as Env from './Env';
+import { ConnectionType } from './User';
 
 export type UserSettingsData = {
   developmentCodeSigningId?: string;
