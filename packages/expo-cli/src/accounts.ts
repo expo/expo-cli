@@ -13,7 +13,7 @@ import { nonEmptyInput } from './validators';
 
 UserManager.initialize();
 
-type CommandOptions = {
+export type CommandOptions = {
   username?: string;
   password?: string;
   otp?: string;
