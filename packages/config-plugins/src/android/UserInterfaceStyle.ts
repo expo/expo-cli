@@ -2,9 +2,9 @@ import { ExpoConfig } from '@expo/config-types';
 
 import { ConfigPlugin } from '../Plugin.types';
 import { createAndroidManifestPlugin, withMainActivity } from '../plugins/android-plugins';
-import { addImports } from '../utils/androidCode';
 import * as WarningAggregator from '../utils/warnings';
 import { AndroidManifest, getMainActivityOrThrow } from './Manifest';
+import { addImports } from './codeMod';
 
 export const CONFIG_CHANGES_ATTRIBUTE = 'android:configChanges';
 
