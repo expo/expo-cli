@@ -5,9 +5,9 @@ import {
   PackageJSONConfig,
   ProjectTarget,
 } from '@expo/config';
-import simpleSpinner from '@expo/simple-spinner';
 import chalk from 'chalk';
 import fs from 'fs';
+import { Ora } from 'ora';
 import path from 'path';
 import { Project, UserManager } from 'xdl';
 
@@ -15,6 +15,7 @@ import CommandError from '../CommandError';
 import Log from '../log';
 import { getProjectOwner } from '../projects';
 import * as sendTo from '../sendTo';
+import { logNewSection } from '../utils/ora';
 import * as TerminalLink from './utils/TerminalLink';
 import { formatNamedWarning } from './utils/logConfigWarnings';
 
@@ -76,10 +77,11 @@ export async function actionAsync(
 
   // Build and publish the project.
 
-  Log.log(`Building optimized bundles and generating sourcemaps...`);
-
+  let spinner: Ora | null = null;
   if (options.quiet) {
-    simpleSpinner.start();
+    spinner = logNewSection(`Building optimized bundles and generating sourcemaps...`);
+  } else {
+    Log.log(`Building optimized bundles and generating sourcemaps...`);
   }
 
   const result = await Project.publishAsync(projectRoot, {
@@ -92,8 +94,8 @@ export async function actionAsync(
   const url = result.url;
   const projectPageUrl = result.projectPageUrl;
 
-  if (options.quiet) {
-    simpleSpinner.stop();
+  if (options.quiet && spinner) {
+    spinner.succeed();
   }
 
   Log.log('Publish complete');

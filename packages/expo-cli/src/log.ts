@@ -56,11 +56,12 @@ export default class Log {
     Log._bundleProgressBar = bar;
   }
 
-  public static setSpinner(oraSpinner: Ora | null) {
+  public static setSpinner(oraSpinner: (Ora & { __modified?: boolean }) | null) {
     Log._oraSpinner = oraSpinner;
-    if (Log._oraSpinner) {
-      const originalStart = Log._oraSpinner.start.bind(Log._oraSpinner);
-      Log._oraSpinner.start = function (text: any) {
+    if (oraSpinner && !oraSpinner.__modified) {
+      oraSpinner.__modified = true;
+      const originalStart = oraSpinner.start.bind(oraSpinner);
+      oraSpinner.start = function (text: any) {
         // Reset the new line tracker
         Log._isLastLineNewLine = false;
         // Ensure we set the observable spinner to this because it is animating.
@@ -68,8 +69,8 @@ export default class Log {
         return originalStart(text);
       };
       // All other methods of stopping will invoke the stop method.
-      const originalStop = Log._oraSpinner.stop.bind(Log._oraSpinner);
-      Log._oraSpinner.stop = () => {
+      const originalStop = oraSpinner.stop.bind(oraSpinner);
+      oraSpinner.stop = () => {
         // Reset the target spinner
         Log.setSpinner(null);
         return originalStop();
