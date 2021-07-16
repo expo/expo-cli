@@ -1,5 +1,6 @@
-import { AndroidConfig, ConfigPlugin, withMainApplication } from '@expo/config-plugins';
+import { ConfigPlugin, withMainApplication } from '@expo/config-plugins';
 import {
+  addImports,
   appendContentsInsideDeclarationBlock,
   findNewInstanceCodeBlock,
   replaceContentsWithOffset,
@@ -42,7 +43,7 @@ function addReactNativeHostWrapperIfNeeded(
     return mainApplication;
   }
 
-  mainApplication = AndroidConfig.UserInterfaceStyle.addJavaImports(
+  mainApplication = addImports(
     mainApplication,
     ['org.unimodules.adapters.react.ReactNativeHostWrapper'],
     isJava
@@ -82,7 +83,7 @@ function addApplicationLifecycleDispatchImportIfNeeded(
     return mainApplication;
   }
 
-  return AndroidConfig.UserInterfaceStyle.addJavaImports(
+  return addImports(
     mainApplication,
     ['org.unimodules.adapters.react.ApplicationLifecycleDispatcher'],
     isJava
@@ -112,11 +113,7 @@ function addConfigurationChangeIfNeeded(
 ): string {
   if (mainApplication.match(/\s+onConfigurationChanged\(/m) == null) {
     // If not override onConfigurationChanged() at all
-    mainApplication = AndroidConfig.UserInterfaceStyle.addJavaImports(
-      mainApplication,
-      ['android.content.res.Configuration'],
-      isJava
-    );
+    mainApplication = addImports(mainApplication, ['android.content.res.Configuration'], isJava);
 
     const addConfigurationChangeBlock = isJava
       ? [

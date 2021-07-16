@@ -1,5 +1,6 @@
-import { AndroidConfig, ConfigPlugin, withMainActivity } from '@expo/config-plugins';
+import { ConfigPlugin, withMainActivity } from '@expo/config-plugins';
 import {
+  addImports,
   appendContentsInsideDeclarationBlock,
   findNewInstanceCodeBlock,
   replaceContentsWithOffset,
@@ -20,7 +21,7 @@ export function setModulesMainActivity(mainActivity: string, language: 'java' | 
 
   if (mainActivity.match(/\s+createReactActivityDelegate\(\)/m) == null) {
     // If not override `createReactActivityDelegate()`, tries to override with wrapper
-    mainActivity = AndroidConfig.UserInterfaceStyle.addJavaImports(
+    mainActivity = addImports(
       mainActivity,
       [
         'com.facebook.react.ReactActivityDelegate',
@@ -53,7 +54,7 @@ export function setModulesMainActivity(mainActivity: string, language: 'java' | 
     );
   } else if (mainActivity.match(/\s+ReactActivityDelegateWrapper\(/m) == null) {
     // If override `createReactActivityDelegate()` already, wrap it with `ReactActivityDelegateWrapper`
-    mainActivity = AndroidConfig.UserInterfaceStyle.addJavaImports(
+    mainActivity = addImports(
       mainActivity,
       ['org.unimodules.adapters.react.ReactActivityDelegateWrapper'],
       isJava
