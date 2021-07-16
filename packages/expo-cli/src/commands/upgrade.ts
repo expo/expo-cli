@@ -21,7 +21,7 @@ import { Android, Project, ProjectSettings, Simulator, Versions } from 'xdl';
 import CommandError from '../CommandError';
 import Log from '../log';
 import { confirmAsync, selectAsync } from '../prompts';
-import { ora } from '../utils/ora';
+import { logNewSection } from '../utils/ora';
 import { findProjectRootAsync } from './utils/ProjectUtils';
 import { getBundledNativeModulesAsync } from './utils/bundledNativeModules';
 import { assertProjectHasExpoExtensionFilesAsync } from './utils/deprecatedExtensionWarnings';
@@ -48,15 +48,6 @@ export type TargetSDKVersion = Pick<
   | 'androidClientUrl'
   | 'beta'
 >;
-
-function logNewSection(title: string) {
-  const spinner = ora(chalk.bold(title));
-  spinner.start();
-  if (Log.isDebug) {
-    spinner.stop();
-  }
-  return spinner;
-}
 
 export function maybeFormatSdkVersion(sdkVersionString: string | null): string | null {
   if (typeof sdkVersionString !== 'string' || sdkVersionString === 'UNVERSIONED') {

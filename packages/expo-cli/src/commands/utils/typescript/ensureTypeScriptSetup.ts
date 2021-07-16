@@ -10,7 +10,7 @@ import { Versions } from 'xdl';
 import CommandError from '../../../CommandError';
 import Log from '../../../log';
 import { confirmAsync } from '../../../prompts';
-import { logNewSection } from '../CreateApp';
+import { logNewSection } from '../../../utils/ora';
 import { profileMethod } from '../profileMethod';
 import {
   collectMissingPackages,

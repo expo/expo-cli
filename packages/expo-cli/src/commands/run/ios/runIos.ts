@@ -22,7 +22,7 @@ import { startBundlerAsync } from './startBundlerAsync';
 
 const isMac = process.platform === 'darwin';
 
-export async function runIosActionAsync(projectRoot: string, options: Options) {
+export async function actionAsync(projectRoot: string, options: Options) {
   const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
   track(projectRoot, exp);
 

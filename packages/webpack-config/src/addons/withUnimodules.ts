@@ -12,7 +12,9 @@ import {
   validateEnvironment,
 } from '../env';
 import { createBabelLoader, createFontLoader } from '../loaders';
-import { ExpoDefinePlugin } from '../plugins';
+// importing from "../plugins" will cause dependency issues with next-adapter
+// other plugins import webpack4 packages which error on load when next-adapter uses webpack5
+import ExpoDefinePlugin from '../plugins/ExpoDefinePlugin';
 import { AnyConfiguration, Arguments, Environment, InputEnvironment } from '../types';
 import { rulesMatchAnyFiles } from '../utils';
 import withAlias from './withAlias';
@@ -37,6 +39,8 @@ export default function withUnimodules(
 
   // Add native react aliases
   webpackConfig = withAlias(webpackConfig, getAliases(env.projectRoot));
+
+  const isWebpack5 = argv.webpack5;
 
   if (!webpackConfig.module) webpackConfig.module = { rules: [] };
   else if (!webpackConfig.module.rules)
@@ -149,7 +153,7 @@ export default function withUnimodules(
 
   // Transpile and remove expo modules from Next.js externals.
   const includeFunc = babelLoader.include as (path: string) => boolean;
-  webpackConfig = ignoreExternalModules(webpackConfig, includeFunc);
+  webpackConfig = ignoreExternalModules(webpackConfig, includeFunc, isWebpack5);
 
   // Add a loose requirement on the ResizeObserver polyfill if it's installed...
   webpackConfig = withEntry(webpackConfig, env, {
@@ -173,7 +177,8 @@ export default function withUnimodules(
  */
 export function ignoreExternalModules(
   webpackConfig: AnyConfiguration,
-  shouldIncludeModule: (path: string) => boolean
+  shouldIncludeModule: (path: string) => boolean,
+  isWebpack5: boolean
 ): AnyConfiguration {
   if (!webpackConfig.externals) {
     return webpackConfig;
@@ -185,6 +190,14 @@ export function ignoreExternalModules(
     if (typeof external !== 'function') {
       return external;
     }
+
+    if (isWebpack5) {
+      return (ctx => {
+        const relPath = path.join('node_modules', ctx.request);
+        return shouldIncludeModule(relPath) ? undefined : (external as (content: any) => any)(ctx);
+      }) as ExternalsFunctionElement;
+    }
+
     return ((ctx, req, cb) => {
       const relPath = path.join('node_modules', req);
       return shouldIncludeModule(relPath) ? cb() : external(ctx, req, cb);

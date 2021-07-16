@@ -16,6 +16,7 @@ import CommandError, { SilentError } from '../CommandError';
 import Log from '../log';
 import prompts, { selectAsync } from '../prompts';
 import { extractAndPrepareTemplateAppAsync } from '../utils/extractTemplateAppAsync';
+import { logNewSection } from '../utils/ora';
 import * as CreateApp from './utils/CreateApp';
 import { usesOldExpoUpdatesAsync } from './utils/ProjectUtils';
 
@@ -259,7 +260,7 @@ async function action(incomingProjectRoot: string, command: Command) {
     initialConfig.name = projectName;
   }
 
-  const extractTemplateStep = CreateApp.logNewSection('Downloading and extracting project files.');
+  const extractTemplateStep = logNewSection('Downloading and extracting project files.');
   let projectPath;
   try {
     projectPath = await extractAndPrepareTemplateAppAsync(templateSpec, projectRoot, initialConfig);
@@ -341,7 +342,7 @@ async function action(incomingProjectRoot: string, command: Command) {
 }
 
 async function installNodeDependenciesAsync(projectRoot: string, packageManager: 'yarn' | 'npm') {
-  const installJsDepsStep = CreateApp.logNewSection('Installing JavaScript dependencies.');
+  const installJsDepsStep = logNewSection('Installing JavaScript dependencies.');
   try {
     await CreateApp.installNodeDependenciesAsync(projectRoot, packageManager);
     installJsDepsStep.succeed('Installed JavaScript dependencies.');

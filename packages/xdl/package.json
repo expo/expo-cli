@@ -105,7 +105,6 @@
     "@types/form-data": "^2.2.0",
     "@types/fs-extra": "^9.0.1",
     "@types/getenv": "^0.7.0",
-    "@types/hapi__joi": "^17.1.2",
     "@types/hashids": "^1.0.30",
     "@types/node-forge": "^0.9.7",
     "@types/raven": "^2.5.3",

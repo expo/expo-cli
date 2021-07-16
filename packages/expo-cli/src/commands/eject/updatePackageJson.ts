@@ -5,7 +5,7 @@ import fs from 'fs-extra';
 import path from 'path';
 
 import Log from '../../log';
-import * as CreateApp from '../utils/CreateApp';
+import { logNewSection } from '../../utils/ora';
 import { isModuleSymlinked } from '../utils/isModuleSymlinked';
 
 export type DependenciesMap = { [key: string]: string | number };
@@ -28,7 +28,7 @@ export async function updatePackageJSONAsync({
 }): Promise<DependenciesModificationResults> {
   // NOTE(brentvatne): Removing spaces between steps for now, add back when
   // there is some additional context for steps
-  const updatingPackageJsonStep = CreateApp.logNewSection(
+  const updatingPackageJsonStep = logNewSection(
     'Updating your package.json scripts, dependencies, and main file'
   );
 

@@ -62,7 +62,12 @@ export function getIosSplashConfig(config: ExpoConfig): IOSSplashConfig | null {
     };
   }
 
-  return null;
+  return {
+    backgroundColor: '#ffffff',
+    resizeMode: 'contain',
+    tabletImage: null,
+    tabletBackgroundColor: null,
+  };
 }
 
 export function warnUnsupportedSplashProperties(config: ExpoConfig) {

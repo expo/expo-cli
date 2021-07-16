@@ -7,7 +7,7 @@ import * as path from 'path';
 import semver from 'semver';
 
 import Log from '../../log';
-import { ora } from '../../utils/ora';
+import { logNewSection } from '../../utils/ora';
 import { hasPackageJsonDependencyListChangedAsync } from '../run/ios/Podfile';
 
 export function validateName(name?: string): string | true {
@@ -142,14 +142,6 @@ export async function installNodeDependenciesAsync(
   } else {
     await new PackageManager.NpmPackageManager(options).installAsync();
   }
-}
-
-export function logNewSection(title: string) {
-  const spinner = ora(Log.chalk.bold(title));
-  // respect loading indicators
-  Log.setSpinner(spinner);
-  spinner.start();
-  return spinner;
 }
 
 export function getChangeDirectoryPath(projectRoot: string): string {

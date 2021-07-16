@@ -4,7 +4,7 @@ import chalk from 'chalk';
 import semver from 'semver';
 
 import Log from '../../log';
-import * as CreateApp from '../utils/CreateApp';
+import { logNewSection } from '../../utils/ora';
 import { learnMore } from '../utils/TerminalLink';
 
 /**
@@ -81,7 +81,7 @@ function logSetupWarnings(warnings: Record<string, string>) {
   }
 
   Log.newLine();
-  const warnAdditionalSetupStep = CreateApp.logNewSection(
+  const warnAdditionalSetupStep = logNewSection(
     'Checking if any additional setup steps are required for installed SDK packages.'
   );
 

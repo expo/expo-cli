@@ -84,6 +84,33 @@ describe(getConfig, () => {
       },
       'custom-location-json'
     );
+    vol.fromJSON(
+      {
+        'app.json': JSON.stringify({
+          expo: {
+            name: 'app-expo-name',
+            plugins: ['__missing-plugin'],
+          },
+        }),
+        'package.json': JSON.stringify({
+          version: '1.0.0',
+        }),
+      },
+      'json-missing-plugins'
+    );
+    vol.fromJSON(
+      {
+        'app.config.js': `module.exports = {
+          foo: 'bar',
+          name: 'cool+export-json_app.config',
+          plugins: [(config)=> { config.name ='custom'; return config; }]
+        };`,
+        'package.json': JSON.stringify({
+          version: '1.0.0',
+        }),
+      },
+      'js-plugins'
+    );
   });
 
   afterAll(() => {
@@ -169,6 +196,40 @@ describe(getConfig, () => {
     beforeEach(() => {
       delete process.env.EXPO_DEBUG;
       resetCustomConfigPaths();
+    });
+
+    it(`skips plugin parsing`, () => {
+      const { exp } = getConfig('json-missing-plugins', {
+        skipSDKVersionRequirement: true,
+        skipPlugins: true,
+      });
+      expect(exp.plugins).toBeUndefined();
+    });
+    it(`skips JS plugin parsing`, () => {
+      const { exp } = getConfig('js-plugins', {
+        skipSDKVersionRequirement: true,
+        skipPlugins: true,
+      });
+      expect(exp.name).toBe('cool+export-json_app.config');
+      expect(exp.plugins).toBeUndefined();
+    });
+    it(`applies JS plugins`, () => {
+      const { exp } = getConfig('js-plugins', {
+        skipSDKVersionRequirement: true,
+        skipPlugins: false,
+      });
+      expect(exp.name).toBe('custom');
+      expect(exp.plugins).toBeDefined();
+    });
+    it(`throws when plugins are missing`, () => {
+      expect(() =>
+        getConfig('json-missing-plugins', {
+          skipSDKVersionRequirement: true,
+          skipPlugins: false,
+        })
+      ).toThrow(
+        /Failed to resolve plugin for module "__missing-plugin" relative to "json-missing-plugins"/
+      );
     });
 
     // Test that setCustomConfigPath works to read custom json configs.

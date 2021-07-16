@@ -97,7 +97,7 @@ async function resolveOptionsAsync(
   };
 }
 
-export async function runAndroidActionAsync(projectRoot: string, options: Options) {
+export async function actionAsync(projectRoot: string, options: Options) {
   const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
   track(projectRoot, exp);
 
@@ -141,11 +141,14 @@ export async function runAndroidActionAsync(projectRoot: string, options: Option
     });
     if (!result.success) {
       // TODO: Maybe fallback on using the package name.
-      throw new CommandError(result.error);
+      throw new CommandError(
+        typeof result.error === 'string' ? result.error : result.error.message
+      );
     }
   } else {
     Log.debug('Opening app on device via package name: ' + props.device.name);
     // For now, just open the app with a matching package name
+    await Android.startAdbReverseAsync(projectRoot);
     await Android.openAppAsync(props.device, props);
   }
 

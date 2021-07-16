@@ -104,10 +104,6 @@ export interface ExpoConfig {
    */
   appKey?: string;
   /**
-   * @deprecated Use `androidStatusBar` instead.
-   */
-  androidStatusBarColor?: string;
-  /**
    * Configuration for the status bar on Android. For more details please navigate to [Configuring StatusBar](https://docs.expo.io/guides/configuring-statusbar/).
    */
   androidStatusBar?: {
@@ -124,7 +120,7 @@ export interface ExpoConfig {
      */
     hidden?: boolean;
     /**
-     * Specifies whether the status bar should be translucent (whether it should be treated as a block element that will take up space on the device's screen and limit space available for the rest of your app to be rendered, or be treated as an element with `'position = absolute'` that is rendered above your app's content). Defaults to `true` (default iOS behavior, the iOS status bar cannot be set translucent by the system)
+     * Sets `android:windowTranslucentStatus` in `styles.xml`. When false, the system status bar pushes the content of your app down (similar to `position: relative`). When true, the status bar floats above the content in your app (similar to `position: absolute`). Defaults to `true` to match the iOS status bar behavior (which can only float above content).
      */
     translucent?: boolean;
   };
@@ -193,7 +189,7 @@ export interface ExpoConfig {
      */
     checkAutomatically?: 'ON_ERROR_RECOVERY' | 'ON_LOAD';
     /**
-     * How long (in ms) to allow for fetching OTA updates before falling back to a cached version of the app. Defaults to 30000 (30 sec). Must be between 0 and 300000 (5 minutes).
+     * How long (in ms) to allow for fetching OTA updates before falling back to a cached version of the app. Defaults to 0. Must be between 0 and 300000 (5 minutes).
      */
     fallbackToCacheTimeout?: number;
     /**
@@ -335,7 +331,7 @@ export interface IOS {
    */
   icon?: string;
   /**
-   * Merchant ID for use with Apple Pay in your standalone app.
+   * @deprecated Merchant ID for use with Apple Pay in your standalone app.
    */
   merchantId?: string;
   /**
@@ -382,17 +378,9 @@ export interface IOS {
     };
   };
   /**
-   * @deprecated Use `updates.enabled` instead.
-   */
-  isRemoteJSEnabled?: boolean;
-  /**
    * [Firebase Configuration File](https://support.google.com/firebase/answer/7015592) Location of the `GoogleService-Info.plist` file for configuring Firebase.
    */
   googleServicesFile?: string;
-  /**
-   * @deprecated Use `updates` key with `fallbackToCacheTimeout: 0` instead.
-   */
-  loadJSInBackgroundExperimental?: boolean;
   /**
    * Whether your standalone iOS app supports tablet screen sizes. Defaults to `false`.
    */
@@ -402,7 +390,7 @@ export interface IOS {
    */
   isTabletOnly?: boolean;
   /**
-   * If true, indicates that your standalone iOS app does not support Slide Over and Split View on iPad. Defaults to `true` currently, but will change to `false` in a future SDK version.
+   * If true, indicates that your standalone iOS app does not support Slide Over and Split View on iPad. Defaults to `false`
    */
   requireFullScreen?: boolean;
   /**
@@ -442,7 +430,7 @@ export interface IOS {
    */
   splash?: {
     /**
-     * Local path to a XIB file as the loading screen. It overrides other loading screen options. Note: This will only be used in the standalone app (i.e., after you build the app). It will not be used in the Expo Go.
+     * @deprecated Apple has deprecated `.xib` splash screens in favor of `.storyboard` files. Local path to a XIB file as the loading screen. It overrides other loading screen options. Note: This will only be used in the standalone app (i.e., after you build the app). It will not be used in the Expo Go.
      */
     xib?: string;
     /**
@@ -493,7 +481,7 @@ export interface Android {
    */
   userInterfaceStyle?: 'light' | 'dark' | 'automatic';
   /**
-   * A Boolean value that indicates whether the app should use the new notifications API.
+   * @deprecated A Boolean value that indicates whether the app should use the new notifications API.
    */
   useNextNotificationsApi?: boolean;
   /**
@@ -692,31 +680,31 @@ export interface Android {
 }
 export interface AndroidIntentFiltersData {
   /**
-   * the scheme of the URL, e.g. `https`
+   * Scheme of the URL, e.g. `https`
    */
   scheme?: string;
   /**
-   * the hostname, e.g. `myapp.io`
+   * Hostname, e.g. `myapp.io`
    */
   host?: string;
   /**
-   * the port, e.g. `3000`
+   * Port, e.g. `3000`
    */
   port?: string;
   /**
-   * an exact path for URLs that should be matched by the filter, e.g. `/records`
+   * Exact path for URLs that should be matched by the filter, e.g. `/records`
    */
   path?: string;
   /**
-   *  a regex for paths that should be matched by the filter, e.g. `.*`
+   * Pattern for paths that should be matched by the filter, e.g. `.*`. Must begin with `/`
    */
   pathPattern?: string;
   /**
-   * a prefix for paths that should be matched by the filter, e.g. `/records/` will match `/records/123`
+   * Prefix for paths that should be matched by the filter, e.g. `/records/` will match `/records/123`
    */
   pathPrefix?: string;
   /**
-   * a MIME type for URLs that should be matched by the filter
+   * MIME type for URLs that should be matched by the filter
    */
   mimeType?: string;
 }

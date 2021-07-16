@@ -1,7 +1,5 @@
 import bunyan from '@expo/bunyan';
 import { setCustomConfigPath } from '@expo/config';
-import { INTERNAL_CALLSITES_REGEX } from '@expo/metro-config';
-import simpleSpinner from '@expo/simple-spinner';
 import boxen from 'boxen';
 import chalk from 'chalk';
 import program, { Command } from 'commander';
@@ -19,8 +17,6 @@ import {
   ApiV2,
   Binaries,
   Config,
-  ConnectionStatus,
-  Doctor,
   Logger,
   LogRecord,
   LogUpdater,
@@ -42,7 +38,7 @@ import Log from './log';
 import update from './update';
 import urlOpts from './urlOpts';
 import { matchFileNameOrURLFromStackTrace } from './utils/matchFileNameOrURLFromStackTrace';
-import { ora } from './utils/ora';
+import { logNewSection, ora } from './utils/ora';
 
 // We use require() to exclude package.json from TypeScript's analysis since it lives outside the
 // src directory and would change the directory structure of the emitted files under the build
@@ -345,6 +341,7 @@ Command.prototype.asyncAction = function (asyncFn: Action) {
     try {
       const options = args[args.length - 1];
       if (options.offline) {
+        const { ConnectionStatus } = await import('xdl');
         ConnectionStatus.setIsOffline(true);
       }
 
@@ -357,7 +354,7 @@ Command.prototype.asyncAction = function (asyncFn: Action) {
       // TODO: Find better ways to consolidate error messages
       if (err instanceof AbortCommandError || err instanceof SilentError) {
         // Do nothing when a prompt is cancelled or the error is logged in a pretty way.
-      } else if (err.isCommandError) {
+      } else if (err.isCommandError || err.isPluginError) {
         Log.error(err.message);
       } else if (err._isApiError) {
         Log.error(chalk.red(err.message));
@@ -370,6 +367,7 @@ Command.prototype.asyncAction = function (asyncFn: Action) {
         } else {
           Log.addNewLineIfNone();
           Log.error(err.message);
+          const { formatStackTrace } = await import('./utils/formatStackTrace');
           const stacktrace = formatStackTrace(err.stack, this.name());
           Log.error(chalk.gray(stacktrace));
         }
@@ -382,63 +380,6 @@ Command.prototype.asyncAction = function (asyncFn: Action) {
     }
   });
 };
-
-function getStringBetweenParens(value: string): string {
-  const regExp = /\(([^)]+)\)/;
-  const matches = regExp.exec(value);
-  if (matches && matches?.length > 1) {
-    return matches[1];
-  }
-  return value;
-}
-
-function focusLastPathComponent(value: string): string {
-  const parts = value.split('/');
-  if (parts.length > 1) {
-    const last = parts.pop();
-    const current = chalk.dim(parts.join('/') + '/');
-    return `${current}${last}`;
-  }
-  return chalk.dim(value);
-}
-
-function formatStackTrace(stacktrace: string, command: string): string {
-  const treeStackLines: string[][] = [];
-  for (const line of stacktrace.split('\n')) {
-    const [first, ...parts] = line.trim().split(' ');
-    // Remove at -- we'll use a branch instead.
-    if (first === 'at') {
-      treeStackLines.push(parts);
-    }
-  }
-
-  return treeStackLines
-    .map((parts, index) => {
-      let first = parts.shift();
-      let last = parts.pop();
-
-      // Replace anonymous with command name
-      if (first === 'Command.<anonymous>') {
-        first = chalk.bold(`expo ${command}`);
-      } else if (first?.startsWith('Object.')) {
-        // Remove extra JS types from function names
-        first = first.split('Object.').pop()!;
-      } else if (first?.startsWith('Function.')) {
-        // Remove extra JS types from function names
-        first = first.split('Function.').pop()!;
-      } else if (first?.startsWith('/')) {
-        // If the first element is a path
-        first = focusLastPathComponent(getStringBetweenParens(first));
-      }
-
-      if (last) {
-        last = focusLastPathComponent(getStringBetweenParens(last));
-      }
-      const branch = (index === treeStackLines.length - 1 ? '└' : '├') + '─';
-      return ['   ', branch, first, ...parts, last].filter(Boolean).join(' ');
-    })
-    .join('\n');
-}
 
 // asyncActionProjectDir captures the projectDirectory from the command line,
 // setting it to cwd if it is not provided.
@@ -519,7 +460,9 @@ Command.prototype.asyncActionProjectDir = function (
       }
     };
 
-    const logStackTrace = (
+    const { INTERNAL_CALLSITES_REGEX } = await import('@expo/metro-config');
+
+    const logStackTrace = async (
       chunk: LogRecord,
       logFn: (...args: any[]) => void,
       nestedLogFn: (...args: any[]) => void
@@ -617,6 +560,7 @@ Command.prototype.asyncActionProjectDir = function (
     new PackagerLogsStream({
       projectRoot,
       onStartBuildBundle: () => {
+        // TODO: Unify with commands/utils/progress.ts
         bar = new ProgressBar('Building JavaScript bundle [:bar] :percent', {
           width: 64,
           total: 100,
@@ -693,6 +637,7 @@ Command.prototype.asyncActionProjectDir = function (
       Log.setSpinner(spinner);
       // validate that this is a good projectDir before we try anything else
 
+      const { Doctor } = await import('xdl');
       const status = await Doctor.validateWithoutNetworkAsync(projectRoot, {
         skipSDKVersionRequirement: options.skipSDKVersionRequirement,
       });
@@ -848,12 +793,41 @@ function _registerLogs() {
       write: (chunk: any) => {
         if (chunk.code) {
           switch (chunk.code) {
+            case NotificationCode.START_PROGRESS_BAR: {
+              const bar = new ProgressBar(chunk.msg, {
+                width: 64,
+                total: 100,
+                clear: true,
+                complete: '=',
+                incomplete: ' ',
+              });
+              Log.setBundleProgressBar(bar);
+              return;
+            }
+            case NotificationCode.TICK_PROGRESS_BAR: {
+              const spinner = Log.getProgress();
+              if (spinner) {
+                spinner.tick(1, chunk.msg);
+              }
+              return;
+            }
+            case NotificationCode.STOP_PROGRESS_BAR: {
+              const spinner = Log.getProgress();
+              if (spinner) {
+                spinner.terminate();
+              }
+              return;
+            }
             case NotificationCode.START_LOADING:
-              simpleSpinner.start();
+              logNewSection(chunk.msg || '');
               return;
-            case NotificationCode.STOP_LOADING:
-              simpleSpinner.stop();
+            case NotificationCode.STOP_LOADING: {
+              const spinner = Log.getSpinner();
+              if (spinner) {
+                spinner.stop();
+              }
               return;
+            }
             case NotificationCode.DOWNLOAD_CLI_PROGRESS:
               return;
           }

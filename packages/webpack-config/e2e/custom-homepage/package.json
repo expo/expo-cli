@@ -3,10 +3,10 @@
   "homepage": "http://expo.github.io/homepage-defined",
   "main": "./index",
   "dependencies": {
-    "expo": "37.0.11",
-    "react": "16.9.0",
-    "react-dom": "16.9.0",
-    "react-native-web": "0.11.7"
+    "expo": "42",
+    "react": "16.13.1",
+    "react-dom": "16.13.1",
+    "react-native-web": "~0.13.12"
   },
   "devDependencies": {
     "@babel/core": "7.9.0"

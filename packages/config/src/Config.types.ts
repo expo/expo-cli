@@ -155,6 +155,10 @@ export type GetConfigOptions = {
    */
   isModdedConfig?: boolean;
   skipSDKVersionRequirement?: boolean;
+  /**
+   * Dangerously skip resolving plugins.
+   */
+  skipPlugins?: boolean;
   strict?: boolean;
 };
 
