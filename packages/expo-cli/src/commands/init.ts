@@ -14,7 +14,7 @@ import { UserManager, Versions } from 'xdl';
 
 import CommandError, { SilentError } from '../CommandError';
 import Log from '../log';
-import prompts, { selectAsync } from '../prompts';
+import prompts, { confirmAsync, selectAsync } from '../prompts';
 import { extractAndPrepareTemplateAppAsync } from '../utils/extractTemplateAppAsync';
 import { logNewSection } from '../utils/ora';
 import * as CreateApp from './utils/CreateApp';
@@ -169,6 +169,13 @@ async function action(incomingProjectRoot: string, command: Command) {
     projectRoot = await resolveProjectRootAsync(incomingProjectRoot || options.name);
   }
 
+  const cdPath = CreateApp.getChangeDirectoryPath(projectRoot);
+
+  // Check if we should skip initializing the git tree
+  const shouldSkipInitializeGitTree = await checkSkipInitializeGitTree(projectRoot, cdPath, {
+    silent: true,
+  });
+
   let resolvedTemplate: string | null = options.template ?? null;
   // @ts-ignore: This guards against someone passing --template without a name after it.
   if (resolvedTemplate === true) {
@@ -290,8 +297,6 @@ async function action(incomingProjectRoot: string, command: Command) {
 
   // Configure updates (?)
 
-  const cdPath = CreateApp.getChangeDirectoryPath(projectRoot);
-
   let showPublishBeforeBuildWarning: boolean | undefined;
   let didConfigureUpdatesProjectFiles: boolean = false;
   let username: string | null = null;
@@ -334,8 +339,9 @@ async function action(incomingProjectRoot: string, command: Command) {
   // npm install will fail with a confusing error if so.
   try {
     // check if git is installed
-    // check if inside git repo
-    await initGitRepoAsync(projectPath, { silent: true, commit: true });
+    if (!shouldSkipInitializeGitTree) {
+      await initGitRepoAsync(projectPath, { silent: true, commit: true });
+    }
   } catch {
     // todo: check if git is installed, bail out
   }
@@ -353,24 +359,47 @@ async function installNodeDependenciesAsync(projectRoot: string, packageManager:
   }
 }
 
-export async function initGitRepoAsync(
+async function checkSkipInitializeGitTree(
   root: string,
-  flags: { silent: boolean; commit: boolean } = { silent: false, commit: true }
+  cdPath: string,
+  flags: { silent: boolean } = { silent: false }
 ) {
   // let's see if we're in a git tree
+  let insideGitTree = false;
+
   try {
-    await spawnAsync('git', ['rev-parse', '--is-inside-work-tree'], {
+    const resultPromise = await spawnAsync('git', ['rev-parse', '--is-inside-work-tree'], {
       cwd: root,
     });
-    !flags.silent && Log.log('New project is already inside of a git repo, skipping git init.');
+
+    insideGitTree = resultPromise.stdout.trim() === 'true';
   } catch (e) {
     if (e.errno === 'ENOENT') {
-      !flags.silent && Log.warn('Unable to initialize git repo. `git` not in PATH.');
+      !flags.silent && Log.warn('Unable to check if within existing git repo. `git` not in PATH.');
       return false;
     }
   }
 
-  // not in git tree, so let's init
+  let shouldSkipInitializeGitTree = false;
+
+  if (insideGitTree) {
+    Log.log(
+      `Your project will be initialized inside an existing git repository (${process.cwd()})`
+    );
+    shouldSkipInitializeGitTree =
+      program.nonInteractive ||
+      (await confirmAsync({
+        message: `Skip initializing a git repository for ${cdPath}?`,
+      }));
+  }
+
+  return shouldSkipInitializeGitTree;
+}
+
+export async function initGitRepoAsync(
+  root: string,
+  flags: { silent: boolean; commit: boolean } = { silent: false, commit: true }
+) {
   try {
     await spawnAsync('git', ['init'], { cwd: root });
     !flags.silent && Log.log('Initialized a git repository.');
