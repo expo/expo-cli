@@ -1,4 +1,8 @@
-import { insertContentsAtOffset, replaceContentsWithOffset } from '../commonCodeMod';
+import {
+  insertContentsAtOffset,
+  replaceContentsWithOffset,
+  searchFromOffset,
+} from '../commonCodeMod';
 
 describe(insertContentsAtOffset, () => {
   it('should insert in the middle', () => {
@@ -41,5 +45,20 @@ describe(replaceContentsWithOffset, () => {
     expect(() => {
       replaceContentsWithOffset('aabbcc', 'dd', 2, 1);
     }).toThrow();
+  });
+});
+
+describe(searchFromOffset, () => {
+  it('should return matched index + offset', () => {
+    expect(searchFromOffset('aabbaabb', /aabb/, 0)).toBe(0);
+    expect(searchFromOffset('aabbaabb', /aabb/, 2)).toBe(4);
+  });
+
+  it('should return -1 if not found', () => {
+    expect(searchFromOffset('aabbaabb', /cc/, 2)).toBe(-1);
+  });
+
+  it('should return -1 if offset out of bound', () => {
+    expect(searchFromOffset('aabbaabb', /cc/, 100)).toBe(-1);
   });
 });

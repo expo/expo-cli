@@ -60,3 +60,17 @@ export function replaceContentsWithOffset(
   const suffix = contents.substring(endOffset + 1);
   return `${prefix}${replacement}${suffix}`;
 }
+
+/**
+ * String.prototype.search() with offset support
+ *
+ * @param source source string to search
+ * @param regexp RegExp pattern to search
+ * @param offset start offset of `source` to search `regexp` pattern
+ * @returns The index of the first match between the regular expression and the given string, or -1 if no match was found.
+ */
+export function searchFromOffset(source: string, regexp: RegExp, offset: number): number {
+  const target = source.substring(offset);
+  const matchedIndex = target.search(regexp);
+  return matchedIndex < 0 ? matchedIndex : matchedIndex + offset;
+}

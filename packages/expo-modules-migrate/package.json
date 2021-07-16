@@ -39,9 +39,12 @@
     "@expo/config-plugins": "^3.0.3",
     "@expo/package-manager": "^0.0.43",
     "chalk": "^4.0.0",
-    "find-up": "^5.0.0"
+    "find-up": "^5.0.0",
+    "fs-extra": "9.0.0",
+    "glob": "7.1.6"
   },
   "devDependencies": {
+    "@types/fs-extra": "^9.0.1",
     "rimraf": "^3.0.2"
   },
   "publishConfig": {
