@@ -292,7 +292,7 @@ export async function compileWebAppAsync(
         if (messages.errors.length > 1) {
           messages.errors.length = 1;
         }
-        return reject(new Error(messages.errors.join('\n\n')));
+        return reject(new XDLError('WEBPACK_BUNDLE', messages.errors.join('\n\n')));
       }
       if (
         getenv.boolish('EXPO_WEB_BUILD_STRICT', false) &&
@@ -307,7 +307,7 @@ export async function compileWebAppAsync(
               'Most CI servers set it automatically.\n'
           )
         );
-        return reject(new Error(messages.warnings.join('\n\n')));
+        return reject(new XDLError('WEBPACK_BUNDLE', messages.warnings.join('\n\n')));
       }
       resolve({
         warnings: messages.warnings,
