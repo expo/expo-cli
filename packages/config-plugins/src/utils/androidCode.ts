@@ -134,3 +134,15 @@ export function replaceContentsWithOffset(
   const suffix = contents.substring(endOffset + 1);
   return `${prefix}${replacement}${suffix}`;
 }
+
+export function addImports(source: string, imports: string[], isJava: boolean): string {
+  const lines = source.split('\n');
+  const lineIndexWithPackageDeclaration = lines.findIndex(line => line.match(/^package .*;?$/));
+  for (const javaImport of imports) {
+    if (!source.includes(javaImport)) {
+      const importStatement = `import ${javaImport}${isJava ? ';' : ''}`;
+      lines.splice(lineIndexWithPackageDeclaration + 1, 0, importStatement);
+    }
+  }
+  return lines.join('\n');
+}
