@@ -78,7 +78,6 @@
     "@expo/plist": "0.0.13",
     "@expo/prebuild-config": "2.0.5",
     "@expo/results": "^1.0.0",
-    "@expo/simple-spinner": "1.0.2",
     "@expo/spawn-async": "1.5.0",
     "@expo/xcpretty": "^3.0.1",
     "babel-runtime": "6.26.0",
