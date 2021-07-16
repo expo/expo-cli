@@ -1,6 +1,6 @@
 {
   "name": "@expo/babel-preset-cli",
-  "version": "0.2.20",
+  "version": "0.2.21",
   "description": "The Babel preset for Expo CLI packages",
   "main": "index.js",
   "scripts": {
@@ -30,7 +30,6 @@
     "@babel/preset-env": "^7.4.4",
     "@babel/preset-typescript": "^7.3.3",
     "babel-plugin-dynamic-import-node": "^2.3.3"
-    
   },
   "devDependencies": {
     "jest-snapshot-serializer-raw": "^1.1.0"
