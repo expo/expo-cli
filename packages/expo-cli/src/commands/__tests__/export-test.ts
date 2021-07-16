@@ -4,7 +4,11 @@ import { vol } from 'memfs';
 import { mockExpoXDL } from '../../__tests__/mock-utils';
 import { jester } from '../../credentials/__tests__/fixtures/mocks-constants';
 import Log from '../../log';
-import { collectMergeSourceUrlsAsync, ensurePublicUrlAsync, promptPublicUrlAsync } from '../export';
+import {
+  collectMergeSourceUrlsAsync,
+  ensurePublicUrlAsync,
+  promptPublicUrlAsync,
+} from '../exportAsync';
 
 jest.mock('fs');
 jest.mock('resolve-from');
@@ -27,6 +31,9 @@ mockExpoXDL({
   },
   ApiV2: {
     clientForUser: jest.fn(),
+  },
+  Doctor: {
+    validateWithoutNetworkAsync: jest.fn(() => 0),
   },
 });
 
