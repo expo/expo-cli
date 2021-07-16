@@ -97,7 +97,7 @@ async function resolveOptionsAsync(
   };
 }
 
-export async function runAndroidActionAsync(projectRoot: string, options: Options) {
+export async function actionAsync(projectRoot: string, options: Options) {
   const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
   track(projectRoot, exp);
 
