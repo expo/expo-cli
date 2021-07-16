@@ -6,7 +6,7 @@ import { profileMethod } from '../utils/profileMethod';
 export function applyAsyncActionProjectDir<Options = Record<string, any>>(
   command: Command,
   resolve: () => Promise<{ actionAsync: (projectRoot: string, options: Options) => Promise<void> }>,
-  settings?: { checkConfig?: boolean }
+  settings?: { checkConfig?: boolean; skipSDKVersionRequirement?: true }
 ) {
   command.asyncActionProjectDir(async (projectRoot: string, options: Options) => {
     const mod = await resolve();
