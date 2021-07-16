@@ -6,7 +6,7 @@ import {
   getDependenciesFromBundledNativeModules,
   maybeFormatSdkVersion,
   upgradeAsync,
-} from '../upgrade';
+} from '../upgradeAsync';
 
 jest.mock('fs');
 jest.mock('resolve-from');
