@@ -1,6 +1,6 @@
 {
   "name": "@expo/image-utils",
-  "version": "0.3.14",
+  "version": "0.3.15",
   "description": "A package used by Expo CLI for processing images",
   "main": "build/index.js",
   "scripts": {
@@ -40,7 +40,7 @@
     "tempy": "0.3.0"
   },
   "devDependencies": {
-    "@expo/babel-preset-cli": "0.2.20",
+    "@expo/babel-preset-cli": "0.2.21",
     "@types/fs-extra": "^9.0.1",
     "@types/getenv": "^0.7.0",
     "@types/semver": "^6.0.0",
