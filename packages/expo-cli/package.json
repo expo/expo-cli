@@ -83,7 +83,7 @@
     "@expo/xcpretty": "^3.0.1",
     "babel-runtime": "6.26.0",
     "base32.js": "0.1.0",
-    "boxen": "4.1.0",
+    "boxen": "^5.0.1",
     "bplist-parser": "0.2.0",
     "chalk": "^4.0.0",
     "cli-table3": "^0.6.0",
