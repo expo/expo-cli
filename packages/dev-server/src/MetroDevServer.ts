@@ -119,7 +119,7 @@ let nextBuildID = 0;
 // TODO: deprecate options.target
 export async function bundleAsync(
   projectRoot: string,
-  expoConfig: ExpoConfig,
+  expoConfig: Pick<ExpoConfig, 'android' | 'sdkVersion'>,
   options: MetroDevServerOptions,
   bundles: BundleOptions[]
 ): Promise<BundleOutput[]> {

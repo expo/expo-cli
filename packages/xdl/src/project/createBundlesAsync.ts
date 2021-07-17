@@ -24,29 +24,29 @@ type PackagerOptions = {
   minify: boolean;
 };
 
-export function printBundleSizes(bundles: { android: BundleOutput; ios: BundleOutput }) {
+export function printBundleSizes(bundles: { android?: BundleOutput; ios?: BundleOutput }) {
   const files: [string, string | Uint8Array][] = [];
 
-  if (bundles.ios.hermesBytecodeBundle) {
+  if (bundles.ios?.hermesBytecodeBundle) {
     files.push(['index.ios.js (Hermes)', bundles.ios.hermesBytecodeBundle]);
-  } else {
+  } else if (bundles.ios?.code) {
     files.push(['index.ios.js', bundles.ios.code]);
   }
-  if (bundles.android.hermesBytecodeBundle) {
+  if (bundles.android?.hermesBytecodeBundle) {
     files.push(['index.android.js (Hermes)', bundles.android.hermesBytecodeBundle]);
-  } else {
+  } else if (bundles.android?.code) {
     files.push(['index.android.js', bundles.android.code]);
   }
 
   // Account for inline source maps
-  if (bundles.ios.hermesSourcemap) {
+  if (bundles.ios?.hermesSourcemap) {
     files.push([chalk.dim('index.ios.js.map (Hermes)'), bundles.ios.hermesSourcemap]);
-  } else if (bundles.ios.map) {
+  } else if (bundles.ios?.map) {
     files.push([chalk.dim('index.ios.js.map'), bundles.ios.map]);
   }
-  if (bundles.android.hermesSourcemap) {
+  if (bundles.android?.hermesSourcemap) {
     files.push([chalk.dim('index.android.js.map (Hermes)'), bundles.android.hermesSourcemap]);
-  } else if (bundles.android.map) {
+  } else if (bundles.android?.map) {
     files.push([chalk.dim('index.android.js.map'), bundles.android.map]);
   }
 
