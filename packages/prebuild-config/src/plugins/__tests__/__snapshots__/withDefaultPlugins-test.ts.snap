@@ -157,7 +157,7 @@ Object {
       "CFBundleExecutable": "$(EXECUTABLE_NAME)",
       "CFBundleIdentifier": "$(PRODUCT_BUNDLE_IDENTIFIER)",
       "CFBundleInfoDictionaryVersion": "6.0",
-      "CFBundleName": "$(PRODUCT_NAME)",
+      "CFBundleName": "my cool app",
       "CFBundlePackageType": "APPL",
       "CFBundleShortVersionString": "1.0.0",
       "CFBundleSignature": "????",
@@ -840,7 +840,7 @@ Object {
           "CFBundleExecutable": "$(EXECUTABLE_NAME)",
           "CFBundleIdentifier": "$(PRODUCT_BUNDLE_IDENTIFIER)",
           "CFBundleInfoDictionaryVersion": "6.0",
-          "CFBundleName": "$(PRODUCT_NAME)",
+          "CFBundleName": "my cool app",
           "CFBundlePackageType": "APPL",
           "CFBundleShortVersionString": "1.0.0",
           "CFBundleSignature": "????",
@@ -1064,7 +1064,7 @@ Object {
       "CFBundleExecutable": "$(EXECUTABLE_NAME)",
       "CFBundleIdentifier": "$(PRODUCT_BUNDLE_IDENTIFIER)",
       "CFBundleInfoDictionaryVersion": "6.0",
-      "CFBundleName": "$(PRODUCT_NAME)",
+      "CFBundleName": "my cool app",
       "CFBundlePackageType": "APPL",
       "CFBundleShortVersionString": "1.0.0",
       "CFBundleSignature": "????",
@@ -1656,6 +1656,7 @@ Object {
         },
         "infoPlist": Object {
           "CFBundleDisplayName": "my cool app",
+          "CFBundleName": "my cool app",
           "CFBundleShortVersionString": "1.0.0",
           "CFBundleURLTypes": Array [
             Object {
@@ -1859,6 +1860,7 @@ Object {
     "googleServicesFile": "./config/GoogleService-Info.plist",
     "infoPlist": Object {
       "CFBundleDisplayName": "my cool app",
+      "CFBundleName": "my cool app",
       "CFBundleShortVersionString": "1.0.0",
       "CFBundleURLTypes": Array [
         Object {
