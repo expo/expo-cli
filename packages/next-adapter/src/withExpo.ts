@@ -5,7 +5,7 @@ import { AnyConfiguration } from '@expo/webpack-config/webpack/types';
 export default function withExpo(nextConfig: any = {}): any {
   return {
     ...nextConfig,
-    pageExtensions: getBareExtensions(['web']),
+    pageExtensions: [...getBareExtensions(['web']), ...nextConfig.pageExtensions],
     webpack(config: AnyConfiguration, options: any): AnyConfiguration {
       // Prevent define plugin from overwriting Next.js environment.
       process.env.EXPO_WEBPACK_DEFINE_ENVIRONMENT_AS_KEYS = 'true';
