@@ -7,8 +7,11 @@ import isReachable from 'is-reachable';
 import resolveFrom from 'resolve-from';
 import semver from 'semver';
 
-import { ExpSchema, ProjectUtils, Versions, Watchman } from '../internal';
+import * as Versions from '../Versions';
+import * as Watchman from '../Watchman';
 import { learnMore } from '../logs/TerminalLink';
+import * as ExpSchema from './ExpSchema';
+import * as ProjectUtils from './ProjectUtils';
 
 export const NO_ISSUES = 0;
 export const WARNING = 1;

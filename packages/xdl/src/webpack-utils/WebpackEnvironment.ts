@@ -2,7 +2,7 @@ import chalk from 'chalk';
 import getenv from 'getenv';
 import { Configuration } from 'webpack';
 
-import { ProjectUtils } from '../internal';
+import * as ProjectUtils from '../project/ProjectUtils';
 
 export const HOST = getenv.string('WEB_HOST', '0.0.0.0');
 

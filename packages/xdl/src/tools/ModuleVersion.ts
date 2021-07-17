@@ -3,7 +3,7 @@ import pTimeout from 'p-timeout';
 import npmPackageJson from 'package-json';
 import semver from 'semver';
 
-import { FsCache } from '../internal';
+import * as FsCache from './FsCache';
 
 /** @deprecated just use the update-check npm package */
 function createModuleVersionChecker(name: string, currentVersion: string) {

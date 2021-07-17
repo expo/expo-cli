@@ -1,4 +1,4 @@
-import { FsCache } from '../../internal';
+import * as FsCache from '../../tools/FsCache';
 
 jest.mock('analytics-node');
 

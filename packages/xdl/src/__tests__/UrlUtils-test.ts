@@ -1,6 +1,6 @@
 import { vol } from 'memfs';
 
-import { UrlUtils } from '../internal';
+import * as UrlUtils from '../UrlUtils';
 
 jest.mock('fs');
 jest.mock('resolve-from');

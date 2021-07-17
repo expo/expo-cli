@@ -1,13 +1,11 @@
 import { ExpoConfig } from '@expo/config-types';
 import os from 'os';
 
-import {
-  ApiV2 as ApiV2Client,
-  ConnectionStatus,
-  Logger as logger,
-  UrlUtils,
-  UserManager,
-} from './internal';
+import ApiV2Client from './ApiV2';
+import * as ConnectionStatus from './ConnectionStatus';
+import logger from './Logger';
+import * as UrlUtils from './UrlUtils';
+import UserManager from './User';
 
 const UPDATE_FREQUENCY_SECS = 20;
 

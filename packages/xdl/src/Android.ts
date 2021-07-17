@@ -10,21 +10,19 @@ import path from 'path';
 import prompts from 'prompts';
 import semver from 'semver';
 
-import {
-  Analytics,
-  Binaries,
-  downloadApkAsync,
-  Env,
-  ImageUtils,
-  learnMore,
-  Logger,
-  NotificationCode,
-  ProjectSettings,
-  Prompts,
-  UrlUtils,
-  Versions,
-  Webpack,
-} from './internal';
+import Analytics from './Analytics';
+import * as Binaries from './Binaries';
+import * as Env from './Env';
+import Logger from './Logger';
+import NotificationCode from './NotificationCode';
+import * as ProjectSettings from './ProjectSettings';
+import * as Prompts from './Prompts';
+import * as UrlUtils from './UrlUtils';
+import * as Versions from './Versions';
+import * as Webpack from './Webpack';
+import { learnMore } from './logs/TerminalLink';
+import * as ImageUtils from './tools/ImageUtils';
+import { downloadApkAsync } from './utils/downloadApkAsync';
 
 export type Device = {
   pid?: string;

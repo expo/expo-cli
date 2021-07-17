@@ -3,7 +3,7 @@ import { watchFile } from 'fs';
 import path from 'path';
 import resolveFrom from 'resolve-from';
 
-import { ProjectUtils } from '../internal';
+import * as ProjectUtils from '../project/ProjectUtils';
 
 // List of files that are being observed.
 const watchingFiles: string[] = [];

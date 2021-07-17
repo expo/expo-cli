@@ -5,7 +5,8 @@ import { exec, execSync } from 'child_process';
 import path from 'path';
 import { promisify } from 'util';
 
-import { Logger, XDLError } from './internal';
+import Logger from './Logger';
+import XDLError from './XDLError';
 
 const execAsync = promisify(exec);
 type DeviceState = 'Shutdown' | 'Booted';

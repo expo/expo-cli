@@ -1,6 +1,6 @@
 import { v4 } from 'uuid';
 
-import { UserSettings } from './internal';
+import UserSettings from './UserSettings';
 
 function _newIdentifier(type = 'c') {
   const bytes = v4(null, Buffer.alloc(16));

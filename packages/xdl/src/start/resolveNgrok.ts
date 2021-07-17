@@ -6,7 +6,9 @@ import requireg from 'requireg';
 import resolveFrom from 'resolve-from';
 import semver from 'semver';
 
-import { delayAsync, Logger, Prompts } from '../internal';
+import Logger from '../Logger';
+import * as Prompts from '../Prompts';
+import { delayAsync } from '../utils/delayAsync';
 
 const NGROK_REQUIRED_VERSION = '^2.4.3';
 const EXPO_DEBUG = getenv.boolish('EXPO_DEBUG', false);

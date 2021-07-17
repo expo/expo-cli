@@ -4,7 +4,8 @@ import fs from 'fs-extra';
 import { vol } from 'memfs';
 import path from 'path';
 
-import { ManifestHandler, UserSettings } from '../../internal';
+import UserSettings from '../../UserSettings';
+import * as ManifestHandler from '../ManifestHandler';
 
 const actualFs = jest.requireActual('fs') as typeof fs;
 jest.mock('fs');

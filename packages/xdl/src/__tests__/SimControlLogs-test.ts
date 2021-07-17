@@ -1,6 +1,7 @@
 import chalk from 'chalk';
 
-import { Logger, SimControlLogs } from '../internal';
+import Logger from '../Logger';
+import * as SimControlLogs from '../SimControlLogs';
 
 jest.mock('../Logger');
 
@@ -46,7 +47,7 @@ _presentViewController:animated:completion:] + 179
   });
   // Seems to be related to AVFoundation
   it(`logs AddInstanceForFactory error`, () => {
-    const message: SimControlLogs = {
+    const message: SimControlLogs.SimControlLog = {
       traceID: 29504432492515332,
       eventMessage:
         'AddInstanceForFactory: No factory registered for id <CFUUID 0x60000312c980> F8BB1C28-BAE8-11D6-9C31-00039315CD46',

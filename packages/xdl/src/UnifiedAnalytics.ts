@@ -1,4 +1,4 @@
-import { AnalyticsClient } from './internal';
+import { AnalyticsClient } from './Analytics';
 
 const client = new AnalyticsClient();
 

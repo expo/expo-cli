@@ -2,7 +2,8 @@ import fs from 'fs';
 import path from 'path';
 import probeImageSize from 'probe-image-size';
 
-import { ExponentTools, LoggerDetach } from '../internal';
+import * as ExponentTools from '../detach/ExponentTools';
+import LoggerDetach from '../detach/Logger';
 
 /**
  * @param {string} projectDirname

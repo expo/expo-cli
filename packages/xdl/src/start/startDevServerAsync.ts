@@ -2,14 +2,12 @@ import { ProjectTarget } from '@expo/config';
 import { MessageSocket, MetroDevServerOptions, runMetroDevServerAsync } from '@expo/dev-server';
 import http from 'http';
 
-import {
-  assertValidProjectRoot,
-  ExpoUpdatesManifestHandler,
-  getFreePortAsync,
-  ManifestHandler,
-  ProjectSettings,
-  ProjectUtils,
-} from '../internal';
+import * as ProjectSettings from '../ProjectSettings';
+import * as ProjectUtils from '../project/ProjectUtils';
+import { assertValidProjectRoot } from '../project/errors';
+import * as ExpoUpdatesManifestHandler from './ExpoUpdatesManifestHandler';
+import * as ManifestHandler from './ManifestHandler';
+import { getFreePortAsync } from './getFreePortAsync';
 
 export type StartOptions = {
   metroPort?: number;

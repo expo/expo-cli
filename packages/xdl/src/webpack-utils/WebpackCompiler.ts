@@ -10,7 +10,8 @@ import { Urls } from 'react-dev-utils/WebpackDevServerUtils';
 import formatWebpackMessages from 'react-dev-utils/formatWebpackMessages';
 import webpack from 'webpack';
 
-import { ProjectUtils, WebpackEnvironment } from '../internal';
+import * as ProjectUtils from '../project/ProjectUtils';
+import * as WebpackEnvironment from '../webpack-utils/WebpackEnvironment';
 
 const CONSOLE_TAG = 'expo';
 

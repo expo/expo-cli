@@ -12,19 +12,17 @@ import openBrowser from 'react-dev-utils/openBrowser';
 import webpack from 'webpack';
 import WebpackDevServer from 'webpack-dev-server';
 
-import {
-  choosePortAsync,
-  ip,
-  learnMore,
-  Logger,
-  ProjectSettings,
-  ProjectUtils,
-  UrlUtils,
-  Versions,
-  WebpackCompiler,
-  WebpackEnvironment,
-  XDLError,
-} from './internal';
+import Logger from './Logger';
+import * as ProjectSettings from './ProjectSettings';
+import * as UrlUtils from './UrlUtils';
+import * as Versions from './Versions';
+import XDLError from './XDLError';
+import ip from './ip';
+import { learnMore } from './logs/TerminalLink';
+import * as ProjectUtils from './project/ProjectUtils';
+import { choosePortAsync } from './utils/choosePortAsync';
+import * as WebpackCompiler from './webpack-utils/WebpackCompiler';
+import * as WebpackEnvironment from './webpack-utils/WebpackEnvironment';
 
 const WEBPACK_LOG_TAG = 'expo';
 

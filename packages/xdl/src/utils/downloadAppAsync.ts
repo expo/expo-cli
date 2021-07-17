@@ -2,7 +2,8 @@ import axios, { AxiosRequestConfig, Canceler } from 'axios';
 import fs from 'fs-extra';
 import path from 'path';
 
-import { Extract, UserSettings } from '../internal';
+import * as Extract from '../Extract';
+import UserSettings from '../UserSettings';
 
 const TIMER_DURATION = 30000;
 const TIMEOUT = 3600000;

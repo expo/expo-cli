@@ -1,4 +1,6 @@
-import { delayAsync, SimControl, Simulator } from '../internal';
+import * as SimControl from '../SimControl';
+import * as Simulator from '../Simulator';
+import { delayAsync } from '../utils/delayAsync';
 
 describe.skip('simulator', () => {
   it('opens and loads url in expo', async () => {

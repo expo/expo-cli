@@ -3,15 +3,13 @@ import axios from 'axios';
 import express from 'express';
 import { AddressInfo } from 'net';
 
-import {
-  assertValidProjectRoot,
-  ConnectionStatus,
-  Doctor,
-  getFreePortAsync,
-  ManifestHandler,
-  ProjectSettings,
-  ProjectUtils,
-} from '../internal';
+import * as ConnectionStatus from '../ConnectionStatus';
+import * as ProjectSettings from '../ProjectSettings';
+import * as Doctor from '../project/Doctor';
+import * as ProjectUtils from '../project/ProjectUtils';
+import { assertValidProjectRoot } from '../project/errors';
+import * as ManifestHandler from './ManifestHandler';
+import { getFreePortAsync } from './getFreePortAsync';
 
 type ConsoleLogLevel = 'info' | 'warn' | 'error' | 'debug';
 

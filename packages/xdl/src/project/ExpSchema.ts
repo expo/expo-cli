@@ -6,7 +6,8 @@ import { boolish } from 'getenv';
 import schemaDerefSync from 'json-schema-deref-sync';
 import path from 'path';
 
-import { ApiV2, FsCache } from '../internal';
+import ApiV2 from '../ApiV2';
+import * as FsCache from '../tools/FsCache';
 
 export type Schema = any;
 export type AssetSchema = {

@@ -9,17 +9,15 @@ import split from 'split';
 import treekill from 'tree-kill';
 import { promisify } from 'util';
 
-import {
-  assertValidProjectRoot,
-  delayAsync,
-  getFreePortAsync,
-  ProjectSettings,
-  ProjectUtils,
-  StartDevServerOptions,
-  UrlUtils,
-  Versions,
-  Watchman,
-} from '../internal';
+import * as ProjectSettings from '../ProjectSettings';
+import * as UrlUtils from '../UrlUtils';
+import * as Versions from '../Versions';
+import * as Watchman from '../Watchman';
+import * as ProjectUtils from '../project/ProjectUtils';
+import { assertValidProjectRoot } from '../project/errors';
+import { delayAsync } from '../utils/delayAsync';
+import { getFreePortAsync } from './getFreePortAsync';
+import { StartOptions as StartDevServerOptions } from './startDevServerAsync';
 
 const treekillAsync = promisify<number, string>(treekill);
 

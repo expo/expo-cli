@@ -1,6 +1,6 @@
 import { execSync } from 'child_process';
 
-import { Logger } from './internal';
+import Logger from './Logger';
 
 // Based on the RN docs (Aug 2020).
 export const minimumVersion = 9.4;

@@ -1,4 +1,4 @@
-import { XDLError } from '../internal';
+import XDLError from '../XDLError';
 
 export function assertValidProjectRoot(projectRoot: string) {
   if (!projectRoot) {

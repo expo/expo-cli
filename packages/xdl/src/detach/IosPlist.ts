@@ -2,7 +2,8 @@ import plist from '@expo/plist';
 import fs from 'fs-extra';
 import path from 'path';
 
-import { ExponentTools, LoggerDetach as logger } from '../internal';
+import * as ExponentTools from './ExponentTools';
+import logger from './Logger';
 
 const { spawnAsyncThrowError } = ExponentTools;
 

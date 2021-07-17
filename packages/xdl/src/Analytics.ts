@@ -1,7 +1,7 @@
 import Segment from 'analytics-node';
 import os from 'os';
 
-import { ip } from './internal';
+import ip from './ip';
 
 const PLATFORM_TO_ANALYTICS_PLATFORM: { [platform: string]: string } = {
   darwin: 'Mac',
