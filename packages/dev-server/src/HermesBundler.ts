@@ -7,7 +7,10 @@ import path from 'path';
 import process from 'process';
 import resolveFrom from 'resolve-from';
 
-export function isEnableHermesManaged(expoConfig: ExpoConfig, platform: Platform): boolean {
+export function isEnableHermesManaged(
+  expoConfig: Pick<ExpoConfig, 'android'>,
+  platform: Platform
+): boolean {
   switch (platform) {
     case 'android':
       return expoConfig.android?.jsEngine === 'hermes';

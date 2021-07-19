@@ -3,7 +3,7 @@ import fs from 'fs';
 import type { AssetData } from 'metro';
 import path from 'path';
 
-import { getAssetDestPathAndroid, getAssetDestPathIOS, PackagerAsset } from './assetPathUtils';
+import { getAssetDestPathAndroid, getAssetDestPathIos, PackagerAsset } from './assetPathUtils';
 
 export function getAssetDestinationPath(
   platform: string,
@@ -11,7 +11,7 @@ export function getAssetDestinationPath(
   scale: number
 ): string {
   if (platform === 'android') return getAssetDestPathAndroid(asset, scale);
-  if (platform === 'ios') return getAssetDestPathIOS(asset, scale);
+  if (platform === 'ios') return getAssetDestPathIos(asset, scale);
   throw new Error('Cannot get asset destination for unsupported platform: ' + platform);
 }
 

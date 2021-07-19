@@ -43,11 +43,13 @@ export async function actionAsync(projectRoot: string, args: Partial<Options>) {
 
   const outputDir = options.bundleOutput
     ? path.dirname(options.bundleOutput)
-    : path.join(projectRoot, `${options.platform}-build`);
+    : // Create a default build folder `ios-build`, `android-build`, to match `web-build`.
+      path.join(projectRoot, `${options.platform}-build`);
 
   // Ensure the output directory is created
   await fs.ensureDir(outputDir);
 
+  // Clear out the folder
   await assertFolderEmptyAsync({
     projectRoot: outputDir,
     folderName: path.relative(projectRoot, outputDir),
@@ -55,7 +57,9 @@ export async function actionAsync(projectRoot: string, args: Partial<Options>) {
     overwrite: true,
   });
 
+  // Create a default bundle name
   const defaultBundleName = options.platform === 'ios' ? 'index.jsbundle' : 'index.android.bundle';
+
   const [results] = await bundleAsync(
     projectRoot,
     config.exp,
@@ -78,5 +82,6 @@ export async function actionAsync(projectRoot: string, args: Partial<Options>) {
     }))
   );
 
+  // Pretty print the resulting sizes
   printBundleSizes({ [options.platform]: results });
 }

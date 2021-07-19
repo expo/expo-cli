@@ -74,7 +74,7 @@ export function getBasePath(asset: PackagerAsset): string {
   return basePath;
 }
 
-export function getAssetDestPathIOS(asset: PackagerAsset, scale: number): string {
+export function getAssetDestPathIos(asset: PackagerAsset, scale: number): string {
   const suffix = scale === 1 ? '' : `@${scale}x`;
   const fileName = `${asset.name + suffix}.${asset.type}`;
   return path.join(
@@ -93,16 +93,16 @@ export function getAssetDestPathAndroid(asset: PackagerAsset, scale: number): st
 }
 
 export function filterPlatformAssetScales(platform: string, scales: number[]): number[] {
-  const whitelist: number[] = ALLOWED_SCALES[platform];
-  if (!whitelist) {
+  const allowList: number[] = ALLOWED_SCALES[platform];
+  if (!allowList) {
     return scales;
   }
-  const result = scales.filter(scale => whitelist.includes(scale));
+  const result = scales.filter(scale => allowList.includes(scale));
   if (result.length === 0 && scales.length > 0) {
     // No matching scale found, but there are some available. Ideally we don't
     // want to be in this situation and should throw, but for now as a fallback
     // let's just use the closest larger image
-    const maxScale = whitelist[whitelist.length - 1];
+    const maxScale = allowList[allowList.length - 1];
     for (const scale of scales) {
       if (scale > maxScale) {
         result.push(scale);
