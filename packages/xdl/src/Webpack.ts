@@ -74,7 +74,6 @@ export type WebEnvironment = {
   pwa: boolean;
   mode: 'development' | 'production' | 'test' | 'none';
   https: boolean;
-  offline?: boolean;
 };
 
 export async function restartAsync(

@@ -71,19 +71,6 @@ describe(`ios`, () => {
   });
 });
 describe(`web`, () => {
-  // {offline: true} should add the copy webpack plugin and change the entry to account for the register-service-worker file.
-  it('web offline', async () => {
-    const config = await createConfig({
-      mode: 'development',
-      offline: true,
-      platform: 'web',
-      projectRoot,
-    });
-    const normalized = normalizeConfig(config);
-    expect(typeof normalized.entry).toBe('function');
-    expect(normalized.plugins).toContain('CopyPlugin');
-  });
-
   it('web development', async () => {
     const config = await createConfig({ mode: 'development', platform: 'web', projectRoot });
     const normalized = normalizeConfig(config);
