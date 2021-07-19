@@ -78,6 +78,7 @@ function getSupportedPlatforms(projectRoot: string): Platform[] {
  *   config.slug = 'new slug'
  *   return { expo: config };
  * }
+ * ```
  *
  * **Supports**
  * - `app.config.ts`
