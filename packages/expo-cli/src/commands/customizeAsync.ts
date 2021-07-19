@@ -5,6 +5,7 @@ import chalk from 'chalk';
 import fs from 'fs-extra';
 import path from 'path';
 import prompts from 'prompts';
+import resolveFrom from 'resolve-from';
 
 import Log from '../log';
 
@@ -34,6 +35,14 @@ const dependencyMap: { [key: string]: string[] } = {
   'webpack.config.js': ['@expo/webpack-config'],
 };
 
+function resolveFromLocalOrGlobal(projectRoot: string, moduleId: string) {
+  const resolved = resolveFrom.silent(projectRoot, moduleId);
+  if (resolved) {
+    return resolved;
+  }
+  return require.resolve(moduleId);
+}
+
 async function generateFilesAsync({
   projectRoot,
   staticPath,
@@ -55,7 +64,7 @@ async function generateFilesAsync({
       // copy the file from template
       promises.push(
         fs.copy(
-          require.resolve(path.join('@expo/webpack-config/template', file)),
+          resolveFromLocalOrGlobal(projectRoot, path.join('@expo/webpack-config/template', file)),
           projectFilePath,
           { overwrite: true, recursive: true }
         )
@@ -89,7 +98,7 @@ export async function actionAsync(projectRoot: string = './', options: Options =
   });
 
   const templateFolder = path.dirname(
-    require.resolve('@expo/webpack-config/web-default/index.html')
+    resolveFromLocalOrGlobal(projectRoot, '@expo/webpack-config/web-default/index.html')
   );
 
   const files = (await fs.readdir(templateFolder)).filter(item => item !== 'icon.png');
