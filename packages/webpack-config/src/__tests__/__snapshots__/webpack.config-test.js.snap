@@ -104,12 +104,6 @@ Object {
             },
           },
           Object {
-            "test": /\\\\\\.worker\\\\\\.\\(js\\|mjs\\|ts\\)\\$/,
-            "use": Object {
-              "loader": "node_modules/worker-loader/dist/cjs.js",
-            },
-          },
-          Object {
             "include": Array [
               "packages/webpack-config/e2e/basic",
               "packages/webpack-config/e2e/basic/node_modules/react-native-vector-icons",
@@ -276,12 +270,6 @@ Object {
                 "sourceMaps": true,
                 "sourceType": "unambiguous",
               },
-            },
-          },
-          Object {
-            "test": /\\\\\\.worker\\\\\\.\\(js\\|mjs\\|ts\\)\\$/,
-            "use": Object {
-              "loader": "node_modules/worker-loader/dist/cjs.js",
             },
           },
           Object {
@@ -561,12 +549,6 @@ Object {
             },
           },
           Object {
-            "test": /\\\\\\.worker\\\\\\.\\(js\\|mjs\\|ts\\)\\$/,
-            "use": Object {
-              "loader": "node_modules/worker-loader/dist/cjs.js",
-            },
-          },
-          Object {
             "include": Array [
               "packages/webpack-config/e2e/basic",
               "packages/webpack-config/e2e/basic/node_modules/react-native-vector-icons",
@@ -749,12 +731,6 @@ Object {
                 "sourceMaps": true,
                 "sourceType": "unambiguous",
               },
-            },
-          },
-          Object {
-            "test": /\\\\\\.worker\\\\\\.\\(js\\|mjs\\|ts\\)\\$/,
-            "use": Object {
-              "loader": "node_modules/worker-loader/dist/cjs.js",
             },
           },
           Object {
