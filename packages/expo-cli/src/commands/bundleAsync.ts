@@ -1,11 +1,11 @@
 import { getConfig } from '@expo/config';
-import { bundleAsync } from '@expo/dev-server';
+import { bundleAsync, BundleOptions, MetroDevServerOptions } from '@expo/dev-server';
 import assert from 'assert';
-import fs from 'fs-extra';
+import fs from 'fs';
 import path from 'path';
 import { printBundleSizes, ProjectUtils } from 'xdl';
+import { resolveEntryPoint } from 'xdl/build/internal';
 
-import { resolveEntryPoint } from '../../../xdl/build/internal';
 import { assertFolderEmptyAsync } from './utils/CreateApp';
 
 type Options = {
@@ -36,6 +36,39 @@ function parseOptions(options: Partial<Options>): Options {
   };
 }
 
+function createDevServerOptions(
+  projectRoot: string,
+  options: Pick<Options, 'clear'>
+): MetroDevServerOptions {
+  return {
+    resetCache: options.clear,
+    logger: ProjectUtils.getLogger(projectRoot),
+  };
+}
+
+function createPlatformBundleOptions(
+  projectRoot: string,
+  outputDir: string,
+  options: Pick<Options, 'platform' | 'dev' | 'sourcemapOutput' | 'bundleOutput' | 'assetsOutput'>
+): BundleOptions {
+  // Create a default bundle name
+  const defaultBundleName = options.platform === 'ios' ? 'index.jsbundle' : 'index.android.bundle';
+
+  return {
+    bundleOutput: options.bundleOutput || path.join(outputDir, defaultBundleName),
+    assetOutput: options.assetsOutput || outputDir,
+    platform: options.platform,
+    // Use Expo's entry point resolution to ensure all commands act the same way.
+    entryPoint: resolveEntryPoint(projectRoot, options.platform),
+    sourcemapOutput: options.sourcemapOutput || path.join(outputDir, defaultBundleName + '.map'),
+    // This prevents the absolute path from being shown in the source code, shouts out to Satya.
+    sourcemapSourcesRoot: projectRoot,
+    // For now, just use dev for both dev and minify
+    dev: !!options.dev,
+    minify: !options.dev,
+  };
+}
+
 export async function actionAsync(projectRoot: string, args: Partial<Options>) {
   const options = parseOptions(args);
 
@@ -47,7 +80,7 @@ export async function actionAsync(projectRoot: string, args: Partial<Options>) {
       path.join(projectRoot, `${options.platform}-build`);
 
   // Ensure the output directory is created
-  await fs.ensureDir(outputDir);
+  await fs.promises.mkdir(outputDir, { recursive: true });
 
   // Clear out the folder
   await assertFolderEmptyAsync({
@@ -57,29 +90,11 @@ export async function actionAsync(projectRoot: string, args: Partial<Options>) {
     overwrite: true,
   });
 
-  // Create a default bundle name
-  const defaultBundleName = options.platform === 'ios' ? 'index.jsbundle' : 'index.android.bundle';
-
   const [results] = await bundleAsync(
     projectRoot,
     config.exp,
-    {
-      resetCache: options.clear,
-      logger: ProjectUtils.getLogger(projectRoot),
-    },
-    [options.platform].map(platform => ({
-      bundleOutput: options.bundleOutput || path.join(outputDir, defaultBundleName),
-      assetOutput: options.assetsOutput || outputDir,
-      platform,
-      // Use Expo's entry point resolution to ensure all commands act the same way.
-      entryPoint: resolveEntryPoint(projectRoot, platform),
-      sourcemapOutput: options.sourcemapOutput || path.join(outputDir, defaultBundleName + '.map'),
-      // This prevents the absolute path from being shown in the source code, shouts out to Satya.
-      sourcemapSourcesRoot: projectRoot,
-      // For now, just use dev for both dev and minify
-      dev: !!options.dev,
-      minify: !options.dev,
-    }))
+    createDevServerOptions(projectRoot, options),
+    [createPlatformBundleOptions(projectRoot, outputDir, options)]
   );
 
   // Pretty print the resulting sizes
