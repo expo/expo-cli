@@ -1,4 +1,3 @@
-/** @internal */ /** */
 import resolveFrom from 'resolve-from';
 
 export function getAliases(projectRoot: string): Record<string, string> {
@@ -18,20 +17,11 @@ export function getAliases(projectRoot: string): Record<string, string> {
     'react-native/Libraries/EventEmitter/NativeEventEmitter$':
       'react-native-web/dist/vendor/react-native/NativeEventEmitter',
   };
+
+  // TODO: Drop this...
   // Check if the installed version of react-native-web still supports NetInfo.
   if (resolveFrom.silent(projectRoot, 'react-native-web/dist/exports/NetInfo')) {
     aliases['@react-native-community/netinfo'] = 'react-native-web/dist/exports/NetInfo';
-  }
-
-  // Add polyfills for modules that react-native-web doesn't support
-  // Depends on expo-asset
-  if (resolveFrom.silent(projectRoot, 'expo-asset')) {
-    aliases['react-native/Libraries/Image/AssetSourceResolver$'] =
-      'expo-asset/build/AssetSourceResolver';
-    aliases['react-native/Libraries/Image/assetPathUtils$'] =
-      'expo-asset/build/Image/assetPathUtils';
-    aliases['react-native/Libraries/Image/resolveAssetSource$'] =
-      'expo-asset/build/resolveAssetSource';
   }
 
   return aliases;
