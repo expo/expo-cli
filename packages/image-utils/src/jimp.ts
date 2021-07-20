@@ -134,7 +134,7 @@ export async function resize(
     height = Jimp.AUTO;
   } else if (!width && height) {
     width = Jimp.AUTO;
-  } else {
+  } else if (!width && !height) {
     width = initialImage.bitmap.width;
     height = initialImage.bitmap.height;
   }
