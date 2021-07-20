@@ -34,10 +34,10 @@
     "!*/__tests__/*"
   ],
   "dependencies": {
-    "@expo/babel-preset-cli": "^0.2.20",
-    "@expo/config": "^5.0.3",
-    "@expo/config-plugins": "^3.0.3",
-    "@expo/package-manager": "^0.0.43",
+    "@expo/babel-preset-cli": "0.2.20",
+    "@expo/config": "5.0.3",
+    "@expo/config-plugins": "3.0.3",
+    "@expo/package-manager": "0.0.43",
     "chalk": "^4.0.0",
     "find-up": "^5.0.0",
     "fs-extra": "9.0.0",
