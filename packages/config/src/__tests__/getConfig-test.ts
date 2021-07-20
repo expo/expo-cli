@@ -87,7 +87,9 @@ describe(modifyConfigAsync, () => {
 
 const invalidConfig = `/* eslint-disable */
 module.exports = {
-    >
+  name: 'app',
+  >
+  slug: 'app',
 }`;
 
 describe(getDynamicConfig, () => {
@@ -136,7 +138,7 @@ describe(getDynamicConfig, () => {
   it(`throws a useful error for dynamic configs with a syntax error`, () => {
     const paths = getConfigFilePaths('syntax-error');
     expect(() => getDynamicConfig(paths.dynamicConfigPath, mockConfigContext)).toThrowError(
-      'Unexpected token (3:4)'
+      /Error .* \(5:7\)/
     );
   });
 });

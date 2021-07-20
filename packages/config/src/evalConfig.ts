@@ -1,11 +1,10 @@
-// @ts-ignore
+import { readFileSync } from 'fs';
 import requireString from 'require-from-string';
+import { transform } from 'sucrase';
 
 import { AppJSONConfig, ConfigContext, ExpoConfig } from './Config.types';
 import { ConfigError } from './Errors';
 import { serializeSkippingMods } from './Serialize';
-import { getBabelPreset } from './getBabelPreset';
-// import babel from '@babel/core';
 
 type RawDynamicConfig = AppJSONConfig | Partial<ExpoConfig> | null;
 
@@ -22,23 +21,44 @@ export function evalConfig(
   configFile: string,
   request: ConfigContext | null
 ): DynamicConfigResults {
-  const babel = require('@babel/core');
+  const contents = readFileSync(configFile, 'utf8');
+  let result: any;
+  try {
+    const { code } = transform(contents, {
+      filePath: configFile,
+      transforms: ['typescript', 'imports'],
+    });
 
-  const { code } = babel.transformFileSync(configFile, {
-    // only: [configFile],
-    cwd: request?.projectRoot || process.cwd(),
-    babelrc: false,
-    configFile: false,
-    comments: false,
-    ignore: [/node_modules/],
-    filename: 'unknown',
-    presets: [getBabelPreset()],
-    // Retain lines for improved error reporting.
-    retainLines: true,
-  });
+    result = requireString(code, configFile);
+  } catch (error) {
+    const location = extractLocationFromSyntaxError(error);
 
-  const result = requireString(code, configFile);
+    // Apply a code frame preview to the error if possible, sucrase doesn't do this by default.
+    if (location) {
+      const { codeFrameColumns } = require('@babel/code-frame');
+      const codeFrame = codeFrameColumns(contents, { start: error.loc }, { highlightCode: true });
+      error.codeFrame = codeFrame;
+      error.message += `\n${codeFrame}`;
+    }
+    throw error;
+  }
   return resolveConfigExport(result, configFile, request);
+}
+
+function extractLocationFromSyntaxError(
+  error: Error | any
+): { line: number; column?: number } | null {
+  // sucrase provides the `loc` object
+  if (error.loc) {
+    return error.loc;
+  }
+
+  // `SyntaxError`s provide the `lineNumber` and `columnNumber` properties
+  if ('lineNumber' in error && 'columnNumber' in error) {
+    return { line: error.lineNumber, column: error.columnNumber };
+  }
+
+  return null;
 }
 
 /**
