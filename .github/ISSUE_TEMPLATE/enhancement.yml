@@ -1,7 +1,6 @@
 name: "\U0001F64B Enhancement"
-about: 'Want us to add something to Expo CLI?'
+description: 'Want us to add something to Expo CLI?'
 labels: 'enhancement'
-issue_body: false
 body:
   - type: markdown
     attributes:
