@@ -1,7 +1,7 @@
 {
   "name": "@expo/next-adapter",
   "version": "3.0.1",
-  "description": "Adapter for using Next.js with Unimodules",
+  "description": "Adapter for using Next.js with Expo modules",
   "main": "build/index.js",
   "types": "build/index.d.ts",
   "scripts": {
@@ -40,8 +40,7 @@
     "template",
     "build",
     "document.js",
-    "document.d.ts",
-    "service-worker.js"
+    "document.d.ts"
   ],
   "devDependencies": {
     "@types/fs-extra": "^9.0.1",

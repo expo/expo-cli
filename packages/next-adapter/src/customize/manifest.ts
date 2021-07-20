@@ -172,54 +172,6 @@ export const manifest: CustomizeOption[] = [
     },
   },
   {
-    name: 'service-worker.js',
-    type: 'extra',
-    destinationPath: projectRoot => path.resolve(projectRoot, './public/service-worker.js'),
-    templatePath: path.resolve(packageRoot, 'template/service-worker.js'),
-    description: 'a service worker with Expo push notification support (works with next-offline).',
-    async onEnabledAsync({ projectRoot }): Promise<boolean> {
-      const destinationPath = this.destinationPath(projectRoot);
-      return !(await projectHasLatestFileAsync(destinationPath, createJSTag()));
-    },
-    async onSelectAsync({ projectRoot, force }): Promise<void> {
-      console.log(chalk.magenta(`\u203A Creating ${this.description}`));
-      const destinationPath = this.destinationPath(projectRoot);
-      await copyFileAsync(this.templatePath!, destinationPath, force, createJSTag());
-    },
-  },
-  {
-    name: 'server.js',
-    type: 'extra',
-    destinationPath: projectRoot => path.resolve(projectRoot, './server.js'),
-    templatePath: path.resolve(packageRoot, 'template/server.js'),
-    description: 'a custom server for handling requests.',
-    async onEnabledAsync({ projectRoot }): Promise<boolean> {
-      const destinationPath = this.destinationPath(projectRoot);
-      return !(await projectHasLatestFileAsync(destinationPath, createJSTag()));
-    },
-    async onSelectAsync({ projectRoot, force }): Promise<void> {
-      console.log(chalk.magenta(`\u203A Creating ${this.description}`));
-      const destinationPath = this.destinationPath(projectRoot);
-      await copyFileAsync(this.templatePath!, destinationPath, force, createJSTag());
-    },
-  },
-  {
-    name: 'Custom server.js',
-    type: 'extra',
-    destinationPath: projectRoot => path.resolve(projectRoot, './server.js'),
-    templatePath: path.resolve(packageRoot, 'template/server-custom.js'),
-    description: 'an ejected custom server for handling requests.',
-    async onEnabledAsync({ projectRoot }): Promise<boolean> {
-      const destinationPath = this.destinationPath(projectRoot);
-      return !(await projectHasLatestFileAsync(destinationPath, createJSTag()));
-    },
-    async onSelectAsync({ projectRoot, force }): Promise<void> {
-      console.log(chalk.magenta(`\u203A Creating ${this.description}`));
-      const destinationPath = this.destinationPath(projectRoot);
-      await copyFileAsync(this.templatePath!, destinationPath, force, createJSTag());
-    },
-  },
-  {
     name: 'Add build script',
     type: 'required',
     destinationPath: projectRoot => '',
