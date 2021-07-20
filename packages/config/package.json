@@ -46,10 +46,6 @@
     "semver": "7.3.2",
     "slugify": "^1.3.4"
   },
-  "devDependencies": {
-    "memfs": "^2.15.5",
-    "rimraf": "^3.0.2"
-  },
   "publishConfig": {
     "access": "public"
   }

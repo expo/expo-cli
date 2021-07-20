@@ -44,11 +44,9 @@
     "service-worker.js"
   ],
   "devDependencies": {
-    "@expo/babel-preset-cli": "0.2.21",
     "@types/fs-extra": "^9.0.1",
     "@types/node-fetch": "^2.5.8",
-    "@types/prompts": "^2.0.6",
-    "rimraf": "^3.0.2"
+    "@types/prompts": "^2.0.6"
   },
   "peerDependencies": {
     "next": "^11",

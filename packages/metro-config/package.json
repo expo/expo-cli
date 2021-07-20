@@ -39,12 +39,10 @@
     "metro-react-native-babel-transformer": "^0.59.0"
   },
   "devDependencies": {
-    "@expo/babel-preset-cli": "0.2.21",
     "expo": "37",
     "metro": "^0.59.0",
     "metro-config": "^0.59.0",
-    "react-native": "~0.63.4",
-    "rimraf": "^3.0.2"
+    "react-native": "~0.63.4"
   },
   "publishConfig": {
     "access": "public"

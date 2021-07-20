@@ -31,9 +31,6 @@
     "build": "tsc",
     "clean": "rimraf build ./tsconfig.tsbuildinfo"
   },
-  "devDependencies": {
-    "rimraf": "^3.0.2"
-  },
   "dependencies": {
     "@expo/config": "5.0.5",
     "@expo/image-utils": "0.3.15",
