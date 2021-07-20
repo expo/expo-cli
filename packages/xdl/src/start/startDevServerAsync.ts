@@ -1,6 +1,6 @@
-import { ProjectTarget } from '@expo/config';
-import { MessageSocket, MetroDevServerOptions, runMetroDevServerAsync } from '@expo/dev-server';
-import http from 'http';
+import type { ProjectTarget } from '@expo/config';
+import type { MessageSocket, MetroDevServerOptions } from '@expo/dev-server';
+import type http from 'http';
 
 import {
   assertValidProjectRoot,
@@ -59,7 +59,24 @@ export async function startDevServerAsync(
     options.maxWorkers = startOptions.maxWorkers;
   }
 
-  const { server, middleware, messageSocket } = await runMetroDevServerAsync(projectRoot, options);
+  let serverInfo: {
+    server: http.Server;
+    middleware: any;
+    messageSocket: MessageSocket;
+  };
+
+  if (process.env.EXPO_BUNDLER === 'esbuild') {
+    // lazy load esbuild
+    const { startDevServerAsync } = await import('@expo/dev-server/build/esbuild/EsbuildDevServer');
+    serverInfo = await startDevServerAsync(projectRoot, { ...options, isDev: true });
+  } else {
+    // lazy load metro
+    const { runMetroDevServerAsync } = await import('@expo/dev-server');
+    serverInfo = await runMetroDevServerAsync(projectRoot, options);
+  }
+
+  const { server, middleware, messageSocket } = serverInfo;
+
   middleware.use(ManifestHandler.getManifestHandler(projectRoot));
   middleware.use(ExpoUpdatesManifestHandler.getManifestHandler(projectRoot));
 
