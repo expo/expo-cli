@@ -10,12 +10,17 @@ export default function withExpo(nextConfig: any = {}): any {
       // Prevent define plugin from overwriting Next.js environment.
       process.env.EXPO_WEBPACK_DEFINE_ENVIRONMENT_AS_KEYS = 'true';
 
+      const webpack5 = (options.config || {}).webpack5;
+
       const expoConfig = withUnimodules(
         config,
         {
           projectRoot: nextConfig.projectRoot || process.cwd(),
         },
-        { supportsFontLoading: false }
+        {
+          supportsFontLoading: false,
+          webpack5: webpack5 !== false,
+        }
       );
       // Use original public path
       (expoConfig.output || {}).publicPath = (config.output || {}).publicPath;

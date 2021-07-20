@@ -24,7 +24,7 @@ module.exports = function (api: any) {
 
   return {
     presets: [
-      require('babel-preset-expo'),
+      [require('babel-preset-expo'), { web: { useTransformReactJsxExperimental: true } }],
       // Only use next in the browser, it'll break your native project/
       isWeb && require('next/babel'),
     ].filter(Boolean),
