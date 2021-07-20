@@ -67,7 +67,6 @@
     "terser-webpack-plugin": "^3.0.6",
     "url-loader": "~4.1.0",
     "webpack": "4.43.0",
-    "webpack-deep-scope-plugin": "1.6.0",
     "webpack-manifest-plugin": "~2.2.0",
     "webpackbar": "^4.0.0",
     "workbox-webpack-plugin": "^6.1.5",
