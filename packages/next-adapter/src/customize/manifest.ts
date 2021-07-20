@@ -69,9 +69,12 @@ function getDependencies(
   const dependencies = ['react-native-web', 'next'].filter(
     dependency => !resolveFrom.silent(projectRoot, dependency)
   );
-  const devDependencies = ['@expo/next-adapter', 'babel-preset-expo'].filter(
-    dependency => !resolveFrom.silent(projectRoot, dependency)
-  );
+  const devDependencies = [
+    '@expo/next-adapter',
+    'babel-preset-expo',
+    'next-compose-plugins',
+    'next-transpile-modules',
+  ].filter(dependency => !resolveFrom.silent(projectRoot, dependency));
 
   return { dependencies, devDependencies };
 }
