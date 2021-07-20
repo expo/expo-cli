@@ -39,12 +39,6 @@ export async function getPublishExpConfigAsync(
     skipSDKVersionRequirement: !!runtimeVersion,
   });
   const { sdkVersion } = exp;
-  if (!sdkVersion) {
-    throw new Error(
-      'Config is missing an SDK version. See https://docs.expo.io/bare/installing-updates/'
-    );
-  }
-
   // Only allow projects to be published with UNVERSIONED if a correct token is set in env
   if (sdkVersion === 'UNVERSIONED' && !Env.maySkipManifestValidation()) {
     throw new XDLError('INVALID_OPTIONS', 'Cannot publish with sdkVersion UNVERSIONED.');
