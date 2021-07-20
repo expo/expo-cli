@@ -128,7 +128,7 @@ function formatCommandsAsMarkdown(commands: CommandData[]) {
   return Object.entries(grouped)
     .map(([groupName, commands]) => {
       // Omit internal and eas commands from the docs
-      if (['eas', 'internal'].includes(groupName)) {
+      if (['internal'].includes(groupName)) {
         return '';
       }
 

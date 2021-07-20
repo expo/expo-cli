@@ -103,7 +103,7 @@ Command.prototype.prepareCommands = function () {
       if (getenv.boolish('EXPO_DEBUG', false)) {
         return true;
       }
-      return !['internal', 'eas'].includes(cmd.__helpGroup);
+      return !['internal'].includes(cmd.__helpGroup);
     })
     .map(function (cmd: Command, i: number) {
       const args = cmd._args.map(humanReadableArgName).join(' ');
@@ -201,7 +201,6 @@ export const helpGroupOrder = [
   'publish',
   'build',
   'credentials',
-  'eas',
   'notifications',
   'url',
   'webhooks',
@@ -222,7 +221,6 @@ function sortHelpGroups(helpGroups: Record<string, string[][]>): Record<string, 
 
   const subGroupOrder: Record<string, string[]> = {
     core: ['init', 'start', 'start:web', 'publish', 'export'],
-    eas: ['eas:credentials'],
   };
 
   const sortSubGroupWithOrder = (groupName: string, group: string[][]): string[][] => {
