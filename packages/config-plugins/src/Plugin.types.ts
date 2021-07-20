@@ -118,6 +118,10 @@ export interface ModConfig {
      */
     mainActivity?: Mod<AndroidPaths.ApplicationProjectFile>;
     /**
+     * Modify the `android/app/src/main/<package>/MainApplication.java` as a string.
+     */
+    mainApplication?: Mod<AndroidPaths.ApplicationProjectFile>;
+    /**
      * Modify the `android/app/build.gradle` as a string.
      */
     appBuildGradle?: Mod<AndroidPaths.GradleProjectFile>;

@@ -141,6 +141,23 @@ export const withMainActivity: ConfigPlugin<Mod<Paths.ApplicationProjectFile>> =
 };
 
 /**
+ * Provides the project MainApplication for modification.
+ *
+ * @param config
+ * @param action
+ */
+export const withMainApplication: ConfigPlugin<Mod<Paths.ApplicationProjectFile>> = (
+  config,
+  action
+) => {
+  return withMod(config, {
+    platform: 'android',
+    mod: 'mainApplication',
+    action,
+  });
+};
+
+/**
  * Provides the project /build.gradle for modification.
  *
  * @param config

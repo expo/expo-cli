@@ -192,6 +192,18 @@ const defaultProviders = {
       await writeFile(filePath, contents);
     },
   }),
+
+  mainApplication: provider<Paths.ApplicationProjectFile>({
+    getFilePath({ modRequest: { projectRoot } }) {
+      return Paths.getProjectFilePath(projectRoot, 'MainApplication');
+    },
+    async read(filePath) {
+      return Paths.getFileInfo(filePath);
+    },
+    async write(filePath, { modResults: { contents } }) {
+      await writeFile(filePath, contents);
+    },
+  }),
 };
 
 type AndroidDefaultProviders = typeof defaultProviders;
@@ -217,7 +229,12 @@ export function getAndroidModFileProviders() {
 export function getAndroidIntrospectModFileProviders(): Omit<
   AndroidDefaultProviders,
   // Get rid of mods that could potentially fail by being empty.
-  'dangerous' | 'projectBuildGradle' | 'settingsGradle' | 'appBuildGradle' | 'mainActivity'
+  | 'dangerous'
+  | 'projectBuildGradle'
+  | 'settingsGradle'
+  | 'appBuildGradle'
+  | 'mainActivity'
+  | 'mainApplication'
 > {
   const createIntrospectionProvider = (
     modName: keyof typeof defaultProviders,
