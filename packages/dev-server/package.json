@@ -53,6 +53,7 @@
   "devDependencies": {
     "@expo/babel-preset-cli": "0.2.21",
     "@types/connect": "^3.4.33",
+    "@types/image-size": "^0.8.0",
     "connect": "^3.7.0",
     "node-fetch": "^2.6.0",
     "rimraf": "^3.0.2"

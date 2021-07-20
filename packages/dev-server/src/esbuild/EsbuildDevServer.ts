@@ -6,6 +6,7 @@ import {
 } from '@react-native-community/cli-server-api';
 import bodyParser from 'body-parser';
 import type { Server as ConnectServer } from 'connect';
+import Debug from 'debug';
 import * as esbuild from 'esbuild';
 import { ensureDirSync } from 'fs-extra';
 import http from 'http';
@@ -25,6 +26,8 @@ import { remoteDevtoolsCorsMiddleware } from '../middleware/remoteDevtoolsCorsMi
 import { remoteDevtoolsSecurityHeadersMiddleware } from '../middleware/remoteDevtoolsSecurityHeadersMiddleware';
 import { replaceMiddlewareWith } from '../middleware/replaceMiddlewareWith';
 import { loadConfig } from './EsbuildConfig';
+
+const debug = Debug('dev-server:esbuild');
 
 const nativeMiddleware = (port: number, _platform: string) => (
   req: IncomingMessage,
@@ -51,6 +54,9 @@ const nativeMiddleware = (port: number, _platform: string) => (
     // TODO: parseOptionsFromUrl
     const { platform = _platform } = urlObj.query || {};
     proxyPath = url.replace('.bundle', `.${platform}.js`);
+
+    // TODO: esbuild's dev server doesn't support arbitrary bundle paths.
+    proxyPath = `/index.${platform}.js`;
   } else if (pathname.endsWith('.map')) {
     // Chrome dev tools may need to access the source maps.
     res.setHeader('Access-Control-Allow-Origin', 'devtools://devtools');
@@ -67,12 +73,15 @@ const nativeMiddleware = (port: number, _platform: string) => (
 
   const proxyUrl = `http://0.0.0.0:${port}${proxyPath}`;
 
+  debug('proxy url: ', proxyUrl);
+
   const proxyReq = http.request(
     proxyUrl,
     { method: req.method, headers: req.headers },
     proxyRes => {
       if (proxyRes.statusCode === 404) return next();
       if (url?.endsWith('.js')) proxyRes.headers['content-type'] = 'application/javascript';
+
       res.writeHead(proxyRes.statusCode!, proxyRes.headers);
       proxyRes.pipe(res, { end: true });
     }

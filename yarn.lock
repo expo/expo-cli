@@ -3733,6 +3733,13 @@
   dependencies:
     "@types/node" "*"
 
+"@types/image-size@^0.8.0":
+  version "0.8.0"
+  resolved "https://registry.yarnpkg.com/@types/image-size/-/image-size-0.8.0.tgz#736342ea51e076fa5fffd6ff219e9b412d4093f1"
+  integrity sha512-hMlhu25ji75dXQk2uZkN3pTJ+lWrgKr8M1fTpyyFvuu+SJZBdGa5gDm4BVNobWXHZbOU11mBj0vciYp7qOfAFg==
+  dependencies:
+    image-size "*"
+
 "@types/invariant@^2.2.29":
   version "2.2.31"
   resolved "https://registry.yarnpkg.com/@types/invariant/-/invariant-2.2.31.tgz#4444c03004f215289dbca3856538434317dd28b2"
@@ -10205,10 +10212,10 @@ he@1.2.0, he@^1.2.0:
   resolved "https://registry.yarnpkg.com/he/-/he-1.2.0.tgz#84ae65fa7eafb165fddb61566ae14baf05664f0f"
   integrity sha512-F/1DnUGPopORZi0ni+CvrCgHQ5FyEAHRLSApuYWMmrbSwoN2Mn/7k+Gl38gJnR7yyDZk6WLXwiGod1JOWNDKGw==
 
-hermes-engine@0.0.0, hermes-engine@~0.5.0:
-  version "0.0.0"
-  resolved "https://registry.yarnpkg.com/hermes-engine/-/hermes-engine-0.0.0.tgz#6a65954646b5e32c87aa998dee16152c0c904cd6"
-  integrity sha512-q5DP4aUe6LnfMaLsxFP1cCY5qA0Ca5Qm2JQ/OgKi3sTfPpXth79AQ7vViXh/RRML53EpokDewMLJmI31RioBAA==
+hermes-engine@~0.5.0:
+  version "0.5.1"
+  resolved "https://registry.yarnpkg.com/hermes-engine/-/hermes-engine-0.5.1.tgz#601115e4b1e0a17d9aa91243b96277de4e926e09"
+  integrity sha512-hLwqh8dejHayjlpvZY40e1aDCDvyP98cWx/L5DhAjSJLH8g4z9Tp08D7y4+3vErDsncPOdf1bxm+zUWpx0/Fxg==
 
 hermes-profile-transformer@^0.0.6:
   version "0.0.6"
@@ -10596,17 +10603,17 @@ ignore@^5.1.4:
   resolved "https://registry.yarnpkg.com/ignore/-/ignore-5.1.4.tgz#84b7b3dbe64552b6ef0eca99f6743dbec6d97adf"
   integrity sha512-MzbUSahkTW1u7JpKKjY7LCARd1fU5W2rLdxlM4kdkayuCwZImjkpluF9CM1aLewYJguPDqewLam18Y6AU69A8A==
 
-image-size@^0.6.0:
-  version "0.6.3"
-  resolved "https://registry.yarnpkg.com/image-size/-/image-size-0.6.3.tgz#e7e5c65bb534bd7cdcedd6cb5166272a85f75fb2"
-  integrity sha512-47xSUiQioGaB96nqtp5/q55m0aBQSQdyIloMOc/x+QVTDZLNmXE892IIDrJ0hM1A5vcNUDD5tDffkSP5lCaIIA==
-
-image-size@^1.0.0:
+image-size@*, image-size@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/image-size/-/image-size-1.0.0.tgz#58b31fe4743b1cec0a0ac26f5c914d3c5b2f0750"
   integrity sha512-JLJ6OwBfO1KcA+TvJT+v8gbE6iWbj24LyDNFgFEN0lzegn6cC6a/p3NIDaepMsJjQjlUWqIC7wJv8lBFxPNjcw==
   dependencies:
     queue "6.0.2"
+
+image-size@^0.6.0:
+  version "0.6.3"
+  resolved "https://registry.yarnpkg.com/image-size/-/image-size-0.6.3.tgz#e7e5c65bb534bd7cdcedd6cb5166272a85f75fb2"
+  integrity sha512-47xSUiQioGaB96nqtp5/q55m0aBQSQdyIloMOc/x+QVTDZLNmXE892IIDrJ0hM1A5vcNUDD5tDffkSP5lCaIIA==
 
 immediate@^3.2.2:
   version "3.2.3"
