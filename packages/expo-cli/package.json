@@ -42,9 +42,7 @@
     "node": ">=12"
   },
   "devDependencies": {
-    "@babel/cli": "^7.8.4",
     "@babel/core": "^7.9.0",
-    "@expo/babel-preset-cli": "0.2.21",
     "@types/command-exists": "^1.2.0",
     "@types/dateformat": "^3.0.0",
     "@types/form-data": "^2.2.0",
@@ -63,8 +61,7 @@
     "@types/wrap-ansi": "^3.0.0",
     "klaw-sync": "6.0.0",
     "memfs": "^3.2.0",
-    "pretty-bytes": "^5.3.0",
-    "rimraf": "^3.0.2"
+    "pretty-bytes": "^5.3.0"
   },
   "dependencies": {
     "@expo/apple-utils": "0.0.0-alpha.20",

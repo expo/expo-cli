@@ -1,7 +1,8 @@
 import { ConfigPlugin, IOSConfig, withDangerousMod } from '@expo/config-plugins';
 import Debug from 'debug';
 import fs from 'fs-extra';
-import Jimp from 'jimp/es';
+// @ts-ignore
+import Jimp from 'jimp-compact';
 import * as path from 'path';
 
 import {

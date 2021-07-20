@@ -1,4 +1,4 @@
-import { statSync } from 'fs-extra';
+import { statSync } from 'fs';
 import { join } from 'path';
 
 import { ConfigError } from './Errors';

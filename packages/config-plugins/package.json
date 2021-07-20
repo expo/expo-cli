@@ -50,9 +50,7 @@
     "@types/debug": "^4.1.5",
     "@types/find-up": "^4.0.0",
     "@types/fs-extra": "^9.0.1",
-    "@types/xml2js": "^0.4.5",
-    "memfs": "^2.15.5",
-    "rimraf": "^3.0.2"
+    "@types/xml2js": "^0.4.5"
   },
   "publishConfig": {
     "access": "public"
