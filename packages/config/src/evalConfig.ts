@@ -22,14 +22,14 @@ export function evalConfig(
   request: ConfigContext | null
 ): DynamicConfigResults {
   const contents = readFileSync(configFile, 'utf8');
+  let result: any;
   try {
     const { code } = transform(contents, {
       filePath: configFile,
       transforms: ['typescript', 'imports'],
     });
 
-    const result = requireString(code, configFile);
-    return resolveConfigExport(result, configFile, request);
+    result = requireString(code, configFile);
   } catch (error) {
     const location = extractLocationFromSyntaxError(error);
 
@@ -42,11 +42,12 @@ export function evalConfig(
     }
     throw error;
   }
+  return resolveConfigExport(result, configFile, request);
 }
 
 function extractLocationFromSyntaxError(
   error: Error | any
-): { line?: number; column?: number } | null {
+): { line: number; column?: number } | null {
   // sucrase provides the `loc` object
   if (error.loc) {
     return error.loc;

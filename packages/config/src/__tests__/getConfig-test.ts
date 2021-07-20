@@ -138,7 +138,7 @@ describe(getDynamicConfig, () => {
   it(`throws a useful error for dynamic configs with a syntax error`, () => {
     const paths = getConfigFilePaths('syntax-error');
     expect(() => getDynamicConfig(paths.dynamicConfigPath, mockConfigContext)).toThrowError(
-      /Error (?:.*) \(5:7\)/
+      /Error .* \(5:7\)/
     );
   });
 });
