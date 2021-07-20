@@ -32,7 +32,6 @@
   },
   "devDependencies": {
     "@babel/plugin-proposal-decorators": "^7.8.3",
-    "@expo/babel-preset-cli": "0.2.21",
     "@types/react": "^16.9.56",
     "anser": "^1.4.7",
     "apollo-cache-inmemory": "^1.1.12",
@@ -61,7 +60,6 @@
     "react-redux": "^5.0.7",
     "react-textarea-autosize": "^6.1.0",
     "redux": "^3.7.2",
-    "rimraf": "^3.0.2",
     "slugify": "^1.0.2",
     "ts-node": "^9.1.1",
     "velocity-react": "^1.4.1",

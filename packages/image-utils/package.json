@@ -40,11 +40,9 @@
     "tempy": "0.3.0"
   },
   "devDependencies": {
-    "@expo/babel-preset-cli": "0.2.21",
     "@types/fs-extra": "^9.0.1",
     "@types/getenv": "^0.7.0",
-    "@types/semver": "^6.0.0",
-    "rimraf": "^3.0.2"
+    "@types/semver": "^6.0.0"
   },
   "publishConfig": {
     "access": "public"

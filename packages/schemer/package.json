@@ -23,9 +23,6 @@
   "files": [
     "build"
   ],
-  "devDependencies": {
-    "@expo/babel-preset-cli": "0.2.21"
-  },
   "dependencies": {
     "ajv": "^5.2.2",
     "json-schema-traverse": "0.3.1",
