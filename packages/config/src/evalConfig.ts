@@ -39,11 +39,12 @@ export function evalConfig(
       const codeFrame = codeFrameColumns(contents, { start: error.loc }, { highlightCode: true });
       error.codeFrame = codeFrame;
       error.message += `\n${codeFrame}`;
-    }
-    const importantStack = extractImportantStackFromNodeError(error);
+    } else {
+      const importantStack = extractImportantStackFromNodeError(error);
 
-    if (importantStack) {
-      error.message += `\n${importantStack}`;
+      if (importantStack) {
+        error.message += `\n${importantStack}`;
+      }
     }
     throw error;
   }
