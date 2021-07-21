@@ -355,10 +355,10 @@ Command.prototype.asyncAction = function (asyncFn: Action) {
       } else if (err.isCommandError || err.isPluginError) {
         Log.error(err.message);
       } else if (err._isApiError) {
-        Log.error(chalk.red(err.message));
-      } else if (err.isXDLError) {
         Log.error(err.message);
-      } else if (err.isJsonFileError || err.isConfigError || err.isPackageManagerError) {
+      } else if (err.isXDLError || err.isConfigError) {
+        Log.error(err.message);
+      } else if (err.isJsonFileError || err.isPackageManagerError) {
         if (err.code === 'EJSONEMPTY') {
           // Empty JSON is an easy bug to debug. Often this is thrown for package.json or app.json being empty.
           Log.error(err.message);

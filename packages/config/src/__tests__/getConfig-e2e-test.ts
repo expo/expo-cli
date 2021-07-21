@@ -51,6 +51,18 @@ describe(getConfig, () => {
     expect(exp.foo).toBe('bar');
   });
 
+  it('throws a useful error for a project with an external syntax error', () => {
+    const projectRoot = resolve(__dirname, './fixtures/external-error');
+    const configPath = resolve(projectRoot, 'app.config.js');
+
+    setCustomConfigPath(projectRoot, configPath);
+    expect(() =>
+      getConfig(projectRoot, {
+        skipSDKVersionRequirement: true,
+      })
+    ).toThrowErrorMatchingSnapshot();
+  });
+
   it('resolves plugins', () => {
     const projectRoot = resolve(__dirname, './fixtures/plugins');
     const { exp } = getConfig(projectRoot, {
