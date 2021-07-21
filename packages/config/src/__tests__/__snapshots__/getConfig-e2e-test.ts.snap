@@ -1,0 +1,11 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`getConfig throws a useful error for a project with an external syntax error 1`] = `
+"Error reading Expo config at /Users/evanbacon/Documents/GitHub/cli/packages/config/src/__tests__/fixtures/external-error/app.config.js:
+
+Cannot use import statement outside a module
+/Users/evanbacon/Documents/GitHub/cli/packages/config/src/__tests__/fixtures/external-error/other.js:2
+import 'fs';
+^^^^^^
+"
+`;
