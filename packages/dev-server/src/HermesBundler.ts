@@ -67,11 +67,11 @@ export async function createHermesSourcemapAsync(
 }
 
 function getHermesCommand(projectRoot: string): string {
-  const platform = getHermesCommandPlatform();
-  const resolvedPath = resolveFrom.silent(projectRoot, `hermes-engine/${platform}/hermesc`);
+  const platformExecutable = getHermesCommandPlatform();
+  const resolvedPath = resolveFrom.silent(projectRoot, `hermes-engine/${platformExecutable}`);
   if (!resolvedPath) {
     throw new Error(
-      `Missing module "hermes-engine/${platform}/hermesc" in the project.` +
+      `Missing module "hermes-engine/${platformExecutable}" in the project.` +
         'This usually means hermes-engine is not installed. ' +
         'Please verify that dependencies in package.json include "react-native" ' +
         'and run `yarn` or `npm install`.'
@@ -83,11 +83,11 @@ function getHermesCommand(projectRoot: string): string {
 function getHermesCommandPlatform(): string {
   switch (os.platform()) {
     case 'darwin':
-      return 'osx-bin';
+      return 'osx-bin/hermesc';
     case 'linux':
-      return 'linux64-bin';
+      return 'linux64-bin/hermesc';
     case 'win32':
-      return 'win64-bin';
+      return 'win64-bin/hermesc.exe';
     default:
       throw new Error(`Unsupported host platform for Hermes compiler: ${os.platform()}`);
   }
