@@ -32,7 +32,7 @@ Running `expo customize:web` will generate this default config in your project.
 ```js
 const createExpoWebpackConfigAsync = require('@expo/webpack-config');
 
-module.exports = async function (env, argv) {
+module.exports = async function(env, argv) {
   const config = await createExpoWebpackConfigAsync(env, argv);
   // Customize the config before returning it.
   return config;
@@ -45,16 +45,14 @@ module.exports = async function (env, argv) {
 
 The main options used to configure how `@expo/webpack-config` works.
 
-| name                        | type                                    | default     | description                                                          |
-| --------------------------- | --------------------------------------- | ----------- | -------------------------------------------------------------------- |
-| `projectRoot`               | `string`                                | required    | Root of the Expo project.                                            |
-| `https`                     | `boolean`                               | `false`     | Should the dev server use https protocol.                            |
-| `offline`                   | `boolean`                               | `false`     | Passing `true` will enable offline support and add a service worker. |
-| `mode`                      | `Mode`                                  | required    | The Webpack mode to bundle the project in.                           |
-| `platform`                  | [`ExpoPlatform`](#ExpoPlatform)         | required    | The target platform to bundle for.                                   |
-| `pwa`                       | `boolean`                               | `true`      | Generate the PWA image assets in production mode.                    |
-| `babel`                     | [`ExpoBabelOptions`](#ExpoBabelOptions) | `undefined` | Control how the default Babel loader is configured.                  |
-| `removeUnusedImportExports` | `boolean`                               | `false`     | Enables advanced tree-shaking with deep scope analysis.              |
+| name          | type                                    | default     | description                                         |
+| ------------- | --------------------------------------- | ----------- | --------------------------------------------------- |
+| `projectRoot` | `string`                                | required    | Root of the Expo project.                           |
+| `https`       | `boolean`                               | `false`     | Should the dev server use https protocol.           |
+| `mode`        | `Mode`                                  | required    | The Webpack mode to bundle the project in.          |
+| `platform`    | [`ExpoPlatform`](#ExpoPlatform)         | required    | The target platform to bundle for.                  |
+| `pwa`         | `boolean`                               | `true`      | Generate the PWA image assets in production mode.   |
+| `babel`       | [`ExpoBabelOptions`](#ExpoBabelOptions) | `undefined` | Control how the default Babel loader is configured. |
 
 ### `Environment` internal
 
@@ -242,7 +240,7 @@ You may find that you want to include universal modules that aren't part of the 
 ```ts
 const createExpoWebpackConfigAsync = require('@expo/webpack-config');
 
-module.exports = async function (env, argv) {
+module.exports = async function(env, argv) {
   const config = await createExpoWebpackConfigAsync(
     {
       ...env,
@@ -266,7 +264,7 @@ If you're adding support to some other Webpack config like in Storybook or Gatsb
 ```ts
 const { withUnimodules } = require('@expo/webpack-config/addons');
 
-module.exports = function () {
+module.exports = function() {
   const someWebpackConfig = {
     /* Your custom Webpack config */
   };
@@ -296,7 +294,7 @@ If you want to modify the babel loader further, you can retrieve it using the he
 const createExpoWebpackConfigAsync = require('@expo/webpack-config');
 const { getExpoBabelLoader } = require('@expo/webpack-config/utils');
 
-module.exports = async function (env, argv) {
+module.exports = async function(env, argv) {
   const config = await createExpoWebpackConfigAsync(env, argv);
   const loader = getExpoBabelLoader(config);
   if (loader) {
@@ -308,7 +306,7 @@ module.exports = async function (env, argv) {
 
 ### Service workers
 
-Service workers are great for emulating native functionality, but they can also lead to a lot of confusion so they are opt-in only (starting in Expo SDK 39 and greater) in this Webpack config. To enable the default workbox plugin pass the options `{ offline: true }` to the creator method.
+Service workers are great for emulating native functionality, but they can also lead to a lot of confusion so they are opt-in only (starting in Expo SDK 42 and greater) in this Webpack config. To enable the default workbox plugin pass the options `{ offline: true }` to the creator method.
 
 #### How Expo service workers ... work
 
@@ -335,7 +333,7 @@ This can have some unfortunate side-effects as application libraries like expo-n
 ```js
 const createExpoWebpackConfigAsync = require('@expo/webpack-config');
 
-module.exports = async function (env, argv) {
+module.exports = async function(env, argv) {
   // Set offline to `false`
   const config = await createExpoWebpackConfigAsync({ ...env, offline: false }, argv);
   return config;
