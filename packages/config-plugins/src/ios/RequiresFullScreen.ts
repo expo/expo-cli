@@ -2,6 +2,7 @@ import { ExpoConfig } from '@expo/config-types';
 
 import { createInfoPlistPlugin } from '../plugins/ios-plugins';
 import { gteSdkVersion } from '../utils/versions';
+import * as WarningAggregator from '../utils/warnings';
 import { InfoPlist } from './IosConfig.types';
 
 export const withRequiresFullScreen = createInfoPlistPlugin(
@@ -29,13 +30,44 @@ export function getRequiresFullScreen(config: Pick<ExpoConfig, 'ios' | 'sdkVersi
   }
 }
 
+const requiredIPadInterface = [
+  'UIInterfaceOrientationPortrait',
+  'UIInterfaceOrientationPortraitUpsideDown',
+  'UIInterfaceOrientationLandscapeLeft',
+  'UIInterfaceOrientationLandscapeRight',
+];
+
 // Whether requires full screen on iPad
 export function setRequiresFullScreen(
   config: Pick<ExpoConfig, 'ios'>,
   infoPlist: InfoPlist
 ): InfoPlist {
+  const requiresFullScreen = getRequiresFullScreen(config);
+  if (!requiresFullScreen) {
+    if (Array.isArray(infoPlist['UISupportedInterfaceOrientations~ipad'])) {
+      if (
+        !(infoPlist['UISupportedInterfaceOrientations~ipad'] as string[]).every(mask =>
+          requiredIPadInterface.includes(mask)
+        )
+      ) {
+        WarningAggregator.addWarningIOS(
+          'ios.requireFullScreen',
+          `iPad multitasking requires all UISupportedInterfaceOrientations~ipad to be defined. The Info.plist currently defines insufficient values that will be overwritten. Existing: ${infoPlist[
+            'UISupportedInterfaceOrientations~ipad'
+          ].join(', ')}`
+        );
+      }
+    }
+    // Require full screen being disabled requires all ipad interfaces to to be added, otherwise submissions to the store will fail.
+    // For issue searching:
+    // ERROR ITMS-90474: "Invalid Bundle. iPad Multitasking support requires these orientations: 'UIInterfaceOrientationPortrait,UIInterfaceOrientationPortraitUpsideDown,UIInterfaceOrientationLandscapeLeft,UIInterfaceOrientationLandscapeRight'. Found 'UIInterfaceOrientationPortrait,UIInterfaceOrientationPortraitUpsideDown' in bundle 'com.bacon.app'."
+    infoPlist['UISupportedInterfaceOrientations~ipad'] = requiredIPadInterface;
+
+    // There currently exists no mechanism to safely undo this feature.
+  }
+
   return {
     ...infoPlist,
-    UIRequiresFullScreen: getRequiresFullScreen(config),
+    UIRequiresFullScreen: requiresFullScreen,
   };
 }
