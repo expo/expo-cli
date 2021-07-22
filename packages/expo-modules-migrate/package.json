@@ -34,18 +34,16 @@
     "!*/__tests__/*"
   ],
   "dependencies": {
-    "@expo/babel-preset-cli": "0.2.20",
-    "@expo/config": "5.0.3",
-    "@expo/config-plugins": "3.0.3",
-    "@expo/package-manager": "0.0.43",
+    "@expo/config": "5.0.5",
+    "@expo/config-plugins": "3.0.5",
+    "@expo/package-manager": "0.0.44",
     "chalk": "^4.0.0",
     "find-up": "^5.0.0",
     "fs-extra": "9.0.0",
     "glob": "7.1.6"
   },
   "devDependencies": {
-    "@types/fs-extra": "^9.0.1",
-    "rimraf": "^3.0.2"
+    "@types/fs-extra": "^9.0.1"
   },
   "publishConfig": {
     "access": "public"
