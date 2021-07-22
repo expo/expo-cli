@@ -41,5 +41,5 @@ test('init', async () => {
     cwd: projectRoot,
     stdio: ['pipe', 'pipe', 'inherit'],
   });
-  expect(gitBranch).toBe('On branch main\nnothing to commit, working tree clean\n');
+  expect(gitBranch).toBe('On branch master\nnothing to commit, working tree clean\n');
 });

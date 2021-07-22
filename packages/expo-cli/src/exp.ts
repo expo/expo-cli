@@ -1,6 +1,5 @@
 import bunyan from '@expo/bunyan';
 import { setCustomConfigPath } from '@expo/config';
-import { INTERNAL_CALLSITES_REGEX } from '@expo/metro-config';
 import boxen from 'boxen';
 import chalk from 'chalk';
 import program, { Command } from 'commander';
@@ -18,8 +17,6 @@ import {
   ApiV2,
   Binaries,
   Config,
-  ConnectionStatus,
-  Doctor,
   Logger,
   LogRecord,
   LogUpdater,
@@ -106,7 +103,7 @@ Command.prototype.prepareCommands = function () {
       if (getenv.boolish('EXPO_DEBUG', false)) {
         return true;
       }
-      return !['internal', 'eas'].includes(cmd.__helpGroup);
+      return !['internal'].includes(cmd.__helpGroup);
     })
     .map(function (cmd: Command, i: number) {
       const args = cmd._args.map(humanReadableArgName).join(' ');
@@ -204,7 +201,6 @@ export const helpGroupOrder = [
   'publish',
   'build',
   'credentials',
-  'eas',
   'notifications',
   'url',
   'webhooks',
@@ -225,7 +221,6 @@ function sortHelpGroups(helpGroups: Record<string, string[][]>): Record<string, 
 
   const subGroupOrder: Record<string, string[]> = {
     core: ['init', 'start', 'start:web', 'publish', 'export'],
-    eas: ['eas:credentials'],
   };
 
   const sortSubGroupWithOrder = (groupName: string, group: string[][]): string[][] => {
@@ -344,6 +339,7 @@ Command.prototype.asyncAction = function (asyncFn: Action) {
     try {
       const options = args[args.length - 1];
       if (options.offline) {
+        const { ConnectionStatus } = await import('xdl');
         ConnectionStatus.setIsOffline(true);
       }
 
@@ -356,19 +352,20 @@ Command.prototype.asyncAction = function (asyncFn: Action) {
       // TODO: Find better ways to consolidate error messages
       if (err instanceof AbortCommandError || err instanceof SilentError) {
         // Do nothing when a prompt is cancelled or the error is logged in a pretty way.
-      } else if (err.isCommandError) {
+      } else if (err.isCommandError || err.isPluginError) {
         Log.error(err.message);
       } else if (err._isApiError) {
-        Log.error(chalk.red(err.message));
-      } else if (err.isXDLError) {
         Log.error(err.message);
-      } else if (err.isJsonFileError || err.isConfigError || err.isPackageManagerError) {
+      } else if (err.isXDLError || err.isConfigError) {
+        Log.error(err.message);
+      } else if (err.isJsonFileError || err.isPackageManagerError) {
         if (err.code === 'EJSONEMPTY') {
           // Empty JSON is an easy bug to debug. Often this is thrown for package.json or app.json being empty.
           Log.error(err.message);
         } else {
           Log.addNewLineIfNone();
           Log.error(err.message);
+          const { formatStackTrace } = await import('./utils/formatStackTrace');
           const stacktrace = formatStackTrace(err.stack, this.name());
           Log.error(chalk.gray(stacktrace));
         }
@@ -381,63 +378,6 @@ Command.prototype.asyncAction = function (asyncFn: Action) {
     }
   });
 };
-
-function getStringBetweenParens(value: string): string {
-  const regExp = /\(([^)]+)\)/;
-  const matches = regExp.exec(value);
-  if (matches && matches?.length > 1) {
-    return matches[1];
-  }
-  return value;
-}
-
-function focusLastPathComponent(value: string): string {
-  const parts = value.split('/');
-  if (parts.length > 1) {
-    const last = parts.pop();
-    const current = chalk.dim(parts.join('/') + '/');
-    return `${current}${last}`;
-  }
-  return chalk.dim(value);
-}
-
-function formatStackTrace(stacktrace: string, command: string): string {
-  const treeStackLines: string[][] = [];
-  for (const line of stacktrace.split('\n')) {
-    const [first, ...parts] = line.trim().split(' ');
-    // Remove at -- we'll use a branch instead.
-    if (first === 'at') {
-      treeStackLines.push(parts);
-    }
-  }
-
-  return treeStackLines
-    .map((parts, index) => {
-      let first = parts.shift();
-      let last = parts.pop();
-
-      // Replace anonymous with command name
-      if (first === 'Command.<anonymous>') {
-        first = chalk.bold(`expo ${command}`);
-      } else if (first?.startsWith('Object.')) {
-        // Remove extra JS types from function names
-        first = first.split('Object.').pop()!;
-      } else if (first?.startsWith('Function.')) {
-        // Remove extra JS types from function names
-        first = first.split('Function.').pop()!;
-      } else if (first?.startsWith('/')) {
-        // If the first element is a path
-        first = focusLastPathComponent(getStringBetweenParens(first));
-      }
-
-      if (last) {
-        last = focusLastPathComponent(getStringBetweenParens(last));
-      }
-      const branch = (index === treeStackLines.length - 1 ? '└' : '├') + '─';
-      return ['   ', branch, first, ...parts, last].filter(Boolean).join(' ');
-    })
-    .join('\n');
-}
 
 // asyncActionProjectDir captures the projectDirectory from the command line,
 // setting it to cwd if it is not provided.
@@ -518,7 +458,9 @@ Command.prototype.asyncActionProjectDir = function (
       }
     };
 
-    const logStackTrace = (
+    const { INTERNAL_CALLSITES_REGEX } = await import('@expo/metro-config');
+
+    const logStackTrace = async (
       chunk: LogRecord,
       logFn: (...args: any[]) => void,
       nestedLogFn: (...args: any[]) => void
@@ -693,6 +635,7 @@ Command.prototype.asyncActionProjectDir = function (
       Log.setSpinner(spinner);
       // validate that this is a good projectDir before we try anything else
 
+      const { Doctor } = await import('xdl');
       const status = await Doctor.validateWithoutNetworkAsync(projectRoot, {
         skipSDKVersionRequirement: options.skipSDKVersionRequirement,
       });

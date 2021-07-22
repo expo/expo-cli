@@ -43,6 +43,7 @@ export const withIosExpoPlugins: ConfigPlugin<{
     IOSConfig.Name.withDisplayName,
     IOSConfig.Orientation.withOrientation,
     IOSConfig.RequiresFullScreen.withRequiresFullScreen,
+    IOSConfig.RootViewBackgroundColor.withRootViewBackgroundColor,
     IOSConfig.Scheme.withScheme,
     IOSConfig.UserInterfaceStyle.withUserInterfaceStyle,
     IOSConfig.UsesNonExemptEncryption.withUsesNonExemptEncryption,
