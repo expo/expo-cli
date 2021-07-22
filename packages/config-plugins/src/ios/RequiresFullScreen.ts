@@ -68,7 +68,7 @@ function resolveExistingIpadInterfaceOrientations(interfaceOrientations: any): s
     const existingList = interfaceOrientations!.join(', ');
     WarningAggregator.addWarningIOS(
       'ios.requireFullScreen',
-      `iPad multitasking requires all \`${iPadInterfaceKey}\` orientations to be defined in the Info.plist. Currently, the plist defines an insufficient set of values that will be overwritten to prevent submission failure. Existing: ${existingList}`
+      `iPad multitasking requires all \`${iPadInterfaceKey}\` orientations to be defined in the Info.plist. The Info.plist currently defines values that are incompatible with multitasking, these will be overwritten to prevent submission failure. Existing: ${existingList}`
     );
     return interfaceOrientations;
   }
