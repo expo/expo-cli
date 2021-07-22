@@ -1,6 +1,7 @@
 import { ExpoConfig, getConfig } from '@expo/config';
 import chalk from 'chalk';
 import fs from 'fs-extra';
+import getenv from 'getenv';
 import * as path from 'path';
 import tempy from 'tempy';
 import { SimControl, Simulator, UnifiedAnalytics } from 'xdl';
@@ -61,10 +62,12 @@ export async function actionAsync(projectRoot: string, options: Options) {
     // Prebundle the app
     Log.debug('Bundling JS before building: ' + tempDir);
     await profileMethod(bundleAppAsync)(projectRoot, {
-      // resetCache: false,
-      dev: props.configuration === 'Debug',
+      resetCache: false,
+      dev: getenv.boolish('DEV', props.configuration === 'Debug'),
       destination: tempDir,
-      entryFile: resolveEntryPoint(projectRoot, 'ios'),
+      entryFile: getenv.string('ENTRY_FILE', resolveEntryPoint(projectRoot, 'ios')),
+      // deliminate by spaces
+      extraPackagerArgs: [getenv.string('EXTRA_PACKAGER_ARGS', '')],
     });
     Log.debug('JS bundling complete');
   }

@@ -43,6 +43,16 @@ export async function bundleAppAsync(
     configArg = ['--config', bundleConfig];
   }
 
+  if (process.env.BUNDLE_COMMAND) {
+    Log.warn('Env BUNDLE_COMMAND is not supported in bundle-first mode');
+  }
+  if (process.env.CLI_PATH) {
+    Log.warn('Env CLI_PATH is not supported in bundle-first mode');
+  }
+  if (process.env.NODE_ARGS) {
+    Log.warn('Env NODE_ARGS is not supported in bundle-first mode');
+  }
+
   const bundleFile = path.join(destination, 'main.jsbundle');
   const args = [
     cliPath,
@@ -76,6 +86,7 @@ export async function bundleAppAsync(
         ...process.env,
         NODE_OPTIONS: process.env.METRO_NODE_OPTIONS,
         REACT_NATIVE_APP_ROOT: projectRoot,
+        RCT_NO_LAUNCH_PACKAGER: '1',
         ELECTRON_RUN_AS_NODE: '1',
       },
     });
@@ -103,14 +114,16 @@ async function copyDirAsync(src: string, dest: string) {
     const srcPath = path.join(src, entry.name);
     const destPath = path.join(dest, entry.name);
 
-    entry.isDirectory()
-      ? await copyDirAsync(srcPath, destPath)
-      : await fs.promises.copyFile(srcPath, destPath);
+    if (entry.isDirectory()) {
+      await copyDirAsync(srcPath, destPath);
+    } else {
+      await fs.promises.copyFile(srcPath, destPath);
+    }
   }
 }
 
 export async function embedBundleAsync(bundlePath: string, binaryPath: string) {
-  Log.debug('Copying JS into binary: ' + binaryPath);
+  Log.debug('Copying JS into app binary folder: ' + binaryPath);
   // Move pre bundled app into binary
   await copyDirAsync(bundlePath, binaryPath);
   if (!Log.isDebug) {
