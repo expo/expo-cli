@@ -55,8 +55,8 @@ describe('versionName', () => {
 });
 
 describe('versionCode', () => {
-  it(`returns null if no version code is provided`, () => {
-    expect(getVersionCode({})).toBe(null);
+  it(`returns 1 if no version code is provided`, () => {
+    expect(getVersionCode({})).toBe(1);
   });
 
   it(`returns the version code if provided`, () => {
