@@ -786,7 +786,8 @@ any interaction with Expo servers may result in unexpected behaviour.`
 }
 
 function _registerLogs() {
-  const stream = {
+  const stream: bunyan.Stream = {
+    level: Log.isDebug ? 'debug' : 'info',
     stream: {
       write: (chunk: any) => {
         if (chunk.code) {
@@ -835,6 +836,8 @@ function _registerLogs() {
           Log.log(chunk.msg);
         } else if (chunk.level === bunyan.WARN) {
           Log.warn(chunk.msg);
+        } else if (chunk.level === bunyan.DEBUG) {
+          Log.debug(chunk.msg);
         } else if (chunk.level >= bunyan.ERROR) {
           Log.error(chunk.msg);
         }
