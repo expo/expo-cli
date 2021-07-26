@@ -6,6 +6,7 @@ import * as path from 'path';
 import CommandError from '../../../CommandError';
 import Log from '../../../log';
 import { selectAsync } from '../../../prompts';
+import { profileMethod } from '../../utils/profileMethod';
 import { resolvePortAsync } from '../utils/resolvePortAsync';
 import * as XcodeBuild from './XcodeBuild';
 import { resolveDeviceAsync } from './resolveDeviceAsync';
@@ -136,9 +137,12 @@ export async function resolveOptionsAsync(
     port = 8081;
   }
 
-  const resolvedScheme = (await resolveNativeSchemeAsync(projectRoot, options)) ?? {
-    name: path.basename(xcodeProject.name, path.extname(xcodeProject.name)),
-  };
+  const resolvedScheme = (await resolveNativeSchemeAsync(projectRoot, options)) ??
+    profileMethod(IOSConfig.BuildScheme.getRunnableSchemesFromXcodeproj)(projectRoot, {
+      configuration: options.configuration,
+    })[0] ?? {
+      name: path.basename(xcodeProject.name, path.extname(xcodeProject.name)),
+    };
 
   const device = await resolveDeviceAsync(options.device, { osType: resolvedScheme.osType });
 
