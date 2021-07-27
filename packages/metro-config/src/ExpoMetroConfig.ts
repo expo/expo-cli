@@ -217,13 +217,14 @@ export interface LoadOptions {
   reporter?: Reporter;
   resetCache?: boolean;
   target?: ProjectTarget;
+  withoutDefaults?: boolean;
 }
 
 export async function loadAsync(
   projectRoot: string,
-  { reporter, target, ...metroOptions }: LoadOptions = {}
+  { reporter, target, withoutDefaults = false, ...metroOptions }: LoadOptions = {}
 ): Promise<MetroConfig.ConfigT> {
-  let defaultConfig = getDefaultConfig(projectRoot, { target });
+  let defaultConfig = withoutDefaults ? {} : getDefaultConfig(projectRoot, { target });
   if (reporter) {
     defaultConfig = { ...defaultConfig, reporter };
   }
@@ -232,6 +233,12 @@ export async function loadAsync(
     { cwd: projectRoot, projectRoot, ...metroOptions },
     defaultConfig
   );
+}
+
+export async function existsAsync(projectRoot: string): Promise<boolean> {
+  const MetroConfig = importMetroConfigFromProject(projectRoot);
+  const result = await MetroConfig.resolveConfig(undefined, projectRoot);
+  return !result.isEmpty;
 }
 
 function importMetroConfigFromProject(projectRoot: string): typeof MetroConfig {
