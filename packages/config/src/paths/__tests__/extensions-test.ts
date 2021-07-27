@@ -4,8 +4,7 @@ describe('getExtensions', () => {
   it(`enforces \`string[]\``, async () => {
     expect(() => getExtensions('web')).toThrow(`string[]`);
     expect(() => getExtensions([], 'js')).toThrow(`string[]`);
-    expect(() => getExtensions([], [], 'expo')).toThrow(`string[]`);
-    expect(() => getExtensions([], null, [])).toThrow(`string[]`);
+    expect(() => getExtensions([], null)).toThrow(`string[]`);
   });
 });
 
