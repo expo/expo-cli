@@ -6,27 +6,21 @@ export type LanguageOptions = {
   isReact: boolean;
 };
 
-export function getExtensions(
-  platforms: string[],
-  extensions: string[],
-  workflows: string[]
-): string[] {
+export function getExtensions(platforms: string[], extensions: string[]): string[] {
   // In the past we used spread operators to collect the values so now we enforce type safety on them.
   assert(Array.isArray(platforms), 'Expected: `platforms: string[]`');
   assert(Array.isArray(extensions), 'Expected: `extensions: string[]`');
-  assert(Array.isArray(workflows), 'Expected: `workflows: string[]`');
 
   const fileExtensions = [];
-  // support .expo files
-  for (const workflow of [...workflows, '']) {
-    // Ensure order is correct: [platformA.js, platformB.js, js]
-    for (const platform of [...platforms, '']) {
-      // Support both TypeScript and JavaScript
-      for (const extension of extensions) {
-        fileExtensions.push([platform, workflow, extension].filter(Boolean).join('.'));
-      }
+
+  // Ensure order is correct: [platformA.js, platformB.js, js]
+  for (const platform of [...platforms, '']) {
+    // Support both TypeScript and JavaScript
+    for (const extension of extensions) {
+      fileExtensions.push([platform, extension].filter(Boolean).join('.'));
     }
   }
+
   return fileExtensions;
 }
 
@@ -55,9 +49,7 @@ export function getManagedExtensions(
   platforms: string[],
   languageOptions: LanguageOptions = { isTS: true, isModern: true, isReact: true }
 ): string[] {
-  const fileExtensions = getExtensions(platforms, getLanguageExtensionsInOrder(languageOptions), [
-    'expo',
-  ]);
+  const fileExtensions = getExtensions(platforms, getLanguageExtensionsInOrder(languageOptions));
   // Always add these last
   _addMiscellaneousExtensions(platforms, fileExtensions);
   return fileExtensions;
@@ -67,11 +59,7 @@ export function getBareExtensions(
   platforms: string[],
   languageOptions: LanguageOptions = { isTS: true, isModern: true, isReact: true }
 ): string[] {
-  const fileExtensions = getExtensions(
-    platforms,
-    getLanguageExtensionsInOrder(languageOptions),
-    []
-  );
+  const fileExtensions = getExtensions(platforms, getLanguageExtensionsInOrder(languageOptions));
   // Always add these last
   _addMiscellaneousExtensions(platforms, fileExtensions);
   return fileExtensions;

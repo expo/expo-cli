@@ -22,6 +22,16 @@ export function getPossibleProjectRoot(): string {
   return fs.realpathSync(process.cwd());
 }
 
+const nativePlatforms = ['ios', 'android'];
+
+export function resolveEntryPoint(
+  projectRoot: string,
+  { platform, projectConfig }: { platform: string; projectConfig?: ProjectConfig }
+) {
+  const platforms = nativePlatforms.includes(platform) ? [platform, 'native'] : [platform];
+  return getEntryPoint(projectRoot, ['./index'], platforms, projectConfig);
+}
+
 export function getEntryPoint(
   projectRoot: string,
   entryFiles: string[],
