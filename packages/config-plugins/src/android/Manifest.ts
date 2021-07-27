@@ -70,6 +70,17 @@ type ManifestApplicationAttributes = {
   'android:largeHeap'?: StringBoolean;
   'android:requestLegacyExternalStorage'?: StringBoolean;
   'android:usesCleartextTraffic'?: StringBoolean;
+  'android:windowSoftInputMode'?:
+    | string
+    | 'stateUnspecified'
+    | 'stateUnchanged'
+    | 'stateHidden'
+    | 'stateAlwaysHidden'
+    | 'stateVisible'
+    | 'stateAlwaysVisible'
+    | 'adjustUnspecified'
+    | 'adjustResize'
+    | 'adjustPan';
   [key: string]: string | undefined;
 };
 
