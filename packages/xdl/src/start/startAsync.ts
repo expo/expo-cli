@@ -46,7 +46,7 @@ export function broadcastMessage(
 export async function startAsync(
   projectRoot: string,
   {
-    exp = getConfig(projectRoot).exp,
+    exp = getConfig(projectRoot, { skipSDKVersionRequirement: true }).exp,
     ...options
   }: StartDevServerOptions & { exp?: ExpoConfig } = {},
   verbose: boolean = true

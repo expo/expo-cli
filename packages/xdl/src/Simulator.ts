@@ -1,5 +1,7 @@
 import { ExpoConfig, getConfig } from '@expo/config';
+import { IOSConfig } from '@expo/config-plugins';
 import * as osascript from '@expo/osascript';
+import plist from '@expo/plist';
 import spawnAsync from '@expo/spawn-async';
 import chalk from 'chalk';
 import { execSync } from 'child_process';
@@ -734,6 +736,29 @@ async function getClientForSDK(sdkVersionString?: string) {
   };
 }
 
+export async function resolveApplicationIdAsync(projectRoot: string) {
+  // Check xcode project
+  try {
+    const bundleId = await IOSConfig.BundleIdentifier.getBundleIdentifierFromPbxproj(projectRoot);
+    if (bundleId) {
+      return bundleId;
+    }
+  } catch {}
+
+  // Check Info.plist
+  try {
+    const infoPlistPath = IOSConfig.Paths.getInfoPlistPath(projectRoot);
+    const data = await plist.parse(fs.readFileSync(infoPlistPath, 'utf8'));
+    if (data.CFBundleIdentifier && !data.CFBundleIdentifier.startsWith('$(')) {
+      return data.CFBundleIdentifier;
+    }
+  } catch {}
+
+  // Check Expo config
+  const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
+  return exp.ios?.bundleIdentifier;
+}
+
 export async function openProjectAsync({
   projectRoot,
   shouldPrompt,
@@ -762,7 +787,14 @@ export async function openProjectAsync({
   const projectUrl = await UrlUtils.constructDeepLinkAsync(projectRoot, {
     hostType: 'localhost',
     scheme,
+  }).catch(e => {
+    if (devClient) {
+      return null;
+    }
+    throw e;
   });
+
+  Logger.global.debug(`iOS project url: ${projectUrl}`);
 
   const { exp } = getConfig(projectRoot, {
     skipSDKVersionRequirement: true,
@@ -777,6 +809,63 @@ export async function openProjectAsync({
     if (!device) {
       return { success: false, error: 'escaped' };
     }
+  }
+
+  // No URL, and is devClient
+  if (!projectUrl) {
+    const applicationId = await resolveApplicationIdAsync(projectRoot);
+    Logger.global.debug(`Open iOS project from app id: ${applicationId}`);
+
+    if (!applicationId) {
+      return {
+        success: false,
+        error:
+          'Cannot resolve bundle identifier or URI scheme to open the native iOS app.\nInstall `expo-dev-client` and rebuild the native app with `expo run:ios` or `eas build -p ios`',
+      };
+    }
+
+    let simulator: SimControl.SimulatorDevice | null = null;
+    try {
+      simulator = await profileMethod(ensureSimulatorOpenAsync)({ udid: device?.udid });
+    } catch (error) {
+      return {
+        success: false,
+        error: error.message,
+      };
+    }
+    Logger.global.info(
+      `\u203A Opening ${chalk.underline(applicationId)} on ${chalk.bold(simulator.name)}`
+    );
+
+    const result = await SimControl.openBundleIdAsync({
+      udid: simulator.udid,
+      bundleIdentifier: applicationId,
+    }).catch(error => {
+      if ('status' in error) {
+        return error;
+      }
+      throw error;
+    });
+    if (result.status === 0) {
+      await activateSimulatorWindowAsync();
+    } else {
+      let errorMessage = `Couldn't open iOS app with ID "${applicationId}" on device "${simulator.name}".`;
+      if (result.status === 4) {
+        errorMessage += `\nThe app might not be installed, try installing it with: ${chalk.bold(
+          `expo run:ios -d ${simulator.udid}`
+        )}`;
+      }
+      errorMessage += chalk.gray(`\n${result.stderr}`);
+      Logger.global.error(errorMessage);
+      return { success: false, error: errorMessage };
+    }
+    return {
+      success: true,
+      udid: simulator.udid,
+      bundleIdentifier: applicationId,
+      // TODO: Remove this hack
+      url: '',
+    };
   }
 
   const result = await profileMethod(openUrlInSimulatorSafeAsync)({

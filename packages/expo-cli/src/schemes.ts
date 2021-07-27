@@ -4,7 +4,7 @@ import plist from '@expo/plist';
 import fs from 'fs';
 import resolveFrom from 'resolve-from';
 
-import { AbortCommandError } from './CommandError';
+import CommandError, { AbortCommandError } from './CommandError';
 import {
   hasRequiredAndroidFilesAsync,
   hasRequiredIOSFilesAsync,
@@ -39,7 +39,7 @@ function intersecting<T>(a: T[], b: T[]): T[] {
   return c.filter(value => d.includes(value));
 }
 
-export async function getDevClientSchemeAsync(projectRoot: string): Promise<string> {
+export async function getOptionalDevClientSchemeAsync(projectRoot: string): Promise<string | null> {
   const [hasIos, hasAndroid] = await Promise.all([
     hasRequiredIOSFilesAsync(projectRoot),
     hasRequiredAndroidFilesAsync(projectRoot),
@@ -64,6 +64,11 @@ export async function getDevClientSchemeAsync(projectRoot: string): Promise<stri
   } else {
     [matching] = intersecting(ios, android);
   }
+  return matching ?? null;
+}
+
+export async function getDevClientSchemeAsync(projectRoot: string): Promise<string> {
+  const matching = await getOptionalDevClientSchemeAsync(projectRoot);
 
   if (!matching) {
     Log.warn(
@@ -88,7 +93,7 @@ export async function getDevClientSchemeAsync(projectRoot: string): Promise<stri
   return matching;
 }
 
-async function getManagedDevClientSchemeAsync(projectRoot: string): Promise<string> {
+async function getManagedDevClientSchemeAsync(projectRoot: string): Promise<string | null> {
   const { exp } = getConfig(projectRoot, {
     skipSDKVersionRequirement: true,
   });
@@ -100,9 +105,8 @@ async function getManagedDevClientSchemeAsync(projectRoot: string): Promise<stri
     Log.warn(
       '\nDev Client: Unable to get the default URI scheme for the project. Please make sure the expo-dev-client package is installed.'
     );
-    Log.error(error);
-    Log.newLine();
-    throw new AbortCommandError();
+    // throw new CommandError(error);
+    return null;
   }
 }
 

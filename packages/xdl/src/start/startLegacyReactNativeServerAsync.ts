@@ -153,11 +153,11 @@ export async function startReactNativeServerAsync({
     sourceExts,
   };
 
-  if (options.nonPersistent && Versions.lteSdkVersion(exp, '32.0.0')) {
+  if (options.nonPersistent && !Versions.gteSdkVersion(exp, '33.0.0')) {
     packagerOpts.nonPersistent = true;
   }
 
-  if (Versions.gteSdkVersion(exp, '33.0.0')) {
+  if (!Versions.lteSdkVersion(exp, '32.0.0')) {
     // starting with SDK 37, we bundle this plugin with the expo-asset package instead of expo,
     // so check there first and fall back to expo if we can't find it in expo-asset
     packagerOpts.assetPlugins = resolveFrom.silent(projectRoot, 'expo-asset/tools/hashAssetFiles');
@@ -175,7 +175,7 @@ export async function startReactNativeServerAsync({
     packagerOpts['max-workers'] = options.maxWorkers;
   }
 
-  if (!Versions.gteSdkVersion(exp, '16.0.0')) {
+  if (Versions.lteSdkVersion(exp, '15.0.0')) {
     delete packagerOpts.customLogReporterPath;
   }
   const userPackagerOpts = exp.packagerOpts;

@@ -5,7 +5,7 @@ import { Android, ConnectionStatus, ProjectSettings, Simulator, Webpack } from '
 
 import CommandError, { AbortCommandError } from './CommandError';
 import Log from './log';
-import { getDevClientSchemeAsync } from './schemes';
+import { getDevClientSchemeAsync, getOptionalDevClientSchemeAsync } from './schemes';
 
 // NOTE: if you update this, you should also update assertValidOptions in UrlUtils.ts
 export type URLOptions = {
@@ -75,7 +75,7 @@ async function optsAsync(projectRoot: string, options: any) {
     opts.scheme = options.scheme ?? null;
   } else if (options.devClient) {
     // Attempt to find the scheme or warn the user how to setup a custom scheme
-    opts.scheme = await getDevClientSchemeAsync(projectRoot);
+    opts.scheme = await getOptionalDevClientSchemeAsync(projectRoot);
   } else {
     // Ensure this is reset when users don't use `--scheme` or `--dev-client`
     opts.scheme = null;
@@ -145,7 +145,10 @@ async function handleMobileOptsAsync(
     if (isEscapedError) {
       throw new AbortCommandError();
     } else {
-      // Throw the first error
+      if (typeof errors[0] === 'string') {
+        // Throw the first error
+        throw new CommandError(errors[0]);
+      }
       throw errors[0];
     }
   }

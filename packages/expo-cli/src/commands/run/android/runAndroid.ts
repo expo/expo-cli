@@ -13,7 +13,6 @@ import { getSchemesForAndroidAsync } from '../../../schemes';
 import { prebuildAsync } from '../../eject/prebuildAsync';
 import { installCustomExitHook } from '../../start/installExitHooks';
 import { startBundlerAsync } from '../ios/startBundlerAsync';
-import { isDevMenuInstalled } from '../utils/isDevMenuInstalled';
 import { resolvePortAsync } from '../utils/resolvePortAsync';
 import { resolveDeviceAsync } from './resolveDeviceAsync';
 import { spawnGradleAsync } from './spawnGradleAsync';
@@ -123,33 +122,16 @@ export async function actionAsync(projectRoot: string, options: Options) {
 
   const schemes = await getSchemesForAndroidAsync(projectRoot);
 
-  if (
-    // If the dev-menu is installed, then deep link directly into the app so the user never sees the switcher screen.
-    isDevMenuInstalled(projectRoot) &&
-    // Ensure the app can handle custom URI schemes before attempting to deep link.
-    // This can happen when someone manually removes all URI schemes from the native app.
-    schemes.length
-  ) {
-    // TODO: set to ensure TerminalUI uses this same scheme.
-    const scheme = schemes[0];
-    Log.debug(`Deep linking into device: ${props.device.name}, using scheme: ${scheme}`);
-    const result = await Android.openProjectAsync({
-      projectRoot,
-      device: props.device,
-      devClient: true,
-      scheme,
-    });
-    if (!result.success) {
-      // TODO: Maybe fallback on using the package name.
-      throw new CommandError(
-        typeof result.error === 'string' ? result.error : result.error.message
-      );
-    }
-  } else {
-    Log.debug('Opening app on device via package name: ' + props.device.name);
-    // For now, just open the app with a matching package name
-    await Android.startAdbReverseAsync(projectRoot);
-    await Android.openAppAsync(props.device, props);
+  const result = await Android.openProjectAsync({
+    projectRoot,
+    device: props.device,
+    devClient: true,
+    scheme: schemes[0],
+  });
+
+  if (!result.success) {
+    // TODO: Maybe fallback on using the package name.
+    throw new CommandError(typeof result.error === 'string' ? result.error : result.error.message);
   }
 
   if (props.bundler) {
