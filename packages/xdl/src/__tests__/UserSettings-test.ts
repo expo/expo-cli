@@ -5,6 +5,7 @@ describe(UserSettings.dotExpoHomeDirectory, () => {
     delete process.env.__UNSAFE_EXPO_HOME_DIRECTORY;
     delete process.env.EXPO_STAGING;
     delete process.env.EXPO_LOCAL;
+    delete process.env.XDG_CONFIG_HOME;
   });
 
   it(`gets the default state directory`, () => {
@@ -21,5 +22,9 @@ describe(UserSettings.dotExpoHomeDirectory, () => {
   it(`gets the custom state directory`, () => {
     process.env.__UNSAFE_EXPO_HOME_DIRECTORY = '/foobar/yolo';
     expect(UserSettings.dotExpoHomeDirectory()).toBe('/foobar/yolo');
+  });
+  it(`gets the xdg config home directory`, () => {
+    process.env.XDG_CONFIG_HOME = '/foobar/yolo';
+    expect(UserSettings.dotExpoHomeDirectory()).toBe('/foobar/yolo/.expo');
   });
 });

@@ -45,7 +45,7 @@ let mkdirped = false;
 function dotExpoHomeDirectory() {
   let dirPath = process.env.__UNSAFE_EXPO_HOME_DIRECTORY;
   if (!dirPath) {
-    const home = os.homedir();
+    const home = process.env.XDG_CONFIG_HOME ? process.env.XDG_CONFIG_HOME : os.homedir();
 
     if (Env.isStaging()) {
       dirPath = path.join(home, '.expo-staging');
