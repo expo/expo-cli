@@ -333,16 +333,6 @@ function _getDefaultSimulatorDeviceUDID() {
   }
 }
 
-async function getFirstAvailableDeviceAsync({ osType = 'iOS' }: { osType?: string } = {}) {
-  const simulators = await getSelectableSimulatorsAsync({ osType });
-
-  if (!simulators.length) {
-    // TODO: Prompt to install the simulators
-    throw new Error(`No ${osType} devices available in Simulator.app`);
-  }
-  return simulators[0];
-}
-
 async function waitForActionAsync<T>({
   action,
   interval = 100,
@@ -914,7 +904,6 @@ export async function sortDefaultDeviceToBeginningAsync(
   osType?: string
 ): Promise<SimControl.SimulatorDevice[]> {
   const defaultUdid = await getBestSimulatorAsync({ osType });
-  // _getDefaultSimulatorDeviceUDID() ?? (await getFirstAvailableDeviceAsync()).udid;
   if (defaultUdid) {
     let iterations = 0;
     while (devices[0].udid !== defaultUdid && iterations < devices.length) {
