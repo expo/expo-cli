@@ -1,6 +1,7 @@
 #!/usr/bin/env ts-node-script
-
 import program, { Command, Option } from 'commander';
+// @ts-ignore
+import replaceAll from 'string-replace-all-ponyfill';
 
 import { registerCommands } from '../build/commands/index.js';
 import { helpGroupOrder } from '../build/exp.js';
@@ -10,7 +11,9 @@ type OptionData = {
   flags: string;
   required: boolean;
   description: string;
-  default: any;
+  default?: any;
+  deprecated?: boolean;
+  icon?: string;
 };
 
 type CommandData = {
@@ -19,22 +22,24 @@ type CommandData = {
   description: string;
   alias?: string;
   options: OptionData[];
+  icon?: string;
 };
 
 // Sets up commander with a minimal setup for inspecting commands and extracting
 // data from them.
-function generateCommandJSON() {
+function generateCommandJSON(): CommandData[] {
   program.name('expo');
   registerCommands(program);
   return program.commands.map(commandAsJSON);
 }
 
 // The type definition for Option seems to be wrong - doesn't include defaultValue
-function optionAsJSON(option: Option & { defaultValue: any }): OptionData {
+function optionAsJSON(option: Option & { defaultValue: any; deprecated?: boolean }): OptionData {
   return {
     flags: option.flags,
     required: option.required,
     description: option.description,
+    deprecated: option.deprecated,
     default: option.defaultValue,
   };
 }
@@ -141,11 +146,212 @@ function formatCommandsAsMarkdown(commands: CommandData[]) {
 
 const commands = generateCommandJSON();
 
+type FigArg = {
+  name?: string;
+  generators?: any;
+  isOptional?: boolean;
+  icon?: string;
+  template?: string;
+  suggestions?: string | string[] | { name: string; icon?: string }[];
+};
+type FigSpec = {
+  name: string[];
+  description: string;
+  hidden?: boolean;
+  priority?: number;
+  options?: FigSpec[];
+  icon?: string;
+  args?: FigArg | FigArg[];
+};
 // eslint-disable-next-line no-console
 console.log('');
 if (['markdown', 'md'].includes(process.argv[2])) {
   // eslint-disable-next-line no-console
   console.log(formatCommandsAsMarkdown(commands));
+} else if (['fig'].includes(process.argv[2])) {
+  const figSubcommands: FigSpec[] = [];
+
+  const booleanArg: FigArg = {
+    name: 'boolean',
+    isOptional: true,
+    suggestions: [
+      { name: 'true', icon: '✅' },
+      { name: 'false', icon: '❌' },
+    ],
+  };
+  const helpOption = {
+    name: ['-h', '--help'],
+    description: 'Output usage information',
+    icon: '💡',
+  };
+  for (const command of commands) {
+    let priorityIndex = helpGroupOrder.findIndex(v => v === command.group);
+    if (priorityIndex > -1) {
+      priorityIndex = helpGroupOrder.length - priorityIndex;
+    }
+    const subcommand: FigSpec = {
+      name: [command.name, command.alias].filter(Boolean) as string[],
+      hidden: command.group === 'internal',
+      description: command.description,
+      priority: priorityIndex,
+      args: {},
+      options: [helpOption],
+    };
+
+    for (const option of command.options) {
+      const name = option.flags
+        .split(' ')
+        .filter(v => {
+          // Get only the args starting with `-`
+          // this prevents things like `<my-name>` from being included.
+          return v.startsWith('-');
+        })
+        .map(v => {
+          // Remove commas and other characters
+          return v.match(/(--?[\w|-]+)/)?.[1];
+        })
+        .filter(Boolean) as string[];
+      const [, argName] = option.flags.match(/(?:\[|\<)([\w|-]+)(?:\]|\>)/) || [];
+      const isRequired = argName ? option.flags.includes('<') : false;
+      const args: FigArg = argName
+        ? {
+            name: argName,
+            // isOptional: !isRequired,
+            // suggestions: ["Debug", "Release"],
+          }
+        : booleanArg;
+
+      if (name.includes('--platform')) {
+        args.name = 'platform';
+        args.suggestions = argName.split('|').map(name => ({
+          name,
+          icon:
+            name === 'ios'
+              ? 'fig://icon?type=apple'
+              : name === 'android'
+              ? 'fig://icon?type=android'
+              : undefined,
+        }));
+      }
+      if (name[0] === '--config') {
+        args.template = 'filepaths';
+      }
+      if (name[0] === '--max-workers') {
+        args.name = 'Number of workers';
+        args.generators = '_gen[`max-workers`]';
+        args.icon = '🧵';
+      }
+      if (command.name === 'run:ios') {
+        if (name[0] === '--configuration') {
+          args.generators = '_gen[`xcode-configuration`]';
+        }
+        if (name[0] === '--scheme') {
+          args.generators = '_gen[`xcode-configuration`]';
+        }
+        if (name[1] === '--device') {
+          args.generators = '_gen[`xcode-devices`]';
+        }
+      }
+
+      if (name[0] === '--configuration') {
+        args.generators = '_gen[`xcode-configuration`]';
+      }
+
+      subcommand.options!.push({
+        name,
+        description: option.description,
+        args,
+      });
+
+      // TODO: enum types (platform)
+
+      if (option.deprecated) {
+        option.icon = 'fig://icon?type=alert';
+      } else if (option.flags.includes('-android')) {
+        option.icon = 'fig://icon?type=android';
+      } else if (option.flags.includes('-ios') || option.flags.includes('-apple')) {
+        option.icon = 'fig://icon?type=apple';
+      } else if (option.flags.includes('-npm') || option.flags.includes('-install')) {
+        option.icon = 'fig://icon?type=npm';
+      } else if (option.flags.includes('-yarn')) {
+        option.icon = 'https://yarnpkg.com/favicon-32x32.png';
+      } else if (option.flags.includes('-name')) {
+        option.icon = 'fig://icon?type=string';
+      } else if (option.flags.includes('-no-')) {
+        option.icon = '⏭️';
+      } else if (
+        option.flags.includes('-username') ||
+        option.flags.includes('-password') ||
+        option.flags.includes('-otp')
+      ) {
+        option.icon = 'fig://icon?type=string';
+      }
+    }
+
+    figSubcommands.push(subcommand);
+  }
+
+  const figSpec = {
+    name: 'expo',
+    // website favicon
+    icon: 'https://static.expo.dev/static/favicon-dark-16x16.png',
+    description: 'Tools for creating, running, and deploying Universal Expo and React Native apps',
+    options: [
+      helpOption,
+      {
+        name: ['-V', '--version'],
+        description: 'Output the version number',
+        icon: '💡',
+      },
+    ],
+    subcommands: figSubcommands,
+  };
+
+  // Replace all quotes around generators
+  const parsed = replaceAll(
+    JSON.stringify(figSpec, null, 2),
+    /"(_gen\[`.*`\])"/g,
+    (_: string, inner: string) => {
+      return inner;
+    }
+  );
+
+  const contents = `
+  // expo-cli@${require('../package.json').version}
+  const _gen = {
+    "xcode-configuration": {
+      script: "xcodebuild -project ios/*.xcodeproj  -list -json",
+      postProcess: (script: string) => JSON.parse(script).project.configurations.map((name) => ({ name })),
+    },
+    "xcode-schemes": {
+      script: "xcodebuild -project ios/*.xcodeproj  -list -json",
+      postProcess: (script: string) => JSON.parse(script).project.schemes.map((name) => ({ name })),
+    },
+    "xcode-devices": {
+      script: "xcrun xctrace list devices",
+  postProcess: (script: string) => script
+      .split("\\n")
+      .filter((item) => !item.match(/^=/))
+      .filter(Boolean)
+      .map((item) => item.split(/\([\w\d\-]+\)$/))
+      .map(([name]) => ({ name: name.trim() }))
+    },
+    "max-workers": {
+      script: "sysctl -n hw.ncpu",
+      postProcess: (script: string) => Array.from({ length: Number(script) }, (_, i) => ({ name: String(i) })),
+    }
+  }
+
+  export const completionSpec: Fig.Spec = ${parsed};
+  `;
+
+  // Generate a schema for https://github.com/withfig/autocomplete
+  // eslint-disable-next-line no-console
+  console.log(contents);
+
+  const proc = require('child_process').spawn('pbcopy');
+  proc.stdin.write(contents);
+  proc.stdin.end();
 } else {
   // eslint-disable-next-line no-console
   console.log(JSON.stringify(commands));
