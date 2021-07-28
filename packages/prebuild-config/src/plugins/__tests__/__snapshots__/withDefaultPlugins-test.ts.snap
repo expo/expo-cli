@@ -476,7 +476,7 @@ Object {
                       "android:launchMode": "singleTask",
                       "android:name": ".MainActivity",
                       "android:screenOrientation": "unspecified",
-                      "android:windowSoftInputMode": "adjustResize",
+                      "android:windowSoftInputMode": "adjustPan",
                     },
                     "intent-filter": Array [
                       Object {
@@ -1274,7 +1274,7 @@ Object {
                       "android:name": ".MainActivity",
                       "android:screenOrientation": "unspecified",
                       "android:theme": "@style/Theme.App.SplashScreen",
-                      "android:windowSoftInputMode": "adjustResize",
+                      "android:windowSoftInputMode": "adjustPan",
                     },
                     "intent-filter": Array [
                       Object {
