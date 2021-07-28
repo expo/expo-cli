@@ -467,7 +467,6 @@ Object {
                   "android:label": "@string/app_name",
                   "android:name": ".MainApplication",
                   "android:theme": "@style/AppTheme",
-                  "android:windowSoftInputMode": "adjustPan",
                 },
                 "activity": Array [
                   Object {
@@ -477,7 +476,7 @@ Object {
                       "android:launchMode": "singleTask",
                       "android:name": ".MainActivity",
                       "android:screenOrientation": "unspecified",
-                      "android:windowSoftInputMode": "adjustResize",
+                      "android:windowSoftInputMode": "adjustPan",
                     },
                     "intent-filter": Array [
                       Object {
@@ -1265,7 +1264,6 @@ Object {
                   "android:roundIcon": "@mipmap/ic_launcher_round",
                   "android:theme": "@style/AppTheme",
                   "android:usesCleartextTraffic": "true",
-                  "android:windowSoftInputMode": "adjustPan",
                 },
                 "activity": Array [
                   Object {
@@ -1276,7 +1274,7 @@ Object {
                       "android:name": ".MainActivity",
                       "android:screenOrientation": "unspecified",
                       "android:theme": "@style/Theme.App.SplashScreen",
-                      "android:windowSoftInputMode": "adjustResize",
+                      "android:windowSoftInputMode": "adjustPan",
                     },
                     "intent-filter": Array [
                       Object {

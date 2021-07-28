@@ -2,7 +2,7 @@ import { ExpoConfig } from '@expo/config-types';
 
 import { ConfigPlugin } from '../Plugin.types';
 import { withAndroidManifest } from '../plugins/android-plugins';
-import { AndroidManifest, getMainApplicationOrThrow } from './Manifest';
+import { AndroidManifest, getMainActivityOrThrow } from './Manifest';
 
 const ANDROID_WINDOW_SOFT_INPUT_MODE = 'android:windowSoftInputMode';
 
@@ -22,7 +22,7 @@ export function setWindowSoftInputModeMode(
   config: Pick<ExpoConfig, 'android' | 'userInterfaceStyle'>,
   androidManifest: AndroidManifest
 ) {
-  const app = getMainApplicationOrThrow(androidManifest);
+  const app = getMainActivityOrThrow(androidManifest);
   app.$[ANDROID_WINDOW_SOFT_INPUT_MODE] = getWindowSoftInputModeMode(config);
   return androidManifest;
 }
