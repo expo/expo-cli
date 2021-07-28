@@ -551,7 +551,16 @@ if (['markdown', 'md'].includes(process.argv[2])) {
     },
     "max-workers": {
       script: "sysctl -n hw.ncpu",
-      postProcess: (script: string) => Array.from({ length: Number(script) }, (_, i) => ({ name: String(i) })),
+      postProcess: (script: string) => {
+        const count = Number(script);
+        return Array.from({ length: count }, (_, i) => {
+          const v = count - i;
+          return {
+            priority: v,
+            name: String(v),
+          };
+        });
+      }
     }
   }
 

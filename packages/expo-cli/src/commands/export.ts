@@ -43,7 +43,7 @@ export default function (program: Command) {
         collect,
         []
       )
-      .option('--max-workers [num]', 'Maximum number of tasks to allow Metro to spawn.')
+      .option('--max-workers <num>', 'Maximum number of tasks to allow Metro to spawn.')
       .option('--experimental-bundle', 'export bundles for use with EAS updates.'),
     () => import('./exportAsync'),
     { checkConfig: true }

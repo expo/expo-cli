@@ -17,7 +17,7 @@ export default function (program: Command) {
         'Target environment for which this publish is intended. Options are `managed` or `bare`.'
       )
       // TODO(anp) set a default for this dynamically based on whether we're inside a container?
-      .option('--max-workers [num]', 'Maximum number of tasks to allow Metro to spawn.')
+      .option('--max-workers <num>', 'Maximum number of tasks to allow Metro to spawn.')
       .option(
         '--release-channel <release channel>',
         "The release channel to publish to. Default is 'default'.",
