@@ -2,8 +2,7 @@
 
 <p align="center">
   <a href="https://expo.io/">
-    <img alt="expo cli" height="128" src="./.gh-assets/banner.svg">
-    <h1 align="center">Expo CLI</h1>
+    <img alt="expo cli" src="./.gh-assets/banner.svg">
   </a>
 </p>
 
