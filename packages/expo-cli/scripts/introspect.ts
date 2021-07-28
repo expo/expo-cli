@@ -1,10 +1,42 @@
 #!/usr/bin/env ts-node-script
+import assert from 'assert';
 import program, { Command, Option } from 'commander';
 // @ts-ignore
 import replaceAll from 'string-replace-all-ponyfill';
+import stripAnsi from 'strip-ansi';
 
 import { registerCommands } from '../build/commands/index.js';
 import { helpGroupOrder } from '../build/exp.js';
+
+type FigArg = {
+  name?: string;
+  generators?: any;
+  debounce?: boolean;
+  variadic?: boolean;
+  isOptional?: boolean;
+  icon?: string;
+  template?: string;
+  suggestions?: string | string[] | { name: string; icon?: string }[];
+};
+
+type FigSpec = {
+  name: string[];
+  description: string;
+  hidden?: boolean;
+  priority?: number;
+  options?: FigSpec[];
+  icon?: string;
+  args?: FigArg | FigArg[];
+};
+
+// eslint-disable-next-line no-console
+const log = console.log;
+
+function pbcopy(contents: string) {
+  const proc = require('child_process').spawn('pbcopy');
+  proc.stdin.write(contents);
+  proc.stdin.end();
+}
 
 // import side-effects
 type OptionData = {
@@ -17,6 +49,7 @@ type OptionData = {
 };
 
 type CommandData = {
+  args: { required?: boolean; name: string; variadic?: boolean }[];
   name: string;
   group: string;
   description: string;
@@ -46,6 +79,7 @@ function optionAsJSON(option: Option & { defaultValue: any; deprecated?: boolean
 
 function commandAsJSON(command: Command): CommandData {
   return {
+    args: command._args,
     name: command.name(),
     group: command.__helpGroup,
     description: command.description(),
@@ -146,44 +180,146 @@ function formatCommandsAsMarkdown(commands: CommandData[]) {
 
 const commands = generateCommandJSON();
 
-type FigArg = {
-  name?: string;
-  generators?: any;
-  isOptional?: boolean;
-  icon?: string;
-  template?: string;
-  suggestions?: string | string[] | { name: string; icon?: string }[];
-};
-type FigSpec = {
-  name: string[];
-  description: string;
-  hidden?: boolean;
-  priority?: number;
-  options?: FigSpec[];
-  icon?: string;
-  args?: FigArg | FigArg[];
-};
-// eslint-disable-next-line no-console
-console.log('');
+log('');
 if (['markdown', 'md'].includes(process.argv[2])) {
-  // eslint-disable-next-line no-console
-  console.log(formatCommandsAsMarkdown(commands));
+  const contents = formatCommandsAsMarkdown(commands);
+  log(contents);
+  pbcopy(contents);
 } else if (['fig'].includes(process.argv[2])) {
+  const ICON = {
+    alert: 'fig://icon?type=alert',
+    android: 'fig://icon?type=android',
+    ios: 'fig://icon?type=apple',
+    npm: 'fig://icon?type=npm',
+    string: 'fig://icon?type=string',
+    box: 'fig://icon?type=box',
+    scheme: 'fig://template?color=3E89F7&badge=://',
+    // emoji
+    init: '🌟',
+    start: '🚀',
+    upgrade: '⬆️',
+    workers: '🧵',
+    device: 'fig://template?color=fff&badge=📱',
+    skip: '⏭',
+    true: 'fig://template?color=2ecc71&badge=✓',
+    false: '❌',
+    help: '💡',
+    url: '🔗',
+    publish: 'fig://template?color=3E89F7&badge=☁️',
+    webhooks: 'fig://icon?type=slack',
+    webhooksAdd: 'fig://icon?type=slack&color=2ecc71&badge=✓',
+    webhooksRemove: 'fig://icon?type=slack&color=EB1414&badge=x',
+    webhooksUpdate: 'fig://icon?type=slack&color=3E89F7',
+    prebuild: '🛠',
+    eject: 'fig://template?color=3E89F7&badge=⏏',
+    doctor: '🥼',
+    customize: '🎨',
+    diagnostics: '📊',
+    status: 'ℹ️',
+    number: '#️⃣',
+    config: 'fig://icon?type=commandkey',
+    credentials: '🔑',
+    lock: '🔒',
+    // urls
+    send: 'fig://icon?type=invite',
+    login: 'fig://icon?type=commandkey',
+    yarn: 'fig://icon?type=yarn',
+    expo: 'https://static.expo.dev/static/favicon-dark-16x16.png',
+
+    // vscode
+    xcode:
+      'https://raw.githubusercontent.com/vscode-icons/vscode-icons/master/icons/file_type_xcode.svg',
+    export:
+      'https://raw.githubusercontent.com/vscode-icons/vscode-icons/master/icons/folder_type_expo.svg',
+    webpack:
+      'https://raw.githubusercontent.com/vscode-icons/vscode-icons/master/icons/file_type_webpack.svg',
+  };
+
+  const COMMAND_ICONS: Record<string, string> = {
+    'build:ios': ICON.ios,
+    'build:android': ICON.android,
+    'build:web': ICON.webpack,
+    'build:status': ICON.status,
+    // 'bundle-assets': ICON.foobar,
+    'client:ios': ICON.ios,
+    'client:install:ios': ICON.ios,
+    'client:install:android': ICON.android,
+    config: ICON.config,
+    'credentials:manager': ICON.credentials,
+    'customize:web': ICON.customize,
+    diagnostics: ICON.diagnostics,
+    doctor: ICON.doctor,
+    eject: ICON.eject,
+    export: ICON.export,
+    'fetch:ios:certs': ICON.ios,
+    'fetch:android:keystore': ICON.android,
+    'fetch:android:hashes': ICON.android,
+    'fetch:android:upload-cert': ICON.android,
+    init: ICON.init,
+    install: ICON.npm,
+    login: ICON.login,
+    logout: ICON.login,
+    prebuild: ICON.prebuild,
+
+    // 'prepare-detached-build': ICON.foobar,
+
+    publish: ICON.publish,
+    'publish:set': ICON.publish,
+    'publish:rollback': ICON.publish,
+    'publish:history': ICON.publish,
+    'publish:details': ICON.publish,
+
+    'push:android:upload': ICON.android,
+    'push:android:show': ICON.android,
+    'push:android:clear': ICON.android,
+
+    register: ICON.login,
+    'run:android': ICON.android,
+    'run:ios': ICON.xcode,
+    send: ICON.send,
+    start: ICON.start,
+    'start:web': ICON.webpack,
+    upgrade: ICON.upgrade,
+    'upload:android': ICON.android,
+    'upload:ios': ICON.ios,
+    url: ICON.url,
+    'url:ipa': ICON.ios,
+    'url:apk': ICON.android,
+    webhooks: ICON.webhooks,
+    'webhooks:add': ICON.webhooksAdd,
+    'webhooks:remove': ICON.webhooksRemove,
+    'webhooks:update': ICON.webhooksUpdate,
+    whoami: ICON.login,
+  };
+
   const figSubcommands: FigSpec[] = [];
 
   const booleanArg: FigArg = {
     name: 'boolean',
     isOptional: true,
     suggestions: [
-      { name: 'true', icon: '✅' },
-      { name: 'false', icon: '❌' },
+      { name: 'true', icon: ICON.true },
+      { name: 'false', icon: ICON.false },
     ],
   };
-  const helpOption = {
+  const helpOption: FigSpec = {
     name: ['-h', '--help'],
+    priority: 1,
     description: 'Output usage information',
-    icon: '💡',
+    icon: ICON.help,
   };
+  const versionOption: FigSpec = {
+    name: ['-V', '--version'],
+    description: 'Output the version number',
+    icon: ICON.help,
+    priority: 1,
+  };
+
+  const getGeneratorArgs = (generator: string, args: Partial<FigArg> = {}): FigArg => ({
+    generators: `_gen[\`${generator}\`]`,
+    ...args,
+  });
+
   for (const command of commands) {
     let priorityIndex = helpGroupOrder.findIndex(v => v === command.group);
     if (priorityIndex > -1) {
@@ -192,11 +328,42 @@ if (['markdown', 'md'].includes(process.argv[2])) {
     const subcommand: FigSpec = {
       name: [command.name, command.alias].filter(Boolean) as string[],
       hidden: command.group === 'internal',
-      description: command.description,
-      priority: priorityIndex,
-      args: {},
+      description: stripAnsi(command.description),
+      priority: 50 + priorityIndex,
+      // fig uses `isOptional` instead of `required`
+      args: (command.args || []).map(({ required, ...arg }) => {
+        // `expo start [path]` is a common pattern in expo-cli, this defaults them to folders.
+        const template = arg.name === 'path' ? 'folders' : undefined;
+        return {
+          isOptional: !required,
+          template,
+          ...arg,
+        };
+      }),
       options: [helpOption],
     };
+
+    // Command icons
+    if (command.name in COMMAND_ICONS) {
+      subcommand.icon = COMMAND_ICONS[command.name];
+    }
+
+    // Command args
+    if (command.name === 'install') {
+      assert(
+        Array.isArray(subcommand.args) && subcommand.args[0],
+        'install [...packages] arg cannot be found'
+      );
+      subcommand.args[0] = getGeneratorArgs('npm', {
+        ...subcommand.args[0],
+        debounce: true,
+      });
+    }
+
+    // Delete empty arrays for fig linting
+    if (Array.isArray(subcommand.args) && !subcommand.args.length) {
+      delete subcommand.args;
+    }
 
     for (const option of command.options) {
       const name = option.flags
@@ -213,79 +380,100 @@ if (['markdown', 'md'].includes(process.argv[2])) {
         .filter(Boolean) as string[];
       const [, argName] = option.flags.match(/(?:\[|\<)([\w|-]+)(?:\]|\>)/) || [];
       const isRequired = argName ? option.flags.includes('<') : false;
-      const args: FigArg = argName
+      let args: FigArg = argName
         ? {
             name: argName,
-            // isOptional: !isRequired,
+            isOptional: !isRequired,
+            // [dir] -> folders
+            // [path|file] -> filepaths
+            template:
+              argName === 'dir'
+                ? 'folders'
+                : ['file', 'path'].includes(argName)
+                ? 'filepaths'
+                : undefined,
             // suggestions: ["Debug", "Release"],
           }
         : booleanArg;
 
+      let extraPriority = 0;
       if (name.includes('--platform')) {
         args.name = 'platform';
         args.suggestions = argName.split('|').map(name => ({
           name,
-          icon:
-            name === 'ios'
-              ? 'fig://icon?type=apple'
-              : name === 'android'
-              ? 'fig://icon?type=android'
-              : undefined,
+          icon: name === 'ios' ? ICON.ios : name === 'android' ? ICON.android : undefined,
         }));
+
+        extraPriority++;
+      } else if (name[0] === '--config') {
+        // config is deprecated so move it lower
+        extraPriority--;
+      } else if (name[0] === '--max-workers') {
+        args = getGeneratorArgs('max-workers', { ...args, name: 'Number of workers' });
       }
-      if (name[0] === '--config') {
-        args.template = 'filepaths';
-      }
-      if (name[0] === '--max-workers') {
-        args.name = 'Number of workers';
-        args.generators = '_gen[`max-workers`]';
-        args.icon = '🧵';
-      }
+
       if (command.name === 'run:ios') {
-        if (name[0] === '--configuration') {
-          args.generators = '_gen[`xcode-configuration`]';
-        }
-        if (name[0] === '--scheme') {
-          args.generators = '_gen[`xcode-configuration`]';
-        }
-        if (name[1] === '--device') {
-          args.generators = '_gen[`xcode-devices`]';
+        if (name.includes('--configuration')) {
+          args = getGeneratorArgs('xcode-configuration', args);
+        } else if (name.includes('--scheme')) {
+          args = getGeneratorArgs('xcode-scheme', args);
+          // User should choose schemes before devices as schemes can filter out devices
+          extraPriority += 2;
+        } else if (name.includes('--device')) {
+          args = getGeneratorArgs('xcode-devices', args);
+          extraPriority++;
         }
       }
 
-      if (name[0] === '--configuration') {
-        args.generators = '_gen[`xcode-configuration`]';
-      }
+      const getOptionIcon = (option: OptionData) => {
+        if (option.deprecated || name.includes('--config')) {
+          return ICON.alert;
+        } else if (option.flags.includes('-android')) {
+          return ICON.android;
+        } else if (option.flags.includes('-ios') || option.flags.includes('-apple')) {
+          return ICON.ios;
+        } else if (option.flags.includes('-no-')) {
+          return ICON.skip;
+        } else if (option.flags.includes('-npm') || option.flags.includes('-install')) {
+          return ICON.npm;
+        } else if (option.flags.includes('-yarn')) {
+          return ICON.yarn;
+        } else if (option.flags.includes('-name')) {
+          return ICON.string;
+        } else if (name.includes('--yes')) {
+          return ICON.true;
+        } else if (name.includes('--scheme') && command.name !== 'run:ios') {
+          return ICON.scheme;
+        } else if (name.includes('--device')) {
+          return ICON.device;
+        } else if (name.includes('--template')) {
+          return ICON.box;
+        } else if (name.includes('--https')) {
+          return ICON.lock;
+        } else if (name.includes('--max-workers')) {
+          return ICON.workers;
+        } else if (name.includes('--port')) {
+          return ICON.number;
+        } else if (
+          option.flags.includes('-username') ||
+          option.flags.includes('-password') ||
+          option.flags.includes('-otp')
+        ) {
+          return ICON.string;
+        }
+        return undefined;
+      };
 
       subcommand.options!.push({
         name,
-        description: option.description,
+        description: stripAnsi(option.description),
         args,
+        icon: getOptionIcon(option),
+        // ensure that command options are placed above path suggestions (+51)
+        priority: 70 + extraPriority,
       });
 
       // TODO: enum types (platform)
-
-      if (option.deprecated) {
-        option.icon = 'fig://icon?type=alert';
-      } else if (option.flags.includes('-android')) {
-        option.icon = 'fig://icon?type=android';
-      } else if (option.flags.includes('-ios') || option.flags.includes('-apple')) {
-        option.icon = 'fig://icon?type=apple';
-      } else if (option.flags.includes('-npm') || option.flags.includes('-install')) {
-        option.icon = 'fig://icon?type=npm';
-      } else if (option.flags.includes('-yarn')) {
-        option.icon = 'https://yarnpkg.com/favicon-32x32.png';
-      } else if (option.flags.includes('-name')) {
-        option.icon = 'fig://icon?type=string';
-      } else if (option.flags.includes('-no-')) {
-        option.icon = '⏭️';
-      } else if (
-        option.flags.includes('-username') ||
-        option.flags.includes('-password') ||
-        option.flags.includes('-otp')
-      ) {
-        option.icon = 'fig://icon?type=string';
-      }
     }
 
     figSubcommands.push(subcommand);
@@ -294,16 +482,9 @@ if (['markdown', 'md'].includes(process.argv[2])) {
   const figSpec = {
     name: 'expo',
     // website favicon
-    icon: 'https://static.expo.dev/static/favicon-dark-16x16.png',
+    icon: ICON.expo,
     description: 'Tools for creating, running, and deploying Universal Expo and React Native apps',
-    options: [
-      helpOption,
-      {
-        name: ['-V', '--version'],
-        description: 'Output the version number',
-        icon: '💡',
-      },
-    ],
+    options: [helpOption, versionOption],
     subcommands: figSubcommands,
   };
 
@@ -317,24 +498,56 @@ if (['markdown', 'md'].includes(process.argv[2])) {
   );
 
   const contents = `
+  // Generated by running \`yarn introspect fig\` in expo-cli/packages/expo-cli
   // expo-cli@${require('../package.json').version}
-  const _gen = {
+
+  const _gen: Record<string, Fig.Generator> = {
+    "npm": {
+      script(context) {
+        if (context[context.length - 1] === "") return "";
+        const searchTerm = context[context.length - 1];
+        return \`curl -s -H "Accept: application/json" "https://api.npms.io/v2/search?q=$\{searchTerm}&size=20"\`;
+      },
+      postProcess(script: string) {
+        try {
+          const results: {
+            package: {
+              name: string;
+              description: string;
+            };
+            searchScore: number;
+          }[] = JSON.parse(script).results;
+          return results.map((item) => ({
+            name: item.package.name,
+            description: item.package.description,
+          })) as Fig.Suggestion[];
+        } catch (e) {
+          return [];
+        }
+      },
+    },
     "xcode-configuration": {
-      script: "xcodebuild -project ios/*.xcodeproj  -list -json",
+      script: "xcodebuild -project ios/*.xcodeproj -list -json",
       postProcess: (script: string) => JSON.parse(script).project.configurations.map((name) => ({ name })),
     },
-    "xcode-schemes": {
-      script: "xcodebuild -project ios/*.xcodeproj  -list -json",
+    "xcode-scheme": {
+      script: "xcodebuild -project ios/*.xcodeproj -list -json",
       postProcess: (script: string) => JSON.parse(script).project.schemes.map((name) => ({ name })),
     },
     "xcode-devices": {
       script: "xcrun xctrace list devices",
-  postProcess: (script: string) => script
-      .split("\\n")
-      .filter((item) => !item.match(/^=/))
-      .filter(Boolean)
-      .map((item) => item.split(/\([\w\d\-]+\)$/))
-      .map(([name]) => ({ name: name.trim() }))
+      postProcess: (script: string) =>
+        script
+          .split("\\n")
+          .filter((item) => !item.match(/^=/))
+          .filter(Boolean)
+          .map((item) => item.split(/(.*?) (\\(([0-9.]+)\\) )?\\(([0-9A-F-]+)\\)/i))
+          // filter catalyst
+          .filter((item: string[] | null) => !!item?.[3])
+          .map(([, name, , osVersion, udid]) => ({
+            displayName: \`$\{name.trim()} ($\{osVersion})\`,
+            name: udid,
+          })),
     },
     "max-workers": {
       script: "sysctl -n hw.ncpu",
@@ -346,13 +559,11 @@ if (['markdown', 'md'].includes(process.argv[2])) {
   `;
 
   // Generate a schema for https://github.com/withfig/autocomplete
-  // eslint-disable-next-line no-console
-  console.log(contents);
 
-  const proc = require('child_process').spawn('pbcopy');
-  proc.stdin.write(contents);
-  proc.stdin.end();
+  log(contents);
+  pbcopy(contents);
 } else {
-  // eslint-disable-next-line no-console
-  console.log(JSON.stringify(commands));
+  const contents = JSON.stringify(commands);
+  log(contents);
+  pbcopy(contents);
 }
