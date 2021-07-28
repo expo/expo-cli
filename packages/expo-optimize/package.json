@@ -1,6 +1,6 @@
 {
   "name": "expo-optimize",
-  "version": "0.1.102",
+  "version": "0.1.103",
   "main": "build",
   "preferGlobal": true,
   "keywords": [
@@ -33,9 +33,9 @@
     "clean": "rimraf ./build/"
   },
   "devDependencies": {
-    "@expo/config": "5.0.5",
-    "@expo/image-utils": "0.3.15",
-    "@expo/json-file": "8.2.31",
+    "@expo/config": "5.0.6",
+    "@expo/image-utils": "0.3.16",
+    "@expo/json-file": "8.2.32",
     "chalk": "^4.0.0",
     "commander": "2.20.0",
     "cross-spawn": "6.0.5",
