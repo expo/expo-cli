@@ -90,7 +90,6 @@ function getSupportedPlatforms(projectRoot: string): Platform[] {
  * @param options enforce criteria for a project config
  */
 export function getConfig(projectRoot: string, options: GetConfigOptions = {}): ProjectConfig {
-  console.log('read');
   const paths = getConfigFilePaths(projectRoot);
 
   const rawStaticConfig = paths.staticConfigPath ? getStaticConfig(paths.staticConfigPath) : null;
