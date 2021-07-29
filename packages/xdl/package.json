@@ -90,7 +90,7 @@
     "text-table": "^0.2.0",
     "tree-kill": "1.2.2",
     "url-join": "4.0.0",
-    "uuid": "3.3.2",
+    "uuid": "^8.0.0",
     "webpack": "4.43.0",
     "webpack-dev-server": "3.11.0",
     "wrap-ansi": "^7.0.0"
@@ -114,7 +114,7 @@
     "@types/tar": "^4.0.1",
     "@types/text-table": "^0.2.1",
     "@types/url-join": "^4.0.0",
-    "@types/uuid": "^3.4.4",
+    "@types/uuid": "^8.3.1",
     "@types/webpack": "4.41.18",
     "@types/webpack-dev-server": "3.11.0",
     "@types/wrap-ansi": "^3.0.0",
