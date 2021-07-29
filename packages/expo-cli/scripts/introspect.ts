@@ -378,7 +378,7 @@ if (['markdown', 'md'].includes(process.argv[2])) {
           return v.match(/(--?[\w|-]+)/)?.[1];
         })
         .filter(Boolean) as string[];
-      const [, argName] = option.flags.match(/(?:\[|\<)([\w|-]+)(?:\]|\>)/) || [];
+      const [, argName] = option.flags.match(/(?:\[|<)([\w|-]+)(?:\]|>)/) || [];
       const isRequired = argName ? option.flags.includes('<') : false;
       let args: FigArg = argName
         ? {
@@ -396,18 +396,14 @@ if (['markdown', 'md'].includes(process.argv[2])) {
           }
         : booleanArg;
 
-      let extraPriority = 0;
       if (name.includes('--platform')) {
         args.name = 'platform';
         args.suggestions = argName.split('|').map(name => ({
           name,
           icon: name === 'ios' ? ICON.ios : name === 'android' ? ICON.android : undefined,
         }));
-
-        extraPriority++;
       } else if (name[0] === '--config') {
         // config is deprecated so move it lower
-        extraPriority--;
       } else if (name[0] === '--max-workers') {
         args = getGeneratorArgs('max-workers', { ...args, name: 'Number of workers' });
       }
@@ -418,10 +414,8 @@ if (['markdown', 'md'].includes(process.argv[2])) {
         } else if (name.includes('--scheme')) {
           args = getGeneratorArgs('xcode-scheme', args);
           // User should choose schemes before devices as schemes can filter out devices
-          extraPriority += 2;
         } else if (name.includes('--device')) {
           args = getGeneratorArgs('xcode-devices', { ...args, isOptional: false });
-          extraPriority++;
         }
       }
 
