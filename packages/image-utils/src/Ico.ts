@@ -1,12 +1,5 @@
 // Inspired by https://github.com/kevva/to-ico but reuses existing packages to keep bundle size small.
-import parsePng from 'parse-png';
-
-type PNG = {
-  data: Buffer;
-  width: number;
-  height: number;
-  bpp: number;
-};
+import { PNG as PngClass, PNGOptions } from 'pngjs';
 
 const constants = {
   directorySize: 16,
@@ -25,11 +18,12 @@ function createHeader(header: number): Buffer {
   return buffer;
 }
 
-function createDirectory(data: PNG, offset: number): Buffer {
+function createDirectory(data: PngClass, offset: number): Buffer {
   const buffer = Buffer.alloc(constants.directorySize);
   const size = data.data.length + constants.bitmapSize;
   const width = data.width === 256 ? 0 : data.width;
   const height = data.height === 256 ? 0 : data.height;
+  // @ts-ignore: not on type
   const bpp = data.bpp * 8;
 
   buffer.writeUInt8(width, 0);
@@ -44,13 +38,14 @@ function createDirectory(data: PNG, offset: number): Buffer {
   return buffer;
 }
 
-function createBitmap(data: PNG, compression: number): Buffer {
+function createBitmap(data: PngClass, compression: number): Buffer {
   const buffer = Buffer.alloc(constants.bitmapSize);
 
   buffer.writeUInt32LE(constants.bitmapSize, 0);
   buffer.writeInt32LE(data.width, 4);
   buffer.writeInt32LE(data.height * 2, 8);
   buffer.writeUInt16LE(1, 12);
+  // @ts-ignore
   buffer.writeUInt16LE(data.bpp * 8, 14);
   buffer.writeUInt32LE(compression, 16);
   buffer.writeUInt32LE(data.data.length, 20);
@@ -89,7 +84,7 @@ function createDIB(data: Buffer, width: number, height: number, bpp: number): Bu
   return buffer;
 }
 
-function generateFromPNGs(pngs: PNG[]): Buffer {
+function generateFromPNGs(pngs: PngClass[]): Buffer {
   const header = createHeader(pngs.length);
   const arr = [header];
 
@@ -105,6 +100,7 @@ function generateFromPNGs(pngs: PNG[]): Buffer {
 
   for (const png of pngs) {
     const header = createBitmap(png, constants.colorMode);
+    // @ts-ignore
     const dib = createDIB(png.data, png.width, png.height, png.bpp);
     arr.push(header, dib);
     len += header.length + dib.length;
@@ -114,6 +110,21 @@ function generateFromPNGs(pngs: PNG[]): Buffer {
 }
 
 export async function generateAsync(buffers: Buffer[]): Promise<Buffer> {
-  const pngs: PNG[] = await Promise.all(buffers.map(x => parsePng(x)));
+  const pngs = await Promise.all(buffers.map(x => parsePngAsync(x)));
   return generateFromPNGs(pngs);
+}
+
+async function parsePngAsync(buffer: Buffer, options?: PNGOptions): Promise<PngClass> {
+  return new Promise((resolve, reject) => {
+    let png = new PngClass(options);
+
+    png.on('metadata', data => {
+      png = Object.assign(png, data);
+    });
+
+    png.on('error', reject);
+    png.on('parsed', () => resolve(png));
+
+    png.end(buffer);
+  });
 }

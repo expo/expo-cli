@@ -1,4 +1,4 @@
-import fs from 'fs-extra';
+import { promises as fs } from 'fs';
 // @ts-ignore
 import Jimp from 'jimp-compact';
 import * as path from 'path';

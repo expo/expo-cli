@@ -1,4 +1,5 @@
-import fs from 'fs-extra';
+import fs from 'fs';
+import { move } from 'fs-extra';
 // @ts-ignore
 import Jimp from 'jimp-compact';
 import fetch from 'node-fetch';
@@ -44,7 +45,7 @@ export async function downloadImage(url: string): Promise<string> {
   const mime = img.getMIME().split('/').pop()!;
   if (!localPath.endsWith(mime)) {
     const newPath = path.join(outputPath, `image.${mime}`);
-    await fs.move(localPath, newPath);
+    await move(localPath, newPath);
     return newPath;
   }
 

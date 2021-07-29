@@ -34,7 +34,7 @@
     "jimp-compact": "0.16.1",
     "mime": "^2.4.4",
     "node-fetch": "^2.6.0",
-    "parse-png": "^2.1.0",
+    "pngjs": "~3.3.3",
     "resolve-from": "^5.0.0",
     "semver": "7.3.2",
     "tempy": "0.3.0"
