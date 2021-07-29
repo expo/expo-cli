@@ -87,7 +87,9 @@ describe(modifyConfigAsync, () => {
 
 const invalidConfig = `/* eslint-disable */
 module.exports = {
-    >
+  name: 'app',
+  >
+  slug: 'app',
 }`;
 
 describe(getDynamicConfig, () => {
@@ -110,6 +112,13 @@ describe(getDynamicConfig, () => {
         'app.config.ts': invalidConfig,
       },
       'syntax-error'
+    );
+    vol.fromJSON(
+      {
+        // This is a missing import
+        'app.config.ts': [`import 'foobar'`, 'module.exports = {}'].join('\n'),
+      },
+      'missing-import-error'
     );
   });
 
@@ -136,7 +145,15 @@ describe(getDynamicConfig, () => {
   it(`throws a useful error for dynamic configs with a syntax error`, () => {
     const paths = getConfigFilePaths('syntax-error');
     expect(() => getDynamicConfig(paths.dynamicConfigPath, mockConfigContext)).toThrowError(
-      'Unexpected token (3:4)'
+      /Error .* \(5:7\)/
+    );
+  });
+  // This tests error are thrown properly and ensures that a more specific
+  // config is used instead of defaulting to a valid substitution.
+  it(`throws a useful error for dynamic configs with a missing import`, () => {
+    const paths = getConfigFilePaths('missing-import-error');
+    expect(() => getDynamicConfig(paths.dynamicConfigPath, mockConfigContext)).toThrowError(
+      /Require stack/
     );
   });
 });

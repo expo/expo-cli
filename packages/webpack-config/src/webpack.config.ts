@@ -1,6 +1,5 @@
 /** @internal */ /** */
 /* eslint-env node */
-import ReactRefreshWebpackPlugin from '@pmmmwh/react-refresh-webpack-plugin';
 import chalk from 'chalk';
 import { CleanWebpackPlugin } from 'clean-webpack-plugin';
 import CopyWebpackPlugin from 'copy-webpack-plugin';
@@ -21,7 +20,6 @@ import ModuleNotFoundPlugin from 'react-dev-utils/ModuleNotFoundPlugin';
 import WatchMissingNodeModulesPlugin from 'react-dev-utils/WatchMissingNodeModulesPlugin';
 import resolveFrom from 'resolve-from';
 import webpack, { Configuration, HotModuleReplacementPlugin, Options, Output } from 'webpack';
-import WebpackDeepScopeAnalysisPlugin from 'webpack-deep-scope-plugin';
 import ManifestPlugin from 'webpack-manifest-plugin';
 
 import {
@@ -54,12 +52,10 @@ import {
 import ExpoAppManifestWebpackPlugin from './plugins/ExpoAppManifestWebpackPlugin';
 import { HTMLLinkNode } from './plugins/ModifyHtmlWebpackPlugin';
 import { Arguments, DevConfiguration, Environment, FilePaths, Mode } from './types';
-import { overrideWithPropertyOrConfig } from './utils';
 
 // Source maps are resource heavy and can cause out of memory issue for large source files.
 const shouldUseSourceMap = boolish('GENERATE_SOURCEMAP', true);
 const shouldUseNativeCodeLoading = boolish('EXPO_WEBPACK_USE_NATIVE_CODE_LOADING', true);
-const shouldUseReactRefresh = boolish('EXPO_WEBPACK_FAST_REFRESH', false);
 
 const isCI = boolish('CI', false);
 
@@ -160,15 +156,6 @@ export default async function (
   // Because the native React runtime is different to the browser we need to make
   // some core modifications to webpack.
   const isNative = ['ios', 'android'].includes(env.platform);
-
-  // Enables deep scope analysis in production mode.
-  // Remove unused import/exports
-  // override: `env.removeUnusedImportExports`
-  const deepScopeAnalysisEnabled = overrideWithPropertyOrConfig(
-    env.removeUnusedImportExports,
-    false
-    // isProd
-  );
 
   const locations = env.locations || (await getPathsAsync(env.projectRoot));
 
@@ -426,16 +413,6 @@ export default async function (
       // This is necessary to emit hot updates (currently CSS only):
       !isNative && isDev && new HotModuleReplacementPlugin(),
 
-      // Experimental hot reloading for React .
-      // https://github.com/facebook/react/tree/master/packages/react-refresh
-      isDev &&
-        shouldUseReactRefresh &&
-        new ReactRefreshWebpackPlugin({
-          overlay: {
-            entry: webpackDevClientEntry,
-          },
-        }),
-
       // If you require a missing module and then `npm install` it, you still have
       // to restart the development server for Webpack to discover it. This plugin
       // makes the discovery automatic so you don't have to restart.
@@ -486,8 +463,6 @@ export default async function (
             };
           },
         }),
-
-      deepScopeAnalysisEnabled && new WebpackDeepScopeAnalysisPlugin(),
 
       // Skip using a progress bar in CI
       !isCI && new ExpoProgressBarPlugin(),

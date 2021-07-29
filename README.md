@@ -2,8 +2,7 @@
 
 <p align="center">
   <a href="https://expo.io/">
-    <img alt="expo cli" height="128" src="./.gh-assets/banner.png">
-    <h1 align="center">Expo CLI</h1>
+    <img alt="expo cli" src="./.gh-assets/banner.svg">
   </a>
 </p>
 
@@ -11,18 +10,14 @@
 
 <p align="center">
 
-  <a aria-label="Join our forums" href="https://forums.expo.io" target="_blank">
-    <img alt="" src="https://img.shields.io/badge/Ask%20Questions%20-blue.svg?style=flat-square&logo=discourse&logoWidth=15&labelColor=000000&color=4630EB">
+  <a aria-label="Join our Discord" href="https://discord.gg/4gtbPAdpaE" target="_blank">
+    <img alt="Discord" src="https://img.shields.io/discord/695411232856997968.svg?style=flat-square&labelColor=000000&color=000000&logo=discord&logoColor=FFFFFF&label=" />
   </a>
-  <a aria-label="Expo is free to use" href="https://github.com/expo/expo/blob/master/LICENSE" target="_blank">
-    <img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-success.svg?style=flat-square&color=33CC12" target="_blank" />
-  </a>
-<a aria-label="expo-cli downloads" href="http://www.npmtrends.com/expo-cli" target="_blank">
-    <img alt="Downloads" src="https://img.shields.io/npm/dm/expo-cli.svg?style=flat-square&labelColor=gray&color=33CC12&label=Downloads" />
+  <a aria-label="expo-cli downloads" href="http://www.npmtrends.com/expo-cli" target="_blank">
+    <img alt="Downloads" src="https://img.shields.io/npm/dm/expo-cli.svg?style=flat-square&labelColor=000&color=000000&label=Downloads" />
 </a>
-    <br>
-    <a aria-label="Circle CI" href="https://circleci.com/gh/expo/expo-cli/tree/master">
-    <img alt="Circle CI" src="https://flat.badgen.net/circleci/github/expo/expo-cli?label=Circle%20CI&labelColor=555555&icon=circleci">
+  <a aria-label="Join our forums" href="https://forums.expo.io" target="_blank">
+    <img alt="" src="https://img.shields.io/badge/Ask%20Questions%20-000.svg?style=flat-square&logo=discourse&logoWidth=15&labelColor=000000&color=000000">
   </a>
 
 </p>

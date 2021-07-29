@@ -24,7 +24,6 @@ export type InputEnvironment = {
   config?: AnyObject;
   locations?: FilePaths;
   mode?: Mode;
-  removeUnusedImportExports?: boolean;
   pwa?: boolean;
   babel?: {
     dangerouslyAddModulePathsToTranspile: string[];
@@ -60,12 +59,6 @@ export type Environment = {
    * The target platform to bundle for. Currently only `web` and `electron` are supported.
    */
   platform: ExpoPlatform;
-  /**
-   * Enables advanced tree-shaking with deep scope analysis.
-   *
-   * @default false
-   */
-  removeUnusedImportExports?: boolean;
   /**
    * Generate the PWA image assets in production mode.
    *

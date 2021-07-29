@@ -35,10 +35,6 @@ export function validateEnvironment(env: InputEnvironment): Environment {
   if (typeof env.https === 'undefined') {
     env.https = false;
   }
-  // This is experimental and might be removed in the future.
-  if (typeof env.removeUnusedImportExports === 'undefined') {
-    env.removeUnusedImportExports = false;
-  }
 
   // Ensure the locations are defined.
   if (!env.locations) {
