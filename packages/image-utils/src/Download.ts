@@ -1,12 +1,20 @@
+import crypto from 'crypto';
 import fs from 'fs';
 import { move } from 'fs-extra';
 // @ts-ignore
 import Jimp from 'jimp-compact';
 import fetch from 'node-fetch';
+import os from 'os';
 import path from 'path';
 import stream from 'stream';
-import temporary from 'tempy';
 import util from 'util';
+
+const tempDir = () => {
+  const folder = crypto.randomBytes(Math.ceil(16)).toString('hex').slice(0, 32);
+  const directory = path.join(fs.realpathSync(os.tmpdir()), folder);
+  fs.mkdirSync(directory);
+  return directory;
+};
 
 // cache downloaded images into memory
 const cacheDownloadedKeys: Record<string, string> = {};
@@ -28,7 +36,7 @@ export async function downloadOrUseCachedImage(url: string): Promise<string> {
 }
 
 export async function downloadImage(url: string): Promise<string> {
-  const outputPath = temporary.directory();
+  const outputPath = tempDir();
 
   const response = await fetch(url);
   if (!response.ok) {
