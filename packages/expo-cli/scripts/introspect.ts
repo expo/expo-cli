@@ -186,53 +186,67 @@ if (['markdown', 'md'].includes(process.argv[2])) {
   log(contents);
   pbcopy(contents);
 } else if (['fig'].includes(process.argv[2])) {
+  const branch = 'master';
   const ICON = {
-    alert: 'fig://icon?type=alert',
-    android: 'fig://icon?type=android',
-    ios: 'fig://icon?type=apple',
     npm: 'fig://icon?type=npm',
-    string: 'fig://icon?type=string',
-    box: 'fig://icon?type=box',
-    scheme: 'fig://template?color=3E89F7&badge=://',
-    // emoji
-    init: '🌟',
-    start: '🚀',
-    upgrade: '⬆️',
-    workers: '🧵',
-    device: 'fig://template?color=fff&badge=📱',
-    skip: '⏭',
-    true: 'fig://template?color=2ecc71&badge=✓',
-    false: '❌',
-    help: '💡',
-    url: '🔗',
-    publish: 'fig://template?color=3E89F7&badge=☁️',
-    webhooks: 'fig://icon?type=slack',
-    webhooksAdd: 'fig://icon?type=slack&color=2ecc71&badge=✓',
-    webhooksRemove: 'fig://icon?type=slack&color=EB1414&badge=x',
-    webhooksUpdate: 'fig://icon?type=slack&color=3E89F7',
-    prebuild: '🛠',
-    eject: 'fig://template?color=3E89F7&badge=⏏',
-    doctor: '🥼',
-    customize: '🎨',
-    diagnostics: '📊',
-    status: 'ℹ️',
-    number: '#️⃣',
-    config: 'fig://icon?type=commandkey',
-    credentials: '🔑',
-    lock: '🔒',
-    // urls
-    send: 'fig://icon?type=invite',
-    login: 'fig://icon?type=commandkey',
     yarn: 'fig://icon?type=yarn',
-    expo: 'https://static.expo.dev/static/favicon-dark-16x16.png',
-
-    // vscode
-    xcode:
-      'https://raw.githubusercontent.com/vscode-icons/vscode-icons/master/icons/file_type_xcode.svg',
-    export:
-      'https://raw.githubusercontent.com/vscode-icons/vscode-icons/master/icons/folder_type_expo.svg',
-    webpack:
-      'https://raw.githubusercontent.com/vscode-icons/vscode-icons/master/icons/file_type_webpack.svg',
+    force: `https://raw.githubusercontent.com/expo/expo-cli/${branch}/assets/fig/force.png`,
+    alert: `https://raw.githubusercontent.com/expo/expo-cli/${branch}/assets/fig/block.png`,
+    android: `https://raw.githubusercontent.com/expo/expo-cli/${branch}/assets/fig/android.png`,
+    ios: `https://raw.githubusercontent.com/expo/expo-cli/${branch}/assets/fig/apple.png`,
+    string: `https://raw.githubusercontent.com/expo/expo-cli/${branch}/assets/fig/string.png`,
+    box: `https://raw.githubusercontent.com/expo/expo-cli/${branch}/assets/fig/export.png`,
+    scheme: `https://raw.githubusercontent.com/expo/expo-cli/${branch}/assets/fig/scheme.png`,
+    web: `https://raw.githubusercontent.com/expo/expo-cli/${branch}/assets/fig/web.png`,
+    workers: `https://raw.githubusercontent.com/expo/expo-cli/${branch}/assets/fig/number.png`,
+    credentials: `https://raw.githubusercontent.com/expo/expo-cli/${branch}/assets/fig/list.png`,
+    init: `https://raw.githubusercontent.com/expo/expo-cli/${branch}/assets/fig/init.png`,
+    start: `https://raw.githubusercontent.com/expo/expo-cli/${branch}/assets/fig/play.png`,
+    upgrade: `https://raw.githubusercontent.com/expo/expo-cli/${branch}/assets/fig/upgrade.png`,
+    device: `https://raw.githubusercontent.com/expo/expo-cli/${branch}/assets/fig/devices.png`,
+    skip: `https://raw.githubusercontent.com/expo/expo-cli/${branch}/assets/fig/skip.png`,
+    true: `https://raw.githubusercontent.com/expo/expo-cli/${branch}/assets/fig/true.png`,
+    false: `https://raw.githubusercontent.com/expo/expo-cli/${branch}/assets/fig/false.png`,
+    help: `https://raw.githubusercontent.com/expo/expo-cli/${branch}/assets/fig/help.png`,
+    url: `https://raw.githubusercontent.com/expo/expo-cli/${branch}/assets/fig/url.png`,
+    publish: `https://raw.githubusercontent.com/expo/expo-cli/${branch}/assets/fig/publish.png`,
+    webhooks: `https://raw.githubusercontent.com/expo/expo-cli/${branch}/assets/fig/webhook.png`,
+    webhooksAdd: `https://raw.githubusercontent.com/expo/expo-cli/${branch}/assets/fig/webhook-add.png`,
+    webhooksRemove: `https://raw.githubusercontent.com/expo/expo-cli/${branch}/assets/fig/webhook-remove.png`,
+    webhooksUpdate: `https://raw.githubusercontent.com/expo/expo-cli/${branch}/assets/fig/webhook-update.png`,
+    prebuild: `https://raw.githubusercontent.com/expo/expo-cli/${branch}/assets/fig/prebuild.png`,
+    download: `https://raw.githubusercontent.com/expo/expo-cli/${branch}/assets/fig/download.png`,
+    eject: `https://raw.githubusercontent.com/expo/expo-cli/${branch}/assets/fig/eject.png`,
+    doctor: `https://raw.githubusercontent.com/expo/expo-cli/${branch}/assets/fig/doctor.png`,
+    customize: `https://raw.githubusercontent.com/expo/expo-cli/${branch}/assets/fig/customize.png`,
+    diagnostics: `https://raw.githubusercontent.com/expo/expo-cli/${branch}/assets/fig/diagnostics.png`,
+    status: `https://raw.githubusercontent.com/expo/expo-cli/${branch}/assets/fig/info.png`,
+    number: `https://raw.githubusercontent.com/expo/expo-cli/${branch}/assets/fig/number.png`,
+    config: `https://raw.githubusercontent.com/expo/expo-cli/${branch}/assets/fig/config.png`,
+    lock: `https://raw.githubusercontent.com/expo/expo-cli/${branch}/assets/fig/lock.png`,
+    send: `https://raw.githubusercontent.com/expo/expo-cli/${branch}/assets/fig/send.png`,
+    tunnel: `https://raw.githubusercontent.com/expo/expo-cli/${branch}/assets/fig/tunnel.png`,
+    login: `https://raw.githubusercontent.com/expo/expo-cli/${branch}/assets/fig/login.png`,
+    logout: `https://raw.githubusercontent.com/expo/expo-cli/${branch}/assets/fig/logout.png`,
+    expo: `https://raw.githubusercontent.com/expo/expo-cli/${branch}/assets/fig/expo.png`,
+    info: `https://raw.githubusercontent.com/expo/expo-cli/${branch}/assets/fig/info.png`,
+    appstore: `https://raw.githubusercontent.com/expo/expo-cli/${branch}/assets/fig/app-store.png`,
+    playstore: `https://raw.githubusercontent.com/expo/expo-cli/${branch}/assets/fig/play-store.png`,
+    webpack: `https://raw.githubusercontent.com/expo/expo-cli/${branch}/assets/fig/webpack.png`,
+    metro: `https://raw.githubusercontent.com/expo/expo-cli/${branch}/assets/fig/metro.png`,
+    offline: `https://raw.githubusercontent.com/expo/expo-cli/${branch}/assets/fig/offline.png`,
+    export: `https://raw.githubusercontent.com/expo/expo-cli/${branch}/assets/fig/export.png`,
+    lan: `https://raw.githubusercontent.com/expo/expo-cli/${branch}/assets/fig/lan.png`,
+    localhost: `https://raw.githubusercontent.com/expo/expo-cli/${branch}/assets/fig/localhost.png`,
+    clear: `https://raw.githubusercontent.com/expo/expo-cli/${branch}/assets/fig/clear.png`,
+    minify: `https://raw.githubusercontent.com/expo/expo-cli/${branch}/assets/fig/minify.png`,
+    dev: `https://raw.githubusercontent.com/expo/expo-cli/${branch}/assets/fig/dev.png`,
+    register: `https://raw.githubusercontent.com/expo/expo-cli/${branch}/assets/fig/register.png`,
+    quiet: `https://raw.githubusercontent.com/expo/expo-cli/${branch}/assets/fig/quiet.png`,
+    verbose: `https://raw.githubusercontent.com/expo/expo-cli/${branch}/assets/fig/verbose.png`,
+    path: `https://raw.githubusercontent.com/expo/expo-cli/${branch}/assets/fig/path.png`,
+    key: `https://raw.githubusercontent.com/expo/expo-cli/${branch}/assets/fig/key.png`,
+    latest: `https://raw.githubusercontent.com/expo/expo-cli/${branch}/assets/fig/latest.png`,
   };
 
   const COMMAND_ICONS: Record<string, string> = {
@@ -241,7 +255,7 @@ if (['markdown', 'md'].includes(process.argv[2])) {
     'build:web': ICON.webpack,
     'build:status': ICON.status,
     // 'bundle-assets': ICON.foobar,
-    'client:ios': ICON.ios,
+    'client:ios': ICON.download,
     'client:install:ios': ICON.ios,
     'client:install:android': ICON.android,
     config: ICON.config,
@@ -258,7 +272,7 @@ if (['markdown', 'md'].includes(process.argv[2])) {
     init: ICON.init,
     install: ICON.npm,
     login: ICON.login,
-    logout: ICON.login,
+    logout: ICON.logout,
     prebuild: ICON.prebuild,
 
     // 'prepare-detached-build': ICON.foobar,
@@ -273,23 +287,23 @@ if (['markdown', 'md'].includes(process.argv[2])) {
     'push:android:show': ICON.android,
     'push:android:clear': ICON.android,
 
-    register: ICON.login,
+    register: ICON.register,
     'run:android': ICON.android,
-    'run:ios': ICON.xcode,
+    'run:ios': ICON.ios,
     send: ICON.send,
     start: ICON.start,
-    'start:web': ICON.webpack,
+    'start:web': ICON.web,
     upgrade: ICON.upgrade,
-    'upload:android': ICON.android,
-    'upload:ios': ICON.ios,
+    'upload:android': ICON.playstore,
+    'upload:ios': ICON.appstore,
     url: ICON.url,
-    'url:ipa': ICON.ios,
-    'url:apk': ICON.android,
+    'url:ipa': ICON.appstore,
+    'url:apk': ICON.playstore,
     webhooks: ICON.webhooks,
     'webhooks:add': ICON.webhooksAdd,
     'webhooks:remove': ICON.webhooksRemove,
     'webhooks:update': ICON.webhooksUpdate,
-    whoami: ICON.login,
+    whoami: ICON.info,
   };
 
   const figSubcommands: FigSpec[] = [];
@@ -311,7 +325,7 @@ if (['markdown', 'md'].includes(process.argv[2])) {
   const versionOption: FigSpec = {
     name: ['-V', '--version'],
     description: 'Output the version number',
-    icon: ICON.help,
+    icon: ICON.info,
     priority: 1,
   };
 
@@ -420,52 +434,109 @@ if (['markdown', 'md'].includes(process.argv[2])) {
       }
 
       const getOptionIcon = (option: OptionData) => {
-        if (option.deprecated || name.includes('--config')) {
+        if (
+          option.deprecated ||
+          name.includes('--config') ||
+          (name.includes('--target') && ['publish', 'export'].includes(command.name))
+        ) {
           return ICON.alert;
+        } else if (command.name.startsWith('run:') && name.includes('--no-bundler')) {
+          return ICON.metro;
+        } else if (name.includes('--variant')) {
+          return ICON.string;
         } else if (option.flags.includes('-android')) {
           return ICON.android;
+        } else if (option.flags.includes('-latest')) {
+          return ICON.latest;
         } else if (option.flags.includes('-ios') || option.flags.includes('-apple')) {
           return ICON.ios;
-        } else if (option.flags.includes('-no-')) {
+        } else if (option.flags.includes('-no-') || option.flags.includes('-skip-')) {
           return ICON.skip;
         } else if (option.flags.includes('-npm') || option.flags.includes('-install')) {
           return ICON.npm;
         } else if (option.flags.includes('-yarn')) {
           return ICON.yarn;
-        } else if (option.flags.includes('-name')) {
+        } else if (option.flags.includes('-name') || name.includes('--public-url')) {
           return ICON.string;
         } else if (name.includes('--yes')) {
           return ICON.true;
         } else if (name.includes('--scheme') && command.name !== 'run:ios') {
           return ICON.scheme;
+        } else if (name.includes('--send-to')) {
+          return ICON.send;
+        } else if (name.includes('--quiet')) {
+          return ICON.quiet;
+        } else if (name.includes('--verbose')) {
+          return ICON.verbose;
+        } else if (name.includes('--tunnel')) {
+          return ICON.tunnel;
+        } else if (name.includes('--lan') || name.includes('--host')) {
+          return ICON.lan;
+        } else if (name.includes('--localhost')) {
+          return ICON.localhost;
+        } else if (name.includes('--minify')) {
+          return ICON.minify;
+        } else if (name.includes('--dev') || name.includes('--dev-client')) {
+          return ICON.dev;
+        } else if (
+          option.flags.includes('-clear') ||
+          option.flags.includes('-revoke') ||
+          name.includes('--clear') ||
+          name.includes('--clean')
+        ) {
+          return ICON.clear;
+        } else if (name.includes('--web')) {
+          return ICON.web;
         } else if (name.includes('--device')) {
           return ICON.device;
         } else if (name.includes('--template')) {
           return ICON.box;
+        } else if (name.includes('--offline')) {
+          return ICON.offline;
         } else if (name.includes('--https')) {
           return ICON.lock;
         } else if (name.includes('--max-workers')) {
           return ICON.workers;
+        } else if (name.includes('--force')) {
+          return ICON.force;
         } else if (name.includes('--port')) {
           return ICON.number;
-        } else if (
-          option.flags.includes('-username') ||
-          option.flags.includes('-password') ||
-          option.flags.includes('-otp')
-        ) {
-          return ICON.string;
+        } else if (name.includes('--platform')) {
+          return ICON.device;
+        } else if (name.includes('--secret')) {
+          return ICON.lock;
+        } else if (option.flags.includes('-dump-')) {
+          return ICON.export;
+        } else if (option.flags.includes('-sdk')) {
+          return ICON.expo;
+        } else if (option.flags.includes('-count')) {
+          return ICON.number;
+        } else if (option.flags.includes('-key')) {
+          return ICON.key;
+        } else if (option.flags.includes('-dir') || option.flags.includes('-path')) {
+          return ICON.path;
         }
-        return undefined;
+        // Default to string icon
+        return ICON.string;
       };
 
-      subcommand.options!.push({
+      const suboption: FigSpec = {
         name,
         description: stripAnsi(option.description),
         args,
         icon: getOptionIcon(option),
         // ensure that command options are placed above path suggestions (+76)
         // priority: 76 + extraPriority,
-      });
+      };
+      // Move the deprecated --config property to the bottom
+      if (
+        name.includes('--config') ||
+        // Move the deprecated target property down
+        (name.includes('--target') && ['publish', 'export'].includes(command.name))
+      ) {
+        suboption.priority = 2;
+      }
+      subcommand.options!.push(suboption);
 
       // TODO: enum types (platform)
     }
