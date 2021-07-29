@@ -194,8 +194,8 @@ function replaceAll(string: string, search: string, replace: string): string {
 }
 
 export const helpGroupOrder = [
-  'auth',
   'core',
+  'auth',
   'client',
   'info',
   'publish',

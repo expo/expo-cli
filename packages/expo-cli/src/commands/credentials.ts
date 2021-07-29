@@ -8,7 +8,7 @@ export default function (program: Command) {
       .command('credentials:manager [path]')
       .description('Manage your credentials')
       .helpGroup('credentials')
-      .option('-p --platform <platform>', 'Platform: [android|ios]', /^(android|ios)$/i),
+      .option('-p --platform <android|ios>', 'Platform: [android|ios]', /^(android|ios)$/i),
     () => import('./credentialsManagerAsync'),
     {
       checkConfig: false,

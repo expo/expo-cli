@@ -5,7 +5,7 @@ import { applyAsyncAction } from './utils/applyAsyncAction';
 export default function (program: Command) {
   applyAsyncAction<string>(
     program
-      .command('init [path]')
+      .command('init [name]')
       .alias('i')
       .helpGroup('core')
       .description('Create a new Expo project')

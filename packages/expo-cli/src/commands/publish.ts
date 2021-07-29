@@ -17,7 +17,7 @@ export default function (program: Command) {
         'Target environment for which this publish is intended. Options are `managed` or `bare`.'
       )
       // TODO(anp) set a default for this dynamically based on whether we're inside a container?
-      .option('--max-workers [num]', 'Maximum number of tasks to allow Metro to spawn.')
+      .option('--max-workers <num>', 'Maximum number of tasks to allow Metro to spawn.')
       .option(
         '--release-channel <release channel>',
         "The release channel to publish to. Default is 'default'.",
@@ -53,7 +53,7 @@ export default function (program: Command) {
       .option('--channel-id <channel-id>', 'This flag is deprecated.')
       .option('-c, --release-channel <channel-name>', 'The channel to rollback from. (Required)')
       .option('-s, --sdk-version <version>', 'The sdk version to rollback. (Required)')
-      .option('-p, --platform <ios|android>', 'The platform to rollback.'),
+      .option('-p, --platform <android|ios>', 'The platform to rollback.'),
     () => import('./publish/publishRollbackAsync'),
     { checkConfig: true }
   );
@@ -74,7 +74,7 @@ export default function (program: Command) {
         parseInt
       )
       .option(
-        '-p, --platform <ios|android>',
+        '-p, --platform <android|ios>',
         'Filter by platform, android or ios. Defaults to both platforms.'
       )
       .option('-s, --sdk-version <version>', 'Filter by SDK version e.g. 35.0.0')

@@ -11,7 +11,7 @@ export default function (program: Command) {
       )
       .helpGroup('internal')
       .option('--dest [dest]', 'Destination directory for assets')
-      .option('--platform [platform]', 'detached project platform'),
+      .option('--platform <android|ios>', 'detached project platform'),
     () => import('./bundleAssetsAsync')
   );
 }

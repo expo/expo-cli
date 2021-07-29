@@ -61,7 +61,8 @@
     "@types/wrap-ansi": "^3.0.0",
     "klaw-sync": "6.0.0",
     "memfs": "^3.2.0",
-    "pretty-bytes": "^5.3.0"
+    "pretty-bytes": "^5.3.0",
+    "string-replace-all-ponyfill": "^1.0.1"
   },
   "dependencies": {
     "@expo/apple-utils": "0.0.0-alpha.20",
