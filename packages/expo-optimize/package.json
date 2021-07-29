@@ -38,10 +38,8 @@
     "@expo/json-file": "8.2.32",
     "chalk": "^4.0.0",
     "commander": "2.20.0",
-    "cross-spawn": "6.0.5",
     "glob": "7.1.6",
     "pretty-bytes": "5.2.0",
-    "tempy": "0.3.0",
     "update-check": "1.5.3"
   }
 }

@@ -1,21 +1,21 @@
 import { getConfig, getWebOutputPath } from '@expo/config';
-import { isAvailableAsync, sharpAsync } from '@expo/image-utils';
+import { isAvailableAsync, sharpAsync } from '@expo/image-utils/build/sharp';
 import JsonFile from '@expo/json-file';
 import chalk from 'chalk';
 import crypto from 'crypto';
-import {
-  ensureDirSync,
-  existsSync,
-  move,
-  readFileSync,
-  statSync,
-  unlinkSync,
-  writeFileSync,
-} from 'fs-extra';
+import fs from 'fs';
+import { move } from 'fs-extra';
 import { sync as globSync } from 'glob';
+import os from 'os';
 import { basename, join, parse, relative } from 'path';
 import prettyBytes from 'pretty-bytes';
-import temporary from 'tempy';
+
+const tempDir = () => {
+  const folder = crypto.randomBytes(Math.ceil(16)).toString('hex').slice(0, 32);
+  const directory = join(fs.realpathSync(os.tmpdir()), folder);
+  fs.mkdirSync(directory);
+  return directory;
+};
 
 export type AssetOptimizationState = Record<string, boolean>;
 
@@ -25,11 +25,13 @@ async function readAssetJsonAsync(
 ): Promise<{ assetJson: JsonFile<AssetOptimizationState>; assetInfo: AssetOptimizationState }> {
   const dirPath = join(projectRoot, '.expo-shared');
 
-  ensureDirSync(dirPath);
+  if (!fs.existsSync(dirPath)) {
+    await fs.promises.mkdir(dirPath, { recursive: true });
+  }
 
   const readmeFilePath = join(dirPath, 'README.md');
-  if (!existsSync(readmeFilePath)) {
-    writeFileSync(
+  if (!fs.existsSync(readmeFilePath)) {
+    fs.writeFileSync(
       readmeFilePath,
       `> Why do I have a folder named ".expo-shared" in my project?
 
@@ -47,7 +49,7 @@ Yes, you should share the ".expo-shared" folder with your collaborators.
   }
 
   const assetJson = new JsonFile<AssetOptimizationState>(join(dirPath, 'assets.json'));
-  if (!existsSync(assetJson.file)) {
+  if (!fs.existsSync(assetJson.file)) {
     console.log();
     console.log(
       chalk.magenta(
@@ -76,7 +78,7 @@ async function optimizeImageAsync(
 ): Promise<string> {
   console.log(`\u203A Checking ${chalk.reset.bold(relative(projectRoot, inputPath))}`);
 
-  const outputPath = temporary.directory();
+  const outputPath = tempDir();
   await sharpAsync({
     input: inputPath,
     output: outputPath,
@@ -141,7 +143,7 @@ function filterImages(files: string[], projectRoot: string) {
 
 // Calculate SHA256 Checksum value of a file based on its contents
 function calculateHash(filePath: string): string {
-  const contents = readFileSync(filePath);
+  const contents = fs.readFileSync(filePath);
   return crypto.createHash('sha256').update(contents).digest('hex');
 }
 
@@ -157,7 +159,7 @@ export async function isProjectOptimized(
   projectRoot: string,
   options: OptimizationOptions
 ): Promise<boolean> {
-  if (!existsSync(join(projectRoot, '.expo-shared/assets.json'))) {
+  if (!fs.existsSync(join(projectRoot, '.expo-shared/assets.json'))) {
     return false;
   }
   const { selectedFiles } = await getAssetFilesAsync(projectRoot, options);
@@ -220,12 +222,12 @@ export async function optimizeAsync(
       return;
     }
 
-    const { size: prevSize } = statSync(image);
+    const { size: prevSize } = fs.statSync(image);
 
     const newName = createNewFilename(image);
     const optimizedImage = await optimizeImageAsync(projectRoot, image, quality);
 
-    const { size: newSize } = statSync(optimizedImage);
+    const { size: newSize } = fs.statSync(optimizedImage);
     const amountSaved = prevSize - newSize;
     if (amountSaved > 0) {
       await move(image, newName);
@@ -252,7 +254,7 @@ export async function optimizeAsync(
             `\u203A Compressed asset ${image} is identical to the original. Using original instead.`
           )
         );
-        unlinkSync(newName);
+        fs.unlinkSync(newName);
       } else {
         console.log(chalk.gray(`\u203A Saving original asset to ${newName}`));
         // Save the old hash to prevent reoptimizing
@@ -260,7 +262,7 @@ export async function optimizeAsync(
       }
     } else {
       // Delete the renamed original asset
-      unlinkSync(newName);
+      fs.unlinkSync(newName);
     }
     if (amountSaved) {
       totalSaved += amountSaved;
