@@ -420,7 +420,7 @@ if (['markdown', 'md'].includes(process.argv[2])) {
           // User should choose schemes before devices as schemes can filter out devices
           extraPriority += 2;
         } else if (name.includes('--device')) {
-          args = getGeneratorArgs('xcode-devices', args);
+          args = getGeneratorArgs('xcode-devices', { ...args, isOptional: false });
           extraPriority++;
         }
       }
@@ -469,8 +469,8 @@ if (['markdown', 'md'].includes(process.argv[2])) {
         description: stripAnsi(option.description),
         args,
         icon: getOptionIcon(option),
-        // ensure that command options are placed above path suggestions (+51)
-        priority: 70 + extraPriority,
+        // ensure that command options are placed above path suggestions (+76)
+        // priority: 76 + extraPriority,
       });
 
       // TODO: enum types (platform)
