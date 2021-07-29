@@ -312,7 +312,6 @@ This webpack config currently does not supply Service Workers by default, they c
 
 - `EXPO_WEBPACK_DEFINE_ENVIRONMENT_AS_KEYS`: Should the define plugin explicitly set environment variables like `process.env.FOO` instead of creating an object like `proces.env: { FOO }`. Defaults to `false`. Next.js uses this to prevent overwriting injected environment variables.
 - `IMAGE_INLINE_SIZE_LIMIT`: By default, images smaller than 10,000 bytes are encoded as a data URI in base64 and inlined in the CSS or JS build artifact. Set this to control the size limit in bytes. Setting it to 0 will disable the inlining of images. This is only used in production.
-- `EXPO_WEBPACK_FAST_REFRESH`: Enable experimental fast refresh in development mode.
 
 ## Exports
 
