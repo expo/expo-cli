@@ -1,4 +1,4 @@
-import { ModConfig } from '@expo/config-plugins';
+import type { ModConfig } from '@expo/config-plugins';
 import JsonFile, { JSONObject } from '@expo/json-file';
 import fs from 'fs';
 import { sync as globSync } from 'glob';

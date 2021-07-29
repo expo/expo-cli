@@ -1,4 +1,4 @@
-import { ConfigPlugin } from '@expo/config-plugins';
+import type { ConfigPlugin } from '@expo/config-plugins';
 import { boolish } from 'getenv';
 
 import { ConfigFilePaths } from '../Config.types';
