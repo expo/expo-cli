@@ -5,10 +5,10 @@ import Request from 'got/dist/source/core';
 import { basename, extname, join } from 'path';
 import stream from 'stream';
 import tar from 'tar';
-import temporary from 'tempy';
 import { promisify } from 'util';
 
 import { uploadAsync, UploadType } from '../../../../uploads';
+import { getTempDir } from '../../../utils/getTempDir';
 import { createProgressTracker } from '../../../utils/progress';
 
 const pipeline = promisify(stream.pipeline);
@@ -57,7 +57,7 @@ async function downloadAppArchiveAsync(url: string): Promise<string> {
   const filename = basename(url);
   // Since we may need to rename the destination path,
   // add everything to a folder which can be nuked to ensure we don't accidentally use an old build with the same name.
-  const destinationFolder = temporary.directory();
+  const destinationFolder = getTempDir();
   const destinationPath = join(destinationFolder, filename);
 
   const downloadStream = createDownloadStream(url);
@@ -95,7 +95,7 @@ async function extractLocalArchiveAsync(filePath: string): Promise<string> {
   const filename = basename(filePath);
   // Since we may need to rename the destination path,
   // add everything to a folder which can be nuked to ensure we don't accidentally use an old build with the same name.
-  const destinationFolder = temporary.directory();
+  const destinationFolder = getTempDir();
   const destinationPath = join(destinationFolder, filename);
 
   // Special use-case for downloading an EAS tar.gz file and unpackaging it.

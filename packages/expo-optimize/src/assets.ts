@@ -11,7 +11,7 @@ import { basename, join, parse, relative } from 'path';
 import prettyBytes from 'pretty-bytes';
 
 const tempDir = () => {
-  const folder = crypto.randomBytes(Math.ceil(16)).toString('hex').slice(0, 32);
+  const folder = crypto.randomBytes(16).toString('hex').slice(0, 32);
   const directory = join(fs.realpathSync(os.tmpdir()), folder);
   fs.mkdirSync(directory);
   return directory;

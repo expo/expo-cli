@@ -10,7 +10,7 @@ import stream from 'stream';
 import util from 'util';
 
 const tempDir = () => {
-  const folder = crypto.randomBytes(Math.ceil(16)).toString('hex').slice(0, 32);
+  const folder = crypto.randomBytes(16).toString('hex').slice(0, 32);
   const directory = path.join(fs.realpathSync(os.tmpdir()), folder);
   fs.mkdirSync(directory);
   return directory;

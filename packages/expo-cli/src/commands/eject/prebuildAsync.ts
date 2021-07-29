@@ -1,11 +1,11 @@
 import { ModPlatform, WarningAggregator } from '@expo/config-plugins';
 import chalk from 'chalk';
-import temporary from 'tempy';
 
 import Log from '../../log';
 import { logNewSection } from '../../utils/ora';
 import * as CreateApp from '../utils/CreateApp';
 import { usesOldExpoUpdatesAsync } from '../utils/ProjectUtils';
+import { getTempDir } from '../utils/getTempDir';
 import { logConfigWarningsAndroid, logConfigWarningsIOS } from '../utils/logConfigWarnings';
 import configureProjectAsync from './configureProjectAsync';
 import { createNativeProjectsFromTemplateAsync } from './createNativeProjectsFromTemplateAsync';
@@ -51,7 +51,7 @@ export async function prebuildAsync(
   assertPlatforms(platforms);
 
   const { exp, pkg } = await ensureConfigAsync({ projectRoot, platforms });
-  const tempDir = temporary.directory();
+  const tempDir = getTempDir();
 
   const {
     hasNewProjectFiles,

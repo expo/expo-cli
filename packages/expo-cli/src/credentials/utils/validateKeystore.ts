@@ -1,8 +1,10 @@
 import spawnAsync from '@expo/spawn-async';
 import commandExists from 'command-exists';
-import temporary from 'tempy';
+import fs from 'fs';
+import path from 'path';
 import terminalLink from 'terminal-link';
 
+import { getTempDir, getTempStr } from '../../commands/utils/getTempDir';
 import Log from '../../log';
 
 export default async function validateKeystoreAsync({
@@ -27,17 +29,25 @@ export default async function validateKeystoreAsync({
   }
 
   try {
-    await temporary.write.task(Buffer.from(keystoreBase64, 'base64'), async keystorePath => {
-      await spawnAsync('keytool', [
-        '-list',
-        '-keystore',
-        keystorePath,
-        '-storepass',
-        keystorePassword,
-        '-alias',
-        keyAlias,
-      ]);
-    });
+    // Read keystore as buffer
+    const data = Buffer.from(keystoreBase64, 'base64');
+    // Create a temp path to write it to for the keytool CLI
+    const keystorePath = path.join(getTempDir(), getTempStr());
+    Log.debug('Validating keystore: ', keystorePath);
+    // Write the keystore
+    await fs.promises.writeFile(keystorePath, data);
+    // Run keytool
+    await spawnAsync('keytool', [
+      '-list',
+      '-keystore',
+      keystorePath,
+      '-storepass',
+      keystorePassword,
+      '-alias',
+      keyAlias,
+    ]);
+    // Attempt to clean up the keystore afterwards
+    await fs.promises.unlink(keystorePath).catch(() => {});
   } catch (e) {
     throw new Error(
       `An error occurred when validating the Android keystore: ${
