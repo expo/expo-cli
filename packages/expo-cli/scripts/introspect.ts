@@ -247,6 +247,9 @@ if (['markdown', 'md'].includes(process.argv[2])) {
     path: `https://raw.githubusercontent.com/expo/expo-cli/${branch}/assets/fig/path.png`,
     key: `https://raw.githubusercontent.com/expo/expo-cli/${branch}/assets/fig/key.png`,
     latest: `https://raw.githubusercontent.com/expo/expo-cli/${branch}/assets/fig/latest.png`,
+    publishRollback: `https://raw.githubusercontent.com/expo/expo-cli/${branch}/assets/fig/publish-rollback.png`,
+    push: `https://raw.githubusercontent.com/expo/expo-cli/${branch}/assets/fig/push.png`,
+    pushClear: `https://raw.githubusercontent.com/expo/expo-cli/${branch}/assets/fig/push-clear.png`,
   };
 
   const COMMAND_ICONS: Record<string, string> = {
@@ -279,13 +282,13 @@ if (['markdown', 'md'].includes(process.argv[2])) {
 
     publish: ICON.publish,
     'publish:set': ICON.publish,
-    'publish:rollback': ICON.publish,
+    'publish:rollback': ICON.publishRollback,
     'publish:history': ICON.publish,
     'publish:details': ICON.publish,
 
-    'push:android:upload': ICON.android,
-    'push:android:show': ICON.android,
-    'push:android:clear': ICON.android,
+    'push:android:upload': ICON.push,
+    'push:android:show': ICON.push,
+    'push:android:clear': ICON.pushClear,
 
     register: ICON.register,
     'run:android': ICON.android,
