@@ -8,7 +8,7 @@ export default function (program: Command) {
       .command('config [path]')
       .description('Show the project config')
       .helpGroup('info')
-      .option('-t, --type <type>', 'Type of config to show. Options: public, prebuild, introspect')
+      .option('-t, --type <public|prebuild|introspect>', 'Type of config to show.')
       .option('--full', 'Include all project config data'),
     () => import('./configAsync')
   );

@@ -24,8 +24,8 @@ export default function (program: Command) {
         '--apple-id <login>',
         'Apple ID username (please also set the Apple ID password as EXPO_APPLE_PASSWORD environment variable).'
       )
-      .option('-t --type <build>', 'Type of build: [archive|simulator].')
-      .option('--release-channel <channel-name>', 'Pull from specified release channel.', 'default')
+      .option('-t --type <archive|simulator>', 'Type of build: [archive|simulator].')
+      .option('--release-channel <name>', 'Pull from specified release channel.', 'default')
       .option('--no-publish', 'Disable automatic publishing before building.')
       .option('--no-wait', 'Exit immediately after scheduling build.')
       .option('--team-id <apple-teamId>', 'Apple Team ID.')
@@ -59,7 +59,7 @@ export default function (program: Command) {
       .alias('ba')
       .helpGroup('build')
       .option('-c, --clear-credentials', 'Clear stored credentials.')
-      .option('--release-channel <channel-name>', 'Pull from specified release channel.', 'default')
+      .option('--release-channel <name>', 'Pull from specified release channel.', 'default')
       .option('--no-publish', 'Disable automatic publishing before building.')
       .option('--no-wait', 'Exit immediately after triggering build.')
       .option('--keystore-path <app.jks>', 'Path to your Keystore.')
@@ -73,7 +73,7 @@ export default function (program: Command) {
         '--skip-workflow-check',
         'Skip warning about build service bare workflow limitations.'
       )
-      .option('-t --type <build>', 'Type of build: [app-bundle|apk].')
+      .option('-t --type <app-bundle|apk>', 'Type of build: [app-bundle|apk].')
       .description('Build and sign a standalone APK or App Bundle for the Google Play Store'),
     () => import('./buildAndroidAsync'),
     { checkConfig: true }
