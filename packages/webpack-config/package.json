@@ -1,6 +1,6 @@
 {
   "name": "@expo/webpack-config",
-  "version": "0.13.2",
+  "version": "0.13.3",
   "description": "The default Webpack configuration used to build Expo apps targeting the web.",
   "main": "webpack.config.js",
   "types": "webpack.config.d.ts",
