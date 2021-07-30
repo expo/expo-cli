@@ -30,15 +30,12 @@ export default function (program: Command) {
       .option('--no-wait', 'Exit immediately after scheduling build.')
       .option('--team-id <apple-teamId>', 'Apple Team ID.')
       .option(
-        '--dist-p12-path <dist.p12>',
+        '--dist-p12-path <path>',
         'Path to your Distribution Certificate P12 (set password as EXPO_IOS_DIST_P12_PASSWORD environment variable).'
       )
       .option('--push-id <push-id>', 'Push Key ID (ex: 123AB4C56D).')
-      .option('--push-p8-path <push.p8>', 'Path to your Push Key .p8 file.')
-      .option(
-        '--provisioning-profile-path <.mobileprovision>',
-        'Path to your Provisioning Profile.'
-      )
+      .option('--push-p8-path <path>', 'Path to your Push Key .p8 file.')
+      .option('--provisioning-profile-path <path>', 'Path to your Provisioning Profile.')
       .option(
         '--public-url <url>',
         'The URL of an externally hosted manifest (for self-hosted apps).'
@@ -62,7 +59,7 @@ export default function (program: Command) {
       .option('--release-channel <name>', 'Pull from specified release channel.', 'default')
       .option('--no-publish', 'Disable automatic publishing before building.')
       .option('--no-wait', 'Exit immediately after triggering build.')
-      .option('--keystore-path <app.jks>', 'Path to your Keystore.')
+      .option('--keystore-path <path>', 'Path to your Keystore: *.jks.')
       .option('--keystore-alias <alias>', 'Keystore Alias')
       .option('--generate-keystore', '[deprecated] Generate Keystore if one does not exist')
       .option(
