@@ -306,7 +306,9 @@ module.exports = async function (env, argv) {
 
 ### Service workers
 
-This webpack config currently does not supply Service Workers by default, they can be added to the project locally: [Adding Service Workers](https://github.com/expo/fyi/blob/master/enabling-web-service-workers.md).
+> Example of using service workers with Expo: `npx create-react-native-app -t with-workbox`
+
+This webpack config currently does not supply service workers by default, they can be added to the project locally: [Adding Service Workers](https://github.com/expo/fyi/blob/master/enabling-web-service-workers.md).
 
 ## Environment Variables
 
