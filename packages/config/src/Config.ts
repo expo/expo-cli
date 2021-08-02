@@ -1,6 +1,6 @@
 import { ModConfig } from '@expo/config-plugins';
 import JsonFile, { JSONObject } from '@expo/json-file';
-import fs from 'fs-extra';
+import fs from 'fs';
 import { sync as globSync } from 'glob';
 import path from 'path';
 import resolveFrom from 'resolve-from';
@@ -78,6 +78,7 @@ function getSupportedPlatforms(projectRoot: string): Platform[] {
  *   config.slug = 'new slug'
  *   return { expo: config };
  * }
+ * ```
  *
  * **Supports**
  * - `app.config.ts`

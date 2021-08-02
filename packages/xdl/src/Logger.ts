@@ -2,7 +2,9 @@ import bunyan from '@expo/bunyan';
 
 class ConsoleRawStream {
   write(record: any) {
-    if (record.level < bunyan.INFO) {
+    if (record.level < bunyan.DEBUG) {
+      console.debug(record);
+    } else if (record.level < bunyan.INFO) {
       console.log(record);
     } else if (record.level < bunyan.WARN) {
       console.info(record);

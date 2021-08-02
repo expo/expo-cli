@@ -1,7 +1,7 @@
 import { ExpoConfig, isLegacyImportsEnabled } from '@expo/config';
 import { Project, ProjectSettings, Versions } from 'xdl';
+import * as WebpackEnvironment from 'xdl/build/webpack-utils/WebpackEnvironment';
 
-import { WebpackEnvironment } from '../../../../xdl/build/internal';
 import { AbortCommandError } from '../../CommandError';
 import Log from '../../log';
 import { URLOptions } from '../../urlOpts';

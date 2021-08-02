@@ -78,6 +78,17 @@ export type ManifestActivity = {
     'android:exported'?: StringBoolean;
     'android:launchMode'?: string;
     'android:theme'?: string;
+    'android:windowSoftInputMode'?:
+      | string
+      | 'stateUnspecified'
+      | 'stateUnchanged'
+      | 'stateHidden'
+      | 'stateAlwaysHidden'
+      | 'stateVisible'
+      | 'stateAlwaysVisible'
+      | 'adjustUnspecified'
+      | 'adjustResize'
+      | 'adjustPan';
     [key: string]: string | undefined;
   };
   'intent-filter'?: ManifestIntentFilter[];

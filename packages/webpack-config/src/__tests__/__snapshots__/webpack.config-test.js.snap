@@ -104,12 +104,6 @@ Object {
             },
           },
           Object {
-            "test": /\\\\\\.worker\\\\\\.\\(js\\|mjs\\|ts\\)\\$/,
-            "use": Object {
-              "loader": "node_modules/worker-loader/dist/cjs.js",
-            },
-          },
-          Object {
             "include": Array [
               "packages/webpack-config/e2e/basic",
               "packages/webpack-config/e2e/basic/node_modules/react-native-vector-icons",
@@ -276,12 +270,6 @@ Object {
                 "sourceMaps": true,
                 "sourceType": "unambiguous",
               },
-            },
-          },
-          Object {
-            "test": /\\\\\\.worker\\\\\\.\\(js\\|mjs\\|ts\\)\\$/,
-            "use": Object {
-              "loader": "node_modules/worker-loader/dist/cjs.js",
             },
           },
           Object {
@@ -561,12 +549,6 @@ Object {
             },
           },
           Object {
-            "test": /\\\\\\.worker\\\\\\.\\(js\\|mjs\\|ts\\)\\$/,
-            "use": Object {
-              "loader": "node_modules/worker-loader/dist/cjs.js",
-            },
-          },
-          Object {
             "include": Array [
               "packages/webpack-config/e2e/basic",
               "packages/webpack-config/e2e/basic/node_modules/react-native-vector-icons",
@@ -643,9 +625,6 @@ Object {
       "react-native/Libraries/Components/View/ViewStylePropTypes$": "react-native-web/dist/exports/View/ViewStylePropTypes",
       "react-native/Libraries/EventEmitter/NativeEventEmitter$": "react-native-web/dist/vendor/react-native/NativeEventEmitter",
       "react-native/Libraries/EventEmitter/RCTDeviceEventEmitter$": "react-native-web/dist/vendor/react-native/NativeEventEmitter/RCTDeviceEventEmitter",
-      "react-native/Libraries/Image/AssetSourceResolver$": "expo-asset/build/AssetSourceResolver",
-      "react-native/Libraries/Image/assetPathUtils$": "expo-asset/build/Image/assetPathUtils",
-      "react-native/Libraries/Image/resolveAssetSource$": "expo-asset/build/resolveAssetSource",
       "react-native/Libraries/vendor/emitter/EventEmitter$": "react-native-web/dist/vendor/react-native/emitter/EventEmitter",
       "react-native/Libraries/vendor/emitter/EventSubscriptionVendor$": "react-native-web/dist/vendor/react-native/emitter/EventSubscriptionVendor",
     },
@@ -749,12 +728,6 @@ Object {
                 "sourceMaps": true,
                 "sourceType": "unambiguous",
               },
-            },
-          },
-          Object {
-            "test": /\\\\\\.worker\\\\\\.\\(js\\|mjs\\|ts\\)\\$/,
-            "use": Object {
-              "loader": "node_modules/worker-loader/dist/cjs.js",
             },
           },
           Object {
@@ -917,9 +890,6 @@ Object {
       "react-native/Libraries/Components/View/ViewStylePropTypes$": "react-native-web/dist/exports/View/ViewStylePropTypes",
       "react-native/Libraries/EventEmitter/NativeEventEmitter$": "react-native-web/dist/vendor/react-native/NativeEventEmitter",
       "react-native/Libraries/EventEmitter/RCTDeviceEventEmitter$": "react-native-web/dist/vendor/react-native/NativeEventEmitter/RCTDeviceEventEmitter",
-      "react-native/Libraries/Image/AssetSourceResolver$": "expo-asset/build/AssetSourceResolver",
-      "react-native/Libraries/Image/assetPathUtils$": "expo-asset/build/Image/assetPathUtils",
-      "react-native/Libraries/Image/resolveAssetSource$": "expo-asset/build/resolveAssetSource",
       "react-native/Libraries/vendor/emitter/EventEmitter$": "react-native-web/dist/vendor/react-native/emitter/EventEmitter",
       "react-native/Libraries/vendor/emitter/EventSubscriptionVendor$": "react-native-web/dist/vendor/react-native/emitter/EventSubscriptionVendor",
     },

@@ -12,9 +12,6 @@ async function main(args) {
       pwa: false,
       verbose: true,
       mode: 'production',
-      webpackEnv: {
-        removeUnusedImportExports: true,
-      },
     });
     process.exit(0);
   } catch (error) {

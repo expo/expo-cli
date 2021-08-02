@@ -387,25 +387,37 @@ export async function isXcrunInstalledAsync() {
 }
 
 export async function xcrunAsync(args: string[], options?: SpawnOptions) {
+  Logger.global.debug('Running: xcrun ' + args.join(' '));
   try {
     return await spawnAsync('xcrun', args, options);
   } catch (e) {
-    if (isLicenseOutOfDate(e.stdout) || isLicenseOutOfDate(e.stderr)) {
-      throw new XDLError(
-        'XCODE_LICENSE_NOT_ACCEPTED',
-        'Xcode license is not accepted. Please run `sudo xcodebuild -license`.'
-      );
-    } else if (e.stderr?.includes('not a developer tool or in PATH')) {
-      throw new XDLError(
-        'SIMCTL_NOT_AVAILABLE',
-        `You may need to run ${chalk.bold(
-          'sudo xcode-select -s /Applications/Xcode.app'
-        )} and try again.`
-      );
-    }
-    throw e;
+    throw parseXcrunError(e);
   }
 }
+
+export function parseXcrunError(e: any): Error {
+  if (isLicenseOutOfDate(e.stdout) || isLicenseOutOfDate(e.stderr)) {
+    return new XDLError(
+      'XCODE_LICENSE_NOT_ACCEPTED',
+      'Xcode license is not accepted. Please run `sudo xcodebuild -license`.'
+    );
+  } else if (e.stderr?.includes('not a developer tool or in PATH')) {
+    return new XDLError(
+      'SIMCTL_NOT_AVAILABLE',
+      `You may need to run ${chalk.bold(
+        'sudo xcode-select -s /Applications/Xcode.app'
+      )} and try again.`
+    );
+  }
+  // Attempt to craft a better error message...
+  if (Array.isArray(e.output)) {
+    e.message += '\n' + e.output.join('\n').trim();
+  } else if (e.stderr) {
+    e.message += '\n' + e.stderr;
+  }
+  return e;
+}
+
 export async function xcrunWithLogging(
   args: string[],
   options?: SpawnOptions

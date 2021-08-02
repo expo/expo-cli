@@ -45,16 +45,14 @@ module.exports = async function (env, argv) {
 
 The main options used to configure how `@expo/webpack-config` works.
 
-| name                        | type                                    | default     | description                                                          |
-| --------------------------- | --------------------------------------- | ----------- | -------------------------------------------------------------------- |
-| `projectRoot`               | `string`                                | required    | Root of the Expo project.                                            |
-| `https`                     | `boolean`                               | `false`     | Should the dev server use https protocol.                            |
-| `offline`                   | `boolean`                               | `false`     | Passing `true` will enable offline support and add a service worker. |
-| `mode`                      | `Mode`                                  | required    | The Webpack mode to bundle the project in.                           |
-| `platform`                  | [`ExpoPlatform`](#ExpoPlatform)         | required    | The target platform to bundle for.                                   |
-| `pwa`                       | `boolean`                               | `true`      | Generate the PWA image assets in production mode.                    |
-| `babel`                     | [`ExpoBabelOptions`](#ExpoBabelOptions) | `undefined` | Control how the default Babel loader is configured.                  |
-| `removeUnusedImportExports` | `boolean`                               | `false`     | Enables advanced tree-shaking with deep scope analysis.              |
+| name          | type                                    | default     | description                                         |
+| ------------- | --------------------------------------- | ----------- | --------------------------------------------------- |
+| `projectRoot` | `string`                                | required    | Root of the Expo project.                           |
+| `https`       | `boolean`                               | `false`     | Should the dev server use https protocol.           |
+| `mode`        | `Mode`                                  | required    | The Webpack mode to bundle the project in.          |
+| `platform`    | [`ExpoPlatform`](#ExpoPlatform)         | required    | The target platform to bundle for.                  |
+| `pwa`         | `boolean`                               | `true`      | Generate the PWA image assets in production mode.   |
+| `babel`       | [`ExpoBabelOptions`](#ExpoBabelOptions) | `undefined` | Control how the default Babel loader is configured. |
 
 ### `Environment` internal
 
@@ -65,9 +63,9 @@ The main options used to configure how `@expo/webpack-config` works.
 
 ### `ExpoPlatform`
 
-| type                                     | description                                                                                                |
-| ---------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| `'ios' | 'android' | 'web' | 'electron'` | The target platform to bundle for. Native platforms are experimental and require a special native runtime. |
+| type   | description |
+| ------ | ----------- | ----- | ----------- | ---------------------------------------------------------------------------------------------------------- |
+| `'ios' | 'android'   | 'web' | 'electron'` | The target platform to bundle for. Native platforms are experimental and require a special native runtime. |
 
 ### `ExpoBabelOptions`
 
@@ -308,7 +306,7 @@ module.exports = async function (env, argv) {
 
 ### Service workers
 
-Service workers are great for emulating native functionality, but they can also lead to a lot of confusion so they are opt-in only (starting in Expo SDK 39 and greater) in this Webpack config. To enable the default workbox plugin pass the options `{ offline: true }` to the creator method.
+Service workers are great for emulating native functionality, but they can also lead to a lot of confusion so they are opt-in only (starting in Expo SDK 42 and greater) in this Webpack config. To enable the default workbox plugin pass the options `{ offline: true }` to the creator method.
 
 #### How Expo service workers ... work
 
@@ -353,7 +351,6 @@ module.exports = async function (env, argv) {
 
 - `EXPO_WEBPACK_DEFINE_ENVIRONMENT_AS_KEYS`: Should the define plugin explicitly set environment variables like `process.env.FOO` instead of creating an object like `proces.env: { FOO }`. Defaults to `false`. Next.js uses this to prevent overwriting injected environment variables.
 - `IMAGE_INLINE_SIZE_LIMIT`: By default, images smaller than 10,000 bytes are encoded as a data URI in base64 and inlined in the CSS or JS build artifact. Set this to control the size limit in bytes. Setting it to 0 will disable the inlining of images. This is only used in production.
-- `EXPO_WEBPACK_FAST_REFRESH`: Enable experimental fast refresh in development mode.
 
 ## Exports
 
