@@ -314,7 +314,6 @@ if (['markdown', 'md'].includes(process.argv[2])) {
 
     const booleanArg: FigArg = {
       name: 'boolean',
-      isOptional: true,
       suggestions: [
         { name: 'true', icon: ICON.true },
         { name: 'false', icon: ICON.false },
@@ -331,6 +330,19 @@ if (['markdown', 'md'].includes(process.argv[2])) {
       description: 'Output the version number',
       icon: ICON.info,
       priority: 1,
+    };
+
+    const clearOptionalProperties = (options: FigArg | FigArg[]): FigArg | FigArg[] => {
+      if (Array.isArray(options)) {
+        return options.map(option => clearOptionalProperties(option) as FigArg);
+      }
+      if (options.isOptional === false) {
+        delete options.isOptional;
+      }
+      if (options.variadic === false) {
+        delete options.variadic;
+      }
+      return options;
     };
 
     const getGeneratorArgs = (generator: string, args: Partial<FigArg> = {}): FigArg => ({
@@ -353,6 +365,7 @@ if (['markdown', 'md'].includes(process.argv[2])) {
         args: (command.args || []).map(({ required, ...arg }) => {
           // `expo start [path]` is a common pattern in expo-cli, this defaults them to folders.
           const template = arg.name === 'path' ? 'folders' : undefined;
+
           return {
             isOptional: !required,
             template,
@@ -418,7 +431,6 @@ if (['markdown', 'md'].includes(process.argv[2])) {
         // Support enum suggestions: <ios|android>
         if (argName?.includes('|')) {
           const enumIcon = (name: string) => {
-            log('enum: ', name);
             if (!name) return undefined;
             if (name === 'ios') {
               return ICON.ios;
@@ -573,7 +585,12 @@ if (['markdown', 'md'].includes(process.argv[2])) {
       description:
         'Tools for creating, running, and deploying Universal Expo and React Native apps',
       options: [helpOption, versionOption],
-      subcommands: figSubcommands,
+      subcommands: figSubcommands.map(command => {
+        if (command.args) {
+          command.args = clearOptionalProperties(command.args);
+        }
+        return command;
+      }),
     };
 
     // Replace all quotes around generators
