@@ -410,7 +410,7 @@ if (['markdown', 'md'].includes(process.argv[2])) {
             return v.match(/(--?[\w|-]+)/)?.[1];
           })
           .filter(Boolean) as string[];
-        const [, argName] = option.flags.match(/(?:\[|<)([\w|-|\|]+)(?:\]|>)/) || [];
+        const [, argName] = option.flags.match(/(?:\[|<)([\w|-||]+)(?:\]|>)/) || [];
         const isRequired = argName ? option.flags?.includes('<') : false;
         let args: FigArg = argName
           ? {
