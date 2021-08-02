@@ -39,6 +39,10 @@
 
 ---
 
+<a align="right" href="#">
+  <img align="right" width="130" alt="expo cli" src="./.gh-assets/float-box.svg">
+</a>
+
 - [📚 Documentation](#-documentation)
 - [🗺 Project Layout](#-project-layout)
 - [🏅 Badges](#-badges)
