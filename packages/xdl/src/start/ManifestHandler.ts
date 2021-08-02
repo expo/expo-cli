@@ -228,7 +228,11 @@ export async function getManifestResponseAsync({
   acceptSignature?: string | string[];
 }): Promise<{ exp: ExpoAppManifest; manifestString: string; hostInfo: HostInfo }> {
   // Read the config
-  const projectConfig = getConfig(projectRoot);
+  const projectConfig = getConfig(projectRoot, { skipSDKVersionRequirement: true });
+  // Opt towards newest functionality when expo isn't installed.
+  if (!projectConfig.exp.sdkVersion) {
+    projectConfig.exp.sdkVersion = 'UNVERSIONED';
+  }
   // Read from headers
   const hostname = stripPort(host);
 

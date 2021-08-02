@@ -95,6 +95,29 @@ describe(UrlUtils.constructBundleQueryParamsWithConfig, () => {
       ).toBe('dev=true&hot=false&strict=true&minify=true');
     });
   });
+  describe('SDK -10', () => {
+    it(`adds includeAssetFileHashes`, async () => {
+      expect(
+        UrlUtils.constructBundleQueryParamsWithConfig(projectRoot, {}, { sdkVersion: '10.0.0' })
+      ).toBe('dev=false&hot=false&includeAssetFileHashes=true');
+    });
+  });
+  describe('SDK 11-32', () => {
+    it(`adds assetPlugin param`, async () => {
+      vol.fromJSON(
+        {
+          'node_modules/expo/tools/hashAssetFiles.js': 'foobar',
+        },
+        projectRoot
+      );
+
+      expect(
+        UrlUtils.constructBundleQueryParamsWithConfig(projectRoot, {}, { sdkVersion: '11.0.0' })
+      ).toBe(
+        'dev=false&hot=false&assetPlugin=%252Fapp%252Fnode_modules%252Fexpo%252Ftools%252FhashAssetFiles.js'
+      );
+    });
+  });
 });
 
 describe(UrlUtils.constructLogUrlAsync, () => {
