@@ -84,6 +84,17 @@ describe(UrlUtils.constructBundleQueryParamsWithConfig, () => {
       expect(
         UrlUtils.constructBundleQueryParamsWithConfig(projectRoot, {}, { sdkVersion: '33.0.0' })
       ).toBe('dev=false&hot=false');
+      // Defaults to highest SDK Support
+      expect(UrlUtils.constructBundleQueryParamsWithConfig(projectRoot, {}, {})).toBe(
+        'dev=false&hot=false'
+      );
+      expect(
+        UrlUtils.constructBundleQueryParamsWithConfig(
+          projectRoot,
+          {},
+          { sdkVersion: 'UNVERSIONED' }
+        )
+      ).toBe('dev=false&hot=false');
     });
     it(`creates a full query string`, async () => {
       expect(
