@@ -1,7 +1,7 @@
 import spawnAsync, { SpawnResult } from '@expo/spawn-async';
 import crypto from 'crypto';
 import fs from 'fs-extra';
-import uuidv4 from 'uuid/v4';
+import { v4 as uuidv4 } from 'uuid';
 
 import { Logger as logger } from '../internal';
 

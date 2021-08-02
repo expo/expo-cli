@@ -2,7 +2,7 @@ import JsonFile from '@expo/json-file';
 import fs from 'fs-extra';
 import os from 'os';
 import path from 'path';
-import uuid from 'uuid';
+import { v4 as uuidv4 } from 'uuid';
 
 import { ConnectionType, Env } from './internal';
 
@@ -68,7 +68,7 @@ async function getAnonymousIdentifierAsync(): Promise<string> {
   let id = await settings.getAsync('uuid', null);
 
   if (!id) {
-    id = uuid.v4();
+    id = uuidv4();
     await settings.setAsync('uuid', id);
   }
 

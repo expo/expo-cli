@@ -1,5 +1,6 @@
 import bunyan from '@expo/bunyan';
 import { setCustomConfigPath } from '@expo/config';
+import { AssertionError } from 'assert';
 import boxen from 'boxen';
 import chalk from 'chalk';
 import program, { Command } from 'commander';
@@ -194,8 +195,8 @@ function replaceAll(string: string, search: string, replace: string): string {
 }
 
 export const helpGroupOrder = [
-  'auth',
   'core',
+  'auth',
   'client',
   'info',
   'publish',
@@ -330,7 +331,7 @@ export type Action = (...args: any[]) => void;
 // parsing the command input
 Command.prototype.asyncAction = function (asyncFn: Action) {
   return this.action(async (...args: any[]) => {
-    if (process.env.EAS_BUILD !== '1') {
+    if (!getenv.boolish('EAS_BUILD', false)) {
       try {
         await profileMethod(checkCliVersionAsync)();
       } catch (e) {}
@@ -352,7 +353,7 @@ Command.prototype.asyncAction = function (asyncFn: Action) {
       // TODO: Find better ways to consolidate error messages
       if (err instanceof AbortCommandError || err instanceof SilentError) {
         // Do nothing when a prompt is cancelled or the error is logged in a pretty way.
-      } else if (err.isCommandError || err.isPluginError) {
+      } else if (err.isCommandError || err.isPluginError || err instanceof AssertionError) {
         Log.error(err.message);
       } else if (err._isApiError) {
         Log.error(err.message);
@@ -756,6 +757,11 @@ async function runAsync(programName: string) {
 }
 
 async function checkCliVersionAsync() {
+  // Skip checking for latest version on EAS Build
+  if (getenv.boolish('EAS_BUILD', false)) {
+    return;
+  }
+
   const { updateIsAvailable, current, latest, deprecated } = await update.checkForUpdateAsync();
   if (updateIsAvailable) {
     Log.nestedWarn(
@@ -786,7 +792,8 @@ any interaction with Expo servers may result in unexpected behaviour.`
 }
 
 function _registerLogs() {
-  const stream = {
+  const stream: bunyan.Stream = {
+    level: Log.isDebug ? 'debug' : 'info',
     stream: {
       write: (chunk: any) => {
         if (chunk.code) {
@@ -835,6 +842,8 @@ function _registerLogs() {
           Log.log(chunk.msg);
         } else if (chunk.level === bunyan.WARN) {
           Log.warn(chunk.msg);
+        } else if (chunk.level === bunyan.DEBUG) {
+          Log.debug(chunk.msg);
         } else if (chunk.level >= bunyan.ERROR) {
           Log.error(chunk.msg);
         }

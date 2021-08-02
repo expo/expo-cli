@@ -1,3 +1,20 @@
+declare module 'metro/src/shared/output/bundle' {
+  export function build(
+    arg0: Server,
+    arg1: RequestOptions
+  ): Promise<{
+    code: string;
+    map: string;
+  }>;
+  export function save(
+    arg0: {
+      code: string;
+      map: string;
+    },
+    arg1: OutputOptions,
+    arg2: (...args: Array<string>) => void
+  ): Promise<unknown>;
+}
 declare module 'metro' {
   //#region metro/src/Assets.js
 

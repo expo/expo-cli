@@ -24,21 +24,18 @@ export default function (program: Command) {
         '--apple-id <login>',
         'Apple ID username (please also set the Apple ID password as EXPO_APPLE_PASSWORD environment variable).'
       )
-      .option('-t --type <build>', 'Type of build: [archive|simulator].')
-      .option('--release-channel <channel-name>', 'Pull from specified release channel.', 'default')
+      .option('-t --type <archive|simulator>', 'Type of build: [archive|simulator].')
+      .option('--release-channel <name>', 'Pull from specified release channel.', 'default')
       .option('--no-publish', 'Disable automatic publishing before building.')
       .option('--no-wait', 'Exit immediately after scheduling build.')
       .option('--team-id <apple-teamId>', 'Apple Team ID.')
       .option(
-        '--dist-p12-path <dist.p12>',
+        '--dist-p12-path <path>',
         'Path to your Distribution Certificate P12 (set password as EXPO_IOS_DIST_P12_PASSWORD environment variable).'
       )
       .option('--push-id <push-id>', 'Push Key ID (ex: 123AB4C56D).')
-      .option('--push-p8-path <push.p8>', 'Path to your Push Key .p8 file.')
-      .option(
-        '--provisioning-profile-path <.mobileprovision>',
-        'Path to your Provisioning Profile.'
-      )
+      .option('--push-p8-path <path>', 'Path to your Push Key .p8 file.')
+      .option('--provisioning-profile-path <path>', 'Path to your Provisioning Profile.')
       .option(
         '--public-url <url>',
         'The URL of an externally hosted manifest (for self-hosted apps).'
@@ -59,10 +56,10 @@ export default function (program: Command) {
       .alias('ba')
       .helpGroup('build')
       .option('-c, --clear-credentials', 'Clear stored credentials.')
-      .option('--release-channel <channel-name>', 'Pull from specified release channel.', 'default')
+      .option('--release-channel <name>', 'Pull from specified release channel.', 'default')
       .option('--no-publish', 'Disable automatic publishing before building.')
       .option('--no-wait', 'Exit immediately after triggering build.')
-      .option('--keystore-path <app.jks>', 'Path to your Keystore.')
+      .option('--keystore-path <path>', 'Path to your Keystore: *.jks.')
       .option('--keystore-alias <alias>', 'Keystore Alias')
       .option('--generate-keystore', '[deprecated] Generate Keystore if one does not exist')
       .option(
@@ -73,7 +70,7 @@ export default function (program: Command) {
         '--skip-workflow-check',
         'Skip warning about build service bare workflow limitations.'
       )
-      .option('-t --type <build>', 'Type of build: [app-bundle|apk].')
+      .option('-t --type <app-bundle|apk>', 'Type of build: [app-bundle|apk].')
       .description('Build and sign a standalone APK or App Bundle for the Google Play Store'),
     () => import('./buildAndroidAsync'),
     { checkConfig: true }

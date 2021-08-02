@@ -19,7 +19,10 @@ export default function (program: Command) {
       .helpGroup('eject')
       .option('--no-install', 'Skip installing npm packages and CocoaPods.')
       .option('--npm', 'Use npm to install dependencies. (default when Yarn is not installed)')
-      .option('-p, --platform [platform]', 'Platforms to sync: ios, android, all. Default: all'),
+      .option(
+        '-p, --platform <all|android|ios>',
+        'Platforms to sync: ios, android, all. Default: all'
+      ),
     () => import('./ejectAsync')
   );
 }

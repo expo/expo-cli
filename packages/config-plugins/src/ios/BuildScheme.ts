@@ -1,6 +1,6 @@
 import { readXMLAsync } from '../utils/XML';
 import { findSchemeNames, findSchemePaths } from './Paths';
-import { findSignableTargets } from './Target';
+import { findSignableTargets, TargetType } from './Target';
 import { getPbxproj, unquote } from './utils/Xcodeproj';
 
 interface SchemeXML {
@@ -32,14 +32,51 @@ export function getSchemesFromXcodeproj(projectRoot: string): string[] {
 }
 
 export function getRunnableSchemesFromXcodeproj(
-  projectRoot: string
-): { name: string; type: string }[] {
+  projectRoot: string,
+  { configuration = 'Debug' }: { configuration?: 'Debug' | 'Release' } = {}
+): { name: string; osType: string; type: string }[] {
   const project = getPbxproj(projectRoot);
 
-  return findSignableTargets(project).map(([, target]) => ({
-    name: unquote(target.name),
-    type: unquote(target.productType),
-  }));
+  return findSignableTargets(project).map(([, target]) => {
+    let osType = 'iOS';
+    const type = unquote(target.productType);
+
+    if (type === TargetType.APPLICATION) {
+      // Attempt to resolve the platform SDK for each target so we can filter devices.
+      const xcConfigurationList =
+        project.hash.project.objects.XCConfigurationList[target.buildConfigurationList];
+
+      if (xcConfigurationList) {
+        const buildConfiguration =
+          xcConfigurationList.buildConfigurations.find(
+            (value: { comment: string; value: string }) => value.comment === configuration
+          ) || xcConfigurationList.buildConfigurations[0];
+        if (buildConfiguration?.value) {
+          const xcBuildConfiguration =
+            project.hash.project.objects.XCBuildConfiguration?.[buildConfiguration.value];
+
+          const buildSdkRoot = xcBuildConfiguration.buildSettings.SDKROOT;
+          if (
+            buildSdkRoot === 'appletvos' ||
+            'TVOS_DEPLOYMENT_TARGET' in xcBuildConfiguration.buildSettings
+          ) {
+            // Is a TV app...
+            osType = 'tvOS';
+          } else if (buildSdkRoot === 'iphoneos') {
+            osType = 'iOS';
+          }
+        }
+      }
+    } else if (type === TargetType.WATCH) {
+      osType = 'watchOS';
+    }
+
+    return {
+      name: unquote(target.name),
+      osType,
+      type: unquote(target.productType),
+    };
+  });
 }
 
 async function readSchemeAsync(

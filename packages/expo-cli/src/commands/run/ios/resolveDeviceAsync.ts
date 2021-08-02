@@ -1,10 +1,10 @@
 import chalk from 'chalk';
-import ora from 'ora';
 import { SimControl, Simulator } from 'xdl';
 
 import CommandError from '../../../CommandError';
 import Log from '../../../log';
 import prompt from '../../../prompts';
+import { ora } from '../../../utils/ora';
 import { profileMethod } from '../../utils/profileMethod';
 
 async function getSimulatorsAsync(): Promise<SimControl.SimulatorDevice[]> {
@@ -14,7 +14,7 @@ async function getSimulatorsAsync(): Promise<SimControl.SimulatorDevice[]> {
   }, []);
 }
 
-async function getBuildDestinationsAsync() {
+async function getBuildDestinationsAsync({ osType }: { osType?: string } = {}) {
   const devices = (
     await profileMethod(SimControl.listDevicesAsync, 'SimControl.listDevicesAsync')()
   ).filter(device => {
@@ -22,35 +22,53 @@ async function getBuildDestinationsAsync() {
   });
 
   const simulators = await Simulator.sortDefaultDeviceToBeginningAsync(
-    await profileMethod(getSimulatorsAsync)()
+    await profileMethod(getSimulatorsAsync)(),
+    osType
   );
 
   return [...devices, ...simulators];
 }
 
 export async function resolveDeviceAsync(
-  device?: string | boolean
+  device?: string | boolean,
+  { osType }: { osType?: string } = {}
 ): Promise<SimControl.SimulatorDevice | SimControl.XCTraceDevice> {
   if (!(await profileMethod(Simulator.ensureXcodeCommandLineToolsInstalledAsync)())) {
     throw new CommandError('Unable to verify Xcode and Simulator installation.');
   }
+
   if (!device) {
-    return await profileMethod(
+    const simulator = await profileMethod(
       Simulator.ensureSimulatorOpenAsync,
       'Simulator.ensureSimulatorOpenAsync'
-    )();
+    )({ osType });
+    Log.debug(`Resolved default (${osType}) device:`, simulator.name, simulator.udid);
+    return simulator;
   }
 
   const spinner = ora(
     `🔍 Finding ${device === true ? 'devices' : `device ${chalk.cyan(device)}`}`
   ).start();
-  const devices: (
+  let devices: (
     | SimControl.SimulatorDevice
     | SimControl.XCTraceDevice
-  )[] = await getBuildDestinationsAsync().catch(() => []);
+  )[] = await getBuildDestinationsAsync({ osType }).catch(() => []);
+
   spinner.stop();
 
   if (device === true) {
+    // If osType is defined, then filter out ineligible simulators.
+    // Only do this inside of the device selection so users who pass the entire device udid can attempt to select any simulator (even if it's invalid).
+    if (osType) {
+      devices = devices.filter(device => {
+        // connected device
+        if (!('osType' in device)) {
+          return true;
+        }
+        return device.osType === osType;
+      });
+    }
+
     // --device with no props after
     const { value } = await prompt({
       type: 'autocomplete',
