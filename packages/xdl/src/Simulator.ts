@@ -211,7 +211,7 @@ export async function isSimulatorInstalledAsync(): Promise<boolean> {
  * This is where any timeout related error handling should live.
  */
 export async function ensureSimulatorOpenAsync(
-  { udid }: { udid?: string } = {},
+  { udid, osType }: { udid?: string; osType?: string } = {},
   tryAgain: boolean = true
 ): Promise<SimControl.SimulatorDevice> {
   // Yes, simulators can be booted even if the app isn't running, obviously we'd never want this.
@@ -230,14 +230,7 @@ export async function ensureSimulatorOpenAsync(
 
   // Use a default simulator if none was specified
   if (!udid) {
-    const simulatorOpenedByApp = await isSimulatorBootedAsync({ udid });
-    // This should prevent opening a second simulator in the chance that default
-    // simulator doesn't match what the Simulator app would open by default.
-    if (simulatorOpenedByApp?.udid) {
-      udid = simulatorOpenedByApp.udid;
-    } else {
-      udid = _getDefaultSimulatorDeviceUDID() ?? (await getFirstAvailableDeviceAsync()).udid;
-    }
+    udid = await getBestSimulatorAsync({ osType });
   }
 
   const bootedDevice = await waitForDeviceToBootAsync({ udid });
@@ -245,7 +238,7 @@ export async function ensureSimulatorOpenAsync(
   if (!bootedDevice) {
     // Give it a second chance, this might not be needed but it could potentially lead to a better UX on slower devices.
     if (tryAgain) {
-      return await ensureSimulatorOpenAsync({ udid }, false);
+      return await ensureSimulatorOpenAsync({ udid, osType }, false);
     }
     // TODO: We should eliminate all needs for a timeout error, it's bad UX to get an error about the simulator not starting while the user can clearly see it starting on their slow computer.
     throw new TimeoutError(
@@ -255,12 +248,51 @@ export async function ensureSimulatorOpenAsync(
   return bootedDevice;
 }
 
+async function getBestSimulatorAsync({ osType }: { osType?: string }): Promise<string> {
+  const simulatorOpenedByApp = await isSimulatorBootedAsync();
+
+  // This should prevent opening a second simulator in the chance that default
+  // simulator doesn't match what the Simulator app would open by default.
+  if (
+    simulatorOpenedByApp?.udid &&
+    (!osType || (osType && simulatorOpenedByApp.osType === osType))
+  ) {
+    return simulatorOpenedByApp.udid;
+  }
+
+  const defaultUdid = _getDefaultSimulatorDeviceUDID();
+
+  if (defaultUdid && !osType) {
+    return defaultUdid;
+  }
+
+  const simulators = await getSelectableSimulatorsAsync({ osType });
+
+  if (!simulators.length) {
+    // TODO: Prompt to install the simulators
+    throw new Error(`No ${osType || 'iOS'} devices available in Simulator.app`);
+  }
+
+  // If the default udid is defined, then check to ensure its osType matches the required os.
+  if (defaultUdid) {
+    const defaultSimulator = simulators.find(device => device.udid === defaultUdid);
+    if (defaultSimulator?.osType === osType) {
+      return defaultUdid;
+    }
+  }
+
+  // Return first selectable device.
+  return simulators[0].udid;
+}
+
 /**
  * Get all simulators supported by Expo (iOS only).
  */
-async function getSelectableSimulatorsAsync(): Promise<SimControl.SimulatorDevice[]> {
+async function getSelectableSimulatorsAsync({ osType = 'iOS' }: { osType?: string } = {}): Promise<
+  SimControl.SimulatorDevice[]
+> {
   const simulators = await getSimulatorsAsync();
-  return simulators.filter(device => device.isAvailable && device.osType === 'iOS');
+  return simulators.filter(device => device.isAvailable && device.osType === osType);
 }
 
 async function getSimulatorsAsync(): Promise<SimControl.SimulatorDevice[]> {
@@ -299,15 +331,6 @@ function _getDefaultSimulatorDeviceUDID() {
   } catch (e) {
     return null;
   }
-}
-
-async function getFirstAvailableDeviceAsync() {
-  const simulators = await getSelectableSimulatorsAsync();
-  if (!simulators.length) {
-    // TODO: Prompt to install the simulators
-    throw new Error('No iPhone devices available in Simulator.');
-  }
-  return simulators[0];
 }
 
 async function waitForActionAsync<T>({
@@ -877,10 +900,10 @@ export async function openWebProjectAsync({
  * @param devices
  */
 export async function sortDefaultDeviceToBeginningAsync(
-  devices: SimControl.SimulatorDevice[]
+  devices: SimControl.SimulatorDevice[],
+  osType?: string
 ): Promise<SimControl.SimulatorDevice[]> {
-  const defaultUdid =
-    _getDefaultSimulatorDeviceUDID() ?? (await getFirstAvailableDeviceAsync()).udid;
+  const defaultUdid = await getBestSimulatorAsync({ osType });
   if (defaultUdid) {
     let iterations = 0;
     while (devices[0].udid !== defaultUdid && iterations < devices.length) {
@@ -892,9 +915,10 @@ export async function sortDefaultDeviceToBeginningAsync(
 }
 
 export async function promptForSimulatorAsync(
-  devices: SimControl.SimulatorDevice[]
+  devices: SimControl.SimulatorDevice[],
+  osType?: string
 ): Promise<SimControl.SimulatorDevice | null> {
-  devices = await sortDefaultDeviceToBeginningAsync(devices);
+  devices = await sortDefaultDeviceToBeginningAsync(devices, osType);
   // TODO: Bail on non-interactive
   const results = await promptForDeviceAsync(devices);
 
