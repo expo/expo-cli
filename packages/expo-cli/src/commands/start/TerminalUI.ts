@@ -250,7 +250,9 @@ export async function startAsync(projectRoot: string, options: StartOptions) {
             devClient: options.devClient ?? false,
           });
           if (!results.success) {
-            Log.nestedError(results.error);
+            Log.nestedError(
+              typeof results.error === 'string' ? results.error : results.error.message
+            );
           }
         }
         printHelp();
