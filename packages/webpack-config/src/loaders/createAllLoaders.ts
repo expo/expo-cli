@@ -5,7 +5,6 @@ import { getConfig, getPaths } from '../env';
 import { Environment } from '../types';
 import createBabelLoader from './createBabelLoader';
 import createFontLoader from './createFontLoader';
-import createWorkerLoader from './createWorkerLoader';
 
 // Inline resources as Base64 when there is less reason to parallelize their download. The
 // heuristic we use is whether the resource would fit within a TCP/IP packet that we would
@@ -94,7 +93,6 @@ export default function createAllLoaders(
     getHtmlLoaderRule(template.folder),
     imageLoaderRule,
     getBabelLoaderRule(env),
-    createWorkerLoader(),
     createFontLoader(root, includeModule),
     styleLoaderRule,
     // This needs to be the last loader

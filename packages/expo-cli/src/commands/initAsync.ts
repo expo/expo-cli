@@ -381,7 +381,6 @@ export async function initGitRepoAsync(
         cwd: root,
         stdio: 'ignore',
       });
-      await spawnAsync('git', ['branch', '-M', 'main'], { cwd: root, stdio: 'ignore' });
     }
     return true;
   } catch (e) {

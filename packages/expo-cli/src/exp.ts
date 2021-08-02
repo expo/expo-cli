@@ -103,7 +103,7 @@ Command.prototype.prepareCommands = function () {
       if (getenv.boolish('EXPO_DEBUG', false)) {
         return true;
       }
-      return !['internal', 'eas'].includes(cmd.__helpGroup);
+      return !['internal'].includes(cmd.__helpGroup);
     })
     .map(function (cmd: Command, i: number) {
       const args = cmd._args.map(humanReadableArgName).join(' ');
@@ -194,14 +194,13 @@ function replaceAll(string: string, search: string, replace: string): string {
 }
 
 export const helpGroupOrder = [
-  'auth',
   'core',
+  'auth',
   'client',
   'info',
   'publish',
   'build',
   'credentials',
-  'eas',
   'notifications',
   'url',
   'webhooks',
@@ -222,7 +221,6 @@ function sortHelpGroups(helpGroups: Record<string, string[][]>): Record<string, 
 
   const subGroupOrder: Record<string, string[]> = {
     core: ['init', 'start', 'start:web', 'publish', 'export'],
-    eas: ['eas:credentials'],
   };
 
   const sortSubGroupWithOrder = (groupName: string, group: string[][]): string[][] => {
@@ -332,7 +330,7 @@ export type Action = (...args: any[]) => void;
 // parsing the command input
 Command.prototype.asyncAction = function (asyncFn: Action) {
   return this.action(async (...args: any[]) => {
-    if (process.env.EAS_BUILD !== '1') {
+    if (!getenv.boolish('EAS_BUILD', false)) {
       try {
         await profileMethod(checkCliVersionAsync)();
       } catch (e) {}
@@ -357,10 +355,10 @@ Command.prototype.asyncAction = function (asyncFn: Action) {
       } else if (err.isCommandError || err.isPluginError) {
         Log.error(err.message);
       } else if (err._isApiError) {
-        Log.error(chalk.red(err.message));
-      } else if (err.isXDLError) {
         Log.error(err.message);
-      } else if (err.isJsonFileError || err.isConfigError || err.isPackageManagerError) {
+      } else if (err.isXDLError || err.isConfigError) {
+        Log.error(err.message);
+      } else if (err.isJsonFileError || err.isPackageManagerError) {
         if (err.code === 'EJSONEMPTY') {
           // Empty JSON is an easy bug to debug. Often this is thrown for package.json or app.json being empty.
           Log.error(err.message);
@@ -758,6 +756,11 @@ async function runAsync(programName: string) {
 }
 
 async function checkCliVersionAsync() {
+  // Skip checking for latest version on EAS Build
+  if (getenv.boolish('EAS_BUILD', false)) {
+    return;
+  }
+
   const { updateIsAvailable, current, latest, deprecated } = await update.checkForUpdateAsync();
   if (updateIsAvailable) {
     Log.nestedWarn(

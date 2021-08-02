@@ -3,13 +3,12 @@ import type { Command } from 'commander';
 import { applyAsyncActionProjectDir } from './utils/applyAsyncAction';
 
 export default function (program: Command) {
+  // TODO: audit params
   applyAsyncActionProjectDir(
     program
       .command('url [path]')
       .alias('u')
       .helpGroup('url')
-
-      .option('-w, --web', 'Return the URL of the web app')
       .description('Log a URL for opening the project in Expo Go')
       .urlOpts()
       .allowOffline(),

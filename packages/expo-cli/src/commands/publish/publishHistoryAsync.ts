@@ -5,6 +5,7 @@ import { getPublishHistoryAsync, HistoryOptions, Publication } from '../utils/Pu
 import * as table from '../utils/cli-table';
 
 const HORIZ_CELL_WIDTH_SMALL = 15;
+const HORIZ_CELL_WIDTH_MEDIUM = 20;
 const HORIZ_CELL_WIDTH_BIG = 40;
 
 export async function actionAsync(projectRoot: string, options: HistoryOptions) {
@@ -26,11 +27,19 @@ export async function actionAsync(projectRoot: string, options: HistoryOptions) 
     );
     Log.log(generalTableString);
 
+    const hasRuntimeVersion = result.queryResult.some(
+      (publication: Publication) => !!publication.runtimeVersion
+    );
+    const hasSdkVersion = result.queryResult.some(
+      (publication: Publication) => !!publication.sdkVersion
+    );
+
     // Print info specific to each publication
     const headers = [
       'publishedTime',
       'appVersion',
-      'sdkVersion',
+      ...(hasSdkVersion ? ['sdkVersion'] : []),
+      ...(hasRuntimeVersion ? ['runtimeVersion'] : []),
       'platform',
       'channel',
       'publicationId',
@@ -39,9 +48,12 @@ export async function actionAsync(projectRoot: string, options: HistoryOptions) 
     // colWidths contains the cell size of each header
     const colWidths: number[] = [];
     const bigCells = new Set(['publicationId', 'publishedTime', 'channel']);
+    const mediumCells = new Set(['runtimeVersion']);
     headers.forEach(header => {
       if (bigCells.has(header)) {
         colWidths.push(HORIZ_CELL_WIDTH_BIG);
+      } else if (mediumCells.has(header)) {
+        colWidths.push(HORIZ_CELL_WIDTH_MEDIUM);
       } else {
         colWidths.push(HORIZ_CELL_WIDTH_SMALL);
       }

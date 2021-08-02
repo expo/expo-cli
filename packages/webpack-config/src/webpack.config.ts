@@ -20,7 +20,6 @@ import ModuleNotFoundPlugin from 'react-dev-utils/ModuleNotFoundPlugin';
 import WatchMissingNodeModulesPlugin from 'react-dev-utils/WatchMissingNodeModulesPlugin';
 import resolveFrom from 'resolve-from';
 import webpack, { Configuration, HotModuleReplacementPlugin, Options, Output } from 'webpack';
-import WebpackDeepScopeAnalysisPlugin from 'webpack-deep-scope-plugin';
 import ManifestPlugin from 'webpack-manifest-plugin';
 
 import {
@@ -53,7 +52,6 @@ import {
 import ExpoAppManifestWebpackPlugin from './plugins/ExpoAppManifestWebpackPlugin';
 import { HTMLLinkNode } from './plugins/ModifyHtmlWebpackPlugin';
 import { Arguments, DevConfiguration, Environment, FilePaths, Mode } from './types';
-import { overrideWithPropertyOrConfig } from './utils';
 
 // Source maps are resource heavy and can cause out of memory issue for large source files.
 const shouldUseSourceMap = boolish('GENERATE_SOURCEMAP', true);
@@ -158,15 +156,6 @@ export default async function (
   // Because the native React runtime is different to the browser we need to make
   // some core modifications to webpack.
   const isNative = ['ios', 'android'].includes(env.platform);
-
-  // Enables deep scope analysis in production mode.
-  // Remove unused import/exports
-  // override: `env.removeUnusedImportExports`
-  const deepScopeAnalysisEnabled = overrideWithPropertyOrConfig(
-    env.removeUnusedImportExports,
-    false
-    // isProd
-  );
 
   const locations = env.locations || (await getPathsAsync(env.projectRoot));
 
@@ -484,8 +473,6 @@ export default async function (
             };
           },
         }),
-
-      deepScopeAnalysisEnabled && new WebpackDeepScopeAnalysisPlugin(),
 
       // Skip using a progress bar in CI
       !isCI && new ExpoProgressBarPlugin(),

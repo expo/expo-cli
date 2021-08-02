@@ -33,17 +33,17 @@ export default function (program: Command) {
       .option('-s, --dump-sourcemap', 'Dump the source map for debugging the JS bundle.')
       .option('-q, --quiet', 'Suppress verbose output.')
       .option(
-        '-t, --target [env]',
-        'Target environment for which this export is intended. Options are `managed` or `bare`.'
+        '-t, --target <managed|bare>',
+        'Target environment for which this export is intended.'
       )
-      .option('--merge-src-dir [dir]', 'A repeatable source dir to merge in.', collect, [])
+      .option('--merge-src-dir <dir>', 'A repeatable source dir to merge in.', collect, [])
       .option(
-        '--merge-src-url [url]',
+        '--merge-src-url <url>',
         'A repeatable source tar.gz file URL to merge in.',
         collect,
         []
       )
-      .option('--max-workers [num]', 'Maximum number of tasks to allow Metro to spawn.')
+      .option('--max-workers <num>', 'Maximum number of tasks to allow Metro to spawn.')
       .option('--experimental-bundle', 'export bundles for use with EAS updates.'),
     () => import('./exportAsync'),
     { checkConfig: true }

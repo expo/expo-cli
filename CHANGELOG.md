@@ -12,6 +12,89 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+## [Thu, 29 Jul 2021 19:21:41 -0700](https://github.com/expo/expo-cli/commit/a94bed2031b86d244b143937fde14d97f2bc6a71)
+
+### 🎉 New features
+
+- Added fig to introspection script ([#3727](https://github.com/expo/expo-cli/issues/3727))
+
+### 🧹 Chores
+
+- [cli] Skip checking for latest expo-cli version on EAS Build
+- Drop template sw file ([#3728](https://github.com/expo/expo-cli/issues/3728))
+
+### 📦 Packages updated
+
+- @expo/dev-tools@0.13.112
+- expo-cli@4.9.1
+- @expo/next-adapter@3.0.3
+- @expo/webpack-config@0.13.3
+- xdl@59.0.52
+
+## [Wed, 28 Jul 2021 13:48:31 -0700](https://github.com/expo/expo-cli/commit/911c052e83d10b73b2a3971c9ec6c5eb26abba08)
+
+### 🛠 Breaking changes
+
+- [next-adapter] Remove custom server and service worker code ([#3705](https://github.com/expo/expo-cli/issues/3705))
+- [webpack] Drop asset aliases ([#3706](https://github.com/expo/expo-cli/issues/3706))
+- [webpack] Drop support for deep-scope plugin  ([#3701](https://github.com/expo/expo-cli/issues/3701))
+- [webpack] Drop support for worker-loader ([#3696](https://github.com/expo/expo-cli/issues/3696))
+
+### 🎉 New features
+
+- [cli] display correct manifest link after publish when using runtime version ([#3719](https://github.com/expo/expo-cli/issues/3719))
+- [cli][config][xdl] support runtimeVersion in classic updates ([#3547](https://github.com/expo/expo-cli/issues/3547))
+- [config-plugins] Added support for iOS rootViewBackgroundColor ([#3660](https://github.com/expo/expo-cli/issues/3660))
+- [config-plugins] Added window soft input mode ([#3725](https://github.com/expo/expo-cli/issues/3725))
+- [config-plugins] Fix multitasking ipad orientations ([#3710](https://github.com/expo/expo-cli/issues/3710))
+- [image-utils] Use jimp compact ([#3698](https://github.com/expo/expo-cli/issues/3698))
+- [readme] Added animated banner ([#3726](https://github.com/expo/expo-cli/issues/3726))
+- Improved webpack bundling errors ([#3680](https://github.com/expo/expo-cli/issues/3680))
+
+### 🧹 Chores
+
+- [cli] Remove custom branch setting so that default branch set in global gitconfig is used ([#3702](https://github.com/expo/expo-cli/issues/3702))
+- [cli][webpack] Allow customization to use local files ([#3695](https://github.com/expo/expo-cli/issues/3695))
+- [config-plugins] use default value for android version code - for consistency with buildNumber on ios ([#3713](https://github.com/expo/expo-cli/issues/3713))
+- [config] Improve error formatting for config reading in the CLI ([#3707](https://github.com/expo/expo-cli/issues/3707))
+- [config] Remove fs-extra from config ([#3699](https://github.com/expo/expo-cli/issues/3699))
+- [config] Replace babel with sucrase ([#3693](https://github.com/expo/expo-cli/issues/3693))
+- [webpack] Drop partial / unsupported fast refresh web implementation ([#3697](https://github.com/expo/expo-cli/issues/3697))
+- Remove shared monorepo deps ([#3704](https://github.com/expo/expo-cli/issues/3704))
+- Remove eas sort group ([#3703](https://github.com/expo/expo-cli/issues/3703))
+- Lazy load prebuild-config modules ([#3681](https://github.com/expo/expo-cli/issues/3681))
+- Remove expo/simple-spinner ([#3683](https://github.com/expo/expo-cli/issues/3683))
+- Combine similar commands ([#3684](https://github.com/expo/expo-cli/issues/3684))
+- Remove term-size and slugid ([#3682](https://github.com/expo/expo-cli/issues/3682))
+
+### 🐛 Bug fixes
+
+- [cli] Fix hermesc.exe resolving on windows ([#3708](https://github.com/expo/expo-cli/issues/3708))
+- [xdl] Fix legacy dev server port selection ([#3694](https://github.com/expo/expo-cli/issues/3694))
+
+### 📦 Packages updated
+
+- @expo/config-plugins@3.0.6
+- @expo/config@5.0.6
+- @expo/dev-server@0.1.81
+- @expo/dev-tools@0.13.111
+- expo-cli@4.9.0
+- expo-codemod@1.1.4
+- expo-optimize@0.1.103
+- @expo/image-utils@0.3.16
+- @expo/json-file@8.2.32
+- @expo/metro-config@0.1.81
+- @expo/next-adapter@3.0.2
+- @expo/osascript@2.0.30
+- @expo/package-manager@0.0.45
+- pod-install@0.1.25
+- @expo/prebuild-config@2.0.6
+- expo-pwa@0.0.91
+- @expo/schemer@1.3.31
+- uri-scheme@1.0.92
+- @expo/webpack-config@0.13.2
+- xdl@59.0.51
+
 ## [Fri, 16 Jul 2021 11:09:46 -0700](https://github.com/expo/expo-cli/commit/ca2116669c211b4500893ce780dae62a3c41d50c)
 
 ### 🛠 Breaking changes
