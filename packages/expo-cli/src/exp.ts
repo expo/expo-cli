@@ -194,8 +194,8 @@ function replaceAll(string: string, search: string, replace: string): string {
 }
 
 export const helpGroupOrder = [
-  'auth',
   'core',
+  'auth',
   'client',
   'info',
   'publish',
@@ -330,7 +330,7 @@ export type Action = (...args: any[]) => void;
 // parsing the command input
 Command.prototype.asyncAction = function (asyncFn: Action) {
   return this.action(async (...args: any[]) => {
-    if (process.env.EAS_BUILD !== '1') {
+    if (!getenv.boolish('EAS_BUILD', false)) {
       try {
         await profileMethod(checkCliVersionAsync)();
       } catch (e) {}
@@ -756,6 +756,11 @@ async function runAsync(programName: string) {
 }
 
 async function checkCliVersionAsync() {
+  // Skip checking for latest version on EAS Build
+  if (getenv.boolish('EAS_BUILD', false)) {
+    return;
+  }
+
   const { updateIsAvailable, current, latest, deprecated } = await update.checkForUpdateAsync();
   if (updateIsAvailable) {
     Log.nestedWarn(

@@ -12,6 +12,25 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+## [Thu, 29 Jul 2021 19:21:41 -0700](https://github.com/expo/expo-cli/commit/a94bed2031b86d244b143937fde14d97f2bc6a71)
+
+### 🎉 New features
+
+- Added fig to introspection script ([#3727](https://github.com/expo/expo-cli/issues/3727))
+
+### 🧹 Chores
+
+- [cli] Skip checking for latest expo-cli version on EAS Build
+- Drop template sw file ([#3728](https://github.com/expo/expo-cli/issues/3728))
+
+### 📦 Packages updated
+
+- @expo/dev-tools@0.13.112
+- expo-cli@4.9.1
+- @expo/next-adapter@3.0.3
+- @expo/webpack-config@0.13.3
+- xdl@59.0.52
+
 ## [Wed, 28 Jul 2021 13:48:31 -0700](https://github.com/expo/expo-cli/commit/911c052e83d10b73b2a3971c9ec6c5eb26abba08)
 
 ### 🛠 Breaking changes
