@@ -602,31 +602,32 @@ export async function activateEmulatorWindowAsync(device: Pick<Device, 'type' | 
   }
 }
 
+/**
+ * @param device Android device to open on
+ * @param props.launchActivity Activity to launch `[application identifier]/.[main activity name]`, ex: `com.bacon.app/.MainActivity`
+ */
 export async function openAppAsync(
   device: Pick<Device, 'pid' | 'type'>,
   {
-    packageName,
-    mainActivity,
+    launchActivity,
   }: {
-    packageName: string;
-    mainActivity: string;
+    launchActivity: string;
   }
 ) {
-  const targetActivityURI = mainActivity.includes('.')
-    ? mainActivity
-    : [packageName, mainActivity].filter(Boolean).join('/.');
-
   const openProject = await getAdbOutputAsync(
     adbPidArgs(
       device.pid,
       'shell',
       'am',
       'start',
+      '-a',
+      'android.intent.action.RUN',
       // FLAG_ACTIVITY_SINGLE_TOP -- If set, the activity will not be launched if it is already running at the top of the history stack.
       '-f',
       '0x20000000',
+      // Activity to open first: com.bacon.app/.MainActivity
       '-n',
-      targetActivityURI
+      launchActivity
     )
   );
 
