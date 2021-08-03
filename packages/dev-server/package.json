@@ -49,6 +49,7 @@
   "devDependencies": {
     "@types/connect": "^3.4.33",
     "connect": "^3.7.0",
+    "metro-inspector-proxy": "^0.59.0",
     "node-fetch": "^2.6.0"
   },
   "publishConfig": {
