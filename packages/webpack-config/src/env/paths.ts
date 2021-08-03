@@ -61,10 +61,6 @@ function parsePaths(
     return path.resolve(productionPath, ...props);
   }
 
-  function getIncludeModule(...props: string[]): string {
-    return path.resolve(modulesPath, ...props);
-  }
-
   let appMain: string | null = null;
   try {
     appMain = getEntryPoint(
@@ -78,7 +74,6 @@ function parsePaths(
 
   return {
     absolute,
-    includeModule: getIncludeModule,
     packageJson: packageJsonPath,
     root: path.resolve(inputProjectRoot),
     appMain,

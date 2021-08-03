@@ -98,7 +98,6 @@ export interface FilePathsFolder {
 }
 export interface FilePaths {
   absolute: PathResolver;
-  includeModule: PathResolver;
   template: FilePathsFolder;
   production: FilePathsFolder;
   packageJson: string;
