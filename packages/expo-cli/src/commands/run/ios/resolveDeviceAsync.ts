@@ -30,7 +30,7 @@ async function getBuildDestinationsAsync({ osType }: { osType?: string } = {}) {
 }
 
 export async function resolveDeviceAsync(
-  device: string | boolean | undefined,
+  device?: string | boolean,
   { osType }: { osType?: string } = {}
 ): Promise<SimControl.SimulatorDevice | SimControl.XCTraceDevice> {
   if (!(await profileMethod(Simulator.ensureXcodeCommandLineToolsInstalledAsync)())) {
