@@ -15,12 +15,10 @@ import WebpackDevServer from 'webpack-dev-server';
 import {
   choosePortAsync,
   ip,
-  learnMore,
   Logger,
   ProjectSettings,
   ProjectUtils,
   UrlUtils,
-  Versions,
   WebpackCompiler,
   WebpackEnvironment,
   XDLError,
@@ -74,7 +72,6 @@ export type WebEnvironment = {
   pwa: boolean;
   mode: 'development' | 'production' | 'test' | 'none';
   https: boolean;
-  offline?: boolean;
 };
 
 export async function restartAsync(
@@ -349,17 +346,11 @@ export async function bundleAsync(projectRoot: string, options?: BundlingOptions
     mode: 'production',
   });
 
-  if (typeof env.offline === 'undefined') {
-    try {
-      const expoConfig = getConfig(projectRoot, { skipSDKVersionRequirement: true });
-      // If offline isn't defined, check the version and keep offline enabled for SDK 38 and prior
-      if (expoConfig.exp.sdkVersion)
-        if (Versions.lteSdkVersion(expoConfig.exp, '38.0.0')) {
-          env.offline = true;
-        }
-    } catch {
-      // Ignore the error thrown by projects without an Expo config.
-    }
+  // @ts-ignore
+  if (typeof env.offline !== 'undefined') {
+    throw new Error(
+      'offline support must be added manually: https://expo.fyi/enabling-web-service-workers'
+    );
   }
 
   if (fullOptions.clear) {
@@ -369,21 +360,6 @@ export async function bundleAsync(projectRoot: string, options?: BundlingOptions
   const config = await createWebpackConfigAsync(env, fullOptions);
 
   await bundleWebAppAsync(projectRoot, config);
-
-  const hasSWPlugin = config.plugins?.find(item => {
-    return item?.constructor?.name === 'GenerateSW';
-  });
-  if (!hasSWPlugin) {
-    ProjectUtils.logInfo(
-      projectRoot,
-      WEBPACK_LOG_TAG,
-      chalk.green(
-        `Offline (PWA) support is not enabled in this build. ${chalk.dim(
-          learnMore('https://expo.fyi/enabling-web-service-workers')
-        )}\n`
-      )
-    );
-  }
 }
 
 export async function getProjectNameAsync(projectRoot: string): Promise<string> {
