@@ -136,7 +136,7 @@ export default function withUnimodules(
     // Process application code with Babel.
     babelLoader,
 
-    supportsFontLoading && createFontLoader(locations.root, locations.includeModule),
+    supportsFontLoading && createFontLoader(locations.root),
   ].filter(Boolean);
 
   webpackConfig.module = {

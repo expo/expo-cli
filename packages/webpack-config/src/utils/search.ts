@@ -7,7 +7,6 @@ import {
   Configuration,
   Entry,
   Plugin,
-  Rule,
   RuleSetCondition,
   RuleSetLoader,
   RuleSetRule,
@@ -88,7 +87,7 @@ export function getRules(config: AnyConfiguration): RuleItem[] {
  * @param config
  * @category utils
  */
-export function getExpoBabelLoader(config: AnyConfiguration): Rule | null {
+export function getExpoBabelLoader(config: AnyConfiguration): RuleSetRule | null {
   const { rules = [] } = config.module || {};
   const currentRules = getRulesAsItems(getRulesFromRules(rules));
   for (const ruleItem of currentRules) {

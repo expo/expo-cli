@@ -1,5 +1,5 @@
 import { getPossibleProjectRoot } from '@expo/config/paths';
-import { Rule } from 'webpack';
+import { RuleSetRule } from 'webpack';
 
 import { getConfig, getPaths } from '../env';
 import { Environment } from '../types';
@@ -24,7 +24,7 @@ const imageInlineSizeLimit = parseInt(process.env.IMAGE_INLINE_SIZE_LIMIT || '10
  * @category loaders
  */
 // TODO: Bacon: Move SVG
-export const imageLoaderRule: Rule = {
+export const imageLoaderRule: RuleSetRule = {
   test: /\.(gif|jpe?g|png|svg)$/,
   use: {
     loader: require.resolve('url-loader'),
@@ -46,7 +46,7 @@ export const imageLoaderRule: Rule = {
  *
  * @category loaders
  */
-export const fallbackLoaderRule: Rule = {
+export const fallbackLoaderRule: RuleSetRule = {
   loader: require.resolve('file-loader'),
   // Exclude `js` files to keep "css" loader working as it injects
   // its runtime that would otherwise be processed through "file" loader.
@@ -67,7 +67,7 @@ export const fallbackLoaderRule: Rule = {
  *
  * @category loaders
  */
-export const styleLoaderRule: Rule = {
+export const styleLoaderRule: RuleSetRule = {
   test: /\.(css)$/,
   use: [require.resolve('style-loader'), require.resolve('css-loader')],
 };
@@ -80,20 +80,20 @@ export const styleLoaderRule: Rule = {
  */
 export default function createAllLoaders(
   env: Pick<Environment, 'projectRoot' | 'locations' | 'mode' | 'config' | 'platform' | 'babel'>
-): Rule[] {
+): RuleSetRule[] {
   env.projectRoot = env.projectRoot || getPossibleProjectRoot();
   // @ts-ignore
   env.config = env.config || getConfig(env);
   // @ts-ignore
   env.locations = env.locations || getPaths(env.projectRoot, env);
 
-  const { root, includeModule, template } = env.locations;
+  const { root, template } = env.locations;
 
   return [
     getHtmlLoaderRule(template.folder),
     imageLoaderRule,
     getBabelLoaderRule(env),
-    createFontLoader(root, includeModule),
+    createFontLoader(root),
     styleLoaderRule,
     // This needs to be the last loader
     fallbackLoaderRule,
@@ -109,7 +109,7 @@ export default function createAllLoaders(
  */
 export function getBabelLoaderRule(
   env: Pick<Environment, 'projectRoot' | 'config' | 'locations' | 'mode' | 'platform' | 'babel'>
-): Rule {
+): RuleSetRule {
   env.projectRoot = env.projectRoot || getPossibleProjectRoot();
   // @ts-ignore
   env.config = env.config || getConfig(env);
@@ -139,7 +139,7 @@ export function getBabelLoaderRule(
  * @param exclude
  * @category loaders
  */
-export function getHtmlLoaderRule(exclude: string): Rule {
+export function getHtmlLoaderRule(exclude: string): RuleSetRule {
   return {
     test: /\.html$/,
     use: [require.resolve('html-loader')],

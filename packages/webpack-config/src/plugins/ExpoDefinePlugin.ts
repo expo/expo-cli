@@ -1,4 +1,4 @@
-import { ExpoConfig } from '@expo/config';
+import type { ExpoConfig } from '@expo/config';
 import { boolish } from 'getenv';
 import semver from 'semver';
 import { DefinePlugin as OriginalDefinePlugin } from 'webpack';

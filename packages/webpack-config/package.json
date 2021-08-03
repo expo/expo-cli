@@ -42,6 +42,7 @@
   "dependencies": {
     "@babel/core": "7.9.0",
     "@expo/config": "5.0.6",
+    "debug": "^4.3.2",
     "babel-loader": "8.1.0",
     "chalk": "^4.0.0",
     "clean-webpack-plugin": "^3.0.0",
@@ -75,6 +76,7 @@
     "@types/react-dev-utils": "~9.0.4",
     "@types/terser-webpack-plugin": "~3.0.0",
     "@types/webpack": "4.41.18",
+    "@types/debug": "^4.1.7",
     "@types/webpack-dev-server": "3.11.0",
     "@types/webpack-manifest-plugin": "~2.1.0",
     "jest-puppeteer": "^4.4.0",
