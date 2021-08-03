@@ -26,6 +26,8 @@ export const INTERNAL_CALLSITES_REGEX = new RegExp(
     '/metro/.*/polyfills/require.js$',
     // Hide frames related to a fast refresh.
     '/metro/.*/lib/bundle-modules/.+\\.js$',
+    '/metro/.*/lib/bundle-modules/.+\\.js$',
+    'node_modules/react-native/Libraries/Utilities/HMRClient.js$',
     'node_modules/eventemitter3/index.js',
     'node_modules/event-target-shim/dist/.+\\.js$',
     // Ignore the log forwarder used in the Expo Go app
@@ -39,6 +41,8 @@ export const INTERNAL_CALLSITES_REGEX = new RegExp(
     'node_modules/promise/setimmediate/.+\\.js$',
     // Babel helpers that implement language features
     'node_modules/@babel/runtime/.+\\.js$',
+    // Block native code invocations
+    `\\[native code\\]`,
   ].join('|')
 );
 
