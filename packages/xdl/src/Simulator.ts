@@ -11,6 +11,7 @@ import semver from 'semver';
 import {
   Analytics,
   BundleIdentifier,
+  CoreSimulator,
   delayAsync,
   downloadAppAsync,
   learnMore,
@@ -29,8 +30,8 @@ import { profileMethod } from './utils/profileMethod';
 
 let _lastUrl: string | null = null;
 
+const EXPO_GO_BUNDLE_IDENTIFIER = 'host.exp.Exponent';
 const SUGGESTED_XCODE_VERSION = `${Xcode.minimumVersion}.0`;
-
 const INSTALL_WARNING_TIMEOUT = 60 * 1000;
 
 export function isPlatformSupported() {
@@ -387,7 +388,10 @@ export async function isExpoClientInstalledOnSimulatorAsync({
 }: {
   udid: string;
 }): Promise<boolean> {
-  return !!(await SimControl.getContainerPathAsync(udid, 'host.exp.Exponent'));
+  return !!(await CoreSimulator.getContainerPathAsync({
+    udid,
+    bundleIdentifier: EXPO_GO_BUNDLE_IDENTIFIER,
+  }));
 }
 
 export async function waitForExpoClientInstalledOnSimulatorAsync({
@@ -402,6 +406,7 @@ export async function waitForExpoClientInstalledOnSimulatorAsync({
     return await waitForExpoClientInstalledOnSimulatorAsync({ udid });
   }
 }
+
 export async function waitForExpoClientUninstalledOnSimulatorAsync({
   udid,
 }: {
@@ -420,7 +425,10 @@ export async function expoVersionOnSimulatorAsync({
 }: {
   udid: string;
 }): Promise<string | null> {
-  const localPath = await SimControl.getContainerPathAsync(udid, 'host.exp.Exponent');
+  const localPath = await CoreSimulator.getContainerPathAsync({
+    udid,
+    bundleIdentifier: EXPO_GO_BUNDLE_IDENTIFIER,
+  });
   if (!localPath) {
     return null;
   }
@@ -541,7 +549,7 @@ export async function installExpoOnSimulatorAsync({
 export async function uninstallExpoAppFromSimulatorAsync({ udid }: { udid?: string } = {}) {
   try {
     Logger.global.info('Uninstalling Expo Go from iOS simulator.');
-    await SimControl.uninstallAsync({ udid, bundleIdentifier: 'host.exp.Exponent' });
+    await SimControl.uninstallAsync({ udid, bundleIdentifier: EXPO_GO_BUNDLE_IDENTIFIER });
   } catch (e) {
     if (!e.message?.includes('No devices are booted.')) {
       console.error(e);
@@ -622,7 +630,7 @@ async function openUrlInSimulatorSafeAsync({
   }
   Logger.global.info(`\u203A Opening ${chalk.underline(url)} on ${chalk.bold(simulator.name)}`);
 
-  let bundleIdentifier = 'host.exp.Exponent';
+  let bundleIdentifier = EXPO_GO_BUNDLE_IDENTIFIER;
   try {
     if (devClient) {
       bundleIdentifier = await profileMethod(BundleIdentifier.configureBundleIdentifierAsync)(
@@ -694,7 +702,7 @@ async function assertDevClientInstalledAsync(
   simulator: Pick<SimControl.SimulatorDevice, 'udid' | 'name'>,
   bundleIdentifier: string
 ): Promise<void> {
-  if (!(await SimControl.getContainerPathAsync(simulator.udid, bundleIdentifier))) {
+  if (!(await CoreSimulator.getContainerPathAsync({ udid: simulator.udid, bundleIdentifier }))) {
     throw new Error(
       `The development client (${bundleIdentifier}) for this project is not installed. ` +
         `Please build and install the client on the simulator first.\n${learnMore(

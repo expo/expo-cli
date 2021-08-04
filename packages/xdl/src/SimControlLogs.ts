@@ -3,7 +3,7 @@ import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
 import path from 'path';
 import wrapAnsi from 'wrap-ansi';
 
-import { Logger, SimControl } from './internal';
+import { CoreSimulator, Logger } from './internal';
 
 const forks: Record<string, ChildProcessWithoutNullStreams> = {};
 
@@ -257,7 +257,7 @@ export async function getImageNameFromBundleIdentifierAsync(
   udid: string,
   bundleIdentifier: string
 ): Promise<string | null> {
-  const containerPath = await SimControl.getContainerPathAsync(udid, bundleIdentifier);
+  const containerPath = await CoreSimulator.getContainerPathAsync({ udid, bundleIdentifier });
 
   if (containerPath) {
     return getImageNameFromContainerPath(containerPath);
