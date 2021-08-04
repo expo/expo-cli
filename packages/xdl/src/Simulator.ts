@@ -250,7 +250,7 @@ export async function ensureSimulatorOpenAsync(
 }
 
 async function getBestSimulatorAsync({ osType }: { osType?: string }): Promise<string> {
-  const simulatorOpenedByApp = await isSimulatorBootedAsync();
+  const simulatorOpenedByApp = await CoreSimulator.getDeviceInfoAsync();
 
   // This should prevent opening a second simulator in the chance that default
   // simulator doesn't match what the Simulator app would open by default.
@@ -308,6 +308,7 @@ async function getBootedSimulatorsAsync(): Promise<SimControl.SimulatorDevice[]>
   return simulators.filter(device => device.state === 'Booted');
 }
 
+// TODO: Delete
 export async function isSimulatorBootedAsync({
   udid,
 }: {

@@ -156,7 +156,6 @@ export async function bootAsync({ udid }: { udid: string }): Promise<SimulatorDe
     }
   }
   return await profileMethod(CoreSimulator.getDeviceInfoAsync)({ udid });
-  // return await profileMethod(isSimulatorBootedAsync)({ udid });
 }
 
 export async function getBootedSimulatorsAsync(): Promise<SimulatorDevice[]> {
@@ -164,20 +163,6 @@ export async function getBootedSimulatorsAsync(): Promise<SimulatorDevice[]> {
   return Object.values(simulatorDeviceInfo.devices).reduce((prev, runtime) => {
     return prev.concat(runtime.filter(device => device.state === 'Booted'));
   }, []);
-}
-
-export async function isSimulatorBootedAsync({
-  udid,
-}: {
-  udid?: string;
-}): Promise<SimulatorDevice | null> {
-  // Simulators can be booted even if the app isn't running :(
-  const devices = await getBootedSimulatorsAsync();
-  if (udid) {
-    return devices.find(bootedDevice => bootedDevice.udid === udid) ?? null;
-  } else {
-    return devices[0] ?? null;
-  }
 }
 
 export async function installAsync(options: { udid: string; dir: string }): Promise<any> {

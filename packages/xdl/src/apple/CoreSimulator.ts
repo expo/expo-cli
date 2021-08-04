@@ -60,13 +60,26 @@ async function resolveUdidAsync(udid: string): Promise<string> {
   return udid;
 }
 
-export async function getDeviceInfoAsync({ udid }: { udid: string }): Promise<SimulatorDevice> {
-  udid = await resolveUdidAsync(udid);
+export async function getDeviceInfoAsync({
+  udid,
+}: { udid?: string } = {}): Promise<SimulatorDevice> {
+  if (!udid || udid === 'booted') {
+    const bootedDevice = await getBootedDeviceAsync();
+    if (!bootedDevice) {
+      throw new CoreSimulatorError('No devices are booted.', 'INVALID_UDID');
+    }
+    const deviceDirectory = await getDirectoryForDeviceAsync(bootedDevice.UDID);
+    return devicePlistToSimulatorDevice(deviceDirectory, bootedDevice);
+  }
+
   const deviceDirectory = await getDirectoryForDeviceAsync(udid);
   const plistPath = path.join(deviceDirectory, 'device.plist');
   // The plist is stored in binary format
   const data = await parseBinaryPlistAsync(plistPath);
+  return devicePlistToSimulatorDevice(deviceDirectory, data);
+}
 
+export function devicePlistToSimulatorDevice(deviceDirectory: string, data: any): SimulatorDevice {
   const runtimeSuffix = data.runtime.split('com.apple.CoreSimulator.SimRuntime.').pop()!;
   // Create an array [tvOS, 13, 4]
   const [osType, ...osVersionComponents] = runtimeSuffix.split('-');
