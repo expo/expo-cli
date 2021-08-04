@@ -5,7 +5,8 @@ import { exec, execSync } from 'child_process';
 import path from 'path';
 import { promisify } from 'util';
 
-import { Logger, XDLError } from './internal';
+import { CoreSimulator, Logger, XDLError } from './internal';
+import { profileMethod } from './utils/profileMethod';
 
 const execAsync = promisify(exec);
 type DeviceState = 'Shutdown' | 'Booted';
@@ -142,6 +143,10 @@ export async function openBundleIdAsync(options: {
 
 // This will only boot in headless mode if the Simulator app is not running.
 export async function bootAsync({ udid }: { udid: string }): Promise<SimulatorDevice | null> {
+  const device = await CoreSimulator.getDeviceInfoAsync({ udid }).catch(() => null);
+  if (device?.state === 'Booted') {
+    return device;
+  }
   try {
     // Skip logging since this is likely to fail.
     await xcrunAsync(['simctl', 'boot', udid]);
@@ -150,7 +155,8 @@ export async function bootAsync({ udid }: { udid: string }): Promise<SimulatorDe
       throw error;
     }
   }
-  return await isSimulatorBootedAsync({ udid });
+  return await profileMethod(CoreSimulator.getDeviceInfoAsync)({ udid });
+  // return await profileMethod(isSimulatorBootedAsync)({ udid });
 }
 
 export async function getBootedSimulatorsAsync(): Promise<SimulatorDevice[]> {

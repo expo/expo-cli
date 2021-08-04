@@ -216,7 +216,7 @@ export async function ensureSimulatorOpenAsync(
   tryAgain: boolean = true
 ): Promise<SimControl.SimulatorDevice> {
   // Yes, simulators can be booted even if the app isn't running, obviously we'd never want this.
-  if (!(await SimControl.isSimulatorAppRunningAsync())) {
+  if (!(await profileMethod(SimControl.isSimulatorAppRunningAsync)())) {
     Logger.global.info(`\u203A Opening the iOS simulator, this might take a moment.`);
 
     // In theory this would ensure the correct simulator is booted as well.
@@ -231,10 +231,10 @@ export async function ensureSimulatorOpenAsync(
 
   // Use a default simulator if none was specified
   if (!udid) {
-    udid = await getBestSimulatorAsync({ osType });
+    udid = await profileMethod(getBestSimulatorAsync)({ osType });
   }
 
-  const bootedDevice = await waitForDeviceToBootAsync({ udid });
+  const bootedDevice = await profileMethod(waitForDeviceToBootAsync)({ udid });
 
   if (!bootedDevice) {
     // Give it a second chance, this might not be needed but it could potentially lead to a better UX on slower devices.
@@ -346,9 +346,9 @@ async function waitForActionAsync<T>({
   let complete: T;
   const start = Date.now();
   do {
-    await delayAsync(interval);
-
     complete = await action();
+
+    await delayAsync(interval);
     if (Date.now() - start > maxWaitTime) {
       break;
     }
@@ -368,9 +368,7 @@ async function waitForDeviceToBootAsync({
   udid,
 }: Pick<SimControl.SimulatorDevice, 'udid'>): Promise<SimControl.SimulatorDevice | null> {
   return waitForActionAsync<SimControl.SimulatorDevice | null>({
-    action: () => {
-      return SimControl.bootAsync({ udid });
-    },
+    action: () => SimControl.bootAsync({ udid }),
   });
 }
 

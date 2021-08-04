@@ -3,6 +3,7 @@ import { sync as globSync } from 'glob';
 import os from 'os';
 import path from 'path';
 
+import { SimulatorDevice } from '../SimControl';
 import { Logger } from '../internal';
 import { parseBinaryPlistAsync } from '../utils/parseBinaryPlistAsync';
 
@@ -45,6 +46,78 @@ async function getDirectoryForDeviceAsync(udid: string): Promise<string> {
     throw new CoreSimulatorError(errorMessage, 'INVALID_UDID');
   }
   return deviceFolder;
+}
+
+async function resolveUdidAsync(udid: string): Promise<string> {
+  if (udid === 'booted') {
+    const bootedDevice = await getBootedDeviceAsync();
+    if (!bootedDevice) {
+      throw new CoreSimulatorError('No devices are booted.', 'INVALID_UDID');
+    }
+    udid = bootedDevice.UDID;
+    Logger.global.debug('Resolved booted device: ' + udid);
+  }
+  return udid;
+}
+
+export async function getDeviceInfoAsync({ udid }: { udid: string }): Promise<SimulatorDevice> {
+  udid = await resolveUdidAsync(udid);
+  const deviceDirectory = await getDirectoryForDeviceAsync(udid);
+  const plistPath = path.join(deviceDirectory, 'device.plist');
+  // The plist is stored in binary format
+  const data = await parseBinaryPlistAsync(plistPath);
+
+  const runtimeSuffix = data.runtime.split('com.apple.CoreSimulator.SimRuntime.').pop()!;
+  // Create an array [tvOS, 13, 4]
+  const [osType, ...osVersionComponents] = runtimeSuffix.split('-');
+  // Join the end components [13, 4] -> '13.4'
+  const osVersion = osVersionComponents.join('.');
+
+  return {
+    ...data,
+    /**
+     * '/Users/name/Library/Developer/CoreSimulator/Devices/00E55DC0-0364-49DF-9EC6-77BE587137D4/data'
+     */
+    dataPath: path.join(deviceDirectory, 'data'),
+    /**
+     * '/Users/name/Library/Logs/CoreSimulator/00E55DC0-0364-49DF-9EC6-77BE587137D4'
+     */
+    logPath: path.join(os.homedir(), 'Library/Logs/CoreSimulator', data.UDID),
+    /**
+     * '00E55DC0-0364-49DF-9EC6-77BE587137D4'
+     */
+    udid: data.UDID,
+    /**
+     * com.apple.CoreSimulator.SimRuntime.tvOS-13-4
+     */
+    runtime: data.runtime,
+    isAvailable: !data.isDeleted,
+    /**
+     * 'com.apple.CoreSimulator.SimDeviceType.Apple-TV-1080p'
+     */
+    deviceTypeIdentifier: data.deviceType,
+    state: data.state === DeviceState.BOOTED ? 'Booted' : 'Shutdown',
+    /**
+     * 'Apple TV'
+     */
+    name: data.name,
+
+    /**
+     * 'iOS'
+     */
+    osType: osType as SimulatorDevice['osType'],
+    /**
+     * '13.4'
+     */
+    osVersion,
+    /**
+     * 'iPhone 11 (13.6)'
+     */
+    windowName: `${data.name} (${osVersion})`,
+
+    // Compare state stored under `state` to 3 (booted)
+    isBooted: data.state === DeviceState.BOOTED,
+  };
 }
 
 /**
@@ -101,14 +174,7 @@ export async function getContainerPathAsync({
   udid: string;
   bundleIdentifier: string;
 }): Promise<string | null> {
-  if (udid === 'booted') {
-    const bootedDevice = await getBootedDeviceAsync();
-    if (!bootedDevice) {
-      throw new CoreSimulatorError('No devices are booted.', 'INVALID_UDID');
-    }
-    udid = bootedDevice.UDID;
-    Logger.global.debug('Resolved booted device: ' + udid);
-  }
+  udid = await resolveUdidAsync(udid);
   // Like: `/Users/evanbacon/Library/Developer/CoreSimulator/Devices/EFEEA6EF-E3F5-4EDE-9B72-29EAFA7514AE/data/Containers/Bundle/Application/`
   const appsFolder = path.join(
     await getDirectoryForDeviceAsync(udid),
