@@ -1,6 +1,5 @@
 import { readExpRcAsync } from '@expo/config';
 import * as path from 'path';
-import { promisify } from 'util';
 
 import {
   Android,
@@ -51,15 +50,13 @@ async function connectToNgrokAsync(
   ngrokPid: number | null | undefined,
   attempts: number = 0
 ): Promise<string> {
-  const ngrokConnectAsync = promisify(ngrok.connect);
-  const ngrokKillAsync = promisify(ngrok.kill);
-
   try {
     const configPath = getNgrokConfigPath();
     const hostname = await hostnameAsync();
-    const url = await ngrokConnectAsync({
+    const url = await ngrok.connect({
       hostname,
       configPath,
+      onStatusChange: handleStatusChange.bind(null, projectRoot),
       ...args,
     });
     return url;
@@ -85,7 +82,7 @@ async function connectToNgrokAsync(
             ProjectUtils.logDebug(projectRoot, 'expo', `Couldn't kill ngrok with PID ${ngrokPid}`);
           }
         } else {
-          await ngrokKillAsync();
+          await ngrok.kill();
         }
       } else {
         // Change randomness to avoid conflict if killing ngrok didn't help
@@ -187,7 +184,7 @@ export async function startTunnelsAsync(
       await ProjectSettings.setPackagerInfoAsync(projectRoot, {
         expoServerNgrokUrl,
         packagerNgrokUrl,
-        ngrokPid: ngrok.process().pid,
+        ngrokPid: ngrok.getActiveProcess().pid,
       });
 
       startedTunnelsSuccessfully = true;
@@ -201,21 +198,6 @@ export async function startTunnelsAsync(
         },
         'Tunnel ready.'
       );
-
-      ngrok.addListener('statuschange', (status: string) => {
-        if (status === 'reconnecting') {
-          ProjectUtils.logError(
-            projectRoot,
-            'expo',
-            'We noticed your tunnel is having issues. ' +
-              'This may be due to intermittent problems with our tunnel provider. ' +
-              'If you have trouble connecting to your app, try to Restart the project, ' +
-              'or switch Host to LAN.'
-          );
-        } else if (status === 'online') {
-          ProjectUtils.logInfo(projectRoot, 'expo', 'Tunnel connected.');
-        }
-      });
     })(),
   ]);
 }
@@ -226,15 +208,13 @@ export async function stopTunnelsAsync(projectRoot: string): Promise<void> {
   if (!ngrok) {
     return;
   }
-  const ngrokKillAsync = promisify(ngrok.kill);
 
   // This will kill all ngrok tunnels in the process.
   // We'll need to change this if we ever support more than one project
   // open at a time in XDE.
   const packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
-  const ngrokProcess = ngrok.process();
+  const ngrokProcess = ngrok.getActiveProcess();
   const ngrokProcessPid = ngrokProcess ? ngrokProcess.pid : null;
-  ngrok.removeAllListeners('statuschange');
   if (packagerInfo.ngrokPid && packagerInfo.ngrokPid !== ngrokProcessPid) {
     // Ngrok is running in some other process. Kill at the os level.
     try {
@@ -248,7 +228,7 @@ export async function stopTunnelsAsync(projectRoot: string): Promise<void> {
     }
   } else {
     // Ngrok is running from the current process. Kill using ngrok api.
-    await ngrokKillAsync();
+    await ngrok.kill();
   }
   await ProjectSettings.setPackagerInfoAsync(projectRoot, {
     expoServerNgrokUrl: null,
@@ -256,4 +236,19 @@ export async function stopTunnelsAsync(projectRoot: string): Promise<void> {
     ngrokPid: null,
   });
   await Android.stopAdbReverseAsync(projectRoot);
+}
+
+function handleStatusChange(projectRoot: string, status: string) {
+  if (status === 'closed') {
+    ProjectUtils.logError(
+      projectRoot,
+      'expo',
+      'We noticed your tunnel is having issues. ' +
+        'This may be due to intermittent problems with our tunnel provider. ' +
+        'If you have trouble connecting to your app, try to Restart the project, ' +
+        'or switch Host to LAN.'
+    );
+  } else if (status === 'connected') {
+    ProjectUtils.logInfo(projectRoot, 'expo', 'Tunnel connected.');
+  }
 }
