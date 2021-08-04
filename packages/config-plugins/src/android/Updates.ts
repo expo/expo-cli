@@ -88,13 +88,11 @@ export function setUpdatesConfig(
   );
 
   const updateUrl = getUpdateUrl(config, username);
-  console.log({ updateUrl });
   if (updateUrl) {
     addMetaDataItemToMainApplication(mainApplication, Config.UPDATE_URL, updateUrl);
   } else {
     removeMetaDataItemFromMainApplication(mainApplication, Config.UPDATE_URL);
   }
-  console.log({ mainApplication });
 
   return setVersionsConfig(config, androidManifest);
 }
