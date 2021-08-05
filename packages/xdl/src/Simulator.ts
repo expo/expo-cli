@@ -297,20 +297,13 @@ async function getBestSimulatorAsync({ osType }: { osType?: string }): Promise<s
 async function getSelectableSimulatorsAsync({ osType = 'iOS' }: { osType?: string } = {}): Promise<
   SimControl.SimulatorDevice[]
 > {
-  const simulators = await getSimulatorsAsync();
+  const simulators = await CoreSimulator.listDevicesAsync();
   return simulators.filter(device => device.isAvailable && device.osType === osType);
-}
-
-async function getSimulatorsAsync(): Promise<SimControl.SimulatorDevice[]> {
-  const simulatorDeviceInfo = await SimControl.listAsync('devices');
-  return Object.values(simulatorDeviceInfo.devices).reduce((prev, runtime) => {
-    return prev.concat(runtime);
-  }, []);
 }
 
 // TODO: Delete
 async function getBootedSimulatorsAsync(): Promise<SimControl.SimulatorDevice[]> {
-  const simulators = await getSimulatorsAsync();
+  const simulators = await CoreSimulator.listDevicesAsync();
   return simulators.filter(device => device.state === 'Booted');
 }
 
