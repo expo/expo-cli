@@ -802,9 +802,6 @@ export async function openProjectAsync({
   });
 
   if (result.success) {
-    // run out of sync
-    // activateSimulatorWindowAsync();
-
     return {
       success: true,
       url: projectUrl,
