@@ -6,6 +6,7 @@ import path from 'path';
 import { promisify } from 'util';
 
 import { CoreSimulator, Logger, XDLError } from './internal';
+import { delayAsync } from './utils/delayAsync';
 import { profileMethod } from './utils/profileMethod';
 
 const execAsync = promisify(exec);
@@ -130,18 +131,78 @@ export async function getContainerPathAsync(
   }
 }
 
+async function waitForActionAsync<T>({
+  action,
+  interval = 100,
+  maxWaitTime = 20000,
+}: {
+  action: () => T | Promise<T>;
+  interval?: number;
+  maxWaitTime?: number;
+}): Promise<T> {
+  let complete: T;
+  const start = Date.now();
+  do {
+    complete = await action();
+
+    await delayAsync(interval);
+    if (Date.now() - start > maxWaitTime) {
+      break;
+    }
+  } while (!complete);
+
+  return complete;
+}
+
+export async function waitForSimulatorAppToStart(): Promise<boolean> {
+  return waitForActionAsync<boolean>({
+    interval: 50,
+    action: isSimulatorAppRunningAsync,
+  });
+}
+
+export async function waitForDeviceToBootAsync({
+  udid,
+}: Pick<SimulatorDevice, 'udid'>): Promise<SimulatorDevice | null> {
+  return waitForActionAsync<SimulatorDevice | null>({
+    action: () => bootAsync({ udid }),
+  });
+}
+
+export class TimeoutError extends Error {}
+
 export async function openURLAsync(options: { udid?: string; url: string }): Promise<void> {
   try {
     // Skip logging since this is likely to fail.
     await xcrunAsync(['simctl', 'openurl', deviceUDIDOrBooted(options.udid), options.url]);
   } catch (error) {
-    if (!error.stderr?.match(/Unable to lookup in current state: Shutting Down/)) {
+    if (!error.stderr?.match(/Unable to lookup in current state: Shut/)) {
       throw error;
     }
-    // If the device was in a weird in-between state ("Shutting Down"), then attempt to reboot it and try again.
+    // If the device was in a weird in-between state ("Shutting Down" or "Shutdown"), then attempt to reboot it and try again.
     // This can happen when quitting the Simulator app, and immediately pressing `i` to reopen the project.
+
+    // First boot the simulator
     await runBootAsync({ udid: deviceUDIDOrBooted(options.udid) });
+
+    // Finally, try again...
     return await openURLAsync(options);
+  }
+}
+
+export async function ensureSimulatorAppRunningAsync({ udid }: { udid?: string }) {
+  // Yes, simulators can be booted even if the app isn't running, obviously we'd never want this.
+  if (!(await isSimulatorAppRunningAsync())) {
+    Logger.global.info(`\u203A Opening the iOS simulator, this might take a moment.`);
+
+    // In theory this would ensure the correct simulator is booted as well.
+    // This isn't theory though, this is Xcode.
+    await openSimulatorAppAsync({ udid });
+    if (!(await waitForSimulatorAppToStart())) {
+      throw new TimeoutError(
+        `Simulator app did not open fast enough. Try opening Simulator first, then running your app.`
+      );
+    }
   }
 }
 

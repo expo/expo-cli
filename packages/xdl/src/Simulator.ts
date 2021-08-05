@@ -135,8 +135,6 @@ export async function ensureXcodeCommandLineToolsInstalledAsync(): Promise<boole
   return _isXcodeCLIInstalled;
 }
 
-class TimeoutError extends Error {}
-
 async function getSimulatorAppIdAsync(): Promise<string | null> {
   let result;
   try {
@@ -215,20 +213,6 @@ export async function ensureSimulatorOpenAsync(
   { udid, osType }: { udid?: string; osType?: string } = {},
   tryAgain: boolean = true
 ): Promise<SimControl.SimulatorDevice> {
-  // Yes, simulators can be booted even if the app isn't running, obviously we'd never want this.
-  if (!(await profileMethod(SimControl.isSimulatorAppRunningAsync)())) {
-    Logger.global.info(`\u203A Opening the iOS simulator, this might take a moment.`);
-
-    // In theory this would ensure the correct simulator is booted as well.
-    // This isn't theory though, this is Xcode.
-    await SimControl.openSimulatorAppAsync({ udid });
-    if (!(await waitForSimulatorAppToStart())) {
-      throw new TimeoutError(
-        `Simulator app did not open fast enough. Try opening Simulator first, then running your app.`
-      );
-    }
-  }
-
   // Use a default simulator if none was specified
   if (!udid) {
     // If a simulator is open, side step the entire booting sequence.
@@ -241,7 +225,7 @@ export async function ensureSimulatorOpenAsync(
     udid = await getBestUnbootedSimulatorAsync({ osType });
   }
 
-  const bootedDevice = await profileMethod(waitForDeviceToBootAsync)({ udid });
+  const bootedDevice = await profileMethod(SimControl.waitForDeviceToBootAsync)({ udid });
 
   if (!bootedDevice) {
     // Give it a second chance, this might not be needed but it could potentially lead to a better UX on slower devices.
@@ -249,7 +233,7 @@ export async function ensureSimulatorOpenAsync(
       return await ensureSimulatorOpenAsync({ udid, osType }, false);
     }
     // TODO: We should eliminate all needs for a timeout error, it's bad UX to get an error about the simulator not starting while the user can clearly see it starting on their slow computer.
-    throw new TimeoutError(
+    throw new SimControl.TimeoutError(
       `Simulator didn't boot fast enough. Try opening Simulator first, then running your app.`
     );
   }
@@ -355,44 +339,6 @@ function _getDefaultSimulatorDeviceUDID() {
   } catch (e) {
     return null;
   }
-}
-
-async function waitForActionAsync<T>({
-  action,
-  interval = 100,
-  maxWaitTime = 20000,
-}: {
-  action: () => T | Promise<T>;
-  interval?: number;
-  maxWaitTime?: number;
-}): Promise<T> {
-  let complete: T;
-  const start = Date.now();
-  do {
-    complete = await action();
-
-    await delayAsync(interval);
-    if (Date.now() - start > maxWaitTime) {
-      break;
-    }
-  } while (!complete);
-
-  return complete;
-}
-
-async function waitForSimulatorAppToStart(): Promise<boolean> {
-  return waitForActionAsync<boolean>({
-    interval: 50,
-    action: SimControl.isSimulatorAppRunningAsync,
-  });
-}
-
-async function waitForDeviceToBootAsync({
-  udid,
-}: Pick<SimControl.SimulatorDevice, 'udid'>): Promise<SimControl.SimulatorDevice | null> {
-  return waitForActionAsync<SimControl.SimulatorDevice | null>({
-    action: () => SimControl.bootAsync({ udid }),
-  });
 }
 
 export async function activateSimulatorWindowAsync() {
@@ -611,7 +557,12 @@ export async function upgradeExpoAsync(
 
   if (_lastUrl) {
     Logger.global.info(`\u203A Opening ${chalk.underline(_lastUrl)} in Expo Go`);
-    await SimControl.openURLAsync({ udid: simulator.udid, url: _lastUrl });
+    await Promise.all([
+      // Open the Simulator.app app
+      SimControl.ensureSimulatorAppRunningAsync(simulator),
+      // Launch the project in the simulator, this can be parallelized for some reason.
+      SimControl.openURLAsync({ udid: simulator.udid, url: _lastUrl }),
+    ]);
     _lastUrl = null;
   }
 
@@ -671,10 +622,18 @@ async function openUrlInSimulatorSafeAsync({
       _lastUrl = url;
     }
 
-    await profileMethod(
-      SimControl.openURLAsync,
-      'SimControl.openURLAsync'
-    )({ url, udid: simulator.udid });
+    await Promise.all([
+      // Open the Simulator.app app, and bring it to the front
+      profileMethod(async () => {
+        await SimControl.ensureSimulatorAppRunningAsync({ udid: simulator?.udid });
+        activateSimulatorWindowAsync();
+      }, 'parallel: ensureSimulatorAppRunningAsync')(),
+      // Launch the project in the simulator, this can be parallelized for some reason.
+      profileMethod(
+        SimControl.openURLAsync,
+        'parallel: openURLAsync'
+      )({ udid: simulator.udid, url }),
+    ]);
   } catch (e) {
     if (e.status === 194) {
       // An error was encountered processing the command (domain=NSOSStatusErrorDomain, code=-10814):
@@ -844,7 +803,7 @@ export async function openProjectAsync({
 
   if (result.success) {
     // run out of sync
-    activateSimulatorWindowAsync();
+    // activateSimulatorWindowAsync();
 
     return {
       success: true,
