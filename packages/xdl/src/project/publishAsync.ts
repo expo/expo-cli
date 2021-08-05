@@ -133,15 +133,21 @@ export async function publishAsync(
     exp.android?.publishManifestPath ||
     EmbeddedAssets.shouldEmbedAssetsForExpoUpdates(projectRoot, exp, pkg, target)
   ) {
+    const sdkOrRuntimeVersion = exp.runtimeVersion
+      ? {
+          'expo-runtime-version': exp.runtimeVersion,
+        }
+      : { 'expo-sdk-version': exp.sdkVersion };
+
     [androidManifest, iosManifest] = await Promise.all([
       ExponentTools.getManifestAsync(response.url, {
-        'Exponent-SDK-Version': exp.sdkVersion,
+        ...sdkOrRuntimeVersion,
         'Exponent-Platform': 'android',
         'Expo-Release-Channel': options.releaseChannel,
         Accept: 'application/expo+json,application/json',
       }),
       ExponentTools.getManifestAsync(response.url, {
-        'Exponent-SDK-Version': exp.sdkVersion,
+        ...sdkOrRuntimeVersion,
         'Exponent-Platform': 'ios',
         'Expo-Release-Channel': options.releaseChannel,
         Accept: 'application/expo+json,application/json',
@@ -264,10 +270,15 @@ async function _handleKernelPublishedAsync({
     kernelBundleUrl = `${kernelBundleUrl}:${Config.api.port}`;
   }
   kernelBundleUrl = `${kernelBundleUrl}/@${user.username}/${exp.slug}/bundle`;
+  const sdkOrRuntimeVersion = exp.runtimeVersion
+    ? {
+        'expo-runtime-version': exp.runtimeVersion,
+      }
+    : { 'expo-sdk-version': exp.sdkVersion };
 
   if (exp.kernel?.androidManifestPath) {
     const manifest = await ExponentTools.getManifestAsync(url, {
-      'Exponent-SDK-Version': exp.sdkVersion,
+      ...sdkOrRuntimeVersion,
       'Exponent-Platform': 'android',
       Accept: 'application/expo+json,application/json',
     });
@@ -281,7 +292,7 @@ async function _handleKernelPublishedAsync({
 
   if (exp.kernel?.iosManifestPath) {
     const manifest = await ExponentTools.getManifestAsync(url, {
-      'Exponent-SDK-Version': exp.sdkVersion,
+      ...sdkOrRuntimeVersion,
       'Exponent-Platform': 'ios',
       Accept: 'application/expo+json,application/json',
     });
