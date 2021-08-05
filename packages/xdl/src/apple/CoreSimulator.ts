@@ -85,7 +85,6 @@ export function devicePlistToSimulatorDevice(deviceDirectory: string, data: any)
   const [osType, ...osVersionComponents] = runtimeSuffix.split('-');
   // Join the end components [13, 4] -> '13.4'
   const osVersion = osVersionComponents.join('.');
-
   return {
     ...data,
     /**

@@ -130,8 +130,19 @@ export async function getContainerPathAsync(
   }
 }
 
-export async function openURLAsync(options: { udid?: string; url: string }) {
-  return simctlAsync(['openurl', deviceUDIDOrBooted(options.udid), options.url]);
+export async function openURLAsync(options: { udid?: string; url: string }): Promise<void> {
+  try {
+    // Skip logging since this is likely to fail.
+    await xcrunAsync(['simctl', 'openurl', deviceUDIDOrBooted(options.udid), options.url]);
+  } catch (error) {
+    if (!error.stderr?.match(/Unable to lookup in current state: Shutting Down/)) {
+      throw error;
+    }
+    // If the device was in a weird in-between state ("Shutting Down"), then attempt to reboot it and try again.
+    // This can happen when quitting the Simulator app, and immediately pressing `i` to reopen the project.
+    await runBootAsync({ udid: deviceUDIDOrBooted(options.udid) });
+    return await openURLAsync(options);
+  }
 }
 
 export async function openBundleIdAsync(options: {
@@ -147,6 +158,11 @@ export async function bootAsync({ udid }: { udid: string }): Promise<SimulatorDe
   if (device?.state === 'Booted') {
     return device;
   }
+  await runBootAsync({ udid });
+  return await profileMethod(CoreSimulator.getDeviceInfoAsync)({ udid });
+}
+
+export async function runBootAsync({ udid }: { udid: string }) {
   try {
     // Skip logging since this is likely to fail.
     await xcrunAsync(['simctl', 'boot', udid]);
@@ -155,14 +171,6 @@ export async function bootAsync({ udid }: { udid: string }): Promise<SimulatorDe
       throw error;
     }
   }
-  return await profileMethod(CoreSimulator.getDeviceInfoAsync)({ udid });
-}
-
-export async function getBootedSimulatorsAsync(): Promise<SimulatorDevice[]> {
-  const simulatorDeviceInfo = await listAsync('devices');
-  return Object.values(simulatorDeviceInfo.devices).reduce((prev, runtime) => {
-    return prev.concat(runtime.filter(device => device.state === 'Booted'));
-  }, []);
 }
 
 export async function installAsync(options: { udid: string; dir: string }): Promise<any> {

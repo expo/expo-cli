@@ -64,7 +64,7 @@ export async function ensureXcodeInstalledAsync(): Promise<boolean> {
 
   if (!semver.valid(version)) {
     // Not sure why this would happen, if it does we should add a more confident error message.
-    console.error(`Xcode version is in an unknown format: ${version}`);
+    Logger.global.error(`Xcode version is in an unknown format: ${version}`);
     return false;
   }
 
@@ -231,7 +231,14 @@ export async function ensureSimulatorOpenAsync(
 
   // Use a default simulator if none was specified
   if (!udid) {
-    udid = await profileMethod(getBestSimulatorAsync)({ osType });
+    // If a simulator is open, side step the entire booting sequence.
+    const simulatorOpenedByApp = await getBestBootedSimulatorAsync({ osType });
+    if (simulatorOpenedByApp) {
+      return simulatorOpenedByApp;
+    }
+
+    // Otherwise, find the best possible simulator from user defaults and continue
+    udid = await getBestUnbootedSimulatorAsync({ osType });
   }
 
   const bootedDevice = await profileMethod(waitForDeviceToBootAsync)({ udid });
@@ -249,8 +256,8 @@ export async function ensureSimulatorOpenAsync(
   return bootedDevice;
 }
 
-async function getBestSimulatorAsync({ osType }: { osType?: string }): Promise<string> {
-  const simulatorOpenedByApp = await CoreSimulator.getDeviceInfoAsync();
+async function getBestBootedSimulatorAsync({ osType }: { osType?: string }) {
+  const simulatorOpenedByApp = await CoreSimulator.getDeviceInfoAsync().catch(() => null);
 
   // This should prevent opening a second simulator in the chance that default
   // simulator doesn't match what the Simulator app would open by default.
@@ -258,9 +265,13 @@ async function getBestSimulatorAsync({ osType }: { osType?: string }): Promise<s
     simulatorOpenedByApp?.udid &&
     (!osType || (osType && simulatorOpenedByApp.osType === osType))
   ) {
-    return simulatorOpenedByApp.udid;
+    return simulatorOpenedByApp;
   }
 
+  return null;
+}
+
+async function getBestUnbootedSimulatorAsync({ osType }: { osType?: string }): Promise<string> {
   const defaultUdid = _getDefaultSimulatorDeviceUDID();
 
   if (defaultUdid && !osType) {
@@ -286,6 +297,16 @@ async function getBestSimulatorAsync({ osType }: { osType?: string }): Promise<s
   return simulators[0].udid;
 }
 
+async function getBestSimulatorAsync({ osType }: { osType?: string }): Promise<string> {
+  const simulatorOpenedByApp = await getBestBootedSimulatorAsync({ osType });
+
+  if (simulatorOpenedByApp) {
+    return simulatorOpenedByApp.udid;
+  }
+
+  return await getBestUnbootedSimulatorAsync({ osType });
+}
+
 /**
  * Get all simulators supported by Expo (iOS only).
  */
@@ -303,6 +324,7 @@ async function getSimulatorsAsync(): Promise<SimControl.SimulatorDevice[]> {
   }, []);
 }
 
+// TODO: Delete
 async function getBootedSimulatorsAsync(): Promise<SimControl.SimulatorDevice[]> {
   const simulators = await getSimulatorsAsync();
   return simulators.filter(device => device.state === 'Booted');
@@ -551,7 +573,7 @@ export async function uninstallExpoAppFromSimulatorAsync({ udid }: { udid?: stri
     await SimControl.uninstallAsync({ udid, bundleIdentifier: EXPO_GO_BUNDLE_IDENTIFIER });
   } catch (e) {
     if (!e.message?.includes('No devices are booted.')) {
-      console.error(e);
+      Logger.global.error(e);
       throw e;
     }
   }
