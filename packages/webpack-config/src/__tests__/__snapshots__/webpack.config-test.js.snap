@@ -106,8 +106,7 @@ Object {
           Object {
             "include": Array [
               "packages/webpack-config/e2e/basic",
-              "packages/webpack-config/e2e/basic/node_modules/react-native-vector-icons",
-              "packages/webpack-config/e2e/basic/node_modules/@expo/vector-icons",
+              "node_modules/@expo/vector-icons/build",
             ],
             "test": /\\\\\\.\\(woff2\\?\\|eot\\|ttf\\|otf\\)\\$/,
             "use": Array [
@@ -275,8 +274,7 @@ Object {
           Object {
             "include": Array [
               "packages/webpack-config/e2e/basic",
-              "packages/webpack-config/e2e/basic/node_modules/react-native-vector-icons",
-              "packages/webpack-config/e2e/basic/node_modules/@expo/vector-icons",
+              "node_modules/@expo/vector-icons/build",
             ],
             "test": /\\\\\\.\\(woff2\\?\\|eot\\|ttf\\|otf\\)\\$/,
             "use": Array [
@@ -551,8 +549,7 @@ Object {
           Object {
             "include": Array [
               "packages/webpack-config/e2e/basic",
-              "packages/webpack-config/e2e/basic/node_modules/react-native-vector-icons",
-              "packages/webpack-config/e2e/basic/node_modules/@expo/vector-icons",
+              "node_modules/@expo/vector-icons/build",
             ],
             "test": /\\\\\\.\\(woff2\\?\\|eot\\|ttf\\|otf\\)\\$/,
             "use": Array [
@@ -733,8 +730,7 @@ Object {
           Object {
             "include": Array [
               "packages/webpack-config/e2e/basic",
-              "packages/webpack-config/e2e/basic/node_modules/react-native-vector-icons",
-              "packages/webpack-config/e2e/basic/node_modules/@expo/vector-icons",
+              "node_modules/@expo/vector-icons/build",
             ],
             "test": /\\\\\\.\\(woff2\\?\\|eot\\|ttf\\|otf\\)\\$/,
             "use": Array [
