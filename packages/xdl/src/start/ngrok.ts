@@ -10,11 +10,11 @@ import {
   ProjectSettings,
   ProjectUtils,
   resolveNgrokAsync,
-  UrlUtils,
   UserManager,
   UserSettings,
   XDLError,
 } from '../internal';
+import * as UrlUtils from './ngrokUrl';
 
 const NGROK_CONFIG = {
   authToken: '5W1bR67GNbWcXqmxZzBG1_56GezNeaX6sSRvn8npeQ8',
