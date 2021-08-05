@@ -474,8 +474,8 @@ export async function doesExpoClientNeedUpdatedAsync(
 ): Promise<boolean> {
   // Test that upgrading works by returning true
   // return true;
-  const versions = await Versions.versionsAsync();
-  const clientForSdk = await getClientForSDK(sdkVersion);
+  const versions = await profileMethod(Versions.versionsAsync)();
+  const clientForSdk = await profileMethod(getClientForSDK)(sdkVersion);
   const latestVersionForSdk = clientForSdk?.version ?? versions.iosVersion;
 
   const installedVersion = await expoVersionOnSimulatorAsync(simulator);
@@ -610,7 +610,7 @@ export async function upgradeExpoAsync(
   }
 
   if (_lastUrl) {
-    Logger.global.info(`\u203A Opening ${chalk.underline(_lastUrl)} in Expo`);
+    Logger.global.info(`\u203A Opening ${chalk.underline(_lastUrl)} in Expo Go`);
     await SimControl.openURLAsync({ udid: simulator.udid, url: _lastUrl });
     _lastUrl = null;
   }
@@ -625,7 +625,7 @@ async function openUrlInSimulatorSafeAsync({
   sdkVersion,
   devClient = false,
   projectRoot,
-  exp = getConfig(projectRoot, { skipSDKVersionRequirement: true }).exp,
+  exp,
   skipNativeLogs = false,
 }: {
   url: string;
@@ -640,6 +640,9 @@ async function openUrlInSimulatorSafeAsync({
   | { success: true; device: SimControl.SimulatorDevice; bundleIdentifier: string }
   | { success: false; msg: string }
 > {
+  if (!exp) {
+    exp = profileMethod(getConfig)(projectRoot, { skipSDKVersionRequirement: true }).exp;
+  }
   let simulator: SimControl.SimulatorDevice | null = null;
   try {
     simulator = await profileMethod(ensureSimulatorOpenAsync)({ udid });
@@ -664,7 +667,7 @@ async function openUrlInSimulatorSafeAsync({
         await streamLogsAsync({ udid: simulator.udid, bundleIdentifier });
       }
     } else if (!isDetached) {
-      await ensureExpoClientInstalledAsync(simulator, sdkVersion);
+      await profileMethod(ensureExpoClientInstalledAsync)(simulator, sdkVersion);
       _lastUrl = url;
     }
 
@@ -743,13 +746,10 @@ async function ensureExpoClientInstalledAsync(
 ) {
   let isInstalled = await isExpoClientInstalledOnSimulatorAsync(simulator);
 
-  if (isInstalled) {
-    if (
-      !hasPromptedToUpgrade[simulator.udid] &&
-      (await doesExpoClientNeedUpdatedAsync(simulator, sdkVersion))
-    ) {
-      // Only prompt once per simulator in a single run.
-      hasPromptedToUpgrade[simulator.udid] = true;
+  if (isInstalled && !hasPromptedToUpgrade[simulator.udid]) {
+    // Only prompt/check for updates once per simulator in a single run.
+    hasPromptedToUpgrade[simulator.udid] = true;
+    if (await profileMethod(doesExpoClientNeedUpdatedAsync)(simulator, sdkVersion)) {
       const confirm = await Prompts.confirmAsync({
         initial: true,
         message: `Expo Go on ${simulator.name} is outdated, would you like to upgrade?`,

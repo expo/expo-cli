@@ -188,6 +188,7 @@ export async function getContainerPathAsync({
 }): Promise<string | null> {
   udid = await resolveUdidAsync(udid);
   // Like: `/Users/evanbacon/Library/Developer/CoreSimulator/Devices/EFEEA6EF-E3F5-4EDE-9B72-29EAFA7514AE/data/Containers/Bundle/Application/`
+  // TODO: Maybe shallow glob for `.com.apple.mobile_container_manager.metadata.plist` to find apps faster
   const appsFolder = path.join(
     await getDirectoryForDeviceAsync(udid),
     'data/Containers/Bundle/Application'
