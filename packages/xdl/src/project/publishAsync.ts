@@ -9,6 +9,7 @@ import FormData from 'form-data';
 import fs from 'fs-extra';
 import path from 'path';
 
+import { RobotUser } from '../User';
 import {
   Analytics,
   ApiV2,
@@ -81,11 +82,6 @@ export async function publishAsync(
 
   // Get project config
   const { exp, pkg, hooks } = await getPublishExpConfigAsync(projectRoot, options);
-
-  // Exit early if kernel builds are created with robot users
-  if (exp.isKernel && user.kind === 'robot') {
-    throw new XDLError('ROBOT_ACCOUNT_ERROR', 'Kernel builds are not available for robot users');
-  }
 
   // TODO: refactor this out to a function, throw error if length doesn't match
   const validPostPublishHooks: LoadedHook[] = prepareHooks(hooks, 'postPublish', projectRoot);
@@ -195,8 +191,7 @@ export async function publishAsync(
   });
 
   // TODO: move to postPublish hook
-  // This method throws early when a robot account is used for a kernel build
-  if (exp.isKernel && user.kind !== 'robot') {
+  if (exp.isKernel) {
     await _handleKernelPublishedAsync({
       user,
       exp,
@@ -261,15 +256,26 @@ async function _handleKernelPublishedAsync({
   url,
 }: {
   projectRoot: string;
-  user: User;
+  user: User | RobotUser;
   exp: ExpoAppManifest;
   url: string;
 }) {
+  let owner = exp.owner;
+  if (!owner) {
+    if (user.kind !== 'user') {
+      throw new XDLError(
+        'ROBOT_ACCOUNT_ERROR',
+        'Kernel builds are not available for robot users when owner app.json field is not supplied'
+      );
+    }
+    owner = user.username;
+  }
+
   let kernelBundleUrl = `${Config.api.scheme}://${Config.api.host}`;
   if (Config.api.port) {
     kernelBundleUrl = `${kernelBundleUrl}:${Config.api.port}`;
   }
-  kernelBundleUrl = `${kernelBundleUrl}/@${user.username}/${exp.slug}/bundle`;
+  kernelBundleUrl = `${kernelBundleUrl}/@${owner}/${exp.slug}/bundle`;
   const sdkOrRuntimeVersion = exp.runtimeVersion
     ? {
         'expo-runtime-version': exp.runtimeVersion,
