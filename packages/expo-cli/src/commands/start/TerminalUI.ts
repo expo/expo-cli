@@ -18,7 +18,6 @@ import Log from '../../log';
 import { selectAsync } from '../../prompts';
 import urlOpts from '../../urlOpts';
 import { openInEditorAsync } from '../utils/openInEditorAsync';
-import { profileMethod } from '../utils/profileMethod';
 
 const CTRL_C = '\u0003';
 const CTRL_D = '\u0004';
