@@ -30,7 +30,7 @@ import { profileMethod } from './utils/profileMethod';
 let _lastUrl: string | null = null;
 
 const SUGGESTED_XCODE_VERSION = `${Xcode.minimumVersion}.0`;
-
+const EXPO_GO_BUNDLE_IDENTIFIER = 'host.exp.Exponent';
 const INSTALL_WARNING_TIMEOUT = 60 * 1000;
 
 export function isPlatformSupported() {
@@ -63,7 +63,7 @@ export async function ensureXcodeInstalledAsync(): Promise<boolean> {
 
   if (!semver.valid(version)) {
     // Not sure why this would happen, if it does we should add a more confident error message.
-    console.error(`Xcode version is in an unknown format: ${version}`);
+    Logger.global.error(`Xcode version is in an unknown format: ${version}`);
     return false;
   }
 
@@ -387,7 +387,7 @@ export async function isExpoClientInstalledOnSimulatorAsync({
 }: {
   udid: string;
 }): Promise<boolean> {
-  return !!(await SimControl.getContainerPathAsync(udid, 'host.exp.Exponent'));
+  return !!(await SimControl.getContainerPathAsync(udid, EXPO_GO_BUNDLE_IDENTIFIER));
 }
 
 export async function waitForExpoClientInstalledOnSimulatorAsync({
@@ -420,7 +420,7 @@ export async function expoVersionOnSimulatorAsync({
 }: {
   udid: string;
 }): Promise<string | null> {
-  const localPath = await SimControl.getContainerPathAsync(udid, 'host.exp.Exponent');
+  const localPath = await SimControl.getContainerPathAsync(udid, EXPO_GO_BUNDLE_IDENTIFIER);
   if (!localPath) {
     return null;
   }
@@ -541,10 +541,10 @@ export async function installExpoOnSimulatorAsync({
 export async function uninstallExpoAppFromSimulatorAsync({ udid }: { udid?: string } = {}) {
   try {
     Logger.global.info('Uninstalling Expo Go from iOS simulator.');
-    await SimControl.uninstallAsync({ udid, bundleIdentifier: 'host.exp.Exponent' });
+    await SimControl.uninstallAsync({ udid, bundleIdentifier: EXPO_GO_BUNDLE_IDENTIFIER });
   } catch (e) {
     if (!e.message?.includes('No devices are booted.')) {
-      console.error(e);
+      Logger.global.error(e);
       throw e;
     }
   }
@@ -622,7 +622,7 @@ async function openUrlInSimulatorSafeAsync({
   }
   Logger.global.info(`\u203A Opening ${chalk.underline(url)} on ${chalk.bold(simulator.name)}`);
 
-  let bundleIdentifier = 'host.exp.Exponent';
+  let bundleIdentifier = EXPO_GO_BUNDLE_IDENTIFIER;
   try {
     if (devClient) {
       bundleIdentifier = await profileMethod(BundleIdentifier.configureBundleIdentifierAsync)(
@@ -714,13 +714,10 @@ async function ensureExpoClientInstalledAsync(
 ) {
   let isInstalled = await isExpoClientInstalledOnSimulatorAsync(simulator);
 
-  if (isInstalled) {
-    if (
-      !hasPromptedToUpgrade[simulator.udid] &&
-      (await doesExpoClientNeedUpdatedAsync(simulator, sdkVersion))
-    ) {
-      // Only prompt once per simulator in a single run.
-      hasPromptedToUpgrade[simulator.udid] = true;
+  if (isInstalled && !hasPromptedToUpgrade[simulator.udid]) {
+    // Only prompt/check for updates once per simulator in a single run.
+    hasPromptedToUpgrade[simulator.udid] = true;
+    if (await profileMethod(doesExpoClientNeedUpdatedAsync)(simulator, sdkVersion)) {
       const confirm = await Prompts.confirmAsync({
         initial: true,
         message: `Expo Go on ${simulator.name} is outdated, would you like to upgrade?`,
