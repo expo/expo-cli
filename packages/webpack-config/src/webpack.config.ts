@@ -236,12 +236,9 @@ export default async function (
         dot: true,
         // We generate new versions of these based on the templates
         ignore: [
-          '**/expo-service-worker.*',
           // '**/serve.json',
           // '**/index.html',
           '**/icon.png',
-          // We copy this over in `withWorkbox` as it must be part of the Webpack `entry` and have templates replaced.
-          '**/register-service-worker.js',
         ],
       },
     },
@@ -250,13 +247,6 @@ export default async function (
       to: locations.production.serveJson,
     },
   ];
-
-  if (env.offline === true) {
-    filesToCopy.push({
-      from: locations.template.serviceWorker,
-      to: locations.production.serviceWorker,
-    });
-  }
 
   const templateIndex = parse(readFileSync(locations.template.indexHtml, { encoding: 'utf8' }));
 
