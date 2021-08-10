@@ -1,4 +1,5 @@
 import { ExpoAppManifest, getConfig, PackageJSONConfig, ProjectTarget } from '@expo/config';
+import { IOSConfig } from '@expo/config-plugins';
 import fs from 'fs-extra';
 import path from 'path';
 import semver from 'semver';
@@ -345,14 +346,6 @@ async function _maybeConfigureExpoUpdatesEmbeddedAssetsAsync(config: EmbeddedAss
 
 /** The code below here is duplicated from expo-cli currently **/
 
-// TODO: come up with a better solution for using app.json expo.name in various places
-function sanitizedName(name: string) {
-  return name
-    .replace(/[\W_]+/g, '')
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '');
-}
-
 // TODO: it's silly and kind of fragile that we look at app config to determine
 // the ios project paths. Overall this function needs to be revamped, just a
 // placeholder for now! Make this more robust when we support applying config
@@ -365,11 +358,15 @@ export function getIOSPaths(projectRoot: string) {
     throw new Error('Your project needs a name in app.json/app.config.js.');
   }
 
-  const iosProjectDirectory = path.join(projectRoot, 'ios', sanitizedName(projectName));
+  const iosProjectDirectory = path.join(
+    projectRoot,
+    'ios',
+    IOSConfig.XcodeUtils.sanitizedName(projectName)
+  );
   const iosSupportingDirectory = path.join(
     projectRoot,
     'ios',
-    sanitizedName(projectName),
+    IOSConfig.XcodeUtils.sanitizedName(projectName),
     'Supporting'
   );
   const iconPath = path.join(iosProjectDirectory, 'Assets.xcassets', 'AppIcon.appiconset');
