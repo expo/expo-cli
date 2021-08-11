@@ -3,6 +3,7 @@ import { install as installSourceMapSupport } from 'source-map-support';
 if (process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test') {
   installSourceMapSupport();
 }
+
 export {
   Analytics,
   Android,
