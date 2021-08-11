@@ -46,7 +46,6 @@ type CLIWebOptions = {
   pwa?: boolean;
   nonInteractive?: boolean;
   port?: number;
-  unimodulesOnly?: boolean;
   onWebpackFinished?: (error?: Error) => void;
 };
 
@@ -60,7 +59,6 @@ type BundlingOptions = {
   mode?: 'development' | 'production' | 'test' | 'none';
   https?: boolean;
   nonInteractive?: boolean;
-  unimodulesOnly?: boolean;
   onWebpackFinished?: (error?: Error) => void;
 };
 
@@ -114,16 +112,9 @@ export type WebpackDevServerResults = {
 
 export async function startAsync(
   projectRoot: string,
-  options: CLIWebOptions = {},
-  deprecatedVerbose?: boolean
+  options: CLIWebOptions = {}
 ): Promise<WebpackDevServerResults | null> {
   await stopAsync(projectRoot);
-  if (typeof deprecatedVerbose !== 'undefined') {
-    throw new XDLError(
-      'WEBPACK_DEPRECATED',
-      'startAsync(root, options, verbose): The `verbose` option is deprecated.'
-    );
-  }
 
   const serverName = 'Webpack';
 
@@ -157,7 +148,7 @@ export async function startAsync(
     }
   }
 
-  const config = await createWebpackConfigAsync(env, fullOptions);
+  const config = await loadConfigAsync(env);
   const port = await getAvailablePortAsync({
     projectRoot,
     defaultPort: options.port,
@@ -383,8 +374,7 @@ export async function bundleAsync(projectRoot: string, options?: BundlingOptions
     await clearWebCacheAsync(projectRoot, env.mode);
   }
 
-  const config = await createWebpackConfigAsync(env, fullOptions);
-
+  const config = await loadConfigAsync(env);
   await bundleWebAppAsync(projectRoot, config);
 }
 
@@ -470,23 +460,6 @@ function transformCLIOptions(options: CLIWebOptions): BundlingOptions {
     ...options,
     isImageEditingEnabled: options.pwa,
   };
-}
-
-async function createWebpackConfigAsync(
-  env: WebEnvironment,
-  options: CLIWebOptions = {}
-): Promise<WebpackConfiguration> {
-  setMode(env.mode);
-
-  let config;
-  if (options.unimodulesOnly) {
-    const { withUnimodules } = require('@expo/webpack-config/addons');
-    config = withUnimodules({}, env);
-  } else {
-    config = await invokeWebpackConfigAsync(env);
-  }
-
-  return config;
 }
 
 async function applyOptionsToProjectSettingsAsync(
@@ -607,10 +580,11 @@ function applyEnvironmentVariables(config: WebpackConfiguration): WebpackConfigu
   return config;
 }
 
-async function invokeWebpackConfigAsync(
+async function loadConfigAsync(
   env: WebEnvironment,
   argv?: string[]
 ): Promise<WebpackConfiguration> {
+  setMode(env.mode);
   // Check if the project has a webpack.config.js in the root.
   const projectWebpackConfig = path.resolve(env.projectRoot, 'webpack.config.js');
   let config: WebpackConfiguration;
@@ -623,8 +597,8 @@ async function invokeWebpackConfigAsync(
     }
   } else {
     // Fallback to the default expo webpack config.
-    const createExpoWebpackConfigAsync = require('@expo/webpack-config');
-    config = await createExpoWebpackConfigAsync(env, argv);
+    const loadDefaultConfigAsync = require('@expo/webpack-config');
+    config = await loadDefaultConfigAsync(env, argv);
   }
   return applyEnvironmentVariables(config);
 }
