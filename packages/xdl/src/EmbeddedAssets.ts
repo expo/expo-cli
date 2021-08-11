@@ -21,6 +21,8 @@ import {
   writeArtifactSafelyAsync,
 } from './internal';
 
+const PLACEHOLDER_URL = 'YOUR-APP-URL-HERE';
+
 export type EmbeddedAssetsConfiguration = {
   projectRoot: string;
   pkg: PackageJSONConfig;
@@ -279,7 +281,7 @@ async function _maybeConfigureExpoUpdatesEmbeddedAssetsAsync(config: EmbeddedAss
   if (fs.existsSync(expoPlistPath)) {
     const expoPlistForProject = plist.parse(await readFileSync(expoPlistPath, 'utf8'));
     const currentIOSUpdatesURL = expoPlistForProject[IOSConfig.Updates.Config.UPDATE_URL];
-    if (currentIOSUpdatesURL === 'YOUR-APP-URL-HERE') {
+    if (currentIOSUpdatesURL === PLACEHOLDER_URL) {
       isLikelyFirstIOSPublish = true;
 
       // The username is only used for defining a default updates URL.
@@ -314,10 +316,8 @@ async function _maybeConfigureExpoUpdatesEmbeddedAssetsAsync(config: EmbeddedAss
       androidManifest,
       AndroidManifestKeyForUpdateURL
     );
-    if (currentAndroidUpdateURL === 'YOUR-APP-URL-HERE') {
+    if (currentAndroidUpdateURL === PLACEHOLDER_URL) {
       isLikelyFirstAndroidPublish = true;
-      const mainApplication = getMainApplicationOrThrow(androidManifest);
-
       // The username is only used for defining a default updates URL.
       // Since we overwrite the URL below the username is superfluous.
       androidManifest = AndroidConfig.Updates.setUpdatesConfig(
@@ -326,6 +326,7 @@ async function _maybeConfigureExpoUpdatesEmbeddedAssetsAsync(config: EmbeddedAss
         /*username*/ null
       );
 
+      const mainApplication = getMainApplicationOrThrow(androidManifest);
       // overwrite the URL defined in AndroidConfig.Updates.setUpdatesConfig
       addMetaDataItemToMainApplication(
         mainApplication,
