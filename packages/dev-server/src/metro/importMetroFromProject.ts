@@ -15,12 +15,16 @@ class MetroImportError extends Error {
   }
 }
 
-function importFromProject(projectRoot: string, moduleId: string) {
+function resolveFromProject(projectRoot: string, moduleId: string) {
   const resolvedPath = resolveFrom.silent(projectRoot, moduleId);
   if (!resolvedPath) {
     throw new MetroImportError(projectRoot, moduleId);
   }
-  return require(resolvedPath);
+  return resolvedPath;
+}
+
+function importFromProject(projectRoot: string, moduleId: string) {
+  return require(resolveFromProject(projectRoot, moduleId));
 }
 
 export function importMetroSourceMapComposeSourceMapsFromProject(
@@ -57,7 +61,7 @@ export function importInspectorProxyServerFromProject(
 
 export function importHermesCommandFromProject(projectRoot: string): string {
   const platformExecutable = getHermesCommandPlatform();
-  return importFromProject(projectRoot, `hermes-engine/${platformExecutable}`);
+  return resolveFromProject(projectRoot, `hermes-engine/${platformExecutable}`);
 }
 
 function getHermesCommandPlatform(): string {
