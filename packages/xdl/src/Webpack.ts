@@ -1,4 +1,5 @@
 import { getConfig, getNameFromConfig } from '@expo/config';
+import { MessageSocket } from '@expo/dev-server';
 import * as devcert from '@expo/devcert';
 import { isUsingYarn } from '@expo/package-manager';
 import chalk from 'chalk';
@@ -74,14 +75,6 @@ export type WebEnvironment = {
   https: boolean;
 };
 
-export async function restartAsync(
-  projectRoot: string,
-  options: BundlingOptions = {}
-): Promise<WebpackSettings | null> {
-  await stopAsync(projectRoot);
-  return await startAsync(projectRoot, options);
-}
-
 let devServerInfo: {
   urls: Urls;
   protocol: 'http' | 'https';
@@ -113,17 +106,18 @@ async function clearWebCacheAsync(projectRoot: string, mode: string): Promise<vo
   } catch {}
 }
 
-export async function broadcastMessage(message: 'content-changed' | string, data?: any) {
-  if (webpackDevServerInstance && webpackDevServerInstance instanceof WebpackDevServer) {
-    webpackDevServerInstance.sockWrite(webpackDevServerInstance.sockets, message, data);
-  }
-}
+export type WebpackDevServerResults = {
+  server: DevServer;
+  location: Omit<WebpackSettings, 'server'>;
+  messageSocket: MessageSocket;
+};
 
 export async function startAsync(
   projectRoot: string,
   options: CLIWebOptions = {},
   deprecatedVerbose?: boolean
-): Promise<WebpackSettings | null> {
+): Promise<WebpackDevServerResults | null> {
+  await stopAsync(projectRoot);
   if (typeof deprecatedVerbose !== 'undefined') {
     throw new XDLError(
       'WEBPACK_DEPRECATED',
@@ -226,12 +220,53 @@ export async function startAsync(
 
   const host = ip.address();
   const url = `${protocol}://${host}:${port}`;
+
+  // Extend the close method to ensure that we clean up the local info.
+  const originalClose = server.close.bind(server);
+
+  server.close = (callback?: (err?: Error) => void) => {
+    return originalClose((err?: Error) => {
+      ProjectSettings.setPackagerInfoAsync(projectRoot, {
+        webpackServerPort: null,
+      }).finally(() => {
+        callback?.(err);
+        webpackDevServerInstance = null;
+        devServerInfo = null;
+        webpackServerPort = null;
+      });
+    });
+  };
+
   return {
-    url,
     server,
-    port,
-    protocol,
-    host,
+    location: {
+      url,
+      port,
+      protocol,
+      host,
+    },
+    // Match the native protocol.
+    messageSocket: {
+      broadcast(message: string, data?: any) {
+        if (!server || !(server instanceof WebpackDevServer)) {
+          return;
+        }
+
+        if (message !== 'reload') {
+          // TODO:
+          // Webpack currently only supports reloading the client (browser),
+          // remove this when we have custom sockets, and native support.
+          return;
+        }
+
+        // TODO:
+        // Default webpack-dev-server sockets use "content-changed" instead of "reload" (what we use on native).
+        // For now, just manually convert the value so our CLI interface can be unified.
+        const hackyConvertedMessage = message === 'reload' ? 'content-changed' : message;
+
+        server.sockWrite(server.sockets, hackyConvertedMessage, data);
+      },
+    },
   };
 }
 
@@ -243,12 +278,6 @@ export async function stopAsync(projectRoot: string): Promise<void> {
         webpackDevServerInstance.close(res);
       }
     });
-    webpackDevServerInstance = null;
-    devServerInfo = null;
-    webpackServerPort = null;
-    await ProjectSettings.setPackagerInfoAsync(projectRoot, {
-      webpackServerPort: null,
-    });
   }
 }
 
@@ -259,10 +288,7 @@ export async function openAsync(projectRoot: string, options?: BundlingOptions):
   await openProjectAsync(projectRoot);
 }
 
-export async function compileWebAppAsync(
-  projectRoot: string,
-  compiler: webpack.Compiler
-): Promise<any> {
+async function compileWebAppAsync(projectRoot: string, compiler: webpack.Compiler): Promise<any> {
   // We generate the stats.json file in the webpack-config
   const { warnings } = await new Promise((resolve, reject) =>
     compiler.run((error, stats) => {
@@ -314,7 +340,7 @@ export async function compileWebAppAsync(
   return { warnings };
 }
 
-export async function bundleWebAppAsync(projectRoot: string, config: WebpackConfiguration) {
+async function bundleWebAppAsync(projectRoot: string, config: WebpackConfiguration) {
   const compiler = webpack(config);
 
   try {
@@ -362,7 +388,7 @@ export async function bundleAsync(projectRoot: string, options?: BundlingOptions
   await bundleWebAppAsync(projectRoot, config);
 }
 
-export async function getProjectNameAsync(projectRoot: string): Promise<string> {
+async function getProjectNameAsync(projectRoot: string): Promise<string> {
   const { exp } = getConfig(projectRoot, {
     skipSDKVersionRequirement: true,
   });
@@ -370,19 +396,11 @@ export async function getProjectNameAsync(projectRoot: string): Promise<string> 
   return webName;
 }
 
-export function isRunning(): boolean {
-  return !!webpackDevServerInstance;
-}
-
-export function getServer(projectRoot: string): DevServer | null {
+function getServer(projectRoot: string): DevServer | null {
   if (webpackDevServerInstance == null) {
     ProjectUtils.logError(projectRoot, WEBPACK_LOG_TAG, 'Webpack is not running.');
   }
   return webpackDevServerInstance;
-}
-
-export function getPort(): number | null {
-  return webpackServerPort;
 }
 
 /**
@@ -589,7 +607,7 @@ function applyEnvironmentVariables(config: WebpackConfiguration): WebpackConfigu
   return config;
 }
 
-export async function invokeWebpackConfigAsync(
+async function invokeWebpackConfigAsync(
   env: WebEnvironment,
   argv?: string[]
 ): Promise<WebpackConfiguration> {
@@ -611,7 +629,7 @@ export async function invokeWebpackConfigAsync(
   return applyEnvironmentVariables(config);
 }
 
-export async function openProjectAsync(
+async function openProjectAsync(
   projectRoot: string
 ): Promise<{ success: true; url: string } | { success: false; error: Error }> {
   try {

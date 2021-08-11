@@ -2,6 +2,7 @@ import { ExpoConfig, getConfig } from '@expo/config';
 import { MessageSocket } from '@expo/dev-server';
 import { Server } from 'http';
 
+import { WebpackDevServerResults } from '../Webpack';
 import {
   Analytics,
   Android,
@@ -26,6 +27,7 @@ import { watchBabelConfigForProject } from './watchBabelConfig';
 
 let serverInstance: Server | null = null;
 let messageSocket: MessageSocket | null = null;
+let webpackDevServer: WebpackDevServerResults | null = null;
 
 /**
  * Sends a message over web sockets to any connected device,
@@ -40,6 +42,10 @@ export function broadcastMessage(
 ) {
   if (messageSocket) {
     messageSocket.broadcast(method, params);
+  }
+
+  if (webpackDevServer) {
+    webpackDevServer.messageSocket.broadcast(method, params);
   }
 }
 
@@ -62,7 +68,7 @@ export async function startAsync(
   watchBabelConfigForProject(projectRoot);
 
   if (options.webOnly) {
-    await Webpack.restartAsync(projectRoot, {
+    webpackDevServer = await Webpack.startAsync(projectRoot, {
       ...options,
       port: options.webpackPort,
     });
@@ -89,22 +95,26 @@ export async function startAsync(
   return exp;
 }
 
+async function stopDevServerAsync() {
+  return new Promise<void>((resolve, reject) => {
+    if (serverInstance) {
+      serverInstance.close(error => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve();
+        }
+      });
+    }
+  });
+}
+
 async function stopInternalAsync(projectRoot: string): Promise<void> {
   DevSession.stopSession();
 
   await Promise.all([
     Webpack.stopAsync(projectRoot),
-    new Promise<void>((resolve, reject) => {
-      if (serverInstance) {
-        serverInstance.close(error => {
-          if (error) {
-            reject(error);
-          } else {
-            resolve();
-          }
-        });
-      }
-    }),
+    stopDevServerAsync(),
     stopExpoServerAsync(projectRoot),
     stopReactNativeServerAsync(projectRoot),
     async () => {
