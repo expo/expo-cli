@@ -146,7 +146,7 @@ export async function writeAndroidManifestAsync(
 ): Promise<void> {
   const manifestXml = XML.format(androidManifest);
   await fs.ensureDir(path.dirname(manifestPath));
-  await fs.writeFileSync(manifestPath, manifestXml);
+  await fs.writeFile(manifestPath, manifestXml);
 }
 
 export async function readAndroidManifestAsync(manifestPath: string): Promise<AndroidManifest> {

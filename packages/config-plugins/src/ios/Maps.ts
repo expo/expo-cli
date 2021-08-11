@@ -127,7 +127,7 @@ const withMapsCocoaPods: ConfigPlugin<{ useGoogleMaps: boolean }> = (config, { u
     'ios',
     async config => {
       const filePath = path.join(config.modRequest.platformProjectRoot, 'Podfile');
-      const contents = await fs.readFileSync(filePath, 'utf-8');
+      const contents = await fs.readFile(filePath, 'utf-8');
       let results: MergeResults;
       // Only add the block if react-native-maps is installed in the project (best effort).
       // Generally prebuild runs after a yarn install so this should always work as expected.
@@ -153,7 +153,7 @@ const withMapsCocoaPods: ConfigPlugin<{ useGoogleMaps: boolean }> = (config, { u
         results = removeMapsCocoaPods(contents);
       }
       if (results.didMerge || results.didClear) {
-        await fs.writeFileSync(filePath, results.contents);
+        await fs.writeFile(filePath, results.contents);
       }
       return config;
     },
