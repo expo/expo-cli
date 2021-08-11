@@ -55,7 +55,7 @@ export async function setLocalesAsync(
       buffer.push(`${plistKey} = "${localVersion}";`);
     }
     // Write the file to the file system.
-    await fs.writeFile(strings, buffer.join('\n'));
+    await fs.writeFileSync(strings, buffer.join('\n'));
 
     // deep find the correct folder
     const group = ensureGroupRecursively(project, `${projectName}/Supporting/${lang}.lproj`);

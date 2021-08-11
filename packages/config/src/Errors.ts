@@ -1,5 +1,4 @@
 import { ConfigErrorCode } from './Config.types';
-
 /**
  * Based on `JsonFileError` from `@expo/json-file`
  */

@@ -1,6 +1,14 @@
 import { ExpoAppManifest, getConfig, PackageJSONConfig, ProjectTarget } from '@expo/config';
-import { IOSConfig } from '@expo/config-plugins';
-import fs from 'fs-extra';
+import { AndroidConfig, IOSConfig } from '@expo/config-plugins';
+import {
+  addMetaDataItemToMainApplication,
+  getMainApplicationMetaDataValue,
+  getMainApplicationOrThrow,
+  readAndroidManifestAsync,
+  writeAndroidManifestAsync,
+} from '@expo/config-plugins/build/android/Manifest';
+import plist from '@expo/plist';
+import fs, { readFileSync, writeFileSync } from 'fs-extra';
 import path from 'path';
 import semver from 'semver';
 
@@ -253,35 +261,44 @@ async function _maybeConfigureExpoKitEmbeddedAssetsAsync(config: EmbeddedAssetsC
   }
 }
 
+/**
+ * Guess if this is a users first publish and Run a slightly modified expo-updates plugin
+ */
 async function _maybeConfigureExpoUpdatesEmbeddedAssetsAsync(config: EmbeddedAssetsConfiguration) {
   if (!config.pkg.dependencies?.['expo-updates'] || config.target === 'managed') {
     return;
   }
-
-  let isLikelyFirstPublish = false;
 
   const { projectRoot, exp, releaseChannel, iosManifestUrl, androidManifestUrl } = config;
 
   const { iosSupportingDirectory: supportingDirectory } = getIOSPaths(projectRoot);
 
   // iOS expo-updates
-  if (fs.existsSync(path.join(supportingDirectory, 'Expo.plist'))) {
-    // This is an app with expo-updates installed, set properties in Expo.plist
-    await IosPlist.modifyAsync(supportingDirectory, 'Expo', (configPlist: any) => {
-      if (configPlist.EXUpdatesURL === 'YOUR-APP-URL-HERE') {
-        isLikelyFirstPublish = true;
-      }
-      configPlist.EXUpdatesURL = iosManifestUrl;
-      configPlist.EXUpdatesSDKVersion = exp.sdkVersion;
+  let isLikelyFirstIOSPublish = false;
+  const expoPlistPath = path.join(supportingDirectory, 'Expo.plist');
+  if (fs.existsSync(expoPlistPath)) {
+    const expoPlistForProject = plist.parse(await readFileSync(expoPlistPath, 'utf8'));
+    const currentIOSUpdatesURL = expoPlistForProject[IOSConfig.Updates.Config.UPDATE_URL];
+    if (currentIOSUpdatesURL === 'YOUR-APP-URL-HERE') {
+      isLikelyFirstIOSPublish = true;
+
+      // The username is only used for defining a default updates URL.
+      // Since we overwrite the URL below the username is superfluous.
+      IOSConfig.Updates.setUpdatesConfig(exp, expoPlistForProject, /*expoUsername*/ null);
+
+      // overwrite the URL defined in IOSConfig.Updates.setUpdatesConfig
+      expoPlistForProject[IOSConfig.Updates.Config.UPDATE_URL] = iosManifestUrl;
+      // set a release channel (not done in updates plugin)
       if (releaseChannel) {
-        configPlist.EXUpdatesReleaseChannel = releaseChannel;
+        expoPlistForProject[IOSConfig.Updates.Config.RELEASE_CHANNEL] = releaseChannel;
       }
-      return configPlist;
-    });
-    await IosPlist.cleanBackupAsync(supportingDirectory, 'Expo', false);
+
+      await writeFileSync(expoPlistPath, plist.build(expoPlistForProject));
+    }
   }
 
   // Android expo-updates
+  let isLikelyFirstAndroidPublish = false;
   const androidManifestXmlPath = path.join(
     projectRoot,
     'android',
@@ -290,54 +307,61 @@ async function _maybeConfigureExpoUpdatesEmbeddedAssetsAsync(config: EmbeddedAss
     'main',
     'AndroidManifest.xml'
   );
-  const androidManifestXmlFile = fs.readFileSync(androidManifestXmlPath, 'utf8');
-  const expoUpdateUrlRegex = /<meta-data[^>]+"expo.modules.updates.EXPO_UPDATE_URL"[^>]+\/>/;
-  const expoSdkVersionRegex = /<meta-data[^>]+"expo.modules.updates.EXPO_SDK_VERSION"[^>]+\/>/;
-  const expoReleaseChannelRegex = /<meta-data[^>]+"expo.modules.updates.EXPO_RELEASE_CHANNEL"[^>]+\/>/;
-
-  const expoUpdateUrlTag = `<meta-data android:name="expo.modules.updates.EXPO_UPDATE_URL" android:value="${androidManifestUrl}" />`;
-  const expoSdkVersionTag = `<meta-data android:name="expo.modules.updates.EXPO_SDK_VERSION" android:value="${exp.sdkVersion}" />`;
-  const expoReleaseChannelTag = `<meta-data android:name="expo.modules.updates.EXPO_RELEASE_CHANNEL" android:value="${releaseChannel}" />`;
-
-  const tagsToInsert = [];
-  if (androidManifestXmlFile.search(expoUpdateUrlRegex) < 0) {
-    tagsToInsert.push(expoUpdateUrlTag);
-  }
-  if (androidManifestXmlFile.search(expoSdkVersionRegex) < 0) {
-    tagsToInsert.push(expoSdkVersionTag);
-  }
-  if (releaseChannel && androidManifestXmlFile.search(expoReleaseChannelRegex) < 0) {
-    tagsToInsert.push(expoReleaseChannelTag);
-  }
-  if (tagsToInsert.length) {
-    // try to insert the meta-data tags that aren't found
-    await ExponentTools.regexFileAsync(
-      /<activity\s+android:name=".MainActivity"/,
-      `${tagsToInsert.join('\n      ')}
-
-  <activity
-    android:name=".MainActivity"`,
-      androidManifestXmlPath
+  const AndroidManifestKeyForUpdateURL = AndroidConfig.Updates.Config.UPDATE_URL;
+  if (fs.existsSync(androidManifestXmlPath)) {
+    let androidManifest = await readAndroidManifestAsync(androidManifestXmlPath);
+    const currentAndroidUpdateURL = getMainApplicationMetaDataValue(
+      androidManifest,
+      AndroidManifestKeyForUpdateURL
     );
-  }
-  await ExponentTools.regexFileAsync(expoUpdateUrlRegex, expoUpdateUrlTag, androidManifestXmlPath);
-  await ExponentTools.regexFileAsync(
-    expoSdkVersionRegex,
-    expoSdkVersionTag,
-    androidManifestXmlPath
-  );
-  if (releaseChannel) {
-    await ExponentTools.regexFileAsync(
-      expoReleaseChannelRegex,
-      expoReleaseChannelTag,
-      androidManifestXmlPath
-    );
+    if (currentAndroidUpdateURL === 'YOUR-APP-URL-HERE') {
+      isLikelyFirstAndroidPublish = true;
+      const mainApplication = getMainApplicationOrThrow(androidManifest);
+
+      // The username is only used for defining a default updates URL.
+      // Since we overwrite the URL below the username is superfluous.
+      androidManifest = AndroidConfig.Updates.setUpdatesConfig(
+        exp,
+        androidManifest,
+        /*username*/ null
+      );
+
+      // overwrite the URL defined in AndroidConfig.Updates.setUpdatesConfig
+      addMetaDataItemToMainApplication(
+        mainApplication,
+        AndroidManifestKeyForUpdateURL,
+        androidManifestUrl
+      );
+      // set a release channel (not done in updates plugin)
+      if (releaseChannel) {
+        addMetaDataItemToMainApplication(
+          mainApplication,
+          AndroidConfig.Updates.Config.RELEASE_CHANNEL,
+          releaseChannel
+        );
+      }
+
+      await writeAndroidManifestAsync(androidManifestXmlPath, androidManifest);
+    }
   }
 
-  if (isLikelyFirstPublish) {
-    logger.global.warn(
+  if (isLikelyFirstIOSPublish || isLikelyFirstAndroidPublish) {
+    let platformSpecificMessage =
       '🚀 It looks like this your first publish for this project! ' +
-        "We've automatically set some configuration values in Expo.plist and AndroidManifest.xml. " +
+      "We've automatically set some configuration values in Expo.plist and AndroidManifest.xml. ";
+
+    if (isLikelyFirstIOSPublish && !isLikelyFirstAndroidPublish) {
+      platformSpecificMessage =
+        '🚀 It looks like this your first iOS publish for this project! ' +
+        "We've automatically set some configuration values in Expo.plist. ";
+    } else if (!isLikelyFirstIOSPublish && isLikelyFirstAndroidPublish) {
+      platformSpecificMessage =
+        '🚀 It looks like this your first Android publish for this project! ' +
+        "We've automatically set some configuration values in AndroidManifest.xml. ";
+    }
+
+    logger.global.warn(
+      platformSpecificMessage +
         "You'll need to make a new build with these changes before you can download the update " +
         'you just published.'
     );

@@ -14,7 +14,7 @@ export interface XMLObject {
 export async function writeXMLAsync(options: { path: string; xml: any }): Promise<void> {
   const xml = new Builder().buildObject(options.xml);
   await fs.ensureDir(path.dirname(options.path));
-  await fs.writeFile(options.path, xml);
+  await fs.writeFileSync(options.path, xml);
 }
 
 export async function readXMLAsync(options: {
@@ -23,7 +23,7 @@ export async function readXMLAsync(options: {
 }): Promise<XMLObject> {
   let contents: string = '';
   try {
-    contents = await fs.readFile(options.path, { encoding: 'utf8', flag: 'r' });
+    contents = await fs.readFileSync(options.path, { encoding: 'utf8', flag: 'r' });
   } catch {
     // catch and use fallback
   }

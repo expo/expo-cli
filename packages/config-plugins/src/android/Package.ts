@@ -212,7 +212,7 @@ export async function getApplicationIdAsync(projectRoot: string): Promise<string
   if (!(await fs.pathExists(buildGradlePath))) {
     return null;
   }
-  const buildGradle = await fs.readFile(buildGradlePath, 'utf8');
+  const buildGradle = await fs.readFileSync(buildGradlePath, 'utf8');
   const matchResult = buildGradle.match(/applicationId ['"](.*)['"]/);
   // TODO add fallback for legacy cases to read from AndroidManifest.xml
   return matchResult?.[1] ?? null;
