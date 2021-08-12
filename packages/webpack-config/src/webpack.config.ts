@@ -42,6 +42,7 @@ import { createAllLoaders } from './loaders';
 import {
   ApplePwaWebpackPlugin,
   ChromeIconsWebpackPlugin,
+  ExpectedErrorsPlugin,
   ExpoDefinePlugin,
   ExpoHtmlWebpackPlugin,
   ExpoInterpolateHtmlPlugin,
@@ -321,8 +322,9 @@ export default async function (
     // Fail out on the first error instead of tolerating it.
     bail: isProd,
     devtool,
-    // TODO(Bacon): Simplify this while ensuring gatsby support continues to work.
-    context: isNative ? env.projectRoot ?? __dirname : __dirname,
+    // This must point to the project root (where the webpack.config.js would normally be located).
+    // If this is anywhere else, the source maps and errors won't show correct paths.
+    context: env.projectRoot,
     // configures where the build ends up
     output: getOutput(locations, mode, publicPath, env.platform),
     plugins: [
@@ -467,6 +469,7 @@ export default async function (
           },
         }),
 
+      new ExpectedErrorsPlugin(),
       // Skip using a progress bar in CI
       env.logger &&
         new ExpoProgressBarPlugin({
