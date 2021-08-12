@@ -1,15 +1,12 @@
-import * as osascript from '@expo/osascript';
 import spawnAsync, { SpawnOptions, SpawnResult } from '@expo/spawn-async';
 import chalk from 'chalk';
-import { exec, execSync } from 'child_process';
+import { execSync } from 'child_process';
 import path from 'path';
-import { promisify } from 'util';
 
 import { waitForActionAsync } from './apple/utils/waitForActionAsync';
 import { CoreSimulator, Logger, XDLError } from './internal';
 import { profileMethod } from './utils/profileMethod';
 
-const execAsync = promisify(exec);
 type DeviceState = 'Shutdown' | 'Booted';
 
 export type SimulatorDevice = {

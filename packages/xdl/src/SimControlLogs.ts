@@ -3,7 +3,7 @@ import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
 import path from 'path';
 import wrapAnsi from 'wrap-ansi';
 
-import { CoreSimulator, Logger, SimControl } from './internal';
+import { Logger, SimControl } from './internal';
 
 const forks: Record<string, ChildProcessWithoutNullStreams> = {};
 
