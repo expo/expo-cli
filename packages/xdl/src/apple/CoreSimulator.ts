@@ -1,11 +1,15 @@
 import fs from 'fs';
+import { boolish } from 'getenv';
 import { sync as globSync } from 'glob';
 import os from 'os';
 import path from 'path';
 
 import { SimulatorDevice } from '../SimControl';
-import { Logger } from '../internal';
+import { Logger, SimControl } from '../internal';
 import { parseBinaryPlistAsync } from '../utils/parseBinaryPlistAsync';
+
+// Enable this to test the JS version of simctl
+const EXPO_BETA_CORE_SIM = boolish('EXPO_BETA_CORE_SIM', false);
 
 enum DeviceState {
   BOOTED = 3,
@@ -61,6 +65,13 @@ async function resolveUdidAsync(udid: string): Promise<string> {
 }
 
 export async function listDevicesAsync(): Promise<SimulatorDevice[]> {
+  if (!EXPO_BETA_CORE_SIM) {
+    const simulatorDeviceInfo = await SimControl.listAsync('devices');
+    return Object.values(simulatorDeviceInfo.devices).reduce((prev, runtime) => {
+      return prev.concat(runtime);
+    }, []);
+  }
+
   const devicesDirectory = getDevicesDirectory();
   const devices = await getDirectoriesAsync(devicesDirectory);
 
@@ -205,6 +216,9 @@ export async function getContainerPathAsync({
   udid: string;
   bundleIdentifier: string;
 }): Promise<string | null> {
+  if (!EXPO_BETA_CORE_SIM) {
+    return SimControl.getContainerPathAsync(udid, bundleIdentifier);
+  }
   udid = await resolveUdidAsync(udid);
   // Like: `/Users/evanbacon/Library/Developer/CoreSimulator/Devices/EFEEA6EF-E3F5-4EDE-9B72-29EAFA7514AE/data/Containers/Bundle/Application/`
   // TODO: Maybe shallow glob for `.com.apple.mobile_container_manager.metadata.plist` to find apps faster
