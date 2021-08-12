@@ -210,7 +210,10 @@ export function createDevServer(
     publicPath: '/',
     // WebpackDevServer is noisy by default so we emit custom message instead
     // by listening to the compiler events with `compiler.hooks[...].tap` calls above.
-    quiet: true,
+    // quiet: true,
+    // Hide `ℹ ｢wds｣: Project is running at`
+    noInfo: true,
+    stats: 'none',
     // Reportedly, this avoids CPU overload on some systems.
     // https://github.com/facebook/create-react-app/issues/293
     // src/node_modules is not ignored to support absolute imports

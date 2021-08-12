@@ -314,6 +314,9 @@ export default async function (
     entry: {
       app: appEntry,
     },
+    // Disable file info logs.
+    stats: 'none',
+
     // https://webpack.js.org/configuration/other-options/#bail
     // Fail out on the first error instead of tolerating it.
     bail: isProd,
@@ -465,7 +468,18 @@ export default async function (
         }),
 
       // Skip using a progress bar in CI
-      !isCI && new ExpoProgressBarPlugin(),
+      env.logger &&
+        new ExpoProgressBarPlugin({
+          logger: env.logger,
+          nonInteractive: isCI,
+          bundleDetails: {
+            bundleType: 'bundle',
+            platform: env.platform,
+            entryFile: locations.appMain,
+            dev: isDev ?? false,
+            minify: isProd ?? false,
+          },
+        }),
     ].filter(Boolean),
     module: {
       strictExportPresence: false,

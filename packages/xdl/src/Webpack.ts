@@ -1,3 +1,4 @@
+import type Log from '@expo/bunyan';
 import { getConfig, getNameFromConfig } from '@expo/config';
 import { MessageSocket } from '@expo/dev-server';
 import * as devcert from '@expo/devcert';
@@ -20,7 +21,6 @@ import {
   ProjectSettings,
   ProjectUtils,
   UrlUtils,
-  WebpackCompiler,
   WebpackEnvironment,
   XDLError,
 } from './internal';
@@ -71,6 +71,7 @@ export type WebEnvironment = {
   pwa: boolean;
   mode: 'development' | 'production' | 'test' | 'none';
   https: boolean;
+  logger: Log;
 };
 
 let devServerInfo: {
@@ -81,16 +82,6 @@ let devServerInfo: {
   nonInteractive: boolean;
   port: number;
 } | null = null;
-
-export function printConnectionInstructions(projectRoot: string, options = {}) {
-  if (!devServerInfo) return;
-  WebpackCompiler.printInstructions(projectRoot, {
-    appName: devServerInfo.appName,
-    urls: devServerInfo.urls,
-    showInDevtools: false,
-    ...options,
-  });
-}
 
 async function clearWebCacheAsync(projectRoot: string, mode: string): Promise<void> {
   const cacheFolder = path.join(projectRoot, '.expo', 'web', 'cache', mode);
@@ -201,29 +192,20 @@ export async function startAsync(
     port: webpackServerPort!,
   };
 
-  const server: DevServer = await new Promise(resolve => {
-    // Create a webpack compiler that is configured with custom messages.
-    const compiler = WebpackCompiler.createWebpackCompiler({
-      projectRoot,
-      appName,
-      config,
-      urls,
-      nonInteractive,
-      webpackFactory: webpack,
-      onFinished: () => resolve(server),
-    });
-    const server = new WebpackDevServer(compiler, config.devServer);
-    // Launch WebpackDevServer.
-    server.listen(port, WebpackEnvironment.HOST, error => {
-      if (error) {
-        ProjectUtils.logError(projectRoot, WEBPACK_LOG_TAG, error.message);
-      }
-      if (typeof options.onWebpackFinished === 'function') {
-        options.onWebpackFinished(error);
-      }
-    });
-    webpackDevServerInstance = server;
+  // Create a webpack compiler that is configured with custom messages.
+  const compiler = webpack(config);
+
+  const server = new WebpackDevServer(compiler, config.devServer);
+  // Launch WebpackDevServer.
+  server.listen(port, WebpackEnvironment.HOST, error => {
+    if (error) {
+      ProjectUtils.logError(projectRoot, WEBPACK_LOG_TAG, error.message);
+    }
+    if (typeof options.onWebpackFinished === 'function') {
+      options.onWebpackFinished(error);
+    }
   });
+  webpackDevServerInstance = server;
 
   await ProjectSettings.setPackagerInfoAsync(projectRoot, {
     webpackServerPort,
@@ -388,21 +370,13 @@ async function getProjectNameAsync(projectRoot: string): Promise<string> {
   return webName;
 }
 
-function getServer(projectRoot: string): DevServer | null {
-  if (webpackDevServerInstance == null) {
-    ProjectUtils.logError(projectRoot, WEBPACK_LOG_TAG, 'Webpack is not running.');
-  }
-  return webpackDevServerInstance;
-}
-
 /**
  * Get the URL for the running instance of Webpack dev server.
  *
  * @param projectRoot
  */
 export async function getUrlAsync(projectRoot: string): Promise<string | null> {
-  const devServer = getServer(projectRoot);
-  if (!devServer) {
+  if (!webpackDevServerInstance) {
     return null;
   }
   const host = ip.address();
@@ -460,6 +434,7 @@ function transformCLIOptions(options: CLIWebOptions): BundlingOptions {
   // Transform the CLI flags into more explicit values
   return {
     ...options,
+
     isImageEditingEnabled: options.pwa,
   };
 }
@@ -498,6 +473,7 @@ async function getWebpackConfigEnvFromBundlingOptionsAsync(
   return {
     projectRoot,
     pwa: isImageEditingEnabled,
+    logger: ProjectUtils.getLogger(projectRoot),
     isImageEditingEnabled,
     mode,
     https,
