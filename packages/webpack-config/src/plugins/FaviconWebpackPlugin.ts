@@ -1,15 +1,9 @@
 import chalk from 'chalk';
 import { generateFaviconAsync, IconOptions, ProjectOptions } from 'expo-pwa';
-import { compilation as compilationNS, Compiler } from 'webpack';
+import { Compilation, Compiler } from 'webpack';
 
 import ModifyHtmlWebpackPlugin, { HTMLLinkNode, HTMLPluginData } from './ModifyHtmlWebpackPlugin';
 
-function logNotice(type: string, message: string) {
-  console.log(chalk.magenta(`\u203A ${type}: ${chalk.gray(message)}`));
-}
-function logWarning(type: string, message: string) {
-  console.log(chalk.yellow(`\u203A ${type}: ${chalk.gray(message)}`));
-}
 export default class FaviconWebpackPlugin extends ModifyHtmlWebpackPlugin {
   constructor(
     private pwaOptions: ProjectOptions & { links: HTMLLinkNode[] },
@@ -20,9 +14,19 @@ export default class FaviconWebpackPlugin extends ModifyHtmlWebpackPlugin {
 
   async modifyAsync(
     compiler: Compiler,
-    compilation: compilationNS.Compilation,
+    compilation: Compilation,
     data: HTMLPluginData
   ): Promise<HTMLPluginData> {
+    const logger = compiler.getInfrastructureLogger('chrome-icons-plugin');
+
+    function logNotice(type: string, message: string) {
+      logger.log(chalk.magenta(`\u203A ${type}: ${chalk.gray(message)}`));
+    }
+
+    function logWarning(type: string, message: string) {
+      logger.warn(chalk.yellow(`\u203A ${type}: ${chalk.gray(message)}`));
+    }
+
     if (!this.favicon) {
       logWarning('Favicon', 'No template image found, skipping auto generation...');
       return data;

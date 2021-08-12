@@ -331,7 +331,7 @@ Wrap your existing webpack config with support for Unimodules (Expo web). ex: **
 
 **params**
 
-- `webpackConfig: AnyConfiguration = {}` Optional existing Webpack config to modify.
+- `webpackConfig: Configuration = {}` Optional existing Webpack config to modify.
 - `env: InputEnvironment = {}` Optional [`Environment`][#environment] options for configuring what features the Webpack config supports.
 - `argv: Arguments = {}`
 
@@ -353,18 +353,6 @@ import { withAlias } from '@expo/webpack-config/addons';
 
 ```js
 import { withDevServer } from '@expo/webpack-config/addons';
-```
-
-#### `withNodeMocks`
-
-```js
-import { withNodeMocks } from '@expo/webpack-config/addons';
-```
-
-#### `withEntry`
-
-```js
-import { withEntry } from '@expo/webpack-config/addons';
 ```
 
 #### `withTypeScriptAsync`

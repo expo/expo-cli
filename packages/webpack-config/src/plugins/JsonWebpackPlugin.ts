@@ -1,5 +1,5 @@
 import { AsyncSeriesWaterfallHook } from 'tapable';
-import { compilation, Compiler } from 'webpack';
+import { Compilation, Compiler } from 'webpack';
 
 export type Options = {
   path: string;
@@ -9,7 +9,7 @@ export type Options = {
 
 export type BeforeEmitOptions = Options & { plugin: JsonWebpackPlugin };
 
-const hooksMap = new WeakMap<compilation.Compilation, Record<string, AsyncSeriesWaterfallHook>>();
+const hooksMap = new WeakMap<Compilation, Record<string, AsyncSeriesWaterfallHook>>();
 
 function createWebpackPluginHooks(): Record<string, AsyncSeriesWaterfallHook> {
   return {
@@ -19,7 +19,7 @@ function createWebpackPluginHooks(): Record<string, AsyncSeriesWaterfallHook> {
 }
 
 export default class JsonWebpackPlugin {
-  static getHooks(compilation: compilation.Compilation): Record<string, AsyncSeriesWaterfallHook> {
+  static getHooks(compilation: Compilation): Record<string, AsyncSeriesWaterfallHook> {
     let hooks = hooksMap.get(compilation);
     // Setup the hooks only once
     if (hooks === undefined) {
@@ -39,10 +39,7 @@ export default class JsonWebpackPlugin {
     compiler.hooks.emit.tapAsync(this.constructor.name, this.writeObject);
   }
 
-  private writeObject = async (
-    compilation: compilation.Compilation,
-    callback: () => void
-  ): Promise<void> => {
+  private writeObject = async (compilation: Compilation, callback: () => void): Promise<void> => {
     let result: BeforeEmitOptions = {
       json: this.options.json,
       path: this.options.path,

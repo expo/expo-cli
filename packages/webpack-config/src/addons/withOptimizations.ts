@@ -1,10 +1,8 @@
+import CssMinimizerPlugin from 'css-minimizer-webpack-plugin';
 import { boolish } from 'getenv';
 import isWsl from 'is-wsl';
-import OptimizeCSSAssetsPlugin from 'optimize-css-assets-webpack-plugin';
-import safePostCssParser from 'postcss-safe-parser';
 import TerserPlugin from 'terser-webpack-plugin';
-
-import { AnyConfiguration } from '../types';
+import { Configuration } from 'webpack';
 
 /**
  * Returns `true` if the Expo web environment variable enabled.
@@ -20,11 +18,10 @@ export function isDebugMode(): boolean {
  * @param webpackConfig Existing Webpack config to modify.
  * @category addons
  */
-export default function withOptimizations(webpackConfig: AnyConfiguration): AnyConfiguration {
+export default function withOptimizations(webpackConfig: Configuration): Configuration {
   if (webpackConfig.mode !== 'production') {
     return webpackConfig;
   }
-  const shouldUseSourceMap = typeof webpackConfig.devtool === 'string';
 
   const _isDebugMode = isDebugMode();
 
@@ -45,6 +42,7 @@ export default function withOptimizations(webpackConfig: AnyConfiguration): AnyC
             ecma: 8,
           },
           compress: {
+            ecma: 5,
             warnings: _isDebugMode,
             // Disabled because of an issue with Uglify breaking seemingly valid code:
             // https://github.com/facebook/create-react-app/issues/2376
@@ -77,36 +75,10 @@ export default function withOptimizations(webpackConfig: AnyConfiguration): AnyC
         parallel: !isWsl,
         // Enable file caching
         cache: true,
-        sourceMap: shouldUseSourceMap,
       }),
       // This is only used in production mode
-      new OptimizeCSSAssetsPlugin({
-        cssProcessorOptions: {
-          parser: safePostCssParser,
-          map: shouldUseSourceMap
-            ? {
-                // `inline: false` forces the sourcemap to be output into a
-                // separate file
-                inline: false,
-                // `annotation: true` appends the sourceMappingURL to the end of
-                // the css file, helping the browser find the sourcemap
-                annotation: true,
-              }
-            : false,
-        },
-      }),
+      new CssMinimizerPlugin(),
     ],
-    // Automatically split vendor and commons
-    // https://twitter.com/wSokra/status/969633336732905474
-    // https://medium.com/webpack/webpack-4-code-splitting-chunk-graph-and-the-splitchunks-optimization-be739a861366
-    splitChunks: {
-      chunks: 'all',
-      name: false,
-    },
-    // Keep the runtime chunk separated to enable long term caching
-    // https://twitter.com/wSokra/status/969679223278505985
-    runtimeChunk: true,
-
     // Skip the emitting phase whenever there are errors while compiling. This ensures that no erroring assets are emitted.
     noEmitOnErrors: true,
   };

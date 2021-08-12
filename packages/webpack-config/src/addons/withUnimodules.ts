@@ -1,6 +1,8 @@
 import { getPossibleProjectRoot } from '@expo/config/paths';
+import assert from 'assert';
 import path from 'path';
-import { ExternalsFunctionElement } from 'webpack';
+import resolveFrom from 'resolve-from';
+import { Configuration } from 'webpack';
 
 import {
   getAliases,
@@ -15,10 +17,9 @@ import { createBabelLoader, createFontLoader } from '../loaders';
 // importing from "../plugins" will cause dependency issues with next-adapter
 // other plugins import webpack4 packages which error on load when next-adapter uses webpack5
 import ExpoDefinePlugin from '../plugins/ExpoDefinePlugin';
-import { AnyConfiguration, Arguments, Environment, InputEnvironment } from '../types';
+import { Arguments, Environment, InputEnvironment } from '../types';
 import { rulesMatchAnyFiles } from '../utils';
 import withAlias from './withAlias';
-import withEntry from './withEntry';
 
 /**
  * Wrap your existing webpack config with support for Unimodules.
@@ -30,10 +31,10 @@ import withEntry from './withEntry';
  * @category addons
  */
 export default function withUnimodules(
-  webpackConfig: AnyConfiguration = {},
+  webpackConfig: Configuration = {},
   env: InputEnvironment = {},
   argv: Arguments = {}
-): AnyConfiguration {
+): Configuration {
   // @ts-ignore: We should attempt to use the project root that the other config is already using (used for Gatsby support).
   env.projectRoot = env.projectRoot || webpackConfig.context || getPossibleProjectRoot();
 
@@ -96,6 +97,7 @@ export default function withUnimodules(
   function reuseOrCreatePublicPaths() {
     if (webpackConfig.output && webpackConfig.output.publicPath) {
       const publicPath = webpackConfig.output.publicPath;
+      assert(typeof publicPath === 'string');
       return {
         publicPath,
         publicUrl: publicPath.endsWith('/') ? publicPath.slice(0, -1) : publicPath,
@@ -125,14 +127,8 @@ export default function withUnimodules(
   );
 
   const rules = [
-    ...webpackConfig.module.rules,
+    ...(webpackConfig.module.rules || []),
 
-    // TODO: Bacon: Auto remove this loader
-    {
-      test: /\.html$/,
-      use: ['html-loader'],
-      exclude: locations.template.folder,
-    },
     // Process application code with Babel.
     babelLoader,
 
@@ -155,10 +151,24 @@ export default function withUnimodules(
   const includeFunc = babelLoader.include as (path: string) => boolean;
   webpackConfig = ignoreExternalModules(webpackConfig, includeFunc, isWebpack5);
 
+  const resizeObserverModuleId = 'resize-observer-polyfill/dist/ResizeObserver.global';
   // Add a loose requirement on the ResizeObserver polyfill if it's installed...
-  webpackConfig = withEntry(webpackConfig, env, {
-    entryPath: 'resize-observer-polyfill/dist/ResizeObserver.global',
-  });
+  const hasResizeObserverPolyfill = resolveFrom.silent(
+    env.projectRoot || getPossibleProjectRoot(),
+    resizeObserverModuleId
+  );
+  if (hasResizeObserverPolyfill) {
+    if (!Array.isArray(webpackConfig.entry)) {
+      if (typeof webpackConfig.entry === 'string') {
+        webpackConfig.entry = [webpackConfig.entry];
+      } else {
+        webpackConfig.entry = [];
+      }
+    }
+    if (!webpackConfig.entry.includes(resizeObserverModuleId)) {
+      webpackConfig.entry.push(resizeObserverModuleId);
+    }
+  }
 
   return webpackConfig;
 }
@@ -176,10 +186,10 @@ export default function withUnimodules(
  * @param shouldIncludeModule A method that returns a boolean when the input module should be transpiled and externed.
  */
 export function ignoreExternalModules(
-  webpackConfig: AnyConfiguration,
+  webpackConfig: Configuration,
   shouldIncludeModule: (path: string) => boolean,
   isWebpack5: boolean
-): AnyConfiguration {
+): Configuration {
   if (!webpackConfig.externals) {
     return webpackConfig;
   }
@@ -192,16 +202,16 @@ export function ignoreExternalModules(
     }
 
     if (isWebpack5) {
-      return (ctx => {
+      return ctx => {
         const relPath = path.join('node_modules', ctx.request);
         return shouldIncludeModule(relPath) ? undefined : (external as (content: any) => any)(ctx);
-      }) as ExternalsFunctionElement;
+      };
     }
 
-    return ((ctx, req, cb) => {
+    return (ctx, req, cb) => {
       const relPath = path.join('node_modules', req);
       return shouldIncludeModule(relPath) ? cb() : external(ctx, req, cb);
-    }) as ExternalsFunctionElement;
+    };
   });
 
   return webpackConfig;

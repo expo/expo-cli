@@ -6,18 +6,13 @@ import { isRegExp } from 'util';
 import {
   Configuration,
   Entry,
-  Plugin,
-  Rule,
   RuleSetCondition,
   RuleSetLoader,
   RuleSetRule,
   RuleSetUse,
   RuleSetUseItem,
+  WebpackPluginInstance,
 } from 'webpack';
-
-import { DevConfiguration } from '../types';
-
-type AnyConfiguration = Configuration | DevConfiguration;
 
 type LoaderItemLoaderPart = Pick<LoaderItem, 'loader' | 'loaderIndex'>;
 
@@ -26,10 +21,8 @@ interface RuleItem {
   index: number;
 }
 
-type ResolvedRuleSet = string | RuleSetLoader;
-
 interface PluginItem {
-  plugin: Plugin;
+  plugin: WebpackPluginInstance;
   index: number;
 }
 
@@ -77,7 +70,7 @@ export function getRulesAsItems(rules: RuleSetRule[]): RuleItem[] {
  * @param config
  * @category utils
  */
-export function getRules(config: AnyConfiguration): RuleItem[] {
+export function getRules(config: Configuration): RuleItem[] {
   const { rules = [] } = config.module || {};
   return getRulesAsItems(getRulesFromRules(rules));
 }
@@ -88,7 +81,7 @@ export function getRules(config: AnyConfiguration): RuleItem[] {
  * @param config
  * @category utils
  */
-export function getExpoBabelLoader(config: AnyConfiguration): Rule | null {
+export function getExpoBabelLoader(config: Configuration): RuleSetRule | null {
   const { rules = [] } = config.module || {};
   const currentRules = getRulesAsItems(getRulesFromRules(rules));
   for (const ruleItem of currentRules) {
@@ -132,7 +125,10 @@ export function getLoadersFromRules(rules: RuleItem[]): LoaderItem[] {
     if (rule.oneOf) {
       return getLoadersFromRules(getRulesAsItems(rule.oneOf));
     }
-    return loaderToLoaderItemLoaderPart(rule.loaders || rule.loader || rule.use).map(loader => ({
+    return loaderToLoaderItemLoaderPart(
+      // @ts-ignore
+      rule.loaders || rule.loader || rule.use
+    ).map(loader => ({
       ...loader,
       rule,
       ruleIndex,
@@ -147,7 +143,7 @@ export function getLoadersFromRules(rules: RuleItem[]): LoaderItem[] {
  * @param config
  * @category utils
  */
-export function getLoaders(config: AnyConfiguration): LoaderItem[] {
+export function getLoaders(config: Configuration): LoaderItem[] {
   const rules = getRules(config);
   return getLoadersFromRules(rules);
 }
@@ -172,7 +168,7 @@ function loaderToLoaderItemLoaderPart(loader: RuleSetUse | undefined): LoaderIte
  * @category utils
  */
 export function getRulesByMatchingFiles(
-  config: AnyConfiguration,
+  config: Configuration,
   files: string[]
 ): { [key: string]: RuleItem[] } {
   const rules = getRules(config);
@@ -189,31 +185,9 @@ export function getRulesByMatchingFiles(
  * @param files
  * @category utils
  */
-export function rulesMatchAnyFiles(config: AnyConfiguration, files: string[]): boolean {
+export function rulesMatchAnyFiles(config: Configuration, files: string[]): boolean {
   const rules = getRulesByMatchingFiles(config, files);
   return Object.keys(rules).some(filename => !!rules[filename].length);
-}
-
-/**
- *
- * @param rule
- * @category utils
- */
-export function resolveRuleSetUse(rule?: RuleSetUse | RuleSetUse[]): ResolvedRuleSet[] {
-  if (!rule) return [];
-  if (Array.isArray(rule)) {
-    const rules = rule as RuleSetUse[];
-    let resolved: ResolvedRuleSet[] = [];
-    for (const rule of rules) {
-      resolved = [...resolved, ...resolveRuleSetUse(rule)];
-    }
-    return resolved;
-  } else if (typeof rule === 'string' || isRuleSetLoader(rule)) {
-    return [rule];
-  } else if (typeof rule === 'function') {
-    return resolveRuleSetUse(rule({}));
-  }
-  return [rule];
 }
 
 /**
@@ -263,7 +237,7 @@ export function conditionMatchesFile(
  * @param param0
  * @category utils
  */
-export function getPlugins({ plugins = [] }: AnyConfiguration): PluginItem[] {
+export function getPlugins({ plugins = [] }: Configuration): PluginItem[] {
   return plugins.map((plugin, index) => ({ index, plugin }));
 }
 
@@ -273,7 +247,7 @@ export function getPlugins({ plugins = [] }: AnyConfiguration): PluginItem[] {
  * @param name
  * @category utils
  */
-export function getPluginsByName(config: AnyConfiguration, name: string): PluginItem[] {
+export function getPluginsByName(config: Configuration, name: string): PluginItem[] {
   return getPlugins(config).filter(({ plugin }: PluginItem) => {
     if (plugin && plugin.constructor) {
       return plugin.constructor.name === name;

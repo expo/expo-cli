@@ -1,4 +1,4 @@
-import { AnyConfiguration } from '../types';
+import { Configuration } from 'webpack';
 
 /**
  * Apply aliases to a Webpack config
@@ -8,9 +8,9 @@ import { AnyConfiguration } from '../types';
  * @category addons
  */
 export default function withAlias(
-  webpackConfig: AnyConfiguration,
+  webpackConfig: Configuration,
   alias: { [key: string]: string } = {}
-): AnyConfiguration {
+): Configuration {
   // Mix in aliases
   if (!webpackConfig.resolve) webpackConfig.resolve = {};
   webpackConfig.resolve.alias = {

@@ -1,7 +1,7 @@
 import { ExpoConfig } from '@expo/config';
 import { boolish } from 'getenv';
 import semver from 'semver';
-import { DefinePlugin as OriginalDefinePlugin } from 'webpack';
+import webpack from 'webpack';
 
 import { getConfig, getMode, getPublicPaths } from '../env';
 import { Environment, Mode } from '../types';
@@ -40,7 +40,7 @@ function createEnvironmentConstants(appManifest: ExpoConfig) {
  * @internal
  */
 export interface ClientEnv {
-  [key: string]: OriginalDefinePlugin.CodeValueObject;
+  [key: string]: any;
 }
 
 /**
@@ -117,7 +117,7 @@ export function createClientEnvironment(
  * This surfaces the `app.json` (config) as an environment variable which is then parsed by `expo-constants`.
  * @category plugins
  */
-export default class DefinePlugin extends OriginalDefinePlugin {
+export default class DefinePlugin extends webpack.DefinePlugin {
   static createClientEnvironment = createClientEnvironment;
   static fromEnv = (
     env: Pick<Environment, 'projectRoot' | 'mode' | 'config' | 'locations'>
@@ -137,6 +137,7 @@ export default class DefinePlugin extends OriginalDefinePlugin {
 
     const environmentVariables = createClientEnvironment(mode, publicUrl, publicAppManifest);
 
+    console.log('ADDED: ', environmentVariables);
     super(environmentVariables);
   }
 }

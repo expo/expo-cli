@@ -1,11 +1,11 @@
 import { loadPartialConfig } from '@babel/core';
 import { getPossibleProjectRoot } from '@expo/config/paths';
 import chalk from 'chalk';
-import fs from 'fs-extra';
+import fs from 'fs';
 import { boolish } from 'getenv';
 import path from 'path';
 import resolveFrom from 'resolve-from';
-import { Rule } from 'webpack';
+import { RuleSetRule } from 'webpack';
 
 import { getConfig, getMode, getPaths } from '../env';
 import { Environment, Mode } from '../types';
@@ -89,7 +89,7 @@ function generateCacheIdentifier(projectRoot: string, version: string = '1'): st
  */
 export function createBabelLoaderFromEnvironment(
   env: Pick<Environment, 'babel' | 'locations' | 'projectRoot' | 'config' | 'mode' | 'platform'>
-): Rule {
+): RuleSetRule {
   const mode = getMode(env);
   const locations = env.locations || getPaths(env.projectRoot, env);
   const appConfig = env.config || getConfig(env);
@@ -132,7 +132,7 @@ export default function createBabelLoader({
   include?: string[];
   verbose?: boolean;
   [key: string]: any;
-} = {}): Rule {
+} = {}): RuleSetRule {
   const ensuredProjectRoot = ensureRoot(babelProjectRoot);
   const modules = [...includeModulesThatContainPaths, ...include];
   const customUse = options.use || {};
@@ -209,7 +209,7 @@ export default function createBabelLoader({
     mode,
   };
   return {
-    test: /\.(mjs|[jt]sx?)$/,
+    test: /\.(js|mjs|jsx|ts|tsx)$/,
     // Can only clobber test
     // Prevent clobbering the `include` and `use` values.
     ...options,

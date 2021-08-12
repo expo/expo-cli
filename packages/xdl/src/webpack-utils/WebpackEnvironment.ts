@@ -26,7 +26,7 @@ export function shouldWebpackClearLogs(): boolean {
 export function logEnvironmentInfo(
   projectRoot: string,
   tag: ProjectUtils.LogTag,
-  config: Configuration
+  config: Pick<Configuration, 'mode'>
 ): void {
   if (isDebugModeEnabled() && config.mode === 'production') {
     ProjectUtils.logWarning(

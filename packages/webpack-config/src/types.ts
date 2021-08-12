@@ -1,16 +1,5 @@
 import { PWAConfig } from 'expo-pwa';
-import { Configuration as WebpackConfiguration } from 'webpack';
-import {
-  ProxyConfigArray,
-  ProxyConfigMap,
-  Configuration as WebpackDevServerConfiguration,
-} from 'webpack-dev-server';
-
-export interface DevConfiguration extends WebpackConfiguration {
-  devServer?: WebpackDevServerConfiguration;
-}
-
-export type AnyConfiguration = DevConfiguration | WebpackConfiguration;
+import { ProxyConfigArray, ProxyConfigMap } from 'webpack-dev-server';
 
 type AnyObject = Record<string, any>;
 
@@ -106,6 +95,9 @@ export interface FilePaths {
   appMain: string | null;
   modules: string;
   servedPath: string;
+  appWebpackCache: string;
+  appTsConfig: string;
+  appJsConfig: string;
   //   [route: string]: string | PathResolver | FilePathsFolder;
 }
 

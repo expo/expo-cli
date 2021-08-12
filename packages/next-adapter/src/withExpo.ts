@@ -1,12 +1,12 @@
 import { getBareExtensions } from '@expo/config/paths';
 import { withUnimodules } from '@expo/webpack-config/addons';
-import { AnyConfiguration } from '@expo/webpack-config/webpack/types';
+import type { Configuration } from 'webpack';
 
 export default function withExpo(nextConfig: any = {}): any {
   return {
     ...nextConfig,
     pageExtensions: getBareExtensions(['web']),
-    webpack(config: AnyConfiguration, options: any): AnyConfiguration {
+    webpack(config: Configuration, options: any): Configuration {
       // Prevent define plugin from overwriting Next.js environment.
       process.env.EXPO_WEBPACK_DEFINE_ENVIRONMENT_AS_KEYS = 'true';
 

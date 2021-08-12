@@ -1,4 +1,4 @@
-import { Rule } from 'webpack';
+import { RuleSetRule } from 'webpack';
 
 /**
  * Create a `Webpack.Rule` for loading fonts and including Expo vector icons.
@@ -11,7 +11,7 @@ import { Rule } from 'webpack';
 export default function createFontLoader(
   projectRoot: string,
   includeModule: (...props: string[]) => string
-): Rule {
+): RuleSetRule {
   return {
     test: /\.(woff2?|eot|ttf|otf)$/,
     use: [

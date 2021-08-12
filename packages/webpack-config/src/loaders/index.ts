@@ -1,9 +1,9 @@
 export {
   imageLoaderRule,
+  avifImageLoaderRule,
   fallbackLoaderRule,
   styleLoaderRule,
   getBabelLoaderRule,
-  getHtmlLoaderRule,
   default as createAllLoaders,
 } from './createAllLoaders';
 export { default as createBabelLoader } from './createBabelLoader';

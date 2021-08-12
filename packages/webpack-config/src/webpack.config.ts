@@ -3,6 +3,7 @@
 import chalk from 'chalk';
 import { CleanWebpackPlugin } from 'clean-webpack-plugin';
 import CopyWebpackPlugin from 'copy-webpack-plugin';
+import { createHash } from 'crypto';
 import {
   getChromeIconConfig,
   getFaviconIconConfig,
@@ -10,25 +11,18 @@ import {
   getSafariStartupImageConfig,
   IconOptions,
 } from 'expo-pwa';
+import fs from 'fs';
 import { readFileSync } from 'fs-extra';
 import { boolish } from 'getenv';
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 import { parse } from 'node-html-parser';
 import path from 'path';
-import PnpWebpackPlugin from 'pnp-webpack-plugin';
 import ModuleNotFoundPlugin from 'react-dev-utils/ModuleNotFoundPlugin';
-import WatchMissingNodeModulesPlugin from 'react-dev-utils/WatchMissingNodeModulesPlugin';
 import resolveFrom from 'resolve-from';
-import webpack, { Configuration, HotModuleReplacementPlugin, Options, Output } from 'webpack';
-import ManifestPlugin from 'webpack-manifest-plugin';
+import webpack, { Configuration } from 'webpack';
+import { WebpackManifestPlugin } from 'webpack-manifest-plugin';
 
-import {
-  withAlias,
-  withDevServer,
-  withNodeMocks,
-  withOptimizations,
-  withPlatformSourceMaps,
-} from './addons';
+import { withAlias, withDevServer, withOptimizations, withPlatformSourceMaps } from './addons';
 import {
   getAliases,
   getConfig,
@@ -51,7 +45,7 @@ import {
 } from './plugins';
 import ExpoAppManifestWebpackPlugin from './plugins/ExpoAppManifestWebpackPlugin';
 import { HTMLLinkNode } from './plugins/ModifyHtmlWebpackPlugin';
-import { Arguments, DevConfiguration, Environment, FilePaths, Mode } from './types';
+import { Arguments, Environment, FilePaths, Mode } from './types';
 
 // Source maps are resource heavy and can cause out of memory issue for large source files.
 const shouldUseSourceMap = boolish('GENERATE_SOURCEMAP', true);
@@ -61,8 +55,8 @@ const isCI = boolish('CI', false);
 
 function getDevtool(
   { production, development }: { production: boolean; development: boolean },
-  { devtool }: { devtool?: Options.Devtool }
-): Options.Devtool {
+  { devtool }: { devtool?: string | false }
+): string | false {
   if (production) {
     // string or false
     if (devtool !== undefined) {
@@ -77,6 +71,9 @@ function getDevtool(
   return false;
 }
 
+type Output = Configuration['output'];
+type DevtoolModuleFilenameTemplateInfo = { root: string; absoluteResourcePath: string };
+
 function getOutput(
   locations: FilePaths,
   mode: Mode,
@@ -89,9 +86,7 @@ function getOutput(
     publicPath,
     // Build folder (default `web-build`)
     path: locations.production.folder,
-    // this defaults to 'window', but by setting it to 'this' then
-    // module chunks which are built will work in web workers as well.
-    globalObject: 'this',
+    assetModuleFilename: 'static/media/[name].[hash][ext]',
   };
 
   if (mode === 'production') {
@@ -100,7 +95,7 @@ function getOutput(
     commonOutput.chunkFilename = 'static/js/[name].[contenthash:8].chunk.js';
     // Point sourcemap entries to original disk location (format as URL on Windows)
     commonOutput.devtoolModuleFilenameTemplate = (
-      info: webpack.DevtoolModuleFilenameTemplateInfo
+      info: DevtoolModuleFilenameTemplateInfo
     ): string => path.relative(locations.root, info.absoluteResourcePath).replace(/\\/g, '/');
   } else {
     // Add comments that describe the file import/exports.
@@ -113,7 +108,7 @@ function getOutput(
     commonOutput.chunkFilename = 'static/js/[name].chunk.js';
     // Point sourcemap entries to original disk location (format as URL on Windows)
     commonOutput.devtoolModuleFilenameTemplate = (
-      info: webpack.DevtoolModuleFilenameTemplateInfo
+      info: DevtoolModuleFilenameTemplateInfo
     ): string => path.resolve(info.absoluteResourcePath).replace(/\\/g, '/');
   }
 
@@ -137,10 +132,14 @@ function getPlatformsExtensions(platform: string): string[] {
   return getModuleFileExtensions(platform);
 }
 
-export default async function (
-  env: Environment,
-  argv: Arguments = {}
-): Promise<Configuration | DevConfiguration> {
+function createEnvironmentHash(env: any) {
+  const hash = createHash('md5');
+  hash.update(JSON.stringify(env));
+
+  return hash.digest('hex');
+}
+
+export default async function (env: Environment, argv: Arguments = {}): Promise<Configuration> {
   if ('report' in env) {
     console.warn(
       chalk.bgRed.black(
@@ -163,12 +162,7 @@ export default async function (
 
   const { build: buildConfig = {} } = config.web || {};
 
-  const devtool = getDevtool(
-    { production: isProd, development: isDev },
-    buildConfig as {
-      devtool: Options.Devtool;
-    }
-  );
+  const devtool = getDevtool({ production: isProd, development: isDev }, buildConfig);
 
   const appEntry: string[] = [];
 
@@ -196,7 +190,6 @@ export default async function (
     }
   } else {
     // Add a loose requirement on the ResizeObserver polyfill if it's installed...
-    // Avoid `withEntry` as we don't need so much complexity with this config.
     const resizeObserverPolyfill = resolveFrom.silent(
       env.projectRoot,
       'resize-observer-polyfill/dist/ResizeObserver.global'
@@ -309,11 +302,10 @@ export default async function (
     },
   };
 
-  let webpackConfig: DevConfiguration = {
+  let webpackConfig: Configuration = {
+    target: ['browserslist'],
     mode,
-    entry: {
-      app: appEntry,
-    },
+    entry: appEntry,
     // https://webpack.js.org/configuration/other-options/#bail
     // Fail out on the first error instead of tolerating it.
     bail: isProd,
@@ -322,6 +314,24 @@ export default async function (
     context: isNative ? env.projectRoot ?? __dirname : __dirname,
     // configures where the build ends up
     output: getOutput(locations, mode, publicPath, env.platform),
+
+    cache: {
+      type: 'filesystem',
+      version: createEnvironmentHash(process.env),
+      cacheDirectory: env.locations.appWebpackCache,
+      store: 'pack',
+      buildDependencies: {
+        defaultWebpack: ['webpack/lib/'],
+        config: [__filename],
+        tsconfig: [env.locations.appTsConfig, env.locations.appJsConfig].filter(f =>
+          fs.existsSync(f)
+        ),
+      },
+    },
+    infrastructureLogging: {
+      level: 'none',
+    },
+
     plugins: [
       // Delete the build folder
       isProd &&
@@ -410,15 +420,6 @@ export default async function (
           maxChunks: 1,
         }),
 
-      // This is necessary to emit hot updates (currently CSS only):
-      !isNative && isDev && new HotModuleReplacementPlugin(),
-
-      // If you require a missing module and then `npm install` it, you still have
-      // to restart the development server for Webpack to discover it. This plugin
-      // makes the discovery automatic so you don't have to restart.
-      // See https://github.com/facebook/create-react-app/issues/186
-      isDev && new WatchMissingNodeModulesPlugin(locations.modules),
-
       !isNative &&
         isProd &&
         new MiniCssExtractPlugin({
@@ -434,7 +435,7 @@ export default async function (
       // - "entrypoints" key: Array of files which are included in `index.html`,
       //   can be used to reconstruct the HTML if necessary
       !isNative &&
-        new ManifestPlugin({
+        new WebpackManifestPlugin({
           fileName: 'asset-manifest.json',
           publicPath,
           filter: ({ path }) => {
@@ -455,7 +456,7 @@ export default async function (
               }
               return manifest;
             }, seed);
-            const entrypointFiles = entrypoints.app.filter(fileName => !fileName.endsWith('.map'));
+            const entrypointFiles = entrypoints.main.filter(fileName => !fileName.endsWith('.map'));
 
             return {
               files: manifestFiles,
@@ -469,28 +470,22 @@ export default async function (
     ].filter(Boolean),
     module: {
       strictExportPresence: false,
+      // @ts-ignore
       rules: [
-        // Disable require.ensure because it breaks tree shaking.
-        { parser: { requireEnsure: false } },
+        // Handle node_modules packages that contain sourcemaps
+        shouldUseSourceMap && {
+          enforce: 'pre',
+          exclude: /@babel(?:\/|\\{1,2})runtime/,
+          test: /\.(js|mjs|jsx|ts|tsx|css)$/,
+          use: 'source-map-loader',
+        },
         {
           oneOf: createAllLoaders(env),
         },
       ].filter(Boolean),
     },
-    resolveLoader: {
-      plugins: [
-        // Also related to Plug'n'Play, but this time it tells Webpack to load its loaders
-        // from the current package.
-        PnpWebpackPlugin.moduleLoader(module),
-      ],
-    },
     resolve: {
       extensions: getPlatformsExtensions(env.platform),
-      plugins: [
-        // Adds support for installing with Plug'n'Play, leading to faster installs and adding
-        // guards against forgotten dependencies and such.
-        PnpWebpackPlugin,
-      ],
       symlinks: false,
     },
     // Turn off performance processing because we utilize
@@ -519,7 +514,7 @@ export default async function (
   }
 
   if (!isNative) {
-    webpackConfig = withNodeMocks(withAlias(webpackConfig, getAliases(env.projectRoot)));
+    webpackConfig = withAlias(webpackConfig, getAliases(env.projectRoot));
   }
 
   return webpackConfig;

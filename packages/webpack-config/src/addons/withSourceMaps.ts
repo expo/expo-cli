@@ -1,13 +1,13 @@
-import { SourceMapDevToolPlugin } from 'webpack';
+import { Configuration, SourceMapDevToolPlugin } from 'webpack';
 
-import { AnyConfiguration, InputEnvironment } from '../types';
+import { InputEnvironment } from '../types';
 
 function isNative(env: Pick<InputEnvironment, 'platform'>): boolean {
   return !!env.platform && ['ios', 'android'].includes(env.platform);
 }
 
 function createSourceMapPlugin(
-  webpackConfig: AnyConfiguration,
+  webpackConfig: Configuration,
   env: Pick<InputEnvironment, 'mode'> = {}
 ) {
   const mode = env.mode ?? webpackConfig.mode;
@@ -45,9 +45,9 @@ function createSourceMapPlugin(
  * @param env
  */
 export default function withPlatformSourceMaps(
-  webpackConfig: AnyConfiguration,
+  webpackConfig: Configuration,
   env: Pick<InputEnvironment, 'platform' | 'mode'> = {}
-): AnyConfiguration {
+): Configuration {
   if (!isNative(env)) {
     return webpackConfig;
   }

@@ -8,6 +8,7 @@ import evalSourceMapMiddleware from 'react-dev-utils/evalSourceMapMiddleware';
 import ignoredFiles from 'react-dev-utils/ignoredFiles';
 import noopServiceWorkerMiddleware from 'react-dev-utils/noopServiceWorkerMiddleware';
 import redirectServedPath from 'react-dev-utils/redirectServedPathMiddleware';
+import { Configuration } from 'webpack';
 import {
   ProxyConfigArray,
   ProxyConfigMap,
@@ -15,7 +16,7 @@ import {
 } from 'webpack-dev-server';
 
 import { getPaths, getPublicPaths } from '../env';
-import { AnyConfiguration, DevConfiguration, Environment } from '../types';
+import { Environment } from '../types';
 
 // Ensure the certificate and key provided are valid and if not
 // throw an easy to debug error
@@ -82,15 +83,6 @@ const sockHost = process.env.WDS_SOCKET_HOST;
 const sockPath = process.env.WDS_SOCKET_PATH; // default: '/ws'
 const sockPort = process.env.WDS_SOCKET_PORT;
 
-/**
- *
- * @param input
- * @internal
- */
-export function isDevConfig(input: AnyConfiguration): input is DevConfiguration {
-  return input && input.mode === 'development';
-}
-
 type SelectiveEnv = Pick<Environment, 'mode' | 'locations' | 'projectRoot' | 'https' | 'platform'>;
 
 type DevServerOptions = {
@@ -107,11 +99,11 @@ type DevServerOptions = {
  * @category addons
  */
 export default function withDevServer(
-  webpackConfig: AnyConfiguration,
+  webpackConfig: Configuration,
   env: SelectiveEnv,
   options: DevServerOptions = {}
-): AnyConfiguration {
-  if (isDevConfig(webpackConfig)) {
+): Configuration {
+  if (webpackConfig?.mode === 'development') {
     webpackConfig.devServer = createDevServer(env, options);
   }
   return webpackConfig;
@@ -164,7 +156,7 @@ export function createDevServer(
     // really know what you're doing with a special environment variable.
     // Note: ["localhost", ".localhost"] will support subdomains - but we might
     // want to allow setting the allowedHosts manually for more complex setups
-    allowedHosts: disableFirewall ? 'all' : [allowedHost],
+    allowedHosts: disableFirewall ? ['all'] : [allowedHost],
     // Enable gzip compression of generated files.
     compress: true,
     static: {
@@ -228,7 +220,7 @@ export function createDevServer(
       if (isNative) {
         return;
       }
-      // Keep `evalSourceMapMiddleware` and `errorOverlayMiddleware`
+      // Keep `evalSourceMapMiddleware`
       // middlewares before `redirectServedPath` otherwise will not have any effect
       // This lets us fetch source contents from webpack for the error overlay
       app.use(evalSourceMapMiddleware(server));
@@ -249,11 +241,11 @@ export function createDevServer(
       app.use(noopServiceWorkerMiddleware(publicUrlOrPath));
     },
 
-    // TODO: Verify these work in Webpack 5 on web
+    // // TODO: Verify these work in Webpack 5 on web
 
-    // Without disabling this on native, you get the error `Can't find variable self`.
-    inline: !isNative,
-    // Specify the mimetypes for hosting native bundles.
-    mimeTypes,
+    // // Without disabling this on native, you get the error `Can't find variable self`.
+    // inline: !isNative,
+    // // Specify the mimetypes for hosting native bundles.
+    // mimeTypes,
   };
 }
