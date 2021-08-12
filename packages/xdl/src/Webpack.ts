@@ -110,6 +110,26 @@ export type WebpackDevServerResults = {
   messageSocket: MessageSocket;
 };
 
+export async function broadcastMessage(message: 'reload' | string, data?: any) {
+  if (!webpackDevServerInstance || !(webpackDevServerInstance instanceof WebpackDevServer)) {
+    return;
+  }
+
+  if (message !== 'reload') {
+    // TODO:
+    // Webpack currently only supports reloading the client (browser),
+    // remove this when we have custom sockets, and native support.
+    return;
+  }
+
+  // TODO:
+  // Default webpack-dev-server sockets use "content-changed" instead of "reload" (what we use on native).
+  // For now, just manually convert the value so our CLI interface can be unified.
+  const hackyConvertedMessage = message === 'reload' ? 'content-changed' : message;
+
+  webpackDevServerInstance.sockWrite(webpackDevServerInstance.sockets, hackyConvertedMessage, data);
+}
+
 export async function startAsync(
   projectRoot: string,
   options: CLIWebOptions = {}
@@ -238,25 +258,7 @@ export async function startAsync(
     },
     // Match the native protocol.
     messageSocket: {
-      broadcast(message: string, data?: any) {
-        if (!server || !(server instanceof WebpackDevServer)) {
-          return;
-        }
-
-        if (message !== 'reload') {
-          // TODO:
-          // Webpack currently only supports reloading the client (browser),
-          // remove this when we have custom sockets, and native support.
-          return;
-        }
-
-        // TODO:
-        // Default webpack-dev-server sockets use "content-changed" instead of "reload" (what we use on native).
-        // For now, just manually convert the value so our CLI interface can be unified.
-        const hackyConvertedMessage = message === 'reload' ? 'content-changed' : message;
-
-        server.sockWrite(server.sockets, hackyConvertedMessage, data);
-      },
+      broadcast: broadcastMessage,
     },
   };
 }
