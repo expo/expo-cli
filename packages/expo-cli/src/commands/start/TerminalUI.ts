@@ -383,10 +383,8 @@ Please reload the project in Expo Go for the change to take effect.`
       case 'r':
         if (options.isRemoteReloadingEnabled) {
           Log.log(`${BLT} Reloading apps`);
-          // Send reload requests over the metro dev server
+          // Send reload requests over the dev servers
           Project.broadcastMessage('reload');
-          // Send reload requests over the webpack dev server
-          Webpack.broadcastMessage('content-changed');
         } else if (!options.webOnly) {
           // [SDK 40]: Restart bundler
           Log.clear();
