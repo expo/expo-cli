@@ -75,6 +75,13 @@ export async function actionAsync(projectRoot: string, options: NormalizedOption
 
   await profileMethod(Project.startAsync)(rootPath, { ...startOptions, exp });
 
+  if (!startOptions.webOnly && options.web) {
+    await profileMethod(Project.startWebpackAsync)(rootPath, {
+      ...startOptions,
+      exp,
+    });
+  }
+
   // Send to option...
   const url = await profileMethod(
     UrlUtils.constructDeepLinkAsync,
@@ -83,10 +90,6 @@ export async function actionAsync(projectRoot: string, options: NormalizedOption
   const recipient = await profileMethod(sendTo.getRecipient)(options.sendTo);
   if (recipient) {
     await sendTo.sendUrlAsync(url, recipient);
-  }
-
-  if (options.web) {
-    await Webpack.startAsync(projectRoot, options);
   }
 
   // Open project on devices.

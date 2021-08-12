@@ -40,13 +40,26 @@ export function broadcastMessage(
   method: 'reload' | 'devMenu' | 'sendDevCommand',
   params?: Record<string, any> | undefined
 ) {
-  if (messageSocket) {
-    messageSocket.broadcast(method, params);
-  }
-
   if (webpackDevServer) {
     webpackDevServer.messageSocket.broadcast(method, params);
   }
+  if (messageSocket) {
+    messageSocket.broadcast(method, params);
+  }
+}
+
+export async function startWebpackAsync(
+  projectRoot: string,
+  {
+    exp = getConfig(projectRoot).exp,
+    ...options
+  }: StartDevServerOptions & { exp?: ExpoConfig } = {}
+) {
+  webpackDevServer = await Webpack.startAsync(projectRoot, {
+    ...options,
+    port: options.webpackPort,
+  });
+  DevSession.startSession(projectRoot, exp, 'web');
 }
 
 export async function startAsync(
@@ -68,11 +81,7 @@ export async function startAsync(
   watchBabelConfigForProject(projectRoot);
 
   if (options.webOnly) {
-    webpackDevServer = await Webpack.startAsync(projectRoot, {
-      ...options,
-      port: options.webpackPort,
-    });
-    DevSession.startSession(projectRoot, exp, 'web');
+    await startWebpackAsync(projectRoot, { exp, ...options });
     return exp;
   } else if (Env.shouldUseDevServer(exp) || options.devClient) {
     [serverInstance, , messageSocket] = await startDevServerAsync(projectRoot, options);

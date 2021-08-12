@@ -147,23 +147,19 @@ const printServerInfo = async (
   }
 
   if (!options.webOnly) {
-    // Log.newLine();
     // TODO: if dev client, change this message!
     Log.nested(item(`Scan the QR code above with Expo Go (Android) or the Camera app (iOS)`));
   }
 
-  if (Webpack.isRunning()) {
+  const webUrl = await Webpack.getUrlAsync(projectRoot);
+  if (webUrl) {
     Log.addNewLineIfNone();
-    // printWebSupportPreviewNotice();
-    const webUrl = await Webpack.getUrlAsync(projectRoot);
-    if (webUrl) {
-      Log.nested(item(`Webpack waiting on ${u(webUrl)}`));
-      Log.nested(chalk.gray(item(`Expo Webpack is in beta, and subject to breaking changes!`)));
-    }
+    Log.nested(item(`Webpack waiting on ${u(webUrl)}`));
+    Log.nested(chalk.gray(item(`Expo Webpack is in beta, and subject to breaking changes!`)));
   }
 
   await printBasicUsageAsync(options);
-  // Webpack.printConnectionInstructions(projectRoot);
+
   printHelp();
   Log.addNewLineIfNone();
 };
@@ -301,16 +297,19 @@ export async function startAsync(projectRoot: string, options: StartOptions) {
         break;
       }
       case 'w': {
-        Log.log(`${BLT} Open in the web browser...`);
-        const isStarted = Webpack.isRunning();
+        // Ensure the Webpack dev server is running first
+        const isStarted = await Webpack.getUrlAsync(projectRoot);
 
-        await Webpack.openAsync(projectRoot);
-        if (isStarted) {
-          printHelp();
-        } else {
+        if (!isStarted) {
+          await Project.startAsync(projectRoot, { webOnly: true });
           // When this is the first time webpack is started, reprint the connection info.
           await printServerInfo(projectRoot, options);
         }
+
+        Log.log(`${BLT} Open in the web browser...`);
+
+        await Webpack.openAsync(projectRoot);
+        printHelp();
         break;
       }
       case 'c': {

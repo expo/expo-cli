@@ -55,5 +55,6 @@ export {
   runHook,
   startAsync,
   stopAsync,
+  startWebpackAsync,
   writeArtifactSafelyAsync,
 } from './internal';

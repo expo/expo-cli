@@ -391,21 +391,13 @@ async function getProjectNameAsync(projectRoot: string): Promise<string> {
   return webName;
 }
 
-function getServer(projectRoot: string): DevServer | null {
-  if (webpackDevServerInstance == null) {
-    ProjectUtils.logError(projectRoot, WEBPACK_LOG_TAG, 'Webpack is not running.');
-  }
-  return webpackDevServerInstance;
-}
-
 /**
  * Get the URL for the running instance of Webpack dev server.
  *
  * @param projectRoot
  */
 export async function getUrlAsync(projectRoot: string): Promise<string | null> {
-  const devServer = getServer(projectRoot);
-  if (!devServer) {
+  if (!webpackDevServerInstance) {
     return null;
   }
   const host = ip.address();

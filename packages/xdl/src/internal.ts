@@ -98,7 +98,7 @@ export {
   startDevServerAsync,
   StartOptions as StartDevServerOptions,
 } from './start/startDevServerAsync';
-export { startAsync, stopAsync, broadcastMessage } from './start/startAsync';
+export { startAsync, stopAsync, startWebpackAsync, broadcastMessage } from './start/startAsync';
 export * as ManifestHandler from './start/ManifestHandler';
 export * as ExpoUpdatesManifestHandler from './start/ExpoUpdatesManifestHandler';
 export { getFreePortAsync } from './start/getFreePortAsync';
