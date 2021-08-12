@@ -11,6 +11,10 @@ import { parseBinaryPlistAsync } from '../utils/parseBinaryPlistAsync';
 // Enable this to test the JS version of simctl
 const EXPO_BETA_CORE_SIM = boolish('EXPO_BETA_CORE_SIM', false);
 
+export function isEnabled() {
+  return EXPO_BETA_CORE_SIM;
+}
+
 enum DeviceState {
   BOOTED = 3,
   SHUTDOWN = 1,

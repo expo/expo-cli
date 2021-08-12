@@ -9,6 +9,8 @@ import path from 'path';
 import prompts from 'prompts';
 import semver from 'semver';
 
+import { ensureSimulatorAppRunningAsync } from './apple/utils/ensureSimulatorAppRunningAsync';
+import { TimeoutError, waitForActionAsync } from './apple/utils/waitForActionAsync';
 import {
   Analytics,
   BundleIdentifier,
@@ -237,7 +239,7 @@ export async function ensureSimulatorOpenAsync(
       return await ensureSimulatorOpenAsync({ udid, osType }, false);
     }
     // TODO: We should eliminate all needs for a timeout error, it's bad UX to get an error about the simulator not starting while the user can clearly see it starting on their slow computer.
-    throw new SimControl.TimeoutError(
+    throw new TimeoutError(
       `Simulator didn't boot fast enough. Try opening Simulator first, then running your app.`
     );
   }
@@ -556,7 +558,7 @@ export async function upgradeExpoAsync(
     Logger.global.info(`\u203A Opening ${chalk.underline(_lastUrl)} in Expo Go`);
     await Promise.all([
       // Open the Simulator.app app
-      SimControl.ensureSimulatorAppRunningAsync(simulator),
+      ensureSimulatorAppRunningAsync(simulator),
       // Launch the project in the simulator, this can be parallelized for some reason.
       SimControl.openURLAsync({ udid: simulator.udid, url: _lastUrl }),
     ]);
@@ -622,7 +624,7 @@ async function openUrlInSimulatorSafeAsync({
     await Promise.all([
       // Open the Simulator.app app, and bring it to the front
       profileMethod(async () => {
-        await SimControl.ensureSimulatorAppRunningAsync({ udid: simulator?.udid });
+        await ensureSimulatorAppRunningAsync({ udid: simulator?.udid });
         activateSimulatorWindowAsync();
       }, 'parallel: ensureSimulatorAppRunningAsync')(),
       // Launch the project in the simulator, this can be parallelized for some reason.
@@ -939,3 +941,5 @@ async function promptForDeviceAsync(
   Prompts.resumeInteractions();
   return value;
 }
+
+export { ensureSimulatorAppRunningAsync };

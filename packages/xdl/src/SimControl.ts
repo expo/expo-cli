@@ -5,8 +5,8 @@ import { exec, execSync } from 'child_process';
 import path from 'path';
 import { promisify } from 'util';
 
+import { waitForActionAsync } from './apple/utils/waitForActionAsync';
 import { CoreSimulator, Logger, XDLError } from './internal';
-import { delayAsync } from './utils/delayAsync';
 import { profileMethod } from './utils/profileMethod';
 
 const execAsync = promisify(exec);
@@ -131,36 +131,6 @@ export async function getContainerPathAsync(
   }
 }
 
-async function waitForActionAsync<T>({
-  action,
-  interval = 100,
-  maxWaitTime = 20000,
-}: {
-  action: () => T | Promise<T>;
-  interval?: number;
-  maxWaitTime?: number;
-}): Promise<T> {
-  let complete: T;
-  const start = Date.now();
-  do {
-    complete = await action();
-
-    await delayAsync(interval);
-    if (Date.now() - start > maxWaitTime) {
-      break;
-    }
-  } while (!complete);
-
-  return complete;
-}
-
-export async function waitForSimulatorAppToStart(): Promise<boolean> {
-  return waitForActionAsync<boolean>({
-    interval: 50,
-    action: isSimulatorAppRunningAsync,
-  });
-}
-
 export async function waitForDeviceToBootAsync({
   udid,
 }: Pick<SimulatorDevice, 'udid'>): Promise<SimulatorDevice | null> {
@@ -168,8 +138,6 @@ export async function waitForDeviceToBootAsync({
     action: () => bootAsync({ udid }),
   });
 }
-
-export class TimeoutError extends Error {}
 
 export async function openURLAsync(options: { udid?: string; url: string }): Promise<void> {
   try {
@@ -190,22 +158,6 @@ export async function openURLAsync(options: { udid?: string; url: string }): Pro
   }
 }
 
-export async function ensureSimulatorAppRunningAsync({ udid }: { udid?: string }) {
-  // Yes, simulators can be booted even if the app isn't running, obviously we'd never want this.
-  if (!(await isSimulatorAppRunningAsync())) {
-    Logger.global.info(`\u203A Opening the iOS simulator, this might take a moment.`);
-
-    // In theory this would ensure the correct simulator is booted as well.
-    // This isn't theory though, this is Xcode.
-    await openSimulatorAppAsync({ udid });
-    if (!(await waitForSimulatorAppToStart())) {
-      throw new TimeoutError(
-        `Simulator app did not open fast enough. Try opening Simulator first, then running your app.`
-      );
-    }
-  }
-}
-
 export async function openBundleIdAsync(options: {
   udid?: string;
   bundleIdentifier: string;
@@ -215,12 +167,39 @@ export async function openBundleIdAsync(options: {
 
 // This will only boot in headless mode if the Simulator app is not running.
 export async function bootAsync({ udid }: { udid: string }): Promise<SimulatorDevice | null> {
-  const device = await CoreSimulator.getDeviceInfoAsync({ udid }).catch(() => null);
-  if (device?.state === 'Booted') {
-    return device;
+  if (CoreSimulator.isEnabled()) {
+    const device = await CoreSimulator.getDeviceInfoAsync({ udid }).catch(() => null);
+    if (device?.state === 'Booted') {
+      return device;
+    }
+    await runBootAsync({ udid });
+    return await profileMethod(CoreSimulator.getDeviceInfoAsync)({ udid });
   }
+
+  // TODO: Deprecate
   await runBootAsync({ udid });
-  return await profileMethod(CoreSimulator.getDeviceInfoAsync)({ udid });
+  return await isSimulatorBootedAsync({ udid });
+}
+
+async function getBootedSimulatorsAsync(): Promise<SimulatorDevice[]> {
+  const simulatorDeviceInfo = await listAsync('devices');
+  return Object.values(simulatorDeviceInfo.devices).reduce((prev, runtime) => {
+    return prev.concat(runtime.filter(device => device.state === 'Booted'));
+  }, []);
+}
+
+async function isSimulatorBootedAsync({
+  udid,
+}: {
+  udid?: string;
+}): Promise<SimulatorDevice | null> {
+  // Simulators can be booted even if the app isn't running :(
+  const devices = await getBootedSimulatorsAsync();
+  if (udid) {
+    return devices.find(bootedDevice => bootedDevice.udid === udid) ?? null;
+  } else {
+    return devices[0] ?? null;
+  }
 }
 
 export async function runBootAsync({ udid }: { udid: string }) {
@@ -390,42 +369,6 @@ export async function simctlAsync(
 
 function deviceUDIDOrBooted(udid?: string): string {
   return udid ? udid : 'booted';
-}
-
-/**
- * I think the app can be open while no simulators are booted.
- */
-export async function isSimulatorAppRunningAsync(): Promise<boolean> {
-  try {
-    const zeroMeansNo = (
-      await osascript.execAsync(
-        'tell app "System Events" to count processes whose name is "Simulator"'
-      )
-    ).trim();
-    if (zeroMeansNo === '0') {
-      return false;
-    }
-  } catch (error) {
-    if (error.message.includes('Application isn’t running')) {
-      return false;
-    }
-    throw error;
-  }
-
-  return true;
-}
-
-export async function openSimulatorAppAsync({ udid }: { udid?: string }) {
-  const args = ['open', '-a', 'Simulator'];
-  if (udid) {
-    // This has no effect if the app is already running.
-    args.push('--args', '-CurrentDeviceUDID', udid);
-  }
-  await execAsync(args.join(' '));
-}
-
-export async function killAllAsync() {
-  return await spawnAsync('killAll', ['Simulator']);
 }
 
 export function isLicenseOutOfDate(text: string) {
