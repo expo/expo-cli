@@ -136,11 +136,6 @@ const printServerInfo = async (
   projectRoot: string,
   options: Pick<StartOptions, 'webOnly' | 'isWebSocketsEnabled' | 'isRemoteReloadingEnabled'> = {}
 ) => {
-  if (options.webOnly) {
-    // Webpack.printConnectionInstructions(projectRoot);
-    // printHelp();
-    // return;
-  }
   Log.newLine();
   const wrapLength = process.stdout.columns || 80;
   const item = (text: string): string => ` ${BLT} ` + wrapAnsi(text, wrapLength).trimStart();
@@ -150,16 +145,23 @@ const printServerInfo = async (
     urlOpts.printQRCode(url);
     Log.nested(item(`Metro waiting on ${u(url)}`));
   }
-  const webUrl = await Webpack.getUrlAsync(projectRoot);
-  if (webUrl) {
-    Log.nested(item(`Webpack waiting on ${u(webUrl)}`));
-  }
 
   if (!options.webOnly) {
     // Log.newLine();
     // TODO: if dev client, change this message!
     Log.nested(item(`Scan the QR code above with Expo Go (Android) or the Camera app (iOS)`));
   }
+
+  if (Webpack.isRunning()) {
+    Log.addNewLineIfNone();
+    // printWebSupportPreviewNotice();
+    const webUrl = await Webpack.getUrlAsync(projectRoot);
+    if (webUrl) {
+      Log.nested(item(`Webpack waiting on ${u(webUrl)}`));
+      Log.nested(chalk.gray(item(`Expo Webpack is in beta, and subject to breaking changes!`)));
+    }
+  }
+
   await printBasicUsageAsync(options);
   // Webpack.printConnectionInstructions(projectRoot);
   printHelp();

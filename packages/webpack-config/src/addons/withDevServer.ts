@@ -1,7 +1,6 @@
 import chalk from 'chalk';
 import crypto from 'crypto';
 import fs from 'fs-extra';
-import { boolish } from 'getenv';
 import * as path from 'path';
 // @ts-ignore
 import evalSourceMapMiddleware from 'react-dev-utils/evalSourceMapMiddleware';
@@ -185,6 +184,7 @@ export function createDevServer(
         ignored: ignoredFiles(locations.root),
       },
     },
+
     client: {
       webSocketURL: {
         // Enable custom sockjs pathname for websocket connection to hot reloading server.
@@ -199,6 +199,8 @@ export function createDevServer(
       logging: 'none',
     },
     devMiddleware: {
+      mimeTypes,
+
       // It is important to tell WebpackDevServer to use the same "publicPath" path as
       // we specified in the webpack config. When homepage is '.', default to serving
       // from the root.

@@ -117,7 +117,11 @@ async function clearWebCacheAsync(projectRoot: string, mode: string): Promise<vo
 
 export async function broadcastMessage(message: 'content-changed' | string, data?: any) {
   if (webpackDevServerInstance && webpackDevServerInstance instanceof WebpackDevServer) {
-    webpackDevServerInstance.sockWrite(webpackDevServerInstance.sockets, message, data);
+    webpackDevServerInstance.sendMessage(
+      webpackDevServerInstance.webSocketServer.clients,
+      message,
+      data
+    );
   }
 }
 
@@ -263,6 +267,7 @@ export async function openAsync(projectRoot: string, options?: BundlingOptions):
   await openProjectAsync(projectRoot);
 }
 
+// TODO: Reuse logging system that we use in dev server + extras
 export async function compileWebAppAsync(
   projectRoot: string,
   compiler: webpack.Compiler
