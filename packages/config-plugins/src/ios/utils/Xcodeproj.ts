@@ -1,6 +1,7 @@
 import { ExpoConfig } from '@expo/config-types';
 import assert from 'assert';
 import path from 'path';
+import slugify from 'slugify';
 import xcode, {
   PBXFile,
   PBXGroup,
@@ -47,7 +48,12 @@ export function resolvePathOrProject(
 }
 
 // TODO: come up with a better solution for using app.json expo.name in various places
-function sanitizedName(name: string) {
+export function sanitizedName(name: string) {
+  // Default to the name `app` when every safe character has been sanitized
+  return sanitizedNameForProjects(name) || sanitizedNameForProjects(slugify(name)) || 'app';
+}
+
+function sanitizedNameForProjects(name: string) {
   return name
     .replace(/[\W_]+/g, '')
     .normalize('NFD')

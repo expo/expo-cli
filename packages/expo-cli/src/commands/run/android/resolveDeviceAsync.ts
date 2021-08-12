@@ -18,9 +18,7 @@ async function ensureEmulatorOpenAsync(device?: Android.Device): Promise<Android
   return bootedDevice;
 }
 
-export async function resolveDeviceAsync(
-  device: string | boolean | undefined
-): Promise<Android.Device> {
+export async function resolveDeviceAsync(device?: string | boolean): Promise<Android.Device> {
   if (!device) {
     return await ensureEmulatorOpenAsync();
   }

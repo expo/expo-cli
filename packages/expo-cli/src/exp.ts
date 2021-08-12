@@ -810,16 +810,17 @@ function _registerLogs() {
               return;
             }
             case NotificationCode.TICK_PROGRESS_BAR: {
-              const spinner = Log.getProgress();
-              if (spinner) {
-                spinner.tick(1, chunk.msg);
+              const bar = Log.getProgress();
+              if (bar) {
+                bar.tick(1, chunk.msg);
               }
               return;
             }
             case NotificationCode.STOP_PROGRESS_BAR: {
-              const spinner = Log.getProgress();
-              if (spinner) {
-                spinner.terminate();
+              const bar = Log.getProgress();
+              if (bar) {
+                Log.setBundleProgressBar(null);
+                bar.terminate();
               }
               return;
             }

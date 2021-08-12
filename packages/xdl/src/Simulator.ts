@@ -4,6 +4,7 @@ import spawnAsync from '@expo/spawn-async';
 import chalk from 'chalk';
 import { execSync } from 'child_process';
 import fs from 'fs-extra';
+import { boolish } from 'getenv';
 import path from 'path';
 import prompts from 'prompts';
 import semver from 'semver';
@@ -29,6 +30,9 @@ import {
 import { profileMethod } from './utils/profileMethod';
 
 let _lastUrl: string | null = null;
+
+// Enable this to test the JS version of simctl
+const EXPO_BETA_CORE_SIM = boolish('EXPO_BETA_CORE_SIM', false);
 
 const EXPO_GO_BUNDLE_IDENTIFIER = 'host.exp.Exponent';
 const SUGGESTED_XCODE_VERSION = `${Xcode.minimumVersion}.0`;
@@ -348,10 +352,14 @@ export async function isExpoClientInstalledOnSimulatorAsync({
 }: {
   udid: string;
 }): Promise<boolean> {
-  return !!(await CoreSimulator.getContainerPathAsync({
-    udid,
-    bundleIdentifier: EXPO_GO_BUNDLE_IDENTIFIER,
-  }));
+  if (EXPO_BETA_CORE_SIM) {
+    return !!(await CoreSimulator.getContainerPathAsync({
+      udid,
+      bundleIdentifier: EXPO_GO_BUNDLE_IDENTIFIER,
+    }));
+  }
+  // TODO: Remove when EXPO_BETA_CORE_SIM is stable
+  return !!(await SimControl.getContainerPathAsync(udid, EXPO_GO_BUNDLE_IDENTIFIER));
 }
 
 export async function waitForExpoClientInstalledOnSimulatorAsync({
@@ -385,10 +393,16 @@ export async function expoVersionOnSimulatorAsync({
 }: {
   udid: string;
 }): Promise<string | null> {
-  const localPath = await CoreSimulator.getContainerPathAsync({
-    udid,
-    bundleIdentifier: EXPO_GO_BUNDLE_IDENTIFIER,
-  });
+  let localPath: string | null;
+  if (EXPO_BETA_CORE_SIM) {
+    localPath = await CoreSimulator.getContainerPathAsync({
+      udid,
+      bundleIdentifier: EXPO_GO_BUNDLE_IDENTIFIER,
+    });
+  } else {
+    // TODO: Remove when EXPO_BETA_CORE_SIM is stable
+    localPath = await SimControl.getContainerPathAsync(udid, EXPO_GO_BUNDLE_IDENTIFIER);
+  }
   if (!localPath) {
     return null;
   }
