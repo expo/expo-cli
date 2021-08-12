@@ -303,7 +303,7 @@ export async function startAsync(projectRoot: string, options: StartOptions) {
       case 'w': {
         Log.log(`${BLT} Open in the web browser...`);
         await Webpack.openAsync(projectRoot);
-        await printServerInfo(projectRoot, options);
+        printHelp();
         break;
       }
       case 'c': {
