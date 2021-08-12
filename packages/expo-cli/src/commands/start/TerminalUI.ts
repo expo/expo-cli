@@ -302,8 +302,15 @@ export async function startAsync(projectRoot: string, options: StartOptions) {
       }
       case 'w': {
         Log.log(`${BLT} Open in the web browser...`);
+        const isStarted = Webpack.isRunning();
+
         await Webpack.openAsync(projectRoot);
-        printHelp();
+        if (isStarted) {
+          printHelp();
+        } else {
+          // When this is the first time webpack is started, reprint the connection info.
+          await printServerInfo(projectRoot, options);
+        }
         break;
       }
       case 'c': {
