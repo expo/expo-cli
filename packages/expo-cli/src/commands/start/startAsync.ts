@@ -109,15 +109,8 @@ export async function actionAsync(projectRoot: string, options: NormalizedOption
   }
 
   // Final note about closing the server.
-  // if (!options.webOnly) {
   Log.nested(`Logs for your project will appear below. ${chalk.dim(`Press Ctrl+C to exit.`)}`);
-  // } else {
-  //   Log.nested(
-  //     `\nLogs for your project will appear in the browser console. ${chalk.dim(
-  //       `Press Ctrl+C to exit.`
-  //     )}`
-  //   );
-  // }
+
   if (options.devClient) {
     UnifiedAnalytics.logEvent('dev client start command', {
       status: 'ready',
