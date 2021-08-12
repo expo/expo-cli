@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import { generateFaviconAsync, IconOptions, ProjectOptions } from 'expo-pwa';
-import { Compilation, Compiler } from 'webpack';
+import { Compilation, Compiler, sources } from 'webpack';
 
 import ModifyHtmlWebpackPlugin, { HTMLLinkNode, HTMLPluginData } from './ModifyHtmlWebpackPlugin';
 
@@ -51,10 +51,7 @@ export default class FaviconWebpackPlugin extends ModifyHtmlWebpackPlugin {
           } .../>`
         );
       } else {
-        compilation.assets[asset.asset.path] = {
-          source: () => asset.asset.source,
-          size: () => asset.asset.source.length,
-        };
+        compilation.emitAsset(asset.asset.path, new sources.RawSource(asset.asset.source));
         data.assetTags.meta.push(asset.tag);
       }
     }

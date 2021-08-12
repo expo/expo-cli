@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import { generateAppleIconAsync, generateSplashAsync, IconOptions, ProjectOptions } from 'expo-pwa';
-import { Compilation, Compiler } from 'webpack';
+import { Compilation, Compiler, sources } from 'webpack';
 
 import ModifyHtmlWebpackPlugin, { HTMLLinkNode, HTMLPluginData } from './ModifyHtmlWebpackPlugin';
 
@@ -94,10 +94,12 @@ export default class ApplePwaWebpackPlugin extends ModifyHtmlWebpackPlugin {
             `Using custom <link rel="apple-touch-icon" sizes="${size}" .../>`
           );
         } else {
-          compilation.assets[asset.asset.path] = {
-            source: () => asset.asset.source,
-            size: () => asset.asset.source.length,
-          };
+          compilation.emitAsset(asset.asset.path, new sources.RawSource(asset.asset.source));
+
+          // compilation.assets[asset.asset.path] = {
+          //   source: () => asset.asset.source,
+          //   size: () => asset.asset.source.length,
+          // };
           data.assetTags.meta.push(asset.tag);
         }
       }
@@ -122,10 +124,11 @@ export default class ApplePwaWebpackPlugin extends ModifyHtmlWebpackPlugin {
             `Using custom <link rel="apple-touch-startup-image" media="${media}" ... />`
           );
         } else {
-          compilation.assets[asset.asset.path] = {
-            source: () => asset.asset.source,
-            size: () => asset.asset.source.length,
-          };
+          compilation.emitAsset(asset.asset.path, new sources.RawSource(asset.asset.source));
+          // compilation.assets[asset.asset.path] = {
+          //   source: () => asset.asset.source,
+          //   size: () => asset.asset.source.length,
+          // };
           data.assetTags.meta.push(asset.tag);
         }
       }

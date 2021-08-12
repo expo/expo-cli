@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import { generateChromeIconAsync, IconOptions, ProjectOptions } from 'expo-pwa';
-import { Compilation, Compiler } from 'webpack';
+import { Compilation, Compiler, sources } from 'webpack';
 
 import { BeforeEmitOptions } from './JsonWebpackPlugin';
 import ModifyJsonWebpackPlugin from './ModifyJsonWebpackPlugin';
@@ -49,11 +49,7 @@ export default class ChromeIconsWebpackPlugin extends ModifyJsonWebpackPlugin {
     const iconAssets = await generateChromeIconAsync(this.options, this.icon, {});
 
     for (const asset of iconAssets) {
-      compilation.assets[asset.asset.path] = {
-        source: () => asset.asset.source,
-        size: () => asset.asset.source.length,
-      };
-
+      compilation.emitAsset(asset.asset.path, new sources.RawSource(asset.asset.source));
       data.json.icons.push(asset.manifest);
     }
 
