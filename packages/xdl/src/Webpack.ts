@@ -276,13 +276,6 @@ export async function stopAsync(projectRoot: string): Promise<void> {
   }
 }
 
-export async function openAsync(projectRoot: string, options?: BundlingOptions): Promise<void> {
-  if (!webpackDevServerInstance) {
-    await startAsync(projectRoot, options);
-  }
-  await openProjectAsync(projectRoot);
-}
-
 // TODO: Reuse logging system that we use in dev server + extras
 async function compileWebAppAsync(projectRoot: string, compiler: webpack.Compiler): Promise<any> {
   // We generate the stats.json file in the webpack-config
@@ -601,7 +594,7 @@ async function loadConfigAsync(
   return applyEnvironmentVariables(config);
 }
 
-async function openProjectAsync(
+export async function openAsync(
   projectRoot: string
 ): Promise<{ success: true; url: string } | { success: false; error: Error }> {
   try {
