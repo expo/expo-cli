@@ -195,6 +195,8 @@ export function createDevServer(
         port: sockPort,
       },
       overlay: true,
+      // TODO: This is nonstandard, prevents logging in the browser
+      logging: 'none',
     },
     devMiddleware: {
       // It is important to tell WebpackDevServer to use the same "publicPath" path as

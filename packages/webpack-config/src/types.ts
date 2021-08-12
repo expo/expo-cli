@@ -1,3 +1,4 @@
+import Log from '@expo/bunyan';
 import { PWAConfig } from 'expo-pwa';
 import { ProxyConfigArray, ProxyConfigMap } from 'webpack-dev-server';
 
@@ -5,6 +6,7 @@ type AnyObject = Record<string, any>;
 
 export type InputEnvironment = {
   projectRoot?: string;
+  logger?: Log;
   platform?: 'ios' | 'android' | 'web' | 'electron';
   info?: boolean;
   https?: boolean;
@@ -58,6 +60,10 @@ export type Environment = {
    * Control how the default Babel loader is configured.
    */
   babel?: ExpoBabelOptions;
+  /**
+   * Used for sending unified bundler logs to Expo CLI.
+   */
+  logger?: Log;
 };
 
 /**

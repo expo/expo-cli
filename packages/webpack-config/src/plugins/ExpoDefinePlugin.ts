@@ -134,10 +134,7 @@ export default class DefinePlugin extends webpack.DefinePlugin {
 
   constructor({ mode, publicUrl, config }: { mode: Mode; publicUrl: string; config: ExpoConfig }) {
     const publicAppManifest = createEnvironmentConstants(config);
-
     const environmentVariables = createClientEnvironment(mode, publicUrl, publicAppManifest);
-
-    console.log('ADDED: ', environmentVariables);
     super(environmentVariables);
   }
 }

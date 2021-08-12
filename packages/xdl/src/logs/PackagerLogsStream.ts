@@ -367,7 +367,13 @@ export default class PackagerLogsStream {
       progressChunk.msg = `Building JavaScript bundle: error`;
       progressChunk.level = Logger.ERROR;
     } else if (msg.type === 'bundle_transform_progressed') {
-      percentProgress = Math.floor((msg.transformedFileCount / msg.totalFileCount) * 100);
+      // @ts-ignore: webpack
+      if (msg.percentage) {
+        // @ts-ignore
+        percentProgress = msg.percentage * 100;
+      } else {
+        percentProgress = Math.floor((msg.transformedFileCount / msg.totalFileCount) * 100);
+      }
       progressChunk.msg = `Building JavaScript bundle: ${percentProgress}%`;
     } else {
       return;

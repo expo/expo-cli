@@ -15,13 +15,13 @@ export function isDebugModeEnabled(): boolean {
   return getenv.boolish('EXPO_WEB_DEBUG', false);
 }
 
-export function isInfoEnabled(): boolean {
-  return getenv.boolish('EXPO_WEB_INFO', false);
-}
+// export function isInfoEnabled(): boolean {
+//   return getenv.boolish('EXPO_WEB_INFO', false);
+// }
 
-export function shouldWebpackClearLogs(): boolean {
-  return !isDebugModeEnabled() && !isInfoEnabled() && !getenv.boolish('EXPO_DEBUG', false);
-}
+// export function shouldWebpackClearLogs(): boolean {
+//   return !isDebugModeEnabled() && !isInfoEnabled() && !getenv.boolish('EXPO_DEBUG', false);
+// }
 
 export function logEnvironmentInfo(
   projectRoot: string,

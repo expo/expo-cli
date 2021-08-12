@@ -2,7 +2,7 @@ import { ConfigError, ExpoConfig, getConfig, isLegacyImportsEnabled } from '@exp
 import chalk from 'chalk';
 import path from 'path';
 import resolveFrom from 'resolve-from';
-import { Project, UnifiedAnalytics, UrlUtils, Versions } from 'xdl';
+import { Project, UnifiedAnalytics, UrlUtils, Versions, Webpack } from 'xdl';
 
 import getDevClientProperties from '../../analytics/getDevClientProperties';
 import Log from '../../log';
@@ -85,6 +85,10 @@ export async function actionAsync(projectRoot: string, options: NormalizedOption
     await sendTo.sendUrlAsync(url, recipient);
   }
 
+  if (options.web) {
+    await Webpack.startAsync(projectRoot, options);
+  }
+
   // Open project on devices.
   await profileMethod(urlOpts.handleMobileOptsAsync)(projectRoot, options);
 
@@ -102,15 +106,15 @@ export async function actionAsync(projectRoot: string, options: NormalizedOption
   }
 
   // Final note about closing the server.
-  if (!options.webOnly) {
-    Log.nested(`Logs for your project will appear below. ${chalk.dim(`Press Ctrl+C to exit.`)}`);
-  } else {
-    Log.nested(
-      `\nLogs for your project will appear in the browser console. ${chalk.dim(
-        `Press Ctrl+C to exit.`
-      )}`
-    );
-  }
+  // if (!options.webOnly) {
+  Log.nested(`Logs for your project will appear below. ${chalk.dim(`Press Ctrl+C to exit.`)}`);
+  // } else {
+  //   Log.nested(
+  //     `\nLogs for your project will appear in the browser console. ${chalk.dim(
+  //       `Press Ctrl+C to exit.`
+  //     )}`
+  //   );
+  // }
   if (options.devClient) {
     UnifiedAnalytics.logEvent('dev client start command', {
       status: 'ready',

@@ -1,3 +1,4 @@
+import Log from '@expo/bunyan';
 import { getConfig, getNameFromConfig } from '@expo/config';
 import * as devcert from '@expo/devcert';
 import { isUsingYarn } from '@expo/package-manager';
@@ -70,6 +71,7 @@ export type WebEnvironment = {
   isImageEditingEnabled: boolean;
   // deprecated
   pwa: boolean;
+  logger: Log;
   mode: 'development' | 'production' | 'test' | 'none';
   https: boolean;
 };
@@ -196,29 +198,31 @@ export async function startAsync(
     port: webpackServerPort!,
   };
 
-  const server: DevServer = await new Promise(resolve => {
-    // Create a webpack compiler that is configured with custom messages.
-    const compiler = WebpackCompiler.createWebpackCompiler({
-      projectRoot,
-      appName,
-      config,
-      urls,
-      nonInteractive,
-      webpackFactory: webpack,
-      onFinished: () => resolve(server),
-    });
-    const server = new WebpackDevServer(compiler, config.devServer);
-    // Launch WebpackDevServer.
-    server.listen(port, WebpackEnvironment.HOST, error => {
-      if (error) {
-        ProjectUtils.logError(projectRoot, WEBPACK_LOG_TAG, error.message);
-      }
-      if (typeof options.onWebpackFinished === 'function') {
-        options.onWebpackFinished(error);
-      }
-    });
-    webpackDevServerInstance = server;
+  // const server: DevServer = await new Promise(resolve => {
+  // Create a webpack compiler that is configured with custom messages.
+  const compiler = webpack(config);
+  // const compiler = WebpackCompiler.createWebpackCompiler({
+  //   projectRoot,
+  //   appName,
+  //   config,
+  //   urls,
+  //   nonInteractive,
+  //   webpackFactory: webpack,
+  //   // onFinished: () => resolve(server),
+  // });
+  const server = new WebpackDevServer(compiler, config.devServer);
+  // Launch WebpackDevServer.
+  server.listen(port, WebpackEnvironment.HOST, error => {
+    if (error) {
+      ProjectUtils.logError(projectRoot, WEBPACK_LOG_TAG, error.message);
+    }
+    if (typeof options.onWebpackFinished === 'function') {
+      options.onWebpackFinished(error);
+    }
   });
+  webpackDevServerInstance = server;
+  //   resolve(server);
+  // });
 
   await ProjectSettings.setPackagerInfoAsync(projectRoot, {
     webpackServerPort,
@@ -508,6 +512,7 @@ async function getWebpackConfigEnvFromBundlingOptionsAsync(
     isImageEditingEnabled,
     mode,
     https,
+    logger: ProjectUtils.getLogger(projectRoot),
     ...(options.webpackEnv || {}),
   };
 }

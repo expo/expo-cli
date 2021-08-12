@@ -315,6 +315,9 @@ export default async function (env: Environment, argv: Arguments = {}): Promise<
     // configures where the build ends up
     output: getOutput(locations, mode, publicPath, env.platform),
 
+    // Disable file info logs.
+    stats: 'none',
+
     cache: {
       type: 'filesystem',
       version: createEnvironmentHash(process.env),
@@ -466,8 +469,10 @@ export default async function (env: Environment, argv: Arguments = {}): Promise<
         }),
 
       // Skip using a progress bar in CI
-      !isCI && new ExpoProgressBarPlugin(),
+
+      env.logger && new ExpoProgressBarPlugin({ logger: env.logger, nonInteractive: isCI }),
     ].filter(Boolean),
+
     module: {
       strictExportPresence: false,
       // @ts-ignore

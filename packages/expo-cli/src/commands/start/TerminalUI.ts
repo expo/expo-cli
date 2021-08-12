@@ -137,23 +137,31 @@ const printServerInfo = async (
   options: Pick<StartOptions, 'webOnly' | 'isWebSocketsEnabled' | 'isRemoteReloadingEnabled'> = {}
 ) => {
   if (options.webOnly) {
-    Webpack.printConnectionInstructions(projectRoot);
-    printHelp();
-    return;
+    // Webpack.printConnectionInstructions(projectRoot);
+    // printHelp();
+    // return;
   }
   Log.newLine();
   const wrapLength = process.stdout.columns || 80;
   const item = (text: string): string => ` ${BLT} ` + wrapAnsi(text, wrapLength).trimStart();
-  const url = await UrlUtils.constructDeepLinkAsync(projectRoot);
+  if (!options.webOnly) {
+    const url = await UrlUtils.constructDeepLinkAsync(projectRoot);
 
-  urlOpts.printQRCode(url);
-  Log.nested(item(`Waiting on ${u(url)}`));
-  // Log.newLine();
-  // TODO: if dev client, change this message!
-  Log.nested(item(`Scan the QR code above with Expo Go (Android) or the Camera app (iOS)`));
+    urlOpts.printQRCode(url);
+    Log.nested(item(`Metro waiting on ${u(url)}`));
+  }
+  const webUrl = await Webpack.getUrlAsync(projectRoot);
+  if (webUrl) {
+    Log.nested(item(`Webpack waiting on ${u(webUrl)}`));
+  }
 
+  if (!options.webOnly) {
+    // Log.newLine();
+    // TODO: if dev client, change this message!
+    Log.nested(item(`Scan the QR code above with Expo Go (Android) or the Camera app (iOS)`));
+  }
   await printBasicUsageAsync(options);
-  Webpack.printConnectionInstructions(projectRoot);
+  // Webpack.printConnectionInstructions(projectRoot);
   printHelp();
   Log.addNewLineIfNone();
 };
