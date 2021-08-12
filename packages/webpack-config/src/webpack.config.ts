@@ -230,7 +230,7 @@ export default async function (env: Environment, argv: Arguments = {}): Promise<
         // We generate new versions of these based on the templates
         ignore: [
           // '**/serve.json',
-          // '**/index.html',
+          '**/index.html',
           '**/icon.png',
         ],
       },

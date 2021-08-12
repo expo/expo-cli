@@ -67,20 +67,20 @@ export default function withOptimizations(webpackConfig: Configuration): Configu
             // https://github.com/facebook/create-react-app/issues/2488
             ascii_only: true,
           },
+          // // Enable file caching
+          // cache: true,
         },
         // Use multi-process parallel running to improve the build speed
         // Default number of concurrent runs: os.cpus().length - 1
         // Disabled on WSL (Windows Subsystem for Linux) due to an issue with Terser
         // https://github.com/webpack-contrib/terser-webpack-plugin/issues/21
         parallel: !isWsl,
-        // Enable file caching
-        cache: true,
       }),
       // This is only used in production mode
       new CssMinimizerPlugin(),
     ],
     // Skip the emitting phase whenever there are errors while compiling. This ensures that no erroring assets are emitted.
-    noEmitOnErrors: true,
+    emitOnErrors: false,
   };
 
   return webpackConfig;

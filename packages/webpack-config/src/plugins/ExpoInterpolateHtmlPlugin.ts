@@ -44,11 +44,11 @@ export default class InterpolateHtmlPlugin {
   apply(compiler: Compiler) {
     const logger = compiler.getInfrastructureLogger('interpolate-html-plugin');
 
-    compiler.hooks.compilation.tap('InterpolateHtmlPlugin', compilation => {
+    compiler.hooks.compilation.tap(this.constructor.name, compilation => {
       this.htmlWebpackPlugin
         // @ts-ignore
         .getHooks(compilation)
-        .afterTemplateExecution.tap('InterpolateHtmlPlugin', (data: any) => {
+        .afterTemplateExecution.tap(this.constructor.name, (data: any) => {
           // Run HTML through a series of user-specified string replacements.
           Object.keys(this.replacements).forEach(key => {
             const value = this.replacements[key];
