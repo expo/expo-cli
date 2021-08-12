@@ -127,14 +127,8 @@ export async function startAsync(
 ): Promise<WebpackDevServerResults | null> {
   await stopAsync(projectRoot);
 
-  const serverName = 'Webpack';
-
   if (webpackDevServerInstance) {
-    ProjectUtils.logError(
-      projectRoot,
-      WEBPACK_LOG_TAG,
-      chalk.red(`${serverName} is already running.`)
-    );
+    ProjectUtils.logError(projectRoot, WEBPACK_LOG_TAG, chalk.red(`Webpack is already running.`));
     return null;
   }
 
@@ -170,7 +164,7 @@ export async function startAsync(
   ProjectUtils.logInfo(
     projectRoot,
     WEBPACK_LOG_TAG,
-    `Starting ${serverName} on port ${webpackServerPort} in ${chalk.underline(env.mode)} mode.`
+    `Starting Webpack on port ${webpackServerPort} in ${chalk.underline(env.mode)} mode.`
   );
 
   const protocol = env.https ? 'https' : 'http';
