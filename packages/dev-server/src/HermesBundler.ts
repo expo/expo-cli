@@ -1,11 +1,14 @@
 import type { ExpoConfig, Platform } from '@expo/config';
 import spawnAsync from '@expo/spawn-async';
 import fs from 'fs-extra';
-import type { composeSourceMaps } from 'metro-source-map';
 import os from 'os';
 import path from 'path';
 import process from 'process';
-import resolveFrom from 'resolve-from';
+
+import {
+  importHermesCommandFromProject,
+  importMetroSourceMapComposeSourceMapsFromProject,
+} from './metro/importMetroFromProject';
 
 export function isEnableHermesManaged(expoConfig: ExpoConfig, platform: Platform): boolean {
   switch (platform) {
@@ -35,7 +38,7 @@ export async function buildHermesBundleAsync(
     await fs.writeFile(tempSourcemapFile, map);
 
     const tempHbcFile = path.join(tempDir, 'index.hbc');
-    const hermesCommand = getHermesCommand(projectRoot);
+    const hermesCommand = importHermesCommandFromProject(projectRoot);
     const args = ['-emit-binary', '-out', tempHbcFile, tempBundleFile, '-output-source-map'];
     if (optimize) {
       args.push('-O');
@@ -60,37 +63,10 @@ export async function createHermesSourcemapAsync(
   sourcemap: string,
   hermesMapFile: string
 ): Promise<string> {
-  const composeSourceMaps = importMetroSourceMapFromProject(projectRoot);
+  const composeSourceMaps = importMetroSourceMapComposeSourceMapsFromProject(projectRoot);
   const bundlerSourcemap = JSON.parse(sourcemap);
   const hermesSourcemap = await fs.readJSON(hermesMapFile);
   return JSON.stringify(composeSourceMaps([bundlerSourcemap, hermesSourcemap]));
-}
-
-function getHermesCommand(projectRoot: string): string {
-  const platformExecutable = getHermesCommandPlatform();
-  const resolvedPath = resolveFrom.silent(projectRoot, `hermes-engine/${platformExecutable}`);
-  if (!resolvedPath) {
-    throw new Error(
-      `Missing module "hermes-engine/${platformExecutable}" in the project.` +
-        'This usually means hermes-engine is not installed. ' +
-        'Please verify that dependencies in package.json include "react-native" ' +
-        'and run `yarn` or `npm install`.'
-    );
-  }
-  return resolvedPath;
-}
-
-function getHermesCommandPlatform(): string {
-  switch (os.platform()) {
-    case 'darwin':
-      return 'osx-bin/hermesc';
-    case 'linux':
-      return 'linux64-bin/hermesc';
-    case 'win32':
-      return 'win64-bin/hermesc.exe';
-    default:
-      throw new Error(`Unsupported host platform for Hermes compiler: ${os.platform()}`);
-  }
 }
 
 export function parseGradleProperties(content: string): Record<string, string> {
@@ -153,19 +129,6 @@ async function maybeInconsistentEngineAndroidAsync(
   }
 
   return false;
-}
-
-function importMetroSourceMapFromProject(projectRoot: string): typeof composeSourceMaps {
-  const resolvedPath = resolveFrom.silent(projectRoot, 'metro-source-map/src/composeSourceMaps');
-  if (!resolvedPath) {
-    throw new Error(
-      'Missing module "metro-source-map/src/composeSourceMaps" in the project. ' +
-        'This usually means React Native is not installed. ' +
-        'Please verify that dependencies in package.json include "react-native" ' +
-        'and run `yarn` or `npm install`.'
-    );
-  }
-  return require(resolvedPath);
 }
 
 // https://github.com/facebook/hermes/blob/release-v0.5/include/hermes/BCGen/HBC/BytecodeFileFormat.h#L24-L25
