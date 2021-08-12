@@ -108,13 +108,20 @@ export async function getDefaultSimulatorDeviceUDIDAsync() {
 /**
  * Returns the local path for the installed tar.app. Returns null when the app isn't installed.
  *
- * @param udid
- * @param bundleIdentifier
+ * @param props.udid device udid.
+ * @param props.bundleIdentifier bundle identifier for app
+ * @returns local file path to installed app binary, e.g. '/Users/evanbacon/Library/Developer/CoreSimulator/Devices/EFEEA6EF-E3F5-4EDE-9B72-29EAFA7514AE/data/Containers/Bundle/Application/FA43A0C6-C2AD-442D-B8B1-EAF3E88CF3BF/Exponent-2.21.3.tar.app'
  */
-export async function getContainerPathAsync(
-  udid: string,
-  bundleIdentifier: string
-): Promise<string | null> {
+export async function getContainerPathAsync({
+  udid,
+  bundleIdentifier,
+}: {
+  udid: string;
+  bundleIdentifier: string;
+}): Promise<string | null> {
+  if (CoreSimulator.isEnabled()) {
+    return CoreSimulator.getContainerPathAsync({ udid, bundleIdentifier });
+  }
   try {
     const { stdout } = await xcrunAsync([
       'simctl',
@@ -262,6 +269,16 @@ export async function listAsync(
     }
   }
   return info;
+}
+
+export async function listSimulatorDevicesAsync() {
+  if (CoreSimulator.isEnabled()) {
+    return CoreSimulator.listDevicesAsync();
+  }
+  const simulatorDeviceInfo = await listAsync('devices');
+  return Object.values(simulatorDeviceInfo.devices).reduce((prev, runtime) => {
+    return prev.concat(runtime);
+  }, []);
 }
 
 /**

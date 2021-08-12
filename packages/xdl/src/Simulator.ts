@@ -4,13 +4,12 @@ import spawnAsync from '@expo/spawn-async';
 import chalk from 'chalk';
 import { execSync } from 'child_process';
 import fs from 'fs-extra';
-import { boolish } from 'getenv';
 import path from 'path';
 import prompts from 'prompts';
 import semver from 'semver';
 
 import { ensureSimulatorAppRunningAsync } from './apple/utils/ensureSimulatorAppRunningAsync';
-import { TimeoutError, waitForActionAsync } from './apple/utils/waitForActionAsync';
+import { TimeoutError } from './apple/utils/waitForActionAsync';
 import {
   Analytics,
   BundleIdentifier,
@@ -32,9 +31,6 @@ import {
 import { profileMethod } from './utils/profileMethod';
 
 let _lastUrl: string | null = null;
-
-// Enable this to test the JS version of simctl
-const EXPO_BETA_CORE_SIM = boolish('EXPO_BETA_CORE_SIM', false);
 
 const EXPO_GO_BUNDLE_IDENTIFIER = 'host.exp.Exponent';
 const SUGGESTED_XCODE_VERSION = `${Xcode.minimumVersion}.0`;
@@ -247,7 +243,16 @@ export async function ensureSimulatorOpenAsync(
 }
 
 async function getBestBootedSimulatorAsync({ osType }: { osType?: string }) {
-  const simulatorOpenedByApp = await CoreSimulator.getDeviceInfoAsync().catch(() => null);
+  let simulatorOpenedByApp: SimControl.SimulatorDevice | null;
+  if (CoreSimulator.isEnabled()) {
+    simulatorOpenedByApp = await CoreSimulator.getDeviceInfoAsync().catch(() => null);
+  } else {
+    const simulatorDeviceInfo = await SimControl.listAsync('devices');
+    const devices = Object.values(simulatorDeviceInfo.devices).reduce((prev, runtime) => {
+      return prev.concat(runtime.filter(device => device.state === 'Booted'));
+    }, []);
+    simulatorOpenedByApp = devices[0];
+  }
 
   // This should prevent opening a second simulator in the chance that default
   // simulator doesn't match what the Simulator app would open by default.
@@ -303,13 +308,13 @@ async function getBestSimulatorAsync({ osType }: { osType?: string }): Promise<s
 async function getSelectableSimulatorsAsync({ osType = 'iOS' }: { osType?: string } = {}): Promise<
   SimControl.SimulatorDevice[]
 > {
-  const simulators = await CoreSimulator.listDevicesAsync();
+  const simulators = await SimControl.listSimulatorDevicesAsync();
   return simulators.filter(device => device.isAvailable && device.osType === osType);
 }
 
 // TODO: Delete
 async function getBootedSimulatorsAsync(): Promise<SimControl.SimulatorDevice[]> {
-  const simulators = await CoreSimulator.listDevicesAsync();
+  const simulators = await SimControl.listSimulatorDevicesAsync();
   return simulators.filter(device => device.state === 'Booted');
 }
 
@@ -354,7 +359,7 @@ export async function isExpoClientInstalledOnSimulatorAsync({
 }: {
   udid: string;
 }): Promise<boolean> {
-  return !!(await CoreSimulator.getContainerPathAsync({
+  return !!(await SimControl.getContainerPathAsync({
     udid,
     bundleIdentifier: EXPO_GO_BUNDLE_IDENTIFIER,
   }));
@@ -391,7 +396,7 @@ export async function expoVersionOnSimulatorAsync({
 }: {
   udid: string;
 }): Promise<string | null> {
-  const localPath = await CoreSimulator.getContainerPathAsync({
+  const localPath = await SimControl.getContainerPathAsync({
     udid,
     bundleIdentifier: EXPO_GO_BUNDLE_IDENTIFIER,
   });
@@ -684,7 +689,7 @@ async function assertDevClientInstalledAsync(
   simulator: Pick<SimControl.SimulatorDevice, 'udid' | 'name'>,
   bundleIdentifier: string
 ): Promise<void> {
-  if (!(await CoreSimulator.getContainerPathAsync({ udid: simulator.udid, bundleIdentifier }))) {
+  if (!(await SimControl.getContainerPathAsync({ udid: simulator.udid, bundleIdentifier }))) {
     throw new Error(
       `The development client (${bundleIdentifier}) for this project is not installed. ` +
         `Please build and install the client on the simulator first.\n${learnMore(

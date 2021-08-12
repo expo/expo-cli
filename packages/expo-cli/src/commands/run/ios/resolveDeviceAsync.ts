@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-import { CoreSimulator, SimControl, Simulator } from 'xdl';
+import { SimControl, Simulator } from 'xdl';
 
 import CommandError from '../../../CommandError';
 import Log from '../../../log';
@@ -15,7 +15,7 @@ async function getBuildDestinationsAsync({ osType }: { osType?: string } = {}) {
   });
 
   const simulators = await Simulator.sortDefaultDeviceToBeginningAsync(
-    await profileMethod(CoreSimulator.listDevicesAsync)(),
+    await profileMethod(SimControl.listSimulatorDevicesAsync)(),
     osType
   );
 
