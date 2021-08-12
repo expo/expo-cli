@@ -43,10 +43,6 @@ export function broadcastMessage(
   if (messageSocket) {
     messageSocket.broadcast(method, params);
   }
-
-  if (webpackDevServer) {
-    webpackDevServer.messageSocket.broadcast(method, params);
-  }
 }
 
 export async function startAsync(

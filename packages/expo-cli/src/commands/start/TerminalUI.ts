@@ -368,6 +368,8 @@ Please reload the project in Expo Go for the change to take effect.`
           Log.log(`${BLT} Reloading apps`);
           // Send reload requests over the dev servers
           Project.broadcastMessage('reload');
+
+          Webpack.broadcastMessage('reload');
         } else if (!options.webOnly) {
           // [SDK 40]: Restart bundler
           Log.clear();
