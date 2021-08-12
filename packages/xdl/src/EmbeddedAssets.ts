@@ -40,7 +40,7 @@ export type EmbeddedAssetsConfiguration = {
 export async function configureAsync(config: EmbeddedAssetsConfiguration) {
   await _maybeWriteArtifactsToDiskAsync(config);
   await _maybeConfigureExpoKitEmbeddedAssetsAsync(config);
-  await _maybeConfigureExpoUpdatesEmbeddedAssetsAsync(config);
+  await _maybeRunModifiedExpoUpdatesPluginAsync(config);
 }
 
 export function getEmbeddedManifestPath(
@@ -264,9 +264,9 @@ async function _maybeConfigureExpoKitEmbeddedAssetsAsync(config: EmbeddedAssetsC
 }
 
 /**
- * Guess if this is a users first publish and Run a slightly modified expo-updates plugin
+ * Guess if this is a users first publish and run a slightly modified expo-updates plugin
  */
-async function _maybeConfigureExpoUpdatesEmbeddedAssetsAsync(config: EmbeddedAssetsConfiguration) {
+async function _maybeRunModifiedExpoUpdatesPluginAsync(config: EmbeddedAssetsConfiguration) {
   if (!config.pkg.dependencies?.['expo-updates'] || config.target === 'managed') {
     return;
   }
@@ -347,9 +347,7 @@ async function _maybeConfigureExpoUpdatesEmbeddedAssetsAsync(config: EmbeddedAss
   }
 
   if (isLikelyFirstIOSPublish || isLikelyFirstAndroidPublish) {
-    let platformSpecificMessage =
-      '🚀 It looks like this your first publish for this project! ' +
-      "We've automatically set some configuration values in Expo.plist and AndroidManifest.xml. ";
+    let platformSpecificMessage: string;
 
     if (isLikelyFirstIOSPublish && !isLikelyFirstAndroidPublish) {
       platformSpecificMessage =
@@ -359,6 +357,10 @@ async function _maybeConfigureExpoUpdatesEmbeddedAssetsAsync(config: EmbeddedAss
       platformSpecificMessage =
         '🚀 It looks like this your first Android publish for this project! ' +
         "We've automatically set some configuration values in AndroidManifest.xml. ";
+    } else {
+      platformSpecificMessage =
+        '🚀 It looks like this your first publish for this project! ' +
+        "We've automatically set some configuration values in Expo.plist and AndroidManifest.xml. ";
     }
 
     logger.global.warn(
