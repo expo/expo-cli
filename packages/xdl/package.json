@@ -47,6 +47,7 @@
     "analytics-node": "3.5.0",
     "axios": "0.21.1",
     "boxen": "^5.0.1",
+    "bplist-parser": "^0.3.0",
     "chalk": "^4.0.0",
     "concat-stream": "1.6.2",
     "decache": "4.4.0",

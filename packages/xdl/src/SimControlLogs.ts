@@ -257,7 +257,7 @@ export async function getImageNameFromBundleIdentifierAsync(
   udid: string,
   bundleIdentifier: string
 ): Promise<string | null> {
-  const containerPath = await SimControl.getContainerPathAsync(udid, bundleIdentifier);
+  const containerPath = await SimControl.getContainerPathAsync({ udid, bundleIdentifier });
 
   if (containerPath) {
     return getImageNameFromContainerPath(containerPath);
