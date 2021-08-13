@@ -458,7 +458,7 @@ Object {
 exports[`web web development 1`] = `
 Object {
   "bail": false,
-  "context": "packages/webpack-config/src",
+  "context": "packages/webpack-config/e2e/basic",
   "devServer": Object {
     "after": [Function],
     "before": [Function],
@@ -670,7 +670,7 @@ Object {
 exports[`web web production 1`] = `
 Object {
   "bail": true,
-  "context": "packages/webpack-config/src",
+  "context": "packages/webpack-config/e2e/basic",
   "devtool": "source-map",
   "entry": Object {
     "app": Array [
