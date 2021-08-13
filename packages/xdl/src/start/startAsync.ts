@@ -68,8 +68,7 @@ export async function startAsync(
     });
 
     // This is used to make Expo Go open the project in either Expo Go, or the web browser.
-    const isNative = ['ios', 'android'].includes(process.env.EXPO_WEBPACK_PLATFORM || '');
-    DevSession.startSession(projectRoot, exp, isNative ? 'native' : 'web');
+    DevSession.startSession(projectRoot, exp, Webpack.isTargetingNative() ? 'native' : 'web');
     return exp;
   } else if (Env.shouldUseDevServer(exp) || options.devClient) {
     [serverInstance, , messageSocket] = await startDevServerAsync(projectRoot, options);

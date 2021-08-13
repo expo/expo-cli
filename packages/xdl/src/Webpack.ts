@@ -106,6 +106,11 @@ async function clearWebCacheAsync(projectRoot: string, mode: string): Promise<vo
   } catch {}
 }
 
+// Temporary hack while we implement multi-bundler dev server proxy.
+export function isTargetingNative() {
+  return ['ios', 'android'].includes(process.env.EXPO_WEBPACK_PLATFORM || '');
+}
+
 export type WebpackDevServerResults = {
   server: DevServer;
   location: Omit<WebpackSettings, 'server'>;
@@ -205,8 +210,8 @@ export async function startAsync(
 
   // This is a temporary hack since we need to serve the expo manifest JSON on `/` for Expo Go support.
   // In the future, if we support HTML links to manifests we can get rid of this platform specific code.
-  const isNative = ['ios', 'android'].includes(process.env.EXPO_WEBPACK_PLATFORM || '');
-  if (isNative) {
+
+  if (isTargetingNative()) {
     await ProjectSettings.setPackagerInfoAsync(projectRoot, {
       expoServerPort: webpackServerPort,
       packagerPort: webpackServerPort,
@@ -225,7 +230,7 @@ export async function startAsync(
       onFinished: () => resolve(server),
     });
 
-    if (isNative) {
+    if (isTargetingNative()) {
       // Inject the Expo Go manifest middleware.
       const originalBefore = config.devServer!.before!.bind(config.devServer!.before);
       config.devServer!.before = (app, server, compiler) => {
