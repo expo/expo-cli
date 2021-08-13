@@ -558,9 +558,10 @@ Command.prototype.asyncActionProjectDir = function (
     // eslint-disable-next-line no-new
     new PackagerLogsStream({
       projectRoot,
-      onStartBuildBundle: () => {
+      onStartBuildBundle({ bundleDetails }) {
         // TODO: Unify with commands/utils/progress.ts
-        bar = new ProgressBar('Building JavaScript bundle [:bar] :percent', {
+        const suffix = PackagerLogsStream.getPlatformTagForBuildDetails(bundleDetails);
+        bar = new ProgressBar(`Building${suffix} JavaScript bundle [:bar] :percent`, {
           width: 64,
           total: 100,
           clear: true,
@@ -570,12 +571,12 @@ Command.prototype.asyncActionProjectDir = function (
 
         Log.setBundleProgressBar(bar);
       },
-      onProgressBuildBundle: (percent: number) => {
+      onProgressBuildBundle({ progress }) {
         if (!bar || bar.complete) return;
-        const ticks = percent - bar.curr;
+        const ticks = progress - bar.curr;
         ticks > 0 && bar.tick(ticks);
       },
-      onFinishBuildBundle: (err, startTime, endTime) => {
+      onFinishBuildBundle({ error, start, end, bundleDetails }) {
         if (bar && !bar.complete) {
           bar.tick(100 - bar.curr);
         }
@@ -585,11 +586,14 @@ Command.prototype.asyncActionProjectDir = function (
           bar.terminate();
           bar = null;
 
-          if (err) {
-            Log.log(chalk.red('Failed building JavaScript bundle.'));
+          const suffix = PackagerLogsStream.getPlatformTagForBuildDetails(bundleDetails);
+          if (error) {
+            Log.log(chalk.red(`Failed building${suffix} JavaScript bundle.`));
           } else {
-            const totalBuildTimeMs = endTime.getTime() - startTime.getTime();
-            Log.log(chalk.green(`Finished building JavaScript bundle in ${totalBuildTimeMs}ms.`));
+            const totalBuildTimeMs = end.getTime() - start.getTime();
+            Log.log(
+              chalk.green(`Finished building${suffix} JavaScript bundle in ${totalBuildTimeMs}ms.`)
+            );
             StatusEventEmitter.emit('bundleBuildFinish', { totalBuildTimeMs });
           }
         }
