@@ -487,6 +487,8 @@ export default async function (
       ],
     },
     resolve: {
+      mainFields: isNative ? ['react-native', 'browser', 'main'] : undefined,
+      aliasFields: isNative ? ['react-native', 'browser', 'main'] : undefined,
       extensions: getPlatformsExtensions(env.platform),
       plugins: [
         // Adds support for installing with Plug'n'Play, leading to faster installs and adding
