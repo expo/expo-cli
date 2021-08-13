@@ -55,7 +55,7 @@ import { Arguments, DevConfiguration, Environment, FilePaths, Mode } from './typ
 
 // Source maps are resource heavy and can cause out of memory issue for large source files.
 const shouldUseSourceMap = boolish('GENERATE_SOURCEMAP', true);
-const shouldUseNativeCodeLoading = boolish('EXPO_WEBPACK_USE_NATIVE_CODE_LOADING', true);
+const shouldUseNativeCodeLoading = boolish('EXPO_WEBPACK_USE_NATIVE_CODE_LOADING', false);
 
 const isCI = boolish('CI', false);
 
@@ -335,9 +335,10 @@ export default async function (
       isProd && new CopyWebpackPlugin({ patterns: filesToCopy }),
 
       // Generate the `index.html`
-      new ExpoHtmlWebpackPlugin(env, templateIndex),
+      (!isNative || !shouldUseNativeCodeLoading) && new ExpoHtmlWebpackPlugin(env, templateIndex),
 
-      ExpoInterpolateHtmlPlugin.fromEnv(env, ExpoHtmlWebpackPlugin),
+      (!isNative || !shouldUseNativeCodeLoading) &&
+        ExpoInterpolateHtmlPlugin.fromEnv(env, ExpoHtmlWebpackPlugin),
 
       isNative &&
         new ExpoAppManifestWebpackPlugin(

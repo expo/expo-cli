@@ -15,8 +15,10 @@ import WebpackDevServer from 'webpack-dev-server';
 
 import {
   choosePortAsync,
+  ExpoUpdatesManifestHandler,
   ip,
   Logger,
+  ManifestHandler,
   ProjectSettings,
   ProjectUtils,
   UrlUtils,
@@ -201,6 +203,16 @@ export async function startAsync(
     port: webpackServerPort!,
   };
 
+  // This is a temporary hack since we need to serve the expo manifest JSON on `/` for Expo Go support.
+  // In the future, if we support HTML links to manifests we can get rid of this platform specific code.
+  const isNative = ['ios', 'android'].includes(process.env.EXPO_WEBPACK_PLATFORM || '');
+  if (isNative) {
+    await ProjectSettings.setPackagerInfoAsync(projectRoot, {
+      expoServerPort: webpackServerPort,
+      packagerPort: webpackServerPort,
+    });
+  }
+
   const server: DevServer = await new Promise(resolve => {
     // Create a webpack compiler that is configured with custom messages.
     const compiler = WebpackCompiler.createWebpackCompiler({
@@ -212,7 +224,19 @@ export async function startAsync(
       webpackFactory: webpack,
       onFinished: () => resolve(server),
     });
+
+    if (isNative) {
+      // Inject the Expo Go manifest middleware.
+      const originalBefore = config.devServer!.before!.bind(config.devServer!.before);
+      config.devServer!.before = (app, server, compiler) => {
+        originalBefore(app, server, compiler);
+        app.use(ManifestHandler.getManifestHandler(projectRoot));
+        app.use(ExpoUpdatesManifestHandler.getManifestHandler(projectRoot));
+      };
+    }
+
     const server = new WebpackDevServer(compiler, config.devServer);
+
     // Launch WebpackDevServer.
     server.listen(port, WebpackEnvironment.HOST, error => {
       if (error) {
