@@ -122,6 +122,12 @@ export async function broadcastMessage(message: 'reload' | string, data?: any) {
     return;
   }
 
+  // Allow any message on native
+  if (isTargetingNative()) {
+    webpackDevServerInstance.sockWrite(webpackDevServerInstance.sockets, message, data);
+    return;
+  }
+
   if (message !== 'reload') {
     // TODO:
     // Webpack currently only supports reloading the client (browser),
