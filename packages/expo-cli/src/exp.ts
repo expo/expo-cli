@@ -560,8 +560,8 @@ Command.prototype.asyncActionProjectDir = function (
       projectRoot,
       onStartBuildBundle({ bundleDetails }) {
         // TODO: Unify with commands/utils/progress.ts
-        const suffix = PackagerLogsStream.getPlatformTagForBuildDetails(bundleDetails);
-        bar = new ProgressBar(`Building${suffix} JavaScript bundle [:bar] :percent`, {
+        const platform = PackagerLogsStream.getPlatformTagForBuildDetails(bundleDetails);
+        bar = new ProgressBar(`${platform}Bundling JavaScript [:bar] :percent`, {
           width: 64,
           total: 100,
           clear: true,
@@ -586,14 +586,13 @@ Command.prototype.asyncActionProjectDir = function (
           bar.terminate();
           bar = null;
 
-          const suffix = PackagerLogsStream.getPlatformTagForBuildDetails(bundleDetails);
+          const platform = PackagerLogsStream.getPlatformTagForBuildDetails(bundleDetails);
+          const totalBuildTimeMs = end.getTime() - start.getTime();
+          const durationSuffix = chalk.gray(` ${totalBuildTimeMs}ms`);
           if (error) {
-            Log.log(chalk.red(`Failed building${suffix} JavaScript bundle.`));
+            Log.log(chalk.red(`${platform}Bundling failed` + durationSuffix));
           } else {
-            const totalBuildTimeMs = end.getTime() - start.getTime();
-            Log.log(
-              chalk.green(`Finished building${suffix} JavaScript bundle in ${totalBuildTimeMs}ms.`)
-            );
+            Log.log(chalk.green(`${platform}Bundling complete` + durationSuffix));
             StatusEventEmitter.emit('bundleBuildFinish', { totalBuildTimeMs });
           }
         }

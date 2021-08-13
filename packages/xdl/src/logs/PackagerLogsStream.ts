@@ -352,7 +352,7 @@ export default class PackagerLogsStream {
     const platform = bundleDetails?.platform ?? null;
     if (platform) {
       const formatted = { ios: 'iOS', android: 'Android', web: 'Web' }[platform] || platform;
-      return ` ${formatted}`;
+      return `${chalk.bold(formatted)} `;
     }
 
     return '';

@@ -1,4 +1,5 @@
 import Log from '@expo/bunyan';
+import chalk from 'chalk';
 import { HandleFunction } from 'connect';
 import http from 'http';
 
@@ -46,6 +47,24 @@ function isAppRegistryStartupMessage(body: any[]): boolean {
   );
 }
 
+export function getDevicePlatformFromAppRegistryStartupMessage(body: string[]): string | null {
+  if (body.length === 1 && typeof body[0] === 'string') {
+    // Dangerously pick the platform out of the request URL
+    // like: http:\\\\/\\\\/192.168.6.113:19000\\\\/index.bundle&platform=android\dev=true&hot=false&minify=false
+    return body[0].match(/[?|&]platform=(\w+)[&|\\]/)?.[1] ?? null;
+  }
+  return null;
+}
+function getFormattedDevicePlatformFromAppRegistryStartupMessage(body: string[]): string | null {
+  const platformId = getDevicePlatformFromAppRegistryStartupMessage(body);
+  if (platformId) {
+    // Map the ID like "ios" to "iOS"
+    const formatted = { ios: 'iOS', android: 'Android', web: 'Web' }[platformId] || platformId;
+    return `${chalk.bold(formatted)} `;
+  }
+  return null;
+}
+
 function handleDeviceLogs(logger: Log, deviceId: string, deviceName: string, logs: any): void {
   for (const log of logs) {
     let body = Array.isArray(log.body) ? log.body : [log.body];
@@ -55,7 +74,8 @@ function handleDeviceLogs(logger: Log, deviceId: string, deviceName: string, log
       level = 'debug';
     }
     if (isAppRegistryStartupMessage(body)) {
-      body = [`Running application on ${deviceName}.`];
+      const platform = getFormattedDevicePlatformFromAppRegistryStartupMessage(body);
+      body = [`${platform}Running app on ${deviceName}.`];
     }
 
     const args = body.map((obj: any) => {
