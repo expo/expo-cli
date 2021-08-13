@@ -14,6 +14,7 @@ export default function clientLogsMiddleware(logger: Log): HandleFunction {
     try {
       const deviceId = req.headers['device-id'];
       const deviceName = req.headers['device-name'];
+      const devicePlatform = req.headers['device-platform'];
       if (!deviceId) {
         res.writeHead(400).end('Missing Device-Id.');
         return;
@@ -26,7 +27,12 @@ export default function clientLogsMiddleware(logger: Log): HandleFunction {
         res.writeHead(400).end('Missing request body.');
         return;
       }
-      handleDeviceLogs(logger, deviceId.toString(), deviceName.toString(), req.body);
+      handleDeviceLogs(logger, {
+        deviceId: deviceId.toString(),
+        deviceName: deviceName.toString(),
+        logs: req.body,
+        devicePlatform: devicePlatform?.toString(),
+      });
     } catch (error) {
       logger.error({ tag: 'expo' }, `Error getting device logs: ${error} ${error.stack}`);
       next(error);
@@ -55,17 +61,22 @@ export function getDevicePlatformFromAppRegistryStartupMessage(body: string[]): 
   }
   return null;
 }
-function getFormattedDevicePlatformFromAppRegistryStartupMessage(body: string[]): string | null {
-  const platformId = getDevicePlatformFromAppRegistryStartupMessage(body);
-  if (platformId) {
-    // Map the ID like "ios" to "iOS"
-    const formatted = { ios: 'iOS', android: 'Android', web: 'Web' }[platformId] || platformId;
-    return `${chalk.bold(formatted)} `;
-  }
-  return null;
+
+function formatDevicePlatform(platform: string): string {
+  // Map the ID like "ios" to "iOS"
+  const formatted = { ios: 'iOS', android: 'Android', web: 'Web' }[platform] || platform;
+  return `${chalk.bold(formatted)} `;
 }
 
-function handleDeviceLogs(logger: Log, deviceId: string, deviceName: string, logs: any): void {
+function handleDeviceLogs(
+  logger: Log,
+  {
+    deviceId,
+    deviceName,
+    logs,
+    devicePlatform,
+  }: { deviceId: string; deviceName: string; devicePlatform?: string; logs: any }
+): void {
   for (const log of logs) {
     let body = Array.isArray(log.body) ? log.body : [log.body];
     let { level } = log;
@@ -74,7 +85,13 @@ function handleDeviceLogs(logger: Log, deviceId: string, deviceName: string, log
       level = 'debug';
     }
     if (isAppRegistryStartupMessage(body)) {
-      const platform = getFormattedDevicePlatformFromAppRegistryStartupMessage(body);
+      // If the installed version of expo is sending back the `device-platform` header
+      // then use that, otherwise find it in the query string.
+      const platformId = devicePlatform
+        ? devicePlatform
+        : getDevicePlatformFromAppRegistryStartupMessage(body);
+
+      const platform = platformId ? formatDevicePlatform(platformId) : '';
       body = [`${platform}Running app on ${deviceName}`];
     }
 
