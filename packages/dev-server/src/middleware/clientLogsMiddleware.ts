@@ -75,7 +75,7 @@ function handleDeviceLogs(logger: Log, deviceId: string, deviceName: string, log
     }
     if (isAppRegistryStartupMessage(body)) {
       const platform = getFormattedDevicePlatformFromAppRegistryStartupMessage(body);
-      body = [`${platform}Running app on ${deviceName}.`];
+      body = [`${platform}Running app on ${deviceName}`];
     }
 
     const args = body.map((obj: any) => {
