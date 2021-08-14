@@ -79,7 +79,7 @@ export async function generateSplashAsync(
     icons.map(
       async (icon: SplashIcon): Promise<HTMLOutput> => {
         // Ensure the default `splash.resizeMode` is used here:
-        // https://docs.expo.io/versions/latest/config/app/#splash
+        // https://docs.expo.dev/versions/latest/config/app/#splash
         if (!icon.resizeMode) {
           icon.resizeMode = 'contain';
         }

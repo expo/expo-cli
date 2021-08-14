@@ -175,7 +175,7 @@ export function parseStartOptions(
 
   if (isLegacyImportsEnabled(exp)) {
     // For `expo start`, the default target is 'managed', for both managed *and* bare apps.
-    // See: https://docs.expo.io/bare/using-expo-client
+    // See: https://docs.expo.dev/bare/using-expo-client
     startOpts.target = options.devClient ? 'bare' : 'managed';
     Log.debug('Using target: ', startOpts.target);
   }

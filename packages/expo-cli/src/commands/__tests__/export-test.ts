@@ -83,7 +83,7 @@ describe('collectMergeSourceUrlsAsync', () => {
   });
 
   it(`downloads tar files`, async () => {
-    const directories = await collectMergeSourceUrlsAsync(projectRoot, ['expo.io/app.tar.gz']);
+    const directories = await collectMergeSourceUrlsAsync(projectRoot, ['expo.dev/app.tar.gz']);
     expect(directories.length).toBe(1);
     // Ensure the file was downloaded with the expected name
     expect(directories[0]).toMatch(/\/alpha\/\.tmp\/app_/);

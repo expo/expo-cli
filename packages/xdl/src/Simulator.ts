@@ -486,7 +486,7 @@ export async function installExpoOnSimulatorAsync({
     return setTimeout(() => {
       Logger.global.info('');
       Logger.global.info(
-        'This download is taking longer than expected. You can also try downloading the clients from the website at https://expo.io/tools'
+        'This download is taking longer than expected. You can also try downloading the clients from the website at https://expo.dev/tools'
       );
     }, INSTALL_WARNING_TIMEOUT);
   };
@@ -693,7 +693,7 @@ async function assertDevClientInstalledAsync(
     throw new Error(
       `The development client (${bundleIdentifier}) for this project is not installed. ` +
         `Please build and install the client on the simulator first.\n${learnMore(
-          'https://docs.expo.io/clients/distribution-for-ios/#building-for-ios'
+          'https://docs.expo.dev/clients/distribution-for-ios/#building-for-ios'
         )}`
     );
   }

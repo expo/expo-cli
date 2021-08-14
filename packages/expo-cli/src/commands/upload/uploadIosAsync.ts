@@ -12,7 +12,7 @@ export async function actionAsync() {
   Log.log(chalk.yellow('expo upload:ios is no longer supported'));
   Log.log('Please use one of the following');
   Log.newLine();
-  logItem(chalk.cyan.bold('eas submit'), 'https://docs.expo.io/submit/ios');
+  logItem(chalk.cyan.bold('eas submit'), 'https://docs.expo.dev/submit/ios');
   logItem('Transporter', 'https://apps.apple.com/us/app/transporter/id1450874784');
   logItem(
     'Fastlane deliver',
