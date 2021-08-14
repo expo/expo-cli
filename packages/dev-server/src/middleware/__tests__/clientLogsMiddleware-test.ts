@@ -13,6 +13,7 @@ const headers = {
   'device-id': '11111111-CAFE-0000-0000-111111111111',
   'session-id': '22222222-C0DE-0000-0000-222222222222',
   'device-name': 'iPhone',
+  'expo-platform': 'ios',
 };
 
 describe(getDevicePlatformFromAppRegistryStartupMessage, () => {
