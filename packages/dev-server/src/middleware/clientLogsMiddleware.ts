@@ -14,7 +14,7 @@ export default function clientLogsMiddleware(logger: Log): HandleFunction {
     try {
       const deviceId = req.headers['device-id'];
       const deviceName = req.headers['device-name'];
-      const devicePlatform = req.headers['device-platform'];
+      const expoPlatform = req.headers['expo-platform'];
       if (!deviceId) {
         res.writeHead(400).end('Missing Device-Id.');
         return;
@@ -31,7 +31,7 @@ export default function clientLogsMiddleware(logger: Log): HandleFunction {
         deviceId: deviceId.toString(),
         deviceName: deviceName.toString(),
         logs: req.body,
-        devicePlatform: devicePlatform?.toString(),
+        devicePlatform: expoPlatform?.toString(),
       });
     } catch (error) {
       logger.error({ tag: 'expo' }, `Error getting device logs: ${error} ${error.stack}`);
