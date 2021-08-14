@@ -346,7 +346,7 @@ async function shouldBailWhenUsingLatest(
     });
 
     if (!answer) {
-      Log.log('Follow the Expo blog at https://blog.expo.io for new release information!');
+      Log.log('Follow the Expo blog at https://blog.expo.dev for new release information!');
       Log.newLine();
       return true;
     }
@@ -818,7 +818,7 @@ export async function upgradeAsync(
       );
     } else {
       Log.gray(
-        `Unable to find release notes for ${targetSdkVersionString}, please try to find them on https://blog.expo.io to learn more about other potentially important upgrade steps and breaking changes.`
+        `Unable to find release notes for ${targetSdkVersionString}, please try to find them on https://blog.expo.dev to learn more about other potentially important upgrade steps and breaking changes.`
       );
     }
   }

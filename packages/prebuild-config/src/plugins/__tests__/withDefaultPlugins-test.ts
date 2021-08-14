@@ -166,7 +166,7 @@ function getLargeConfig(): ExportedConfig {
           action: 'VIEW',
           data: {
             scheme: 'https',
-            host: '*.expo.io',
+            host: '*.expo.dev',
           },
           category: ['BROWSABLE', 'DEFAULT'],
         },

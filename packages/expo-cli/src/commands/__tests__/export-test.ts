@@ -63,7 +63,7 @@ describe('ensurePublicUrlAsync', () => {
   it(`validates a URL`, async () => {
     const logWarnSpy = jest.spyOn(Log, 'nestedWarn').mockImplementation(() => {});
 
-    await expect(ensurePublicUrlAsync('https://expo.io', true)).resolves.toBe('https://expo.io');
+    await expect(ensurePublicUrlAsync('https://expo.dev', true)).resolves.toBe('https://expo.dev');
     // No warnings thrown
     expect(logWarnSpy).toBeCalledTimes(0);
 

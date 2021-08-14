@@ -74,7 +74,7 @@ Object {
           "DEFAULT",
         ],
         "data": Object {
-          "host": "*.expo.io",
+          "host": "*.expo.dev",
           "scheme": "https",
         },
       },
@@ -554,7 +554,7 @@ Object {
                         "data": Array [
                           Object {
                             "$": Object {
-                              "android:host": "*.expo.io",
+                              "android:host": "*.expo.dev",
                               "android:scheme": "https",
                             },
                           },
@@ -983,7 +983,7 @@ Object {
           "DEFAULT",
         ],
         "data": Object {
-          "host": "*.expo.io",
+          "host": "*.expo.dev",
           "scheme": "https",
         },
       },
@@ -1352,7 +1352,7 @@ Object {
                         "data": Array [
                           Object {
                             "$": Object {
-                              "android:host": "*.expo.io",
+                              "android:host": "*.expo.dev",
                               "android:scheme": "https",
                             },
                           },
@@ -1784,7 +1784,7 @@ Object {
           "DEFAULT",
         ],
         "data": Object {
-          "host": "*.expo.io",
+          "host": "*.expo.dev",
           "scheme": "https",
         },
       },
