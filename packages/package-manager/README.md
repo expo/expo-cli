@@ -48,7 +48,7 @@ The Expo source code is made available under the [MIT license](LICENSE). Some of
 ---
 
 <p>
-    <a aria-label="sponsored by expo" href="http://expo.io">
+    <a aria-label="sponsored by expo" href="http://expo.dev">
         <img src="https://img.shields.io/badge/SPONSORED%20BY%20EXPO-4630EB.svg?style=for-the-badge" target="_blank" />
     </a>
     <a aria-label="@expo/package-manager is free to use" href="/LICENSE" target="_blank">

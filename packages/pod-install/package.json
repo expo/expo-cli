@@ -14,7 +14,7 @@
     "url": "https://github.com/expo/expo-cli.git"
   },
   "homepage": "https://github.com/expo/expo-cli/tree/master/packages/pod-install",
-  "author": "Expo <support@expo.io>",
+  "author": "Expo <support@expo.dev>",
   "license": "MIT",
   "bin": {
     "pod-install": "./build/index.js"

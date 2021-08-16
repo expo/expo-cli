@@ -52,7 +52,7 @@ export function logNextSteps({
       `\u203A 📁 The property ${chalk.bold(
         `assetBundlePatterns`
       )} does not have the same effect in the bare workflow.\n  ${Log.chalk.dim(
-        learnMore('https://docs.expo.io/bare/updating-your-app/#embedding-assets')
+        learnMore('https://docs.expo.dev/bare/updating-your-app/#embedding-assets')
       )}`
     );
   }

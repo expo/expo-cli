@@ -162,7 +162,7 @@ function logManifestUrl({
 
 /**
  *
- * @example ⚙️   Project page: https://expo.io/@bacon/projects/my-app [copied to clipboard] Learn more: https://expo.fyi/project-page
+ * @example ⚙️   Project page: https://expo.dev/@bacon/projects/my-app [copied to clipboard] Learn more: https://expo.fyi/project-page
  * @param options
  */
 function logProjectPageUrl({
@@ -242,7 +242,7 @@ export function logOptimizeWarnings({ projectRoot }: { projectRoot: string }): v
       `Project may contain uncompressed images. Optimizing image assets can improve app size and performance.\n  To fix this, run ${chalk.bold(
         `npx expo-optimize`
       )}`,
-      'https://docs.expo.io/distribution/optimizing-updates/#optimize-images'
+      'https://docs.expo.dev/distribution/optimizing-updates/#optimize-images'
     )
   );
 }

@@ -15,7 +15,7 @@
     "url": "https://github.com/expo/expo-cli.git",
     "directory": "packages/pwa"
   },
-  "author": "Expo <support@expo.io>",
+  "author": "Expo <support@expo.dev>",
   "license": "MIT",
   "bin": {
     "expo-pwa": "./build/cli.js"

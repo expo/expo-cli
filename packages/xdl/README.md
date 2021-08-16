@@ -1,7 +1,7 @@
 # xdl
 
 The Expo Development Library.
-[Documentation](https://docs.expo.io/workflow/expo-cli/)
+[Documentation](https://docs.expo.dev/workflow/expo-cli/)
 
 If you have problems with the code in this repository, please file issues & bug reports
 at https://github.com/expo/expo. Thanks!

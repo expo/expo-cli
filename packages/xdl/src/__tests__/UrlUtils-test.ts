@@ -277,7 +277,7 @@ describe(UrlUtils.isURL, () => {
     expect(
       UrlUtils.isURL('127.0.0.1:80', { protocols: ['https', 'http'], requireProtocol: true })
     ).toBe(false);
-    expect(UrlUtils.isURL('https://expo.io/', { protocols: ['https'] })).toBe(true);
+    expect(UrlUtils.isURL('https://expo.dev/', { protocols: ['https'] })).toBe(true);
     expect(UrlUtils.isURL('', { protocols: ['https'] })).toBe(false);
     expect(UrlUtils.isURL('hello', { protocols: ['https'] })).toBe(false);
   });

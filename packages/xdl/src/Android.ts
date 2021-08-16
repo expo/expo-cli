@@ -115,7 +115,7 @@ export async function getAllAvailableDevicesAsync(): Promise<Device[]> {
   if (!allDevices.length) {
     const genymotionMessage = `https://developer.android.com/studio/run/device.html#developer-device-options. If you are using Genymotion go to Settings -> ADB, select "Use custom Android SDK tools", and point it at your Android SDK directory.`;
     throw new Error(
-      `No Android connected device found, and no emulators could be started automatically.\nPlease connect a device or create an emulator (https://docs.expo.io/workflow/android-studio-emulator).\nThen follow the instructions here to enable USB debugging:\n${genymotionMessage}`
+      `No Android connected device found, and no emulators could be started automatically.\nPlease connect a device or create an emulator (https://docs.expo.dev/workflow/android-studio-emulator).\nThen follow the instructions here to enable USB debugging:\n${genymotionMessage}`
     );
   }
 
@@ -370,7 +370,7 @@ async function ensureDevClientInstalledAsync(device: Device, applicationId: stri
     throw new Error(
       `The development client (${applicationId}) for this project is not installed. ` +
         `Please build and install the client on the simulator first.\n${learnMore(
-          'https://docs.expo.io/clients/distribution-for-android/'
+          'https://docs.expo.dev/clients/distribution-for-android/'
         )}`
     );
   }
@@ -415,7 +415,7 @@ export async function installExpoAsync({
     return setTimeout(() => {
       Logger.global.info('');
       Logger.global.info(
-        'This download is taking longer than expected. You can also try downloading the clients from the website at https://expo.io/tools'
+        'This download is taking longer than expected. You can also try downloading the clients from the website at https://expo.dev/tools'
       );
     }, INSTALL_WARNING_TIMEOUT);
   };
@@ -1087,7 +1087,7 @@ export async function checkSplashScreenImages(projectRoot: string): Promise<void
 Be aware that your splash image will be used as xxxhdpi asset and its ${chalk.bold(
       'actual size will be different'
     )} depending on device's DPI.
-See https://docs.expo.io/guides/splash-screens/#splash-screen-api-limitations-on-android for more information`);
+See https://docs.expo.dev/guides/splash-screens/#splash-screen-api-limitations-on-android for more information`);
     return;
   }
 
@@ -1100,7 +1100,7 @@ but their sizes mismatch expected ones: [dpi: provided (expected)] ${androidSpla
           `${dpi}: ${width}x${height} (${expectedWidth}x${expectedHeight})`
       )
       .join(', ')}
-See https://docs.expo.io/guides/splash-screens/#splash-screen-api-limitations-on-android for more information`);
+See https://docs.expo.dev/guides/splash-screens/#splash-screen-api-limitations-on-android for more information`);
   }
 }
 

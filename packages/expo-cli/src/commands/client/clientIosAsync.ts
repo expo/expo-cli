@@ -180,7 +180,7 @@ export async function actionAsync(
     );
     Log.log(table.toString());
     Log.log(
-      'See https://docs.expo.io/guides/adhoc-builds/#optional-additional-configuration-steps for more details.'
+      'See https://docs.expo.dev/guides/adhoc-builds/#optional-additional-configuration-steps for more details.'
     );
   }
 
