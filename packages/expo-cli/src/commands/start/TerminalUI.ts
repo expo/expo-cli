@@ -221,7 +221,7 @@ export async function startAsync(projectRoot: string, options: StartOptions) {
     switch (key) {
       case 'A':
       case 'a':
-        if (options.webOnly) {
+        if (options.webOnly && !Webpack.isTargetingNative()) {
           Log.log(`${BLT} Opening the web project in Chrome on Android...`);
           const results = await Android.openWebProjectAsync({
             projectRoot,
@@ -247,7 +247,7 @@ export async function startAsync(projectRoot: string, options: StartOptions) {
         break;
       case 'I':
       case 'i':
-        if (options.webOnly) {
+        if (options.webOnly && !Webpack.isTargetingNative()) {
           Log.log(`${BLT} Opening the web project in Safari on iOS...`);
           const results = await Simulator.openWebProjectAsync({
             projectRoot,

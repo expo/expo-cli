@@ -15,8 +15,10 @@ import WebpackDevServer from 'webpack-dev-server';
 
 import {
   choosePortAsync,
+  ExpoUpdatesManifestHandler,
   ip,
   Logger,
+  ManifestHandler,
   ProjectSettings,
   ProjectUtils,
   UrlUtils,
@@ -104,6 +106,11 @@ async function clearWebCacheAsync(projectRoot: string, mode: string): Promise<vo
   } catch {}
 }
 
+// Temporary hack while we implement multi-bundler dev server proxy.
+export function isTargetingNative() {
+  return ['ios', 'android'].includes(process.env.EXPO_WEBPACK_PLATFORM || '');
+}
+
 export type WebpackDevServerResults = {
   server: DevServer;
   location: Omit<WebpackSettings, 'server'>;
@@ -112,6 +119,12 @@ export type WebpackDevServerResults = {
 
 export async function broadcastMessage(message: 'reload' | string, data?: any) {
   if (!webpackDevServerInstance || !(webpackDevServerInstance instanceof WebpackDevServer)) {
+    return;
+  }
+
+  // Allow any message on native
+  if (isTargetingNative()) {
+    webpackDevServerInstance.sockWrite(webpackDevServerInstance.sockets, message, data);
     return;
   }
 
@@ -201,6 +214,16 @@ export async function startAsync(
     port: webpackServerPort!,
   };
 
+  // This is a temporary hack since we need to serve the expo manifest JSON on `/` for Expo Go support.
+  // In the future, if we support HTML links to manifests we can get rid of this platform specific code.
+
+  if (isTargetingNative()) {
+    await ProjectSettings.setPackagerInfoAsync(projectRoot, {
+      expoServerPort: webpackServerPort,
+      packagerPort: webpackServerPort,
+    });
+  }
+
   const server: DevServer = await new Promise(resolve => {
     // Create a webpack compiler that is configured with custom messages.
     const compiler = WebpackCompiler.createWebpackCompiler({
@@ -212,7 +235,19 @@ export async function startAsync(
       webpackFactory: webpack,
       onFinished: () => resolve(server),
     });
+
+    if (isTargetingNative()) {
+      // Inject the Expo Go manifest middleware.
+      const originalBefore = config.devServer!.before!.bind(config.devServer!.before);
+      config.devServer!.before = (app, server, compiler) => {
+        originalBefore(app, server, compiler);
+        app.use(ManifestHandler.getManifestHandler(projectRoot));
+        app.use(ExpoUpdatesManifestHandler.getManifestHandler(projectRoot));
+      };
+    }
+
     const server = new WebpackDevServer(compiler, config.devServer);
+
     // Launch WebpackDevServer.
     server.listen(port, WebpackEnvironment.HOST, error => {
       if (error) {
