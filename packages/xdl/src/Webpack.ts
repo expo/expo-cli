@@ -16,8 +16,10 @@ import WebpackDevServer from 'webpack-dev-server';
 
 import {
   choosePortAsync,
+  ExpoUpdatesManifestHandler,
   ip,
   Logger,
+  ManifestHandler,
   ProjectSettings,
   ProjectUtils,
   UrlUtils,
@@ -95,6 +97,11 @@ async function clearWebCacheAsync(projectRoot: string, mode: string): Promise<vo
   } catch {}
 }
 
+// Temporary hack while we implement multi-bundler dev server proxy.
+export function isTargetingNative() {
+  return ['ios', 'android'].includes(process.env.EXPO_WEBPACK_PLATFORM || '');
+}
+
 export type WebpackDevServerResults = {
   server: DevServer;
   location: Omit<WebpackSettings, 'server'>;
@@ -103,6 +110,12 @@ export type WebpackDevServerResults = {
 
 export async function broadcastMessage(message: 'reload' | string, data?: any) {
   if (!webpackDevServerInstance || !(webpackDevServerInstance instanceof WebpackDevServer)) {
+    return;
+  }
+
+  // Allow any message on native
+  if (isTargetingNative()) {
+    webpackDevServerInstance.sockWrite(webpackDevServerInstance.sockets, message, data);
     return;
   }
 
@@ -185,6 +198,21 @@ export async function startAsync(
     nonInteractive,
     port: webpackServerPort!,
   };
+
+  if (isTargetingNative()) {
+    await ProjectSettings.setPackagerInfoAsync(projectRoot, {
+      expoServerPort: webpackServerPort,
+      packagerPort: webpackServerPort,
+    });
+
+    // Inject the Expo Go manifest middleware.
+    const originalBefore = config.devServer!.before!.bind(config.devServer!.before);
+    config.devServer!.before = (app, server, compiler) => {
+      originalBefore(app, server, compiler);
+      app.use(ManifestHandler.getManifestHandler(projectRoot));
+      app.use(ExpoUpdatesManifestHandler.getManifestHandler(projectRoot));
+    };
+  }
 
   // Create a webpack compiler that is configured with custom messages.
   const compiler = webpack(config);

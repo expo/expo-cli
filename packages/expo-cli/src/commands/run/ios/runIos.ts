@@ -183,6 +183,7 @@ async function openInSimulatorAsync({
       bundleIdentifier,
     });
     if (result.status === 0) {
+      await Simulator.ensureSimulatorAppRunningAsync({ udid: device.udid });
       await Simulator.activateSimulatorWindowAsync();
     } else {
       throw new CommandError(

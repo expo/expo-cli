@@ -11,6 +11,7 @@ export {
   Config,
   AndroidCredentials,
   ConnectionStatus,
+  CoreSimulator,
   Detach,
   Doctor,
   Env,
