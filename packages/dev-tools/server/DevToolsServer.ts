@@ -165,7 +165,7 @@ function createMessageBuffer(projectRoot: string, issues: Issue): AsyncIterableR
   // eslint-disable-next-line no-new
   new PackagerLogsStream({
     projectRoot,
-    updateLogs: updater => {
+    updateLogs(updater) {
       const chunks = updater([]);
       chunks.forEach(chunk => {
         if (chunk.issueId) {
@@ -183,7 +183,7 @@ function createMessageBuffer(projectRoot: string, issues: Issue): AsyncIterableR
         });
       });
     },
-    onStartBuildBundle: chunk => {
+    onStartBuildBundle({ chunk }) {
       buffer.push({
         type: 'ADDED',
         sourceId: PROCESS_SOURCE.id,
@@ -194,19 +194,19 @@ function createMessageBuffer(projectRoot: string, issues: Issue): AsyncIterableR
         },
       });
     },
-    onProgressBuildBundle: (percentage, start, chunk) => {
+    onProgressBuildBundle({ progress, start, chunk }) {
       buffer.push({
         type: 'UPDATED',
         sourceId: PROCESS_SOURCE.id,
         node: {
           ...chunk,
-          progress: percentage,
+          progress,
           // @ts-ignore
           duration: new Date() - (start || new Date()),
         },
       });
     },
-    onFinishBuildBundle: (error, start, end, chunk) => {
+    onFinishBuildBundle({ error, start, end, chunk }) {
       buffer.push({
         type: 'UPDATED',
         sourceId: PROCESS_SOURCE.id,
