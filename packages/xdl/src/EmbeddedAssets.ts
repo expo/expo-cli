@@ -1,12 +1,5 @@
 import { ExpoAppManifest, getConfig, PackageJSONConfig, ProjectTarget } from '@expo/config';
 import { AndroidConfig, IOSConfig } from '@expo/config-plugins';
-import {
-  addMetaDataItemToMainApplication,
-  getMainApplicationMetaDataValue,
-  getMainApplicationOrThrow,
-  readAndroidManifestAsync,
-  writeAndroidManifestAsync,
-} from '@expo/config-plugins/build/android/Manifest';
 import plist from '@expo/plist';
 import fs from 'fs-extra';
 import path from 'path';
@@ -279,7 +272,7 @@ async function _maybeRunModifiedExpoUpdatesPluginAsync(config: EmbeddedAssetsCon
   let isLikelyFirstIOSPublish = false;
   const expoPlistPath = path.join(supportingDirectory, 'Expo.plist');
   if (fs.existsSync(expoPlistPath)) {
-    const expoPlistForProject = plist.parse(await readFileSync(expoPlistPath, 'utf8'));
+    const expoPlistForProject = plist.parse(await fs.readFileSync(expoPlistPath, 'utf8'));
     const currentIOSUpdatesURL = expoPlistForProject[IOSConfig.Updates.Config.UPDATE_URL];
     if (currentIOSUpdatesURL === PLACEHOLDER_URL) {
       isLikelyFirstIOSPublish = true;
@@ -295,7 +288,7 @@ async function _maybeRunModifiedExpoUpdatesPluginAsync(config: EmbeddedAssetsCon
         expoPlistForProject[IOSConfig.Updates.Config.RELEASE_CHANNEL] = releaseChannel;
       }
 
-      await writeFileSync(expoPlistPath, plist.build(expoPlistForProject));
+      await fs.writeFileSync(expoPlistPath, plist.build(expoPlistForProject));
     }
   }
 
@@ -311,8 +304,10 @@ async function _maybeRunModifiedExpoUpdatesPluginAsync(config: EmbeddedAssetsCon
   );
   const AndroidManifestKeyForUpdateURL = AndroidConfig.Updates.Config.UPDATE_URL;
   if (fs.existsSync(androidManifestXmlPath)) {
-    let androidManifest = await readAndroidManifestAsync(androidManifestXmlPath);
-    const currentAndroidUpdateURL = getMainApplicationMetaDataValue(
+    let androidManifest = await AndroidConfig.Manifest.readAndroidManifestAsync(
+      androidManifestXmlPath
+    );
+    const currentAndroidUpdateURL = AndroidConfig.Manifest.getMainApplicationMetaDataValue(
       androidManifest,
       AndroidManifestKeyForUpdateURL
     );
@@ -326,23 +321,26 @@ async function _maybeRunModifiedExpoUpdatesPluginAsync(config: EmbeddedAssetsCon
         /*username*/ null
       );
 
-      const mainApplication = getMainApplicationOrThrow(androidManifest);
+      const mainApplication = AndroidConfig.Manifest.getMainApplicationOrThrow(androidManifest);
       // overwrite the URL defined in AndroidConfig.Updates.setUpdatesConfig
-      addMetaDataItemToMainApplication(
+      AndroidConfig.Manifest.addMetaDataItemToMainApplication(
         mainApplication,
         AndroidManifestKeyForUpdateURL,
         androidManifestUrl
       );
       // set a release channel (not done in updates plugin)
       if (releaseChannel) {
-        addMetaDataItemToMainApplication(
+        AndroidConfig.Manifest.addMetaDataItemToMainApplication(
           mainApplication,
           AndroidConfig.Updates.Config.RELEASE_CHANNEL,
           releaseChannel
         );
       }
 
-      await writeAndroidManifestAsync(androidManifestXmlPath, androidManifest);
+      await AndroidConfig.Manifest.writeAndroidManifestAsync(
+        androidManifestXmlPath,
+        androidManifest
+      );
     }
   }
 
@@ -352,20 +350,20 @@ async function _maybeRunModifiedExpoUpdatesPluginAsync(config: EmbeddedAssetsCon
     if (isLikelyFirstIOSPublish && !isLikelyFirstAndroidPublish) {
       platformSpecificMessage =
         '🚀 It looks like this your first iOS publish for this project! ' +
-        "Automatically setup Expo updates in the Expo.plist";
+        'Automatically setup Expo updates in the Expo.plist';
     } else if (!isLikelyFirstIOSPublish && isLikelyFirstAndroidPublish) {
       platformSpecificMessage =
         '🚀 It looks like this your first Android publish for this project! ' +
-        "We've automatically set some configuration values in AndroidManifest.xml. ";
+        'Automatically setup Expo updates in the AndroidManifest.xml';
     } else {
       platformSpecificMessage =
         '🚀 It looks like this your first publish for this project! ' +
-        "We've automatically set some configuration values in Expo.plist and AndroidManifest.xml. ";
+        'Automatically setup Expo updates in the Expo.plist and the AndroidManifest.xml';
     }
 
     logger.global.warn(
       platformSpecificMessage +
-        "The native app must be rebuilt, and downloaded by your users before they can access the new JavaScript bundle " +
+        'The native app must be rebuilt, and downloaded by your users before they can access the new JavaScript bundle ' +
         'you just published.'
     );
   }
