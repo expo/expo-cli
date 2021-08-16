@@ -1,14 +1,11 @@
 import type Log from '@expo/bunyan';
-import { getConfig, getNameFromConfig } from '@expo/config';
 import { MessageSocket } from '@expo/dev-server';
 import * as devcert from '@expo/devcert';
-import { isUsingYarn } from '@expo/package-manager';
 import chalk from 'chalk';
 import fs from 'fs-extra';
 import getenv from 'getenv';
 import http from 'http';
 import * as path from 'path';
-import { prepareUrls, Urls } from 'react-dev-utils/WebpackDevServerUtils';
 import formatWebpackMessages from 'react-dev-utils/formatWebpackMessages';
 import openBrowser from 'react-dev-utils/openBrowser';
 import webpack from 'webpack';
@@ -75,15 +72,6 @@ export type WebEnvironment = {
   https: boolean;
   logger: Log;
 };
-
-let devServerInfo: {
-  urls: Urls;
-  protocol: 'http' | 'https';
-  useYarn: boolean;
-  appName: string;
-  nonInteractive: boolean;
-  port: number;
-} | null = null;
 
 async function clearWebCacheAsync(projectRoot: string, mode: string): Promise<void> {
   const cacheFolder = path.join(projectRoot, '.expo', 'web', 'cache', mode);
@@ -181,23 +169,6 @@ export async function startAsync(
   );
 
   const protocol = env.https ? 'https' : 'http';
-  const urls = prepareUrls(protocol, '::', webpackServerPort);
-  const useYarn = isUsingYarn(projectRoot);
-  const appName = await getProjectNameAsync(projectRoot);
-  const nonInteractive = validateBoolOption(
-    'nonInteractive',
-    options.nonInteractive,
-    !process.stdout.isTTY
-  );
-
-  devServerInfo = {
-    urls,
-    protocol,
-    useYarn,
-    appName,
-    nonInteractive,
-    port: webpackServerPort!,
-  };
 
   if (isTargetingNative()) {
     await ProjectSettings.setPackagerInfoAsync(projectRoot, {
@@ -246,7 +217,6 @@ export async function startAsync(
       }).finally(() => {
         callback?.(err);
         webpackDevServerInstance = null;
-        devServerInfo = null;
         webpackServerPort = null;
       });
     });
@@ -382,14 +352,6 @@ export async function bundleAsync(projectRoot: string, options?: BundlingOptions
 
   const config = await loadConfigAsync(env);
   await bundleWebAppAsync(projectRoot, config);
-}
-
-async function getProjectNameAsync(projectRoot: string): Promise<string> {
-  const { exp } = getConfig(projectRoot, {
-    skipSDKVersionRequirement: true,
-  });
-  const webName = getNameFromConfig(exp).webName ?? exp.name;
-  return webName;
 }
 
 /**
