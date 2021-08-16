@@ -8,7 +8,7 @@ import {
   writeAndroidManifestAsync,
 } from '@expo/config-plugins/build/android/Manifest';
 import plist from '@expo/plist';
-import fs, { readFileSync, writeFileSync } from 'fs-extra';
+import fs from 'fs-extra';
 import path from 'path';
 import semver from 'semver';
 
@@ -352,7 +352,7 @@ async function _maybeRunModifiedExpoUpdatesPluginAsync(config: EmbeddedAssetsCon
     if (isLikelyFirstIOSPublish && !isLikelyFirstAndroidPublish) {
       platformSpecificMessage =
         '🚀 It looks like this your first iOS publish for this project! ' +
-        "We've automatically set some configuration values in Expo.plist. ";
+        "Automatically setup Expo updates in the Expo.plist";
     } else if (!isLikelyFirstIOSPublish && isLikelyFirstAndroidPublish) {
       platformSpecificMessage =
         '🚀 It looks like this your first Android publish for this project! ' +
@@ -365,7 +365,7 @@ async function _maybeRunModifiedExpoUpdatesPluginAsync(config: EmbeddedAssetsCon
 
     logger.global.warn(
       platformSpecificMessage +
-        "You'll need to make a new build with these changes before you can download the update " +
+        "The native app must be rebuilt, and downloaded by your users before they can access the new JavaScript bundle " +
         'you just published.'
     );
   }
