@@ -153,7 +153,7 @@ const printServerInfo = async (
   if (webUrl) {
     Log.addNewLineIfNone();
     Log.nested(item(`Webpack waiting on ${u(webUrl)}`));
-    Log.nested(chalk.gray(item(`Expo Webpack is in beta, and subject to breaking changes!`)));
+    Log.nested(chalk.gray(item(`Expo Webpack (web) is in beta, and subject to breaking changes!`)));
   }
 
   await printBasicUsageAsync(options);
