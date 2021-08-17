@@ -7,7 +7,7 @@ Object {
   "devServer": Object {
     "after": [Function],
     "before": [Function],
-    "clientLogLevel": "none",
+    "clientLogLevel": "silent",
     "compress": true,
     "contentBase": "packages/webpack-config/web-default",
     "contentBasePublicPath": "/",
@@ -29,14 +29,15 @@ Object {
         ],
       },
     },
+    "noInfo": true,
     "overlay": false,
     "proxy": undefined,
     "public": undefined,
     "publicPath": "/",
-    "quiet": true,
     "sockHost": undefined,
     "sockPath": undefined,
     "sockPort": undefined,
+    "stats": "none",
     "transportMode": "ws",
     "watchContentBase": true,
   },
@@ -114,6 +115,7 @@ Object {
     "DefinePlugin",
     "LimitChunkCountPlugin",
     "WatchMissingNodeModulesPlugin",
+    "ExpectedErrorsPlugin",
     "SourceMapDevToolPlugin",
   ],
   "resolve": Object {
@@ -164,6 +166,7 @@ Object {
       },
     ],
   },
+  "stats": "none",
   "target": "webworker",
 }
 `;
@@ -324,6 +327,7 @@ Object {
     "ModuleNotFoundPlugin",
     "DefinePlugin",
     "LimitChunkCountPlugin",
+    "ExpectedErrorsPlugin",
     "SourceMapDevToolPlugin",
   ],
   "resolve": Object {
@@ -374,6 +378,7 @@ Object {
       },
     ],
   },
+  "stats": "none",
   "target": "webworker",
 }
 `;
@@ -385,7 +390,7 @@ Object {
   "devServer": Object {
     "after": [Function],
     "before": [Function],
-    "clientLogLevel": "none",
+    "clientLogLevel": "silent",
     "compress": true,
     "contentBase": "packages/webpack-config/web-default",
     "contentBasePublicPath": "/",
@@ -400,14 +405,15 @@ Object {
     "injectClient": false,
     "inline": true,
     "mimeTypes": undefined,
+    "noInfo": true,
     "overlay": false,
     "proxy": undefined,
     "public": undefined,
     "publicPath": "/",
-    "quiet": true,
     "sockHost": undefined,
     "sockPath": undefined,
     "sockPort": undefined,
+    "stats": "none",
     "transportMode": "ws",
     "watchContentBase": true,
   },
@@ -541,6 +547,7 @@ Object {
     "HotModuleReplacementPlugin",
     "WatchMissingNodeModulesPlugin",
     "ManifestPlugin",
+    "ExpectedErrorsPlugin",
   ],
   "resolve": Object {
     "alias": Object {
@@ -589,6 +596,7 @@ Object {
       },
     ],
   },
+  "stats": "none",
 }
 `;
 
@@ -808,6 +816,7 @@ Object {
     "DefinePlugin",
     "MiniCssExtractPlugin",
     "ManifestPlugin",
+    "ExpectedErrorsPlugin",
   ],
   "resolve": Object {
     "alias": Object {
@@ -856,5 +865,6 @@ Object {
       },
     ],
   },
+  "stats": "none",
 }
 `;

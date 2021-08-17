@@ -97,7 +97,6 @@ export default class WebpackBar extends webpack.ProgressPlugin {
       // Show warnings if no errors were found.
       if (statsData.warnings?.length) {
         for (const warning of statsData.warnings) {
-          // TODO: Agnostic format transform here
           this.sendEvent('bundling_warning', {
             warning,
           });
