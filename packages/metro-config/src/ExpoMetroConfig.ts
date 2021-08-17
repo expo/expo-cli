@@ -7,6 +7,9 @@ import type MetroConfig from 'metro-config';
 import path from 'path';
 import resolveFrom from 'resolve-from';
 
+import { DefinePlugin } from './DefinePlugin';
+import { MetroSerializer } from './MetroSerializer';
+
 export const EXPO_DEBUG = boolish('EXPO_DEBUG', false);
 
 // Import only the types here, the values will be imported from the project, at runtime.
@@ -162,6 +165,7 @@ export function getDefaultConfig(
     ...metroDefaultValues
   } = MetroConfig.getDefaultConfig.getDefaultValues(projectRoot);
 
+  const port = Number(process.env.RCT_METRO_PORT) || 8081;
   // Merge in the default config from Metro here, even though loadConfig uses it as defaults.
   // This is a convenience for getDefaultConfig use in metro.config.js, e.g. to modify assetExts.
   return MetroConfig.mergeConfig(metroDefaultValues, {
@@ -178,7 +182,7 @@ export function getDefaultConfig(
       getPolyfills: () => require(path.join(reactNativePath, 'rn-get-polyfills'))(),
     },
     server: {
-      port: Number(process.env.RCT_METRO_PORT) || 8081,
+      port,
     },
     symbolicator: {
       customizeFrame: frame => {
@@ -231,11 +235,30 @@ export async function loadAsync(
   if (reporter) {
     defaultConfig = { ...defaultConfig, reporter };
   }
+
   const MetroConfig = importMetroConfigFromProject(projectRoot);
-  return await MetroConfig.loadConfig(
+  const config = await MetroConfig.loadConfig(
     { cwd: projectRoot, projectRoot, ...metroOptions },
     defaultConfig
   );
+
+  // If a port is defined (developing), then surface it statically to the app.
+  if (metroOptions.port) {
+    if (!config.serializer) {
+      // @ts-ignore
+      config.serializer = {};
+    }
+    // @ts-ignore: multi-version support
+    config.serializer.customSerializer = MetroSerializer(projectRoot, [
+      // Define `__PORT__` on the global scope in development mode
+      // this enables us to test against when the user is debugging vs in production.
+      DefinePlugin({
+        'process.env.__EXPO_DEV_SERVER_PORT': metroOptions.port,
+      }),
+    ]);
+  }
+
+  return config;
 }
 
 function importMetroConfigFromProject(projectRoot: string): typeof MetroConfig {

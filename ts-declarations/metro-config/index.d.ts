@@ -97,7 +97,7 @@ declare module 'metro-config' {
     createModuleIdFactory: () => (path: string) => number;
     customSerializer: (
       entryPoint: string,
-      preModules: ReadonlyArray<Module>,
+      preModules: readonly Module[],
       graph: Graph,
       options: SerializerOptions
     ) => string | { code: string; map: string } | null | undefined;

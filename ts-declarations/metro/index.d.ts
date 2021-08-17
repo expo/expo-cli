@@ -35,7 +35,7 @@ declare module 'metro' {
   //#endregion
   //#region metro/src/DeltaBundler/types.flow.js
 
-  interface MixedOutput {
+  export interface MixedOutput {
     readonly data: unknown;
     readonly type: string;
   }
@@ -121,16 +121,16 @@ declare module 'metro' {
     readonly reset: boolean;
   }
 
-  export interface SerializerOptions {
+  export interface SerializerOptions<T = MixedOutput> {
     readonly asyncRequireModulePath: string;
     readonly createModuleId: (arg0: string) => number;
     readonly dev: boolean;
     readonly getRunModuleStatement: (arg0: number | string) => string;
     readonly inlineSourceMap: boolean | null | undefined;
     readonly modulesOnly: boolean;
-    readonly processModuleFilter: (module: Module) => boolean;
+    readonly processModuleFilter: (module: Module<T>) => boolean;
     readonly projectRoot: string;
-    readonly runBeforeMainModule: ReadonlyArray<string>;
+    readonly runBeforeMainModule: readonly string[];
     readonly runModule: boolean;
     readonly sourceMapUrl: string | null | undefined;
     readonly sourceUrl: string | null | undefined;
