@@ -12,7 +12,7 @@ import webpack from 'webpack';
 
 import { WebpackFileError } from './WebpackFileError';
 import { getBabelError } from './parseBabelError';
-import { getNotFoundError } from './parseNotFoundError';
+import { getModuleDependencyWarning, getNotFoundError } from './parseNotFoundError';
 
 function getFileData(compilation: webpack.compilation.Compilation, m: any): string {
   let resolved: string;
@@ -39,7 +39,7 @@ export async function getModuleBuildError(
   if (
     !(
       typeof input === 'object' &&
-      (input?.name === 'ModuleBuildError' || input?.name === 'ModuleNotFoundError') &&
+      ['ModuleBuildError', 'ModuleNotFoundError', 'ModuleDependencyWarning'].includes(input.name) &&
       Boolean(input.module) &&
       input.error instanceof Error
     )
@@ -47,14 +47,18 @@ export async function getModuleBuildError(
     return false;
   }
 
-  const err: Error = input.error;
   const sourceFilename = getFileData(compilation, input.module);
+
+  if (input.name === 'ModuleDependencyWarning') {
+    return await getModuleDependencyWarning(compilation, input, sourceFilename);
+  }
+
   const notFoundError = await getNotFoundError(compilation, input, sourceFilename);
   if (notFoundError !== false) {
     return notFoundError;
   }
 
-  const babel = getBabelError(sourceFilename, err);
+  const babel = getBabelError(sourceFilename, input.error);
   if (babel !== false) {
     return babel;
   }

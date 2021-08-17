@@ -73,12 +73,14 @@ export async function createOriginalStackFrame({
   modulePath,
   rootDirectory,
   frame,
+  frameNodeModules,
 }: {
   line: number;
   column: number | null;
   source: any;
   modulePath?: string;
   rootDirectory: string;
+  frameNodeModules?: boolean;
   frame: any;
 }): Promise<OriginalStackFrameResponse | null> {
   const result = await findOriginalSourcePositionAndContent(source, {
@@ -107,7 +109,9 @@ export async function createOriginalStackFrame({
   };
 
   const originalCodeFrame: string | null =
-    !(originalFrame.file?.includes('node_modules') ?? true) && sourceContent && sourcePosition.line
+    (frameNodeModules || !(originalFrame.file?.includes('node_modules') ?? true)) &&
+    sourceContent &&
+    sourcePosition.line
       ? (codeFrameColumns(
           sourceContent,
           {

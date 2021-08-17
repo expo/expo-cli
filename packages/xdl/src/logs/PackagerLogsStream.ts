@@ -108,6 +108,11 @@ type ReportableEvent =
       type: 'bundling_error';
     }
   | {
+      // Currently only sent from Webpack
+      warning: string;
+      type: 'bundling_warning';
+    }
+  | {
       type: 'dep_graph_loading';
     }
   | {
@@ -286,6 +291,10 @@ export default class PackagerLogsStream {
           this._formatBundlingError(msg.error) ||
           msg;
         chunk.level = Logger.ERROR;
+        break;
+      case 'bundling_warning':
+        chunk.msg = msg.warning;
+        chunk.level = Logger.WARN;
         break;
       case 'transform_cache_reset':
         chunk.msg =

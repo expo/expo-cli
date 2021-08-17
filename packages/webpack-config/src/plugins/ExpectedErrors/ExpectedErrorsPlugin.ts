@@ -15,6 +15,19 @@ export default class ExpectedErrorsPlugin {
   apply(compiler: webpack.Compiler) {
     compiler.hooks.compilation.tap(this.constructor.name, compilation => {
       compilation.hooks.afterSeal.tapPromise(this.constructor.name, async () => {
+        if (compilation.warnings?.length) {
+          compilation.warnings = await Promise.all(
+            compilation.warnings.map(async warning => {
+              try {
+                const moduleWarning = await getModuleBuildError(compilation, warning);
+                return moduleWarning === false ? warning : moduleWarning;
+              } catch (e) {
+                console.log(e);
+                return warning;
+              }
+            })
+          );
+        }
         if (compilation.errors?.length) {
           compilation.errors = await Promise.all(
             compilation.errors.map(async err => {

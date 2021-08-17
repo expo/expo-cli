@@ -26,6 +26,7 @@
  */
 import chalk from 'chalk';
 import path from 'path';
+import webpack from 'webpack';
 
 import { WebpackFileError } from './WebpackFileError';
 import { createOriginalStackFrame } from './createOriginalStackFrame';
@@ -55,68 +56,126 @@ export async function getNotFoundError(compilation: any, input: any, fileName: s
   if (input.name !== 'ModuleNotFoundError') {
     return false;
   }
+  const stack = await createStackTrace(getProjectRoot(compilation), {
+    loc: input.loc ? input.loc : input.dependencies.map((d: any) => d.loc).filter(Boolean)[0],
+    originalSource: input.module.originalSource(),
+  });
+  // If we could not result the original location we still need to show the existing error
+  if (!stack) {
+    return input;
+  }
 
-  const loc = input.loc ? input.loc : input.dependencies.map((d: any) => d.loc).filter(Boolean)[0];
-  const originalSource = input.module.originalSource();
+  const errorMessage = input.error.message
+    .replace(/ in '.*?'/, '')
+    .replace(/Can't resolve '(.*)'/, `Can't resolve '${chalk.green('$1')}'`);
 
+  return new WebpackFileError(
+    {
+      filePath: fileName,
+      line: stack.lineNumber,
+      col: stack.column,
+    },
+    [
+      chalk.red.bold('Module not found') + `: ${errorMessage}`,
+      stack.frame,
+      getImportTrace(compilation, input),
+      // TODO: FYI
+    ]
+      .filter(Boolean)
+      .join('\n')
+  );
+}
+
+function getImportTrace(compilation: webpack.compilation.Compilation, input: any) {
+  if (!isWebpack5) {
+    return '';
+  }
+
+  const projectRoot = getProjectRoot(compilation);
+
+  let importTraceLine = '\nImport trace for requested module:\n';
+  const moduleTrace = getModuleTrace(input, compilation);
+
+  for (const { origin } of moduleTrace) {
+    if (!origin.resource) {
+      continue;
+    }
+    const filePath = path.relative(projectRoot, origin.resource);
+    importTraceLine += `./${filePath}\n`;
+  }
+
+  return importTraceLine + '\n';
+}
+
+// This can occur in React Native when using require incorrectly:
+// i.e. `(require: any).Systrace = Systrace;` which is valid in Metro.
+export async function getModuleDependencyWarning(
+  compilation: webpack.compilation.Compilation,
+  input: any,
+  fileName: string
+) {
+  if (input.name !== 'ModuleDependencyWarning') {
+    return false;
+  }
+
+  const stack = await createStackTrace(getProjectRoot(compilation), {
+    loc: input.loc,
+    originalSource: input.module.originalSource(),
+  });
+
+  // If we could not result the original location we still need to show the existing error
+  if (!stack) {
+    return input;
+  }
+
+  return new WebpackFileError(
+    {
+      filePath: fileName,
+      line: stack.lineNumber,
+      col: stack.column,
+    },
+    [
+      input.error.message,
+      stack.frame,
+      getImportTrace(compilation, input),
+      // TODO: FYI
+    ]
+      .filter(Boolean)
+      .join('\n')
+  );
+}
+
+function getProjectRoot(compilation: webpack.compilation.Compilation): string {
+  // @ts-ignore: Webpack v5/v4
+  return compilation.options.context ?? compilation.context;
+}
+
+async function createStackTrace(
+  projectRoot: string,
+  { loc, originalSource }: { loc: any; originalSource: any }
+) {
   try {
     const result = await createOriginalStackFrame({
       line: loc.start.line,
       column: loc.start.column,
       source: originalSource,
-      rootDirectory: compilation.options.context,
+      rootDirectory: projectRoot,
+      frameNodeModules: true,
       frame: {},
     });
 
     // If we could not result the original location we still need to show the existing error
     if (!result) {
-      return input;
+      return null;
     }
-
-    const errorMessage = input.error.message
-      .replace(/ in '.*?'/, '')
-      .replace(/Can't resolve '(.*)'/, `Can't resolve '${chalk.green('$1')}'`);
-
-    const importTrace = () => {
-      if (!isWebpack5) {
-        return '';
-      }
-
-      let importTraceLine = '\nImport trace for requested module:\n';
-      const moduleTrace = getModuleTrace(input, compilation);
-
-      for (const { origin } of moduleTrace) {
-        if (!origin.resource) {
-          continue;
-        }
-        const filePath = path.relative(compilation.options.context, origin.resource);
-        importTraceLine += `./${filePath}\n`;
-      }
-
-      return importTraceLine + '\n';
+    return {
+      lineNumber: result.originalStackFrame.lineNumber,
+      column: result.originalStackFrame.column,
+      frame: result.originalCodeFrame ?? '',
     };
-
-    const frame = result.originalCodeFrame ?? '';
-
-    const message = [
-      chalk.red.bold('Module not found') + `: ${errorMessage}`,
-      frame,
-      importTrace(),
-      // TODO: FYI
-    ]
-      .filter(Boolean)
-      .join('\n');
-    return new WebpackFileError(
-      {
-        filePath: fileName,
-        line: result.originalStackFrame.lineNumber,
-        col: result.originalStackFrame.column,
-      },
-      message
-    );
   } catch (err) {
     console.log('Failed to parse source map:', err);
     // Don't fail on failure to resolve sourcemaps
-    return input;
+    return null;
   }
 }
