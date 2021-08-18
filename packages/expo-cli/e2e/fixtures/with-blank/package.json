@@ -1,0 +1,10 @@
+{
+    "dependencies": {
+      "expo": "^42.0.3",
+      "react": "16.9.0",
+      "react-native": "https://github.com/expo/react-native/archive/sdk-42.0.0.tar.gz"
+    },
+    "devDependencies": {
+      "@babel/core": "7.9.0"
+    }
+}

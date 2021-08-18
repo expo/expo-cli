@@ -21,6 +21,10 @@ export default function (program: Command) {
       .option('-p, --platform <ios|android>', 'Platform [ios|android]')
       .option('--dev', 'Bundle in development mode')
       .option(
+        '--entry-file <path>',
+        'Path to the initial file, either absolute or relative to project root'
+      )
+      .option(
         '--max-workers <number>',
         'Maximum number of tasks to allow the bundler to spawn.',
         parseInt

@@ -16,6 +16,7 @@ type Options = {
   maxWorkers?: number;
   dev?: boolean;
   platform: 'ios' | 'android';
+  entryFile?: string;
 };
 
 function parseOptions(options: Partial<Options>): Options {
@@ -27,6 +28,7 @@ function parseOptions(options: Partial<Options>): Options {
 
   return {
     clear: options.clear,
+    entryFile: options.entryFile,
     bundleOutput: options.bundleOutput,
     sourcemapOutput: options.sourcemapOutput,
     assetsOutput: options.assetsOutput,
@@ -49,7 +51,10 @@ function createDevServerOptions(
 function createPlatformBundleOptions(
   projectRoot: string,
   outputDir: string,
-  options: Pick<Options, 'platform' | 'dev' | 'sourcemapOutput' | 'bundleOutput' | 'assetsOutput'>
+  options: Pick<
+    Options,
+    'platform' | 'dev' | 'sourcemapOutput' | 'bundleOutput' | 'assetsOutput' | 'entryFile'
+  >
 ): BundleOptions {
   // Create a default bundle name
   const defaultBundleName = options.platform === 'ios' ? 'index.jsbundle' : 'index.android.bundle';
@@ -59,7 +64,7 @@ function createPlatformBundleOptions(
     assetOutput: options.assetsOutput || outputDir,
     platform: options.platform,
     // Use Expo's entry point resolution to ensure all commands act the same way.
-    entryPoint: resolveEntryPoint(projectRoot, options.platform),
+    entryPoint: options.entryFile || resolveEntryPoint(projectRoot, options.platform),
     sourcemapOutput: options.sourcemapOutput || path.join(outputDir, defaultBundleName + '.map'),
     // This prevents the absolute path from being shown in the source code, shouts out to Satya.
     sourcemapSourcesRoot: projectRoot,
