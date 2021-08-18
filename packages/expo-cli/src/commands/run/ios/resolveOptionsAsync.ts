@@ -26,7 +26,7 @@ export type ProjectInfo = {
   name: string;
 };
 
-const ignoredPaths = ['**/@(Carthage|Pods|node_modules)/**'];
+const ignoredPaths = ['**/@(Carthage|Pods|vendor|node_modules)/**'];
 
 function findXcodeProjectPaths(
   projectRoot: string,
