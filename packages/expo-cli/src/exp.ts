@@ -18,6 +18,7 @@ import {
   ApiV2,
   Binaries,
   Config,
+  Env,
   Logger,
   LogRecord,
   LogUpdater,
@@ -104,7 +105,7 @@ Command.prototype.prepareCommands = function () {
       if (getenv.boolish('EXPO_DEBUG', false)) {
         return true;
       }
-      return !['internal', 'eas'].includes(cmd.__helpGroup);
+      return !['internal'].includes(cmd.__helpGroup);
     })
     .map(function (cmd: Command, i: number) {
       const args = cmd._args.map(humanReadableArgName).join(' ');
@@ -195,14 +196,13 @@ function replaceAll(string: string, search: string, replace: string): string {
 }
 
 export const helpGroupOrder = [
-  'auth',
   'core',
+  'auth',
   'client',
   'info',
   'publish',
   'build',
   'credentials',
-  'eas',
   'notifications',
   'url',
   'webhooks',
@@ -223,7 +223,6 @@ function sortHelpGroups(helpGroups: Record<string, string[][]>): Record<string, 
 
   const subGroupOrder: Record<string, string[]> = {
     core: ['init', 'start', 'start:web', 'publish', 'export'],
-    eas: ['eas:credentials'],
   };
 
   const sortSubGroupWithOrder = (groupName: string, group: string[][]): string[][] => {
@@ -333,7 +332,7 @@ export type Action = (...args: any[]) => void;
 // parsing the command input
 Command.prototype.asyncAction = function (asyncFn: Action) {
   return this.action(async (...args: any[]) => {
-    if (process.env.EAS_BUILD !== '1') {
+    if (!getenv.boolish('EAS_BUILD', false)) {
       try {
         await profileMethod(checkCliVersionAsync)();
       } catch (e) {}
@@ -358,10 +357,10 @@ Command.prototype.asyncAction = function (asyncFn: Action) {
       } else if (err.isCommandError || err.isPluginError || err instanceof AssertionError) {
         Log.error(err.message);
       } else if (err._isApiError) {
-        Log.error(chalk.red(err.message));
-      } else if (err.isXDLError) {
         Log.error(err.message);
-      } else if (err.isJsonFileError || err.isConfigError || err.isPackageManagerError) {
+      } else if (err.isXDLError || err.isConfigError) {
+        Log.error(err.message);
+      } else if (err.isJsonFileError || err.isPackageManagerError) {
         if (err.code === 'EJSONEMPTY') {
           // Empty JSON is an easy bug to debug. Often this is thrown for package.json or app.json being empty.
           Log.error(err.message);
@@ -560,9 +559,10 @@ Command.prototype.asyncActionProjectDir = function (
     // eslint-disable-next-line no-new
     new PackagerLogsStream({
       projectRoot,
-      onStartBuildBundle: () => {
+      onStartBuildBundle({ bundleDetails }) {
         // TODO: Unify with commands/utils/progress.ts
-        bar = new ProgressBar('Building JavaScript bundle [:bar] :percent', {
+        const platform = PackagerLogsStream.getPlatformTagForBuildDetails(bundleDetails);
+        bar = new ProgressBar(`${platform}Bundling JavaScript [:bar] :percent`, {
           width: 64,
           total: 100,
           clear: true,
@@ -572,12 +572,12 @@ Command.prototype.asyncActionProjectDir = function (
 
         Log.setBundleProgressBar(bar);
       },
-      onProgressBuildBundle: (percent: number) => {
+      onProgressBuildBundle({ progress }) {
         if (!bar || bar.complete) return;
-        const ticks = percent - bar.curr;
+        const ticks = progress - bar.curr;
         ticks > 0 && bar.tick(ticks);
       },
-      onFinishBuildBundle: (err, startTime, endTime) => {
+      onFinishBuildBundle({ error, start, end, bundleDetails }) {
         if (bar && !bar.complete) {
           bar.tick(100 - bar.curr);
         }
@@ -587,11 +587,13 @@ Command.prototype.asyncActionProjectDir = function (
           bar.terminate();
           bar = null;
 
-          if (err) {
-            Log.log(chalk.red('Failed building JavaScript bundle.'));
+          const platform = PackagerLogsStream.getPlatformTagForBuildDetails(bundleDetails);
+          const totalBuildTimeMs = end.getTime() - start.getTime();
+          const durationSuffix = chalk.gray(` ${totalBuildTimeMs}ms`);
+          if (error) {
+            Log.log(chalk.red(`${platform}Bundling failed` + durationSuffix));
           } else {
-            const totalBuildTimeMs = endTime.getTime() - startTime.getTime();
-            Log.log(chalk.green(`Finished building JavaScript bundle in ${totalBuildTimeMs}ms.`));
+            Log.log(chalk.green(`${platform}Bundling complete` + durationSuffix));
             StatusEventEmitter.emit('bundleBuildFinish', { totalBuildTimeMs });
           }
         }
@@ -657,8 +659,27 @@ Command.prototype.asyncActionProjectDir = function (
 };
 
 export async function bootstrapAnalyticsAsync(): Promise<void> {
-  Analytics.initializeClient('vGu92cdmVaggGA26s3lBX6Y5fILm8SQ7', packageJSON.version);
-  UnifiedAnalytics.initializeClient('u4e9dmCiNpwIZTXuyZPOJE7KjCMowdx5', packageJSON.version);
+  if (Env.shouldDisableAnalytics()) {
+    return; // do not allow E2E to fire events
+  }
+
+  Analytics.initializeClient(
+    'vGu92cdmVaggGA26s3lBX6Y5fILm8SQ7',
+    {
+      apiKey: '1wHTzmVgmZvNjCalKL45chlc2VN',
+      dataPlaneUrl: 'https://cdp.expo.dev',
+    },
+    packageJSON.version
+  );
+
+  UnifiedAnalytics.initializeClient(
+    'u4e9dmCiNpwIZTXuyZPOJE7KjCMowdx5',
+    {
+      apiKey: '1wabJGd5IiuF9Q8SGlcI90v8WTs',
+      dataPlaneUrl: 'https://cdp.expo.dev',
+    },
+    packageJSON.version
+  );
 
   const userData = await profileMethod(
     UserManager.getCachedUserDataAsync,
@@ -671,7 +692,6 @@ export async function bootstrapAnalyticsAsync(): Promise<void> {
     userId: userData.userId,
     currentConnection: userData?.currentConnection,
     username: userData?.username,
-    userType: '', // not available without hitting api
   });
 }
 
@@ -759,6 +779,11 @@ async function runAsync(programName: string) {
 }
 
 async function checkCliVersionAsync() {
+  // Skip checking for latest version on EAS Build
+  if (getenv.boolish('EAS_BUILD', false)) {
+    return;
+  }
+
   const { updateIsAvailable, current, latest, deprecated } = await update.checkForUpdateAsync();
   if (updateIsAvailable) {
     Log.nestedWarn(
@@ -789,7 +814,8 @@ any interaction with Expo servers may result in unexpected behaviour.`
 }
 
 function _registerLogs() {
-  const stream = {
+  const stream: bunyan.Stream = {
+    level: Log.isDebug ? 'debug' : 'info',
     stream: {
       write: (chunk: any) => {
         if (chunk.code) {
@@ -806,16 +832,17 @@ function _registerLogs() {
               return;
             }
             case NotificationCode.TICK_PROGRESS_BAR: {
-              const spinner = Log.getProgress();
-              if (spinner) {
-                spinner.tick(1, chunk.msg);
+              const bar = Log.getProgress();
+              if (bar) {
+                bar.tick(1, chunk.msg);
               }
               return;
             }
             case NotificationCode.STOP_PROGRESS_BAR: {
-              const spinner = Log.getProgress();
-              if (spinner) {
-                spinner.terminate();
+              const bar = Log.getProgress();
+              if (bar) {
+                Log.setBundleProgressBar(null);
+                bar.terminate();
               }
               return;
             }
@@ -838,6 +865,8 @@ function _registerLogs() {
           Log.log(chunk.msg);
         } else if (chunk.level === bunyan.WARN) {
           Log.warn(chunk.msg);
+        } else if (chunk.level === bunyan.DEBUG) {
+          Log.debug(chunk.msg);
         } else if (chunk.level >= bunyan.ERROR) {
           Log.error(chunk.msg);
         }

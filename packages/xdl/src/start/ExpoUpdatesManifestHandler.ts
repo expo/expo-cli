@@ -3,7 +3,7 @@ import { getRuntimeVersionForSDKVersion } from '@expo/sdk-runtime-versions';
 import express from 'express';
 import http from 'http';
 import { parse } from 'url';
-import uuid from 'uuid';
+import { v4 as uuidv4 } from 'uuid';
 
 import {
   Analytics,
@@ -89,7 +89,7 @@ export async function getManifestResponseAsync({
   );
 
   const expoUpdatesManifest = {
-    id: uuid.v4(),
+    id: uuidv4(),
     createdAt: new Date().toISOString(),
     runtimeVersion,
     launchAsset: {

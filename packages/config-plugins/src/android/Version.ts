@@ -34,7 +34,7 @@ export function setVersionName(config: Pick<ExpoConfig, 'version'>, buildGradle:
 }
 
 export function getVersionCode(config: Pick<ExpoConfig, 'android'>) {
-  return config.android?.versionCode ?? null;
+  return config.android?.versionCode ?? 1;
 }
 
 export function setVersionCode(config: Pick<ExpoConfig, 'android'>, buildGradle: string) {

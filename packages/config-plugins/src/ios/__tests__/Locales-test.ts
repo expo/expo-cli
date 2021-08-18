@@ -77,7 +77,7 @@ describe('e2e: iOS locales', () => {
     expect(WarningAggregator.addWarningIOS).toHaveBeenCalledWith(
       'locales-xx',
       'Failed to parse JSON of locale file for language: xx',
-      'https://docs.expo.io/distribution/app-stores/#localizing-your-ios-app'
+      'https://docs.expo.dev/distribution/app-stores/#localizing-your-ios-app'
     );
   });
 });

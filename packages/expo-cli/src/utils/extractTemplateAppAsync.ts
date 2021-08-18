@@ -1,4 +1,5 @@
 import { BareAppConfig, ExpoConfig } from '@expo/config';
+import { IOSConfig } from '@expo/config-plugins';
 import JsonFile from '@expo/json-file';
 import fs from 'fs-extra';
 import merge from 'lodash/merge';
@@ -11,13 +12,6 @@ import { UserSettings } from 'xdl';
 
 type AppJsonInput = { expo: Partial<ExpoConfig> & { name: string } };
 type TemplateConfig = { name: string };
-
-function sanitizedName(name: string) {
-  return name
-    .replace(/[\W_]+/g, '')
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '');
-}
 
 function escapeXMLCharacters(original: string): string {
   const noAmps = original.replace('&', '&amp;');
@@ -50,8 +44,8 @@ class Transformer extends Minipass {
     const name = this.getNormalizedName();
     const replaced = this.data
       .replace(/Hello App Display Name/g, name)
-      .replace(/HelloWorld/g, sanitizedName(name))
-      .replace(/helloworld/g, sanitizedName(name.toLowerCase()));
+      .replace(/HelloWorld/g, IOSConfig.XcodeUtils.sanitizedName(name))
+      .replace(/helloworld/g, IOSConfig.XcodeUtils.sanitizedName(name.toLowerCase()));
     super.write(replaced);
     return super.end();
   }
@@ -145,9 +139,11 @@ export function createEntryResolver(name: string) {
       entry.path = entry.path
         .replace(
           /HelloWorld/g,
-          entry.path.includes('android') ? sanitizedName(name.toLowerCase()) : sanitizedName(name)
+          entry.path.includes('android')
+            ? IOSConfig.XcodeUtils.sanitizedName(name.toLowerCase())
+            : IOSConfig.XcodeUtils.sanitizedName(name)
         )
-        .replace(/helloworld/g, sanitizedName(name).toLowerCase());
+        .replace(/helloworld/g, IOSConfig.XcodeUtils.sanitizedName(name).toLowerCase());
     }
     if (entry.type && /^file$/i.test(entry.type) && path.basename(entry.path) === 'gitignore') {
       // Rename `gitignore` because npm ignores files named `.gitignore` when publishing.

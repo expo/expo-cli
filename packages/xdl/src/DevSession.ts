@@ -16,7 +16,7 @@ let keepUpdating = true;
 // TODO notify www when a project is started, and every N seconds afterwards
 export async function startSession(
   projectRoot: string,
-  exp: ExpoConfig,
+  exp: Pick<ExpoConfig, 'name' | 'description' | 'slug' | 'primaryColor'>,
   platform: 'native' | 'web',
   forceUpdate: boolean = false
 ): Promise<void> {

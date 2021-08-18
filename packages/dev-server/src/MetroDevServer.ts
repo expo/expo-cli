@@ -7,11 +7,10 @@ import {
 } from '@react-native-community/cli-server-api';
 import bodyParser from 'body-parser';
 import type { Server as ConnectServer } from 'connect';
-import type http from 'http';
+import http from 'http';
 import type Metro from 'metro';
 import outputBundle from 'metro/src/shared/output/bundle';
 import path from 'path';
-import resolveFrom from 'resolve-from';
 import semver from 'semver';
 
 import {
@@ -22,6 +21,11 @@ import {
 import LogReporter from './LogReporter';
 import { BundleAssetWithFileHashes } from './assets/copyAssetsAsync';
 import { saveAssetsAsync } from './assets/saveAssetsAsync';
+import { createDevServerAsync } from './metro/createDevServerAsync';
+import {
+  importMetroFromProject,
+  importMetroServerFromProject,
+} from './metro/importMetroFromProject';
 import clientLogsMiddleware from './middleware/clientLogsMiddleware';
 import createJsInspectorMiddleware from './middleware/createJsInspectorMiddleware';
 import { remoteDevtoolsCorsMiddleware } from './middleware/remoteDevtoolsCorsMiddleware';
@@ -69,8 +73,6 @@ export async function runMetroDevServerAsync(
   middleware: any;
   messageSocket: MessageSocket;
 }> {
-  const Metro = importMetroFromProject(projectRoot);
-
   const reporter = new LogReporter(options.logger);
 
   const metroConfig = await ExpoMetroConfig.loadAsync(projectRoot, { reporter, ...options });
@@ -102,13 +104,16 @@ export async function runMetroDevServerAsync(
     return middleware.use(metroMiddleware);
   };
 
-  const serverInstance = await Metro.runServer(metroConfig, { hmrEnabled: true });
+  const { server } = await createDevServerAsync(projectRoot, {
+    config: metroConfig,
+    logger: options.logger,
+  });
 
-  const { messageSocket, eventsSocket } = attachToServer(serverInstance);
+  const { messageSocket, eventsSocket } = attachToServer(server);
   reporter.reportEvent = eventsSocket.reportEvent;
 
   return {
-    server: serverInstance,
+    server,
     middleware,
     messageSocket,
   };
@@ -270,34 +275,6 @@ export async function bundleAsync(
   } finally {
     metroServer.end();
   }
-}
-
-function importMetroFromProject(projectRoot: string): typeof Metro {
-  const resolvedPath = resolveFrom.silent(projectRoot, 'metro');
-  if (!resolvedPath) {
-    throw new Error(
-      'Missing package "metro" in the project at ' +
-        projectRoot +
-        '. ' +
-        'This usually means `react-native` is not installed. ' +
-        'Please verify that dependencies in package.json include "react-native" ' +
-        'and run `yarn` or `npm install`.'
-    );
-  }
-  return require(resolvedPath);
-}
-
-function importMetroServerFromProject(projectRoot: string): typeof Metro.Server {
-  const resolvedPath = resolveFrom.silent(projectRoot, 'metro/src/Server');
-  if (!resolvedPath) {
-    throw new Error(
-      'Missing module "metro/src/Server" in the project. ' +
-        'This usually means React Native is not installed. ' +
-        'Please verify that dependencies in package.json include "react-native" ' +
-        'and run `yarn` or `npm install`.'
-    );
-  }
-  return require(resolvedPath);
 }
 
 // Cloned from xdl/src/Versions.ts, we cannot use that because of circular dependency

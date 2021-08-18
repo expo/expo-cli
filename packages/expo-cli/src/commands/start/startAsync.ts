@@ -23,18 +23,20 @@ export async function actionAsync(projectRoot: string, options: NormalizedOption
   // Add clean up hooks
   installExitHooks(projectRoot);
 
-  // Find expo binary in project/workspace node_modules
-  const hasExpoInstalled = resolveFrom.silent(projectRoot, 'expo');
-
-  if (!hasExpoInstalled) {
-    throw new ConfigError(
-      `Unable to find expo in this project - have you run yarn / npm install yet?`,
-      'MODULE_NOT_FOUND'
-    );
+  // Only validate expo in Expo Go contexts
+  if (!options.devClient) {
+    // Find expo binary in project/workspace node_modules
+    const hasExpoInstalled = resolveFrom.silent(projectRoot, 'expo');
+    if (!hasExpoInstalled) {
+      throw new ConfigError(
+        `Unable to find expo in this project - have you run yarn / npm install yet?`,
+        'MODULE_NOT_FOUND'
+      );
+    }
   }
 
   const { exp, pkg } = profileMethod(getConfig)(projectRoot, {
-    skipSDKVersionRequirement: options.webOnly,
+    skipSDKVersionRequirement: options.webOnly || options.devClient,
   });
 
   if (options.devClient) {

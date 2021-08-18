@@ -52,7 +52,7 @@ async function _getUsageAsync(projectRoot: string): Promise<string> {
   const timeDifferenceString = _getTimeDifferenceString(new Date(), new Date(publishedTime));
 
   return (
-    `--release-channel and --sdk-version arguments are required. \n` +
+    `--release-channel and either --sdk-version or --runtime-version arguments are required. \n` +
     `For example, to roll back the revision [${revisionId}] on release channel [${channel}] (published ${timeDifferenceString}), \n` +
     `run: expo publish:rollback --release-channel ${channel} --sdk-version ${sdkVersion}`
   );
@@ -84,9 +84,9 @@ function _getTimeDifferenceString(t0: Date, t1: Date): string {
 
 function _getGenericUsage(): string {
   return (
-    `--release-channel and --sdk-version arguments are required. \n` +
+    `--release-channel and either --sdk-version or --runtime-version arguments are required. \n` +
     `For example, to roll back the latest publishes on the default channel for sdk 37.0.0, \n` +
-    `run: expo publish:rollback --release-channel defaul --sdk-version 37.0.0 \n` +
+    `run: expo publish:rollback --release-channel default --sdk-version 37.0.0 \n` +
     `To rollback a specific platform, use the --platform flag.`
   );
 }

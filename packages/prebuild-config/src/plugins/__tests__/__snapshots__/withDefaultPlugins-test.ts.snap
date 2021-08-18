@@ -74,7 +74,7 @@ Object {
           "DEFAULT",
         ],
         "data": Object {
-          "host": "*.expo.io",
+          "host": "*.expo.dev",
           "scheme": "https",
         },
       },
@@ -204,6 +204,7 @@ Object {
         },
       },
       "NSLocationWhenInUseUsageDescription": "",
+      "RCTRootViewBackgroundColor": 4294901760,
       "UILaunchStoryboardName": "SplashScreen",
       "UIRequiredDeviceCapabilities": Array [
         "armv7",
@@ -475,7 +476,7 @@ Object {
                       "android:launchMode": "singleTask",
                       "android:name": ".MainActivity",
                       "android:screenOrientation": "unspecified",
-                      "android:windowSoftInputMode": "adjustResize",
+                      "android:windowSoftInputMode": "adjustPan",
                     },
                     "intent-filter": Array [
                       Object {
@@ -553,7 +554,7 @@ Object {
                         "data": Array [
                           Object {
                             "$": Object {
-                              "android:host": "*.expo.io",
+                              "android:host": "*.expo.dev",
                               "android:scheme": "https",
                             },
                           },
@@ -887,6 +888,7 @@ Object {
             },
           },
           "NSLocationWhenInUseUsageDescription": "",
+          "RCTRootViewBackgroundColor": 4294901760,
           "UILaunchStoryboardName": "SplashScreen",
           "UIRequiredDeviceCapabilities": Array [
             "armv7",
@@ -981,7 +983,7 @@ Object {
           "DEFAULT",
         ],
         "data": Object {
-          "host": "*.expo.io",
+          "host": "*.expo.dev",
           "scheme": "https",
         },
       },
@@ -1111,6 +1113,7 @@ Object {
         },
       },
       "NSLocationWhenInUseUsageDescription": "",
+      "RCTRootViewBackgroundColor": 4294901760,
       "UILaunchStoryboardName": "SplashScreen",
       "UIRequiredDeviceCapabilities": Array [
         "armv7",
@@ -1271,7 +1274,7 @@ Object {
                       "android:name": ".MainActivity",
                       "android:screenOrientation": "unspecified",
                       "android:theme": "@style/Theme.App.SplashScreen",
-                      "android:windowSoftInputMode": "adjustResize",
+                      "android:windowSoftInputMode": "adjustPan",
                     },
                     "intent-filter": Array [
                       Object {
@@ -1349,7 +1352,7 @@ Object {
                         "data": Array [
                           Object {
                             "$": Object {
-                              "android:host": "*.expo.io",
+                              "android:host": "*.expo.dev",
                               "android:scheme": "https",
                             },
                           },
@@ -1690,6 +1693,7 @@ Object {
             "fbauth2",
             "fbshareextension",
           ],
+          "RCTRootViewBackgroundColor": 4294901760,
           "UILaunchStoryboardName": "SplashScreen",
           "UIRequiresFullScreen": true,
           "UISupportedInterfaceOrientations": Array [
@@ -1780,7 +1784,7 @@ Object {
           "DEFAULT",
         ],
         "data": Object {
-          "host": "*.expo.io",
+          "host": "*.expo.dev",
           "scheme": "https",
         },
       },
@@ -1893,6 +1897,7 @@ Object {
         "fbauth2",
         "fbshareextension",
       ],
+      "RCTRootViewBackgroundColor": 4294901760,
       "UILaunchStoryboardName": "SplashScreen",
       "UIRequiresFullScreen": true,
       "UISupportedInterfaceOrientations": Array [

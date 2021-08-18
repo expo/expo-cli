@@ -1,6 +1,6 @@
 {
   "name": "@expo/dev-tools",
-  "version": "0.13.110",
+  "version": "0.13.113",
   "main": "build/server/index.js",
   "scripts": {
     "dev": "cross-env NODE_ENV=development ts-node -T ./server/dev-server",
@@ -17,7 +17,7 @@
     "build"
   ],
   "dependencies": {
-    "@expo/config": "5.0.5",
+    "@expo/config": "5.0.7",
     "base64url": "3.0.1",
     "express": "4.16.4",
     "freeport-async": "2.0.0",
@@ -32,7 +32,6 @@
   },
   "devDependencies": {
     "@babel/plugin-proposal-decorators": "^7.8.3",
-    "@expo/babel-preset-cli": "0.2.21",
     "@types/react": "^16.9.56",
     "anser": "^1.4.7",
     "apollo-cache-inmemory": "^1.1.12",
@@ -61,11 +60,10 @@
     "react-redux": "^5.0.7",
     "react-textarea-autosize": "^6.1.0",
     "redux": "^3.7.2",
-    "rimraf": "^3.0.2",
     "slugify": "^1.0.2",
     "ts-node": "^9.1.1",
     "velocity-react": "^1.4.1",
-    "xdl": "59.0.50"
+    "xdl": "59.0.53"
   },
   "license": "MIT",
   "repository": {

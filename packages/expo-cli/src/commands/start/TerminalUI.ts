@@ -18,7 +18,6 @@ import Log from '../../log';
 import { selectAsync } from '../../prompts';
 import urlOpts from '../../urlOpts';
 import { openInEditorAsync } from '../utils/openInEditorAsync';
-import { profileMethod } from '../utils/profileMethod';
 
 const CTRL_C = '\u0003';
 const CTRL_D = '\u0004';
@@ -215,89 +214,61 @@ export async function startAsync(projectRoot: string, options: StartOptions) {
   await printServerInfo(projectRoot, options);
 
   async function handleKeypress(key: string) {
-    if (options.webOnly) {
-      switch (key) {
-        case 'A':
-        case 'a':
-          if (key === 'A') {
-            Log.clear();
-          }
+    const shouldPrompt = !options.nonInteractive && ['I', 'A'].includes(key);
+    if (shouldPrompt) {
+      Log.clear();
+    }
+    switch (key) {
+      case 'A':
+      case 'a':
+        if (options.webOnly && !Webpack.isTargetingNative()) {
           Log.log(`${BLT} Opening the web project in Chrome on Android...`);
-          await Android.openWebProjectAsync({
+          const results = await Android.openWebProjectAsync({
             projectRoot,
-            shouldPrompt: !options.nonInteractive && key === 'A',
+            shouldPrompt,
           });
-          printHelp();
-          break;
-        case 'i':
-        case 'I':
-          if (key === 'I') {
-            Log.clear();
+          if (!results.success) {
+            Log.nestedError(results.error);
           }
-          Log.log(`${BLT} Opening the web project in Safari on iOS...`);
-          await Simulator.openWebProjectAsync({
-            projectRoot,
-            shouldPrompt: !options.nonInteractive && key === 'I',
-            // note(brentvatne): temporarily remove logic for picking the
-            // simulator until we have parity for Android. this also ensures that we
-            // don't interfere with the default user flow until more users have tested
-            // this out.
-            //
-            // If no simulator is booted, then prompt which simulator to use.
-            // (key === 'I' || !(await Simulator.isSimulatorBootedAsync())),
-          });
-          printHelp();
-          break;
-      }
-    } else {
-      switch (key) {
-        case 'A':
-          Log.clear();
-          await Android.openProjectAsync({
-            projectRoot,
-            shouldPrompt: true,
-            devClient: options.devClient ?? false,
-          });
-          printHelp();
-          break;
-        case 'a': {
+        } else {
           Log.log(`${BLT} Opening on Android...`);
-          await Android.openProjectAsync({ projectRoot, devClient: options.devClient ?? false });
-          printHelp();
-          break;
-        }
-        case 'I':
-          Log.clear();
-          await Simulator.openProjectAsync({
+          const results = await Android.openProjectAsync({
             projectRoot,
-            shouldPrompt: true,
+            shouldPrompt,
             devClient: options.devClient ?? false,
           });
-          printHelp();
-          break;
-        case 'i': {
-          // note(brentvatne): temporarily remove logic for picking the
-          // simulator until we have parity for Android. this also ensures that we
-          // don't interfere with the default user flow until more users have tested
-          // this out.
-          //
-          // If no simulator is booted, then prompt for which simulator to use.
-          // const shouldPrompt =
-          //   !options.nonInteractive && (key === 'I' || !(await Simulator.isSimulatorBootedAsync()));
-
+          if (!results.success && results.error !== 'escaped') {
+            Log.nestedError(
+              typeof results.error === 'string' ? results.error : results.error.message
+            );
+          }
+        }
+        printHelp();
+        break;
+      case 'I':
+      case 'i':
+        if (options.webOnly && !Webpack.isTargetingNative()) {
+          Log.log(`${BLT} Opening the web project in Safari on iOS...`);
+          const results = await Simulator.openWebProjectAsync({
+            projectRoot,
+            shouldPrompt,
+          });
+          if (!results.success) {
+            Log.nestedError(results.error);
+          }
+        } else {
           Log.log(`${BLT} Opening on iOS...`);
-          await profileMethod(
-            Simulator.openProjectAsync,
-            'Simulator.openProjectAsync'
-          )({
+          const results = await Simulator.openProjectAsync({
             projectRoot,
-            shouldPrompt: false,
+            shouldPrompt,
             devClient: options.devClient ?? false,
           });
-          printHelp();
-          break;
+          if (!results.success && results.error !== 'escaped') {
+            Log.nestedError(results.error);
+          }
         }
-      }
+        printHelp();
+        break;
     }
 
     switch (key) {
@@ -395,10 +366,10 @@ Please reload the project in Expo Go for the change to take effect.`
       case 'r':
         if (options.isRemoteReloadingEnabled) {
           Log.log(`${BLT} Reloading apps`);
-          // Send reload requests over the metro dev server
+          // Send reload requests over the dev servers
           Project.broadcastMessage('reload');
-          // Send reload requests over the webpack dev server
-          Webpack.broadcastMessage('content-changed');
+
+          Webpack.broadcastMessage('reload');
         } else if (!options.webOnly) {
           // [SDK 40]: Restart bundler
           Log.clear();

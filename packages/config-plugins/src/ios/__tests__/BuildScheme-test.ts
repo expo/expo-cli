@@ -5,11 +5,37 @@ import path from 'path';
 import {
   getApplicationTargetNameForSchemeAsync,
   getArchiveBuildConfigurationForSchemeAsync,
+  getRunnableSchemesFromXcodeproj,
 } from '../BuildScheme';
 
 const fsReal = jest.requireActual('fs') as typeof fs;
 
 jest.mock('fs');
+
+describe(getRunnableSchemesFromXcodeproj, () => {
+  beforeAll(async () => {
+    vol.fromJSON(
+      {
+        'ios/project.xcodeproj/project.pbxproj': fsReal.readFileSync(
+          path.join(__dirname, 'fixtures/project-multitarget.pbxproj'),
+          'utf-8'
+        ),
+      },
+      '/app'
+    );
+  });
+
+  afterAll(() => {
+    vol.reset();
+  });
+  it(`parses for runnable schemes`, async () => {
+    const schemes = getRunnableSchemesFromXcodeproj('/app');
+    expect(schemes).toStrictEqual([
+      { name: 'multitarget', osType: 'iOS', type: 'com.apple.product-type.application' },
+      { name: 'shareextension', osType: 'iOS', type: 'com.apple.product-type.app-extension' },
+    ]);
+  });
+});
 
 describe(getApplicationTargetNameForSchemeAsync, () => {
   describe('single build action entry', () => {

@@ -11,6 +11,7 @@ import {
 export enum TargetType {
   APPLICATION = 'com.apple.product-type.application',
   EXTENSION = 'com.apple.product-type.app-extension',
+  WATCH = 'com.apple.product-type.application.watchapp',
   STICKER_PACK_EXTENSION = 'com.apple.product-type.app-extension.messages-sticker-pack',
   OTHER = 'other',
 }
@@ -85,6 +86,7 @@ export function findSignableTargets(project: XcodeProject): NativeTargetSectionE
     ([, target]) =>
       isTargetOfType(target, TargetType.APPLICATION) ||
       isTargetOfType(target, TargetType.EXTENSION) ||
+      isTargetOfType(target, TargetType.WATCH) ||
       isTargetOfType(target, TargetType.STICKER_PACK_EXTENSION)
   );
   if (applicationTargets.length === 0) {

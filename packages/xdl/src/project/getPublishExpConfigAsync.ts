@@ -30,12 +30,15 @@ export async function getPublishExpConfigAsync(
   options.releaseChannel = options.releaseChannel || 'default';
 
   // Verify that exp/app.json and package.json exist
-  const { exp: privateExp } = getConfig(projectRoot);
-  const { hooks } = privateExp;
-  const { exp, pkg } = getConfig(projectRoot, { isPublicConfig: true });
-
+  const {
+    exp: { hooks, runtimeVersion },
+  } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
+  const { exp, pkg } = getConfig(projectRoot, {
+    isPublicConfig: true,
+    // enforce sdk validation if user is not using runtimeVersion
+    skipSDKVersionRequirement: !!runtimeVersion,
+  });
   const { sdkVersion } = exp;
-
   // Only allow projects to be published with UNVERSIONED if a correct token is set in env
   if (sdkVersion === 'UNVERSIONED' && !Env.maySkipManifestValidation()) {
     throw new XDLError('INVALID_OPTIONS', 'Cannot publish with sdkVersion UNVERSIONED.');

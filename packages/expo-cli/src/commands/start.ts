@@ -9,7 +9,7 @@ export default (program: any) => {
     .option('-s, --send-to [dest]', 'An email address to send a link to')
     .option('-c, --clear', 'Clear the Metro bundler cache')
     // TODO(anp) set a default for this dynamically based on whether we're inside a container?
-    .option('--max-workers [num]', 'Maximum number of tasks to allow Metro to spawn.')
+    .option('--max-workers <num>', 'Maximum number of tasks to allow Metro to spawn.')
     .option('--dev', 'Turn development mode on')
     .option('--no-dev', 'Turn development mode off')
     .option('--minify', 'Minify code')

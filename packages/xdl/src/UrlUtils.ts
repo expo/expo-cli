@@ -37,7 +37,7 @@ export async function constructDeepLinkAsync(
   projectRoot: string,
   opts?: Partial<URLOptions>,
   requestHostname?: string
-) {
+): Promise<string> {
   const { devClient } = await ProjectSettings.getPackagerOptsAsync(projectRoot);
 
   if (devClient) {
@@ -174,7 +174,8 @@ export async function constructDebuggerHostAsync(
 }
 
 export function constructBundleQueryParams(projectRoot: string, opts: MetroQueryOptions): string {
-  const { exp } = getConfig(projectRoot);
+  // No SDK Version will assume the latest requirements
+  const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
   return constructBundleQueryParamsWithConfig(projectRoot, opts, exp);
 }
 
@@ -197,26 +198,22 @@ export function constructBundleQueryParamsWithConfig(
     queryParams.minify = !!opts.minify;
   }
 
-  // No special requirements after SDK 33 (Jun 5 2019)
-  if (Versions.gteSdkVersion(exp, '33.0.0')) {
-    return QueryString.stringify(queryParams);
-  }
-
   // TODO: Remove this ...
 
   // SDK11 to SDK32 require us to inject hashAssetFiles through the params, but this is not
   // needed with SDK33+
-  const supportsAssetPlugins = Versions.gteSdkVersion(exp, '11.0.0');
-  const usesAssetPluginsQueryParam = supportsAssetPlugins && Versions.lteSdkVersion(exp, '32.0.0');
-  if (usesAssetPluginsQueryParam) {
-    // Use an absolute path here so that we can not worry about symlinks/relative requires
-    const pluginModule = resolveFrom(projectRoot, 'expo/tools/hashAssetFiles');
-    queryParams.assetPlugin = encodeURIComponent(pluginModule);
-  } else if (!supportsAssetPlugins) {
+  if (Versions.lteSdkVersion(exp, '10.0.0')) {
+    // SDK <=10
     // Only sdk-10.1.0+ supports the assetPlugin parameter. We use only the
     // major version in the sdkVersion field, so check for 11.0.0 to be sure.
     queryParams.includeAssetFileHashes = true;
+  } else if (Versions.lteSdkVersion(exp, '32.0.0')) {
+    // SDK 11-32
+    // Use an absolute path here so that we can not worry about symlinks/relative requires
+    const pluginModule = resolveFrom(projectRoot, 'expo/tools/hashAssetFiles');
+    queryParams.assetPlugin = encodeURIComponent(pluginModule);
   }
+  // Special requirements aren't needed after SDK 33 (Jun 5 2019)
 
   return QueryString.stringify(queryParams);
 }
@@ -293,7 +290,7 @@ function resolveProtocol(
   }
   let protocol = 'exp';
 
-  const { exp } = getConfig(projectRoot);
+  const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
 
   // We only use these values from the config
   const { scheme, detach, sdkVersion } = exp;
@@ -305,7 +302,7 @@ function resolveProtocol(
     );
     // Get the first valid scheme.
     const firstScheme = schemes[0];
-    if (firstScheme && Versions.gteSdkVersion({ sdkVersion }, '27.0.0')) {
+    if (firstScheme && !Versions.lteSdkVersion({ sdkVersion }, '26.0.0')) {
       protocol = firstScheme;
     } else if (detach.scheme) {
       // must keep this fallback in place for older projects
@@ -423,37 +420,6 @@ function joinURLComponents({
 
 export function stripJSExtension(entryPoint: string): string {
   return entryPoint.replace(/\.js$/, '');
-}
-
-export function randomIdentifier(length: number = 6): string {
-  const alphabet = '23456789qwertyuipasdfghjkzxcvbnm';
-  let result = '';
-  for (let i = 0; i < length; i++) {
-    const j = Math.floor(Math.random() * alphabet.length);
-    const c = alphabet.substr(j, 1);
-    result += c;
-  }
-  return result;
-}
-
-export function sevenDigitIdentifier(): string {
-  return `${randomIdentifier(3)}-${randomIdentifier(4)}`;
-}
-
-export function randomIdentifierForUser(username: string): string {
-  return `${username}-${randomIdentifier(3)}-${randomIdentifier(2)}`;
-}
-
-export function someRandomness(): string {
-  return [randomIdentifier(2), randomIdentifier(3)].join('-');
-}
-
-export function domainify(s: string): string {
-  return s
-    .toLowerCase()
-    .replace(/[^a-z0-9-]/g, '-')
-    .replace(/^-+/, '')
-    .replace(/-+$/, '');
 }
 
 export function isHttps(urlString: string): boolean {

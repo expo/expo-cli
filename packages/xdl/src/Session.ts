@@ -1,9 +1,9 @@
-import { v4 } from 'uuid';
+import { v4 as uuidv4 } from 'uuid';
 
 import { UserSettings } from './internal';
 
 function _newIdentifier(type = 'c') {
-  const bytes = v4(null, Buffer.alloc(16));
+  const bytes = uuidv4(null, Buffer.alloc(16));
   const base64 = bytes.toString('base64');
   const slug = base64
     // Replace + with - (see RFC 4648, sec. 5)
