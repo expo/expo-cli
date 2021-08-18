@@ -1,4 +1,5 @@
 import { getConfig, getNameFromConfig } from '@expo/config';
+import { MessageSocket } from '@expo/dev-server';
 import * as devcert from '@expo/devcert';
 import { isUsingYarn } from '@expo/package-manager';
 import chalk from 'chalk';
@@ -14,8 +15,10 @@ import WebpackDevServer from 'webpack-dev-server';
 
 import {
   choosePortAsync,
+  ExpoUpdatesManifestHandler,
   ip,
   Logger,
+  ManifestHandler,
   ProjectSettings,
   ProjectUtils,
   UrlUtils,
@@ -45,7 +48,6 @@ type CLIWebOptions = {
   pwa?: boolean;
   nonInteractive?: boolean;
   port?: number;
-  unimodulesOnly?: boolean;
   onWebpackFinished?: (error?: Error) => void;
 };
 
@@ -59,7 +61,6 @@ type BundlingOptions = {
   mode?: 'development' | 'production' | 'test' | 'none';
   https?: boolean;
   nonInteractive?: boolean;
-  unimodulesOnly?: boolean;
   onWebpackFinished?: (error?: Error) => void;
 };
 
@@ -73,14 +74,6 @@ export type WebEnvironment = {
   mode: 'development' | 'production' | 'test' | 'none';
   https: boolean;
 };
-
-export async function restartAsync(
-  projectRoot: string,
-  options: BundlingOptions = {}
-): Promise<WebpackSettings | null> {
-  await stopAsync(projectRoot);
-  return await startAsync(projectRoot, options);
-}
 
 let devServerInfo: {
   urls: Urls;
@@ -113,23 +106,48 @@ async function clearWebCacheAsync(projectRoot: string, mode: string): Promise<vo
   } catch {}
 }
 
-export async function broadcastMessage(message: 'content-changed' | string, data?: any) {
-  if (webpackDevServerInstance && webpackDevServerInstance instanceof WebpackDevServer) {
-    webpackDevServerInstance.sockWrite(webpackDevServerInstance.sockets, message, data);
+// Temporary hack while we implement multi-bundler dev server proxy.
+export function isTargetingNative() {
+  return ['ios', 'android'].includes(process.env.EXPO_WEBPACK_PLATFORM || '');
+}
+
+export type WebpackDevServerResults = {
+  server: DevServer;
+  location: Omit<WebpackSettings, 'server'>;
+  messageSocket: MessageSocket;
+};
+
+export async function broadcastMessage(message: 'reload' | string, data?: any) {
+  if (!webpackDevServerInstance || !(webpackDevServerInstance instanceof WebpackDevServer)) {
+    return;
   }
+
+  // Allow any message on native
+  if (isTargetingNative()) {
+    webpackDevServerInstance.sockWrite(webpackDevServerInstance.sockets, message, data);
+    return;
+  }
+
+  if (message !== 'reload') {
+    // TODO:
+    // Webpack currently only supports reloading the client (browser),
+    // remove this when we have custom sockets, and native support.
+    return;
+  }
+
+  // TODO:
+  // Default webpack-dev-server sockets use "content-changed" instead of "reload" (what we use on native).
+  // For now, just manually convert the value so our CLI interface can be unified.
+  const hackyConvertedMessage = message === 'reload' ? 'content-changed' : message;
+
+  webpackDevServerInstance.sockWrite(webpackDevServerInstance.sockets, hackyConvertedMessage, data);
 }
 
 export async function startAsync(
   projectRoot: string,
-  options: CLIWebOptions = {},
-  deprecatedVerbose?: boolean
-): Promise<WebpackSettings | null> {
-  if (typeof deprecatedVerbose !== 'undefined') {
-    throw new XDLError(
-      'WEBPACK_DEPRECATED',
-      'startAsync(root, options, verbose): The `verbose` option is deprecated.'
-    );
-  }
+  options: CLIWebOptions = {}
+): Promise<WebpackDevServerResults | null> {
+  await stopAsync(projectRoot);
 
   const serverName = 'Webpack';
 
@@ -163,7 +181,7 @@ export async function startAsync(
     }
   }
 
-  const config = await createWebpackConfigAsync(env, fullOptions);
+  const config = await loadConfigAsync(env);
   const port = await getAvailablePortAsync({
     projectRoot,
     defaultPort: options.port,
@@ -196,6 +214,16 @@ export async function startAsync(
     port: webpackServerPort!,
   };
 
+  // This is a temporary hack since we need to serve the expo manifest JSON on `/` for Expo Go support.
+  // In the future, if we support HTML links to manifests we can get rid of this platform specific code.
+
+  if (isTargetingNative()) {
+    await ProjectSettings.setPackagerInfoAsync(projectRoot, {
+      expoServerPort: webpackServerPort,
+      packagerPort: webpackServerPort,
+    });
+  }
+
   const server: DevServer = await new Promise(resolve => {
     // Create a webpack compiler that is configured with custom messages.
     const compiler = WebpackCompiler.createWebpackCompiler({
@@ -207,7 +235,19 @@ export async function startAsync(
       webpackFactory: webpack,
       onFinished: () => resolve(server),
     });
+
+    if (isTargetingNative()) {
+      // Inject the Expo Go manifest middleware.
+      const originalBefore = config.devServer!.before!.bind(config.devServer!.before);
+      config.devServer!.before = (app, server, compiler) => {
+        originalBefore(app, server, compiler);
+        app.use(ManifestHandler.getManifestHandler(projectRoot));
+        app.use(ExpoUpdatesManifestHandler.getManifestHandler(projectRoot));
+      };
+    }
+
     const server = new WebpackDevServer(compiler, config.devServer);
+
     // Launch WebpackDevServer.
     server.listen(port, WebpackEnvironment.HOST, error => {
       if (error) {
@@ -226,12 +266,35 @@ export async function startAsync(
 
   const host = ip.address();
   const url = `${protocol}://${host}:${port}`;
+
+  // Extend the close method to ensure that we clean up the local info.
+  const originalClose = server.close.bind(server);
+
+  server.close = (callback?: (err?: Error) => void) => {
+    return originalClose((err?: Error) => {
+      ProjectSettings.setPackagerInfoAsync(projectRoot, {
+        webpackServerPort: null,
+      }).finally(() => {
+        callback?.(err);
+        webpackDevServerInstance = null;
+        devServerInfo = null;
+        webpackServerPort = null;
+      });
+    });
+  };
+
   return {
-    url,
     server,
-    port,
-    protocol,
-    host,
+    location: {
+      url,
+      port,
+      protocol,
+      host,
+    },
+    // Match the native protocol.
+    messageSocket: {
+      broadcast: broadcastMessage,
+    },
   };
 }
 
@@ -243,12 +306,6 @@ export async function stopAsync(projectRoot: string): Promise<void> {
         webpackDevServerInstance.close(res);
       }
     });
-    webpackDevServerInstance = null;
-    devServerInfo = null;
-    webpackServerPort = null;
-    await ProjectSettings.setPackagerInfoAsync(projectRoot, {
-      webpackServerPort: null,
-    });
   }
 }
 
@@ -259,10 +316,7 @@ export async function openAsync(projectRoot: string, options?: BundlingOptions):
   await openProjectAsync(projectRoot);
 }
 
-export async function compileWebAppAsync(
-  projectRoot: string,
-  compiler: webpack.Compiler
-): Promise<any> {
+async function compileWebAppAsync(projectRoot: string, compiler: webpack.Compiler): Promise<any> {
   // We generate the stats.json file in the webpack-config
   const { warnings } = await new Promise((resolve, reject) =>
     compiler.run((error, stats) => {
@@ -314,7 +368,7 @@ export async function compileWebAppAsync(
   return { warnings };
 }
 
-export async function bundleWebAppAsync(projectRoot: string, config: WebpackConfiguration) {
+async function bundleWebAppAsync(projectRoot: string, config: WebpackConfiguration) {
   const compiler = webpack(config);
 
   try {
@@ -357,12 +411,11 @@ export async function bundleAsync(projectRoot: string, options?: BundlingOptions
     await clearWebCacheAsync(projectRoot, env.mode);
   }
 
-  const config = await createWebpackConfigAsync(env, fullOptions);
-
+  const config = await loadConfigAsync(env);
   await bundleWebAppAsync(projectRoot, config);
 }
 
-export async function getProjectNameAsync(projectRoot: string): Promise<string> {
+async function getProjectNameAsync(projectRoot: string): Promise<string> {
   const { exp } = getConfig(projectRoot, {
     skipSDKVersionRequirement: true,
   });
@@ -370,19 +423,11 @@ export async function getProjectNameAsync(projectRoot: string): Promise<string> 
   return webName;
 }
 
-export function isRunning(): boolean {
-  return !!webpackDevServerInstance;
-}
-
-export function getServer(projectRoot: string): DevServer | null {
+function getServer(projectRoot: string): DevServer | null {
   if (webpackDevServerInstance == null) {
     ProjectUtils.logError(projectRoot, WEBPACK_LOG_TAG, 'Webpack is not running.');
   }
   return webpackDevServerInstance;
-}
-
-export function getPort(): number | null {
-  return webpackServerPort;
 }
 
 /**
@@ -452,23 +497,6 @@ function transformCLIOptions(options: CLIWebOptions): BundlingOptions {
     ...options,
     isImageEditingEnabled: options.pwa,
   };
-}
-
-async function createWebpackConfigAsync(
-  env: WebEnvironment,
-  options: CLIWebOptions = {}
-): Promise<WebpackConfiguration> {
-  setMode(env.mode);
-
-  let config;
-  if (options.unimodulesOnly) {
-    const { withUnimodules } = require('@expo/webpack-config/addons');
-    config = withUnimodules({}, env);
-  } else {
-    config = await invokeWebpackConfigAsync(env);
-  }
-
-  return config;
 }
 
 async function applyOptionsToProjectSettingsAsync(
@@ -589,10 +617,11 @@ function applyEnvironmentVariables(config: WebpackConfiguration): WebpackConfigu
   return config;
 }
 
-export async function invokeWebpackConfigAsync(
+async function loadConfigAsync(
   env: WebEnvironment,
   argv?: string[]
 ): Promise<WebpackConfiguration> {
+  setMode(env.mode);
   // Check if the project has a webpack.config.js in the root.
   const projectWebpackConfig = path.resolve(env.projectRoot, 'webpack.config.js');
   let config: WebpackConfiguration;
@@ -605,13 +634,13 @@ export async function invokeWebpackConfigAsync(
     }
   } else {
     // Fallback to the default expo webpack config.
-    const createExpoWebpackConfigAsync = require('@expo/webpack-config');
-    config = await createExpoWebpackConfigAsync(env, argv);
+    const loadDefaultConfigAsync = require('@expo/webpack-config');
+    config = await loadDefaultConfigAsync(env, argv);
   }
   return applyEnvironmentVariables(config);
 }
 
-export async function openProjectAsync(
+async function openProjectAsync(
   projectRoot: string
 ): Promise<{ success: true; url: string } | { success: false; error: Error }> {
   try {

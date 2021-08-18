@@ -1,13 +1,12 @@
-import * as osascript from '@expo/osascript';
 import spawnAsync, { SpawnOptions, SpawnResult } from '@expo/spawn-async';
 import chalk from 'chalk';
-import { exec, execSync } from 'child_process';
+import { execSync } from 'child_process';
 import path from 'path';
-import { promisify } from 'util';
 
-import { Logger, XDLError } from './internal';
+import { waitForActionAsync } from './apple/utils/waitForActionAsync';
+import { CoreSimulator, Logger, XDLError } from './internal';
+import { profileMethod } from './utils/profileMethod';
 
-const execAsync = promisify(exec);
 type DeviceState = 'Shutdown' | 'Booted';
 
 export type SimulatorDevice = {
@@ -106,13 +105,20 @@ export async function getDefaultSimulatorDeviceUDIDAsync() {
 /**
  * Returns the local path for the installed tar.app. Returns null when the app isn't installed.
  *
- * @param udid
- * @param bundleIdentifier
+ * @param props.udid device udid.
+ * @param props.bundleIdentifier bundle identifier for app
+ * @returns local file path to installed app binary, e.g. '/Users/evanbacon/Library/Developer/CoreSimulator/Devices/EFEEA6EF-E3F5-4EDE-9B72-29EAFA7514AE/data/Containers/Bundle/Application/FA43A0C6-C2AD-442D-B8B1-EAF3E88CF3BF/Exponent-2.21.3.tar.app'
  */
-export async function getContainerPathAsync(
-  udid: string,
-  bundleIdentifier: string
-): Promise<string | null> {
+export async function getContainerPathAsync({
+  udid,
+  bundleIdentifier,
+}: {
+  udid: string;
+  bundleIdentifier: string;
+}): Promise<string | null> {
+  if (CoreSimulator.isEnabled()) {
+    return CoreSimulator.getContainerPathAsync({ udid, bundleIdentifier });
+  }
   try {
     const { stdout } = await xcrunAsync([
       'simctl',
@@ -129,8 +135,31 @@ export async function getContainerPathAsync(
   }
 }
 
-export async function openURLAsync(options: { udid?: string; url: string }) {
-  return simctlAsync(['openurl', deviceUDIDOrBooted(options.udid), options.url]);
+export async function waitForDeviceToBootAsync({
+  udid,
+}: Pick<SimulatorDevice, 'udid'>): Promise<SimulatorDevice | null> {
+  return waitForActionAsync<SimulatorDevice | null>({
+    action: () => bootAsync({ udid }),
+  });
+}
+
+export async function openURLAsync(options: { udid?: string; url: string }): Promise<void> {
+  try {
+    // Skip logging since this is likely to fail.
+    await xcrunAsync(['simctl', 'openurl', deviceUDIDOrBooted(options.udid), options.url]);
+  } catch (error) {
+    if (!error.stderr?.match(/Unable to lookup in current state: Shut/)) {
+      throw error;
+    }
+    // If the device was in a weird in-between state ("Shutting Down" or "Shutdown"), then attempt to reboot it and try again.
+    // This can happen when quitting the Simulator app, and immediately pressing `i` to reopen the project.
+
+    // First boot the simulator
+    await runBootAsync({ udid: deviceUDIDOrBooted(options.udid) });
+
+    // Finally, try again...
+    return await openURLAsync(options);
+  }
 }
 
 export async function openBundleIdAsync(options: {
@@ -142,25 +171,28 @@ export async function openBundleIdAsync(options: {
 
 // This will only boot in headless mode if the Simulator app is not running.
 export async function bootAsync({ udid }: { udid: string }): Promise<SimulatorDevice | null> {
-  try {
-    // Skip logging since this is likely to fail.
-    await xcrunAsync(['simctl', 'boot', udid]);
-  } catch (error) {
-    if (!error.stderr?.match(/Unable to boot device in current state: Booted/)) {
-      throw error;
+  if (CoreSimulator.isEnabled()) {
+    const device = await CoreSimulator.getDeviceInfoAsync({ udid }).catch(() => null);
+    if (device?.state === 'Booted') {
+      return device;
     }
+    await runBootAsync({ udid });
+    return await profileMethod(CoreSimulator.getDeviceInfoAsync)({ udid });
   }
+
+  // TODO: Deprecate
+  await runBootAsync({ udid });
   return await isSimulatorBootedAsync({ udid });
 }
 
-export async function getBootedSimulatorsAsync(): Promise<SimulatorDevice[]> {
+async function getBootedSimulatorsAsync(): Promise<SimulatorDevice[]> {
   const simulatorDeviceInfo = await listAsync('devices');
   return Object.values(simulatorDeviceInfo.devices).reduce((prev, runtime) => {
     return prev.concat(runtime.filter(device => device.state === 'Booted'));
   }, []);
 }
 
-export async function isSimulatorBootedAsync({
+async function isSimulatorBootedAsync({
   udid,
 }: {
   udid?: string;
@@ -171,6 +203,17 @@ export async function isSimulatorBootedAsync({
     return devices.find(bootedDevice => bootedDevice.udid === udid) ?? null;
   } else {
     return devices[0] ?? null;
+  }
+}
+
+export async function runBootAsync({ udid }: { udid: string }) {
+  try {
+    // Skip logging since this is likely to fail.
+    await xcrunAsync(['simctl', 'boot', udid]);
+  } catch (error) {
+    if (!error.stderr?.match(/Unable to boot device in current state: Booted/)) {
+      throw error;
+    }
   }
 }
 
@@ -223,6 +266,16 @@ export async function listAsync(
     }
   }
   return info;
+}
+
+export async function listSimulatorDevicesAsync() {
+  if (CoreSimulator.isEnabled()) {
+    return CoreSimulator.listDevicesAsync();
+  }
+  const simulatorDeviceInfo = await listAsync('devices');
+  return Object.values(simulatorDeviceInfo.devices).reduce((prev, runtime) => {
+    return prev.concat(runtime);
+  }, []);
 }
 
 /**
@@ -330,42 +383,6 @@ export async function simctlAsync(
 
 function deviceUDIDOrBooted(udid?: string): string {
   return udid ? udid : 'booted';
-}
-
-/**
- * I think the app can be open while no simulators are booted.
- */
-export async function isSimulatorAppRunningAsync(): Promise<boolean> {
-  try {
-    const zeroMeansNo = (
-      await osascript.execAsync(
-        'tell app "System Events" to count processes whose name is "Simulator"'
-      )
-    ).trim();
-    if (zeroMeansNo === '0') {
-      return false;
-    }
-  } catch (error) {
-    if (error.message.includes('Application isn’t running')) {
-      return false;
-    }
-    throw error;
-  }
-
-  return true;
-}
-
-export async function openSimulatorAppAsync({ udid }: { udid?: string }) {
-  const args = ['open', '-a', 'Simulator'];
-  if (udid) {
-    // This has no effect if the app is already running.
-    args.push('--args', '-CurrentDeviceUDID', udid);
-  }
-  await execAsync(args.join(' '));
-}
-
-export async function killAllAsync() {
-  return await spawnAsync('killAll', ['Simulator']);
 }
 
 export function isLicenseOutOfDate(text: string) {

@@ -40,7 +40,7 @@ Object {
     "transportMode": "ws",
     "watchContentBase": true,
   },
-  "devtool": "cheap-module-source-map",
+  "devtool": false,
   "entry": Object {
     "app": Array [
       "node_modules/react-native/Libraries/polyfills/console.js",
@@ -68,17 +68,6 @@ Object {
             ],
           },
           Object {
-            "test": /\\\\\\.\\(gif\\|jpe\\?g\\|png\\|svg\\)\\$/,
-            "use": Object {
-              "loader": "node_modules/url-loader/dist/cjs.js",
-              "options": Object {
-                "esModule": false,
-                "limit": 1000,
-                "name": "static/media/[name].[hash:8].[ext]",
-              },
-            },
-          },
-          Object {
             "include": [Function],
             "test": /\\\\\\.\\(mjs\\|\\[jt\\]sx\\?\\)\\$/,
             "use": Object {
@@ -103,43 +92,6 @@ Object {
               },
             },
           },
-          Object {
-            "include": Array [
-              "packages/webpack-config/e2e/basic",
-              "packages/webpack-config/e2e/basic/node_modules/react-native-vector-icons",
-              "packages/webpack-config/e2e/basic/node_modules/@expo/vector-icons",
-            ],
-            "test": /\\\\\\.\\(woff2\\?\\|eot\\|ttf\\|otf\\)\\$/,
-            "use": Array [
-              Object {
-                "loader": "node_modules/url-loader/dist/cjs.js",
-                "options": Object {
-                  "esModule": false,
-                  "limit": 50000,
-                  "name": "./fonts/[name].[ext]",
-                },
-              },
-            ],
-          },
-          Object {
-            "test": /\\\\\\.\\(css\\)\\$/,
-            "use": Array [
-              "node_modules/style-loader/dist/cjs.js",
-              "node_modules/css-loader/dist/cjs.js",
-            ],
-          },
-          Object {
-            "exclude": Array [
-              /\\\\\\.\\(mjs\\|\\[jt\\]sx\\?\\)\\$/,
-              /\\\\\\.html\\$/,
-              /\\\\\\.json\\$/,
-            ],
-            "loader": "node_modules/file-loader/dist/cjs.js",
-            "options": Object {
-              "esModule": false,
-              "name": "static/media/[name].[hash:8].[ext]",
-            },
-          },
         ],
       },
     ],
@@ -148,7 +100,7 @@ Object {
   "output": Object {
     "chunkFilename": "static/js/[name].chunk.js",
     "devtoolModuleFilenameTemplate": [Function],
-    "filename": "static/js/bundle.js",
+    "filename": "index.bundle",
     "globalObject": "this",
     "path": "packages/webpack-config/e2e/basic/web-build",
     "pathinfo": true,
@@ -162,8 +114,14 @@ Object {
     "DefinePlugin",
     "LimitChunkCountPlugin",
     "WatchMissingNodeModulesPlugin",
+    "SourceMapDevToolPlugin",
   ],
   "resolve": Object {
+    "aliasFields": Array [
+      "react-native",
+      "browser",
+      "main",
+    ],
     "extensions": Array [
       ".ios.ts",
       ".ios.tsx",
@@ -178,6 +136,11 @@ Object {
       ".js",
       ".jsx",
       ".json",
+    ],
+    "mainFields": Array [
+      "react-native",
+      "browser",
+      "main",
     ],
     "plugins": Array [
       Object {
@@ -209,7 +172,7 @@ exports[`ios ios production 1`] = `
 Object {
   "bail": true,
   "context": "packages/webpack-config/e2e/basic",
-  "devtool": "source-map",
+  "devtool": false,
   "entry": Object {
     "app": Array [
       "node_modules/react-native/Libraries/polyfills/console.js",
@@ -237,17 +200,6 @@ Object {
             ],
           },
           Object {
-            "test": /\\\\\\.\\(gif\\|jpe\\?g\\|png\\|svg\\)\\$/,
-            "use": Object {
-              "loader": "node_modules/url-loader/dist/cjs.js",
-              "options": Object {
-                "esModule": false,
-                "limit": 1000,
-                "name": "static/media/[name].[hash:8].[ext]",
-              },
-            },
-          },
-          Object {
             "include": [Function],
             "test": /\\\\\\.\\(mjs\\|\\[jt\\]sx\\?\\)\\$/,
             "use": Object {
@@ -272,43 +224,6 @@ Object {
               },
             },
           },
-          Object {
-            "include": Array [
-              "packages/webpack-config/e2e/basic",
-              "packages/webpack-config/e2e/basic/node_modules/react-native-vector-icons",
-              "packages/webpack-config/e2e/basic/node_modules/@expo/vector-icons",
-            ],
-            "test": /\\\\\\.\\(woff2\\?\\|eot\\|ttf\\|otf\\)\\$/,
-            "use": Array [
-              Object {
-                "loader": "node_modules/url-loader/dist/cjs.js",
-                "options": Object {
-                  "esModule": false,
-                  "limit": 50000,
-                  "name": "./fonts/[name].[ext]",
-                },
-              },
-            ],
-          },
-          Object {
-            "test": /\\\\\\.\\(css\\)\\$/,
-            "use": Array [
-              "node_modules/style-loader/dist/cjs.js",
-              "node_modules/css-loader/dist/cjs.js",
-            ],
-          },
-          Object {
-            "exclude": Array [
-              /\\\\\\.\\(mjs\\|\\[jt\\]sx\\?\\)\\$/,
-              /\\\\\\.html\\$/,
-              /\\\\\\.json\\$/,
-            ],
-            "loader": "node_modules/file-loader/dist/cjs.js",
-            "options": Object {
-              "esModule": false,
-              "name": "static/media/[name].[hash:8].[ext]",
-            },
-          },
         ],
       },
     ],
@@ -326,7 +241,7 @@ Object {
           "include": undefined,
           "minify": undefined,
           "parallel": true,
-          "sourceMap": true,
+          "sourceMap": false,
           "terserOptions": Object {
             "compress": Object {
               "comparisons": false,
@@ -363,10 +278,7 @@ Object {
           "canPrint": undefined,
           "cssProcessor": [Function],
           "cssProcessorOptions": Object {
-            "map": Object {
-              "annotation": true,
-              "inline": false,
-            },
+            "map": false,
             "parser": [Function],
           },
           "cssProcessorPluginOptions": Object {},
@@ -398,7 +310,7 @@ Object {
   "output": Object {
     "chunkFilename": "static/js/[name].[contenthash:8].chunk.js",
     "devtoolModuleFilenameTemplate": [Function],
-    "filename": "static/js/[name].[contenthash:8].js",
+    "filename": "index.bundle",
     "globalObject": "this",
     "path": "packages/webpack-config/e2e/basic/web-build",
     "publicPath": "/",
@@ -412,8 +324,14 @@ Object {
     "ModuleNotFoundPlugin",
     "DefinePlugin",
     "LimitChunkCountPlugin",
+    "SourceMapDevToolPlugin",
   ],
   "resolve": Object {
+    "aliasFields": Array [
+      "react-native",
+      "browser",
+      "main",
+    ],
     "extensions": Array [
       ".ios.ts",
       ".ios.tsx",
@@ -428,6 +346,11 @@ Object {
       ".js",
       ".jsx",
       ".json",
+    ],
+    "mainFields": Array [
+      "react-native",
+      "browser",
+      "main",
     ],
     "plugins": Array [
       Object {
@@ -458,7 +381,7 @@ Object {
 exports[`web web development 1`] = `
 Object {
   "bail": false,
-  "context": "packages/webpack-config/src",
+  "context": "packages/webpack-config/e2e/basic",
   "devServer": Object {
     "after": [Function],
     "before": [Function],
@@ -628,6 +551,7 @@ Object {
       "react-native/Libraries/vendor/emitter/EventEmitter$": "react-native-web/dist/vendor/react-native/emitter/EventEmitter",
       "react-native/Libraries/vendor/emitter/EventSubscriptionVendor$": "react-native-web/dist/vendor/react-native/emitter/EventSubscriptionVendor",
     },
+    "aliasFields": undefined,
     "extensions": Array [
       ".web.ts",
       ".web.tsx",
@@ -642,6 +566,7 @@ Object {
       ".json",
       ".wasm",
     ],
+    "mainFields": undefined,
     "plugins": Array [
       Object {
         "apply": [Function],
@@ -670,7 +595,7 @@ Object {
 exports[`web web production 1`] = `
 Object {
   "bail": true,
-  "context": "packages/webpack-config/src",
+  "context": "packages/webpack-config/e2e/basic",
   "devtool": "source-map",
   "entry": Object {
     "app": Array [
@@ -893,6 +818,7 @@ Object {
       "react-native/Libraries/vendor/emitter/EventEmitter$": "react-native-web/dist/vendor/react-native/emitter/EventEmitter",
       "react-native/Libraries/vendor/emitter/EventSubscriptionVendor$": "react-native-web/dist/vendor/react-native/emitter/EventSubscriptionVendor",
     },
+    "aliasFields": undefined,
     "extensions": Array [
       ".web.ts",
       ".web.tsx",
@@ -907,6 +833,7 @@ Object {
       ".json",
       ".wasm",
     ],
+    "mainFields": undefined,
     "plugins": Array [
       Object {
         "apply": [Function],

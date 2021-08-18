@@ -15,7 +15,7 @@
     "url": "https://github.com/expo/expo-cli.git",
     "directory": "packages/uri-scheme"
   },
-  "author": "Expo <support@expo.io>",
+  "author": "Expo <support@expo.dev>",
   "license": "MIT",
   "bin": {
     "uri-scheme": "./cli.js"

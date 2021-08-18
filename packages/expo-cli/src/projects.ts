@@ -59,7 +59,7 @@ function getProjectOwner(user: User | RobotUser, exp: ExpoConfig): string {
   if (user.kind === 'robot' && !exp.owner) {
     throw new CommandError(
       'ROBOT_OWNER_ERROR',
-      'The "owner" manifest property is required when using robot users. See: https://docs.expo.io/versions/latest/config/app/#owner'
+      'The "owner" manifest property is required when using robot users. See: https://docs.expo.dev/versions/latest/config/app/#owner'
     );
   }
 

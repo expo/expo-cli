@@ -44,11 +44,11 @@ afterAll(() => {
 
 describe('downloadAppArchiveAsync', () => {
   it(`downloads an apk to a file with the same name in a temporary directory`, async () => {
-    const path = await downloadAppArchiveAsync('http://fake.expo.io/app.apk');
+    const path = await downloadAppArchiveAsync('http://fake.expo.dev/app.apk');
     expect(path).toMatch(/app.apk$/);
   });
   it(`downloads and extracts a tar to a file with the correct extension in a temporary directory`, async () => {
-    const path = await downloadAppArchiveAsync('http://fake.expo.io/app.tar.gz');
+    const path = await downloadAppArchiveAsync('http://fake.expo.dev/app.tar.gz');
     expect(path).toMatch(/app.tar.gz.apk$/);
   });
 });

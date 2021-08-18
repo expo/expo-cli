@@ -10,7 +10,7 @@ export default function (program: Command) {
       .command('prebuild [path]')
       .description(
         `Experimental: Create native iOS and Android project files before building natively. ${chalk.dim(
-          learnMore('https://docs.expo.io/workflow/customizing/')
+          learnMore('https://docs.expo.dev/workflow/customizing/')
         )}`
       )
       .longDescription(

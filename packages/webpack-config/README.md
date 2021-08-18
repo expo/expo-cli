@@ -491,7 +491,7 @@ Custom versions of Webpack Plugins that are optimized for use with native React 
 import { ExpoDefinePlugin } from '@expo/webpack-config/plugins';
 ```
 
-Required for `expo-constants` https://docs.expo.io/versions/latest/sdk/constants/.
+Required for `expo-constants` https://docs.expo.dev/versions/latest/sdk/constants/.
 This surfaces the `app.json` (config) as an environment variable which is then parsed by `expo-constants`.
 
 #### `ExpoHtmlWebpackPlugin`
@@ -533,7 +533,7 @@ The Expo source code is made available under the [MIT license](LICENSE). Some of
 ---
 
 <p>
-    <a aria-label="sponsored by expo" href="http://expo.io">
+    <a aria-label="sponsored by expo" href="http://expo.dev">
         <img src="https://img.shields.io/badge/Sponsored_by-Expo-4630EB.svg?style=for-the-badge&logo=EXPO&labelColor=000&logoColor=fff" target="_blank" />
     </a>
     <a aria-label="expo webpack-config is free to use" href="/LICENSE" target="_blank">
@@ -541,5 +541,5 @@ The Expo source code is made available under the [MIT license](LICENSE). Some of
     </a>
 </p>
 
-[docs]: https://docs.expo.io/guides/customizing-webpack/
+[docs]: https://docs.expo.dev/guides/customizing-webpack/
 [docs-latest]: https://github.com/expo/expo/blob/master/docs/pages/versions/unversioned/guides/customizing-webpack.md

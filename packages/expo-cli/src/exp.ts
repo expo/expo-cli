@@ -18,6 +18,7 @@ import {
   ApiV2,
   Binaries,
   Config,
+  Env,
   Logger,
   LogRecord,
   LogUpdater,
@@ -558,9 +559,10 @@ Command.prototype.asyncActionProjectDir = function (
     // eslint-disable-next-line no-new
     new PackagerLogsStream({
       projectRoot,
-      onStartBuildBundle: () => {
+      onStartBuildBundle({ bundleDetails }) {
         // TODO: Unify with commands/utils/progress.ts
-        bar = new ProgressBar('Building JavaScript bundle [:bar] :percent', {
+        const platform = PackagerLogsStream.getPlatformTagForBuildDetails(bundleDetails);
+        bar = new ProgressBar(`${platform}Bundling JavaScript [:bar] :percent`, {
           width: 64,
           total: 100,
           clear: true,
@@ -570,12 +572,12 @@ Command.prototype.asyncActionProjectDir = function (
 
         Log.setBundleProgressBar(bar);
       },
-      onProgressBuildBundle: (percent: number) => {
+      onProgressBuildBundle({ progress }) {
         if (!bar || bar.complete) return;
-        const ticks = percent - bar.curr;
+        const ticks = progress - bar.curr;
         ticks > 0 && bar.tick(ticks);
       },
-      onFinishBuildBundle: (err, startTime, endTime) => {
+      onFinishBuildBundle({ error, start, end, bundleDetails }) {
         if (bar && !bar.complete) {
           bar.tick(100 - bar.curr);
         }
@@ -585,11 +587,13 @@ Command.prototype.asyncActionProjectDir = function (
           bar.terminate();
           bar = null;
 
-          if (err) {
-            Log.log(chalk.red('Failed building JavaScript bundle.'));
+          const platform = PackagerLogsStream.getPlatformTagForBuildDetails(bundleDetails);
+          const totalBuildTimeMs = end.getTime() - start.getTime();
+          const durationSuffix = chalk.gray(` ${totalBuildTimeMs}ms`);
+          if (error) {
+            Log.log(chalk.red(`${platform}Bundling failed` + durationSuffix));
           } else {
-            const totalBuildTimeMs = endTime.getTime() - startTime.getTime();
-            Log.log(chalk.green(`Finished building JavaScript bundle in ${totalBuildTimeMs}ms.`));
+            Log.log(chalk.green(`${platform}Bundling complete` + durationSuffix));
             StatusEventEmitter.emit('bundleBuildFinish', { totalBuildTimeMs });
           }
         }
@@ -655,8 +659,27 @@ Command.prototype.asyncActionProjectDir = function (
 };
 
 export async function bootstrapAnalyticsAsync(): Promise<void> {
-  Analytics.initializeClient('vGu92cdmVaggGA26s3lBX6Y5fILm8SQ7', packageJSON.version);
-  UnifiedAnalytics.initializeClient('u4e9dmCiNpwIZTXuyZPOJE7KjCMowdx5', packageJSON.version);
+  if (Env.shouldDisableAnalytics()) {
+    return; // do not allow E2E to fire events
+  }
+
+  Analytics.initializeClient(
+    'vGu92cdmVaggGA26s3lBX6Y5fILm8SQ7',
+    {
+      apiKey: '1wHTzmVgmZvNjCalKL45chlc2VN',
+      dataPlaneUrl: 'https://cdp.expo.dev',
+    },
+    packageJSON.version
+  );
+
+  UnifiedAnalytics.initializeClient(
+    'u4e9dmCiNpwIZTXuyZPOJE7KjCMowdx5',
+    {
+      apiKey: '1wabJGd5IiuF9Q8SGlcI90v8WTs',
+      dataPlaneUrl: 'https://cdp.expo.dev',
+    },
+    packageJSON.version
+  );
 
   const userData = await profileMethod(
     UserManager.getCachedUserDataAsync,
@@ -669,7 +692,6 @@ export async function bootstrapAnalyticsAsync(): Promise<void> {
     userId: userData.userId,
     currentConnection: userData?.currentConnection,
     username: userData?.username,
-    userType: '', // not available without hitting api
   });
 }
 
