@@ -220,6 +220,8 @@ describe('with assets', () => {
       },
       expectedFilePaths: [
         'ios-build/assets/icon.png',
+        'ios-build/assets/icon@2x.png',
+        'ios-build/assets/icon@3x.png',
         'ios-build/index.jsbundle',
         'ios-build/index.jsbundle.map',
       ],
@@ -245,7 +247,12 @@ describe('with assets', () => {
         max: 838404,
       },
       expectedFilePaths: [
+        'android-build/drawable-hdpi/icon.png',
+        'android-build/drawable-ldpi/icon.png',
         'android-build/drawable-mdpi/icon.png',
+        'android-build/drawable-xhdpi/icon.png',
+        'android-build/drawable-xxhdpi/icon.png',
+        'android-build/drawable-xxxhdpi/icon.png',
         'android-build/index.android.bundle',
         'android-build/index.android.bundle.map',
       ],
