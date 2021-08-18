@@ -23,6 +23,7 @@ export type StartOptions = {
   maxWorkers?: number;
   webOnly?: boolean;
   target?: ProjectTarget;
+  platforms?: ('ios' | 'android' | 'web')[];
 };
 
 export async function startDevServerAsync(

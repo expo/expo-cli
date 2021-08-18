@@ -163,6 +163,9 @@ export function parseStartOptions(
 
   if (options.webOnly) {
     startOpts.webOnly = true;
+    startOpts.platforms = ['web'];
+  } else {
+    startOpts.platforms = exp.platforms;
   }
 
   if (options.maxWorkers) {

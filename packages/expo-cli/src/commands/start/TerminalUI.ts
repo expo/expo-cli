@@ -35,6 +35,7 @@ type StartOptions = {
   nonPersistent?: boolean;
   maxWorkers?: number;
   webOnly?: boolean;
+  platforms?: ('android' | 'ios' | 'web')[];
 };
 
 const printHelp = (): void => {
@@ -56,23 +57,24 @@ const printUsageAsync = async (
   projectRoot: string,
   options: Pick<
     StartOptions,
-    'webOnly' | 'devClient' | 'isWebSocketsEnabled' | 'isRemoteReloadingEnabled'
+    'webOnly' | 'devClient' | 'isWebSocketsEnabled' | 'isRemoteReloadingEnabled' | 'platforms'
   > = {}
 ) => {
   const { dev } = await ProjectSettings.readAsync(projectRoot);
   const openDevToolsAtStartup = await shouldOpenDevToolsOnStartupAsync();
   const devMode = dev ? 'development' : 'production';
   const currentToggle = openDevToolsAtStartup ? 'enabled' : 'disabled';
+  const { platforms = ['android', 'ios', 'web'] } = options;
 
   const isMac = process.platform === 'darwin';
 
   logCommandsTable([
     [],
-    ['a', `open Android`],
-    ['shift+a', `select a device or emulator`],
-    isMac && ['i', `open iOS simulator`],
-    isMac && ['shift+i', `select a simulator`],
-    ['w', `open web`],
+    platforms.includes('android') && ['a', `open Android`],
+    platforms.includes('android') && ['shift+a', `select a device or emulator`],
+    platforms.includes('ios') && isMac && ['i', `open iOS simulator`],
+    platforms.includes('ios') && isMac && ['shift+i', `select a simulator`],
+    platforms.includes('web') && ['w', `open web`],
     [],
     !!options.isRemoteReloadingEnabled && ['r', `reload app`],
     !!options.isWebSocketsEnabled && ['m', `toggle menu`],
@@ -91,17 +93,21 @@ const printUsageAsync = async (
 };
 
 const printBasicUsageAsync = async (
-  options: Pick<StartOptions, 'webOnly' | 'isWebSocketsEnabled' | 'isRemoteReloadingEnabled'> = {}
+  options: Pick<
+    StartOptions,
+    'webOnly' | 'isWebSocketsEnabled' | 'isRemoteReloadingEnabled' | 'platforms'
+  > = {}
 ) => {
   const isMac = process.platform === 'darwin';
   const openDevToolsAtStartup = await shouldOpenDevToolsOnStartupAsync();
   const currentToggle = openDevToolsAtStartup ? 'enabled' : 'disabled';
+  const { platforms = ['android', 'ios', 'web'] } = options;
 
   logCommandsTable([
     [],
-    ['a', `open Android`],
-    isMac && ['i', `open iOS simulator`],
-    ['w', `open web`],
+    platforms.includes('android') && ['a', `open Android`],
+    platforms.includes('ios') && isMac && ['i', `open iOS simulator`],
+    platforms.includes('web') && ['w', `open web`],
     [],
     !!options.isRemoteReloadingEnabled && ['r', `reload app`],
     !!options.isWebSocketsEnabled && ['m', `toggle menu`],
