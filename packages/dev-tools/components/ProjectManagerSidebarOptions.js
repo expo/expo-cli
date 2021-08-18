@@ -123,6 +123,7 @@ export default class ProjectManagerSidebarOptions extends React.Component {
   render() {
     const { showCopiedMessage, isSendFormVisible } = this.state;
     const isDisabled = !this.props.url;
+    const { platforms } = this.props.config;
 
     const sendHeader = (
       <div className={STYLES_CONTENT_GROUP} onClick={this._handleSendHeaderClick}>
@@ -132,16 +133,21 @@ export default class ProjectManagerSidebarOptions extends React.Component {
 
     return (
       <div>
-        <div className={STYLES_CONTENT_GROUP} onClick={this.props.onSimulatorClickAndroid}>
-          <span className={STYLES_CONTENT_GROUP_LEFT}>Run on Android device/emulator</span>
-        </div>
-        <div className={STYLES_CONTENT_GROUP} onClick={this.props.onSimulatorClickIOS}>
-          <span className={STYLES_CONTENT_GROUP_LEFT}>Run on iOS simulator</span>
-        </div>
-
-        <a className={STYLES_CONTENT_GROUP} onClick={this.props.onStartWebClick}>
-          <span className={STYLES_CONTENT_GROUP_LEFT}>Run in web browser</span>
-        </a>
+        {platforms.includes('android') && (
+          <div className={STYLES_CONTENT_GROUP} onClick={this.props.onSimulatorClickAndroid}>
+            <span className={STYLES_CONTENT_GROUP_LEFT}>Run on Android device/emulator</span>
+          </div>
+        )}
+        {platforms.includes('ios') && (
+          <div className={STYLES_CONTENT_GROUP} onClick={this.props.onSimulatorClickIOS}>
+            <span className={STYLES_CONTENT_GROUP_LEFT}>Run on iOS simulator</span>
+          </div>
+        )}
+        {platforms.includes('web') && (
+          <a className={STYLES_CONTENT_GROUP} onClick={this.props.onStartWebClick}>
+            <span className={STYLES_CONTENT_GROUP_LEFT}>Run in web browser</span>
+          </a>
+        )}
 
         <ContentGroup header={sendHeader} isActive={isSendFormVisible}>
           <InputWithButton

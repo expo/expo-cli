@@ -189,6 +189,7 @@ class ProjectManager extends React.Component {
         isPublishing={this.props.isPublishing}
         isActiveDeviceIOS={this.props.isActiveDeviceIOS}
         isActiveDeviceAndroid={this.props.isActiveDeviceAndroid}
+        config={this.props.project.config}
       />
     );
 

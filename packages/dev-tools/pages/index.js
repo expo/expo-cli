@@ -38,6 +38,7 @@ const query = gql`
         description
         slug
         githubUrl
+        platforms
       }
       sources {
         id
