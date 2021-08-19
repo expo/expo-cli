@@ -5,6 +5,7 @@ import xcode from 'xcode';
 
 import { ConfigPlugin } from '../Plugin.types';
 import { withExpoPlist } from '../plugins/ios-plugins';
+import { getUpdateUrl } from '../utils/Updates';
 import { ExpoPlist } from './IosConfig.types';
 
 const CREATE_MANIFEST_IOS_PATH = 'expo-updates/scripts/create-manifest-ios.sh';
@@ -23,17 +24,6 @@ export enum Config {
   UPDATE_URL = 'EXUpdatesURL',
   RELEASE_CHANNEL = 'EXUpdatesReleaseChannel',
   UPDATES_CONFIGURATION_REQUEST_HEADERS_KEY = 'EXUpdatesRequestHeaders',
-}
-
-export function getUpdateUrl(
-  config: Pick<ExpoConfigUpdates, 'owner' | 'slug'>,
-  username: string | null
-): string | null {
-  const user = typeof config.owner === 'string' ? config.owner : username;
-  if (!user) {
-    return null;
-  }
-  return `https://exp.host/@${user}/${config.slug}`;
 }
 
 export function getRuntimeVersion(

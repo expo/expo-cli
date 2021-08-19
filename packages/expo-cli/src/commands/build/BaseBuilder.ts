@@ -154,7 +154,7 @@ export default class BaseBuilder {
     if (reuseStatus.canReuse) {
       Log.warn(`Did you know that Expo provides over-the-air updates?
 Please see the docs (${chalk.underline(
-        'https://docs.expo.io/guides/configuring-ota-updates/'
+        'https://docs.expo.dev/guides/configuring-ota-updates/'
       )}) and check if you can use them instead of building your app binaries again.`);
 
       Log.warn(
@@ -215,7 +215,7 @@ Please see the docs (${chalk.underline(
           )}`;
           if (shouldShowUpgradeInfo) {
             status += `\nWant to wait less? Get priority builds at ${chalk.underline(
-              'https://expo.io/settings/billing'
+              'https://expo.dev/settings/billing'
             )}.`;
           }
           break;
@@ -226,7 +226,7 @@ Please see the docs (${chalk.underline(
           status = 'Build in progress...';
           if (shouldShowUpgradeInfo) {
             status += `\nWant to wait less? Get priority builds at ${chalk.underline(
-              'https://expo.io/settings/billing'
+              'https://expo.dev/settings/billing'
             )}.`;
           }
           break;
@@ -234,7 +234,7 @@ Please see the docs (${chalk.underline(
           status = 'Build finished.';
           if (shouldShowUpgradeInfo) {
             status += `\nLooks like this build could have been faster.\nRead more about priority builds at ${chalk.underline(
-              'https://expo.io/settings/billing'
+              'https://expo.dev/settings/billing'
             )}.`;
           }
           break;
@@ -378,7 +378,7 @@ ${job.id}
     );
     if (priority === 'normal' && canPurchasePriorityBuilds) {
       Log.log(
-        'You can make this faster. 🐢\nGet priority builds at: https://expo.io/settings/billing\n'
+        'You can make this faster. 🐢\nGet priority builds at: https://expo.dev/settings/billing\n'
       );
     }
 

@@ -1,6 +1,6 @@
 {
   "name": "@expo/webpack-config",
-  "version": "0.13.3",
+  "version": "0.14.0",
   "description": "The default Webpack configuration used to build Expo apps targeting the web.",
   "main": "webpack.config.js",
   "types": "webpack.config.d.ts",
@@ -41,13 +41,13 @@
   },
   "dependencies": {
     "@babel/core": "7.9.0",
-    "@expo/config": "5.0.6",
+    "@expo/config": "5.0.7",
     "babel-loader": "8.1.0",
     "chalk": "^4.0.0",
     "clean-webpack-plugin": "^3.0.0",
     "copy-webpack-plugin": "~6.0.3",
     "css-loader": "~3.6.0",
-    "expo-pwa": "0.0.91",
+    "expo-pwa": "0.0.92",
     "file-loader": "~6.0.0",
     "find-yarn-workspace-root": "~2.0.0",
     "getenv": "^1.0.0",
@@ -66,8 +66,7 @@
     "url-loader": "~4.1.0",
     "webpack": "4.43.0",
     "webpack-manifest-plugin": "~2.2.0",
-    "webpackbar": "^4.0.0",
-    "workbox-webpack-plugin": "^6.1.5"
+    "webpackbar": "^4.0.0"
   },
   "devDependencies": {
     "@types/copy-webpack-plugin": "~6.0.0",
@@ -78,7 +77,6 @@
     "@types/webpack": "4.41.18",
     "@types/webpack-dev-server": "3.11.0",
     "@types/webpack-manifest-plugin": "~2.1.0",
-    "@types/workbox-webpack-plugin": "^5.1.8",
     "jest-puppeteer": "^4.4.0",
     "serve": "^11.1.0"
   },

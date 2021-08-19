@@ -4,7 +4,7 @@ import chalk from 'chalk';
 import express from 'express';
 import http from 'http';
 import os from 'os';
-import { URL } from 'url';
+import { parse, URL } from 'url';
 
 import {
   Analytics,
@@ -123,7 +123,14 @@ export function getManifestHandler(projectRoot: string) {
     next: (err?: Error) => void
   ) => {
     // Only support `/`, `/manifest`, `/index.exp` for the manifest middleware.
-    if (!req.url || !['/', '/manifest', '/index.exp'].includes(req.url)) {
+
+    if (
+      !req.url ||
+      !['/', '/manifest', '/index.exp'].includes(
+        // Strip the query params
+        parse(req.url).pathname || req.url
+      )
+    ) {
       next();
       return;
     }
@@ -295,7 +302,7 @@ export async function getManifestResponseAsync({
           `@${manifest.owner}`
         )} and you have not been granted the appropriate permissions.\n` +
           `Please request access from an admin of @${manifest.owner} or change the "owner" field to an account you belong to.\n` +
-          learnMore('https://docs.expo.io/versions/latest/config/app/#owner')
+          learnMore('https://docs.expo.dev/versions/latest/config/app/#owner')
       );
       ConnectionStatus.setIsOffline(true);
       manifestString = await getManifestStringAsync(manifest, hostInfo.host, acceptSignature);

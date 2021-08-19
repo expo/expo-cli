@@ -45,7 +45,7 @@
 - ✅ Editing app name should update the slug, if slug matches the name (e.g. "My App" and "my-app").
 - ✅ Should validate app name and slug.
 - ✅ Should show a toast after clicking "Publish"
-- ✅ Should replace the toast when published successfully and display the expo.io URL.
+- ✅ Should replace the toast when published successfully and display the expo.dev URL.
 - ✅ Should handle failed publish (e.g. machine not connected to internet).
 - ✅ Changes to fields should be persisted to `app.json` after publishing.
 - ✅ Publishing should be disabled when running with `expo start --offline`.

@@ -233,7 +233,7 @@ export async function startAsync(projectRoot: string, options: StartOptions) {
     switch (key) {
       case 'A':
       case 'a':
-        if (options.webOnly) {
+        if (options.webOnly && !Webpack.isTargetingNative()) {
           Log.log(`${BLT} Opening the web project in Chrome on Android...`);
           const results = await Android.openWebProjectAsync({
             projectRoot,
@@ -249,7 +249,7 @@ export async function startAsync(projectRoot: string, options: StartOptions) {
             shouldPrompt,
             devClient: options.devClient ?? false,
           });
-          if (!results.success) {
+          if (!results.success && results.error !== 'escaped') {
             Log.nestedError(
               typeof results.error === 'string' ? results.error : results.error.message
             );
@@ -259,7 +259,7 @@ export async function startAsync(projectRoot: string, options: StartOptions) {
         break;
       case 'I':
       case 'i':
-        if (options.webOnly) {
+        if (options.webOnly && !Webpack.isTargetingNative()) {
           Log.log(`${BLT} Opening the web project in Safari on iOS...`);
           const results = await Simulator.openWebProjectAsync({
             projectRoot,
@@ -270,13 +270,12 @@ export async function startAsync(projectRoot: string, options: StartOptions) {
           }
         } else {
           Log.log(`${BLT} Opening on iOS...`);
-
           const results = await Simulator.openProjectAsync({
             projectRoot,
             shouldPrompt,
             devClient: options.devClient ?? false,
           });
-          if (!results.success) {
+          if (!results.success && results.error !== 'escaped') {
             Log.nestedError(results.error);
           }
         }
@@ -379,10 +378,10 @@ Please reload the project in Expo Go for the change to take effect.`
       case 'r':
         if (options.isRemoteReloadingEnabled) {
           Log.log(`${BLT} Reloading apps`);
-          // Send reload requests over the metro dev server
+          // Send reload requests over the dev servers
           Project.broadcastMessage('reload');
-          // Send reload requests over the webpack dev server
-          Webpack.broadcastMessage('content-changed');
+
+          Webpack.broadcastMessage('reload');
         } else if (!options.webOnly) {
           // [SDK 40]: Restart bundler
           Log.clear();

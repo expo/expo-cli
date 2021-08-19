@@ -10,7 +10,7 @@ export default function (program: Command) {
       .command('eject [path]')
       .description(
         `Create native iOS and Android project files. ${chalk.dim(
-          learnMore('https://docs.expo.io/workflow/customizing/')
+          learnMore('https://docs.expo.dev/workflow/customizing/')
         )}`
       )
       .longDescription(

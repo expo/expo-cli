@@ -1,4 +1,5 @@
-import Segment from 'analytics-node';
+import RudderAnalytics from '@expo/rudder-sdk-node';
+import SegmentAnalytics from 'analytics-node';
 import os from 'os';
 
 import { ip } from './internal';
@@ -9,11 +10,17 @@ const PLATFORM_TO_ANALYTICS_PLATFORM: { [platform: string]: string } = {
   linux: 'Linux',
 };
 
+type RudderAnalyticsConfig = {
+  apiKey: string;
+  dataPlaneUrl: string;
+};
+
 export class AnalyticsClient {
-  private userTraits: any;
-  private segmentNodeInstance: Segment | undefined;
-  private _userId: string | undefined;
-  private _version: string | undefined;
+  private userTraits?: { [key: string]: any };
+  private rudderstackClient?: RudderAnalytics;
+  private segmentClient?: SegmentAnalytics; // should be removed when we've confirmed rudder client works as expected
+  private _userId?: string;
+  private _version?: string;
 
   public get userId() {
     return this._userId;
@@ -24,23 +31,48 @@ export class AnalyticsClient {
   }
 
   public flush() {
-    if (this.segmentNodeInstance) {
-      this.segmentNodeInstance.flush();
+    if (this.rudderstackClient) {
+      this.rudderstackClient.flush();
+    }
+
+    if (this.segmentClient) {
+      this.segmentClient.flush();
     }
   }
 
-  public initializeClient(apiKey: string, packageVersion: string) {
+  public initializeClient(
+    segmentWriteKey: string,
+    rudderConfig: RudderAnalyticsConfig,
+    packageVersion: string
+  ) {
     // Do not wait before flushing, we want node to close immediately if the programs ends
-    this.segmentNodeInstance = new Segment(apiKey, { flushInterval: 300 });
+    this.rudderstackClient = new RudderAnalytics(
+      rudderConfig.apiKey,
+      `${rudderConfig.dataPlaneUrl}/v1/batch`,
+      {
+        flushInterval: 300,
+      }
+    );
+    this.rudderstackClient.logger.silent = true;
+    this.segmentClient = new SegmentAnalytics(segmentWriteKey, {
+      flushInterval: 300,
+    });
     this._version = packageVersion;
   }
 
-  public identifyUser(userId: string, traits: any) {
+  public identifyUser(userId: string, traits: { [key: string]: any }) {
     this._userId = userId;
     this.userTraits = traits;
 
-    if (this.segmentNodeInstance) {
-      this.segmentNodeInstance.identify({
+    if (this.rudderstackClient) {
+      this.rudderstackClient.identify({
+        userId: this._userId,
+        traits: this.userTraits,
+        context: this.getContext(),
+      });
+    }
+    if (this.segmentClient) {
+      this.segmentClient.identify({
         userId: this._userId,
         traits: this.userTraits,
         context: this.getContext(),
@@ -49,8 +81,17 @@ export class AnalyticsClient {
   }
 
   public logEvent(name: string, properties: any = {}) {
-    if (this.segmentNodeInstance && this._userId) {
-      this.segmentNodeInstance.track({
+    if (this.rudderstackClient && this._userId) {
+      this.rudderstackClient.track({
+        userId: this._userId,
+        event: name,
+        properties,
+        context: this.getContext(),
+      });
+    }
+
+    if (this.segmentClient && this._userId) {
+      this.segmentClient.track({
         userId: this._userId,
         event: name,
         properties,
@@ -59,7 +100,7 @@ export class AnalyticsClient {
     }
   }
 
-  private getContext() {
+  private getContext(): any {
     const platform = PLATFORM_TO_ANALYTICS_PLATFORM[os.platform()] || os.platform();
     const context = {
       ip: ip.address(),

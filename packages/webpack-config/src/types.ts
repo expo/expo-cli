@@ -25,7 +25,6 @@ export type InputEnvironment = {
   locations?: FilePaths;
   mode?: Mode;
   pwa?: boolean;
-  offline?: boolean;
   babel?: {
     dangerouslyAddModulePathsToTranspile: string[];
   };
@@ -52,12 +51,6 @@ export type Environment = {
    * Root of the Expo project.
    */
   projectRoot: string;
-  /**
-   * Passing `true` will enable offline support and add a service worker.
-   *
-   * @default false
-   */
-  offline?: boolean;
   /**
    * The Webpack mode to bundle the project in.
    */
@@ -102,8 +95,6 @@ export interface FilePathsFolder {
   manifest: string;
   serveJson: string;
   favicon: string;
-  serviceWorker: string;
-  registerServiceWorker: string;
 }
 export interface FilePaths {
   absolute: PathResolver;

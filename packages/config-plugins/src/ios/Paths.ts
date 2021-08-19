@@ -5,7 +5,7 @@ import * as path from 'path';
 import { UnexpectedError } from '../utils/errors';
 import * as WarningAggregator from '../utils/warnings';
 
-const ignoredPaths = ['**/@(Carthage|Pods|node_modules)/**'];
+const ignoredPaths = ['**/@(Carthage|Pods|vendor|node_modules)/**'];
 
 interface ProjectFile<L extends string = string> {
   path: string;

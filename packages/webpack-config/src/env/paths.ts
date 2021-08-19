@@ -91,8 +91,6 @@ function parsePaths(
       manifest: templatePath('manifest.json'),
       serveJson: templatePath('serve.json'),
       favicon: templatePath('favicon.ico'),
-      serviceWorker: templatePath('expo-service-worker.js'),
-      registerServiceWorker: templatePath('register-service-worker.js'),
     },
     production: {
       get: getProductionPath,
@@ -101,8 +99,6 @@ function parsePaths(
       manifest: getProductionPath('manifest.json'),
       serveJson: getProductionPath('serve.json'),
       favicon: getProductionPath('favicon.ico'),
-      serviceWorker: getProductionPath('expo-service-worker.js'),
-      registerServiceWorker: getProductionPath('register-service-worker.js'),
     },
   };
 }

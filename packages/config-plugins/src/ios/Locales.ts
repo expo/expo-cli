@@ -90,7 +90,7 @@ export async function getResolvedLocalesAsync(
         WarningAggregator.addWarningIOS(
           `locales-${lang}`,
           `Failed to parse JSON of locale file for language: ${lang}`,
-          'https://docs.expo.io/distribution/app-stores/#localizing-your-ios-app'
+          'https://docs.expo.dev/distribution/app-stores/#localizing-your-ios-app'
         );
       }
     } else {

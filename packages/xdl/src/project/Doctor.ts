@@ -134,7 +134,7 @@ async function validateWithSchema(
       schemaErrorMessage = `Error: Problem${
         e.errors.length > 1 ? 's' : ''
       } validating fields in ${configName}. ${learnMore(
-        'https://docs.expo.io/workflow/configuration/'
+        'https://docs.expo.dev/workflow/configuration/'
       )}`;
       schemaErrorMessage += e.errors.map(formatValidationError).join('');
     }
@@ -147,7 +147,7 @@ async function validateWithSchema(
       if (e instanceof SchemerError) {
         assetsErrorMessage = `Error: Problem${
           e.errors.length > 1 ? '' : 's'
-        } validating asset fields in ${configName}. ${learnMore('https://docs.expo.io/')}`;
+        } validating asset fields in ${configName}. ${learnMore('https://docs.expo.dev/')}`;
         assetsErrorMessage += e.errors.map(formatValidationError).join('');
       }
     }
@@ -340,7 +340,7 @@ async function _validateReactNativeVersionAsync(
     ProjectUtils.logWarning(
       projectRoot,
       'expo',
-      `Warning: Not using the Expo fork of react-native. ${learnMore('https://docs.expo.io/')}`,
+      `Warning: Not using the Expo fork of react-native. ${learnMore('https://docs.expo.dev/')}`,
       'doctor-not-using-expo-fork'
     );
     return WARNING;

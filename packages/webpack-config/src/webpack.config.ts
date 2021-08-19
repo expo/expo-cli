@@ -55,7 +55,7 @@ import { Arguments, DevConfiguration, Environment, FilePaths, Mode } from './typ
 
 // Source maps are resource heavy and can cause out of memory issue for large source files.
 const shouldUseSourceMap = boolish('GENERATE_SOURCEMAP', true);
-const shouldUseNativeCodeLoading = boolish('EXPO_WEBPACK_USE_NATIVE_CODE_LOADING', true);
+const shouldUseNativeCodeLoading = boolish('EXPO_WEBPACK_USE_NATIVE_CODE_LOADING', false);
 
 const isCI = boolish('CI', false);
 
@@ -236,12 +236,9 @@ export default async function (
         dot: true,
         // We generate new versions of these based on the templates
         ignore: [
-          '**/expo-service-worker.*',
           // '**/serve.json',
           // '**/index.html',
           '**/icon.png',
-          // We copy this over in `withWorkbox` as it must be part of the Webpack `entry` and have templates replaced.
-          '**/register-service-worker.js',
         ],
       },
     },
@@ -250,13 +247,6 @@ export default async function (
       to: locations.production.serveJson,
     },
   ];
-
-  if (env.offline === true) {
-    filesToCopy.push({
-      from: locations.template.serviceWorker,
-      to: locations.production.serviceWorker,
-    });
-  }
 
   const templateIndex = parse(readFileSync(locations.template.indexHtml, { encoding: 'utf8' }));
 
@@ -290,7 +280,7 @@ export default async function (
     // to our docs means they want to use a custom manifest.json instead of having a new one generated.
     //
     // Normalize the link (removing the beginning slash) so it can be resolved relative to the user's static folder.
-    // Ref: https://docs.expo.io/guides/progressive-web-apps/#manual-setup
+    // Ref: https://docs.expo.dev/guides/progressive-web-apps/#manual-setup
     if (manifestLink.href.startsWith('/')) {
       manifestLink.href = manifestLink.href.substring(1);
     }
@@ -328,8 +318,9 @@ export default async function (
     // Fail out on the first error instead of tolerating it.
     bail: isProd,
     devtool,
-    // TODO(Bacon): Simplify this while ensuring gatsby support continues to work.
-    context: isNative ? env.projectRoot ?? __dirname : __dirname,
+    // This must point to the project root (where the webpack.config.js would normally be located).
+    // If this is anywhere else, the source maps and errors won't show correct paths.
+    context: env.projectRoot ?? __dirname,
     // configures where the build ends up
     output: getOutput(locations, mode, publicPath, env.platform),
     plugins: [
@@ -344,9 +335,10 @@ export default async function (
       isProd && new CopyWebpackPlugin({ patterns: filesToCopy }),
 
       // Generate the `index.html`
-      new ExpoHtmlWebpackPlugin(env, templateIndex),
+      (!isNative || !shouldUseNativeCodeLoading) && new ExpoHtmlWebpackPlugin(env, templateIndex),
 
-      ExpoInterpolateHtmlPlugin.fromEnv(env, ExpoHtmlWebpackPlugin),
+      (!isNative || !shouldUseNativeCodeLoading) &&
+        ExpoInterpolateHtmlPlugin.fromEnv(env, ExpoHtmlWebpackPlugin),
 
       isNative &&
         new ExpoAppManifestWebpackPlugin(
@@ -495,6 +487,8 @@ export default async function (
       ],
     },
     resolve: {
+      mainFields: isNative ? ['react-native', 'browser', 'main'] : undefined,
+      aliasFields: isNative ? ['react-native', 'browser', 'main'] : undefined,
       extensions: getPlatformsExtensions(env.platform),
       plugins: [
         // Adds support for installing with Plug'n'Play, leading to faster installs and adding

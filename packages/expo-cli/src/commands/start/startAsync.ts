@@ -23,6 +23,7 @@ export async function actionAsync(projectRoot: string, options: NormalizedOption
   // Add clean up hooks
   installExitHooks(projectRoot);
 
+  // Only validate expo in Expo Go contexts
   if (!options.devClient) {
     // Find expo binary in project/workspace node_modules
     const hasExpoInstalled = resolveFrom.silent(projectRoot, 'expo');

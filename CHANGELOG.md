@@ -12,6 +12,56 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+## [Fri, 6 Aug 2021 13:06:23 -0700](https://github.com/expo/expo-cli/commit/cb9ec2ec1d33f484fd956ac9669926443904a6cb)
+
+### 🛠 Breaking changes
+
+- [webpack-config] Drop workbox support ([#3729](https://github.com/expo/expo-cli/issues/3729))
+
+### 🎉 New features
+
+- [cli] added fig icons ([#3733](https://github.com/expo/expo-cli/issues/3733))
+- [cli][run:ios] Auto detect device type for scheme ([#3720](https://github.com/expo/expo-cli/issues/3720))
+
+### 🧹 Chores
+
+- [cli] Refactor TerminalUI commands ([#3749](https://github.com/expo/expo-cli/issues/3749))
+- [cli] Support robot publishing of kernel when owner is supplied ([#3753](https://github.com/expo/expo-cli/issues/3753))
+- [cli] prevent checking for updates more than once per run ([#3748](https://github.com/expo/expo-cli/issues/3748))
+- [config-plugins][config-types] set default url returned by getUpdateU… ([#3456](https://github.com/expo/expo-cli/issues/3456))
+- [readme] added box to side bar ([#3735](https://github.com/expo/expo-cli/issues/3735))
+- [xdl] Move ngrok tools out of UrlUtils module ([#3739](https://github.com/expo/expo-cli/issues/3739))
+- Bump babel/runtime ([#3732](https://github.com/expo/expo-cli/issues/3732))
+- Restrict [native code] in stack traces ([#3742](https://github.com/expo/expo-cli/issues/3742))
+- Upgrade uuid ([#3730](https://github.com/expo/expo-cli/issues/3730))
+
+### 🐛 Bug fixes
+
+- [cli] Fix downloading expo go progress bar bug
+- [cli] various fixes from #3685 ([#3736](https://github.com/expo/expo-cli/issues/3736))
+- [webpack-config] Remove progress and babel/runtime ([#3700](https://github.com/expo/expo-cli/issues/3700))
+- [xdl] Upgrade @expo/ngrok ([#3740](https://github.com/expo/expo-cli/issues/3740))
+- [xdl] pass appropriate headers when making getManifestCall ([#3751](https://github.com/expo/expo-cli/issues/3751))
+
+### 📦 Packages updated
+
+- @expo/config-plugins@3.0.7
+- @expo/config@5.0.7
+- @expo/dev-server@0.1.82
+- @expo/dev-tools@0.13.113
+- expo-cli@4.10.0
+- expo-optimize@0.1.104
+- @expo/json-file@8.2.33
+- @expo/metro-config@0.1.82
+- @expo/next-adapter@3.0.4
+- @expo/package-manager@0.0.46
+- pod-install@0.1.26
+- @expo/prebuild-config@2.0.7
+- expo-pwa@0.0.92
+- uri-scheme@1.0.93
+- @expo/webpack-config@0.14.0
+- xdl@59.0.53
+
 ## [Thu, 29 Jul 2021 19:21:41 -0700](https://github.com/expo/expo-cli/commit/a94bed2031b86d244b143937fde14d97f2bc6a71)
 
 ### 🎉 New features

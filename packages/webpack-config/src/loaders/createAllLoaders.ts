@@ -88,6 +88,12 @@ export default function createAllLoaders(
   env.locations = env.locations || getPaths(env.projectRoot, env);
 
   const { root, includeModule, template } = env.locations;
+  const isNative = ['ios', 'android'].includes(env.platform);
+
+  if (isNative) {
+    // TODO: Support fallback loader + assets
+    return [getHtmlLoaderRule(template.folder), getBabelLoaderRule(env)];
+  }
 
   return [
     getHtmlLoaderRule(template.folder),
@@ -97,7 +103,7 @@ export default function createAllLoaders(
     styleLoaderRule,
     // This needs to be the last loader
     fallbackLoaderRule,
-  ].filter(Boolean);
+  ].filter(Boolean) as Rule[];
 }
 
 /**
