@@ -127,10 +127,10 @@ export async function actionAsync(projectRoot: string, options: Options) {
     device: props.device,
     devClient: true,
     scheme: schemes[0],
+    applicationId: props.packageName,
   });
 
   if (!result.success) {
-    // TODO: Maybe fallback on using the package name.
     throw new CommandError(typeof result.error === 'string' ? result.error : result.error.message);
   }
 

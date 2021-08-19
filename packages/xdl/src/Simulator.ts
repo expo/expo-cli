@@ -782,6 +782,7 @@ export async function openProjectAsync({
   udid,
   scheme,
   skipNativeLogs,
+  applicationId,
 }: {
   projectRoot: string;
   shouldPrompt?: boolean;
@@ -789,6 +790,7 @@ export async function openProjectAsync({
   scheme?: string;
   udid?: string;
   skipNativeLogs?: boolean;
+  applicationId?: string;
 }): Promise<
   | { success: true; url: string; udid: string; bundleIdentifier: string }
   | { success: false; error: string }
@@ -830,7 +832,7 @@ export async function openProjectAsync({
 
   // No URL, and is devClient
   if (!projectUrl) {
-    const applicationId = await resolveApplicationIdAsync(projectRoot);
+    applicationId = applicationId ?? (await resolveApplicationIdAsync(projectRoot));
     Logger.global.debug(`Open iOS project from app id: ${applicationId}`);
 
     if (!applicationId) {

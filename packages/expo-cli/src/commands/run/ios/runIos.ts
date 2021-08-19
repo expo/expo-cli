@@ -155,11 +155,11 @@ async function openInSimulatorAsync({
     udid: device.udid,
     devClient: true,
     scheme: schemes[0],
+    applicationId: bundleIdentifier,
     // We always setup native logs before launching to ensure we catch any fatal errors.
     skipNativeLogs: true,
   });
   if (!result.success) {
-    // TODO: Maybe fallback on using the bundle identifier.
     throw new CommandError(result.error);
   }
 }

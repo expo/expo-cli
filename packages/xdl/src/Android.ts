@@ -829,12 +829,14 @@ export async function openProjectAsync({
   devClient = false,
   device,
   scheme,
+  applicationId,
 }: {
   projectRoot: string;
   shouldPrompt?: boolean;
   devClient?: boolean;
   device?: Device;
   scheme?: string;
+  applicationId?: string | null;
 }): Promise<{ success: true; url: string } | { success: false; error: Error | string }> {
   await startAdbReverseAsync(projectRoot);
 
@@ -870,7 +872,7 @@ export async function openProjectAsync({
 
   // No URL, and is devClient
   if (!projectUrl) {
-    const applicationId = await resolveApplicationIdAsync(projectRoot);
+    applicationId = applicationId ?? (await resolveApplicationIdAsync(projectRoot));
 
     if (!applicationId) {
       return {
