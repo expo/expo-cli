@@ -4,7 +4,6 @@ import plist from '@expo/plist';
 import fs from 'fs';
 import resolveFrom from 'resolve-from';
 
-import CommandError, { AbortCommandError } from './CommandError';
 import {
   hasRequiredAndroidFilesAsync,
   hasRequiredIOSFilesAsync,
@@ -65,32 +64,6 @@ export async function getOptionalDevClientSchemeAsync(projectRoot: string): Prom
     [matching] = intersecting(ios, android);
   }
   return matching ?? null;
-}
-
-export async function getDevClientSchemeAsync(projectRoot: string): Promise<string> {
-  const matching = await getOptionalDevClientSchemeAsync(projectRoot);
-
-  if (!matching) {
-    Log.warn(
-      '\nDev Client: No common URI schemes could be found for the native iOS and Android projects, this is required for opening the project\n'
-    );
-    Log.log(
-      `Add a common scheme with ${Log.chalk.cyan(
-        'npx uri-scheme add my-scheme'
-      )} or provide a scheme with the ${Log.chalk.cyan('--scheme')} flag\n`
-    );
-    Log.log(
-      Log.chalk.dim(
-        `You can see all of the existing schemes for your native projects by running ${Log.chalk.cyan(
-          'npx uri-scheme list'
-        )}\n`
-      )
-    );
-
-    // No log error
-    throw new AbortCommandError();
-  }
-  return matching;
 }
 
 async function getManagedDevClientSchemeAsync(projectRoot: string): Promise<string | null> {

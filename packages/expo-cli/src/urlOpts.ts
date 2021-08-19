@@ -5,7 +5,7 @@ import { Android, ConnectionStatus, ProjectSettings, Simulator, Webpack } from '
 
 import CommandError, { AbortCommandError } from './CommandError';
 import Log from './log';
-import { getDevClientSchemeAsync, getOptionalDevClientSchemeAsync } from './schemes';
+import { getOptionalDevClientSchemeAsync } from './schemes';
 
 // NOTE: if you update this, you should also update assertValidOptions in UrlUtils.ts
 export type URLOptions = {

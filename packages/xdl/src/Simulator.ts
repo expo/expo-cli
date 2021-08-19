@@ -3,6 +3,7 @@ import { IOSConfig } from '@expo/config-plugins';
 import * as osascript from '@expo/osascript';
 import plist from '@expo/plist';
 import spawnAsync from '@expo/spawn-async';
+import assert from 'assert';
 import chalk from 'chalk';
 import { execSync } from 'child_process';
 import fs from 'fs-extra';
@@ -825,6 +826,7 @@ export async function openProjectAsync({
       return { success: false, error: 'escaped' };
     }
   }
+  assert(device);
 
   // No URL, and is devClient
   if (!projectUrl) {
@@ -839,21 +841,12 @@ export async function openProjectAsync({
       };
     }
 
-    let simulator: SimControl.SimulatorDevice | null = null;
-    try {
-      simulator = await profileMethod(ensureSimulatorOpenAsync)({ udid: device?.udid });
-    } catch (error) {
-      return {
-        success: false,
-        error: error.message,
-      };
-    }
     Logger.global.info(
-      `\u203A Opening ${chalk.underline(applicationId)} on ${chalk.bold(simulator.name)}`
+      `\u203A Opening ${chalk.underline(applicationId)} on ${chalk.bold(device.name)}`
     );
 
     const result = await SimControl.openBundleIdAsync({
-      udid: simulator.udid,
+      udid: device.udid,
       bundleIdentifier: applicationId,
     }).catch(error => {
       if ('status' in error) {
@@ -862,12 +855,13 @@ export async function openProjectAsync({
       throw error;
     });
     if (result.status === 0) {
-      await activateSimulatorWindowAsync();
+      await ensureSimulatorAppRunningAsync({ udid: device?.udid });
+      activateSimulatorWindowAsync();
     } else {
-      let errorMessage = `Couldn't open iOS app with ID "${applicationId}" on device "${simulator.name}".`;
+      let errorMessage = `Couldn't open iOS app with ID "${applicationId}" on device "${device.name}".`;
       if (result.status === 4) {
         errorMessage += `\nThe app might not be installed, try installing it with: ${chalk.bold(
-          `expo run:ios -d ${simulator.udid}`
+          `expo run:ios -d ${device.udid}`
         )}`;
       }
       errorMessage += chalk.gray(`\n${result.stderr}`);
@@ -876,7 +870,7 @@ export async function openProjectAsync({
     }
     return {
       success: true,
-      udid: simulator.udid,
+      udid: device.udid,
       bundleIdentifier: applicationId,
       // TODO: Remove this hack
       url: '',
