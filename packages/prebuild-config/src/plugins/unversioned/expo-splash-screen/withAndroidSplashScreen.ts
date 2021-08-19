@@ -8,6 +8,7 @@ import { getAndroidSplashConfig } from './getAndroidSplashConfig';
 import { withAndroidSplashDrawables } from './withAndroidSplashDrawables';
 import { withAndroidSplashImages } from './withAndroidSplashImages';
 import { withAndroidSplashLegacyMainActivity } from './withAndroidSplashLegacyMainActivity';
+import { withAndroidSplashStrings } from './withAndroidSplashStrings';
 import { withAndroidSplashStyles } from './withAndroidSplashStyles';
 
 export const withAndroidSplashScreen: ConfigPlugin = config => {
@@ -35,6 +36,7 @@ export const withAndroidSplashScreen: ConfigPlugin = config => {
     [withAndroidSplashDrawables, splashConfig],
     ...(shouldUpdateLegacyMainActivity(config) ? [withAndroidSplashLegacyMainActivity] : []),
     withAndroidSplashStyles,
+    withAndroidSplashStrings,
   ]);
 };
 
