@@ -50,7 +50,7 @@ export function writeMetroConfig({
     }
 
     fs.copySync(sourceConfigPath, targetConfigPath);
-    updatingMetroConfigStep.succeed('Added Metro config.');
+    updatingMetroConfigStep.succeed('Added Metro config');
   } catch (e) {
     updatingMetroConfigStep.stopAndPersist({
       symbol: '⚠️ ',
