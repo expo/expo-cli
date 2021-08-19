@@ -876,7 +876,7 @@ export async function openProjectAsync({
       return {
         success: false,
         error:
-          'Cannot resolve application identifier or URI scheme to open the native Android app.\nInstall `expo-dev-client` and rebuild the native app with `expo run:android` or `eas build -p android`',
+          'Cannot resolve application identifier or URI scheme to open the native Android app.\nBuild the native app with `expo run:android` or `eas build -p android`',
       };
     }
 

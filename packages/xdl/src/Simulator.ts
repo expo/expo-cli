@@ -835,7 +835,7 @@ export async function openProjectAsync({
       return {
         success: false,
         error:
-          'Cannot resolve bundle identifier or URI scheme to open the native iOS app.\nInstall `expo-dev-client` and rebuild the native app with `expo run:ios` or `eas build -p ios`',
+          'Cannot resolve bundle identifier or URI scheme to open the native iOS app.\nBuild the native app with `expo run:ios` or `eas build -p ios`',
       };
     }
 
