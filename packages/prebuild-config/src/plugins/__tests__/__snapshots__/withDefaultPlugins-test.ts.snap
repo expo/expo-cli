@@ -736,6 +736,18 @@ Object {
               },
               Object {
                 "$": Object {
+                  "name": "expo_splash_screen_resize_mode",
+                },
+                "_": "contain",
+              },
+              Object {
+                "$": Object {
+                  "name": "expo_splash_screen_status_bar_translucent",
+                },
+                "_": "true",
+              },
+              Object {
+                "$": Object {
                   "name": "facebook_app_id",
                 },
                 "_": "1234567890",
@@ -1561,6 +1573,18 @@ Object {
                   "name": "app_name",
                 },
                 "_": "my cool app",
+              },
+              Object {
+                "$": Object {
+                  "name": "expo_splash_screen_resize_mode",
+                },
+                "_": "contain",
+              },
+              Object {
+                "$": Object {
+                  "name": "expo_splash_screen_status_bar_translucent",
+                },
+                "_": "true",
               },
               Object {
                 "$": Object {
