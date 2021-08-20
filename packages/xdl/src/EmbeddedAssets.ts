@@ -268,12 +268,14 @@ async function _maybeRunModifiedExpoUpdatesPluginAsync(config: EmbeddedAssetsCon
 
   const { iosSupportingDirectory: supportingDirectory } = getIOSPaths(projectRoot);
 
+  let isAMismatchBetweenInferredAndConfiguredValues = false;
+
   // iOS expo-updates
   let isLikelyFirstIOSPublish = false;
   const expoPlistPath = path.join(supportingDirectory, 'Expo.plist');
   if (fs.existsSync(expoPlistPath)) {
     let expoPlistForProject = plist.parse(await fs.readFileSync(expoPlistPath, 'utf8'));
-    const currentExpoPlist = { ...expoPlistForProject };
+    const currentlyConfiguredExpoPlist = { ...expoPlistForProject };
 
     // The username is only used for defining a default updates URL.
     // Since we overwrite the URL below the username is superfluous.
@@ -292,24 +294,56 @@ async function _maybeRunModifiedExpoUpdatesPluginAsync(config: EmbeddedAssetsCon
 
     // If we guess that this is a users first publish, modify the native code to match
     // what is configured.
-    const currentIOSUpdatesURL = currentExpoPlist[IOSConfig.Updates.Config.UPDATE_URL];
-    if (currentIOSUpdatesURL === PLACEHOLDER_URL) {
+    const configuredIOSUpdatesURL =
+      currentlyConfiguredExpoPlist[IOSConfig.Updates.Config.UPDATE_URL];
+    if (configuredIOSUpdatesURL === PLACEHOLDER_URL) {
       isLikelyFirstIOSPublish = true;
       fs.writeFileSync(expoPlistPath, plist.build(expoPlistForProject));
     } else {
-      // Only log warnings if this is not the first publish
-      for (const key of new Set([
-        ...Object.keys(currentExpoPlist),
-        ...Object.keys(expoPlistForProject),
-      ])) {
-        if (currentExpoPlist[key] !== expoPlistForProject[key]) {
-          logger.global.warn(
-            `\nThere is a mismatch on iOS between the values configured in the App.json and and values set in the Expo.plist for ${key}.`
-          );
-          logger.global.warn(
-            `The value configured in the App.json is "${expoPlistForProject[key]}".`
-          );
-          logger.global.warn(`The value set in the Expo.plist is "${currentExpoPlist[key]}".`);
+      // Log warnings if this is not the first publish and critical properties seem misconfigured
+      const {
+        UPDATE_URL,
+        SDK_VERSION,
+        RUNTIME_VERSION,
+        RELEASE_CHANNEL,
+      } = IOSConfig.Updates.Config;
+      for (const key of [UPDATE_URL, SDK_VERSION, RUNTIME_VERSION, RELEASE_CHANNEL]) {
+        if (currentlyConfiguredExpoPlist[key] !== expoPlistForProject[key]) {
+          isAMismatchBetweenInferredAndConfiguredValues = true;
+          switch (key) {
+            case UPDATE_URL: {
+              logger.global.warn(
+                `\nThe inferred value of the update URL is (${expoPlistForProject[key]}), but (${key}) in the Expo.plist is set to (${currentlyConfiguredExpoPlist[key]}).` +
+                  `\nThis could be due to:` +
+                  `\n . 1. The value of 'updates.url' set in the app.json` +
+                  `\n . 2. The values of 'owner' and 'slug' set in the app.json` +
+                  `\n . 3. The value of the --public-url flag`
+              );
+              break;
+            }
+            case SDK_VERSION: {
+              logger.global.warn(
+                `\nIn your app.json (sdkVersion) is set to (${expoPlistForProject[key]}), but (${key}) in the Expo.plist is set to (${currentlyConfiguredExpoPlist[key]}).`
+              );
+              break;
+            }
+            case RUNTIME_VERSION: {
+              logger.global.warn(
+                `\nIn your app.json (runtimeVersion) is set to (${expoPlistForProject[key]}), but (${key}) in the Expo.plist is set to (${currentlyConfiguredExpoPlist[key]}).`
+              );
+              break;
+            }
+            case RELEASE_CHANNEL: {
+              logger.global.warn(
+                `\nThe value passed to --release-channel flag is to (${expoPlistForProject[key]}), but (${key}) in the Expo.plist is set to (${currentlyConfiguredExpoPlist[key]}).`
+              );
+              break;
+            }
+            default:
+              logger.global.warn(
+                `${key} is inferred to be ${expoPlistForProject[key]}, but (${key}) in the Expo.plist is set to (${currentlyConfiguredExpoPlist[key]}).`
+              );
+          }
         }
       }
     }
@@ -327,33 +361,34 @@ async function _maybeRunModifiedExpoUpdatesPluginAsync(config: EmbeddedAssetsCon
   );
   const AndroidManifestKeyForUpdateURL = AndroidConfig.Updates.Config.UPDATE_URL;
   if (fs.existsSync(androidManifestXmlPath)) {
-    const currentAndroidManifest = await AndroidConfig.Manifest.readAndroidManifestAsync(
+    const currentlyConfiguredAndroidManifest = await AndroidConfig.Manifest.readAndroidManifestAsync(
       androidManifestXmlPath
     );
-    const [currentManifestApplication] = currentAndroidManifest.manifest.application ?? [];
-    const currentMetaDataAttributes =
-      currentManifestApplication['meta-data']?.map(md => md['$']) ?? [];
+    const [currentConfiguredManifestApplication] =
+      currentlyConfiguredAndroidManifest.manifest.application ?? [];
+    const currentlyConfiguredMetaDataAttributes =
+      currentConfiguredManifestApplication['meta-data']?.map(md => md['$']) ?? [];
 
     // The username is only used for defining a default updates URL.
     // Since we overwrite the URL below the username is superfluous.
-    const configuredAndroidManifest = AndroidConfig.Updates.setUpdatesConfig(
+    const inferredAndroidManifest = AndroidConfig.Updates.setUpdatesConfig(
       exp,
-      currentAndroidManifest,
+      currentlyConfiguredAndroidManifest,
       /*username*/ null
     );
-    const mainApplication = AndroidConfig.Manifest.getMainApplicationOrThrow(
-      configuredAndroidManifest
+    const inferredMainApplication = AndroidConfig.Manifest.getMainApplicationOrThrow(
+      inferredAndroidManifest
     );
     // overwrite the URL defined in AndroidConfig.Updates.setUpdatesConfig
     AndroidConfig.Manifest.addMetaDataItemToMainApplication(
-      mainApplication,
+      inferredMainApplication,
       AndroidManifestKeyForUpdateURL,
       androidManifestUrl
     );
     // set a release channel (not done in updates plugin)
     if (releaseChannel) {
       AndroidConfig.Manifest.addMetaDataItemToMainApplication(
-        mainApplication,
+        inferredMainApplication,
         AndroidConfig.Updates.Config.RELEASE_CHANNEL,
         releaseChannel
       );
@@ -361,40 +396,82 @@ async function _maybeRunModifiedExpoUpdatesPluginAsync(config: EmbeddedAssetsCon
 
     // If we guess that this is a users first publish, modify the native code to match
     // what is configured.
-    const currentAndroidUpdateURL = currentMetaDataAttributes.find(
+    const currentlyConfiguredAndroidUpdateURL = currentlyConfiguredMetaDataAttributes.find(
       x => x['android:name'] === AndroidConfig.Updates.Config.UPDATE_URL
     )?.['android:value'];
-    if (currentAndroidUpdateURL === PLACEHOLDER_URL) {
+    if (currentlyConfiguredAndroidUpdateURL === PLACEHOLDER_URL) {
       isLikelyFirstAndroidPublish = true;
       await AndroidConfig.Manifest.writeAndroidManifestAsync(
         androidManifestXmlPath,
-        configuredAndroidManifest
+        inferredAndroidManifest
       );
     } else {
-      // Only log warnings if this is not the first publish
-      const [configuredManifestApplication] = configuredAndroidManifest.manifest.application!;
-      const configuredMetaDataAttributes = configuredManifestApplication['meta-data']?.map(
+      // Log warnings if this is not the first publish and critical properties seem misconfigured
+      const [inferredManifestApplication] = inferredAndroidManifest.manifest.application!;
+      const inferredMetaDataAttributes = inferredManifestApplication['meta-data']?.map(
         md => md['$']
       )!;
 
-      for (const metaDataValue of new Set(
-        [...configuredMetaDataAttributes, ...currentMetaDataAttributes]?.map(x => x['android:name'])
-      )) {
-        const configuredValue = configuredMetaDataAttributes.find(
-          x => x['android:name'] === metaDataValue
+      const {
+        UPDATE_URL,
+        SDK_VERSION,
+        RUNTIME_VERSION,
+        RELEASE_CHANNEL,
+      } = AndroidConfig.Updates.Config;
+      for (const key of [UPDATE_URL, SDK_VERSION, RUNTIME_VERSION, RELEASE_CHANNEL]) {
+        const inferredValue = inferredMetaDataAttributes.find(x => x['android:name'] === key)?.[
+          'android:value'
+        ];
+        const currentlyConfiguredValue = currentlyConfiguredMetaDataAttributes.find(
+          x => x['android:name'] === key
         )?.['android:value'];
-        const currentValue = currentMetaDataAttributes.find(
-          x => x['android:name'] === metaDataValue
-        )?.['android:value'];
-        if (configuredValue !== currentValue) {
-          logger.global.warn(
-            `\nThere is a mismatch on Android between the value configured in the App.json and values in the AndroidManifest.xml for ${metaDataValue}.`
-          );
-          logger.global.warn(`The value configured in the App.json is "${configuredValue}".`);
-          logger.global.warn(`The value set in the AndroidManifest.xml is "${currentValue}".`);
+        if (inferredValue !== currentlyConfiguredValue) {
+          isAMismatchBetweenInferredAndConfiguredValues = true;
+          switch (key) {
+            case UPDATE_URL: {
+              logger.global.warn(
+                `\nThe inferred value of the update URL is (${inferredValue}), but (${key}) in the AndroidManifest.xml is set to (${currentlyConfiguredValue}).` +
+                  `\nThis could be due to:` +
+                  `\n . 1. The value of 'updates.url' set in the app.json` +
+                  `\n . 2. The values of 'owner' and 'slug' set in the app.json` +
+                  `\n . 3. The value of the --public-url flag`
+              );
+              break;
+            }
+            case SDK_VERSION: {
+              logger.global.warn(
+                `\nIn your app.json (sdkVersion) is set to (${inferredValue}), but (${key}) in the AndroidManifest.xml is set to (${currentlyConfiguredValue}).`
+              );
+              break;
+            }
+            case RUNTIME_VERSION: {
+              logger.global.warn(
+                `\nIn your app.json (runtimeVersion) is set to (${inferredValue}), but (${key}) in the AndroidManifest.xml is set to (${currentlyConfiguredValue}).`
+              );
+              break;
+            }
+            case RELEASE_CHANNEL: {
+              logger.global.warn(
+                `\nThe value passed to --release-channel flag is to (${inferredValue}), but (${key}) in the AndroidManifest.xml is set to (${currentlyConfiguredValue}).`
+              );
+              break;
+            }
+            default:
+              logger.global.warn(
+                `${key} is inferred to be ${inferredValue}, but (${key}) in the AndroidManifest.xml is set to (${currentlyConfiguredValue}).`
+              );
+          }
         }
       }
     }
+  }
+  if (
+    isAMismatchBetweenInferredAndConfiguredValues &&
+    !(isLikelyFirstIOSPublish || isLikelyFirstAndroidPublish)
+  ) {
+    logger.global.warn(
+      `\nMake sure the values set in app.json, or passed via the command line, match the builds you're intending to update.`
+    );
   }
 
   if (isLikelyFirstIOSPublish || isLikelyFirstAndroidPublish) {
@@ -416,7 +493,7 @@ async function _maybeRunModifiedExpoUpdatesPluginAsync(config: EmbeddedAssetsCon
 
     logger.global.warn(
       platformSpecificMessage +
-        'You'll need to make and release a new build before your users can download the update ' +
+        `You'll need to make and release a new build before your users can download the update ` +
         'you just published.'
     );
   }
