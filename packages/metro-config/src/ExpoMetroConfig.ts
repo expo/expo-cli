@@ -92,8 +92,8 @@ export function getDefaultConfig(
     // it is not needed
   }
 
-  const isLegacy = readIsLegacyImportsEnabled(projectRoot);
   // Deprecated -- SDK 41 --
+  const isLegacy = readIsLegacyImportsEnabled(projectRoot);
   if (options.target) {
     if (!isLegacy) {
       console.warn(
