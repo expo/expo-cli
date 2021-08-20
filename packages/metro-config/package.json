@@ -36,9 +36,11 @@
     "@expo/config": "5.0.7",
     "chalk": "^4.1.0",
     "getenv": "^1.0.0",
-    "metro-react-native-babel-transformer": "^0.59.0"
+    "metro-react-native-babel-transformer": "^0.59.0",
+    "resolve": "^1.20.0"
   },
   "devDependencies": {
+    "@types/resolve": "^1.20.1",
     "expo": "37",
     "metro": "^0.59.0",
     "metro-config": "^0.59.0",

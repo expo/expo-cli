@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 import { readFileSync } from 'fs';
-import resolveFrom from 'resolve-from';
+
+import { resolveSilent } from './resolve';
 
 const cacheKeyParts = [
   readFileSync(__filename),
@@ -16,7 +17,7 @@ function resolveTransformer(projectRoot: string) {
   if (transformer) {
     return transformer;
   }
-  const resolvedPath = resolveFrom.silent(projectRoot, 'metro-react-native-babel-transformer');
+  const resolvedPath = resolveSilent(projectRoot, 'metro-react-native-babel-transformer');
   if (!resolvedPath) {
     throw new Error(
       'Missing package "metro-react-native-babel-transformer" in the project. ' +
@@ -49,7 +50,7 @@ function transform(props: {
   src: string;
 }) {
   // Use babel-preset-expo by default if available...
-  props.options.extendsBabelConfigPath = resolveFrom.silent(
+  props.options.extendsBabelConfigPath = resolveSilent(
     props.options.projectRoot,
     'babel-preset-expo'
   );

@@ -5,7 +5,8 @@ import { boolish } from 'getenv';
 import { Reporter } from 'metro';
 import type MetroConfig from 'metro-config';
 import path from 'path';
-import resolveFrom from 'resolve-from';
+
+import { resolveAsBundler, resolveFrom, resolveSilent } from './resolve';
 
 export const EXPO_DEBUG = boolish('EXPO_DEBUG', false);
 
@@ -55,11 +56,11 @@ function readIsLegacyImportsEnabled(projectRoot: string): boolean {
   return isLegacyImportsEnabled(config.exp);
 }
 
-function getProjectBabelConfigFile(projectRoot: string): string | undefined {
+function getProjectBabelConfigFile(projectRoot: string): string | null {
   return (
-    resolveFrom.silent(projectRoot, './babel.config.js') ||
-    resolveFrom.silent(projectRoot, './.babelrc') ||
-    resolveFrom.silent(projectRoot, './.babelrc.js')
+    resolveSilent(projectRoot, './babel.config.js') ||
+    resolveSilent(projectRoot, './.babelrc') ||
+    resolveSilent(projectRoot, './.babelrc.js')
   );
 }
 
@@ -145,6 +146,12 @@ export function getDefaultConfig(
   const babelConfigPath = getProjectBabelConfigFile(projectRoot);
   const isCustomBabelConfigDefined = !!babelConfigPath;
 
+  const expoSideEffects = [
+    // TODO: use expo monorepo resolution
+    resolveAsBundler(projectRoot, 'react-native-gesture-handler', { includeCoreModules: false }),
+    resolveAsBundler(projectRoot, 'expo-dev-client', { includeCoreModules: false }),
+  ].filter(Boolean) as string[];
+
   if (EXPO_DEBUG) {
     console.log();
     console.log(`Expo Metro config:`);
@@ -153,6 +160,7 @@ export function getDefaultConfig(
     console.log(`- Extensions: ${sourceExts.join(', ')}`);
     console.log(`- React Native: ${reactNativePath}`);
     console.log(`- Babel config: ${babelConfigPath || 'babel-preset-expo (default)'}`);
+    console.log(`- Side Effects: ${expoSideEffects.join(', ') || '[none]'}`);
     console.log();
   }
   const {
@@ -171,10 +179,10 @@ export function getDefaultConfig(
       sourceExts,
     },
     serializer: {
-      getModulesRunBeforeMainModule: () => [
-        require.resolve(path.join(reactNativePath, 'Libraries/Core/InitializeCore')),
-        // TODO: Bacon: load Expo side-effects
-      ],
+      getModulesRunBeforeMainModule: () =>
+        [require.resolve(path.join(reactNativePath, 'Libraries/Core/InitializeCore'))].concat(
+          expoSideEffects
+        ),
       getPolyfills: () => require(path.join(reactNativePath, 'rn-get-polyfills'))(),
     },
     server: {
@@ -239,7 +247,7 @@ export async function loadAsync(
 }
 
 function importMetroConfigFromProject(projectRoot: string): typeof MetroConfig {
-  const resolvedPath = resolveFrom.silent(projectRoot, 'metro-config');
+  const resolvedPath = resolveSilent(projectRoot, 'metro-config');
   if (!resolvedPath) {
     throw new Error(
       'Missing package "metro-config" in the project. ' +
