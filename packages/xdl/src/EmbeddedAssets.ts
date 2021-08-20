@@ -416,7 +416,7 @@ async function _maybeRunModifiedExpoUpdatesPluginAsync(config: EmbeddedAssetsCon
 
     logger.global.warn(
       platformSpecificMessage +
-        'The native app must be rebuilt, and downloaded by your users before they can access the new JavaScript bundle ' +
+        'You'll need to make and release a new build before your users can download the update ' +
         'you just published.'
     );
   }
