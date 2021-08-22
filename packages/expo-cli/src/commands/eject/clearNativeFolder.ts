@@ -68,10 +68,15 @@ async function isIOSProjectValidAsync(projectRoot: string) {
   return hasRequiredIOSFilesAsync(projectRoot);
 }
 
-export async function promptToClearMalformedNativeProjectsAsync(projectRoot: string) {
+export async function promptToClearMalformedNativeProjectsAsync(
+  projectRoot: string,
+  checkPlatforms: string[]
+) {
   const [isAndroidValid, isIOSValid] = await Promise.all([
-    isAndroidProjectValidAsync(projectRoot),
-    isIOSProjectValidAsync(projectRoot),
+    checkPlatforms.includes('android')
+      ? isAndroidProjectValidAsync(projectRoot)
+      : Promise.resolve(true),
+    checkPlatforms.includes('ios') ? isIOSProjectValidAsync(projectRoot) : Promise.resolve(true),
   ]);
 
   if (isAndroidValid && isIOSValid) {

@@ -31,7 +31,7 @@ export async function actionAsync(
     // Clear the native folders before syncing
     await clearNativeFolder(projectRoot, platforms);
   } else {
-    await promptToClearMalformedNativeProjectsAsync(projectRoot);
+    await promptToClearMalformedNativeProjectsAsync(projectRoot, platforms);
   }
 
   await prebuildAsync(projectRoot, {
