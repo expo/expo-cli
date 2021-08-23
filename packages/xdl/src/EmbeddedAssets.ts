@@ -439,15 +439,15 @@ async function _maybeRunModifiedExpoUpdatesPluginAsync(config: EmbeddedAssetsCon
     if (isLikelyFirstIOSPublish && !isLikelyFirstAndroidPublish) {
       platformSpecificMessage =
         '🚀 It looks like this your first iOS publish for this project! ' +
-        'Automatically setup Expo updates in the Expo.plist. ';
+        `We've automatically set some configuration values in Expo.plist. `;
     } else if (!isLikelyFirstIOSPublish && isLikelyFirstAndroidPublish) {
       platformSpecificMessage =
         '🚀 It looks like this your first Android publish for this project! ' +
-        'Automatically setup Expo updates in the AndroidManifest.xml. ';
+        `We've automatically set some configuration values in AndroidManifest.xml. `;
     } else {
       platformSpecificMessage =
         '🚀 It looks like this your first publish for this project! ' +
-        'Automatically setup Expo updates in the Expo.plist and the AndroidManifest.xml. ';
+        `We've automatically set some configuration values in Expo.plist and AndroidManifest.xml. `;
     }
 
     logger.global.warn(
