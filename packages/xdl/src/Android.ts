@@ -815,6 +815,7 @@ export async function openProjectAsync({
   device?: Device;
   scheme?: string;
 }): Promise<{ success: true; url: string } | { success: false; error: Error | string }> {
+  const devices: Device[] = [];
   try {
     await startAdbReverseAsync(projectRoot);
 
@@ -829,27 +830,40 @@ export async function openProjectAsync({
         return { success: false, error: 'escaped' };
       }
       device = booted;
+      devices.push(device);
     } else {
-      const devices = await getAllAvailableDevicesAsync();
-      let booted: Device | null = devices[0];
+      const allDevices = await getAllAvailableDevicesAsync();
+      let booted: Device | null = allDevices[0];
       if (shouldPrompt) {
-        booted = await promptForDeviceAsync(devices);
+        booted = await promptForDeviceAsync(allDevices);
       }
       if (!booted) {
         return { success: false, error: 'escaped' };
       }
+      devices.push(booted);
+      if (!shouldPrompt) {
+        // Add all devices that are already booted
+        for (let i = 1; i < allDevices.length; i++) {
+          const device = allDevices[i];
+          if (device.isBooted) {
+            devices.push(device);
+          }
+        }
+      }
       device = booted;
     }
 
-    await openUrlAsync({
-      url: projectUrl,
-      device,
-      isDetached: !!exp.isDetached,
-      sdkVersion: exp.sdkVersion,
-      devClient,
-      exp,
-      projectRoot,
-    });
+    for (const device of devices) {
+      await openUrlAsync({
+        url: projectUrl,
+        device,
+        isDetached: !!exp.isDetached,
+        sdkVersion: exp.sdkVersion,
+        devClient,
+        exp,
+        projectRoot,
+      });
+    }
     return { success: true, url: projectUrl };
   } catch (e) {
     if (e.isAbortError) {
