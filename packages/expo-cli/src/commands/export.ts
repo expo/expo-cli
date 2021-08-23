@@ -13,6 +13,7 @@ export default function (program: Command) {
       .command('export [path]')
       .description('Export the static files of the app for hosting it on a web server')
       .helpGroup('core')
+      .option('--platform <all|android|ios>', 'Platforms: ios, android, all. Default: all')
       .option(
         '-p, --public-url <url>',
         'The public url that will host the static files. (Required)'

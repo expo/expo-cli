@@ -64,8 +64,8 @@ export function printBundleSizes(bundles: { android?: BundleOutput; ios?: Bundle
 export async function createBundlesAsync(
   projectRoot: string,
   publishOptions: PublishOptions = {},
-  bundleOptions: { dev?: boolean; useDevServer: boolean }
-): Promise<{ android: BundleOutput; ios: BundleOutput }> {
+  bundleOptions: { platforms: Platform[]; dev?: boolean; useDevServer: boolean }
+): Promise<Record<string, BundleOutput>> {
   if (!bundleOptions.useDevServer) {
     try {
       await startReactNativeServerAsync({
@@ -86,8 +86,7 @@ export async function createBundlesAsync(
 
   const config = getConfig(projectRoot, { skipSDKVersionRequirement: true });
   const isLegacy = isLegacyImportsEnabled(config.exp);
-  const platforms: Platform[] = ['android', 'ios'];
-  const [android, ios] = await bundleAsync(
+  const bundles = await bundleAsync(
     projectRoot,
     config.exp,
     {
@@ -97,17 +96,19 @@ export async function createBundlesAsync(
       logger: ProjectUtils.getLogger(projectRoot),
       quiet: publishOptions.quiet,
     },
-    platforms.map((platform: Platform) => ({
+    bundleOptions.platforms.map((platform: Platform) => ({
       platform,
       entryPoint: resolveEntryPoint(projectRoot, platform),
       dev: bundleOptions.dev,
     }))
   );
 
-  return {
-    android,
-    ios,
-  };
+  return bundleOptions.platforms.reduce((prev, curr, index) => {
+    return {
+      ...prev,
+      [curr]: bundles[index],
+    };
+  }, {});
 }
 
 // Fetch iOS and Android bundles for publishing

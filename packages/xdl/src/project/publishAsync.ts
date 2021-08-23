@@ -5,6 +5,7 @@ import {
   HookArguments,
   PackageJSONConfig,
 } from '@expo/config';
+import { BundleOutput } from '@expo/dev-server';
 import FormData from 'form-data';
 import fs from 'fs-extra';
 import path from 'path';
@@ -85,9 +86,10 @@ export async function publishAsync(
 
   // TODO: refactor this out to a function, throw error if length doesn't match
   const validPostPublishHooks: LoadedHook[] = prepareHooks(hooks, 'postPublish', projectRoot);
-  const bundles = await createBundlesAsync(projectRoot, options, {
+  const bundles = (await createBundlesAsync(projectRoot, options, {
+    platforms: ['ios', 'android'],
     useDevServer: Env.shouldUseDevServer(exp),
-  });
+  })) as { ios: BundleOutput; android: BundleOutput };
 
   printBundleSizes(bundles);
 

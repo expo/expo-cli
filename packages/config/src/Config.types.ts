@@ -52,9 +52,11 @@ export type HookArguments = {
   iosBundle: string | Uint8Array;
   iosSourceMap: string | null;
   iosManifest: any;
+  iosManifestUrl: string;
   androidBundle: string | Uint8Array;
   androidSourceMap: string | null;
   androidManifest: any;
+  androidManifestUrl: string;
   projectRoot: string;
   log: (msg: any) => void;
 };
