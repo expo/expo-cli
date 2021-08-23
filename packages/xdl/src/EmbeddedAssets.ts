@@ -311,8 +311,8 @@ async function _maybeRunModifiedExpoUpdatesPluginAsync(config: EmbeddedAssetsCon
         let currentlyConfiguredValue = currentlyConfiguredExpoPlist[key];
         const inferredValue = expoPlistForProject[key];
         if (key === RELEASE_CHANNEL && inferredValue) {
-          // A client with an undefined release channel  is mapped to
-          // 'default' in the server so avoid logging an unneccessary warning.
+          // A client with an undefined release channel is mapped to
+          // 'default' in the server, so avoid logging an unneccessary warning.
           currentlyConfiguredValue = currentlyConfiguredValue ?? 'default';
         }
         if (currentlyConfiguredValue !== inferredValue) {
@@ -411,8 +411,8 @@ async function _maybeRunModifiedExpoUpdatesPluginAsync(config: EmbeddedAssetsCon
           x => x['android:name'] === key
         )?.['android:value'];
         if (key === RELEASE_CHANNEL && inferredValue) {
-          // A client with an undefined release channel  is mapped to
-          // 'default' in the server so avoid logging an unneccessary warning.
+          // A client with an undefined release channel is mapped to
+          // 'default' in the server, so avoid logging an unneccessary warning.
           currentlyConfiguredValue = currentlyConfiguredValue ?? 'default';
         }
         if (inferredValue !== currentlyConfiguredValue) {
