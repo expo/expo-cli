@@ -18,7 +18,7 @@ export const withAndroidSplashScreen: ConfigPlugin = config => {
     ) {
       WarningAggregator.addWarningAndroid(
         'androidStatusBar.backgroundColor',
-        'The androidStatusBar.backgroundColor color conflicts with the splash backgroundColor on Android'
+        'Color conflicts with the splash.backgroundColor'
       );
     }
   } else {
