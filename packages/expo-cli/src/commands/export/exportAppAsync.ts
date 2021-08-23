@@ -103,7 +103,8 @@ export async function exportAppAsync(
   // Log bundle size info to the user
   printBundleSizes(bundles);
 
-  const { hashes, filenames } = await writeBundlesAsync({ bundles, outputDir: bundlesPathToWrite });
+  // Write the JS bundles to disk, and get the bundle file names (this could change with async chunk loading support).
+  const { hashes, fileNames } = await writeBundlesAsync({ bundles, outputDir: bundlesPathToWrite });
 
   Log.log('Finished saving JS Bundles');
 
@@ -118,12 +119,12 @@ export async function exportAppAsync(
   });
 
   if (experimentalBundle) {
-    await writeMetadataJsonAsync({ outputDir, bundles, fileNames: filenames });
+    await writeMetadataJsonAsync({ outputDir, bundles, fileNames });
   }
 
   if (options.dumpAssetmap) {
     Log.log('Dumping asset map');
-    await writeAssetMapAsync({ projectRoot, outputDir: absoluteOutputDir, assets });
+    await writeAssetMapAsync({ outputDir: absoluteOutputDir, assets });
   }
 
   // build source maps
@@ -136,15 +137,14 @@ export async function exportAppAsync(
       bundles,
       hashes,
       outputDir: bundlesPathToWrite,
-      fileNames: filenames,
+      fileNames,
       removeOriginalSourceMappingUrl,
     });
     // If we output source maps, then add a debug HTML file which the user can open in
     // the web browser to inspect the output like web.
     await writeDebugHtmlAsync({
-      projectRoot,
-      absoluteOutputDir,
-      filenames,
+      outputDir: absoluteOutputDir,
+      fileNames,
     });
   }
 
@@ -165,10 +165,9 @@ export async function exportAppAsync(
 
   // TODO: Add a comment explaining what platform manifests are used for
   const manifests = await writePlatformManifestsAsync({
-    projectRoot,
     outputDir: absoluteOutputDir,
     publicUrl,
-    filenames,
+    fileNames,
     exp,
     pkg,
   });
@@ -218,6 +217,7 @@ function runHooks({
   }
 }
 
+// TODO: Move to expo/config for public manifests
 function mutateExpoConfigWithManifestValues(
   exp: ExpoAppManifest,
   { assetUrl, isDev, username }: { assetUrl: string; isDev?: boolean; username?: string | null }

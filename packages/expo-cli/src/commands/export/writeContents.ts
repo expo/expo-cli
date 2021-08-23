@@ -2,39 +2,44 @@ import type { ExpoAppManifest, HookArguments, PackageJSONConfig } from '@expo/co
 import type { BundleOutput } from '@expo/dev-server';
 import crypto from 'crypto';
 import fs from 'fs';
+import { ensureDir } from 'fs-extra';
 import path from 'path';
 import urljoin from 'url-join';
-import { Project, ProjectAssets } from 'xdl';
+import { ProjectAssets } from 'xdl';
 
 import Log from '../../log';
 import { truncateLastLinesAsync } from '../utils/truncateLastLinesAsync';
 import { createMetadataJson } from './createMetadataJson';
 
+type PlatformExpoAppManifest = ExpoAppManifest & {
+  platform: string;
+  bundleUrl: string;
+  dependencies: string[];
+};
+
+async function writeAsync(folder: string, fileName: string, contents: any) {
+  await ensureDir(folder);
+  await fs.promises.writeFile(path.join(folder, fileName), contents);
+}
+
 export async function writeDebugHtmlAsync({
-  projectRoot,
-  absoluteOutputDir,
-  filenames,
+  outputDir,
+  fileNames,
 }: {
-  projectRoot: string;
-  absoluteOutputDir: string;
-  filenames: Record<string, string>;
+  outputDir: string;
+  fileNames: Record<string, string>;
 }) {
   // Make a debug html so user can debug their bundles
   Log.log('Preparing additional debugging files');
   const debugHtml = `
-      ${Object.values(filenames)
-        .map(filename => `<script src="${path.join('bundles', filename)}"></script>`)
-        .join('      \n')}
+      ${Object.values(fileNames)
+        .map(fileName => `<script src="${path.join('bundles', fileName)}"></script>`)
+        .join('\n      ')}
       Open up this file in Chrome. In the Javascript developer console, navigate to the Source tab.
       You can see a red coloured folder containing the original source code from your bundle.
       `;
 
-  await Project.writeArtifactSafelyAsync(
-    projectRoot,
-    null,
-    path.join(absoluteOutputDir, 'debug.html'),
-    debugHtml
-  );
+  await writeAsync(outputDir, 'debug.html', debugHtml);
 }
 
 /**
@@ -62,7 +67,7 @@ export async function writeBundlesAsync({
   outputDir: string;
 }) {
   const hashes: Record<string, string> = {};
-  const filenames: Record<string, string> = {};
+  const fileNames: Record<string, string> = {};
 
   for (const [platform, bundleOutput] of Object.entries(bundles)) {
     const bundle = bundleOutput.hermesBytecodeBundle ?? bundleOutput.code;
@@ -70,11 +75,11 @@ export async function writeBundlesAsync({
     const fileName = createBundleFileName({ platform, hash });
 
     hashes[platform] = hash;
-    filenames[platform] = fileName;
-    await Project.writeArtifactSafelyAsync(outputDir, null, fileName, bundle);
+    fileNames[platform] = fileName;
+    await writeAsync(outputDir, fileName, bundle);
   }
 
-  return { hashes, filenames };
+  return { hashes, fileNames };
 }
 
 export async function writeSourceMapsAsync({
@@ -94,8 +99,7 @@ export async function writeSourceMapsAsync({
     const sourceMap = bundle.hermesSourcemap ?? bundle.map;
     const hash = hashes?.[platform] ?? createBundleHash(bundle.hermesBytecodeBundle ?? bundle.code);
     const mapName = `${platform}-${hash}.map`;
-    const mapPath = path.join(outputDir, mapName);
-    await fs.promises.writeFile(mapPath, sourceMap);
+    await writeAsync(outputDir, mapName, sourceMap);
 
     const jsBundleFileName = fileNames?.[platform] ?? createBundleFileName({ platform, hash });
     const jsPath = path.join(outputDir, jsBundleFileName);
@@ -126,20 +130,16 @@ export async function writeMetadataJsonAsync({
     bundles,
     filenames: fileNames,
   });
-  await fs.promises.writeFile(path.resolve(outputDir, 'metadata.json'), JSON.stringify(metadata));
+  await writeAsync(outputDir, 'metadata.json', JSON.stringify(metadata));
 }
 
 export async function writeAssetMapAsync({
-  projectRoot,
   outputDir,
   assets,
 }: {
-  projectRoot: string;
   outputDir: string;
   assets: ProjectAssets.Asset[];
 }) {
-  const fileName = path.join(outputDir, 'assetmap.json');
-
   // Convert the assets array to a k/v pair where the asset hash is the key and the asset is the value.
   const contents = assets.reduce<{ [hash: string]: ProjectAssets.Asset }>((prev, asset) => {
     return {
@@ -148,42 +148,34 @@ export async function writeAssetMapAsync({
     };
   }, {});
 
-  await Project.writeArtifactSafelyAsync(projectRoot, null, fileName, JSON.stringify(contents));
+  await writeAsync(outputDir, 'assetmap.json', JSON.stringify(contents));
 }
 
 export async function writePlatformManifestsAsync({
-  projectRoot,
   outputDir,
   publicUrl,
-  filenames,
+  fileNames,
   exp,
   pkg,
 }: {
-  projectRoot: string;
   outputDir: string;
   publicUrl: string;
-  filenames: Record<string, string>;
+  fileNames: Record<string, string>;
   exp: ExpoAppManifest;
   pkg: PackageJSONConfig;
-}) {
+}): Promise<Record<string, PlatformExpoAppManifest>> {
   const dependencies = Object.keys(pkg.dependencies);
-  const manifests: Record<string, any> = {};
-  for (const platform of Object.keys(filenames)) {
+  const manifests: Record<string, PlatformExpoAppManifest> = {};
+  for (const platform of Object.keys(fileNames)) {
     // save the platform manifest
-    const manifest = {
+    const manifest: PlatformExpoAppManifest = {
       ...exp,
       platform,
-      bundleUrl: urljoin(publicUrl, 'bundles', filenames[platform]),
+      bundleUrl: urljoin(publicUrl, 'bundles', fileNames[platform]),
       dependencies,
     };
     manifests[platform] = manifest;
-
-    await Project.writeArtifactSafelyAsync(
-      projectRoot,
-      null,
-      path.join(outputDir, `${platform}-index.json`),
-      JSON.stringify(manifest)
-    );
+    await writeAsync(outputDir, `${platform}-index.json`, JSON.stringify(manifest));
   }
   return manifests;
 }
@@ -208,7 +200,7 @@ export function createMultiPlatformBundleInfo({
 }: {
   publicUrl: string;
   bundles: Record<string, BundleOutput>;
-  manifests: Record<string, any>;
+  manifests: Record<string, PlatformExpoAppManifest>;
 }): MultiPlatformBundleInfo {
   const keys: { key: string; on: (platform: string) => any }[] = [
     {
@@ -217,7 +209,7 @@ export function createMultiPlatformBundleInfo({
     },
     {
       key: 'Manifest',
-      on: platform => manifests[platform]!,
+      on: platform => manifests[platform] ?? null,
     },
     {
       key: 'Bundle',
