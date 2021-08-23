@@ -29,7 +29,7 @@ export async function resolveDeviceAsync(device?: string | boolean): Promise<And
     // --device with no props after
     const device = await Android.promptForDeviceAsync(devices);
     if (!device) {
-      throw new CommandError('Select a device to run on');
+      throw new CommandError('Select a device to use');
     }
     Log.log(chalk.dim`\u203A Using --device ${device.name}`);
     return device;

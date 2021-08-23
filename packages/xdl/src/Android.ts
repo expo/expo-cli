@@ -483,19 +483,23 @@ export async function uninstallExpoAsync(device: Device): Promise<string | undef
   }
 }
 
-export async function upgradeExpoAsync(options?: {
+export async function upgradeExpoAsync({
+  url,
+  version,
+  device,
+}: {
   url?: string;
   version?: string;
-}): Promise<boolean> {
-  const { url, version } = options || {};
-
+  device?: Device | null;
+} = {}): Promise<boolean> {
   try {
-    const devices = await getAttachedDevicesAsync();
-    if (!devices.length) {
-      throw new Error('no devices connected');
+    if (!device) {
+      device = (await getAttachedDevicesAsync())[0];
+      if (!device) {
+        throw new Error('no devices connected');
+      }
     }
-
-    const device = await attemptToStartEmulatorOrAssertAsync(devices[0]);
+    device = await attemptToStartEmulatorOrAssertAsync(device);
     if (!device) {
       return false;
     }
