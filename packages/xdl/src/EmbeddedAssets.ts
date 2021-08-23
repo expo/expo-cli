@@ -1,5 +1,5 @@
 import { ExpoAppManifest, getConfig, PackageJSONConfig, ProjectTarget } from '@expo/config';
-import { AndroidConfig, IOSConfig } from '@expo/config-plugins';
+import { AndroidConfig, IOSConfig, WarningAggregator } from '@expo/config-plugins';
 import plist from '@expo/plist';
 import fs from 'fs-extra';
 import path from 'path';
@@ -15,6 +15,7 @@ import {
 } from './internal';
 
 const PLACEHOLDER_URL = 'YOUR-APP-URL-HERE';
+const FYI_URL = 'https://expo.fyi/expo-updates-config.md';
 
 export type EmbeddedAssetsConfiguration = {
   projectRoot: string;
@@ -268,8 +269,6 @@ async function _maybeRunModifiedExpoUpdatesPluginAsync(config: EmbeddedAssetsCon
 
   const { iosSupportingDirectory: supportingDirectory } = getIOSPaths(projectRoot);
 
-  let isAMismatchBetweenInferredAndConfiguredValues = false;
-
   // iOS expo-updates
   let isLikelyFirstIOSPublish = false;
   const expoPlistPath = path.join(supportingDirectory, 'Expo.plist');
@@ -308,42 +307,27 @@ async function _maybeRunModifiedExpoUpdatesPluginAsync(config: EmbeddedAssetsCon
         RELEASE_CHANNEL,
       } = IOSConfig.Updates.Config;
       for (const key of [UPDATE_URL, SDK_VERSION, RUNTIME_VERSION, RELEASE_CHANNEL]) {
-        if (currentlyConfiguredExpoPlist[key] !== expoPlistForProject[key]) {
-          isAMismatchBetweenInferredAndConfiguredValues = true;
+        let currentlyConfiguredValue = currentlyConfiguredExpoPlist[key];
+        const inferredValue = expoPlistForProject[key];
+        if (key === RELEASE_CHANNEL && inferredValue) {
+          // A client with an undefined release channel  is mapped to
+          // 'default' in the server so avoid logging an unneccessary warning.
+          currentlyConfiguredValue = currentlyConfiguredValue ?? 'default';
+        }
+        if (currentlyConfiguredValue !== inferredValue) {
+          let message: string;
           switch (key) {
-            case UPDATE_URL: {
-              logger.global.warn(
-                `\nThe inferred value of the update URL is (${expoPlistForProject[key]}), but (${key}) in the Expo.plist is set to (${currentlyConfiguredExpoPlist[key]}).` +
-                  `\nThis could be due to:` +
-                  `\n . 1. The value of 'updates.url' set in the app.json` +
-                  `\n . 2. The values of 'owner' and 'slug' set in the app.json` +
-                  `\n . 3. The value of the --public-url flag`
-              );
-              break;
-            }
-            case SDK_VERSION: {
-              logger.global.warn(
-                `\nIn your app.json (sdkVersion) is set to (${expoPlistForProject[key]}), but (${key}) in the Expo.plist is set to (${currentlyConfiguredExpoPlist[key]}).`
-              );
-              break;
-            }
-            case RUNTIME_VERSION: {
-              logger.global.warn(
-                `\nIn your app.json (runtimeVersion) is set to (${expoPlistForProject[key]}), but (${key}) in the Expo.plist is set to (${currentlyConfiguredExpoPlist[key]}).`
-              );
-              break;
-            }
             case RELEASE_CHANNEL: {
-              logger.global.warn(
-                `\nThe value passed to --release-channel flag is to (${expoPlistForProject[key]}), but (${key}) in the Expo.plist is set to (${currentlyConfiguredExpoPlist[key]}).`
-              );
+              message = `The value passed to the --release-channel flag is to "${inferredValue}", but it is set to "${currentlyConfiguredValue}".`;
               break;
             }
+            case UPDATE_URL:
+            case SDK_VERSION:
+            case RUNTIME_VERSION:
             default:
-              logger.global.warn(
-                `${key} is inferred to be ${expoPlistForProject[key]}, but (${key}) in the Expo.plist is set to (${currentlyConfiguredExpoPlist[key]}).`
-              );
+              message = `${key} is inferred to be "${inferredValue}", but it is set to "${currentlyConfiguredValue}".`;
           }
+          WarningAggregator.addWarningIOS(`Expo.plist key: "${key}"`, message, FYI_URL);
         }
       }
     }
@@ -422,56 +406,31 @@ async function _maybeRunModifiedExpoUpdatesPluginAsync(config: EmbeddedAssetsCon
         const inferredValue = inferredMetaDataAttributes.find(x => x['android:name'] === key)?.[
           'android:value'
         ];
-        const currentlyConfiguredValue = currentlyConfiguredMetaDataAttributes.find(
+        let currentlyConfiguredValue = currentlyConfiguredMetaDataAttributes.find(
           x => x['android:name'] === key
         )?.['android:value'];
+        if (key === RELEASE_CHANNEL && inferredValue) {
+          // A client with an undefined release channel  is mapped to
+          // 'default' in the server so avoid logging an unneccessary warning.
+          currentlyConfiguredValue = currentlyConfiguredValue ?? 'default';
+        }
         if (inferredValue !== currentlyConfiguredValue) {
-          isAMismatchBetweenInferredAndConfiguredValues = true;
+          let message: string;
           switch (key) {
-            case UPDATE_URL: {
-              logger.global.warn(
-                `\nThe inferred value of the update URL is (${inferredValue}), but (${key}) in the AndroidManifest.xml is set to (${currentlyConfiguredValue}).` +
-                  `\nThis could be due to:` +
-                  `\n . 1. The value of 'updates.url' set in the app.json` +
-                  `\n . 2. The values of 'owner' and 'slug' set in the app.json` +
-                  `\n . 3. The value of the --public-url flag`
-              );
-              break;
-            }
-            case SDK_VERSION: {
-              logger.global.warn(
-                `\nIn your app.json (sdkVersion) is set to (${inferredValue}), but (${key}) in the AndroidManifest.xml is set to (${currentlyConfiguredValue}).`
-              );
-              break;
-            }
-            case RUNTIME_VERSION: {
-              logger.global.warn(
-                `\nIn your app.json (runtimeVersion) is set to (${inferredValue}), but (${key}) in the AndroidManifest.xml is set to (${currentlyConfiguredValue}).`
-              );
-              break;
-            }
             case RELEASE_CHANNEL: {
-              logger.global.warn(
-                `\nThe value passed to --release-channel flag is to (${inferredValue}), but (${key}) in the AndroidManifest.xml is set to (${currentlyConfiguredValue}).`
-              );
+              message = `The value passed to the --release-channel flag is "${inferredValue}", but it is set to "${currentlyConfiguredValue}".`;
               break;
             }
+            case UPDATE_URL:
+            case SDK_VERSION:
+            case RUNTIME_VERSION:
             default:
-              logger.global.warn(
-                `${key} is inferred to be ${inferredValue}, but (${key}) in the AndroidManifest.xml is set to (${currentlyConfiguredValue}).`
-              );
+              message = `The inferred value is "${inferredValue}", but it is set to "${currentlyConfiguredValue}".`;
           }
+          WarningAggregator.addWarningAndroid(`AndroidManifest.xml key "${key}"`, message, FYI_URL);
         }
       }
     }
-  }
-  if (
-    isAMismatchBetweenInferredAndConfiguredValues &&
-    !(isLikelyFirstIOSPublish || isLikelyFirstAndroidPublish)
-  ) {
-    logger.global.warn(
-      `\nMake sure the values set in app.json, or passed via the command line, match the builds you're intending to update.`
-    );
   }
 
   if (isLikelyFirstIOSPublish || isLikelyFirstAndroidPublish) {
