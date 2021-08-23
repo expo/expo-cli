@@ -258,7 +258,8 @@ async function _maybeConfigureExpoKitEmbeddedAssetsAsync(config: EmbeddedAssetsC
 }
 
 /**
- * Guess if this is a users first publish and run a slightly modified expo-updates plugin
+ * Guess if this is a user's first publish and run a slightly modified expo-updates plugin.
+ * If it is not their first publish and a config mismatch is noticed, log warnings.
  */
 async function _maybeRunModifiedExpoUpdatesPluginAsync(config: EmbeddedAssetsConfiguration) {
   if (!config.pkg.dependencies?.['expo-updates'] || config.target === 'managed') {
