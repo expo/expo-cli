@@ -49,7 +49,7 @@ describe(warnUnsupportedSplashProperties, () => {
 
     expect(WarningAggregator.addWarningIOS).toHaveBeenCalledWith(
       'ios.splash.xib',
-      'ios.splash.xib is not supported in prebuild. Please use ios.splash.image instead.'
+      'property is not supported in prebuild. Please use ios.splash.image instead.'
     );
   });
 });
