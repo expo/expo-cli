@@ -95,26 +95,29 @@ export async function writeSourceMapsAsync({
   outputDir: string;
   removeOriginalSourceMappingUrl?: boolean;
 }) {
-  for (const [platform, bundle] of Object.entries(bundles)) {
-    const sourceMap = bundle.hermesSourcemap ?? bundle.map;
-    const hash = hashes?.[platform] ?? createBundleHash(bundle.hermesBytecodeBundle ?? bundle.code);
-    const mapName = `${platform}-${hash}.map`;
-    await writeAsync(outputDir, mapName, sourceMap);
+  await Promise.all(
+    Object.entries(bundles).map(async ([platform, bundle]) => {
+      const sourceMap = bundle.hermesSourcemap ?? bundle.map;
+      const hash =
+        hashes?.[platform] ?? createBundleHash(bundle.hermesBytecodeBundle ?? bundle.code);
+      const mapName = `${platform}-${hash}.map`;
+      await writeAsync(outputDir, mapName, sourceMap);
 
-    const jsBundleFileName = fileNames?.[platform] ?? createBundleFileName({ platform, hash });
-    const jsPath = path.join(outputDir, jsBundleFileName);
+      const jsBundleFileName = fileNames?.[platform] ?? createBundleFileName({ platform, hash });
+      const jsPath = path.join(outputDir, jsBundleFileName);
 
-    if (removeOriginalSourceMappingUrl) {
-      // Remove original mapping to incorrect sourcemap paths
-      // In SDK 40+ and bare projects, we no longer need to do this.
-      Log.log(`Configuring source maps for ${platform}`);
-      await truncateLastLinesAsync(jsPath, 1);
-    }
+      if (removeOriginalSourceMappingUrl) {
+        // Remove original mapping to incorrect sourcemap paths
+        // In SDK 40+ and bare projects, we no longer need to do this.
+        Log.log(`Configuring source maps for ${platform}`);
+        await truncateLastLinesAsync(jsPath, 1);
+      }
 
-    // Add correct mapping to sourcemap paths
-    const mappingComment = `\n//# sourceMappingURL=${mapName}`;
-    await fs.promises.appendFile(jsPath, mappingComment);
-  }
+      // Add correct mapping to sourcemap paths
+      const mappingComment = `\n//# sourceMappingURL=${mapName}`;
+      await fs.promises.appendFile(jsPath, mappingComment);
+    })
+  );
 }
 
 export async function writeMetadataJsonAsync({
@@ -126,7 +129,7 @@ export async function writeMetadataJsonAsync({
   bundles: Record<string, BundleOutput>;
   fileNames: Record<string, string>;
 }) {
-  const metadata = await createMetadataJson({
+  const metadata = createMetadataJson({
     bundles,
     filenames: fileNames,
   });
