@@ -27,7 +27,7 @@ async function setupTestProjectAsync(name: string, fixtureName: string): Promise
 }
 
 beforeAll(() => {
-  jest.setTimeout(5 * 60e3);
+  jest.setTimeout(5 * 60_000);
 });
 
 const MAIN_FILE_NAME_MAP = {
