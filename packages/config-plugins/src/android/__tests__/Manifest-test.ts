@@ -7,6 +7,7 @@ import {
   findUsesLibraryItem,
   getMainActivity,
   getMainApplication,
+  getRunnableActivity,
   prefixAndroidKeys,
   readAndroidManifestAsync,
   removeMetaDataItemFromMainApplication,
@@ -26,6 +27,16 @@ describe(getMainActivity, () => {
   it(`returns null`, async () => {
     const activity = getMainActivity({} as any);
     expect(activity).toBe(null);
+  });
+});
+describe(getRunnableActivity, () => {
+  it(`works`, async () => {
+    const sampleManifestPath = resolve(fixturesPath, 'complex-react-native-AndroidManifest.xml');
+    const manifest = await readAndroidManifestAsync(sampleManifestPath);
+    const activity = getRunnableActivity(manifest);
+    expect(activity.$).toBeDefined();
+    expect(activity.$['android:name']).toBe('.CustomNamed');
+    expect(Array.isArray(activity['intent-filter'])).toBe(true);
   });
 });
 describe(getMainApplication, () => {
