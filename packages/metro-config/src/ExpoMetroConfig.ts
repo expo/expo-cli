@@ -9,6 +9,7 @@ import resolveFrom from 'resolve-from';
 
 import { DefinePlugin } from './DefinePlugin';
 import { MetroSerializer } from './MetroSerializer';
+import { loadEnvConfig, processEnv } from './env';
 
 export const EXPO_DEBUG = boolish('EXPO_DEBUG', false);
 
@@ -51,6 +52,7 @@ export const INTERNAL_CALLSITES_REGEX = new RegExp(
 
 export interface DefaultConfigOptions {
   target?: ProjectTarget;
+  env?: Record<string, string>;
 }
 
 function readIsLegacyImportsEnabled(projectRoot: string): boolean {
@@ -166,6 +168,34 @@ export function getDefaultConfig(
   } = MetroConfig.getDefaultConfig.getDefaultValues(projectRoot);
 
   const port = Number(process.env.RCT_METRO_PORT) || 8081;
+
+  // TODO: dev/prod
+  const dev = true;
+
+  const loadedEnv = loadEnvConfig(projectRoot, dev);
+  const env = {
+    ...loadedEnv.combinedEnv,
+    ...(options.env || {}),
+  };
+
+  const def = {
+    // 'process.env.__EXPO_DEV_SERVER_PORT': metroOptions.port,
+    ...Object.keys(env || {}).reduce((acc, key) => {
+      if (/^(?:NODE_.+)|^(?:__.+)$/i.test(key)) {
+        throw new Error(
+          `The key "${key}" under "env" in next.config.js is not allowed. https://nextjs.org/docs/messages/env-key-not-allowed`
+        );
+      }
+
+      return {
+        ...acc,
+        [`process.env.${key}`]: JSON.stringify(env[key]),
+      };
+    }, {}),
+    // TODO: enforce `NODE_ENV` on `process.env`, and add a test:
+    'process.env.NODE_ENV': JSON.stringify(dev ? 'development' : 'production'),
+  };
+
   // Merge in the default config from Metro here, even though loadConfig uses it as defaults.
   // This is a convenience for getDefaultConfig use in metro.config.js, e.g. to modify assetExts.
   return MetroConfig.mergeConfig(metroDefaultValues, {
@@ -180,6 +210,12 @@ export function getDefaultConfig(
         // TODO: Bacon: load Expo side-effects
       ],
       getPolyfills: () => require(path.join(reactNativePath, 'rn-get-polyfills'))(),
+      // @ts-ignore: multi-version support
+      customSerializer: MetroSerializer(projectRoot, [
+        // Define `__PORT__` on the global scope in development mode
+        // this enables us to test against when the user is debugging vs in production.
+        DefinePlugin(def),
+      ]),
     },
     server: {
       port,
@@ -237,28 +273,10 @@ export async function loadAsync(
   }
 
   const MetroConfig = importMetroConfigFromProject(projectRoot);
-  const config = await MetroConfig.loadConfig(
+  return await MetroConfig.loadConfig(
     { cwd: projectRoot, projectRoot, ...metroOptions },
     defaultConfig
   );
-
-  // If a port is defined (developing), then surface it statically to the app.
-  if (metroOptions.port) {
-    if (!config.serializer) {
-      // @ts-ignore
-      config.serializer = {};
-    }
-    // @ts-ignore: multi-version support
-    config.serializer.customSerializer = MetroSerializer(projectRoot, [
-      // Define `__PORT__` on the global scope in development mode
-      // this enables us to test against when the user is debugging vs in production.
-      DefinePlugin({
-        'process.env.__EXPO_DEV_SERVER_PORT': metroOptions.port,
-      }),
-    ]);
-  }
-
-  return config;
 }
 
 function importMetroConfigFromProject(projectRoot: string): typeof MetroConfig {

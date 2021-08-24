@@ -35,8 +35,21 @@ export function DefinePlugin(define: Record<string, any>): MetroPlugin {
       })
       .join('\n');
 
+    const removeOldPreludes = () => {
+      const index = preModules.findIndex(mod =>
+        mod.path.match(/<generated>\/prelude-[\d|\w]+\.js/)
+      );
+      if (index === -1) return;
+      // @ts-ignore
+      preModules.splice(index, 1);
+      removeOldPreludes();
+    };
+    removeOldPreludes();
+
     let preludeIndex = preModules.findIndex(item => item.path === '__prelude__') + 1;
     if (preludeIndex < 0) preludeIndex = 0;
+
+    // @ts-ignore: readonly -- remove any previous modules
     // @ts-ignore: readonly
     preModules.splice(preludeIndex, 0, createScript(createHash(code), code));
     console.log('preModules', preModules);
