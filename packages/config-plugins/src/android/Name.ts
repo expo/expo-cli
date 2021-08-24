@@ -26,7 +26,7 @@ export const withNameSettingsGradle: ConfigPlugin = config => {
       config.modResults.contents = applyNameSettingsGradle(config, config.modResults.contents);
     } else {
       addWarningAndroid(
-        'android-name-settings-gradle',
+        'name',
         `Cannot automatically configure settings.gradle if it's not groovy`
       );
     }

@@ -2,7 +2,7 @@ import { ExpoConfig } from '@expo/config-types';
 
 import { ConfigPlugin } from '../Plugin.types';
 import { createAndroidManifestPlugin, withMainActivity } from '../plugins/android-plugins';
-import * as WarningAggregator from '../utils/warnings';
+import { addWarningAndroid } from '../utils/warnings';
 import { AndroidManifest, getMainActivityOrThrow } from './Manifest';
 
 export const CONFIG_CHANGES_ATTRIBUTE = 'android:configChanges';
@@ -33,8 +33,8 @@ export const withUiModeMainActivity: ConfigPlugin = config => {
         config.modResults.contents
       );
     } else {
-      WarningAggregator.addWarningAndroid(
-        'android-userInterfaceStyle',
+      addWarningAndroid(
+        'android.userInterfaceStyle',
         `Cannot automatically configure MainActivity if it's not java`
       );
     }

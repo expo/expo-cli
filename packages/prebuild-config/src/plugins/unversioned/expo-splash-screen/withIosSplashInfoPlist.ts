@@ -33,7 +33,7 @@ export function setSplashInfoPlist(
     // Add a warning to prevent the dark mode splash screen from not being shown -- this was learned the hard way.
     if (existing && existing !== 'automatic') {
       WarningAggregator.addWarningIOS(
-        'splash',
+        'userInterfaceStyle',
         'The existing `userInterfaceStyle` property is preventing splash screen from working properly. Please remove it or disable dark mode splash screens.'
       );
     }

@@ -73,8 +73,8 @@ export function getIosSplashConfig(config: ExpoConfig): IOSSplashConfig | null {
 export function warnUnsupportedSplashProperties(config: ExpoConfig) {
   if (config.ios?.splash?.xib) {
     WarningAggregator.addWarningIOS(
-      'splash',
-      'ios.splash.xib is not supported in prebuild. Please use ios.splash.image instead.'
+      'ios.splash.xib',
+      'property is not supported in prebuild. Please use ios.splash.image instead.'
     );
   }
 }

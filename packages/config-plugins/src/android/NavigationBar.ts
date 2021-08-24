@@ -2,7 +2,7 @@ import { ExpoConfig } from '@expo/config-types';
 
 import { ConfigPlugin } from '../Plugin.types';
 import { withAndroidColors, withAndroidStyles } from '../plugins/android-plugins';
-import * as WarningAggregator from '../utils/warnings';
+import { addWarningAndroid } from '../utils/warnings';
 import { setColorItem } from './Colors';
 import { buildResourceItem, ResourceXML } from './Resources';
 import { assignStylesValue, getAppThemeLightNoActionBarGroup } from './Styles';
@@ -14,9 +14,10 @@ export const withNavigationBar: ConfigPlugin = config => {
   if (immersiveMode) {
     // Immersive mode needs to be set programmatically
     // TODO: Resolve
-    WarningAggregator.addWarningAndroid(
+    addWarningAndroid(
       'androidNavigationBar.visible',
-      'Hiding the navigation bar must be done programmatically. Refer to the Android documentation - https://developer.android.com/training/system-ui/immersive - for instructions.'
+      'Hiding the navigation bar must be done programmatically',
+      'https://developer.android.com/training/system-ui/immersive'
     );
   }
 
