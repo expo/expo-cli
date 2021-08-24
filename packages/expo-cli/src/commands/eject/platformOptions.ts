@@ -4,21 +4,10 @@ import chalk from 'chalk';
 import CommandError from '../../CommandError';
 import Log from '../../log';
 
-function getDefaultPlatforms({ loose }: { loose?: boolean } = {}): ModPlatform[] {
-  const platforms: ModPlatform[] = ['android'];
-  if (loose || process.platform !== 'win32') {
-    platforms.push('ios');
-  }
-  return platforms;
-}
-
 export function platformsFromPlatform(
-  platform?: string,
+  platform: string = 'all',
   { loose }: { loose?: boolean } = {}
 ): ModPlatform[] {
-  if (!platform) {
-    return getDefaultPlatforms({ loose });
-  }
   switch (platform) {
     case 'ios':
       if (process.platform === 'win32' && !loose) {
@@ -29,7 +18,10 @@ export function platformsFromPlatform(
     case 'android':
       return ['android'];
     case 'all':
-      return getDefaultPlatforms({ loose });
+      if (loose || process.platform !== 'win32') {
+        return ['android', 'ios'];
+      }
+      return ['android'];
     default:
       throw new CommandError(`Unsupported platform "${platform}". Options are: ios, android, all`);
   }
