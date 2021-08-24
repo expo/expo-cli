@@ -3,6 +3,11 @@
  * The standard Expo config object defined in `app.config.js` files.
  */
 
+/**
+ * Specifies the JavaScript engine for apps. Supported only on EAS Build. Defaults to `jsc`. Valid values: `hermes`, `jsc`.
+ */
+export type JsEngine = 'hermes' | 'jsc';
+
 export interface ExpoConfig {
   /**
    * The name of your app as it appears both within Expo Go and on your home screen as a standalone app.
@@ -250,6 +255,7 @@ export interface ExpoConfig {
    */
   plugins?: (string | [] | [string] | [string, any])[];
   splash?: Splash;
+  jsEngine?: JsEngine;
   ios?: IOS;
   android?: Android;
   web?: Web;
@@ -451,6 +457,10 @@ export interface IOS {
     tabletImage?: string;
     [k: string]: any;
   };
+  /**
+   * Specifies the JavaScript engine for iOS apps. Supported only on EAS Build. Defaults to `jsc`. Valid values: `hermes`, `jsc`.
+   */
+  jsEngine?: 'hermes' | 'jsc';
 }
 /**
  * Configuration that is specific to the Android platform.
@@ -674,7 +684,7 @@ export interface Android {
    */
   softwareKeyboardLayoutMode?: 'resize' | 'pan';
   /**
-   * Specifies the JavaScript engine. Supported only on EAS Build. Defaults to `jsc`. Valid values: `hermes`, `jsc`.
+   * Specifies the JavaScript engine for Android apps. Supported only on EAS Build and Expo Go. Defaults to `jsc`. Valid values: `hermes`, `jsc`.
    */
   jsEngine?: 'hermes' | 'jsc';
 }

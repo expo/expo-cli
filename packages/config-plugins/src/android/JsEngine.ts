@@ -14,12 +14,12 @@ export const withJsEngineGradleProps: ConfigPlugin = config => {
   });
 };
 
-export function getJsEngine(config: Pick<ExpoConfig, 'android'>) {
-  return config.android?.jsEngine ?? DEFAULT_JS_ENGINE;
+export function getJsEngine(config: Pick<ExpoConfig, 'android' | 'jsEngine'>) {
+  return config.android?.jsEngine ?? config.jsEngine ?? DEFAULT_JS_ENGINE;
 }
 
 export function setJsEngine(
-  config: Pick<ExpoConfig, 'android'>,
+  config: Pick<ExpoConfig, 'android' | 'jsEngine'>,
   gradleProperties: PropertiesItem[]
 ): PropertiesItem[] {
   const oldPropIndex = gradleProperties.findIndex(
@@ -28,7 +28,7 @@ export function setJsEngine(
   const newProp: PropertiesItem = {
     type: 'property',
     key: JS_ENGINE_PROP_KEY,
-    value: config.android?.jsEngine ?? DEFAULT_JS_ENGINE,
+    value: config.android?.jsEngine ?? config.jsEngine ?? DEFAULT_JS_ENGINE,
   };
 
   if (oldPropIndex >= 0) {

@@ -6,6 +6,7 @@ import * as Entitlements from './Entitlements';
 import * as Facebook from './Facebook';
 import * as Google from './Google';
 import { ExpoPlist, InfoPlist } from './IosConfig.types';
+import * as JsEngine from './JsEngine';
 import * as Locales from './Locales';
 import * as Maps from './Maps';
 import * as Name from './Name';
@@ -40,6 +41,7 @@ export {
   Locales,
   InfoPlist,
   ExpoPlist,
+  JsEngine,
   Name,
   Orientation,
   Paths,
