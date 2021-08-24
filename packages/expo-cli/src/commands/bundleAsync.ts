@@ -1,11 +1,12 @@
 import { getConfig } from '@expo/config';
+import { resolveEntryPoint } from '@expo/config/paths';
 import { bundleAsync, BundleOptions, MetroDevServerOptions } from '@expo/dev-server';
 import assert from 'assert';
 import fs from 'fs';
 import path from 'path';
 import { printBundleSizes, ProjectUtils } from 'xdl';
-import { resolveEntryPoint } from 'xdl/build/internal';
 
+import Log from '../log';
 import { assertFolderEmptyAsync } from './utils/CreateApp';
 
 type Options = {
@@ -59,12 +60,21 @@ function createPlatformBundleOptions(
   // Create a default bundle name
   const defaultBundleName = options.platform === 'ios' ? 'index.jsbundle' : 'index.android.bundle';
 
+  if (!options.entryFile) {
+    const entryFile = resolveEntryPoint(projectRoot, { platform: options.platform });
+    assert(
+      entryFile,
+      `The project entry file could not be resolved. Please either define it in the \`package.json\` (main), \`app.json\` (expo.entryPoint), create an \`index.js\`, or install the \`expo\` package.`
+    );
+    options.entryFile = entryFile;
+  }
+
   return {
     bundleOutput: options.bundleOutput || path.join(outputDir, defaultBundleName),
     assetOutput: options.assetsOutput || outputDir,
     platform: options.platform,
     // Use Expo's entry point resolution to ensure all commands act the same way.
-    entryPoint: options.entryFile || resolveEntryPoint(projectRoot, options.platform),
+    entryPoint: options.entryFile,
     sourcemapOutput: options.sourcemapOutput || path.join(outputDir, defaultBundleName + '.map'),
     // This prevents the absolute path from being shown in the source code, shouts out to Satya.
     sourcemapSourcesRoot: projectRoot,
@@ -75,6 +85,7 @@ function createPlatformBundleOptions(
 }
 
 export async function actionAsync(projectRoot: string, args: Partial<Options>) {
+  Log.warn('expo bundle is experimental and subject to breaking changes');
   const options = parseOptions(args);
 
   const config = getConfig(projectRoot, { skipSDKVersionRequirement: true });

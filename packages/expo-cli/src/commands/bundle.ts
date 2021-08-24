@@ -6,8 +6,9 @@ export default function (program: Command) {
   applyAsyncActionProjectDir(
     program
       .command('bundle [path]')
-      .description('Bundle the JavaScript and assets for offline usage')
-      .helpGroup('core')
+      .description('Experimental: Bundle the JavaScript and assets for offline usage')
+      .helpGroup('internal')
+      // .helpGroup('core')
       .option('-c, --clear', 'Clear the bundler cache')
       .option(
         '--bundle-output <path>',
