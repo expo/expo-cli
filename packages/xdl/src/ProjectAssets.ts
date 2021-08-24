@@ -252,7 +252,7 @@ export async function exportAssetsAsync({
     assert(outputDir, 'outputDir must be specified when exporting to EAS');
     assets = uniqBy(
       Object.values(bundles).reduce<BundleAssetWithFileHashes[]>(
-        (prev, cur) => prev.concat(cur.assets),
+        (prev, cur) => prev.concat(cur?.assets || []),
         []
       ),
       asset => asset.hash
@@ -401,7 +401,7 @@ async function collectAssets(
   });
 
   return Object.values(bundles)
-    .reduce<Asset[]>((prev, cur) => prev.concat(cur.assets), [])
+    .reduce<Asset[]>((prev, cur) => prev.concat(cur?.assets || []), [])
     .concat(manifestAssets);
 }
 
