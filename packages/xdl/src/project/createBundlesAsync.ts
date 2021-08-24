@@ -67,6 +67,17 @@ export async function createBundlesAsync(
   bundleOptions: { platforms: Platform[]; dev?: boolean; useDevServer: boolean }
 ): Promise<Record<string, BundleOutput>> {
   if (!bundleOptions.useDevServer) {
+    // The old approach is so unstable / untested that we should warn users going forward to upgrade their projects.
+    logger.global.warn(
+      'Using legacy Metro server to bundle your JavaScript code, you may encounter unexpected behavior if your project uses a custom metro.config.js file.'
+    );
+    // Dev server is aggressively enabled, so we can have a specific warning message:
+    // - If the SDK version is UNVERSIONED or undefined, it'll be enabled.
+    // - If EXPO_USE_DEV_SERVER is 0, or unset, it'll be enabled.
+    logger.global.warn(
+      `Please upgrade your project to Expo SDK +40. If you experience issues, try using the envar EXPO_USE_DEV_SERVER=1.`
+    );
+
     try {
       await startReactNativeServerAsync({
         projectRoot,

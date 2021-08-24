@@ -22,7 +22,8 @@ import {
 export const ANONYMOUS_USERNAME = 'anonymous';
 
 /**
- * If the `eas` flag is true, the structure of the outputDir will be:
+ * If the `experimentalBundle` flag is true, the structure of the outputDir will be:
+ *
  * ```
  * ├── assets
  * │   └── *
@@ -32,7 +33,7 @@ export const ANONYMOUS_USERNAME = 'anonymous';
  * └── metadata.json
  * ```
  *
- * If the `eas` flag is not true, then this function is for self hosting
+ * If the `experimentalBundle` flag is not true, then this function is for self hosting
  * and the outputDir will have the files created in the project directory the following way:
  *
  * ```
@@ -82,20 +83,6 @@ export async function exportAppAsync(
 
   const useDevServer = Env.shouldUseDevServer(exp);
 
-  // The old approach is so unstable / untested that we should warn users going forward to upgrade their projects.
-  if (!useDevServer) {
-    // TODO: Show this message in `expo publish` too.
-    Log.warn(
-      'Using legacy Metro server to bundle your JavaScript code, you may encounter unexpected behavior if your project uses a custom metro.config.js file.'
-    );
-    // Dev server is aggressively enabled, so we can have a specific warning message:
-    // - If the SDK version is UNVERSIONED or undefined, it'll be enabled.
-    // - If EXPO_USE_DEV_SERVER is 0, or unset, it'll be enabled.
-    Log.warn(
-      `Please upgrade your project from ${exp.sdkVersion} to Expo SDK +40. If you experience issues, try using the envar EXPO_USE_DEV_SERVER=1.`
-    );
-  }
-
   // Run metro bundler and create the JS bundles/source maps.
   const bundles = await Project.createBundlesAsync(projectRoot, options.publishOptions, {
     platforms: options.platforms,
@@ -121,10 +108,6 @@ export async function exportAppAsync(
     bundles,
     experimentalBundle,
   });
-
-  if (experimentalBundle) {
-    await writeMetadataJsonAsync({ outputDir, bundles, fileNames });
-  }
 
   if (options.dumpAssetmap) {
     Log.log('Dumping asset map');
@@ -154,6 +137,8 @@ export async function exportAppAsync(
 
   // Skip the hooks and manifest creation if building for EAS.
   if (experimentalBundle) {
+    // Generate a metadata.json and bail.
+    await writeMetadataJsonAsync({ outputDir, bundles, fileNames });
     return;
   }
 
@@ -224,7 +209,11 @@ function runHooks({
 // TODO: Move to expo/config for public manifests
 function mutateExpoConfigWithManifestValues(
   exp: ExpoAppManifest,
-  { assetUrl, isDev, username }: { assetUrl: string; isDev?: boolean; username?: string | null }
+  {
+    assetUrl,
+    isDev,
+    username = ANONYMOUS_USERNAME,
+  }: { assetUrl: string; isDev?: boolean; username?: string | null }
 ) {
   // Add assetUrl to manifest
   exp.assetUrlOverride = assetUrl;
@@ -241,10 +230,6 @@ function mutateExpoConfigWithManifestValues(
     exp.developer = {
       tool: 'exp',
     };
-  }
-
-  if (!username) {
-    username = ANONYMOUS_USERNAME;
   }
 
   exp.id = `@${username}/${exp.slug}`;
