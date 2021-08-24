@@ -28,11 +28,10 @@
   "dependencies": {
     "base64-js": "^1.2.3",
     "xmlbuilder": "^14.0.0",
-    "xmldom": "~0.5.0"
+    "@xmldom/xmldom": "~0.7.0"
   },
   "devDependencies": {
-    "@types/base64-js": "^1.2.5",
-    "@types/xmldom": "^0.1.29"
+    "@types/base64-js": "^1.2.5"
   },
   "publishConfig": {
     "access": "public"
