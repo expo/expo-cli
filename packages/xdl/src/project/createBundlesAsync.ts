@@ -65,7 +65,7 @@ export async function createBundlesAsync(
   projectRoot: string,
   publishOptions: PublishOptions = {},
   bundleOptions: { platforms: Platform[]; dev?: boolean; useDevServer: boolean }
-): Promise<Record<string, BundleOutput>> {
+): Promise<Partial<Record<Platform, BundleOutput>>> {
   if (!bundleOptions.useDevServer) {
     // The old approach is so unstable / untested that we should warn users going forward to upgrade their projects.
     logger.global.warn(

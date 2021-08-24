@@ -5,7 +5,6 @@ import {
   HookArguments,
   PackageJSONConfig,
 } from '@expo/config';
-import { BundleOutput } from '@expo/dev-server';
 import FormData from 'form-data';
 import fs from 'fs-extra';
 import path from 'path';
@@ -86,22 +85,24 @@ export async function publishAsync(
 
   // TODO: refactor this out to a function, throw error if length doesn't match
   const validPostPublishHooks: LoadedHook[] = prepareHooks(hooks, 'postPublish', projectRoot);
-  const bundles = (await createBundlesAsync(projectRoot, options, {
+  const bundles = await createBundlesAsync(projectRoot, options, {
     platforms: ['ios', 'android'],
     useDevServer: Env.shouldUseDevServer(exp),
-  })) as { ios: BundleOutput; android: BundleOutput };
+  });
 
   printBundleSizes(bundles);
 
   await ProjectAssets.publishAssetsAsync({ projectRoot, exp, bundles });
 
-  const androidBundle = bundles.android.hermesBytecodeBundle ?? bundles.android.code;
-  const iosBundle = bundles.ios.hermesBytecodeBundle ?? bundles.ios.code;
+  const androidBundle = bundles.android?.hermesBytecodeBundle ?? bundles.android?.code!;
+  const iosBundle = bundles.ios?.hermesBytecodeBundle ?? bundles.ios?.code!;
 
   const hasHooks = validPostPublishHooks.length > 0;
 
-  const androidSourceMap = hasHooks ? bundles.android.hermesSourcemap ?? bundles.android.map : null;
-  const iosSourceMap = hasHooks ? bundles.ios.hermesSourcemap ?? bundles.ios.map : null;
+  const androidSourceMap = hasHooks
+    ? bundles.android?.hermesSourcemap ?? bundles.android?.map ?? null
+    : null;
+  const iosSourceMap = hasHooks ? bundles.ios?.hermesSourcemap ?? bundles.ios?.map ?? null : null;
 
   let response;
   try {
