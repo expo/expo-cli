@@ -1,6 +1,7 @@
 import type Metro from 'metro';
 import type MetroConfig from 'metro-config';
 import type { composeSourceMaps } from 'metro-source-map';
+import type outputBundle from 'metro/src/shared/output/bundle';
 import os from 'os';
 import resolveFrom from 'resolve-from';
 
@@ -51,6 +52,10 @@ export function importMetroLibAttachWebsocketServerFromProject(projectRoot: stri
 
 export function importMetroServerFromProject(projectRoot: string): typeof Metro.Server {
   return importFromProject(projectRoot, 'metro/src/Server');
+}
+
+export function importMetroOutputBundleFromProject(projectRoot: string): typeof outputBundle {
+  return importFromProject(projectRoot, 'metro/src/shared/output/bundle');
 }
 
 export function importInspectorProxyServerFromProject(

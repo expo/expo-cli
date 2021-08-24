@@ -9,7 +9,6 @@ import bodyParser from 'body-parser';
 import type { Server as ConnectServer } from 'connect';
 import http from 'http';
 import type Metro from 'metro';
-import outputBundle from 'metro/src/shared/output/bundle';
 import path from 'path';
 import semver from 'semver';
 
@@ -24,6 +23,7 @@ import { saveAssetsAsync } from './assets/saveAssetsAsync';
 import { createDevServerAsync } from './metro/createDevServerAsync';
 import {
   importMetroFromProject,
+  importMetroOutputBundleFromProject,
   importMetroServerFromProject,
 } from './metro/importMetroFromProject';
 import clientLogsMiddleware from './middleware/clientLogsMiddleware';
@@ -130,6 +130,7 @@ export async function bundleAsync(
 ): Promise<BundleOutput[]> {
   const metro = importMetroFromProject(projectRoot);
   const Server = importMetroServerFromProject(projectRoot);
+  const outputBundle = importMetroOutputBundleFromProject(projectRoot);
 
   const reporter = new LogReporter(options.logger);
   const config = await ExpoMetroConfig.loadAsync(projectRoot, { reporter, ...options });
