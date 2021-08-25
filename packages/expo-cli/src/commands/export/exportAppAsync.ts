@@ -209,11 +209,7 @@ function runHooks({
 // TODO: Move to expo/config for public manifests
 function mutateExpoConfigWithManifestValues(
   exp: ExpoAppManifest,
-  {
-    assetUrl,
-    isDev,
-    username = ANONYMOUS_USERNAME,
-  }: { assetUrl: string; isDev?: boolean; username?: string | null }
+  { assetUrl, isDev, username }: { assetUrl: string; isDev?: boolean; username?: string | null }
 ) {
   // Add assetUrl to manifest
   exp.assetUrlOverride = assetUrl;
@@ -230,6 +226,10 @@ function mutateExpoConfigWithManifestValues(
     exp.developer = {
       tool: 'exp',
     };
+  }
+
+  if (!username) {
+    username = ANONYMOUS_USERNAME;
   }
 
   exp.id = `@${username}/${exp.slug}`;
