@@ -6,7 +6,7 @@ const RESIZE_MODE_KEY = 'expo_splash_screen_resize_mode';
 const STATUS_BAR_TRANSLUCENT_KEY = 'expo_splash_screen_status_bar_translucent';
 
 export const withAndroidSplashStrings: ConfigPlugin = config => {
-  config = withStringsXml(config, config => {
+  return withStringsXml(config, config => {
     const splashConfig = getAndroidSplashConfig(config);
     if (splashConfig) {
       const { resizeMode } = splashConfig;
@@ -15,7 +15,6 @@ export const withAndroidSplashStrings: ConfigPlugin = config => {
     }
     return config;
   });
-  return config;
 };
 
 export function setSplashStrings(
