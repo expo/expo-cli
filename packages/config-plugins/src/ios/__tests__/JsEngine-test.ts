@@ -23,7 +23,7 @@ describe('jsEngine', () => {
     const podfileProperties = {};
 
     expect(setJsEngine(config, podfileProperties)).toMatchObject({
-      [`${JS_ENGINE_PROP_KEY}`]: 'hermes',
+      [JS_ENGINE_PROP_KEY]: 'hermes',
     });
   });
 
@@ -32,16 +32,16 @@ describe('jsEngine', () => {
     const podfileProperties = {};
 
     expect(setJsEngine(config, podfileProperties)).toMatchObject({
-      [`${JS_ENGINE_PROP_KEY}`]: 'jsc',
+      [JS_ENGINE_PROP_KEY]: 'jsc',
     });
   });
 
   it('overwrite the property if an old property is existed', () => {
     const config: Partial<ExpoConfig> = { jsEngine: 'hermes' };
-    const podfileProperties = { [`${JS_ENGINE_PROP_KEY}`]: 'jsc' };
+    const podfileProperties = { [JS_ENGINE_PROP_KEY]: 'jsc' };
 
     expect(setJsEngine(config, podfileProperties)).toMatchObject({
-      [`${JS_ENGINE_PROP_KEY}`]: 'hermes',
+      [JS_ENGINE_PROP_KEY]: 'hermes',
     });
   });
 });
