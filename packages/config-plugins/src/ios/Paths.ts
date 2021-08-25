@@ -3,7 +3,7 @@ import { sync as globSync } from 'glob';
 import * as path from 'path';
 
 import { UnexpectedError } from '../utils/errors';
-import * as WarningAggregator from '../utils/warnings';
+import { addWarningIOS } from '../utils/warnings';
 
 const ignoredPaths = ['**/@(Carthage|Pods|vendor|node_modules)/**'];
 
@@ -235,7 +235,7 @@ function warnMultipleFiles({
 }) {
   const usingPath = projectRoot ? path.relative(projectRoot, using) : using;
   const extraPaths = projectRoot ? extra.map(v => path.relative(projectRoot, v)) : extra;
-  WarningAggregator.addWarningIOS(
+  addWarningIOS(
     `paths-${tag}`,
     `Found multiple ${fileName} file paths, using "${usingPath}". Ignored paths: ${JSON.stringify(
       extraPaths

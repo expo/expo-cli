@@ -10,8 +10,10 @@ import StatusEventEmitter from '../../../StatusEventEmitter';
 import getDevClientProperties from '../../../analytics/getDevClientProperties';
 import Log from '../../../log';
 import { getSchemesForAndroidAsync } from '../../../schemes';
+import { promptToClearMalformedNativeProjectsAsync } from '../../eject/clearNativeFolder';
 import { prebuildAsync } from '../../eject/prebuildAsync';
 import { installCustomExitHook } from '../../start/installExitHooks';
+import { profileMethod } from '../../utils/profileMethod';
 import { startBundlerAsync } from '../ios/startBundlerAsync';
 import { isDevMenuInstalled } from '../utils/isDevMenuInstalled';
 import { resolvePortAsync } from '../utils/resolvePortAsync';
@@ -29,6 +31,7 @@ export type AndroidRunOptions = Omit<Options, 'device'> & {
   apkVariantDirectory: string;
   packageName: string;
   mainActivity: string;
+  launchActivity: string;
   device: Android.Device;
   variantFolder: string;
   appName: string;
@@ -47,6 +50,17 @@ async function resolveAndroidProjectPathAsync(projectRoot: string): Promise<stri
   }
 }
 
+async function attemptToGetApplicationIdFromGradleAsync(projectRoot: string) {
+  try {
+    const applicationIdFromGradle = await AndroidConfig.Package.getApplicationIdAsync(projectRoot);
+    if (applicationIdFromGradle) {
+      Log.debug('Found Application ID in Gradle: ' + applicationIdFromGradle);
+      return applicationIdFromGradle;
+    }
+  } catch {}
+  return null;
+}
+
 async function resolveOptionsAsync(
   projectRoot: string,
   options: Options
@@ -63,9 +77,16 @@ async function resolveOptionsAsync(
   const androidManifest = await AndroidConfig.Manifest.readAndroidManifestAsync(filePath);
 
   // Assert MainActivity defined.
-  await AndroidConfig.Manifest.getMainActivityOrThrow(androidManifest);
-  const mainActivity = 'MainActivity';
-  const packageName = androidManifest.manifest.$.package;
+  const activity = await AndroidConfig.Manifest.getRunnableActivity(androidManifest);
+  if (!activity) {
+    throw new CommandError(`${filePath} is missing a runnable activity element.`);
+  }
+  // Often this is ".MainActivity"
+  const mainActivity = activity.$['android:name'];
+  const packageName =
+    // Try to get the application identifier from the gradle before checking the package name in the manifest.
+    (await attemptToGetApplicationIdFromGradleAsync(projectRoot)) ??
+    androidManifest.manifest.$.package;
 
   if (!packageName) {
     throw new CommandError(`Could not find package name in AndroidManifest.xml at "${filePath}"`);
@@ -90,6 +111,7 @@ async function resolveOptionsAsync(
     port,
     device,
     mainActivity,
+    launchActivity: `${packageName}/${mainActivity}`,
     packageName,
     apkVariantDirectory,
     variantFolder: variant,
@@ -98,6 +120,10 @@ async function resolveOptionsAsync(
 }
 
 export async function actionAsync(projectRoot: string, options: Options) {
+  // If the user has an empty android folder then the project won't build, this can happen when they delete the prebuild files in git.
+  // Check to ensure most of the core files are in place, and prompt to remove the folder if they aren't.
+  await profileMethod(promptToClearMalformedNativeProjectsAsync)(projectRoot, ['android']);
+
   const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
   track(projectRoot, exp);
 
@@ -146,10 +172,14 @@ export async function actionAsync(projectRoot: string, options: Options) {
       );
     }
   } else {
-    Log.debug('Opening app on device via package name: ' + props.device.name);
+    Log.debug(
+      `Opening app on device via package name: ${props.device.name}. Launch: ${props.launchActivity}`
+    );
     // For now, just open the app with a matching package name
     await Android.startAdbReverseAsync(projectRoot);
-    await Android.openAppAsync(props.device, props);
+    await Android.openAppAsync(props.device, {
+      launchActivity: props.launchActivity,
+    });
   }
 
   if (props.bundler) {
