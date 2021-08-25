@@ -605,6 +605,21 @@ describe('built-in plugins', () => {
       'locales/en-US.json',
     ]);
   });
+
+  it('create Podfile.properties.json file for backward compatible', async () => {
+    const { '/app/ios/Podfile.properties.json': _, ...volWithoutPodfileProperties } = vol.toJSON();
+    vol.reset();
+    vol.fromJSON(volWithoutPodfileProperties);
+
+    let config = getPrebuildConfig();
+    // change jsEngine to hermes
+    config.jsEngine = 'hermes';
+
+    config = await compileModsAsync(config, { projectRoot: '/app' });
+
+    const result = await JsonFile.readAsync('/app/ios/Podfile.properties.json');
+    expect(result).toMatchObject({ 'expo.jsEngine': 'hermes' });
+  });
 });
 
 async function isValidXMLAsync(filePath: string) {
