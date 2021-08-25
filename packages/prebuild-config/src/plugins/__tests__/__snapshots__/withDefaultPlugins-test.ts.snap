@@ -910,6 +910,9 @@ Object {
             "live": "MY_BRANCH_KEY",
           },
         },
+        "podfileProperties": Object {
+          "expo.jsEngine": "jsc",
+        },
       },
     },
     "pluginHistory": Object {
@@ -1710,6 +1713,9 @@ Object {
           "branch_key": Object {
             "live": "MY_BRANCH_KEY",
           },
+        },
+        "podfileProperties": Object {
+          "expo.jsEngine": "jsc",
         },
       },
     },
