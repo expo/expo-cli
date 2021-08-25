@@ -93,18 +93,4 @@ async function createBlankAsync(plistPath: string, plistName: string) {
   fs.removeSync(tmpConfigFile);
 }
 
-async function cleanBackupAsync(plistPath: string, plistName: string, restoreOriginal = true) {
-  const plistFilename = _getNormalizedPlistFilename(plistName);
-  const configPlistName = path.join(plistPath, plistFilename);
-  const configFilename = path.join(plistPath, `${plistName}.json`);
-  const backupPlistPath = `${configPlistName}.bak`;
-
-  if (restoreOriginal && (await fs.pathExists(backupPlistPath))) {
-    await fs.copy(backupPlistPath, configPlistName);
-  }
-
-  await fs.remove(backupPlistPath);
-  await fs.remove(configFilename);
-}
-
-export { modifyAsync, cleanBackupAsync, createBlankAsync };
+export { modifyAsync, createBlankAsync };
