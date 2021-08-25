@@ -116,7 +116,7 @@ export async function exportAppAsync(
   if (options.dumpSourcemap) {
     // TODO: Maybe move this into the bundler settings.
     const removeOriginalSourceMappingUrl =
-      target === 'managed' && semver.lt(exp.sdkVersion, '40.0.0');
+      target === 'managed' && !!exp.sdkVersion && semver.lt(exp.sdkVersion, '40.0.0');
 
     await writeSourceMapsAsync({
       bundles,

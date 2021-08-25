@@ -38,7 +38,7 @@ export async function validateDependenciesVersionsAsync(
   }
 
   // intersection of packages from package.json and bundled native modules
-  const packagesToCheck = getPackagesToCheck(pkg.dependencies, bundledNativeModules);
+  const packagesToCheck = getPackagesToCheck(pkg.dependencies || {}, bundledNativeModules);
   // read package versions from the file system (node_modules)
   const packageVersions = await resolvePackageVersionsAsync(projectRoot, packagesToCheck);
   // find incorrect dependencies by comparing the actual package versions with the bundled native module version ranges
