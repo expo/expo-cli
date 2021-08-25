@@ -5,7 +5,6 @@ import {
   PackageJSONConfig,
   ProjectTarget,
 } from '@expo/config';
-import { WarningAggregator } from '@expo/config-plugins';
 import chalk from 'chalk';
 import fs from 'fs';
 import { Ora } from 'ora';
@@ -18,11 +17,7 @@ import { getProjectOwner } from '../projects';
 import * as sendTo from '../sendTo';
 import { logNewSection } from '../utils/ora';
 import * as TerminalLink from './utils/TerminalLink';
-import {
-  formatNamedWarning,
-  logConfigWarningsAndroid,
-  logConfigWarningsIOS,
-} from './utils/logConfigWarnings';
+import { formatNamedWarning } from './utils/logConfigWarnings';
 
 type Options = {
   clear?: boolean;
@@ -96,8 +91,6 @@ export async function actionAsync(
     target,
     resetCache: options.clear,
   });
-
-  logExpoUpdatesConfigWarnings();
 
   const url = result.url;
   const projectPageUrl = result.projectPageUrl;
@@ -236,16 +229,6 @@ export function logExpoUpdatesWarnings(pkg: PackageJSONConfig): void {
       )} from your dependencies.`
     )
   );
-}
-
-export function logExpoUpdatesConfigWarnings(): void {
-  if (WarningAggregator.hasWarningsAndroid() || WarningAggregator.hasWarningsIOS()) {
-    Log.printNewLineBeforeNextLog();
-    Log.log('⚠️ ', chalk.yellow('Config synced with warnings that should be fixed:'));
-    logConfigWarningsAndroid();
-    logConfigWarningsIOS();
-    Log.printNewLineBeforeNextLog();
-  }
 }
 
 export function logOptimizeWarnings({ projectRoot }: { projectRoot: string }): void {
