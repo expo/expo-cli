@@ -60,8 +60,13 @@ export async function exportAppAsync(
   },
   experimentalBundle: boolean
 ): Promise<void> {
+  const { exp, pkg, hooks } = await Project.getPublishExpConfigAsync(
+    projectRoot,
+    options.publishOptions || {}
+  );
+
   const absoluteOutputDir = path.resolve(projectRoot, outputDir);
-  const defaultTarget = getDefaultTarget(projectRoot);
+  const defaultTarget = getDefaultTarget(projectRoot, exp);
   const target = options.publishOptions?.target ?? defaultTarget;
 
   const assetPathToWrite = path.resolve(absoluteOutputDir, 'assets');
@@ -76,18 +81,11 @@ export async function exportAppAsync(
     Log.newLine();
   }
 
-  const { exp, pkg, hooks } = await Project.getPublishExpConfigAsync(
-    projectRoot,
-    options.publishOptions || {}
-  );
-
-  const useDevServer = Env.shouldUseDevServer(exp);
-
   // Run metro bundler and create the JS bundles/source maps.
   const bundles = await Project.createBundlesAsync(projectRoot, options.publishOptions, {
     platforms: options.platforms,
     dev: options.isDev,
-    useDevServer,
+    useDevServer: Env.shouldUseDevServer(exp),
     // TODO: Disable source map generation if we aren't outputting them.
   });
 

@@ -63,7 +63,7 @@ export async function writeBundlesAsync({
   bundles,
   outputDir,
 }: {
-  bundles: Record<string, BundleOutput>;
+  bundles: Record<string, Pick<BundleOutput, 'hermesBytecodeBundle' | 'code'>>;
   outputDir: string;
 }) {
   const hashes: Record<string, string> = {};
@@ -89,13 +89,16 @@ export async function writeSourceMapsAsync({
   outputDir,
   removeOriginalSourceMappingUrl,
 }: {
-  bundles: Record<string, BundleOutput>;
+  bundles: Record<
+    string,
+    Pick<BundleOutput, 'hermesSourcemap' | 'map' | 'hermesBytecodeBundle' | 'code'>
+  >;
   hashes?: Record<string, string>;
   fileNames?: Record<string, string>;
   outputDir: string;
   removeOriginalSourceMappingUrl?: boolean;
 }) {
-  await Promise.all(
+  return await Promise.all(
     Object.entries(bundles).map(async ([platform, bundle]) => {
       const sourceMap = bundle.hermesSourcemap ?? bundle.map;
       const hash =
@@ -116,6 +119,13 @@ export async function writeSourceMapsAsync({
       // Add correct mapping to sourcemap paths
       const mappingComment = `\n//# sourceMappingURL=${mapName}`;
       await fs.promises.appendFile(jsPath, mappingComment);
+      return {
+        platform,
+        fileName: mapName,
+        hash,
+        map: sourceMap,
+        comment: mappingComment,
+      };
     })
   );
 }
@@ -126,12 +136,12 @@ export async function writeMetadataJsonAsync({
   fileNames,
 }: {
   outputDir: string;
-  bundles: Record<string, BundleOutput>;
+  bundles: Record<string, Pick<BundleOutput, 'assets'>>;
   fileNames: Record<string, string>;
 }) {
   const metadata = createMetadataJson({
     bundles,
-    filenames: fileNames,
+    fileNames,
   });
   await writeAsync(outputDir, 'metadata.json', JSON.stringify(metadata));
 }
@@ -152,6 +162,8 @@ export async function writeAssetMapAsync({
   }, {});
 
   await writeAsync(outputDir, 'assetmap.json', JSON.stringify(contents));
+
+  return contents;
 }
 
 export async function writePlatformManifestsAsync({
@@ -165,9 +177,9 @@ export async function writePlatformManifestsAsync({
   publicUrl: string;
   fileNames: Record<string, string>;
   exp: ExpoAppManifest;
-  pkg: PackageJSONConfig;
+  pkg: Pick<PackageJSONConfig, 'dependencies'>;
 }): Promise<Record<string, PlatformExpoAppManifest>> {
-  const dependencies = Object.keys(pkg.dependencies);
+  const dependencies = Object.keys(pkg.dependencies ?? {});
   const manifests: Record<string, PlatformExpoAppManifest> = {};
   for (const platform of Object.keys(fileNames)) {
     // save the platform manifest
@@ -202,7 +214,10 @@ export function createMultiPlatformBundleInfo({
   manifests,
 }: {
   publicUrl: string;
-  bundles: Record<string, BundleOutput>;
+  bundles: Record<
+    string,
+    Pick<BundleOutput, 'hermesBytecodeBundle' | 'code' | 'hermesSourcemap' | 'map'>
+  >;
   manifests: Record<string, PlatformExpoAppManifest>;
 }): MultiPlatformBundleInfo {
   const keys: { key: string; on: (platform: string) => any }[] = [

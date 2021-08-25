@@ -3,7 +3,7 @@ import { ExpoConfig } from '@expo/config-types';
 
 export { ExpoConfig };
 
-export type PackageJSONConfig = Record<string, any>;
+export type PackageJSONConfig = { dependencies?: Record<string, string>; [key: string]: any };
 
 export interface ProjectConfig {
   /**

@@ -18,17 +18,17 @@ type Metadata = {
 
 export function createMetadataJson({
   bundles,
-  filenames,
+  fileNames,
 }: {
-  bundles: Record<string, BundleOutput>;
-  filenames: Record<string, string>;
+  bundles: Record<string, Pick<BundleOutput, 'assets'>>;
+  fileNames: Record<string, string>;
 }): Metadata {
   // Build metadata.json
   const fileMetadata: {
     [platform: string]: Partial<PlatformMetadata>;
   } = {};
   Object.keys(bundles).forEach(platform => {
-    const filename = filenames[platform];
+    const filename = fileNames[platform];
     assert(filename, `Expected filename for ${platform}`);
 
     fileMetadata[platform] = {
