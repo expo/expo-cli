@@ -10,7 +10,6 @@ import Log from '../log';
 import prompt from '../prompts';
 import { exportAppAsync } from './export/exportAppAsync';
 import { mergeAppDistributions } from './export/mergeAppDistributions';
-import { logExpoUpdatesConfigWarnings } from './publishAsync';
 import * as CreateApp from './utils/CreateApp';
 import { downloadAndDecompressAsync } from './utils/Tar';
 
@@ -186,8 +185,6 @@ export async function actionAsync(projectRoot: string, options: Options) {
   mergeSrcDirs.push(...options.mergeSrcDir);
 
   await mergeSourceDirectoriresAsync(projectRoot, mergeSrcDirs, options);
-
-  logExpoUpdatesConfigWarnings();
 
   Log.log(`Export was successful. Your exported files can be found in ${options.outputDir}`);
 }
