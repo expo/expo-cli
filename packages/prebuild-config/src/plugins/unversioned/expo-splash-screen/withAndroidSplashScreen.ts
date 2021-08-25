@@ -44,8 +44,12 @@ function shouldUpdateLegacyMainActivity(config: ExpoConfig): boolean {
   try {
     const projectRoot = config._internal?.projectRoot;
     const packagePath = resolveFrom(projectRoot, 'expo-splash-screen/package.json');
-    const version = JsonFile.read(packagePath).version?.toString() ?? '';
-    return semver.lt(version, '0.12.0');
+    if (packagePath) {
+      const version = JsonFile.read(packagePath).version?.toString() ?? '';
+      return semver.lt(version, '0.12.0');
+    }
+    // If expo-splash-screen didn't be installed or included in template, we check the sdkVersion instead.
+    return !!(config.sdkVersion && semver.lt(config.sdkVersion, '43.0.0'));
   } catch {}
   return false;
 }
