@@ -1,6 +1,6 @@
 {
   "name": "expo-cli",
-  "version": "4.10.0",
+  "version": "4.11.0",
   "description": "The command-line tool for creating and publishing Expo apps",
   "preferGlobal": true,
   "main": "build/exp.js",
@@ -66,16 +66,16 @@
   },
   "dependencies": {
     "@babel/runtime": "7.9.0",
-    "@expo/apple-utils": "0.0.0-alpha.20",
+    "@expo/apple-utils": "0.0.0-alpha.25",
     "@expo/bunyan": "4.0.0",
-    "@expo/config": "5.0.7",
-    "@expo/config-plugins": "3.0.7",
-    "@expo/dev-tools": "0.13.113",
+    "@expo/config": "5.0.9",
+    "@expo/config-plugins": "3.1.0",
+    "@expo/dev-tools": "0.13.115",
     "@expo/json-file": "8.2.33",
     "@expo/osascript": "2.0.30",
-    "@expo/package-manager": "0.0.46",
-    "@expo/plist": "0.0.13",
-    "@expo/prebuild-config": "2.0.7",
+    "@expo/package-manager": "0.0.47",
+    "@expo/plist": "0.0.14",
+    "@expo/prebuild-config": "2.1.0",
     "@expo/results": "^1.0.0",
     "@expo/spawn-async": "1.5.0",
     "@expo/xcpretty": "^3.0.1",
@@ -126,7 +126,7 @@
     "url-join": "4.0.0",
     "uuid": "^8.0.0",
     "wrap-ansi": "^7.0.0",
-    "xdl": "59.0.53"
+    "xdl": "59.1.0"
   },
   "resolutions": {
     "hermes-engine": "0.0.0"

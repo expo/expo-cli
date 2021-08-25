@@ -9,6 +9,7 @@ import StatusEventEmitter from '../../../StatusEventEmitter';
 import getDevClientProperties from '../../../analytics/getDevClientProperties';
 import Log from '../../../log';
 import { getSchemesForIosAsync } from '../../../schemes';
+import { promptToClearMalformedNativeProjectsAsync } from '../../eject/clearNativeFolder';
 import { EjectAsyncOptions, prebuildAsync } from '../../eject/prebuildAsync';
 import { installCustomExitHook } from '../../start/installExitHooks';
 import { profileMethod } from '../../utils/profileMethod';
@@ -23,6 +24,10 @@ import { startBundlerAsync } from './startBundlerAsync';
 const isMac = process.platform === 'darwin';
 
 export async function actionAsync(projectRoot: string, options: Options) {
+  // If the user has an empty ios folder then the project won't build, this can happen when they delete the prebuild files in git.
+  // Check to ensure most of the core files are in place, and prompt to remove the folder if they aren't.
+  await profileMethod(promptToClearMalformedNativeProjectsAsync)(projectRoot, ['ios']);
+
   const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
   track(projectRoot, exp);
 

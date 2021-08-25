@@ -240,7 +240,7 @@ export async function startAsync(projectRoot: string, options: StartOptions) {
             shouldPrompt,
             devClient: options.devClient ?? false,
           });
-          if (!results.success) {
+          if (!results.success && results.error !== 'escaped') {
             Log.nestedError(
               typeof results.error === 'string' ? results.error : results.error.message
             );
@@ -266,7 +266,7 @@ export async function startAsync(projectRoot: string, options: StartOptions) {
             shouldPrompt,
             devClient: options.devClient ?? false,
           });
-          if (!results.success) {
+          if (!results.success && results.error !== 'escaped') {
             Log.nestedError(results.error);
           }
         }

@@ -148,7 +148,7 @@ class RemoveKeystore implements IView {
       )
     );
     Log.warn(
-      'Please read https://docs.expo.io/distribution/building-standalone-apps/#if-you-choose-to-build-for-android for more info before proceeding.'
+      'Please read https://docs.expo.dev/distribution/building-standalone-apps/#if-you-choose-to-build-for-android for more info before proceeding.'
     );
     Log.newLine();
     Log.warn(

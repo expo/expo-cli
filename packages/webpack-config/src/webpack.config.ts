@@ -281,7 +281,7 @@ export default async function (
     // to our docs means they want to use a custom manifest.json instead of having a new one generated.
     //
     // Normalize the link (removing the beginning slash) so it can be resolved relative to the user's static folder.
-    // Ref: https://docs.expo.io/guides/progressive-web-apps/#manual-setup
+    // Ref: https://docs.expo.dev/guides/progressive-web-apps/#manual-setup
     if (manifestLink.href.startsWith('/')) {
       manifestLink.href = manifestLink.href.substring(1);
     }

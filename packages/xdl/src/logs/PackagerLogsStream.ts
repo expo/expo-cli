@@ -483,7 +483,7 @@ export default class PackagerLogsStream {
     const relativePath = path.relative(this._projectRoot, originModulePath);
 
     const DOCS_PAGE_URL =
-      'https://docs.expo.io/workflow/using-libraries/#using-third-party-libraries';
+      'https://docs.expo.dev/workflow/using-libraries/#using-third-party-libraries';
 
     if (NODE_STDLIB_MODULES.includes(moduleName)) {
       if (originModulePath.includes('node_modules')) {
