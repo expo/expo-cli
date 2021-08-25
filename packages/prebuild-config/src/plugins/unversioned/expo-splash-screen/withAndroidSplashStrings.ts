@@ -23,25 +23,19 @@ export function setSplashStrings(
   resizeMode: string,
   statusBarTranslucent: boolean
 ): AndroidConfig.Resources.ResourceXML {
-  let result = AndroidConfig.Strings.setStringItem(
+  return AndroidConfig.Strings.setStringItem(
     [
       AndroidConfig.Resources.buildResourceItem({
         name: RESIZE_MODE_KEY,
         value: resizeMode,
+        translatable: false,
       }),
-    ],
-    strings
-  );
-
-  result = AndroidConfig.Strings.setStringItem(
-    [
       AndroidConfig.Resources.buildResourceItem({
         name: STATUS_BAR_TRANSLUCENT_KEY,
         value: String(statusBarTranslucent),
+        translatable: false,
       }),
     ],
     strings
   );
-
-  return result;
 }
