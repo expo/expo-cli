@@ -20,7 +20,7 @@ import {
   WriteConfigOptions,
 } from './Config.types';
 import { ConfigError } from './Errors';
-import { getExpoSDKVersion } from './Project';
+import { getExpoSDKVersion, getRuntimeVersionNullable } from './Project';
 import { getDynamicConfig, getStaticConfig } from './getConfig';
 import { getFullName } from './getFullName';
 import { withConfigPlugins } from './plugins/withConfigPlugins';
@@ -488,8 +488,28 @@ function ensureConfigHasDefaultValues({
     platforms = getSupportedPlatforms(projectRoot);
   }
 
+  const defaultIos = expWithDefaults.ios
+    ? ({
+        ...expWithDefaults.ios,
+        runtimeVersion: getRuntimeVersionNullable(expWithDefaults, 'ios') ?? undefined,
+      } as any) //TODO-JJ remove this cast in SDK 43 https://linear.app/expo/issue/ENG-1869/remove-tempruntimeversion-in-expoconfig
+    : undefined;
+  const defaultAndroid = expWithDefaults.android
+    ? ({
+        ...expWithDefaults.android,
+        runtimeVersion: getRuntimeVersionNullable(expWithDefaults, 'android') ?? undefined,
+      } as any) //TODO-JJ remove this cast in SDK 43 https://linear.app/expo/issue/ENG-1869/remove-tempruntimeversion-in-expoconfig
+    : undefined;
+
   return {
-    exp: { ...expWithDefaults, sdkVersion, platforms },
+    exp: {
+      ...expWithDefaults,
+      sdkVersion,
+      runtimeVersion: getRuntimeVersionNullable(expWithDefaults) ?? undefined,
+      ios: defaultIos,
+      android: defaultAndroid,
+      platforms,
+    },
     pkg: pkgWithDefaults,
   };
 }
