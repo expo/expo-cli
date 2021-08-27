@@ -158,6 +158,10 @@ export default async function (
   // some core modifications to webpack.
   const isNative = ['ios', 'android'].includes(env.platform);
 
+  if (isNative) {
+    env.pwa = false;
+  }
+
   const locations = env.locations || (await getPathsAsync(env.projectRoot));
 
   const { publicPath, publicUrl } = getPublicPaths(env);
@@ -332,12 +336,12 @@ export default async function (
           verbose: false,
         }),
       // Copy the template files over
-      isProd && new CopyWebpackPlugin({ patterns: filesToCopy }),
+      isProd && !isNative && new CopyWebpackPlugin({ patterns: filesToCopy }),
 
       // Generate the `index.html`
-      (!isNative || !shouldUseNativeCodeLoading) && new ExpoHtmlWebpackPlugin(env, templateIndex),
+      (!isNative || shouldUseNativeCodeLoading) && new ExpoHtmlWebpackPlugin(env, templateIndex),
 
-      (!isNative || !shouldUseNativeCodeLoading) &&
+      (!isNative || shouldUseNativeCodeLoading) &&
         ExpoInterpolateHtmlPlugin.fromEnv(env, ExpoHtmlWebpackPlugin),
 
       isNative &&
