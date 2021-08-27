@@ -235,7 +235,7 @@ export default async function nativeAssetsLoader(this: any) {
           info.height && (info.height /= scale);
         }
       }
-    } catch (e) {
+    } catch {
       // Asset is not an image
     }
 
