@@ -2,6 +2,7 @@ import { getConfig, getNameFromConfig } from '@expo/config';
 import { MessageSocket } from '@expo/dev-server';
 import * as devcert from '@expo/devcert';
 import { isUsingYarn } from '@expo/package-manager';
+import { createDevServerMiddleware } from '@react-native-community/cli-server-api';
 import chalk from 'chalk';
 import fs from 'fs-extra';
 import getenv from 'getenv';
@@ -84,6 +85,11 @@ let devServerInfo: {
   port: number;
 } | null = null;
 
+// A custom message websocket broadcaster used to send messages to a React Native runtime.
+let customMessageSocketBroadcaster:
+  | undefined
+  | ((message: string, data?: Record<string, any>) => void);
+
 export function printConnectionInstructions(projectRoot: string, options = {}) {
   if (!devServerInfo) return;
   WebpackCompiler.printInstructions(projectRoot, {
@@ -123,8 +129,8 @@ export async function broadcastMessage(message: 'reload' | string, data?: any) {
   }
 
   // Allow any message on native
-  if (isTargetingNative()) {
-    webpackDevServerInstance.sockWrite(webpackDevServerInstance.sockets, message, data);
+  if (customMessageSocketBroadcaster) {
+    customMessageSocketBroadcaster(message, data);
     return;
   }
 
@@ -236,11 +242,18 @@ export async function startAsync(
       onFinished: () => resolve(server),
     });
 
+    let nativeMiddleware: any;
     if (isTargetingNative()) {
+      nativeMiddleware = createDevServerMiddleware({
+        port,
+        watchFolders: [projectRoot],
+      });
       // Inject the Expo Go manifest middleware.
       const originalBefore = config.devServer!.before!.bind(config.devServer!.before);
       config.devServer!.before = (app, server, compiler) => {
         originalBefore(app, server, compiler);
+
+        app.use(nativeMiddleware.middleware);
         app.use(ManifestHandler.getManifestHandler(projectRoot));
         app.use(ExpoUpdatesManifestHandler.getManifestHandler(projectRoot));
       };
@@ -249,7 +262,17 @@ export async function startAsync(
     const server = new WebpackDevServer(compiler, config.devServer);
 
     // Launch WebpackDevServer.
-    server.listen(port, WebpackEnvironment.HOST, error => {
+    server.listen(port, WebpackEnvironment.HOST, function (this: http.Server, error) {
+      if (nativeMiddleware) {
+        // Hook up the React Native WebSockets to the Webpack dev server.
+        const {
+          messageSocket,
+          // eventsSocket
+        } = nativeMiddleware.attachToServer(this);
+
+        customMessageSocketBroadcaster = messageSocket.broadcast;
+      }
+
       if (error) {
         ProjectUtils.logError(projectRoot, WEBPACK_LOG_TAG, error.message);
       }
