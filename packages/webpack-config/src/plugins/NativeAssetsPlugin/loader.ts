@@ -133,65 +133,64 @@ export default async function nativeAssetsLoader(this: any) {
           return new Promise((resolve, reject) =>
             this.fs.readFile(scaleFilePath, (error: Error | null, results: any) => {
               if (error) {
-                reject(error);
-              } else {
-                let destination;
+                return reject(error);
+              }
+              let destination;
 
-                if (options.persist && options.platforms.includes('android')) {
-                  const testXml = /\.(xml)$/;
-                  const testMP4 = /\.(mp4)$/;
-                  const testImages = /\.(png|jpg|gif|webp)$/;
-                  const testFonts = /\.(ttf|otf|ttc)$/;
+              if (options.persist && options.platforms.includes('android')) {
+                const testXml = /\.(xml)$/;
+                const testMP4 = /\.(mp4)$/;
+                const testImages = /\.(png|jpg|gif|webp)$/;
+                const testFonts = /\.(ttf|otf|ttc)$/;
 
-                  // found font family
-                  if (testXml.test(normalizedName) && results?.indexOf('font-family') !== -1) {
-                    destination = 'font';
-                  } else if (testFonts.test(normalizedName)) {
-                    // font extensions
-                    destination = 'font';
-                  } else if (testMP4.test(normalizedName)) {
-                    // video files extensions
-                    destination = 'raw';
-                  } else if (testImages.test(normalizedName) || testXml.test(normalizedName)) {
-                    // images extensions
-                    switch (scale) {
-                      case '@0.75x':
-                        destination = 'drawable-ldpi';
-                        break;
-                      case '@1x':
-                        destination = 'drawable-mdpi';
-                        break;
-                      case '@1.5x':
-                        destination = 'drawable-hdpi';
-                        break;
-                      case '@2x':
-                        destination = 'drawable-xhdpi';
-                        break;
-                      case '@3x':
-                        destination = 'drawable-xxhdpi';
-                        break;
-                      case '@4x':
-                        destination = 'drawable-xxxhdpi';
-                        break;
-                      default:
-                        throw new Error(`Unknown scale ${scale} for ${scaleFilePath}`);
-                    }
-                  } else {
-                    // everything else is going to RAW
-                    destination = 'raw';
+                // found font family
+                if (testXml.test(normalizedName) && results?.indexOf('font-family') !== -1) {
+                  destination = 'font';
+                } else if (testFonts.test(normalizedName)) {
+                  // font extensions
+                  destination = 'font';
+                } else if (testMP4.test(normalizedName)) {
+                  // video files extensions
+                  destination = 'raw';
+                } else if (testImages.test(normalizedName) || testXml.test(normalizedName)) {
+                  // images extensions
+                  switch (scale) {
+                    case '@0.75x':
+                      destination = 'drawable-ldpi';
+                      break;
+                    case '@1x':
+                      destination = 'drawable-mdpi';
+                      break;
+                    case '@1.5x':
+                      destination = 'drawable-hdpi';
+                      break;
+                    case '@2x':
+                      destination = 'drawable-xhdpi';
+                      break;
+                    case '@3x':
+                      destination = 'drawable-xxhdpi';
+                      break;
+                    case '@4x':
+                      destination = 'drawable-xxxhdpi';
+                      break;
+                    default:
+                      throw new Error(`Unknown scale ${scale} for ${scaleFilePath}`);
                   }
-
-                  destination = path.join(destination, normalizedName);
                 } else {
-                  const name = `${filename}${scale === '@1x' ? '' : scale}.${type}`;
-                  destination = path.join(assetsPath, relativeDirname, name);
+                  // everything else is going to RAW
+                  destination = 'raw';
                 }
 
-                resolve({
-                  destination,
-                  content: results,
-                });
+                destination = path.join(destination, normalizedName);
+              } else {
+                const name = `${filename}${scale === '@1x' ? '' : scale}.${type}`;
+                destination = path.join(assetsPath, relativeDirname, name);
               }
+
+              resolve({
+                destination,
+                content: results,
+              });
             })
           );
         }
@@ -212,10 +211,11 @@ export default async function nativeAssetsLoader(this: any) {
       publicPath = path.join(options.publicPath, publicPath);
     }
 
-    const hashes = await Promise.all(
-      assets.map(asset => {
-        return crypto.createHash('md5').update(asset.content?.toString() ?? asset.destination, 'utf8').digest('hex');
-      })
+    const hashes = assets.map(asset =>
+      crypto
+        .createHash('md5')
+        .update(asset.content?.toString() ?? asset.destination, 'utf8')
+        .digest('hex')
     );
 
     let info: ISizeCalculationResult | undefined;
