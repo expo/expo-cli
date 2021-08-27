@@ -48,6 +48,7 @@ import {
   ExpoProgressBarPlugin,
   ExpoPwaManifestWebpackPlugin,
   FaviconWebpackPlugin,
+  NativeAssetsPlugin,
 } from './plugins';
 import ExpoAppManifestWebpackPlugin from './plugins/ExpoAppManifestWebpackPlugin';
 import { HTMLLinkNode } from './plugins/ModifyHtmlWebpackPlugin';
@@ -179,19 +180,18 @@ export default async function (
   const webpackDevClientEntry = require.resolve('react-dev-utils/webpackHotDevClient');
 
   if (isNative) {
-    const reactNativeModulePath = resolveFrom.silent(env.projectRoot, 'react-native');
-    if (reactNativeModulePath) {
-      for (const polyfill of [
-        'Core/InitializeCore.js',
-        'polyfills/Object.es7.js',
-        'polyfills/error-guard.js',
-        'polyfills/console.js',
-      ]) {
-        const resolvedPolyfill = resolveFrom.silent(
-          env.projectRoot,
-          `react-native/Libraries/${polyfill}`
-        );
-        if (resolvedPolyfill) appEntry.unshift(resolvedPolyfill);
+    const getPolyfillsPath = resolveFrom.silent(
+      env.projectRoot,
+      'react-native/rn-get-polyfills.js'
+    );
+
+    if (getPolyfillsPath) {
+      appEntry.unshift(
+        ...require(getPolyfillsPath)(),
+        resolveFrom(env.projectRoot, 'react-native/Libraries/Core/InitializeCore')
+      );
+      if (isDev) {
+        // TODO: Native HMR
       }
     }
   } else {
@@ -339,6 +339,47 @@ export default async function (
 
       (!isNative || !shouldUseNativeCodeLoading) &&
         ExpoInterpolateHtmlPlugin.fromEnv(env, ExpoHtmlWebpackPlugin),
+
+      isNative &&
+        new NativeAssetsPlugin({
+          platforms: [env.platform, 'native'],
+          persist: isProd,
+          assetExtensions: [
+            // Image formats
+            'bmp',
+            'gif',
+            'jpg',
+            'jpeg',
+            'png',
+            'psd',
+            'svg',
+            'webp',
+            // Video formats
+            'm4v',
+            'mov',
+            'mp4',
+            'mpeg',
+            'mpg',
+            'webm',
+            // Audio formats
+            'aac',
+            'aiff',
+            'caf',
+            'm4a',
+            'mp3',
+            'wav',
+            // Document formats
+            'html',
+            'pdf',
+            'yaml',
+            'yml',
+            // Font formats
+            'otf',
+            'ttf',
+            // Archives (virtual files)
+            'zip',
+          ],
+        }),
 
       isNative &&
         new ExpoAppManifestWebpackPlugin(
