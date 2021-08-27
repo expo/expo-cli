@@ -48,7 +48,6 @@
     "copy-webpack-plugin": "~6.0.3",
     "css-loader": "~3.6.0",
     "expo-pwa": "0.0.94",
-    "escape-string-regexp": "^5.0.0",
     "file-loader": "~6.0.0",
     "find-yarn-workspace-root": "~2.0.0",
     "getenv": "^1.0.0",
