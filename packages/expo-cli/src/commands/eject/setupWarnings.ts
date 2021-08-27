@@ -61,19 +61,14 @@ export function getSetupWarnings({
     )}`;
   }
 
-  const warnings = Object.keys(pkg.dependencies || {}).reduce<Record<string, string>>(
-    (prev, key) => {
-      if (!(key in pkgsWithExtraSetup)) {
-        return prev;
+  const warnings: Record<string, string> = {};
+  if (pkg.dependencies) {
+    for (const key in pkg.dependencies) {
+      if (key in pkgsWithExtraSetup) {
+        warnings[key] = pkgsWithExtraSetup[key];
       }
-      return {
-        ...prev,
-        [key]: pkgsWithExtraSetup[key],
-      };
-    },
-    {}
-  );
-
+    }
+  }
   return warnings;
 }
 

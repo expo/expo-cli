@@ -75,7 +75,7 @@ export async function createBundlesAsync(
     // - If the SDK version is UNVERSIONED or undefined, it'll be enabled.
     // - If EXPO_USE_DEV_SERVER is 0, or unset, it'll be enabled.
     logger.global.warn(
-      `Please upgrade your project to Expo SDK +40. If you experience issues, try using the envar EXPO_USE_DEV_SERVER=1.`
+      `Please upgrade your project to Expo SDK 40+. If you experience CLI issues after upgrading, try using the env var EXPO_USE_DEV_SERVER=1.`
     );
 
     try {

@@ -551,9 +551,8 @@ export function getDefaultTarget(
   projectRoot: string,
   exp?: Pick<ExpoConfig, 'sdkVersion'>
 ): ProjectTarget {
-  if (!exp) {
-    exp = getConfig(projectRoot, { skipSDKVersionRequirement: true }).exp;
-  }
+  exp ??= getConfig(projectRoot, { skipSDKVersionRequirement: true }).exp;
+
   // before SDK 37, always default to managed to preserve previous behavior
   if (exp.sdkVersion && exp.sdkVersion !== 'UNVERSIONED' && semver.lt(exp.sdkVersion, '37.0.0')) {
     return 'managed';

@@ -35,8 +35,8 @@ export async function writeDebugHtmlAsync({
       ${Object.values(fileNames)
         .map(fileName => `<script src="${path.join('bundles', fileName)}"></script>`)
         .join('\n      ')}
-      Open up this file in Chrome. In the Javascript developer console, navigate to the Source tab.
-      You can see a red coloured folder containing the original source code from your bundle.
+      Open up this file in Chrome. In the JavaScript developer console, navigate to the Source tab.
+      You can see a red colored folder containing the original source code from your bundle.
       `;
 
   await writeAsync(outputDir, 'debug.html', debugHtml);
@@ -154,12 +154,7 @@ export async function writeAssetMapAsync({
   assets: ProjectAssets.Asset[];
 }) {
   // Convert the assets array to a k/v pair where the asset hash is the key and the asset is the value.
-  const contents = assets.reduce<{ [hash: string]: ProjectAssets.Asset }>((prev, asset) => {
-    return {
-      ...prev,
-      [asset.hash]: asset,
-    };
-  }, {});
+  const contents = Object.fromEntries(assets.map(asset => [asset.hash, asset]));
 
   await writeAsync(outputDir, 'assetmap.json', JSON.stringify(contents));
 

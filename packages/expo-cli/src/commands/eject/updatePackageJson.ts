@@ -137,7 +137,7 @@ export function updatePackageJSONDependencies({
 
   // Only change the dependencies if the normalized hash changes, this helps to reduce meaningless changes.
   const hasNewDependencies =
-    hashForDependencyMap(pkg.dependencies || {}) !== hashForDependencyMap(combinedDependencies);
+    hashForDependencyMap(pkg.dependencies) !== hashForDependencyMap(combinedDependencies);
   const hasNewDevDependencies =
     hashForDependencyMap(pkg.devDependencies) !== hashForDependencyMap(combinedDevDependencies);
   // Save the dependencies
@@ -249,7 +249,7 @@ function normalizeDependencyMap(deps: DependenciesMap): string[] {
     .sort();
 }
 
-export function hashForDependencyMap(deps: DependenciesMap): string {
+export function hashForDependencyMap(deps: DependenciesMap = {}): string {
   const depsList = normalizeDependencyMap(deps);
   const depsString = depsList.join('\n');
   return createFileHash(depsString);

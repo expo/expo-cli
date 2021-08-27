@@ -62,7 +62,7 @@ export async function exportAppAsync(
 ): Promise<void> {
   const { exp, pkg, hooks } = await Project.getPublishExpConfigAsync(
     projectRoot,
-    options.publishOptions || {}
+    options.publishOptions
   );
 
   const absoluteOutputDir = path.resolve(projectRoot, outputDir);
