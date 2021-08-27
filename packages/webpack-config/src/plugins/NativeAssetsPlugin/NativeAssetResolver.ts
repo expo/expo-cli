@@ -10,6 +10,7 @@
 
 import fs from 'fs';
 import path from 'path';
+import { promisify } from 'util';
 import webpack from 'webpack';
 
 import { escapeStringRegexp } from '../../utils/escapeStringRegexp';
@@ -89,39 +90,42 @@ export class NativeAssetResolver {
     private compiler: webpack.Compiler
   ) {
     if (!this.config.test) {
+      // Like: `/.(ios|native)$/`
       this.config.test = new RegExp(`.(${this.config.assetExtensions.join('|')})$`);
     }
   }
 
+  private isValidPath(requestPath: string): requestPath is string {
+    return typeof requestPath === 'string' && this.config.test!.test(requestPath);
+  }
+
   apply(resolver: Resolver) {
     const { platforms, assetExtensions } = this.config;
-    const test = this.config.test!;
+    const logger = this.compiler.getInfrastructureLogger('NativeAssetResolver');
+    const readdirAsync = promisify(resolver.fileSystem.readdir.bind(resolver.fileSystem));
 
-    const logger = this.compiler.getInfrastructureLogger('ReactNativeAssetResolver');
+    resolver
+      .getHook('file')
+      .tapAsync('NativeAssetResolver', async (request, _context, callback) => {
+        const requestPath = request.path;
+        if (!this.isValidPath(requestPath)) {
+          return callback();
+        }
 
-    resolver.getHook('file').tapAsync('ReactNativeAssetResolver', (request, _context, callback) => {
-      const requestPath = request.path;
-      if ((typeof requestPath === 'string' && !test.test(requestPath)) || requestPath === false) {
-        callback();
-        return;
-      }
+        logger.debug('Processing asset:', requestPath);
 
-      logger.debug('Processing asset:', requestPath);
-
-      // @ts-ignore
-      resolver.fileSystem.readdir(path.dirname(requestPath), (error, results) => {
-        if (error) {
-          callback();
-          return;
+        let files: string[];
+        const dir = path.dirname(requestPath);
+        try {
+          files = (await readdirAsync(dir)).filter(result => typeof result === 'string');
+        } catch (error) {
+          logger.error(`Failed to read Webpack fs directory: ${dir}`, error);
+          return callback();
         }
 
         const basename = path.basename(requestPath);
         const name = basename.replace(/\.[^.]+$/, '');
         const type = path.extname(requestPath).substring(1);
-        const files = ((results as (string | Buffer)[])?.filter(
-          result => typeof result === 'string'
-        ) ?? []) as string[];
-
         let resolved = files.includes(basename) ? requestPath : undefined;
 
         if (!resolved) {
@@ -163,6 +167,5 @@ export class NativeAssetResolver {
 
         callback(null, resolvedFile);
       });
-    });
   }
 }

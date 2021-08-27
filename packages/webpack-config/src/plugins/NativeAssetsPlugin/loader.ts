@@ -9,11 +9,13 @@
  */
 
 import crypto from 'crypto';
+import type fs from 'fs';
 import { imageSize } from 'image-size';
 import { ISizeCalculationResult } from 'image-size/dist/types/interface';
 import utils from 'loader-utils';
 import path from 'path';
 import { validate as validateSchema } from 'schema-utils';
+import { promisify } from 'util';
 
 import { escapeStringRegexp } from '../../utils/escapeStringRegexp';
 import { CollectedScales, NativeAssetResolver } from './NativeAssetResolver';
@@ -57,6 +59,52 @@ function getOptions(loaderContext: any): Options {
 }
 
 export const raw = true;
+
+function getAndroidResourceFolder({
+  name,
+  contents,
+  scale,
+  scaleFilePath,
+}: {
+  name: string;
+  contents?: string;
+  scale: string;
+  scaleFilePath: string;
+}) {
+  const testXml = /\.(xml)$/;
+  const testImages = /\.(png|jpg|gif|webp)$/;
+  const testFonts = /\.(ttf|otf|ttc)$/;
+
+  if (
+    // found font family
+    (testXml.test(name) && contents?.includes('font-family')) ||
+    // font extensions
+    testFonts.test(name)
+  ) {
+    return 'font';
+  } else if (testImages.test(name) || testXml.test(name)) {
+    // images extensions
+    switch (scale) {
+      case '@0.75x':
+        return 'drawable-ldpi';
+      case '@1x':
+        return 'drawable-mdpi';
+      case '@1.5x':
+        return 'drawable-hdpi';
+      case '@2x':
+        return 'drawable-xhdpi';
+      case '@3x':
+        return 'drawable-xxhdpi';
+      case '@4x':
+        return 'drawable-xxxhdpi';
+      default:
+        throw new Error(`Unknown scale ${scale} for ${scaleFilePath}`);
+    }
+  }
+
+  // everything else is going to RAW
+  return 'raw';
+}
 
 export default async function nativeAssetsLoader(this: any) {
   this.cacheable();
@@ -108,6 +156,7 @@ export default async function nativeAssetsLoader(this: any) {
         }
       })
     );
+
     const scales = NativeAssetResolver.collectScales(files, {
       name: filename,
       type,
@@ -118,84 +167,39 @@ export default async function nativeAssetsLoader(this: any) {
     const scaleKeys = Object.keys(scales).sort(
       (a, b) => parseInt(a.replace(/[^\d.]/g, ''), 10) - parseInt(b.replace(/[^\d.]/g, ''), 10)
     );
+    const readFileAsync = promisify(this.fs.readFile.bind(this.fs) as typeof fs.readFile);
 
-    const assets = await Promise.all(
-      scaleKeys.map(
-        (
-          scale
-        ): Promise<{
-          destination: string;
-          content: string | Buffer | undefined;
-        }> => {
-          const scaleFilePath = path.join(dirname, scales[scale].name);
-          this.addDependency(scaleFilePath);
+    const resolveAssetOutput = (results: any, scale: string, scaleFilePath: string) => {
+      if (options.persist && options.platforms.includes('android')) {
+        const destination = getAndroidResourceFolder({
+          name: normalizedName,
+          scale,
+          scaleFilePath,
+          contents: results,
+        });
+        return path.join(destination, normalizedName);
+      }
 
-          return new Promise((resolve, reject) =>
-            this.fs.readFile(scaleFilePath, (error: Error | null, results: any) => {
-              if (error) {
-                return reject(error);
-              }
-              let destination;
+      const name = `${filename}${scale === '@1x' ? '' : scale}.${type}`;
+      return path.join(assetsPath, relativeDirname, name);
+    };
 
-              if (options.persist && options.platforms.includes('android')) {
-                const testXml = /\.(xml)$/;
-                const testMP4 = /\.(mp4)$/;
-                const testImages = /\.(png|jpg|gif|webp)$/;
-                const testFonts = /\.(ttf|otf|ttc)$/;
+    const resolveScaleAsync = async (
+      scale: string
+    ): Promise<{
+      destination: string;
+      content: string | Buffer | undefined;
+    }> => {
+      const scaleFilePath = path.join(dirname, scales[scale].name);
+      this.addDependency(scaleFilePath);
+      const results = await readFileAsync(scaleFilePath);
+      return {
+        content: results,
+        destination: resolveAssetOutput(results, scale, scaleFilePath),
+      };
+    };
 
-                // found font family
-                if (testXml.test(normalizedName) && results?.indexOf('font-family') !== -1) {
-                  destination = 'font';
-                } else if (testFonts.test(normalizedName)) {
-                  // font extensions
-                  destination = 'font';
-                } else if (testMP4.test(normalizedName)) {
-                  // video files extensions
-                  destination = 'raw';
-                } else if (testImages.test(normalizedName) || testXml.test(normalizedName)) {
-                  // images extensions
-                  switch (scale) {
-                    case '@0.75x':
-                      destination = 'drawable-ldpi';
-                      break;
-                    case '@1x':
-                      destination = 'drawable-mdpi';
-                      break;
-                    case '@1.5x':
-                      destination = 'drawable-hdpi';
-                      break;
-                    case '@2x':
-                      destination = 'drawable-xhdpi';
-                      break;
-                    case '@3x':
-                      destination = 'drawable-xxhdpi';
-                      break;
-                    case '@4x':
-                      destination = 'drawable-xxxhdpi';
-                      break;
-                    default:
-                      throw new Error(`Unknown scale ${scale} for ${scaleFilePath}`);
-                  }
-                } else {
-                  // everything else is going to RAW
-                  destination = 'raw';
-                }
-
-                destination = path.join(destination, normalizedName);
-              } else {
-                const name = `${filename}${scale === '@1x' ? '' : scale}.${type}`;
-                destination = path.join(assetsPath, relativeDirname, name);
-              }
-
-              resolve({
-                destination,
-                content: results,
-              });
-            })
-          );
-        }
-      )
-    );
+    const assets = await Promise.all(scaleKeys.map(resolveScaleAsync));
 
     assets.forEach(asset => {
       const { destination, content } = asset;
