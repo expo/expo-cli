@@ -1,5 +1,6 @@
 import assert from 'assert';
 
+import CommandError from '../../CommandError';
 import { RollbackOptions, rollbackPublicationFromChannelAsync } from '../utils/PublishUtils';
 import { getUsageAsync } from './getUsageAsync';
 
@@ -12,17 +13,17 @@ type Options = {
 
 export async function actionAsync(projectRoot: string, options: Options) {
   assert(
-    options.channelId,
-    'This flag is deprecated and does not do anything. Please use --release-channel and --sdk-version instead.'
+    !options.channelId,
+    '--channel-id flag is deprecated and does not do anything. Please use --release-channel and --sdk-version instead.'
   );
 
   if (!options.releaseChannel || !options.sdkVersion) {
     const usage = await getUsageAsync(projectRoot);
-    throw new Error(usage);
+    throw new CommandError(usage);
   }
   if (options.platform) {
     if (options.platform !== 'android' && options.platform !== 'ios') {
-      throw new Error(
+      throw new CommandError(
         'Platform must be either android or ios. Leave out the platform flag to target both platforms.'
       );
     }

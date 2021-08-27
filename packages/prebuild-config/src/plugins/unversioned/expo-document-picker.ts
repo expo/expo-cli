@@ -6,7 +6,6 @@ export default createLegacyPlugin({
   packageName: 'expo-document-picker',
   fallback(config) {
     if (config.ios?.usesIcloudStorage) {
-      // TODO: need access to the appleTeamId for this one!
       WarningAggregator.addWarningIOS(
         'ios.usesIcloudStorage',
         'Install expo-document-picker to enable the ios.usesIcloudStorage feature'

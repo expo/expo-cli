@@ -3,13 +3,16 @@ import { Android, Versions } from 'xdl';
 
 import Log from '../../log';
 import { confirmAsync } from '../../prompts';
+import { resolveDeviceAsync } from '../run/android/resolveDeviceAsync';
 import * as ClientUpgradeUtils from '../utils/ClientUpgradeUtils';
 
 type Options = {
   latest?: boolean;
+  device?: boolean | string;
 };
 
 export async function actionAsync(options: Options) {
+  const device = await resolveDeviceAsync(options.device);
   const forceLatest = !!options.latest;
   const currentSdkConfig = await ClientUpgradeUtils.getExpoSdkConfig(process.cwd());
   const currentSdkVersion = currentSdkConfig ? currentSdkConfig.sdkVersion : undefined;
@@ -29,7 +32,13 @@ export async function actionAsync(options: Options) {
       return;
     }
 
-    if (await Android.upgradeExpoAsync({ url: latestClient.url, version: latestClient.version })) {
+    if (
+      await Android.upgradeExpoAsync({
+        device,
+        url: latestClient.url,
+        version: latestClient.version,
+      })
+    ) {
       Log.log('Done!');
     } else {
       Log.error(`Unable to install Expo Go ${latestClient.version} for Android.`);
@@ -57,6 +66,7 @@ export async function actionAsync(options: Options) {
     });
     if (answer) {
       await Android.upgradeExpoAsync({
+        device,
         url: recommendedClient.url,
         version: recommendedClient.version,
       });
@@ -71,6 +81,7 @@ export async function actionAsync(options: Options) {
     });
     if (answer) {
       await Android.upgradeExpoAsync({
+        device,
         url: latestClient?.url,
         version: latestClient?.version,
       });
@@ -93,6 +104,7 @@ export async function actionAsync(options: Options) {
     });
     if (answer) {
       await Android.upgradeExpoAsync({
+        device,
         url: latestClient?.url,
         version: latestClient?.version,
       });
@@ -109,7 +121,7 @@ export async function actionAsync(options: Options) {
     clients: availableClients,
   });
 
-  if (await Android.upgradeExpoAsync({ url: targetClient.clientUrl })) {
+  if (await Android.upgradeExpoAsync({ device, url: targetClient.clientUrl })) {
     Log.log('Done!');
   }
 }

@@ -484,19 +484,23 @@ export async function uninstallExpoAsync(device: Device): Promise<string | undef
   }
 }
 
-export async function upgradeExpoAsync(options?: {
+export async function upgradeExpoAsync({
+  url,
+  version,
+  device,
+}: {
   url?: string;
   version?: string;
-}): Promise<boolean> {
-  const { url, version } = options || {};
-
+  device?: Device | null;
+} = {}): Promise<boolean> {
   try {
-    const devices = await getAttachedDevicesAsync();
-    if (!devices.length) {
-      throw new Error('no devices connected');
+    if (!device) {
+      device = (await getAttachedDevicesAsync())[0];
+      if (!device) {
+        throw new Error('no devices connected');
+      }
     }
-
-    const device = await attemptToStartEmulatorOrAssertAsync(devices[0]);
+    device = await attemptToStartEmulatorOrAssertAsync(device);
     if (!device) {
       return false;
     }
@@ -603,31 +607,32 @@ export async function activateEmulatorWindowAsync(device: Pick<Device, 'type' | 
   }
 }
 
-async function openAppAsync(
+/**
+ * @param device Android device to open on
+ * @param props.launchActivity Activity to launch `[application identifier]/.[main activity name]`, ex: `com.bacon.app/.MainActivity`
+ */
+export async function openAppAsync(
   device: Pick<Device, 'pid' | 'type'>,
   {
-    packageName,
-    mainActivity,
+    launchActivity,
   }: {
-    packageName: string;
-    mainActivity: string;
+    launchActivity: string;
   }
 ) {
-  const targetActivityURI = mainActivity.includes('.')
-    ? mainActivity
-    : [packageName, mainActivity].filter(Boolean).join('/.');
-
   const openProject = await getAdbOutputAsync(
     adbPidArgs(
       device.pid,
       'shell',
       'am',
       'start',
+      '-a',
+      'android.intent.action.RUN',
       // FLAG_ACTIVITY_SINGLE_TOP -- If set, the activity will not be launched if it is already running at the top of the history stack.
       '-f',
       '0x20000000',
+      // Activity to open first: com.bacon.app/.MainActivity
       '-n',
-      targetActivityURI
+      launchActivity
     )
   );
 
@@ -830,6 +835,7 @@ export async function openProjectAsync({
   device,
   scheme,
   applicationId,
+  launchActivity,
 }: {
   projectRoot: string;
   shouldPrompt?: boolean;
@@ -837,6 +843,7 @@ export async function openProjectAsync({
   device?: Device;
   scheme?: string;
   applicationId?: string | null;
+  launchActivity?: string;
 }): Promise<{ success: true; url: string } | { success: false; error: Error | string }> {
   await startAdbReverseAsync(projectRoot);
 
@@ -872,25 +879,24 @@ export async function openProjectAsync({
 
   // No URL, and is devClient
   if (!projectUrl) {
-    applicationId = applicationId ?? (await resolveApplicationIdAsync(projectRoot));
-
-    if (!applicationId) {
-      return {
-        success: false,
-        error:
-          'Cannot resolve application identifier or URI scheme to open the native Android app.\nBuild the native app with `expo run:android` or `eas build -p android`',
-      };
+    if (!launchActivity) {
+      applicationId = applicationId ?? (await resolveApplicationIdAsync(projectRoot));
+      if (!applicationId) {
+        return {
+          success: false,
+          error:
+            'Cannot resolve application identifier or URI scheme to open the native Android app.\nBuild the native app with `expo run:android` or `eas build -p android`',
+        };
+      }
+      launchActivity = `${applicationId}/.MainActivity`;
     }
-
-    const mainActivity = 'MainActivity';
 
     try {
       await openAppAsync(device, {
-        packageName: applicationId,
-        mainActivity,
+        launchActivity,
       });
     } catch (error) {
-      let errorMessage = `Couldn't open Android app with ID "${applicationId}" on device "${device.name}".`;
+      let errorMessage = `Couldn't open Android app with activity "${launchActivity}" on device "${device.name}".`;
       if (error instanceof XDLError && error.code === 'APP_NOT_INSTALLED') {
         errorMessage += `\nThe app might not be installed, try installing it with: ${chalk.bold(
           `expo run:android -d ${device.name}`

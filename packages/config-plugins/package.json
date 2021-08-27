@@ -1,6 +1,6 @@
 {
   "name": "@expo/config-plugins",
-  "version": "3.0.7",
+  "version": "3.1.0",
   "description": "A library for Expo config plugins",
   "main": "build/index.js",
   "scripts": {
@@ -34,7 +34,8 @@
   "dependencies": {
     "@expo/config-types": "^42.0.0",
     "@expo/json-file": "8.2.33",
-    "@expo/plist": "0.0.13",
+    "@expo/plist": "0.0.14",
+    "chalk": "^4.1.2",
     "debug": "^4.3.1",
     "find-up": "~5.0.0",
     "fs-extra": "9.0.0",
