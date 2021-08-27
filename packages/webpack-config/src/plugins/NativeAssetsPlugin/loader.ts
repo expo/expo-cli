@@ -214,9 +214,7 @@ export default async function nativeAssetsLoader(this: any) {
 
     const hashes = await Promise.all(
       assets.map(asset => {
-        const hash = crypto.createHash('md5');
-        hash.update(asset.content?.toString() ?? asset.destination, 'utf8');
-        return hash.digest('hex');
+        return crypto.createHash('md5').update(asset.content?.toString() ?? asset.destination, 'utf8').digest('hex');
       })
     );
 
