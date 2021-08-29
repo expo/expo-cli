@@ -107,8 +107,7 @@ Object {
     "publicPath": "/",
   },
   "plugins": Array [
-    "HtmlWebpackPlugin",
-    "InterpolateHtmlPlugin",
+    "NativeAssetsPlugin",
     "ExpoAppManifestWebpackPlugin",
     "ModuleNotFoundPlugin",
     "DefinePlugin",
@@ -317,9 +316,7 @@ Object {
   },
   "plugins": Array [
     "CleanWebpackPlugin",
-    "CopyPlugin",
-    "HtmlWebpackPlugin",
-    "InterpolateHtmlPlugin",
+    "NativeAssetsPlugin",
     "ExpoAppManifestWebpackPlugin",
     "ModuleNotFoundPlugin",
     "DefinePlugin",
