@@ -1,8 +1,12 @@
 import { getConfig, getNameFromConfig } from '@expo/config';
-import { MessageSocket } from '@expo/dev-server';
+import {
+  attachInspectorProxy,
+  createDevServerMiddleware,
+  LogReporter,
+  MessageSocket,
+} from '@expo/dev-server';
 import * as devcert from '@expo/devcert';
 import { isUsingYarn } from '@expo/package-manager';
-import { createDevServerMiddleware } from '@react-native-community/cli-server-api';
 import chalk from 'chalk';
 import fs from 'fs-extra';
 import getenv from 'getenv';
@@ -149,6 +153,55 @@ export async function broadcastMessage(message: 'reload' | string, data?: any) {
   webpackDevServerInstance.sockWrite(webpackDevServerInstance.sockets, hackyConvertedMessage, data);
 }
 
+function createNativeDevServerMiddleware(projectRoot: string, { port }: { port: number }) {
+  if (!isTargetingNative()) {
+    return null;
+  }
+  const nativeMiddleware = createDevServerMiddleware({
+    logger: ProjectUtils.getLogger(projectRoot),
+    port,
+    watchFolders: [projectRoot],
+  });
+  // Add manifest middleware to the other middleware.
+  // TODO: Move this in to expo/dev-server.
+  nativeMiddleware.middleware
+    .use(ManifestHandler.getManifestHandler(projectRoot))
+    .use(ExpoUpdatesManifestHandler.getManifestHandler(projectRoot));
+
+  return nativeMiddleware;
+}
+
+function attachNativeDevServerMiddlewareToDevServer(
+  projectRoot: string,
+  {
+    server,
+    middleware,
+    attachToServer,
+    logger,
+  }: { server: http.Server } & ReturnType<typeof createNativeDevServerMiddleware>
+) {
+  // Hook up the React Native WebSockets to the Webpack dev server.
+  const { messageSocket, debuggerProxy, eventsSocket } = attachToServer(server);
+
+  customMessageSocketBroadcaster = messageSocket.broadcast;
+
+  const logReporter = new LogReporter(logger);
+  logReporter.reportEvent = eventsSocket.reportEvent;
+
+  const { inspectorProxy } = attachInspectorProxy(projectRoot, {
+    middleware,
+    server,
+  });
+
+  return {
+    messageSocket,
+    eventsSocket,
+    debuggerProxy,
+    logReporter,
+    inspectorProxy,
+  };
+}
+
 export async function startAsync(
   projectRoot: string,
   options: CLIWebOptions = {}
@@ -242,35 +295,27 @@ export async function startAsync(
       onFinished: () => resolve(server),
     });
 
-    let nativeMiddleware: any;
-    if (isTargetingNative()) {
-      nativeMiddleware = createDevServerMiddleware({
-        port,
-        watchFolders: [projectRoot],
-      });
-      // Inject the Expo Go manifest middleware.
-      const originalBefore = config.devServer!.before!.bind(config.devServer!.before);
-      config.devServer!.before = (app, server, compiler) => {
-        originalBefore(app, server, compiler);
+    // Create the middleware required for interacting with a native runtime (Expo Go, or Expo Dev Client).
+    const nativeMiddleware = createNativeDevServerMiddleware(projectRoot, { port });
+    // Inject the native manifest middleware.
+    const originalBefore = config.devServer!.before!.bind(config.devServer!.before);
+    config.devServer!.before = (app, server, compiler) => {
+      originalBefore(app, server, compiler);
 
+      if (nativeMiddleware?.middleware) {
         app.use(nativeMiddleware.middleware);
-        app.use(ManifestHandler.getManifestHandler(projectRoot));
-        app.use(ExpoUpdatesManifestHandler.getManifestHandler(projectRoot));
-      };
-    }
+      }
+    };
 
     const server = new WebpackDevServer(compiler, config.devServer);
 
     // Launch WebpackDevServer.
     server.listen(port, WebpackEnvironment.HOST, function (this: http.Server, error) {
       if (nativeMiddleware) {
-        // Hook up the React Native WebSockets to the Webpack dev server.
-        const {
-          messageSocket,
-          // eventsSocket
-        } = nativeMiddleware.attachToServer(this);
-
-        customMessageSocketBroadcaster = messageSocket.broadcast;
+        attachNativeDevServerMiddlewareToDevServer(projectRoot, {
+          server: this,
+          ...nativeMiddleware,
+        });
       }
 
       if (error) {
