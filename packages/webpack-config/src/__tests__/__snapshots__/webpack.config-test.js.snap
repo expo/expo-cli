@@ -112,6 +112,7 @@ Object {
     "ModuleNotFoundPlugin",
     "DefinePlugin",
     "LimitChunkCountPlugin",
+    "NormalModuleReplacementPlugin",
     "WatchMissingNodeModulesPlugin",
     "SourceMapDevToolPlugin",
   ],
@@ -321,6 +322,7 @@ Object {
     "ModuleNotFoundPlugin",
     "DefinePlugin",
     "LimitChunkCountPlugin",
+    "NormalModuleReplacementPlugin",
     "SourceMapDevToolPlugin",
   ],
   "resolve": Object {

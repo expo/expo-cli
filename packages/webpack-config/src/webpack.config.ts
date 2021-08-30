@@ -460,6 +460,14 @@ export default async function (
       // This is necessary to emit hot updates (currently CSS only):
       !isNative && isDev && new HotModuleReplacementPlugin(),
 
+      // Replace the Metro specific HMR code in `react-native` with
+      // a shim.
+      isNative &&
+        new webpack.NormalModuleReplacementPlugin(
+          /react-native\/Libraries\/Utilities\/HMRClient\.js$/,
+          require.resolve('./runtime/metro-runtime-shim')
+        ),
+
       // If you require a missing module and then `npm install` it, you still have
       // to restart the development server for Webpack to discover it. This plugin
       // makes the discovery automatic so you don't have to restart.
