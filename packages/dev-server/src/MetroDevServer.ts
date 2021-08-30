@@ -232,9 +232,20 @@ function gteSdkVersion(expJson: Pick<ExpoConfig, 'sdkVersion'>, sdkVersion: stri
   }
 }
 
-export function connectInspectorProxy(
+/**
+ * Attach the inspector proxy to a development server.
+ * Inspector proxy is used for viewing the JS context in a browser.
+ * This must be attached after the server is listening.
+ * Attaching consists of pushing custom middleware and appending WebSockets to the server.
+ *
+ *
+ * @param projectRoot
+ * @param props.server dev server to add WebSockets to
+ * @param props.middleware dev server middleware to add extra middleware to
+ */
+export function attachInspectorProxy(
   projectRoot: string,
-  { server, connect }: { server: http.Server; connect: ConnectServer }
+  { server, middleware }: { server: http.Server; middleware: ConnectServer }
 ) {
   const { InspectorProxy } = importInspectorProxyServerFromProject(projectRoot);
   const inspectorProxy = new InspectorProxy(projectRoot);
@@ -250,7 +261,9 @@ export function connectInspectorProxy(
   // so that we could provide routes (/json/list and /json/version) here.
   // Currently this causes Metro to give warning about T31407894.
   // $FlowFixMe[method-unbinding] added when improving typing for this parameters
-  connect.use(inspectorProxy.processRequest.bind(inspectorProxy));
+  middleware.use(inspectorProxy.processRequest.bind(inspectorProxy));
+
+  return { inspectorProxy };
 }
 
 export { LogReporter, createDevServerMiddleware };

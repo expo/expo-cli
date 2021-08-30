@@ -1,5 +1,10 @@
 import { getConfig, getNameFromConfig } from '@expo/config';
-import { createDevServerMiddleware, LogReporter, MessageSocket } from '@expo/dev-server';
+import {
+  attachInspectorProxy,
+  createDevServerMiddleware,
+  LogReporter,
+  MessageSocket,
+} from '@expo/dev-server';
 import * as devcert from '@expo/devcert';
 import { isUsingYarn } from '@expo/package-manager';
 import chalk from 'chalk';
@@ -167,25 +172,33 @@ function createNativeDevServerMiddleware(projectRoot: string, { port }: { port: 
 }
 
 function attachNativeDevServerMiddlewareToDevServer(
-  server: http.Server,
-  nativeMiddleware: ReturnType<typeof createNativeDevServerMiddleware>
+  projectRoot: string,
+  {
+    server,
+    middleware,
+    attachToServer,
+    logger,
+  }: { server: http.Server } & ReturnType<typeof createNativeDevServerMiddleware>
 ) {
-  if (!nativeMiddleware) {
-    return null;
-  }
   // Hook up the React Native WebSockets to the Webpack dev server.
-  const { messageSocket, debuggerProxy, eventsSocket } = nativeMiddleware.attachToServer(server);
+  const { messageSocket, debuggerProxy, eventsSocket } = attachToServer(server);
 
   customMessageSocketBroadcaster = messageSocket.broadcast;
 
-  const logReporter = new LogReporter(nativeMiddleware.logger);
+  const logReporter = new LogReporter(logger);
   logReporter.reportEvent = eventsSocket.reportEvent;
+
+  const { inspectorProxy } = attachInspectorProxy(projectRoot, {
+    middleware,
+    server,
+  });
 
   return {
     messageSocket,
     eventsSocket,
     debuggerProxy,
     logReporter,
+    inspectorProxy,
   };
 }
 
@@ -298,7 +311,12 @@ export async function startAsync(
 
     // Launch WebpackDevServer.
     server.listen(port, WebpackEnvironment.HOST, function (this: http.Server, error) {
-      attachNativeDevServerMiddlewareToDevServer(this, nativeMiddleware);
+      if (nativeMiddleware) {
+        attachNativeDevServerMiddlewareToDevServer(projectRoot, {
+          server: this,
+          ...nativeMiddleware,
+        });
+      }
 
       if (error) {
         ProjectUtils.logError(projectRoot, WEBPACK_LOG_TAG, error.message);
