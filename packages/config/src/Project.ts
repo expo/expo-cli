@@ -30,6 +30,30 @@ export function getExpoSDKVersion(
   );
 }
 
+export function getVersion(config: Pick<ExpoConfig, 'version'>) {
+  const defaultVersion = '1.0.0';
+  if (!config.version) {
+    console.warn(`Using default version: "${defaultVersion}"`);
+  }
+  return config.version ?? defaultVersion;
+}
+
+export function getBuildNumber(config: Pick<ExpoConfig, 'ios'>) {
+  const defaultBuildNumber = '1';
+  if (!config.ios?.buildNumber) {
+    console.warn(`Using default ios.buildNumber: "${defaultBuildNumber}"`);
+  }
+  return config.ios?.buildNumber ?? defaultBuildNumber;
+}
+
+export function getVersionCode(config: Pick<ExpoConfig, 'android'>) {
+  const defaultVersionCode = 1;
+  if (!config.android?.versionCode) {
+    console.warn(`Using default android.versionCode: "${defaultVersionCode}"`);
+  }
+  return config.android?.versionCode ?? defaultVersionCode;
+}
+
 export function getNativeBuildVersion(
   config: Pick<ExpoConfig, 'version'> & {
     android?: Pick<Android, 'versionCode'> & TempRuntimeVersion;
@@ -37,27 +61,15 @@ export function getNativeBuildVersion(
   },
   platform: 'android' | 'ios'
 ): string {
-  if (!config.version) {
-    throw new ConfigError('Missing "version" field', 'INVALID_CONFIG');
-  }
+  const version = getVersion(config);
   switch (platform) {
     case 'ios': {
-      if (!config.ios?.buildNumber) {
-        throw new ConfigError(
-          'The "ios.buildNumber" field is required when computing the native build version for ios.',
-          'INVALID_CONFIG'
-        );
-      }
-      return `${config.version}(${config.ios.buildNumber})`;
+      const buildNumber = getBuildNumber(config);
+      return `${version}(${buildNumber})`;
     }
     case 'android': {
-      if (!config.android?.versionCode) {
-        throw new ConfigError(
-          'The "android.versionCode" field is required when computing the native build version for android.',
-          'INVALID_CONFIG'
-        );
-      }
-      return `${config.version}(${config.android.versionCode})`;
+      const versionCode = getVersionCode(config);
+      return `${version}(${versionCode})`;
     }
     default: {
       throw new Error(

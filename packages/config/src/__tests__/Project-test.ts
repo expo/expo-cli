@@ -1,7 +1,15 @@
-import { getNativeBuildVersion, getRuntimeVersionNullable } from '../Project';
+import {
+  getBuildNumber,
+  getNativeBuildVersion,
+  getRuntimeVersionNullable,
+  getVersion,
+  getVersionCode,
+} from '../Project';
+
+console.warn = jest.fn();
 
 describe(getNativeBuildVersion, () => {
-  const version = '1.0.0';
+  const version = '2.0.0';
   const versionCode = 42;
   const buildNumber = '13';
   it('works for android', () => {
@@ -20,24 +28,43 @@ describe(getNativeBuildVersion, () => {
       getNativeBuildVersion({ version }, fakePlatform as any);
     }).toThrow(`"${fakePlatform}" is not a supported platform. Choose either "ios" or "android".`);
   });
-  it('throws an error if the version is missing', () => {
-    expect(() => {
-      getNativeBuildVersion({}, 'ios');
-    }).toThrow('Missing "version" field');
+  it('uses the default version if the version is missing', () => {
+    expect(getNativeBuildVersion({}, 'ios')).toBe('1.0.0(1)');
   });
-  it('throws an error if the platform is ios and the buildNumber is missing', () => {
-    expect(() => {
-      getNativeBuildVersion({ version }, 'ios');
-    }).toThrow(
-      'The "ios.buildNumber" field is required when computing the native build version for ios.'
-    );
+  it('uses the default buildNumber if the platform is ios and the buildNumber is missing', () => {
+    expect(getNativeBuildVersion({ version }, 'ios')).toBe(`${version}(1)`);
   });
-  it('throws an error if the platform is android and the  versionCode is missing', () => {
-    expect(() => {
-      getNativeBuildVersion({ version }, 'android');
-    }).toThrow(
-      'The "android.versionCode" field is required when computing the native build version for android.'
-    );
+  it('uses the default versionCode if the platform is android and the versionCode is missing', () => {
+    expect(getNativeBuildVersion({ version }, 'android')).toBe(`${version}(1)`);
+  });
+});
+
+describe(getVersion, () => {
+  it(`uses version if it's given in config`, () => {
+    expect(getVersion({ version: '1.2.3' })).toBe('1.2.3');
+  });
+
+  it(`uses 1.0.0 if no version is given`, () => {
+    expect(getVersion({})).toBe('1.0.0');
+  });
+});
+describe(getVersionCode, () => {
+  it(`returns 1 if no version code is provided`, () => {
+    expect(getVersionCode({})).toBe(1);
+  });
+
+  it(`returns the version code if provided`, () => {
+    expect(getVersionCode({ android: { versionCode: 5 } })).toBe(5);
+  });
+});
+describe(getBuildNumber, () => {
+  it(`uses ios.buildNumber if it's given in config`, () => {
+    expect(getBuildNumber({ ios: { buildNumber: '12' } })).toEqual('12');
+  });
+
+  it(`falls back to '1' if not provided`, () => {
+    expect(getBuildNumber({ ios: { buildNumber: null } })).toEqual('1');
+    expect(getBuildNumber({})).toEqual('1');
   });
 });
 describe(getRuntimeVersionNullable, () => {

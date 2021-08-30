@@ -34,6 +34,7 @@ export function setVersionName(config: Pick<ExpoConfig, 'version'>, buildGradle:
 }
 
 export function getVersionCode(config: Pick<ExpoConfig, 'android'>) {
+  // TODO-JJ import this from  @expo/config once new version is published
   return config.android?.versionCode ?? 1;
 }
 
