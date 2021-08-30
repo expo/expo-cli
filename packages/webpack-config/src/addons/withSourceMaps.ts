@@ -27,7 +27,8 @@ function createSourceMapPlugin(
       // Emulate the `devtool` settings based on CRA defaults
       ...(isDev
         ? {
-            // cheap-module-source-map -- less accurate but faster
+            // `module: false` = cheap-module-source-map -- less accurate but faster
+            // `module: true` = more accurate but some paths are non existent
             module: true,
             columns: false,
           }
