@@ -1,11 +1,6 @@
 import type Log from '@expo/bunyan';
 import { ExpoConfig, getConfigFilePaths } from '@expo/config';
 import * as ExpoMetroConfig from '@expo/metro-config';
-import {
-  createDevServerMiddleware,
-  securityHeadersMiddleware,
-} from '@react-native-community/cli-server-api';
-import bodyParser from 'body-parser';
 import type { Server as ConnectServer } from 'connect';
 import http from 'http';
 import type Metro from 'metro';
@@ -20,14 +15,11 @@ import {
 import LogReporter from './LogReporter';
 import { createDevServerAsync } from './metro/createDevServerAsync';
 import {
+  importInspectorProxyServerFromProject,
   importMetroFromProject,
   importMetroServerFromProject,
 } from './metro/importMetroFromProject';
-import clientLogsMiddleware from './middleware/clientLogsMiddleware';
-import createJsInspectorMiddleware from './middleware/createJsInspectorMiddleware';
-import { remoteDevtoolsCorsMiddleware } from './middleware/remoteDevtoolsCorsMiddleware';
-import { remoteDevtoolsSecurityHeadersMiddleware } from './middleware/remoteDevtoolsSecurityHeadersMiddleware';
-import { replaceMiddlewareWith } from './middleware/replaceMiddlewareWith';
+import { createDevServerMiddleware } from './middleware/devServerMiddleware';
 
 export type MetroDevServerOptions = ExpoMetroConfig.LoadOptions & {
   logger: Log;
@@ -69,20 +61,8 @@ export async function runMetroDevServerAsync(
   const { middleware, attachToServer } = createDevServerMiddleware({
     port: metroConfig.server.port,
     watchFolders: metroConfig.watchFolders,
+    logger: options.logger,
   });
-
-  // securityHeadersMiddleware does not support cross-origin requests for remote devtools to get the sourcemap.
-  // We replace with the enhanced version.
-  replaceMiddlewareWith(
-    middleware as ConnectServer,
-    securityHeadersMiddleware,
-    remoteDevtoolsSecurityHeadersMiddleware
-  );
-  middleware.use(remoteDevtoolsCorsMiddleware);
-
-  middleware.use(bodyParser.json());
-  middleware.use('/logs', clientLogsMiddleware(options.logger));
-  middleware.use('/inspector', createJsInspectorMiddleware());
 
   const customEnhanceMiddleware = metroConfig.server.enhanceMiddleware;
   // @ts-ignore can't mutate readonly config
@@ -251,3 +231,39 @@ function gteSdkVersion(expJson: Pick<ExpoConfig, 'sdkVersion'>, sdkVersion: stri
     throw new Error(`${expJson.sdkVersion} is not a valid version. Must be in the form of x.y.z`);
   }
 }
+
+/**
+ * Attach the inspector proxy to a development server.
+ * Inspector proxy is used for viewing the JS context in a browser.
+ * This must be attached after the server is listening.
+ * Attaching consists of pushing custom middleware and appending WebSockets to the server.
+ *
+ *
+ * @param projectRoot
+ * @param props.server dev server to add WebSockets to
+ * @param props.middleware dev server middleware to add extra middleware to
+ */
+export function attachInspectorProxy(
+  projectRoot: string,
+  { server, middleware }: { server: http.Server; middleware: ConnectServer }
+) {
+  const { InspectorProxy } = importInspectorProxyServerFromProject(projectRoot);
+  const inspectorProxy = new InspectorProxy(projectRoot);
+  if ('addWebSocketListener' in inspectorProxy) {
+    // metro@0.59.0
+    inspectorProxy.addWebSocketListener(server);
+  } else if ('createWebSocketListeners' in inspectorProxy) {
+    // metro@0.66.0
+    // TODO: This isn't properly support without a ws router.
+    inspectorProxy.createWebSocketListeners(server);
+  }
+  // TODO(hypuk): Refactor inspectorProxy.processRequest into separate request handlers
+  // so that we could provide routes (/json/list and /json/version) here.
+  // Currently this causes Metro to give warning about T31407894.
+  // $FlowFixMe[method-unbinding] added when improving typing for this parameters
+  middleware.use(inspectorProxy.processRequest.bind(inspectorProxy));
+
+  return { inspectorProxy };
+}
+
+export { LogReporter, createDevServerMiddleware };

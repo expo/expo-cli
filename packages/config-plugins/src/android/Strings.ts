@@ -12,24 +12,27 @@ export function setStringItem(
   itemToAdd: ResourceItemXML[],
   stringFileContentsJSON: ResourceXML
 ): ResourceXML {
-  if (stringFileContentsJSON?.resources?.string) {
-    const stringNameExists = stringFileContentsJSON.resources.string.filter(
-      (e: ResourceItemXML) => e.$.name === itemToAdd[0].$.name
-    )[0];
-    if (stringNameExists) {
-      // replace the previous value
-      stringNameExists._ = itemToAdd[0]._;
-    } else {
-      stringFileContentsJSON.resources.string = stringFileContentsJSON.resources.string.concat(
-        itemToAdd
-      );
-    }
-  } else {
+  if (!stringFileContentsJSON?.resources?.string) {
     if (!stringFileContentsJSON.resources || typeof stringFileContentsJSON.resources === 'string') {
       // file was empty and JSON is `{resources : ''}`
       stringFileContentsJSON.resources = {};
     }
     stringFileContentsJSON.resources.string = itemToAdd;
+    return stringFileContentsJSON;
+  }
+
+  for (const newItem of itemToAdd) {
+    const stringNameExists = stringFileContentsJSON.resources.string.findIndex(
+      (e: ResourceItemXML) => e.$.name === newItem.$.name
+    );
+    if (stringNameExists > -1) {
+      // replace the previous item
+      stringFileContentsJSON.resources.string[stringNameExists] = newItem;
+    } else {
+      stringFileContentsJSON.resources.string = stringFileContentsJSON.resources.string.concat(
+        newItem
+      );
+    }
   }
   return stringFileContentsJSON;
 }

@@ -1,5 +1,10 @@
 import type Log from '@expo/bunyan';
-import { MessageSocket } from '@expo/dev-server';
+import {
+  attachInspectorProxy,
+  createDevServerMiddleware,
+  LogReporter,
+  MessageSocket,
+} from '@expo/dev-server';
 import * as devcert from '@expo/devcert';
 import chalk from 'chalk';
 import fs from 'fs-extra';
@@ -73,6 +78,11 @@ export type WebEnvironment = {
   logger: Log;
 };
 
+// A custom message websocket broadcaster used to send messages to a React Native runtime.
+let customMessageSocketBroadcaster:
+  | undefined
+  | ((message: string, data?: Record<string, any>) => void);
+
 async function clearWebCacheAsync(projectRoot: string, mode: string): Promise<void> {
   const cacheFolder = path.join(projectRoot, '.expo', 'web', 'cache', mode);
   ProjectUtils.logInfo(
@@ -102,8 +112,8 @@ export async function broadcastMessage(message: 'reload' | string, data?: any) {
   }
 
   // Allow any message on native
-  if (isTargetingNative()) {
-    webpackDevServerInstance.sockWrite(webpackDevServerInstance.sockets, message, data);
+  if (customMessageSocketBroadcaster) {
+    customMessageSocketBroadcaster(message, data);
     return;
   }
 
@@ -120,6 +130,55 @@ export async function broadcastMessage(message: 'reload' | string, data?: any) {
   const hackyConvertedMessage = message === 'reload' ? 'content-changed' : message;
 
   webpackDevServerInstance.sockWrite(webpackDevServerInstance.sockets, hackyConvertedMessage, data);
+}
+
+function createNativeDevServerMiddleware(projectRoot: string, { port }: { port: number }) {
+  if (!isTargetingNative()) {
+    return null;
+  }
+  const nativeMiddleware = createDevServerMiddleware({
+    logger: ProjectUtils.getLogger(projectRoot),
+    port,
+    watchFolders: [projectRoot],
+  });
+  // Add manifest middleware to the other middleware.
+  // TODO: Move this in to expo/dev-server.
+  nativeMiddleware.middleware
+    .use(ManifestHandler.getManifestHandler(projectRoot))
+    .use(ExpoUpdatesManifestHandler.getManifestHandler(projectRoot));
+
+  return nativeMiddleware;
+}
+
+function attachNativeDevServerMiddlewareToDevServer(
+  projectRoot: string,
+  {
+    server,
+    middleware,
+    attachToServer,
+    logger,
+  }: { server: http.Server } & ReturnType<typeof createNativeDevServerMiddleware>
+) {
+  // Hook up the React Native WebSockets to the Webpack dev server.
+  const { messageSocket, debuggerProxy, eventsSocket } = attachToServer(server);
+
+  customMessageSocketBroadcaster = messageSocket.broadcast;
+
+  const logReporter = new LogReporter(logger);
+  logReporter.reportEvent = eventsSocket.reportEvent;
+
+  const { inspectorProxy } = attachInspectorProxy(projectRoot, {
+    middleware,
+    server,
+  });
+
+  return {
+    messageSocket,
+    eventsSocket,
+    debuggerProxy,
+    logReporter,
+    inspectorProxy,
+  };
 }
 
 export async function startAsync(
@@ -188,9 +247,27 @@ export async function startAsync(
   // Create a webpack compiler that is configured with custom messages.
   const compiler = webpack(config);
 
+  // Create the middleware required for interacting with a native runtime (Expo Go, or Expo Dev Client).
+  const nativeMiddleware = createNativeDevServerMiddleware(projectRoot, { port });
+  // Inject the native manifest middleware.
+  const originalBefore = config.devServer!.before!.bind(config.devServer!.before);
+  config.devServer!.before = (app, server, compiler) => {
+    originalBefore(app, server, compiler);
+
+    if (nativeMiddleware?.middleware) {
+      app.use(nativeMiddleware.middleware);
+    }
+  };
+
   const server = new WebpackDevServer(compiler, config.devServer);
   // Launch WebpackDevServer.
-  server.listen(port, WebpackEnvironment.HOST, error => {
+  server.listen(port, WebpackEnvironment.HOST, function (this: http.Server, error) {
+    if (nativeMiddleware) {
+      attachNativeDevServerMiddlewareToDevServer(projectRoot, {
+        server: this,
+        ...nativeMiddleware,
+      });
+    }
     if (error) {
       ProjectUtils.logError(projectRoot, WEBPACK_LOG_TAG, error.message);
     }
@@ -198,6 +275,7 @@ export async function startAsync(
       options.onWebpackFinished(error);
     }
   });
+
   webpackDevServerInstance = server;
 
   await ProjectSettings.setPackagerInfoAsync(projectRoot, {

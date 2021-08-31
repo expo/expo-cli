@@ -11,3 +11,4 @@ export { default as ExpoPwaManifestWebpackPlugin } from './ExpoPwaManifestWebpac
 export { default as ModifyHtmlWebpackPlugin } from './ModifyHtmlWebpackPlugin';
 export { default as FaviconWebpackPlugin } from './FaviconWebpackPlugin';
 export { default as ExpectedErrorsPlugin } from './ExpectedErrors/ExpectedErrorsPlugin';
+export { NativeAssetsPlugin } from './NativeAssetsPlugin/NativeAssetsPlugin';

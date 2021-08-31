@@ -14,6 +14,39 @@ describe('jsEngine', () => {
     expect(getJsEngine(config)).toBe('jsc');
   });
 
+  it('return the engine where platform override config has higher priority', () => {
+    const config: Partial<ExpoConfig> = { jsEngine: 'hermes', android: { jsEngine: 'jsc' } };
+    expect(getJsEngine(config)).toBe('jsc');
+  });
+
+  it('set the property from shared `jsEngine` config', () => {
+    const config: Partial<ExpoConfig> = { jsEngine: 'hermes' };
+    const gradleProperties = parsePropertiesFile(`
+android.useAndroidX=true
+android.enableJetifier=true
+`);
+
+    expect(setJsEngine(config, gradleProperties)).toContainEqual({
+      type: 'property',
+      key: JS_ENGINE_PROP_KEY,
+      value: 'hermes',
+    });
+  });
+
+  it('set the property from platform `jsEngine` override config', () => {
+    const config: Partial<ExpoConfig> = { jsEngine: 'hermes', android: { jsEngine: 'jsc' } };
+    const gradleProperties = parsePropertiesFile(`
+android.useAndroidX=true
+android.enableJetifier=true
+`);
+
+    expect(setJsEngine(config, gradleProperties)).toContainEqual({
+      type: 'property',
+      key: JS_ENGINE_PROP_KEY,
+      value: 'jsc',
+    });
+  });
+
   it('set the property if no property is existed', () => {
     const config: Partial<ExpoConfig> = { android: { jsEngine: 'hermes' } };
     const gradleProperties = parsePropertiesFile(`

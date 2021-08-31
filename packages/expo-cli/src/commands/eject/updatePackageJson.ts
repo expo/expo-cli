@@ -249,7 +249,7 @@ function normalizeDependencyMap(deps: DependenciesMap): string[] {
     .sort();
 }
 
-export function hashForDependencyMap(deps: DependenciesMap): string {
+export function hashForDependencyMap(deps: DependenciesMap = {}): string {
   const depsList = normalizeDependencyMap(deps);
   const depsString = depsList.join('\n');
   return createFileHash(depsString);

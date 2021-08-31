@@ -17,4 +17,3 @@ afterAll(() => {
 });
 
 jest.mock('@expo/rudder-sdk-node');
-jest.mock('analytics-node');

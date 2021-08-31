@@ -4,21 +4,13 @@ import chalk from 'chalk';
 import CommandError from '../../CommandError';
 import Log from '../../log';
 
-function getDefaultPlatforms(): ModPlatform[] {
-  const platforms: ModPlatform[] = ['android'];
-  if (process.platform !== 'win32') {
-    platforms.push('ios');
-  }
-  return platforms;
-}
-
-export function platformsFromPlatform(platform?: string): ModPlatform[] {
-  if (!platform) {
-    return getDefaultPlatforms();
-  }
+export function platformsFromPlatform(
+  platform: string = 'all',
+  { loose }: { loose?: boolean } = {}
+): ModPlatform[] {
   switch (platform) {
     case 'ios':
-      if (process.platform === 'win32') {
+      if (process.platform === 'win32' && !loose) {
         Log.warn('Ejecting is unsupported locally on windows, use eas build instead');
         // continue anyways :shrug:
       }
@@ -26,7 +18,10 @@ export function platformsFromPlatform(platform?: string): ModPlatform[] {
     case 'android':
       return ['android'];
     case 'all':
-      return getDefaultPlatforms();
+      if (loose || process.platform !== 'win32') {
+        return ['android', 'ios'];
+      }
+      return ['android'];
     default:
       throw new CommandError(`Unsupported platform "${platform}". Options are: ios, android, all`);
   }

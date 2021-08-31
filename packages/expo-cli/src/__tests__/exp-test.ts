@@ -11,12 +11,6 @@ Command.prototype.asyncAction = jest.fn().mockImplementation(_ => program);
 Command.prototype.allowOffline = jest.fn().mockImplementation(_ => program);
 Command.prototype.urlOpts = jest.fn().mockImplementation(_ => program);
 
-jest.mock('xdl', () => {
-  const actual = jest.requireActual('xdl');
-  actual.Env.shouldDisableAnalytics = jest.fn().mockImplementation(() => false);
-  return actual;
-});
-
 describe(bootstrapAnalyticsAsync.name, () => {
   const spy = jest.spyOn(UnifiedAnalytics, 'identifyUser');
 

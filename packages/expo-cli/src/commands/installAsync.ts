@@ -51,7 +51,7 @@ export async function actionAsync(
   // If using `expo install` in a project without the expo package even listed
   // in package.json, just fall through to npm/yarn.
   //
-  if (!pkg.dependencies['expo']) {
+  if (!pkg.dependencies?.['expo']) {
     return await packageManager.addAsync(...packages);
   }
 
