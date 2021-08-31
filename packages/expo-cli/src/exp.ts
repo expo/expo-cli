@@ -659,25 +659,15 @@ Command.prototype.asyncActionProjectDir = function (
 };
 
 export async function bootstrapAnalyticsAsync(): Promise<void> {
-  if (Env.shouldDisableAnalytics()) {
-    return; // do not allow E2E to fire events
-  }
-
   Analytics.initializeClient(
-    'vGu92cdmVaggGA26s3lBX6Y5fILm8SQ7',
-    {
-      apiKey: '1wHTzmVgmZvNjCalKL45chlc2VN',
-      dataPlaneUrl: 'https://cdp.expo.dev',
-    },
+    '1wHTzmVgmZvNjCalKL45chlc2VN',
+    'https://cdp.expo.dev',
     packageJSON.version
   );
 
   UnifiedAnalytics.initializeClient(
-    'u4e9dmCiNpwIZTXuyZPOJE7KjCMowdx5',
-    {
-      apiKey: '1wabJGd5IiuF9Q8SGlcI90v8WTs',
-      dataPlaneUrl: 'https://cdp.expo.dev',
-    },
+    '1wabJGd5IiuF9Q8SGlcI90v8WTs',
+    'https://cdp.expo.dev',
     packageJSON.version
   );
 
@@ -714,7 +704,10 @@ async function runAsync(programName: string) {
   try {
     _registerLogs();
 
-    await bootstrapAnalyticsAsync();
+    if (Env.shouldEnableAnalytics()) {
+      await bootstrapAnalyticsAsync();
+    }
+
     UserManager.setInteractiveAuthenticationCallback(loginOrRegisterAsync);
 
     if (process.env.SERVER_URL) {
