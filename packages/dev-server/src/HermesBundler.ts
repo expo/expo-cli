@@ -4,6 +4,7 @@ import fs from 'fs-extra';
 import os from 'os';
 import path from 'path';
 import process from 'process';
+import semver from 'semver';
 
 import {
   importHermesCommandFromProject,
@@ -12,8 +13,20 @@ import {
 
 export function isEnableHermesManaged(expoConfig: ExpoConfig, platform: Platform): boolean {
   switch (platform) {
-    case 'android':
-      return expoConfig.android?.jsEngine === 'hermes';
+    case 'android': {
+      if (!gteSdkVersion(expoConfig, '42.0.0')) {
+        // Hermes on Android is supported after SDK 42.
+        return false;
+      }
+      return (expoConfig.android?.jsEngine ?? expoConfig.jsEngine) === 'hermes';
+    }
+    case 'ios': {
+      if (!gteSdkVersion(expoConfig, '43.0.0')) {
+        // Hermes on iOS is supported after SDK 43.
+        return false;
+      }
+      return (expoConfig.ios?.jsEngine ?? expoConfig.jsEngine) === 'hermes';
+    }
     default:
       return false;
   }
@@ -85,20 +98,44 @@ export function parseGradleProperties(content: string): Record<string, string> {
   return result;
 }
 
-export async function maybeInconsistentEngineAsync(
+export async function maybeThrowFromInconsistentEngineAsync(
   projectRoot: string,
+  configFilePath: string,
   platform: string,
   isHermesManaged: boolean
-): Promise<boolean> {
-  switch (platform) {
-    case 'android':
-      return maybeInconsistentEngineAndroidAsync(projectRoot, isHermesManaged);
-    default:
-      return false;
+): Promise<void> {
+  const configFileName = path.basename(configFilePath);
+  if (
+    platform === 'android' &&
+    (await maybeInconsistentEngineAndroidAsync(projectRoot, isHermesManaged))
+  ) {
+    throw new Error(
+      `JavaScript engine configuration is inconsistent between ${configFileName} and Android native project.\n` +
+        `In ${configFileName}: Hermes is ${isHermesManaged ? 'enabled' : 'not enabled'}\n` +
+        `In Android native project: Hermes is ${isHermesManaged ? 'not enabled' : 'enabled'}\n` +
+        `Please check the following files for inconsistencies:\n` +
+        `  - ${configFilePath}\n` +
+        `  - ${path.join(projectRoot, 'android', 'gradle.properties')}\n` +
+        `  - ${path.join(projectRoot, 'android', 'app', 'build.gradle')}\n` +
+        'Learn more: https://expo.fyi/hermes-android-config'
+    );
+  }
+
+  if (platform === 'ios' && (await maybeInconsistentEngineIosAsync(projectRoot, isHermesManaged))) {
+    throw new Error(
+      `JavaScript engine configuration is inconsistent between ${configFileName} and iOS native project.\n` +
+        `In ${configFileName}: Hermes is ${isHermesManaged ? 'enabled' : 'not enabled'}\n` +
+        `In iOS native project: Hermes is ${isHermesManaged ? 'not enabled' : 'enabled'}\n` +
+        `Please check the following files for inconsistencies:\n` +
+        `  - ${configFilePath}\n` +
+        `  - ${path.join(projectRoot, 'ios', 'Podfile')}\n` +
+        `  - ${path.join(projectRoot, 'ios', 'Podfile.properties.json')}\n` +
+        'Learn more: https://expo.fyi/hermes-ios-config'
+    );
   }
 }
 
-async function maybeInconsistentEngineAndroidAsync(
+export async function maybeInconsistentEngineAndroidAsync(
   projectRoot: string,
   isHermesManaged: boolean
 ): Promise<boolean> {
@@ -131,6 +168,41 @@ async function maybeInconsistentEngineAndroidAsync(
   return false;
 }
 
+export async function maybeInconsistentEngineIosAsync(
+  projectRoot: string,
+  isHermesManaged: boolean
+): Promise<boolean> {
+  // Trying best to check ios native project if by chance to be consistent between app config
+
+  // Check ios/Podfile for ":hermes_enabled => true"
+  const podfilePath = path.join(projectRoot, 'ios', 'Podfile');
+  if (fs.existsSync(podfilePath)) {
+    const content = await fs.readFile(podfilePath, 'utf8');
+    const isPropsReference =
+      content.search(
+        /^\s*:hermes_enabled\s*=>\s*podfile_properties\['expo.jsEngine'\] == 'hermes',?\s+/m
+      ) >= 0;
+    const isHermesBare = content.search(/^\s*:hermes_enabled\s*=>\s*true,?\s+/m) >= 0;
+    if (!isPropsReference && isHermesManaged !== isHermesBare) {
+      return true;
+    }
+  }
+
+  // Check Podfile.properties.json from prebuild template
+  const podfilePropertiesPath = path.join(projectRoot, 'ios', 'Podfile.properties.json');
+  if (fs.existsSync(podfilePropertiesPath)) {
+    try {
+      const props = JSON.parse(await fs.readFile(podfilePropertiesPath, 'utf8'));
+      const isHermesBare = props['expo.jsEngine'] === 'hermes';
+      if (isHermesManaged !== isHermesBare) {
+        return true;
+      }
+    } catch (e) {}
+  }
+
+  return false;
+}
+
 // https://github.com/facebook/hermes/blob/release-v0.5/include/hermes/BCGen/HBC/BytecodeFileFormat.h#L24-L25
 const HERMES_MAGIC_HEADER = 'c61fbc03c103191f';
 
@@ -153,4 +225,21 @@ async function readHermesHeaderAsync(file: string): Promise<Buffer> {
   await fs.read(fd, buffer, 0, 12, null);
   await fs.close(fd);
   return buffer;
+}
+
+// Cloned from xdl/src/Versions.ts, we cannot use that because of circular dependency
+function gteSdkVersion(expJson: Pick<ExpoConfig, 'sdkVersion'>, sdkVersion: string): boolean {
+  if (!expJson.sdkVersion) {
+    return false;
+  }
+
+  if (expJson.sdkVersion === 'UNVERSIONED') {
+    return true;
+  }
+
+  try {
+    return semver.gte(expJson.sdkVersion, sdkVersion);
+  } catch (e) {
+    throw new Error(`${expJson.sdkVersion} is not a valid version. Must be in the form of x.y.z`);
+  }
 }

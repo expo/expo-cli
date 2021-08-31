@@ -4,13 +4,11 @@ import * as ExpoMetroConfig from '@expo/metro-config';
 import type { Server as ConnectServer } from 'connect';
 import http from 'http';
 import type Metro from 'metro';
-import path from 'path';
-import semver from 'semver';
 
 import {
   buildHermesBundleAsync,
   isEnableHermesManaged,
-  maybeInconsistentEngineAsync,
+  maybeThrowFromInconsistentEngineAsync,
 } from './HermesBundler';
 import LogReporter from './LogReporter';
 import { createDevServerAsync } from './metro/createDevServerAsync';
@@ -156,39 +154,22 @@ export async function bundleAsync(
     bundle: BundleOptions,
     bundleOutput: BundleOutput
   ): Promise<BundleOutput> => {
-    if (!gteSdkVersion(expoConfig, '42.0.0')) {
-      return bundleOutput;
-    }
-    const isHermesManaged = isEnableHermesManaged(expoConfig, bundle.platform);
+    const { platform } = bundle;
+    const isHermesManaged = isEnableHermesManaged(expoConfig, platform);
 
-    const maybeInconsistentEngine = await maybeInconsistentEngineAsync(
+    const paths = getConfigFilePaths(projectRoot);
+    const configFilePath = paths.dynamicConfigPath ?? paths.staticConfigPath ?? 'app.json';
+    await maybeThrowFromInconsistentEngineAsync(
       projectRoot,
-      bundle.platform,
+      configFilePath,
+      platform,
       isHermesManaged
     );
-    if (maybeInconsistentEngine) {
-      const platform = bundle.platform === 'ios' ? 'iOS' : 'Android';
-      const paths = getConfigFilePaths(projectRoot);
-      const configFilePath = paths.dynamicConfigPath ?? paths.staticConfigPath ?? 'app.json';
-      const configFileName = path.basename(configFilePath);
-      throw new Error(
-        `JavaScript engine configuration is inconsistent between ${configFileName} and ${platform} native project.\n` +
-          `In ${configFileName}: Hermes is ${isHermesManaged ? 'enabled' : 'not enabled'}\n` +
-          `In ${platform} native project: Hermes is ${
-            isHermesManaged ? 'not enabled' : 'enabled'
-          }\n` +
-          `Please check the following files for inconsistencies:\n` +
-          `  - ${configFilePath}\n` +
-          `  - ${path.join(projectRoot, 'android', 'gradle.properties')}\n` +
-          `  - ${path.join(projectRoot, 'android', 'app', 'build.gradle')}\n` +
-          'Learn more: https://expo.fyi/hermes-android-config'
-      );
-    }
 
     if (isHermesManaged) {
       options.logger.info(
         { tag: 'expo' },
-        `💿 Building Hermes bytecode for the bundle - platform[${bundle.platform}]`
+        `💿 Building Hermes bytecode for the bundle - platform[${platform}]`
       );
       const hermesBundleOutput = await buildHermesBundleAsync(
         projectRoot,
@@ -198,6 +179,13 @@ export async function bundleAsync(
       );
       bundleOutput.hermesBytecodeBundle = hermesBundleOutput.hbc;
       bundleOutput.hermesSourcemap = hermesBundleOutput.sourcemap;
+
+      if (platform) {
+        options.logger.warn(
+          { tag: 'expo' },
+          '❗️ Over-the-Air updates with Hermes engine may violate App Store Review Guideline. Publish with your own risk.'
+        );
+      }
     }
 
     return bundleOutput;
@@ -212,23 +200,6 @@ export async function bundleAsync(
     );
   } finally {
     metroServer.end();
-  }
-}
-
-// Cloned from xdl/src/Versions.ts, we cannot use that because of circular dependency
-function gteSdkVersion(expJson: Pick<ExpoConfig, 'sdkVersion'>, sdkVersion: string): boolean {
-  if (!expJson.sdkVersion) {
-    return false;
-  }
-
-  if (expJson.sdkVersion === 'UNVERSIONED') {
-    return true;
-  }
-
-  try {
-    return semver.gte(expJson.sdkVersion, sdkVersion);
-  } catch (e) {
-    throw new Error(`${expJson.sdkVersion} is not a valid version. Must be in the form of x.y.z`);
   }
 }
 
