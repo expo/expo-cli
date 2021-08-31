@@ -42,7 +42,6 @@ function getModuleTrace(input: any, compilation: any) {
   while (current) {
     if (visitedModules.has(current)) break; // circular (technically impossible, but who knows)
     visitedModules.add(current);
-    console.log();
     const origin = compilation.moduleGraph.getIssuer(current);
     if (!origin) break;
     moduleTrace.push({ origin, module: current });
@@ -57,7 +56,9 @@ export async function getNotFoundError(compilation: any, input: any, fileName: s
     return false;
   }
   const stack = await createStackTrace(getProjectRoot(compilation), {
-    loc: input.loc ? input.loc : input.dependencies.map((d: any) => d.loc).filter(Boolean)[0],
+    loc: input.loc
+      ? input.loc
+      : (input.dependencies || []).map((d: any) => d.loc).filter(Boolean)[0],
     originalSource: input.module.originalSource(),
   });
   // If we could not result the original location we still need to show the existing error
@@ -156,8 +157,8 @@ async function createStackTrace(
 ) {
   try {
     const result = await createOriginalStackFrame({
-      line: loc.start.line,
-      column: loc.start.column,
+      line: loc?.start?.line,
+      column: loc?.start?.column,
       source: originalSource,
       rootDirectory: projectRoot,
       frameNodeModules: true,

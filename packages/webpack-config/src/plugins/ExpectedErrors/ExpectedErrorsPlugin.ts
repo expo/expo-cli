@@ -12,34 +12,31 @@ import webpack from 'webpack';
 import { getModuleBuildError } from './getModuleBuildError';
 
 export default class ExpectedErrorsPlugin {
+  private parseErrorsAsync(compilation: webpack.compilation.Compilation, errors: any[]) {
+    return Promise.all(
+      errors.map(async error => {
+        try {
+          const parsed = await getModuleBuildError(compilation, error);
+          return parsed === false ? error : parsed;
+        } catch (e) {
+          console.log(e);
+          return error;
+        }
+      })
+    );
+  }
+
   apply(compiler: webpack.Compiler) {
     compiler.hooks.compilation.tap(this.constructor.name, compilation => {
       compilation.hooks.afterSeal.tapPromise(this.constructor.name, async () => {
+        // Warnings
         if (compilation.warnings?.length) {
-          compilation.warnings = await Promise.all(
-            compilation.warnings.map(async warning => {
-              try {
-                const moduleWarning = await getModuleBuildError(compilation, warning);
-                return moduleWarning === false ? warning : moduleWarning;
-              } catch (e) {
-                console.log(e);
-                return warning;
-              }
-            })
-          );
+          compilation.warnings = await this.parseErrorsAsync(compilation, compilation.warnings);
         }
+
+        // Errors
         if (compilation.errors?.length) {
-          compilation.errors = await Promise.all(
-            compilation.errors.map(async err => {
-              try {
-                const moduleError = await getModuleBuildError(compilation, err);
-                return moduleError === false ? err : moduleError;
-              } catch (e) {
-                console.log(e);
-                return err;
-              }
-            })
-          );
+          compilation.errors = await this.parseErrorsAsync(compilation, compilation.errors);
         }
       });
     });
