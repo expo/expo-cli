@@ -656,19 +656,11 @@ async function openUrlInSimulatorSafeAsync({
     if (e.isXDLError) {
       // Hit some internal error, don't try again.
       // This includes Xcode license errors
-      Logger.global.error(e.message);
+      // Logger.global.error(e.message);
       return {
         success: false,
         msg: `${e.toString()}`,
       };
-    }
-
-    if (isDetached) {
-      Logger.global.error(
-        `Error running app. Have you installed the app already using Xcode? Since you are detached you must build manually. ${e.toString()}`
-      );
-    } else {
-      Logger.global.error(e.message);
     }
 
     return {
@@ -819,16 +811,15 @@ export async function openProjectAsync({
   });
 
   let device: SimControl.SimulatorDevice | null = null;
-  if (udid) {
-    device = await ensureSimulatorOpenAsync({ udid });
-  } else if (shouldPrompt) {
+  if (!udid && shouldPrompt) {
     const devices = await getSelectableSimulatorsAsync();
     device = await promptForSimulatorAsync(devices);
     if (!device) {
       return { success: false, error: 'escaped' };
     }
+  } else {
+    device = await ensureSimulatorOpenAsync({ udid });
   }
-  assert(device);
 
   // No URL, and is devClient
   if (!projectUrl) {
@@ -867,7 +858,6 @@ export async function openProjectAsync({
         )}`;
       }
       errorMessage += chalk.gray(`\n${result.stderr}`);
-      Logger.global.error(errorMessage);
       return { success: false, error: errorMessage };
     }
     return {

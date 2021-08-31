@@ -370,7 +370,7 @@ async function ensureDevClientInstalledAsync(device: Device, applicationId: stri
   if (!(await isInstalledAsync(device, applicationId))) {
     throw new Error(
       `The development client (${applicationId}) for this project is not installed. ` +
-        `Please build and install the client on the simulator first.\n${learnMore(
+        `Please build and install the client on the device first.\n${learnMore(
           'https://docs.expo.dev/clients/distribution-for-android/'
         )}`
     );
@@ -903,7 +903,7 @@ export async function openProjectAsync({
         )}`;
       }
       errorMessage += chalk.gray(`\n${error.message}`);
-      Logger.global.error(errorMessage);
+      error.message = errorMessage;
       return { success: false, error };
     }
     return {
@@ -929,7 +929,7 @@ export async function openProjectAsync({
       // Don't log anything when the user cancelled the process
       return { success: false, error: 'escaped' };
     } else {
-      Logger.global.error(`Couldn't start project on Android: ${e.message}`);
+      e.message = `Couldn't start project on Android: ${e.message}`;
     }
     return { success: false, error: e };
   }
@@ -964,8 +964,7 @@ export async function openWebProjectAsync({
     await openUrlAsync({ url: projectUrl, device, isDetached: true, projectRoot });
     return { success: true, url: projectUrl };
   } catch (e) {
-    Logger.global.error(`Couldn't open the web project on Android: ${e.message}`);
-    return { success: false, error: e };
+    return { success: false, error: `Couldn't open the web project on Android: ${e.message}` };
   }
 }
 
