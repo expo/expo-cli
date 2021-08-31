@@ -3,7 +3,6 @@ import { IOSConfig } from '@expo/config-plugins';
 import * as osascript from '@expo/osascript';
 import plist from '@expo/plist';
 import spawnAsync from '@expo/spawn-async';
-import assert from 'assert';
 import chalk from 'chalk';
 import { execSync } from 'child_process';
 import fs from 'fs-extra';
