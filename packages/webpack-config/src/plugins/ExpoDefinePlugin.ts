@@ -22,6 +22,7 @@ function createEnvironmentConstants(appManifest: ExpoConfig) {
     facebookAppId: undefined,
     facebookDisplayName: undefined,
 
+    hooks: undefined,
     // Remove iOS and Android.
     ios: undefined,
     android: undefined,
