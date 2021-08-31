@@ -250,6 +250,10 @@ export interface ExpoConfig {
    */
   plugins?: (string | [] | [string] | [string, any])[];
   splash?: Splash;
+  /**
+   * Specifies the JavaScript engine for apps. Supported only on EAS Build. Defaults to `jsc`. Valid values: `hermes`, `jsc`.
+   */
+  jsEngine?: 'hermes' | 'jsc';
   ios?: IOS;
   android?: Android;
   web?: Web;
@@ -451,6 +455,10 @@ export interface IOS {
     tabletImage?: string;
     [k: string]: any;
   };
+  /**
+   * Specifies the JavaScript engine for iOS apps. Supported only on EAS Build. Defaults to `jsc`. Valid values: `hermes`, `jsc`.
+   */
+  jsEngine?: 'hermes' | 'jsc';
 }
 /**
  * Configuration that is specific to the Android platform.
@@ -674,7 +682,7 @@ export interface Android {
    */
   softwareKeyboardLayoutMode?: 'resize' | 'pan';
   /**
-   * Specifies the JavaScript engine. Supported only on EAS Build. Defaults to `jsc`. Valid values: `hermes`, `jsc`.
+   * Specifies the JavaScript engine for Android apps. Supported only on EAS Build and in Expo Go. Defaults to `jsc`. Valid values: `hermes`, `jsc`.
    */
   jsEngine?: 'hermes' | 'jsc';
 }

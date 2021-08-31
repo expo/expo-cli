@@ -48,6 +48,7 @@ import {
   ExpoProgressBarPlugin,
   ExpoPwaManifestWebpackPlugin,
   FaviconWebpackPlugin,
+  NativeAssetsPlugin,
 } from './plugins';
 import ExpoAppManifestWebpackPlugin from './plugins/ExpoAppManifestWebpackPlugin';
 import { HTMLLinkNode } from './plugins/ModifyHtmlWebpackPlugin';
@@ -157,6 +158,10 @@ export default async function (
   // some core modifications to webpack.
   const isNative = ['ios', 'android'].includes(env.platform);
 
+  if (isNative) {
+    env.pwa = false;
+  }
+
   const locations = env.locations || (await getPathsAsync(env.projectRoot));
 
   const { publicPath, publicUrl } = getPublicPaths(env);
@@ -179,19 +184,18 @@ export default async function (
   const webpackDevClientEntry = require.resolve('react-dev-utils/webpackHotDevClient');
 
   if (isNative) {
-    const reactNativeModulePath = resolveFrom.silent(env.projectRoot, 'react-native');
-    if (reactNativeModulePath) {
-      for (const polyfill of [
-        'Core/InitializeCore.js',
-        'polyfills/Object.es7.js',
-        'polyfills/error-guard.js',
-        'polyfills/console.js',
-      ]) {
-        const resolvedPolyfill = resolveFrom.silent(
-          env.projectRoot,
-          `react-native/Libraries/${polyfill}`
-        );
-        if (resolvedPolyfill) appEntry.unshift(resolvedPolyfill);
+    const getPolyfillsPath = resolveFrom.silent(
+      env.projectRoot,
+      'react-native/rn-get-polyfills.js'
+    );
+
+    if (getPolyfillsPath) {
+      appEntry.unshift(
+        ...require(getPolyfillsPath)(),
+        resolveFrom(env.projectRoot, 'react-native/Libraries/Core/InitializeCore')
+      );
+      if (isDev) {
+        // TODO: Native HMR
       }
     }
   } else {
@@ -332,13 +336,54 @@ export default async function (
           verbose: false,
         }),
       // Copy the template files over
-      isProd && new CopyWebpackPlugin({ patterns: filesToCopy }),
+      isProd && !isNative && new CopyWebpackPlugin({ patterns: filesToCopy }),
 
       // Generate the `index.html`
-      (!isNative || !shouldUseNativeCodeLoading) && new ExpoHtmlWebpackPlugin(env, templateIndex),
+      (!isNative || shouldUseNativeCodeLoading) && new ExpoHtmlWebpackPlugin(env, templateIndex),
 
-      (!isNative || !shouldUseNativeCodeLoading) &&
+      (!isNative || shouldUseNativeCodeLoading) &&
         ExpoInterpolateHtmlPlugin.fromEnv(env, ExpoHtmlWebpackPlugin),
+
+      isNative &&
+        new NativeAssetsPlugin({
+          platforms: [env.platform, 'native'],
+          persist: isProd,
+          assetExtensions: [
+            // Image formats
+            'bmp',
+            'gif',
+            'jpg',
+            'jpeg',
+            'png',
+            'psd',
+            'svg',
+            'webp',
+            // Video formats
+            'm4v',
+            'mov',
+            'mp4',
+            'mpeg',
+            'mpg',
+            'webm',
+            // Audio formats
+            'aac',
+            'aiff',
+            'caf',
+            'm4a',
+            'mp3',
+            'wav',
+            // Document formats
+            'html',
+            'pdf',
+            'yaml',
+            'yml',
+            // Font formats
+            'otf',
+            'ttf',
+            // Archives (virtual files)
+            'zip',
+          ],
+        }),
 
       isNative &&
         new ExpoAppManifestWebpackPlugin(
@@ -414,6 +459,14 @@ export default async function (
 
       // This is necessary to emit hot updates (currently CSS only):
       !isNative && isDev && new HotModuleReplacementPlugin(),
+
+      // Replace the Metro specific HMR code in `react-native` with
+      // a shim.
+      isNative &&
+        new webpack.NormalModuleReplacementPlugin(
+          /react-native\/Libraries\/Utilities\/HMRClient\.js$/,
+          require.resolve('./runtime/metro-runtime-shim')
+        ),
 
       // If you require a missing module and then `npm install` it, you still have
       // to restart the development server for Webpack to discover it. This plugin

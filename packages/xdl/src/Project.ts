@@ -56,4 +56,5 @@ export {
   startAsync,
   stopAsync,
   writeArtifactSafelyAsync,
+  LoadedHook,
 } from './internal';

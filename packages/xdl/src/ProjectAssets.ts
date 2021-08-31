@@ -27,7 +27,7 @@ type ManifestResolutionError = Error & {
   manifestField?: string;
 };
 
-type BundlesByPlatform = { android: BundleOutput; ios: BundleOutput };
+type BundlesByPlatform = { android?: BundleOutput; ios?: BundleOutput };
 
 type ExportAssetsOptions = {
   projectRoot: string;
@@ -250,7 +250,10 @@ export async function exportAssetsAsync({
   let assets: Asset[];
   if (experimentalBundle) {
     assert(outputDir, 'outputDir must be specified when exporting to EAS');
-    assets = uniqBy([...bundles.android.assets, ...bundles.ios.assets], asset => asset.hash);
+    assets = uniqBy(
+      Object.values(bundles).flatMap(bundle => bundle!.assets),
+      asset => asset.hash
+    );
   } else {
     const assetCdnPath = urljoin(hostedUrl, assetPath);
     assets = await collectAssets(projectRoot, exp, assetCdnPath, bundles);
@@ -394,7 +397,7 @@ async function collectAssets(
     strict: true,
   });
 
-  return [...bundles.ios.assets, ...bundles.android.assets, ...manifestAssets];
+  return [...Object.values(bundles).flatMap(bundle => bundle!.assets), ...manifestAssets];
 }
 
 export async function resolveAndCollectExpoUpdatesManifestAssets(
