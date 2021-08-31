@@ -166,7 +166,12 @@ export async function openBundleIdAsync(options: {
   udid?: string;
   bundleIdentifier: string;
 }): Promise<SpawnResult> {
-  return simctlAsync(['launch', deviceUDIDOrBooted(options.udid), options.bundleIdentifier]);
+  return xcrunAsync([
+    'simctl',
+    'launch',
+    deviceUDIDOrBooted(options.udid),
+    options.bundleIdentifier,
+  ]);
 }
 
 // This will only boot in headless mode if the Simulator app is not running.
