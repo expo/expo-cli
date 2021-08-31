@@ -79,10 +79,23 @@ export async function actionAsync(projectRoot: string, options: NormalizedOption
   const url = await profileMethod(
     UrlUtils.constructDeepLinkAsync,
     'UrlUtils.constructDeepLinkAsync'
-  )(projectRoot);
-  const recipient = await profileMethod(sendTo.getRecipient)(options.sendTo);
-  if (recipient) {
-    await sendTo.sendUrlAsync(url, recipient);
+  )(projectRoot).catch(error => {
+    // TODO: Maybe there's a better way to do this
+    if (!options.devClient || error.code !== 'NO_DEV_CLIENT_SCHEME') {
+      throw error;
+    }
+    return null;
+  });
+
+  if (options.sendTo) {
+    if (url) {
+      const recipient = await profileMethod(sendTo.getRecipient)(options.sendTo);
+      if (recipient) {
+        await sendTo.sendUrlAsync(url, recipient);
+      }
+    } else {
+      Log.warn('Cannot send URL because the linking URI cannot be resolved');
+    }
   }
 
   // Open project on devices.
@@ -93,7 +106,7 @@ export async function actionAsync(projectRoot: string, options: NormalizedOption
 
   if (isTerminalUIEnabled) {
     await profileMethod(TerminalUI.startAsync, 'TerminalUI.startAsync')(projectRoot, startOptions);
-  } else {
+  } else if (url) {
     if (!exp.isDetached) {
       Log.newLine();
       urlOpts.printQRCode(url);

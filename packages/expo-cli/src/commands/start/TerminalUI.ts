@@ -141,12 +141,26 @@ const printServerInfo = async (
   const item = (text: string): string => ` ${BLT} ` + wrapAnsi(text, wrapLength).trimStart();
 
   if (!options.webOnly) {
-    const url = await UrlUtils.constructDeepLinkAsync(projectRoot);
+    try {
+      const url = await UrlUtils.constructDeepLinkAsync(projectRoot);
 
-    urlOpts.printQRCode(url);
-    Log.nested(item(`Metro waiting on ${u(url)}`));
-    // TODO: if dev client, change this message!
-    Log.nested(item(`Scan the QR code above with Expo Go (Android) or the Camera app (iOS)`));
+      urlOpts.printQRCode(url);
+      Log.nested(item(`Metro waiting on ${u(url)}`));
+      // Log.newLine();
+      // TODO: if dev client, change this message!
+      Log.nested(item(`Scan the QR code above with Expo Go (Android) or the Camera app (iOS)`));
+    } catch (error) {
+      // If there is no dev client scheme, then skip the QR code.
+      if (error.code !== 'NO_DEV_CLIENT_SCHEME') {
+        throw error;
+      } else {
+        const serverUrl = await UrlUtils.constructManifestUrlAsync(projectRoot, {
+          urlType: 'http',
+        });
+        Log.nested(item(`Metro waiting on ${u(serverUrl)}`));
+        Log.nested(item(`Linking is disabled because the client scheme cannot be resolved.`));
+      }
+    }
   }
 
   const webUrl = await Webpack.getUrlAsync(projectRoot);
