@@ -114,12 +114,16 @@ export async function createBundlesAsync(
     }))
   );
 
-  return bundleOptions.platforms.reduce((prev, curr, index) => {
-    return {
-      ...prev,
-      [curr]: bundles[index],
-    };
-  }, {});
+  // { ios: bundle, android: bundle }
+  const results: Record<string, BundleOutput> = {};
+
+  for (let index = 0; index < bundleOptions.platforms.length; index++) {
+    const platform = bundleOptions.platforms[index];
+    const bundle = bundles[index];
+    results[platform] = bundle;
+  }
+
+  return results;
 }
 
 // Fetch iOS and Android bundles for publishing
