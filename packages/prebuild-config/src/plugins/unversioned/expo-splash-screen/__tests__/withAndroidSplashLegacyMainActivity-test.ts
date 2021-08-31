@@ -4,11 +4,11 @@ import fs from 'fs-extra';
 import { vol } from 'memfs';
 
 import fixtures from '../../../__tests__/fixtures/react-native-project';
-import { setSplashScreenMainActivity } from '../withAndroidSplashMainActivity';
+import { setSplashScreenLegacyMainActivity } from '../withAndroidSplashLegacyMainActivity';
 
 jest.mock('fs');
 
-describe(setSplashScreenMainActivity, () => {
+describe(setSplashScreenLegacyMainActivity, () => {
   beforeAll(async () => {
     vol.fromJSON(fixtures, '/app');
   });
@@ -29,12 +29,16 @@ describe(setSplashScreenMainActivity, () => {
     };
     const mainActivity = await AndroidConfig.Paths.getMainActivityAsync('/app');
     let contents = fs.readFileSync(mainActivity.path).toString();
-    contents = await setSplashScreenMainActivity(exp, contents, mainActivity.language);
+    contents = await setSplashScreenLegacyMainActivity(exp, contents, mainActivity.language);
     expect(contents).toMatch(
       /SplashScreen.show\(this, SplashScreenImageResizeMode\.NATIVE, ReactRootView\.class, false\);/
     );
     // Try it twice...
-    const nextContents = await setSplashScreenMainActivity(exp, contents, mainActivity.language);
+    const nextContents = await setSplashScreenLegacyMainActivity(
+      exp,
+      contents,
+      mainActivity.language
+    );
     expect(nextContents).toMatch(contents);
   });
 });

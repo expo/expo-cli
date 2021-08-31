@@ -10,9 +10,9 @@ const debug = Debug('expo:prebuild-config:expo-splash-screen:android:mainActivit
 // DO NOT CHANGE
 const SHOW_SPLASH_ID = 'expo-splash-screen-mainActivity-onCreate-show-splash';
 
-export const withAndroidSplashMainActivity: ConfigPlugin = config => {
+export const withAndroidSplashLegacyMainActivity: ConfigPlugin = config => {
   return withMainActivity(config, config => {
-    config.modResults.contents = setSplashScreenMainActivity(
+    config.modResults.contents = setSplashScreenLegacyMainActivity(
       config,
       config.modResults.contents,
       config.modResults.language
@@ -21,7 +21,7 @@ export const withAndroidSplashMainActivity: ConfigPlugin = config => {
   });
 };
 
-export function setSplashScreenMainActivity(
+export function setSplashScreenLegacyMainActivity(
   config: Pick<ExpoConfig, 'android' | 'androidStatusBar' | 'userInterfaceStyle'>,
   mainActivity: string,
   language: 'java' | 'kt'
