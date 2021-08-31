@@ -79,29 +79,19 @@ export function getNativeBuildVersion(
   }
 }
 
-export function getRuntimeVersionNullable(
+export function getRuntimeVersion(
   config: Pick<ExpoConfig, 'version'> &
     TempRuntimeVersion & {
       android?: Pick<Android, 'versionCode'> & TempRuntimeVersion;
       ios?: Pick<IOS, 'buildNumber'> & TempRuntimeVersion;
     },
-  platform?: 'android' | 'ios'
-): string | null {
-  if (!platform) {
-    // get top level runtime.
-    if (typeof config.runtimeVersion !== 'string') {
-      throw new ConfigError('You must specify a platform while using a policy', 'INVALID_CONFIG');
-    }
-    return config.runtimeVersion ?? null;
-  }
-
+  platform: 'android' | 'ios'
+): string {
   const runtimeVersion = config[platform]?.runtimeVersion ?? config.runtimeVersion;
 
-  if (!runtimeVersion) {
-    return null;
-  } else if (typeof runtimeVersion === 'string') {
+  if (typeof runtimeVersion === 'string') {
     return runtimeVersion;
-  } else if (runtimeVersion['policy'] === 'nativeBuildVersion') {
+  } else if (!runtimeVersion || runtimeVersion['policy'] === 'nativeBuildVersion') {
     return getNativeBuildVersion(config, platform);
   }
 

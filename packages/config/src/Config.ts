@@ -20,7 +20,7 @@ import {
   WriteConfigOptions,
 } from './Config.types';
 import { ConfigError } from './Errors';
-import { getExpoSDKVersion, getRuntimeVersionNullable } from './Project';
+import { getExpoSDKVersion, getRuntimeVersion } from './Project';
 import { getDynamicConfig, getStaticConfig } from './getConfig';
 import { getFullName } from './getFullName';
 import { withConfigPlugins } from './plugins/withConfigPlugins';
@@ -491,21 +491,24 @@ function ensureConfigHasDefaultValues({
   const defaultIos = expWithDefaults.ios
     ? ({
         ...expWithDefaults.ios,
-        runtimeVersion: getRuntimeVersionNullable(expWithDefaults, 'ios') ?? undefined,
+        runtimeVersion: getRuntimeVersion(expWithDefaults, 'ios'),
       } as any) //TODO-JJ remove this cast in SDK 43 https://linear.app/expo/issue/ENG-1869/remove-tempruntimeversion-in-expoconfig
     : undefined;
   const defaultAndroid = expWithDefaults.android
     ? ({
         ...expWithDefaults.android,
-        runtimeVersion: getRuntimeVersionNullable(expWithDefaults, 'android') ?? undefined,
+        runtimeVersion: getRuntimeVersion(expWithDefaults, 'android'),
       } as any) //TODO-JJ remove this cast in SDK 43 https://linear.app/expo/issue/ENG-1869/remove-tempruntimeversion-in-expoconfig
     : undefined;
-
+  // TODO-JJ remove top level runtimeVersion in favor of platform specific definitions
+  // Since there is code that expects either a string or undefined here, pass only non-object runtime Version
+  const topLevelRuntimeVersion =
+    typeof expWithDefaults.runtimeVersion === 'string' ? expWithDefaults.runtimeVersion : undefined;
   return {
     exp: {
       ...expWithDefaults,
+      runtimeVersion: topLevelRuntimeVersion,
       sdkVersion,
-      runtimeVersion: getRuntimeVersionNullable(expWithDefaults) ?? undefined,
       ios: defaultIos,
       android: defaultAndroid,
       platforms,
