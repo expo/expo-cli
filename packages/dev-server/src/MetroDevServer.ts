@@ -192,12 +192,14 @@ export async function bundleAsync(
   };
 
   try {
-    return await Promise.all(
-      bundles.map(async (bundle: BundleOptions) => {
-        const bundleOutput = await buildAsync(bundle);
-        return maybeAddHermesBundleAsync(bundle, bundleOutput);
-      })
-    );
+    const intermediateOutputs = await Promise.all(bundles.map(bundle => buildAsync(bundle)));
+    const bundleOutputs: BundleOutput[] = [];
+    for (let i = 0; i < bundles.length; ++i) {
+      // hermesc does not support parallel building even we spawn processes.
+      // we should build them sequentially.
+      bundleOutputs.push(await maybeAddHermesBundleAsync(bundles[i], intermediateOutputs[i]));
+    }
+    return bundleOutputs;
   } finally {
     metroServer.end();
   }
