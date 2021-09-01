@@ -58,21 +58,21 @@ export function printInstructions(
   const divider = chalk.dim`│`;
 
   if (urls.lanUrlForTerminal) {
-    message += `\n \u203A ${chalk.reset('Local')}   ${divider} ${urls.localUrlForTerminal}`;
-    message += `\n \u203A ${chalk.reset('LAN')}     ${divider} ${urls.lanUrlForTerminal}`;
+    message += `\n\u203A ${chalk.reset('Local')}   ${divider} ${urls.localUrlForTerminal}`;
+    message += `\n\u203A ${chalk.reset('LAN')}     ${divider} ${urls.lanUrlForTerminal}`;
   } else {
-    message += `\n \u203A ${urls.localUrlForTerminal}`;
+    message += `\n\u203A ${urls.localUrlForTerminal}`;
   }
 
   message += '\n';
 
-  message += `\n \u203A Run ${chalk.bold(`expo build:web`)} to optimize and build for production`;
+  message += `\n\u203A Run ${chalk.bold(`expo build:web`)} to optimize and build for production`;
 
   message += '\n';
 
-  message += `\n \u203A Press ${chalk.bold(`w`)} ${divider} open in the browser`;
+  message += `\n\u203A Press ${chalk.bold(`w`)} ${divider} open in the browser`;
   if (shouldPrintHelp) {
-    message += `\n \u203A Press ${chalk.bold(`?`)} ${divider} show all commands`;
+    message += `\n\u203A Press ${chalk.bold(`?`)} ${divider} show all commands`;
   }
 
   log(projectRoot, message, showInDevtools);
