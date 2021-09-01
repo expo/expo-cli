@@ -20,7 +20,13 @@ import {
   WriteConfigOptions,
 } from './Config.types';
 import { ConfigError } from './Errors';
-import { getExpoSDKVersion, getRuntimeVersion } from './Project';
+import {
+  getBuildNumber,
+  getExpoSDKVersion,
+  getRuntimeVersion,
+  getVersion,
+  getVersionCode,
+} from './Project';
 import { getDynamicConfig, getStaticConfig } from './getConfig';
 import { getFullName } from './getFullName';
 import { withConfigPlugins } from './plugins/withConfigPlugins';
@@ -492,21 +498,25 @@ function ensureConfigHasDefaultValues({
     ? ({
         ...expWithDefaults.ios,
         runtimeVersion: getRuntimeVersion(expWithDefaults, 'ios'),
-      } as any) //TODO-JJ remove this cast in SDK 43 https://linear.app/expo/issue/ENG-1869/remove-tempruntimeversion-in-expoconfig
+        buildNumber: getBuildNumber(expWithDefaults),
+      } as any) //TODO(JJ) remove this cast in SDK 43 https://linear.app/expo/issue/ENG-1869/remove-tempruntimeversion-in-expoconfig
     : undefined;
   const defaultAndroid = expWithDefaults.android
     ? ({
         ...expWithDefaults.android,
         runtimeVersion: getRuntimeVersion(expWithDefaults, 'android'),
-      } as any) //TODO-JJ remove this cast in SDK 43 https://linear.app/expo/issue/ENG-1869/remove-tempruntimeversion-in-expoconfig
+        versionCode: getVersionCode(expWithDefaults),
+      } as any) //TODO(JJ) remove this cast in SDK 43 https://linear.app/expo/issue/ENG-1869/remove-tempruntimeversion-in-expoconfig
     : undefined;
-  // TODO-JJ remove top level runtimeVersion in favor of platform specific definitions
-  // Since there is code that expects either a string or undefined here, pass only non-object runtime Version
+  // TODO(JJ) remove top level runtimeVersion in favor of platform specific definitions
+  // While there is code that expects either a string or undefined here, pass only non-object runtime Version
   const topLevelRuntimeVersion =
     typeof expWithDefaults.runtimeVersion === 'string' ? expWithDefaults.runtimeVersion : undefined;
+
   return {
     exp: {
       ...expWithDefaults,
+      version: getVersion(expWithDefaults),
       runtimeVersion: topLevelRuntimeVersion,
       sdkVersion,
       ios: defaultIos,

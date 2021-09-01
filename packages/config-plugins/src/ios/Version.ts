@@ -8,8 +8,7 @@ export const withVersion = createInfoPlistPlugin(setVersion, 'withVersion');
 export const withBuildNumber = createInfoPlistPlugin(setBuildNumber, 'withBuildNumber');
 
 export function getVersion(config: Pick<ExpoConfig, 'version'>) {
-  // TODO-JJ import this from  @expo/config once new version is published
-  return config.version || '1.0.0';
+  return config.version;
 }
 
 export function setVersion(config: Pick<ExpoConfig, 'version'>, infoPlist: InfoPlist): InfoPlist {
@@ -20,8 +19,7 @@ export function setVersion(config: Pick<ExpoConfig, 'version'>, infoPlist: InfoP
 }
 
 export function getBuildNumber(config: Pick<ExpoConfig, 'ios'>) {
-  // TODO-JJ import this from  @expo/config once new version is published
-  return config.ios?.buildNumber ? config.ios.buildNumber : '1';
+  return config.ios?.buildNumber;
 }
 
 export function setBuildNumber(config: Pick<ExpoConfig, 'ios'>, infoPlist: InfoPlist): InfoPlist {
