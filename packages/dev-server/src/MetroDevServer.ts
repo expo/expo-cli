@@ -1,6 +1,7 @@
 import type Log from '@expo/bunyan';
 import { ExpoConfig, getConfigFilePaths } from '@expo/config';
 import * as ExpoMetroConfig from '@expo/metro-config';
+import chalk from 'chalk';
 import type { Server as ConnectServer } from 'connect';
 import http from 'http';
 import type Metro from 'metro';
@@ -167,9 +168,12 @@ export async function bundleAsync(
     );
 
     if (isHermesManaged) {
+      const platformTag = chalk.bold(
+        { ios: 'iOS', android: 'Android', web: 'Web' }[platform] || platform
+      );
       options.logger.info(
         { tag: 'expo' },
-        `💿 Building Hermes bytecode for the bundle - platform[${platform}]`
+        `💿 ${platformTag} Building Hermes bytecode for the bundle`
       );
       const hermesBundleOutput = await buildHermesBundleAsync(
         projectRoot,
@@ -180,10 +184,10 @@ export async function bundleAsync(
       bundleOutput.hermesBytecodeBundle = hermesBundleOutput.hbc;
       bundleOutput.hermesSourcemap = hermesBundleOutput.sourcemap;
 
-      if (platform) {
+      if (platform === 'ios') {
         options.logger.warn(
           { tag: 'expo' },
-          '❗️ Over-the-Air updates with Hermes engine may violate App Store Review Guideline. Publish with your own risk.'
+          `❗️ ${platformTag} Over-the-Air updates with Hermes engine may violate App Store Review Guidelines. Publish the bundle at risk.`
         );
       }
     }
