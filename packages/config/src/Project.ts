@@ -6,7 +6,7 @@ import { ExpoConfig } from './Config.types';
 import { ConfigError } from './Errors';
 
 // TODO-JJ once SDK 43 is pubished, remove TempRuntimeVersion https://linear.app/expo/issue/ENG-1869/remove-tempruntimeversion-in-expoconfig
-type TempRuntimeVersion = { runtimeVersion?: string | { policy: 'nativeBuildVersion' } };
+type TempRuntimeVersion = { runtimeVersion?: string | { policy: 'nativeVersion' } };
 
 export function getExpoSDKVersion(
   projectRoot: string,
@@ -54,7 +54,7 @@ export function getVersionCode(config: Pick<ExpoConfig, 'android'>) {
   return config.android?.versionCode ?? defaultVersionCode;
 }
 
-export function getNativeBuildVersion(
+export function getNativeVersion(
   config: Pick<ExpoConfig, 'version'> & {
     android?: Pick<Android, 'versionCode'> & TempRuntimeVersion;
     ios?: Pick<IOS, 'buildNumber'> & TempRuntimeVersion;
@@ -91,13 +91,13 @@ export function getRuntimeVersion(
 
   if (typeof runtimeVersion === 'string') {
     return runtimeVersion;
-  } else if (!runtimeVersion || runtimeVersion['policy'] === 'nativeBuildVersion') {
-    return getNativeBuildVersion(config, platform);
+  } else if (!runtimeVersion || runtimeVersion['policy'] === 'nativeVersion') {
+    return getNativeVersion(config, platform);
   }
 
   throw new Error(
     `"${
       typeof runtimeVersion === 'object' ? JSON.stringify(runtimeVersion) : runtimeVersion
-    }" is not a valid runtime version. getRuntimeVersion only supports a string or the "nativeBuildVersion" policy.`
+    }" is not a valid runtime version. getRuntimeVersion only supports a string or the "nativeVersion" policy.`
   );
 }

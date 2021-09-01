@@ -1,6 +1,6 @@
 import {
   getBuildNumber,
-  getNativeBuildVersion,
+  getNativeVersion,
   getRuntimeVersion,
   getVersion,
   getVersionCode,
@@ -8,34 +8,34 @@ import {
 
 console.warn = jest.fn();
 
-describe(getNativeBuildVersion, () => {
+describe(getNativeVersion, () => {
   const version = '2.0.0';
   const versionCode = 42;
   const buildNumber = '13';
   it('works for android', () => {
-    expect(getNativeBuildVersion({ version, android: { versionCode } }, 'android')).toBe(
+    expect(getNativeVersion({ version, android: { versionCode } }, 'android')).toBe(
       `${version}(${versionCode})`
     );
   });
   it('works for ios', () => {
-    expect(getNativeBuildVersion({ version, ios: { buildNumber } }, 'ios')).toBe(
+    expect(getNativeVersion({ version, ios: { buildNumber } }, 'ios')).toBe(
       `${version}(${buildNumber})`
     );
   });
   it('throws an error if platform is not recognized', () => {
     const fakePlatform = 'doesnotexit';
     expect(() => {
-      getNativeBuildVersion({ version }, fakePlatform as any);
+      getNativeVersion({ version }, fakePlatform as any);
     }).toThrow(`"${fakePlatform}" is not a supported platform. Choose either "ios" or "android".`);
   });
   it('uses the default version if the version is missing', () => {
-    expect(getNativeBuildVersion({}, 'ios')).toBe('1.0.0(1)');
+    expect(getNativeVersion({}, 'ios')).toBe('1.0.0(1)');
   });
   it('uses the default buildNumber if the platform is ios and the buildNumber is missing', () => {
-    expect(getNativeBuildVersion({ version }, 'ios')).toBe(`${version}(1)`);
+    expect(getNativeVersion({ version }, 'ios')).toBe(`${version}(1)`);
   });
   it('uses the default versionCode if the platform is android and the versionCode is missing', () => {
-    expect(getNativeBuildVersion({ version }, 'android')).toBe(`${version}(1)`);
+    expect(getNativeVersion({ version }, 'android')).toBe(`${version}(1)`);
   });
 });
 
@@ -81,7 +81,7 @@ describe(getRuntimeVersion, () => {
     const buildNumber = '2';
     expect(
       getRuntimeVersion(
-        { version, runtimeVersion: { policy: 'nativeBuildVersion' }, ios: { buildNumber } },
+        { version, runtimeVersion: { policy: 'nativeVersion' }, ios: { buildNumber } },
         'ios'
       )
     ).toBe(`${version}(${buildNumber})`);
@@ -93,12 +93,12 @@ describe(getRuntimeVersion, () => {
     expect(() => {
       getRuntimeVersion({ runtimeVersion: 1 } as any, 'ios');
     }).toThrow(
-      `"1" is not a valid runtime version. getRuntimeVersion only supports a string or the "nativeBuildVersion" policy.`
+      `"1" is not a valid runtime version. getRuntimeVersion only supports a string or the "nativeVersion" policy.`
     );
     expect(() => {
       getRuntimeVersion({ runtimeVersion: { policy: 'unsupportedPlugin' } } as any, 'ios');
     }).toThrow(
-      `"{"policy":"unsupportedPlugin"}" is not a valid runtime version. getRuntimeVersion only supports a string or the "nativeBuildVersion" policy.`
+      `"{"policy":"unsupportedPlugin"}" is not a valid runtime version. getRuntimeVersion only supports a string or the "nativeVersion" policy.`
     );
   });
 });
