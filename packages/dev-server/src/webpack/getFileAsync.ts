@@ -63,7 +63,7 @@ export function getCompilerForPlatform(compiler: AnyCompiler, platform?: string)
 }
 
 export function createGetFileNameFromUrl(compiler: AnyCompiler, publicPath: string = '/') {
-  return function ({ url, platform }: { url: string; platform?: string }) {
+  return function ({ url, platform }: { url: string; platform?: string }): string {
     const platformCompiler = getCompilerForPlatform(compiler, platform);
 
     const filename = getFilenameFromUrl(

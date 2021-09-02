@@ -47,28 +47,35 @@ export function createSymbolicateMiddleware({
     logger,
     customizeFrame,
     async getFileAsync(props) {
-      const filename = getFilenameFromUrl(props);
-      return getFileFromCompilerAsync(compiler, filename);
+      const fileName = getFilenameFromUrl(props);
+      return getFileFromCompilerAsync(compiler, { fileName, platform: props.platform });
     },
     async getSourceMapAsync(props) {
-      const filename = getFilenameFromUrl(props);
-      const fallbackSourceMapFilename = `${filename}.map`;
-      const bundle = await getFileFromCompilerAsync(compiler, filename);
-      const [, sourceMappingUrl] = /sourceMappingURL=(.+)$/.exec(bundle) || [undefined, undefined];
+      const fileName = getFilenameFromUrl(props);
+      const fallbackSourceMapFilename = `${fileName}.map`;
+      const bundle = await getFileFromCompilerAsync(compiler, {
+        fileName,
+        platform: props.platform,
+      });
+      const sourceMappingUrl = /sourceMappingURL=(.+)$/.exec(bundle)?.[1];
       const sourceMapBasename = sourceMappingUrl?.split('?')?.[0];
 
       let sourceMapFilename = fallbackSourceMapFilename;
       if (sourceMapBasename) {
-        sourceMapFilename = path.join(path.dirname(filename), sourceMapBasename);
+        sourceMapFilename = path.join(path.dirname(fileName), sourceMapBasename);
       }
 
       let parseError: Error | null = null;
       for (const file of [sourceMapFilename, fallbackSourceMapFilename]) {
         try {
-          return await getFileFromCompilerAsync(compiler, { fileName: file });
+          return await getFileFromCompilerAsync(compiler, {
+            fileName: file,
+            platform: props.platform,
+          });
         } catch (error) {
           parseError = error;
-          logger.warn({ tag: 'dev-server' }, 'Failed to read source map from sourceMappingURL');
+          console.warn('Failed to read source map from sourceMappingURL:', file);
+          // logger.warn({ tag: 'dev-server' }, 'Failed to read source map from sourceMappingURL');
         }
       }
       throw parseError;
@@ -102,7 +109,8 @@ export function createSymbolicateMiddleware({
       const parsed = await symbolicate.process(stack, { platform });
       return res.end(JSON.stringify(parsed));
     } catch (error) {
-      logger.error({ tag: 'dev-server' }, `Failed to symbolicate: ${error} ${error.stack}`);
+      console.error(`Failed to symbolicate: ${error} ${error.stack}`);
+      // logger.error({ tag: 'dev-server' }, `Failed to symbolicate: ${error} ${error.stack}`);
       res.statusCode = 500;
       return res.end(JSON.stringify({ error: error.message }));
     }
