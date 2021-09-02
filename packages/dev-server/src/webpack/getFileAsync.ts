@@ -1,5 +1,5 @@
 import assert from 'assert';
-import type { IncomingMessage, ServerResponse } from 'http';
+import type { IncomingMessage } from 'http';
 import webpack from 'webpack';
 // @ts-ignore
 import { getFilenameFromUrl } from 'webpack-dev-middleware/lib/util';
