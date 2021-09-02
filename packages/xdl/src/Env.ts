@@ -28,6 +28,7 @@ export function shouldUseDevServer(exp: Pick<ExpoConfig, 'sdkVersion'>) {
   return !Versions.lteSdkVersion(exp, '39.0.0') || getenv.boolish('EXPO_USE_DEV_SERVER', false);
 }
 
-export function shouldDisableAnalytics() {
-  return getenv.boolish('E2E', false) || getenv.boolish('CI', false);
+// do not allow E2E to fire events
+export function shouldEnableAnalytics() {
+  return !getenv.boolish('E2E', false) && !getenv.boolish('CI', false);
 }

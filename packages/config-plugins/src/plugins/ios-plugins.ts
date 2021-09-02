@@ -137,3 +137,20 @@ export const withXcodeProject: ConfigPlugin<Mod<XcodeProject>> = (config, action
     action,
   });
 };
+
+/**
+ * Provides the Podfile.properties.json for modification.
+ *
+ * @param config
+ * @param action
+ */
+export const withPodfileProperties: ConfigPlugin<Mod<Record<string, string>>> = (
+  config,
+  action
+) => {
+  return withMod(config, {
+    platform: 'ios',
+    mod: 'podfileProperties',
+    action,
+  });
+};

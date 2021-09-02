@@ -118,11 +118,10 @@ function logCommandsTable(ui: (false | string[])[]) {
       // @ts-ignore: filter doesn't work
       .map(([key, message, status]) => {
         if (!key) return '';
-        let view = ` ${BLT} `;
+        let view = `${BLT} `;
         if (key.length === 1) view += 'Press ';
         view += `${b(key)} ${div} `;
         view += message;
-        // let view = ` ${BLT} Press ${b(key)} ${div} ${message}`;
         if (status) {
           view += ` ${chalk.dim(`(${i(status)})`)}`;
         }
@@ -141,16 +140,28 @@ const printServerInfo = async (
     printHelp();
     return;
   }
-  Log.newLine();
-  const wrapLength = process.stdout.columns || 80;
-  const item = (text: string): string => ` ${BLT} ` + wrapAnsi(text, wrapLength).trimStart();
-  const url = await UrlUtils.constructDeepLinkAsync(projectRoot);
 
-  urlOpts.printQRCode(url);
-  Log.nested(item(`Waiting on ${u(url)}`));
-  // Log.newLine();
-  // TODO: if dev client, change this message!
-  Log.nested(item(`Scan the QR code above with Expo Go (Android) or the Camera app (iOS)`));
+  const wrapLength = process.stdout.columns || 80;
+  const item = (text: string): string => `${BLT} ` + wrapAnsi(text, wrapLength).trimStart();
+
+  try {
+    const url = await UrlUtils.constructDeepLinkAsync(projectRoot);
+
+    urlOpts.printQRCode(url);
+    Log.nested(item(`Waiting on ${u(url)}`));
+    // Log.newLine();
+    // TODO: if dev client, change this message!
+    Log.nested(item(`Scan the QR code above with Expo Go (Android) or the Camera app (iOS)`));
+  } catch (error) {
+    // If there is no dev client scheme, then skip the QR code.
+    if (error.code !== 'NO_DEV_CLIENT_SCHEME') {
+      throw error;
+    } else {
+      const serverUrl = await UrlUtils.constructManifestUrlAsync(projectRoot, { urlType: 'http' });
+      Log.nested(item(`Waiting on ${u(serverUrl)}`));
+      Log.nested(item(`Linking is disabled because the client scheme cannot be resolved.`));
+    }
+  }
 
   await printBasicUsageAsync(options);
   Webpack.printConnectionInstructions(projectRoot);
