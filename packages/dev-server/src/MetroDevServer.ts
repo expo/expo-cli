@@ -183,15 +183,7 @@ export async function bundleAsync(
       );
       bundleOutput.hermesBytecodeBundle = hermesBundleOutput.hbc;
       bundleOutput.hermesSourcemap = hermesBundleOutput.sourcemap;
-
-      if (platform === 'ios') {
-        options.logger.warn(
-          { tag: 'expo' },
-          `❗️ ${platformTag} Over-the-Air updates with Hermes engine may violate App Store Review Guidelines. Publish the bundle at risk.`
-        );
-      }
     }
-
     return bundleOutput;
   };
 
