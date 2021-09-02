@@ -191,13 +191,11 @@ export async function maybeInconsistentEngineIosAsync(
   // Check Podfile.properties.json from prebuild template
   const podfilePropertiesPath = path.join(projectRoot, 'ios', 'Podfile.properties.json');
   if (fs.existsSync(podfilePropertiesPath)) {
-    try {
-      const props = JSON.parse(await fs.readFile(podfilePropertiesPath, 'utf8'));
-      const isHermesBare = props['expo.jsEngine'] === 'hermes';
-      if (isHermesManaged !== isHermesBare) {
-        return true;
-      }
-    } catch (e) {}
+    const props = await parsePodfilePropertiesAsync(podfilePropertiesPath);
+    const isHermesBare = props['expo.jsEngine'] === 'hermes';
+    if (isHermesManaged !== isHermesBare) {
+      return true;
+    }
   }
 
   return false;
@@ -241,5 +239,15 @@ function gteSdkVersion(expJson: Pick<ExpoConfig, 'sdkVersion'>, sdkVersion: stri
     return semver.gte(expJson.sdkVersion, sdkVersion);
   } catch (e) {
     throw new Error(`${expJson.sdkVersion} is not a valid version. Must be in the form of x.y.z`);
+  }
+}
+
+async function parsePodfilePropertiesAsync(
+  podfilePropertiesPath: string
+): Promise<Record<string, string>> {
+  try {
+    return JSON.parse(await fs.readFile(podfilePropertiesPath, 'utf8'));
+  } catch (e) {
+    return {};
   }
 }
