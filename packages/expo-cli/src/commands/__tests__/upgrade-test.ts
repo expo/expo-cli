@@ -126,16 +126,18 @@ describe('getDependenciesFromBundledNativeModules', () => {
       });
     }
 
-    it(`upgrades react-native to fb version in bare workflow`, () => {
-      const deps = getDependenciesFromBundledNativeModules({
-        projectDependencies: { ...projectDependencies },
-        bundledNativeModules,
-        sdkVersion,
-        workflow: 'bare',
-        targetSdkVersion,
+    for (const workflow of ['bare', 'managed']) {
+      it(`upgrades react-native to fb version in ${workflow} workflow`, () => {
+        const deps = getDependenciesFromBundledNativeModules({
+          projectDependencies: { ...projectDependencies },
+          bundledNativeModules,
+          sdkVersion,
+          workflow: workflow as any,
+          targetSdkVersion,
+        });
+        expect(deps['react-native']).toBe('mock-facebookReactNativeVersion');
       });
-      expect(deps['react-native']).toBe('mock-facebookReactNativeVersion');
-    });
+    }
   });
 
   it(`doesn't add a package if it's not already installed`, () => {
