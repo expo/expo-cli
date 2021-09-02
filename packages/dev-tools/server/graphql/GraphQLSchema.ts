@@ -287,7 +287,7 @@ const typeDefs = graphql`
     openSimulator(platform: Platform!): OpenSimulatorResult
     # Starts WebPack server
     openWeb: OpenWebResult
-    # Publishes the current project to expo.io
+    # Publishes the current project to expo.dev (classic updates)
     publishProject(releaseChannel: String): PublishProjectResult
     # Sends the project URL by email.
     sendProjectUrl(recipient: String!): SendProjectResult

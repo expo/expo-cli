@@ -1,4 +1,5 @@
 import Log from '@expo/bunyan';
+import chalk from 'chalk';
 import { HandleFunction } from 'connect';
 import http from 'http';
 
@@ -13,6 +14,7 @@ export default function clientLogsMiddleware(logger: Log): HandleFunction {
     try {
       const deviceId = req.headers['device-id'];
       const deviceName = req.headers['device-name'];
+      const expoPlatform = req.headers['expo-platform'];
       if (!deviceId) {
         res.writeHead(400).end('Missing Device-Id.');
         return;
@@ -25,7 +27,12 @@ export default function clientLogsMiddleware(logger: Log): HandleFunction {
         res.writeHead(400).end('Missing request body.');
         return;
       }
-      handleDeviceLogs(logger, deviceId.toString(), deviceName.toString(), req.body);
+      handleDeviceLogs(logger, {
+        deviceId: deviceId.toString(),
+        deviceName: deviceName.toString(),
+        logs: req.body,
+        devicePlatform: expoPlatform?.toString(),
+      });
     } catch (error) {
       logger.error({ tag: 'expo' }, `Error getting device logs: ${error} ${error.stack}`);
       next(error);
@@ -46,7 +53,30 @@ function isAppRegistryStartupMessage(body: any[]): boolean {
   );
 }
 
-function handleDeviceLogs(logger: Log, deviceId: string, deviceName: string, logs: any): void {
+export function getDevicePlatformFromAppRegistryStartupMessage(body: string[]): string | null {
+  if (body.length === 1 && typeof body[0] === 'string') {
+    // Dangerously pick the platform out of the request URL
+    // like: http:\\\\/\\\\/192.168.6.113:19000\\\\/index.bundle&platform=android\dev=true&hot=false&minify=false
+    return body[0].match(/[?|&]platform=(\w+)[&|\\]/)?.[1] ?? null;
+  }
+  return null;
+}
+
+function formatDevicePlatform(platform: string): string {
+  // Map the ID like "ios" to "iOS"
+  const formatted = { ios: 'iOS', android: 'Android', web: 'Web' }[platform] || platform;
+  return `${chalk.bold(formatted)} `;
+}
+
+function handleDeviceLogs(
+  logger: Log,
+  {
+    deviceId,
+    deviceName,
+    logs,
+    devicePlatform,
+  }: { deviceId: string; deviceName: string; devicePlatform?: string; logs: any }
+): void {
   for (const log of logs) {
     let body = Array.isArray(log.body) ? log.body : [log.body];
     let { level } = log;
@@ -55,7 +85,14 @@ function handleDeviceLogs(logger: Log, deviceId: string, deviceName: string, log
       level = 'debug';
     }
     if (isAppRegistryStartupMessage(body)) {
-      body = [`Running application on ${deviceName}.`];
+      // If the installed version of expo is sending back the `device-platform` header
+      // then use that, otherwise find it in the query string.
+      const platformId = devicePlatform
+        ? devicePlatform
+        : getDevicePlatformFromAppRegistryStartupMessage(body);
+
+      const platform = platformId ? formatDevicePlatform(platformId) : '';
+      body = [`${platform}Running app on ${deviceName}`];
     }
 
     const args = body.map((obj: any) => {

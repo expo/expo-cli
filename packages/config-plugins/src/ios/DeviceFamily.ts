@@ -3,7 +3,7 @@ import { XcodeProject } from 'xcode';
 
 import { ConfigPlugin } from '../Plugin.types';
 import { withXcodeProject } from '../plugins/ios-plugins';
-import * as WarningAggregator from '../utils/warnings';
+import { addWarningIOS } from '../utils/warnings';
 
 export const withDeviceFamily: ConfigPlugin = config => {
   return withXcodeProject(config, async config => {
@@ -27,8 +27,8 @@ export function getDeviceFamilies(config: Pick<ExpoConfig, 'ios'>): number[] {
   const isTabletOnly = getIsTabletOnly(config);
 
   if (isTabletOnly && config.ios?.supportsTablet === false) {
-    WarningAggregator.addWarningIOS(
-      'device-family',
+    addWarningIOS(
+      'ios.supportsTablet',
       `Found contradictory values: \`{ ios: { isTabletOnly: true, supportsTablet: false } }\`. Using \`{ isTabletOnly: true }\`.`
     );
   }

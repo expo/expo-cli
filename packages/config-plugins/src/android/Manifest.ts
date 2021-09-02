@@ -182,6 +182,37 @@ export function getMainActivityOrThrow(androidManifest: AndroidManifest): Manife
   return mainActivity;
 }
 
+export function getRunnableActivity(androidManifest: AndroidManifest): ManifestActivity | null {
+  // Get enabled activities
+  const enabledActivities = androidManifest?.manifest?.application?.[0]?.activity?.filter?.(
+    (e: any) => e.$['android:enabled'] !== 'false' && e.$['android:enabled'] !== false
+  );
+
+  if (!enabledActivities) {
+    return null;
+  }
+
+  // Get the activity that has a runnable intent-filter
+  for (const activity of enabledActivities) {
+    if (Array.isArray(activity['intent-filter'])) {
+      for (const intentFilter of activity['intent-filter']) {
+        if (
+          intentFilter.action?.find(
+            action => action.$['android:name'] === 'android.intent.action.MAIN'
+          ) &&
+          intentFilter.category?.find(
+            category => category.$['android:name'] === 'android.intent.category.LAUNCHER'
+          )
+        ) {
+          return activity;
+        }
+      }
+    }
+  }
+
+  return null;
+}
+
 export function getMainActivity(androidManifest: AndroidManifest): ManifestActivity | null {
   const mainActivity = androidManifest?.manifest?.application?.[0]?.activity?.filter?.(
     (e: any) => e.$['android:name'] === '.MainActivity'

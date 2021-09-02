@@ -834,6 +834,10 @@ export default {
         rootObject = 83CBB9F71A601CBA00E9B192 /* Project object */;
     }
     `,
+  'ios/Podfile.properties.json': `\
+{
+  "expo.jsEngine": "jsc"
+}`,
   // Android
   'android/app/src/main/java/com/reactnativeproject/MainActivity.java': `package com.reactnativeproject;
   

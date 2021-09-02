@@ -42,6 +42,7 @@ import {
   ExpoProgressBarPlugin,
   ExpoPwaManifestWebpackPlugin,
   FaviconWebpackPlugin,
+  NativeAssetsPlugin,
 } from './plugins';
 import ExpoAppManifestWebpackPlugin from './plugins/ExpoAppManifestWebpackPlugin';
 import { HTMLLinkNode } from './plugins/ModifyHtmlWebpackPlugin';
@@ -49,7 +50,7 @@ import { Arguments, Environment, FilePaths, Mode } from './types';
 
 // Source maps are resource heavy and can cause out of memory issue for large source files.
 const shouldUseSourceMap = boolish('GENERATE_SOURCEMAP', true);
-const shouldUseNativeCodeLoading = boolish('EXPO_WEBPACK_USE_NATIVE_CODE_LOADING', true);
+const shouldUseNativeCodeLoading = boolish('EXPO_WEBPACK_USE_NATIVE_CODE_LOADING', false);
 
 const isCI = boolish('CI', false);
 
@@ -109,6 +110,7 @@ function getOutput(
     // Point sourcemap entries to original disk location (format as URL on Windows)
     commonOutput.devtoolModuleFilenameTemplate = (
       info: DevtoolModuleFilenameTemplateInfo
+      // TODO: revist for web
     ): string => path.resolve(info.absoluteResourcePath).replace(/\\/g, '/');
   }
 
@@ -116,6 +118,10 @@ function getOutput(
     // Give the output bundle a constant name to prevent caching.
     // Also there are no actual files generated in dev.
     commonOutput.filename = `index.bundle`;
+    // This works best for our custom native symbolication middleware
+    commonOutput.devtoolModuleFilenameTemplate = (
+      info: DevtoolModuleFilenameTemplateInfo
+    ): string => info.resourcePath.replace(/\\/g, '/');
   }
 
   return commonOutput;
@@ -156,6 +162,10 @@ export default async function (env: Environment, argv: Arguments = {}): Promise<
   // some core modifications to webpack.
   const isNative = ['ios', 'android'].includes(env.platform);
 
+  if (isNative) {
+    env.pwa = false;
+  }
+
   const locations = env.locations || (await getPathsAsync(env.projectRoot));
 
   const { publicPath, publicUrl } = getPublicPaths(env);
@@ -173,19 +183,18 @@ export default async function (env: Environment, argv: Arguments = {}): Promise<
   const webpackDevClientEntry = require.resolve('react-dev-utils/webpackHotDevClient');
 
   if (isNative) {
-    const reactNativeModulePath = resolveFrom.silent(env.projectRoot, 'react-native');
-    if (reactNativeModulePath) {
-      for (const polyfill of [
-        'Core/InitializeCore.js',
-        'polyfills/Object.es7.js',
-        'polyfills/error-guard.js',
-        'polyfills/console.js',
-      ]) {
-        const resolvedPolyfill = resolveFrom.silent(
-          env.projectRoot,
-          `react-native/Libraries/${polyfill}`
-        );
-        if (resolvedPolyfill) appEntry.unshift(resolvedPolyfill);
+    const getPolyfillsPath = resolveFrom.silent(
+      env.projectRoot,
+      'react-native/rn-get-polyfills.js'
+    );
+
+    if (getPolyfillsPath) {
+      appEntry.unshift(
+        ...require(getPolyfillsPath)(),
+        resolveFrom(env.projectRoot, 'react-native/Libraries/Core/InitializeCore')
+      );
+      if (isDev) {
+        // TODO: Native HMR
       }
     }
   } else {
@@ -273,7 +282,7 @@ export default async function (env: Environment, argv: Arguments = {}): Promise<
     // to our docs means they want to use a custom manifest.json instead of having a new one generated.
     //
     // Normalize the link (removing the beginning slash) so it can be resolved relative to the user's static folder.
-    // Ref: https://docs.expo.io/guides/progressive-web-apps/#manual-setup
+    // Ref: https://docs.expo.dev/guides/progressive-web-apps/#manual-setup
     if (manifestLink.href.startsWith('/')) {
       manifestLink.href = manifestLink.href.substring(1);
     }
@@ -310,8 +319,9 @@ export default async function (env: Environment, argv: Arguments = {}): Promise<
     // Fail out on the first error instead of tolerating it.
     bail: isProd,
     devtool,
-    // TODO(Bacon): Simplify this while ensuring gatsby support continues to work.
-    context: isNative ? env.projectRoot ?? __dirname : __dirname,
+    // This must point to the project root (where the webpack.config.js would normally be located).
+    // If this is anywhere else, the source maps and errors won't show correct paths.
+    context: env.projectRoot ?? __dirname,
     // configures where the build ends up
     output: getOutput(locations, mode, publicPath, env.platform),
 
@@ -344,12 +354,54 @@ export default async function (env: Environment, argv: Arguments = {}): Promise<
           verbose: false,
         }),
       // Copy the template files over
-      isProd && new CopyWebpackPlugin({ patterns: filesToCopy }),
+      isProd && !isNative && new CopyWebpackPlugin({ patterns: filesToCopy }),
 
       // Generate the `index.html`
-      new ExpoHtmlWebpackPlugin(env, templateIndex),
+      (!isNative || shouldUseNativeCodeLoading) && new ExpoHtmlWebpackPlugin(env, templateIndex),
 
-      ExpoInterpolateHtmlPlugin.fromEnv(env, ExpoHtmlWebpackPlugin),
+      (!isNative || shouldUseNativeCodeLoading) &&
+        ExpoInterpolateHtmlPlugin.fromEnv(env, ExpoHtmlWebpackPlugin),
+
+      isNative &&
+        new NativeAssetsPlugin({
+          platforms: [env.platform, 'native'],
+          persist: isProd,
+          assetExtensions: [
+            // Image formats
+            'bmp',
+            'gif',
+            'jpg',
+            'jpeg',
+            'png',
+            'psd',
+            'svg',
+            'webp',
+            // Video formats
+            'm4v',
+            'mov',
+            'mp4',
+            'mpeg',
+            'mpg',
+            'webm',
+            // Audio formats
+            'aac',
+            'aiff',
+            'caf',
+            'm4a',
+            'mp3',
+            'wav',
+            // Document formats
+            'html',
+            'pdf',
+            'yaml',
+            'yml',
+            // Font formats
+            'otf',
+            'ttf',
+            // Archives (virtual files)
+            'zip',
+          ],
+        }),
 
       isNative &&
         new ExpoAppManifestWebpackPlugin(
@@ -423,6 +475,14 @@ export default async function (env: Environment, argv: Arguments = {}): Promise<
           maxChunks: 1,
         }),
 
+      // Replace the Metro specific HMR code in `react-native` with
+      // a shim.
+      isNative &&
+        new webpack.NormalModuleReplacementPlugin(
+          /react-native\/Libraries\/Utilities\/HMRClient\.js$/,
+          require.resolve('./runtime/metro-runtime-shim')
+        ),
+
       !isNative &&
         isProd &&
         new MiniCssExtractPlugin({
@@ -490,6 +550,8 @@ export default async function (env: Environment, argv: Arguments = {}): Promise<
       ].filter(Boolean),
     },
     resolve: {
+      mainFields: isNative ? ['react-native', 'browser', 'main'] : undefined,
+      aliasFields: isNative ? ['react-native', 'browser', 'main'] : undefined,
       extensions: getPlatformsExtensions(env.platform),
       symlinks: false,
     },

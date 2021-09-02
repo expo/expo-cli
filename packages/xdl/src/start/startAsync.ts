@@ -2,7 +2,6 @@ import { ExpoConfig, getConfig } from '@expo/config';
 import { MessageSocket } from '@expo/dev-server';
 import { Server } from 'http';
 
-import { WebpackDevServerResults } from '../Webpack';
 import {
   Analytics,
   Android,
@@ -27,7 +26,6 @@ import { watchBabelConfigForProject } from './watchBabelConfig';
 
 let serverInstance: Server | null = null;
 let messageSocket: MessageSocket | null = null;
-let webpackDevServer: WebpackDevServerResults | null = null;
 
 /**
  * Sends a message over web sockets to any connected device,
@@ -65,7 +63,7 @@ export async function startWebpackAsync(
 export async function startAsync(
   projectRoot: string,
   {
-    exp = getConfig(projectRoot).exp,
+    exp = getConfig(projectRoot, { skipSDKVersionRequirement: true }).exp,
     ...options
   }: StartDevServerOptions & { exp?: ExpoConfig } = {},
   verbose: boolean = true

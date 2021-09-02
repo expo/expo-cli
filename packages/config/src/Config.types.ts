@@ -3,7 +3,7 @@ import { ExpoConfig } from '@expo/config-types';
 
 export { ExpoConfig };
 
-export type PackageJSONConfig = Record<string, any>;
+export type PackageJSONConfig = { dependencies?: Record<string, string>; [key: string]: any };
 
 export interface ProjectConfig {
   /**
@@ -52,9 +52,11 @@ export type HookArguments = {
   iosBundle: string | Uint8Array;
   iosSourceMap: string | null;
   iosManifest: any;
+  iosManifestUrl: string;
   androidBundle: string | Uint8Array;
   androidSourceMap: string | null;
   androidManifest: any;
+  androidManifestUrl: string;
   projectRoot: string;
   log: (msg: any) => void;
 };

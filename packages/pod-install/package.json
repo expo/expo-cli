@@ -1,6 +1,6 @@
 {
   "name": "pod-install",
-  "version": "0.1.26",
+  "version": "0.1.27",
   "main": "build",
   "keywords": [
     "cocoapods",
@@ -14,7 +14,7 @@
     "url": "https://github.com/expo/expo-cli.git"
   },
   "homepage": "https://github.com/expo/expo-cli/tree/master/packages/pod-install",
-  "author": "Expo <support@expo.io>",
+  "author": "Expo <support@expo.dev>",
   "license": "MIT",
   "bin": {
     "pod-install": "./build/index.js"
@@ -32,7 +32,7 @@
     "clean": "rimraf ./build/"
   },
   "devDependencies": {
-    "@expo/package-manager": "0.0.46",
+    "@expo/package-manager": "0.0.47",
     "chalk": "^4.0.0",
     "commander": "2.20.0",
     "update-check": "1.5.3"

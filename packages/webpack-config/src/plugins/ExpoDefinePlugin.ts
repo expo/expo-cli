@@ -93,7 +93,7 @@ export function createClientEnvironment(
 
         /**
          * Surfaces the `app.json` (config) as an environment variable which is then parsed by
-         * `expo-constants` https://docs.expo.io/versions/latest/sdk/constants/
+         * `expo-constants` https://docs.expo.dev/versions/latest/sdk/constants/
          */
         [`${prefix}APP_MANIFEST`]: JSON.stringify(nativeAppManifest),
       } as Record<string, string>
@@ -113,7 +113,7 @@ export function createClientEnvironment(
 }
 
 /**
- * Required for `expo-constants` https://docs.expo.io/versions/latest/sdk/constants/.
+ * Required for `expo-constants` https://docs.expo.dev/versions/latest/sdk/constants/.
  * This surfaces the `app.json` (config) as an environment variable which is then parsed by `expo-constants`.
  * @category plugins
  */

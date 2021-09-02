@@ -271,7 +271,7 @@ async function makeBreakingChangesToConfigAsync(
             text: chalk.red(
               `Please manually update "androidNavigationBar.visible" according to ${terminalLink(
                 'this documentation',
-                'https://docs.expo.io/versions/latest/config/app/#androidnavigationbar'
+                'https://docs.expo.dev/versions/latest/config/app/#androidnavigationbar'
               )}`
             ),
           });
@@ -302,7 +302,7 @@ async function maybeBailOnUnsafeFunctionalityAsync(
     }
 
     const answer = await confirmAsync({
-      message: `This command works best on SDK 33 and higher. We can try updating for you, but you will likely need to follow up with the instructions from https://docs.expo.io/workflow/upgrading-expo-sdk-walkthrough/. Continue anyways?`,
+      message: `This command works best on SDK 33 and higher. We can try updating for you, but you will likely need to follow up with the instructions from https://docs.expo.dev/workflow/upgrading-expo-sdk-walkthrough/. Continue anyways?`,
     });
 
     if (!answer) {
@@ -346,7 +346,7 @@ async function shouldBailWhenUsingLatest(
     });
 
     if (!answer) {
-      Log.log('Follow the Expo blog at https://blog.expo.io for new release information!');
+      Log.log('Follow the Expo blog at https://blog.expo.dev for new release information!');
       Log.newLine();
       return true;
     }
@@ -818,7 +818,7 @@ export async function upgradeAsync(
       );
     } else {
       Log.gray(
-        `Unable to find release notes for ${targetSdkVersionString}, please try to find them on https://blog.expo.io to learn more about other potentially important upgrade steps and breaking changes.`
+        `Unable to find release notes for ${targetSdkVersionString}, please try to find them on https://blog.expo.dev to learn more about other potentially important upgrade steps and breaking changes.`
       );
     }
   }
@@ -855,7 +855,7 @@ export async function upgradeAsync(
 async function maybeCleanNpmStateAsync(packageManager: any) {
   // We don't trust npm to properly handle deduping dependencies so we need to
   // clear the lockfile and node_modules.
-  // https://forums.expo.io/t/sdk-37-unrecognized-font-family/35201
+  // https://forums.expo.dev/t/sdk-37-unrecognized-font-family/35201
   // https://twitter.com/geoffreynyaga/status/1246170581109743617
   if (packageManager instanceof PackageManager.NpmPackageManager) {
     const cleaningNpmStateStep = logNewSection(

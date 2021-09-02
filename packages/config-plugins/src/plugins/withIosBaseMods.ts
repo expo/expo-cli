@@ -1,4 +1,4 @@
-import { JSONObject } from '@expo/json-file';
+import JsonFile, { JSONObject } from '@expo/json-file';
 import plist from '@expo/plist';
 import assert from 'assert';
 import { promises } from 'fs';
@@ -150,6 +150,22 @@ const defaultProviders = {
       await writeFile(filePath, plist.build(sortObject(config.modResults)));
     },
   }),
+  // Append a rule to supply Podfile.properties.json data to mods on `mods.ios.podfileProperties`
+  podfileProperties: provider<Record<string, string>>({
+    getFilePath({ modRequest: { platformProjectRoot } }) {
+      return path.resolve(platformProjectRoot, 'Podfile.properties.json');
+    },
+    async read(filePath) {
+      let results: Record<string, string> = {};
+      try {
+        results = await JsonFile.readAsync(filePath);
+      } catch (e) {}
+      return results;
+    },
+    async write(filePath, { modResults }) {
+      await JsonFile.writeAsync(filePath, modResults);
+    },
+  }),
 };
 
 type IosDefaultProviders = typeof defaultProviders;
@@ -299,6 +315,30 @@ export function getIosIntrospectModFileProviders(): Omit<
         if (!config.ios) config.ios = {};
 
         config.ios.entitlements = config.modResults;
+      },
+    },
+
+    podfileProperties: {
+      async getFilePath(...props) {
+        try {
+          return await defaultProviders.podfileProperties.getFilePath(...props);
+        } catch {
+          return '';
+        }
+      },
+
+      async read(filePath, config, props) {
+        try {
+          return await defaultProviders.podfileProperties.read(filePath, config, props);
+        } catch {
+          return {};
+        }
+      },
+
+      async write(filePath, config, props) {
+        try {
+          await defaultProviders.podfileProperties.write(filePath, config, props);
+        } catch {}
       },
     },
   };

@@ -8,6 +8,7 @@ import { UrlUtils } from 'xdl';
 import CommandError from '../CommandError';
 import Log from '../log';
 import prompt from '../prompts';
+import { platformsFromPlatform } from './eject/platformOptions';
 import { exportAppAsync } from './export/exportAppAsync';
 import { mergeAppDistributions } from './export/mergeAppDistributions';
 import * as CreateApp from './utils/CreateApp';
@@ -22,6 +23,7 @@ type Options = {
   dev: boolean;
   clear: boolean;
   quiet: boolean;
+  platform: string;
   target?: ProjectTarget;
   dumpAssetmap: boolean;
   dumpSourcemap: boolean;
@@ -75,15 +77,19 @@ async function exportFilesAsync(
     | 'target'
     | 'outputDir'
     | 'publicUrl'
+    | 'platform'
     | 'assetUrl'
     | 'experimentalBundle'
   >
 ) {
+  const platforms = platformsFromPlatform(options.platform, { loose: true });
+
   // Make outputDir an absolute path if it isnt already
   const exportOptions = {
     dumpAssetmap: options.dumpAssetmap,
     dumpSourcemap: options.dumpSourcemap,
     isDev: options.dev,
+    platforms,
     publishOptions: {
       resetCache: !!options.clear,
       target: options.target,

@@ -6,7 +6,7 @@ import { XcodeProject } from 'xcode';
 
 import { ConfigPlugin } from '../Plugin.types';
 import { withXcodeProject } from '../plugins/ios-plugins';
-import * as WarningAggregator from '../utils/warnings';
+import { addWarningIOS } from '../utils/warnings';
 import { addResourceFileToGroup, ensureGroupRecursively, getProjectName } from './utils/Xcodeproj';
 
 type LocaleJson = Record<string, string>;
@@ -87,10 +87,10 @@ export async function getResolvedLocalesAsync(
         locales[lang] = await JsonFile.readAsync(join(projectRoot, localeJsonPath));
       } catch (e) {
         // Add a warning when a json file cannot be parsed.
-        WarningAggregator.addWarningIOS(
-          `locales-${lang}`,
+        addWarningIOS(
+          `locales.${lang}`,
           `Failed to parse JSON of locale file for language: ${lang}`,
-          'https://docs.expo.io/distribution/app-stores/#localizing-your-ios-app'
+          'https://docs.expo.dev/distribution/app-stores/#localizing-your-ios-app'
         );
       }
     } else {

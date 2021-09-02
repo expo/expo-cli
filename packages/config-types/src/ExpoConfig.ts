@@ -13,7 +13,7 @@ export interface ExpoConfig {
    */
   description?: string;
   /**
-   * The friendly URL name for publishing. For example, `myAppName` will refer to the `expo.io/@project-owner/myAppName` project.
+   * The friendly URL name for publishing. For example, `myAppName` will refer to the `expo.dev/@project-owner/myAppName` project.
    */
   slug: string;
   /**
@@ -43,7 +43,7 @@ export interface ExpoConfig {
    */
   runtimeVersion?: string;
   /**
-   * Your app version. In addition to this field, you'll also use `ios.buildNumber` and `android.versionCode` — read more about how to version your app [here](https://docs.expo.io/distribution/app-stores/#versioning-your-app). On iOS this corresponds to `CFBundleShortVersionString`, and on Android, this corresponds to `versionName`. The required format can be found [here](https://developer.apple.com/documentation/bundleresources/information_property_list/cfbundleshortversionstring).
+   * Your app version. In addition to this field, you'll also use `ios.buildNumber` and `android.versionCode` — read more about how to version your app [here](https://docs.expo.dev/distribution/app-stores/#versioning-your-app). On iOS this corresponds to `CFBundleShortVersionString`, and on Android, this corresponds to `versionName`. The required format can be found [here](https://developer.apple.com/documentation/bundleresources/information_property_list/cfbundleshortversionstring).
    */
   version?: string;
   /**
@@ -87,7 +87,7 @@ export interface ExpoConfig {
      */
     color?: string;
     /**
-     * Whether or not to display notifications when the app is in the foreground on iOS. `_displayInForeground` option in the individual push notification message overrides this option. [Learn more.](https://docs.expo.io/push-notifications/receiving-notifications/#foreground-notification-behavior) Defaults to `false`.
+     * Whether or not to display notifications when the app is in the foreground on iOS. `_displayInForeground` option in the individual push notification message overrides this option. [Learn more.](https://docs.expo.dev/push-notifications/receiving-notifications/#foreground-notification-behavior) Defaults to `false`.
      */
     iosDisplayInForeground?: boolean;
     /**
@@ -104,7 +104,7 @@ export interface ExpoConfig {
    */
   appKey?: string;
   /**
-   * Configuration for the status bar on Android. For more details please navigate to [Configuring StatusBar](https://docs.expo.io/guides/configuring-statusbar/).
+   * Configuration for the status bar on Android. For more details please navigate to [Configuring StatusBar](https://docs.expo.dev/guides/configuring-statusbar/).
    */
   androidStatusBar?: {
     /**
@@ -165,13 +165,13 @@ export interface ExpoConfig {
    */
   entryPoint?: string;
   /**
-   * Any extra fields you want to pass to your experience. Values are accessible via `Expo.Constants.manifest.extra` ([Learn more](https://docs.expo.io/versions/latest/sdk/constants/#constantsmanifest))
+   * Any extra fields you want to pass to your experience. Values are accessible via `Expo.Constants.manifest.extra` ([Learn more](https://docs.expo.dev/versions/latest/sdk/constants/#constantsmanifest))
    */
   extra?: {
     [k: string]: any;
   };
   /**
-   * @deprecated Use a `metro.config.js` file instead. [Learn more](https://docs.expo.io/guides/customizing-metro/)
+   * @deprecated Use a `metro.config.js` file instead. [Learn more](https://docs.expo.dev/guides/customizing-metro/)
    */
   packagerOpts?: {
     [k: string]: any;
@@ -242,14 +242,18 @@ export interface ExpoConfig {
     [k: string]: any;
   };
   /**
-   * An array of file glob strings which point to assets that will be bundled within your standalone app binary. Read more in the [Offline Support guide](https://docs.expo.io/guides/offline-support/)
+   * An array of file glob strings which point to assets that will be bundled within your standalone app binary. Read more in the [Offline Support guide](https://docs.expo.dev/guides/offline-support/)
    */
   assetBundlePatterns?: string[];
   /**
-   * Config plugins for adding extra functionality to your project. [Learn more](https://docs.expo.io/guides/config-plugins/).
+   * Config plugins for adding extra functionality to your project. [Learn more](https://docs.expo.dev/guides/config-plugins/).
    */
   plugins?: (string | [] | [string] | [string, any])[];
   splash?: Splash;
+  /**
+   * Specifies the JavaScript engine for apps. Supported only on EAS Build. Defaults to `jsc`. Valid values: `hermes`, `jsc`.
+   */
+  jsEngine?: 'hermes' | 'jsc';
   ios?: IOS;
   android?: Android;
   web?: Web;
@@ -451,6 +455,10 @@ export interface IOS {
     tabletImage?: string;
     [k: string]: any;
   };
+  /**
+   * Specifies the JavaScript engine for iOS apps. Supported only on EAS Build. Defaults to `jsc`. Valid values: `hermes`, `jsc`.
+   */
+  jsEngine?: 'hermes' | 'jsc';
 }
 /**
  * Configuration that is specific to the Android platform.
@@ -674,7 +682,7 @@ export interface Android {
    */
   softwareKeyboardLayoutMode?: 'resize' | 'pan';
   /**
-   * Specifies the JavaScript engine. Supported only on EAS Build. Defaults to `jsc`. Valid values: `hermes`, `jsc`.
+   * Specifies the JavaScript engine for Android apps. Supported only on EAS Build and in Expo Go. Defaults to `jsc`. Valid values: `hermes`, `jsc`.
    */
   jsEngine?: 'hermes' | 'jsc';
 }

@@ -74,7 +74,7 @@ Object {
           "DEFAULT",
         ],
         "data": Object {
-          "host": "*.expo.io",
+          "host": "*.expo.dev",
           "scheme": "https",
         },
       },
@@ -554,7 +554,7 @@ Object {
                         "data": Array [
                           Object {
                             "$": Object {
-                              "android:host": "*.expo.io",
+                              "android:host": "*.expo.dev",
                               "android:scheme": "https",
                             },
                           },
@@ -736,6 +736,20 @@ Object {
               },
               Object {
                 "$": Object {
+                  "name": "expo_splash_screen_resize_mode",
+                  "translatable": "false",
+                },
+                "_": "contain",
+              },
+              Object {
+                "$": Object {
+                  "name": "expo_splash_screen_status_bar_translucent",
+                  "translatable": "false",
+                },
+                "_": "true",
+              },
+              Object {
+                "$": Object {
                   "name": "facebook_app_id",
                 },
                 "_": "1234567890",
@@ -910,6 +924,9 @@ Object {
             "live": "MY_BRANCH_KEY",
           },
         },
+        "podfileProperties": Object {
+          "expo.jsEngine": "jsc",
+        },
       },
     },
     "pluginHistory": Object {
@@ -983,7 +1000,7 @@ Object {
           "DEFAULT",
         ],
         "data": Object {
-          "host": "*.expo.io",
+          "host": "*.expo.dev",
           "scheme": "https",
         },
       },
@@ -1352,7 +1369,7 @@ Object {
                         "data": Array [
                           Object {
                             "$": Object {
-                              "android:host": "*.expo.io",
+                              "android:host": "*.expo.dev",
                               "android:scheme": "https",
                             },
                           },
@@ -1564,6 +1581,20 @@ Object {
               },
               Object {
                 "$": Object {
+                  "name": "expo_splash_screen_resize_mode",
+                  "translatable": "false",
+                },
+                "_": "contain",
+              },
+              Object {
+                "$": Object {
+                  "name": "expo_splash_screen_status_bar_translucent",
+                  "translatable": "false",
+                },
+                "_": "true",
+              },
+              Object {
+                "$": Object {
                   "name": "facebook_app_id",
                 },
                 "_": "1234567890",
@@ -1711,6 +1742,9 @@ Object {
             "live": "MY_BRANCH_KEY",
           },
         },
+        "podfileProperties": Object {
+          "expo.jsEngine": "jsc",
+        },
       },
     },
     "pluginHistory": Object {
@@ -1784,7 +1818,7 @@ Object {
           "DEFAULT",
         ],
         "data": Object {
-          "host": "*.expo.io",
+          "host": "*.expo.dev",
           "scheme": "https",
         },
       },

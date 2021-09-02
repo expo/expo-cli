@@ -24,8 +24,8 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE. */
 
+import { DOMParser } from '@xmldom/xmldom';
 import assert from 'assert';
-import { DOMParser } from 'xmldom';
 
 const TEXT_NODE = 3;
 const CDATA_NODE = 4;

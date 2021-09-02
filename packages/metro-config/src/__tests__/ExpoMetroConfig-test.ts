@@ -18,7 +18,7 @@ describe('getDefaultConfig', () => {
       expect.objectContaining({
         projectRoot,
         resolver: expect.objectContaining({
-          sourceExts: expect.arrayContaining(['expo.ts', 'expo.tsx', 'expo.js', 'expo.jsx']),
+          sourceExts: expect.arrayContaining(['expo.ts', 'expo.tsx', 'expo.js', 'expo.jsx', 'jsx']),
         }),
       })
     );

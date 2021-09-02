@@ -166,7 +166,7 @@ function getLargeConfig(): ExportedConfig {
           action: 'VIEW',
           data: {
             scheme: 'https',
-            host: '*.expo.io',
+            host: '*.expo.dev',
           },
           category: ['BROWSABLE', 'DEFAULT'],
         },
@@ -345,6 +345,7 @@ describe('built-in plugins', () => {
       'ios/ReactNativeProject/SplashScreen.storyboard',
       'ios/ReactNativeProject/ReactNativeProject.entitlements',
       'ios/ReactNativeProject.xcodeproj/project.pbxproj',
+      'ios/Podfile.properties.json',
       'ios/Podfile',
       'android/app/src/main/java/com/bacon/todo/MainActivity.java',
       'android/app/src/main/java/com/bacon/todo/MainApplication.java',
@@ -487,6 +488,7 @@ describe('built-in plugins', () => {
       'ios/ReactNativeProject/Images.xcassets/Contents.json',
       'ios/ReactNativeProject/ReactNativeProject.entitlements',
       'ios/ReactNativeProject.xcodeproj/project.pbxproj',
+      'ios/Podfile.properties.json',
       'ios/Podfile',
       'android/app/src/main/java/com/reactnativeproject/MainActivity.java',
       'android/app/src/main/java/com/reactnativeproject/MainApplication.java',
@@ -602,6 +604,21 @@ describe('built-in plugins', () => {
       'config/google-services.json',
       'locales/en-US.json',
     ]);
+  });
+
+  it('create Podfile.properties.json file for backward compatible', async () => {
+    const { '/app/ios/Podfile.properties.json': _, ...volWithoutPodfileProperties } = vol.toJSON();
+    vol.reset();
+    vol.fromJSON(volWithoutPodfileProperties);
+
+    let config = getPrebuildConfig();
+    // change jsEngine to hermes
+    config.jsEngine = 'hermes';
+
+    config = await compileModsAsync(config, { projectRoot: '/app' });
+
+    const result = await JsonFile.readAsync('/app/ios/Podfile.properties.json');
+    expect(result).toMatchObject({ 'expo.jsEngine': 'hermes' });
   });
 });
 

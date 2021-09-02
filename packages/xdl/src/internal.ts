@@ -11,6 +11,7 @@
 */
 export { Semaphore } from './utils/Semaphore';
 export * as Env from './Env';
+export * as CoreSimulator from './apple/CoreSimulator';
 export { default as Config } from './Config';
 export * as Xcode from './Xcode';
 export * as ConnectionStatus from './ConnectionStatus';

@@ -32,7 +32,7 @@ it(`allows an npm proxy`, async () => {
   jest.mock('child_process', () => {
     return {
       execSync() {
-        return 'https://expo.io';
+        return 'https://expo.dev';
       },
     };
   });

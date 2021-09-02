@@ -1,6 +1,12 @@
 import Log from '@expo/bunyan';
 import { getConfig, getNameFromConfig } from '@expo/config';
-import { MessageSocket } from '@expo/dev-server';
+import {
+  attachInspectorProxy,
+  createDevServerMiddleware,
+  LogReporter,
+  MessageSocket,
+} from '@expo/dev-server';
+import { createSymbolicateMiddleware } from '@expo/dev-server/build/webpack/symbolicateMiddleware';
 import * as devcert from '@expo/devcert';
 import { isUsingYarn } from '@expo/package-manager';
 import chalk from 'chalk';
@@ -16,8 +22,10 @@ import WebpackDevServer from 'webpack-dev-server';
 
 import {
   choosePortAsync,
+  ExpoUpdatesManifestHandler,
   ip,
   Logger,
+  ManifestHandler,
   ProjectSettings,
   ProjectUtils,
   UrlUtils,
@@ -84,6 +92,11 @@ let devServerInfo: {
   port: number;
 } | null = null;
 
+// A custom message websocket broadcaster used to send messages to a React Native runtime.
+let customMessageSocketBroadcaster:
+  | undefined
+  | ((message: string, data?: Record<string, any>) => void);
+
 export function printConnectionInstructions(projectRoot: string, options = {}) {
   if (!devServerInfo) return;
   WebpackCompiler.printInstructions(projectRoot, {
@@ -106,11 +119,101 @@ async function clearWebCacheAsync(projectRoot: string, mode: string): Promise<vo
   } catch {}
 }
 
+// Temporary hack while we implement multi-bundler dev server proxy.
+export function isTargetingNative() {
+  return ['ios', 'android'].includes(process.env.EXPO_WEBPACK_PLATFORM || '');
+}
+
 export type WebpackDevServerResults = {
   server: DevServer;
   location: Omit<WebpackSettings, 'server'>;
   messageSocket: MessageSocket;
 };
+
+export async function broadcastMessage(message: 'reload' | string, data?: any) {
+  if (!webpackDevServerInstance || !(webpackDevServerInstance instanceof WebpackDevServer)) {
+    return;
+  }
+
+  // Allow any message on native
+  if (customMessageSocketBroadcaster) {
+    customMessageSocketBroadcaster(message, data);
+    return;
+  }
+
+  if (message !== 'reload') {
+    // TODO:
+    // Webpack currently only supports reloading the client (browser),
+    // remove this when we have custom sockets, and native support.
+    return;
+  }
+
+  // TODO:
+  // Default webpack-dev-server sockets use "content-changed" instead of "reload" (what we use on native).
+  // For now, just manually convert the value so our CLI interface can be unified.
+  const hackyConvertedMessage = message === 'reload' ? 'content-changed' : message;
+
+  webpackDevServerInstance.sockWrite(webpackDevServerInstance.sockets, hackyConvertedMessage, data);
+}
+
+function createNativeDevServerMiddleware(
+  projectRoot: string,
+  { port, compiler }: { port: number; compiler: webpack.Compiler }
+) {
+  if (!isTargetingNative()) {
+    return null;
+  }
+  const nativeMiddleware = createDevServerMiddleware({
+    logger: ProjectUtils.getLogger(projectRoot),
+    port,
+    watchFolders: [projectRoot],
+  });
+  // Add manifest middleware to the other middleware.
+  // TODO: Move this in to expo/dev-server.
+  nativeMiddleware.middleware
+    .use(ManifestHandler.getManifestHandler(projectRoot))
+    .use(ExpoUpdatesManifestHandler.getManifestHandler(projectRoot))
+    .use(
+      '/symbolicate',
+      createSymbolicateMiddleware({
+        projectRoot,
+        compiler,
+        logger: nativeMiddleware.logger,
+      })
+    );
+  return nativeMiddleware;
+}
+
+function attachNativeDevServerMiddlewareToDevServer(
+  projectRoot: string,
+  {
+    server,
+    middleware,
+    attachToServer,
+    logger,
+  }: { server: http.Server } & ReturnType<typeof createNativeDevServerMiddleware>
+) {
+  // Hook up the React Native WebSockets to the Webpack dev server.
+  const { messageSocket, debuggerProxy, eventsSocket } = attachToServer(server);
+
+  customMessageSocketBroadcaster = messageSocket.broadcast;
+
+  const logReporter = new LogReporter(logger);
+  logReporter.reportEvent = eventsSocket.reportEvent;
+
+  const { inspectorProxy } = attachInspectorProxy(projectRoot, {
+    middleware,
+    server,
+  });
+
+  return {
+    messageSocket,
+    eventsSocket,
+    debuggerProxy,
+    logReporter,
+    inspectorProxy,
+  };
+}
 
 export async function startAsync(
   projectRoot: string,
@@ -183,27 +286,59 @@ export async function startAsync(
     port: webpackServerPort!,
   };
 
-  // const server: DevServer = await new Promise(resolve => {
-  // Create a webpack compiler that is configured with custom messages.
-  const compiler = webpack(config);
-  // const compiler = WebpackCompiler.createWebpackCompiler({
-  //   projectRoot,
-  //   appName,
-  //   config,
-  //   urls,
-  //   nonInteractive,
-  //   webpackFactory: webpack,
-  //   // onFinished: () => resolve(server),
-  // });
-  const server = new WebpackDevServer(compiler, config.devServer);
-  // Launch WebpackDevServer.
-  server.listen(port, WebpackEnvironment.HOST, error => {
-    if (error) {
-      ProjectUtils.logError(projectRoot, WEBPACK_LOG_TAG, error.message);
-    }
-    if (typeof options.onWebpackFinished === 'function') {
-      options.onWebpackFinished(error);
-    }
+  // This is a temporary hack since we need to serve the expo manifest JSON on `/` for Expo Go support.
+  // In the future, if we support HTML links to manifests we can get rid of this platform specific code.
+
+  if (isTargetingNative()) {
+    await ProjectSettings.setPackagerInfoAsync(projectRoot, {
+      expoServerPort: webpackServerPort,
+      packagerPort: webpackServerPort,
+    });
+  }
+
+  const server: DevServer = await new Promise(resolve => {
+    // Create a webpack compiler that is configured with custom messages.
+    const compiler = WebpackCompiler.createWebpackCompiler({
+      projectRoot,
+      appName,
+      config,
+      urls,
+      nonInteractive,
+      webpackFactory: webpack,
+      onFinished: () => resolve(server),
+    });
+
+    // Create the middleware required for interacting with a native runtime (Expo Go, or Expo Dev Client).
+    const nativeMiddleware = createNativeDevServerMiddleware(projectRoot, { port, compiler });
+    // Inject the native manifest middleware.
+    const originalBefore = config.devServer!.before!.bind(config.devServer!.before);
+    config.devServer!.before = (app, server, compiler) => {
+      originalBefore(app, server, compiler);
+
+      if (nativeMiddleware?.middleware) {
+        app.use(nativeMiddleware.middleware);
+      }
+    };
+
+    const server = new WebpackDevServer(compiler, config.devServer);
+
+    // Launch WebpackDevServer.
+    server.listen(port, WebpackEnvironment.HOST, function (this: http.Server, error) {
+      if (nativeMiddleware) {
+        attachNativeDevServerMiddlewareToDevServer(projectRoot, {
+          server: this,
+          ...nativeMiddleware,
+        });
+      }
+
+      if (error) {
+        ProjectUtils.logError(projectRoot, WEBPACK_LOG_TAG, error.message);
+      }
+      if (typeof options.onWebpackFinished === 'function') {
+        options.onWebpackFinished(error);
+      }
+    });
+    webpackDevServerInstance = server;
   });
   webpackDevServerInstance = server;
   //   resolve(server);
@@ -242,25 +377,7 @@ export async function startAsync(
     },
     // Match the native protocol.
     messageSocket: {
-      broadcast(message: string, data?: any) {
-        if (!server || !(server instanceof WebpackDevServer)) {
-          return;
-        }
-
-        if (message !== 'reload') {
-          // TODO:
-          // Webpack currently only supports reloading the client (browser),
-          // remove this when we have custom sockets, and native support.
-          return;
-        }
-
-        // TODO:
-        // Default webpack-dev-server sockets use "content-changed" instead of "reload" (what we use on native).
-        // For now, just manually convert the value so our CLI interface can be unified.
-        const hackyConvertedMessage = message === 'reload' ? 'content-changed' : message;
-
-        server.sendMessage(server.webSocketServer.clients, hackyConvertedMessage, data);
-      },
+      broadcast: broadcastMessage,
     },
   };
 }
