@@ -13,6 +13,7 @@ type ManifestMetaDataAttributes = AndroidManifestAttributes & {
 
 type AndroidManifestAttributes = {
   'android:name': string | 'android.intent.action.VIEW';
+  'tools:node'?: string | 'remove';
 };
 
 type ManifestAction = {
@@ -131,7 +132,12 @@ type ManifestUsesFeature = {
 export type AndroidManifest = {
   manifest: {
     // Probably more, but this is currently all we'd need for most cases in Expo.
-    $: { 'xmlns:android': string; package?: string; [key: string]: string | undefined };
+    $: {
+      'xmlns:android': string;
+      'xmlns:tools'?: string;
+      package?: string;
+      [key: string]: string | undefined;
+    };
     permission?: ManifestPermission[];
     'uses-permission'?: ManifestUsesPermission[];
     'uses-permission-sdk-23'?: ManifestUsesPermission[];

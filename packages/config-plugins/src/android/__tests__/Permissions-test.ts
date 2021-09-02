@@ -3,6 +3,7 @@ import { resolve } from 'path';
 import { format } from '../../utils/XML';
 import { readAndroidManifestAsync } from '../Manifest';
 import {
+  addBlockedPermissions,
   ensurePermission,
   ensurePermissions,
   getAndroidPermissions,
@@ -13,6 +14,58 @@ import {
 
 const fixturesPath = resolve(__dirname, 'fixtures');
 const sampleManifestPath = resolve(fixturesPath, 'react-native-AndroidManifest.xml');
+
+describe(addBlockedPermissions, () => {
+  it(`restricts an existing permission`, () => {
+    expect(
+      addBlockedPermissions(
+        {
+          manifest: {
+            $: {
+              'xmlns:android': '...',
+            },
+            'uses-permission': [
+              {
+                $: { 'android:name': 'foobar' },
+              },
+              {
+                $: { 'android:name': 'foobar-2' },
+              },
+            ],
+          },
+        },
+        ['foobar']
+      ).manifest['uses-permission']
+    ).toStrictEqual([
+      {
+        $: { 'android:name': 'foobar-2' },
+      },
+      {
+        $: { 'android:name': 'foobar', 'tools:node': 'remove' },
+      },
+    ]);
+  });
+
+  it(`restricts a new permission`, () => {
+    expect(
+      addBlockedPermissions(
+        {
+          manifest: {
+            $: {
+              'xmlns:android': '...',
+            },
+            'uses-permission': [],
+          },
+        },
+        ['foobar']
+      ).manifest['uses-permission']
+    ).toStrictEqual([
+      {
+        $: { 'android:name': 'foobar', 'tools:node': 'remove' },
+      },
+    ]);
+  });
+});
 
 describe('Android permissions', () => {
   it(`returns empty array if no android permissions key is provided`, () => {
