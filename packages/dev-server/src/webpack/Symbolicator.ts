@@ -99,14 +99,6 @@ export class Symbolicator {
    */
   sourceMapConsumerCache: Record<string, SourceMapConsumer> = {};
 
-  /**
-   * Constructs new `Symbolicator` instance.
-   *
-   * @param projectRoot Absolute path to root directory of the project.
-   * @param logger Bunyan instance.
-   * @param readFileFromWdm Function to read arbitrary file from webpack-dev-middleware.
-   * @param readSourceMapFromWdm Function to read Source Map file from webpack-dev-middleware.
-   */
   constructor(
     public config: {
       projectRoot: string;
