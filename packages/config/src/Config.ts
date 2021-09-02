@@ -516,7 +516,6 @@ function ensureConfigHasDefaultValues({
   return {
     exp: {
       ...expWithDefaults,
-      version: getVersion(expWithDefaults),
       runtimeVersion: topLevelRuntimeVersion,
       sdkVersion,
       ios: defaultIos,
