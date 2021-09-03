@@ -1,3 +1,4 @@
+import type Log from '@expo/bunyan';
 import { PWAConfig } from 'expo-pwa';
 import { Configuration as WebpackConfiguration } from 'webpack';
 import {
@@ -28,6 +29,7 @@ export type InputEnvironment = {
   babel?: {
     dangerouslyAddModulePathsToTranspile: string[];
   };
+  logger?: Log;
 };
 
 export type Environment = {
@@ -69,6 +71,10 @@ export type Environment = {
    * Control how the default Babel loader is configured.
    */
   babel?: ExpoBabelOptions;
+  /**
+   * Used for sending unified bundler logs to Expo CLI.
+   */
+  logger?: Log;
 };
 
 /**
