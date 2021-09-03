@@ -1,4 +1,4 @@
-import Log from '@expo/bunyan';
+import type Log from '@expo/bunyan';
 import { PWAConfig } from 'expo-pwa';
 import { ProxyConfigArray, ProxyConfigMap } from 'webpack-dev-server';
 
@@ -6,7 +6,6 @@ type AnyObject = Record<string, any>;
 
 export type InputEnvironment = {
   projectRoot?: string;
-  logger?: Log;
   platform?: 'ios' | 'android' | 'web' | 'electron';
   info?: boolean;
   https?: boolean;
@@ -19,6 +18,7 @@ export type InputEnvironment = {
   babel?: {
     dangerouslyAddModulePathsToTranspile: string[];
   };
+  logger?: Log;
 };
 
 export type Environment = {

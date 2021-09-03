@@ -50,7 +50,7 @@ type MetroError =
   | ({
       originModulePath: string;
       message: string;
-      errors: object[];
+      errors: { description: string; filename: string; lineNumber: number }[];
     } & ErrorObject)
   | ({
       type: 'TransformError';
@@ -58,7 +58,7 @@ type MetroError =
       lineNumber: number;
       column: number;
       filename: string;
-      errors: object[];
+      errors: { description: string; filename: string; lineNumber: number }[];
     } & ErrorObject)
   | ErrorObject;
 
@@ -108,6 +108,11 @@ type ReportableEvent =
       type: 'bundling_error';
     }
   | {
+      // Currently only sent from Webpack
+      warning: string;
+      type: 'bundling_warning';
+    }
+  | {
       type: 'dep_graph_loading';
     }
   | {
@@ -118,6 +123,9 @@ type ReportableEvent =
       type: 'bundle_transform_progressed';
       transformedFileCount: number;
       totalFileCount: number;
+
+      // A special property added for webpack support
+      percentage?: number;
     }
   | {
       type: 'global_cache_error';
@@ -283,6 +291,10 @@ export default class PackagerLogsStream {
           this._formatBundlingError(msg.error) ||
           msg;
         chunk.level = Logger.ERROR;
+        break;
+      case 'bundling_warning':
+        chunk.msg = msg.warning;
+        chunk.level = Logger.WARN;
         break;
       case 'transform_cache_reset':
         chunk.msg =

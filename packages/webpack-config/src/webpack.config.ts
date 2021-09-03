@@ -36,6 +36,7 @@ import { createAllLoaders } from './loaders';
 import {
   ApplePwaWebpackPlugin,
   ChromeIconsWebpackPlugin,
+  ExpectedErrorsPlugin,
   ExpoDefinePlugin,
   ExpoHtmlWebpackPlugin,
   ExpoInterpolateHtmlPlugin,
@@ -315,6 +316,7 @@ export default async function (env: Environment, argv: Arguments = {}): Promise<
     target: ['browserslist'],
     mode,
     entry: appEntry,
+
     // https://webpack.js.org/configuration/other-options/#bail
     // Fail out on the first error instead of tolerating it.
     bail: isProd,
@@ -528,9 +530,20 @@ export default async function (env: Environment, argv: Arguments = {}): Promise<
           },
         }),
 
+      new ExpectedErrorsPlugin(),
       // Skip using a progress bar in CI
-
-      env.logger && new ExpoProgressBarPlugin({ logger: env.logger, nonInteractive: isCI }),
+      env.logger &&
+        new ExpoProgressBarPlugin({
+          logger: env.logger,
+          nonInteractive: isCI,
+          bundleDetails: {
+            bundleType: 'bundle',
+            platform: env.platform,
+            entryFile: locations.appMain,
+            dev: isDev ?? false,
+            minify: isProd ?? false,
+          },
+        }),
     ].filter(Boolean),
 
     module: {

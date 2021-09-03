@@ -1,9 +1,10 @@
 import { ExpoConfig } from '@expo/config-types';
+// @ts-ignore: uses flow
+import normalizeColor from '@react-native/normalize-color';
 
 import { ConfigPlugin } from '../Plugin.types';
 import { withInfoPlist } from '../plugins/ios-plugins';
 import { InfoPlist } from './IosConfig.types';
-import normalizeColor from './utils/normalizeColor';
 
 // Maps to the template AppDelegate.m
 const BACKGROUND_COLOR_KEY = 'RCTRootViewBackgroundColor';

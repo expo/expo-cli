@@ -1,5 +1,4 @@
-import Log from '@expo/bunyan';
-import { getConfig, getNameFromConfig } from '@expo/config';
+import type Log from '@expo/bunyan';
 import {
   attachInspectorProxy,
   createDevServerMiddleware,
@@ -8,13 +7,11 @@ import {
 } from '@expo/dev-server';
 import { createSymbolicateMiddleware } from '@expo/dev-server/build/webpack/symbolicateMiddleware';
 import * as devcert from '@expo/devcert';
-import { isUsingYarn } from '@expo/package-manager';
 import chalk from 'chalk';
 import fs from 'fs-extra';
 import getenv from 'getenv';
 import http from 'http';
 import * as path from 'path';
-import { prepareUrls, Urls } from 'react-dev-utils/WebpackDevServerUtils';
 import formatWebpackMessages from 'react-dev-utils/formatWebpackMessages';
 import openBrowser from 'react-dev-utils/openBrowser';
 import webpack from 'webpack';
@@ -29,7 +26,6 @@ import {
   ProjectSettings,
   ProjectUtils,
   UrlUtils,
-  WebpackCompiler,
   WebpackEnvironment,
   XDLError,
 } from './internal';
@@ -78,34 +74,15 @@ export type WebEnvironment = {
   isImageEditingEnabled: boolean;
   // deprecated
   pwa: boolean;
-  logger: Log;
   mode: 'development' | 'production' | 'test' | 'none';
   https: boolean;
+  logger: Log;
 };
-
-let devServerInfo: {
-  urls: Urls;
-  protocol: 'http' | 'https';
-  useYarn: boolean;
-  appName: string;
-  nonInteractive: boolean;
-  port: number;
-} | null = null;
 
 // A custom message websocket broadcaster used to send messages to a React Native runtime.
 let customMessageSocketBroadcaster:
   | undefined
   | ((message: string, data?: Record<string, any>) => void);
-
-export function printConnectionInstructions(projectRoot: string, options = {}) {
-  if (!devServerInfo) return;
-  WebpackCompiler.printInstructions(projectRoot, {
-    appName: devServerInfo.appName,
-    urls: devServerInfo.urls,
-    showInDevtools: false,
-    ...options,
-  });
-}
 
 async function clearWebCacheAsync(projectRoot: string, mode: string): Promise<void> {
   const cacheFolder = path.join(projectRoot, '.expo', 'web', 'cache', mode);
@@ -221,14 +198,8 @@ export async function startAsync(
 ): Promise<WebpackDevServerResults | null> {
   await stopAsync(projectRoot);
 
-  const serverName = 'Webpack';
-
   if (webpackDevServerInstance) {
-    ProjectUtils.logError(
-      projectRoot,
-      WEBPACK_LOG_TAG,
-      chalk.red(`${serverName} is already running.`)
-    );
+    ProjectUtils.logError(projectRoot, WEBPACK_LOG_TAG, chalk.red(`Webpack is already running.`));
     return null;
   }
 
@@ -264,30 +235,10 @@ export async function startAsync(
   ProjectUtils.logInfo(
     projectRoot,
     WEBPACK_LOG_TAG,
-    `Starting ${serverName} on port ${webpackServerPort} in ${chalk.underline(env.mode)} mode.`
+    `Starting Webpack on port ${webpackServerPort} in ${chalk.underline(env.mode)} mode.`
   );
 
   const protocol = env.https ? 'https' : 'http';
-  const urls = prepareUrls(protocol, '::', webpackServerPort);
-  const useYarn = isUsingYarn(projectRoot);
-  const appName = await getProjectNameAsync(projectRoot);
-  const nonInteractive = validateBoolOption(
-    'nonInteractive',
-    options.nonInteractive,
-    !process.stdout.isTTY
-  );
-
-  devServerInfo = {
-    urls,
-    protocol,
-    useYarn,
-    appName,
-    nonInteractive,
-    port: webpackServerPort!,
-  };
-
-  // This is a temporary hack since we need to serve the expo manifest JSON on `/` for Expo Go support.
-  // In the future, if we support HTML links to manifests we can get rid of this platform specific code.
 
   if (isTargetingNative()) {
     await ProjectSettings.setPackagerInfoAsync(projectRoot, {
@@ -296,53 +247,42 @@ export async function startAsync(
     });
   }
 
-  const server: DevServer = await new Promise(resolve => {
-    // Create a webpack compiler that is configured with custom messages.
-    const compiler = WebpackCompiler.createWebpackCompiler({
-      projectRoot,
-      appName,
-      config,
-      urls,
-      nonInteractive,
-      webpackFactory: webpack,
-      onFinished: () => resolve(server),
-    });
+  // Create a webpack compiler that is configured with custom messages.
+  const compiler = webpack(config);
 
-    // Create the middleware required for interacting with a native runtime (Expo Go, or Expo Dev Client).
-    const nativeMiddleware = createNativeDevServerMiddleware(projectRoot, { port, compiler });
-    // Inject the native manifest middleware.
-    const originalBefore = config.devServer!.before!.bind(config.devServer!.before);
-    config.devServer!.before = (app, server, compiler) => {
-      originalBefore(app, server, compiler);
+  // Create the middleware required for interacting with a native runtime (Expo Go, or Expo Dev Client).
+  const nativeMiddleware = createNativeDevServerMiddleware(projectRoot, { port, compiler });
+  // Inject the native manifest middleware.
+  const originalBefore = config.devServer!.before!.bind(config.devServer!.before);
+  config.devServer!.before = (app, server, compiler) => {
+    originalBefore(app, server, compiler);
 
-      if (nativeMiddleware?.middleware) {
-        app.use(nativeMiddleware.middleware);
-      }
-    };
+    if (nativeMiddleware?.middleware) {
+      app.use(nativeMiddleware.middleware);
+    }
+  };
 
-    const server = new WebpackDevServer(compiler, config.devServer);
-
-    // Launch WebpackDevServer.
-    server.listen(port, WebpackEnvironment.HOST, function (this: http.Server, error) {
-      if (nativeMiddleware) {
-        attachNativeDevServerMiddlewareToDevServer(projectRoot, {
-          server: this,
-          ...nativeMiddleware,
-        });
-      }
-
-      if (error) {
-        ProjectUtils.logError(projectRoot, WEBPACK_LOG_TAG, error.message);
-      }
-      if (typeof options.onWebpackFinished === 'function') {
-        options.onWebpackFinished(error);
-      }
-    });
-    webpackDevServerInstance = server;
+  const server = new WebpackDevServer(compiler, config.devServer);
+  // Launch WebpackDevServer.
+  server.listen(port, WebpackEnvironment.HOST, function (this: http.Server, error) {
+    if (nativeMiddleware) {
+      attachNativeDevServerMiddlewareToDevServer(projectRoot, {
+        server: this,
+        ...nativeMiddleware,
+      });
+    }
+    if (error) {
+      ProjectUtils.logError(projectRoot, WEBPACK_LOG_TAG, error.message);
+    }
+    if (typeof options.onWebpackFinished === 'function') {
+      options.onWebpackFinished(error);
+    }
   });
   webpackDevServerInstance = server;
   //   resolve(server);
   // });
+
+  webpackDevServerInstance = server;
 
   await ProjectSettings.setPackagerInfoAsync(projectRoot, {
     webpackServerPort,
@@ -361,7 +301,6 @@ export async function startAsync(
       }).finally(() => {
         callback?.(err);
         webpackDevServerInstance = null;
-        devServerInfo = null;
         webpackServerPort = null;
       });
     });
@@ -493,14 +432,6 @@ export async function bundleAsync(projectRoot: string, options?: BundlingOptions
   await bundleWebAppAsync(projectRoot, config);
 }
 
-async function getProjectNameAsync(projectRoot: string): Promise<string> {
-  const { exp } = getConfig(projectRoot, {
-    skipSDKVersionRequirement: true,
-  });
-  const webName = getNameFromConfig(exp).webName ?? exp.name;
-  return webName;
-}
-
 /**
  * Get the URL for the running instance of Webpack dev server.
  *
@@ -565,6 +496,7 @@ function transformCLIOptions(options: CLIWebOptions): BundlingOptions {
   // Transform the CLI flags into more explicit values
   return {
     ...options,
+
     isImageEditingEnabled: options.pwa,
   };
 }
