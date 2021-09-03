@@ -118,11 +118,10 @@ function logCommandsTable(ui: (false | string[])[]) {
       // @ts-ignore: filter doesn't work
       .map(([key, message, status]) => {
         if (!key) return '';
-        let view = ` ${BLT} `;
+        let view = `${BLT} `;
         if (key.length === 1) view += 'Press ';
         view += `${b(key)} ${div} `;
         view += message;
-        // let view = ` ${BLT} Press ${b(key)} ${div} ${message}`;
         if (status) {
           view += ` ${chalk.dim(`(${i(status)})`)}`;
         }
@@ -136,9 +135,8 @@ const printServerInfo = async (
   projectRoot: string,
   options: Pick<StartOptions, 'webOnly' | 'isWebSocketsEnabled' | 'isRemoteReloadingEnabled'> = {}
 ) => {
-  Log.newLine();
   const wrapLength = process.stdout.columns || 80;
-  const item = (text: string): string => ` ${BLT} ` + wrapAnsi(text, wrapLength).trimStart();
+  const item = (text: string): string => `${BLT} ` + wrapAnsi(text, wrapLength).trimStart();
 
   if (!options.webOnly) {
     try {
@@ -345,6 +343,7 @@ export async function startAsync(projectRoot: string, options: StartOptions) {
         if (options.isWebSocketsEnabled) {
           Log.log(`${BLT} Toggling dev menu`);
           Project.broadcastMessage('devMenu');
+          Webpack.broadcastMessage('devMenu');
         }
         break;
       }
@@ -366,6 +365,7 @@ export async function startAsync(projectRoot: string, options: StartOptions) {
               ],
             });
             Project.broadcastMessage('sendDevCommand', { name: value });
+            Webpack.broadcastMessage('sendDevCommand', { name: value });
           } catch {
             // do nothing
           } finally {

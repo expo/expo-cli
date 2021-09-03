@@ -44,13 +44,13 @@
     "resolve-from": "^5.0.0",
     "semver": "7.3.2",
     "serialize-error": "6.0.0",
-    "temp-dir": "^2.0.0"
+    "temp-dir": "^2.0.0",
+    "node-fetch": "^2.6.0",
+    "connect": "^3.7.0"
   },
   "devDependencies": {
     "@types/connect": "^3.4.33",
-    "connect": "^3.7.0",
-    "metro-inspector-proxy": "^0.59.0",
-    "node-fetch": "^2.6.0"
+    "metro-inspector-proxy": "^0.59.0"
   },
   "publishConfig": {
     "access": "public"

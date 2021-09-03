@@ -5,6 +5,7 @@ import {
   LogReporter,
   MessageSocket,
 } from '@expo/dev-server';
+import { createSymbolicateMiddleware } from '@expo/dev-server/build/webpack/symbolicateMiddleware';
 import * as devcert from '@expo/devcert';
 import chalk from 'chalk';
 import fs from 'fs-extra';
@@ -132,7 +133,10 @@ export async function broadcastMessage(message: 'reload' | string, data?: any) {
   webpackDevServerInstance.sockWrite(webpackDevServerInstance.sockets, hackyConvertedMessage, data);
 }
 
-function createNativeDevServerMiddleware(projectRoot: string, { port }: { port: number }) {
+function createNativeDevServerMiddleware(
+  projectRoot: string,
+  { port, compiler }: { port: number; compiler: webpack.Compiler }
+) {
   if (!isTargetingNative()) {
     return null;
   }
@@ -145,8 +149,15 @@ function createNativeDevServerMiddleware(projectRoot: string, { port }: { port: 
   // TODO: Move this in to expo/dev-server.
   nativeMiddleware.middleware
     .use(ManifestHandler.getManifestHandler(projectRoot))
-    .use(ExpoUpdatesManifestHandler.getManifestHandler(projectRoot));
-
+    .use(ExpoUpdatesManifestHandler.getManifestHandler(projectRoot))
+    .use(
+      '/symbolicate',
+      createSymbolicateMiddleware({
+        projectRoot,
+        compiler,
+        logger: nativeMiddleware.logger,
+      })
+    );
   return nativeMiddleware;
 }
 
@@ -234,21 +245,13 @@ export async function startAsync(
       expoServerPort: webpackServerPort,
       packagerPort: webpackServerPort,
     });
-
-    // Inject the Expo Go manifest middleware.
-    const originalBefore = config.devServer!.before!.bind(config.devServer!.before);
-    config.devServer!.before = (app, server, compiler) => {
-      originalBefore(app, server, compiler);
-      app.use(ManifestHandler.getManifestHandler(projectRoot));
-      app.use(ExpoUpdatesManifestHandler.getManifestHandler(projectRoot));
-    };
   }
 
   // Create a webpack compiler that is configured with custom messages.
   const compiler = webpack(config);
 
   // Create the middleware required for interacting with a native runtime (Expo Go, or Expo Dev Client).
-  const nativeMiddleware = createNativeDevServerMiddleware(projectRoot, { port });
+  const nativeMiddleware = createNativeDevServerMiddleware(projectRoot, { port, compiler });
   // Inject the native manifest middleware.
   const originalBefore = config.devServer!.before!.bind(config.devServer!.before);
   config.devServer!.before = (app, server, compiler) => {

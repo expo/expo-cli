@@ -116,6 +116,7 @@ function getOutput(
     // Point sourcemap entries to original disk location (format as URL on Windows)
     commonOutput.devtoolModuleFilenameTemplate = (
       info: webpack.DevtoolModuleFilenameTemplateInfo
+      // TODO: Revisit for web
     ): string => path.resolve(info.absoluteResourcePath).replace(/\\/g, '/');
   }
 
@@ -123,6 +124,10 @@ function getOutput(
     // Give the output bundle a constant name to prevent caching.
     // Also there are no actual files generated in dev.
     commonOutput.filename = `index.bundle`;
+    // This works best for our custom native symbolication middleware
+    commonOutput.devtoolModuleFilenameTemplate = (
+      info: webpack.DevtoolModuleFilenameTemplateInfo
+    ): string => info.resourcePath.replace(/\\/g, '/');
   }
 
   return commonOutput;
