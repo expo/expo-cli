@@ -349,8 +349,9 @@ async function _maybeRunModifiedExpoUpdatesPluginAsync(config: EmbeddedAssetsCon
     const currentlyConfiguredAndroidManifest = await AndroidConfig.Manifest.readAndroidManifestAsync(
       androidManifestXmlPath
     );
-    const [currentConfiguredManifestApplication] =
-      currentlyConfiguredAndroidManifest.manifest.application ?? [];
+    const currentConfiguredManifestApplication = AndroidConfig.Manifest.getMainApplicationOrThrow(
+      currentlyConfiguredAndroidManifest
+    );
     const currentlyConfiguredMetaDataAttributes =
       currentConfiguredManifestApplication['meta-data']?.map(md => md['$']) ?? [];
 
@@ -392,10 +393,10 @@ async function _maybeRunModifiedExpoUpdatesPluginAsync(config: EmbeddedAssetsCon
       );
     } else {
       // Log warnings if this is not the first publish and critical properties seem misconfigured
-      const [inferredManifestApplication] = inferredAndroidManifest.manifest.application!;
-      const inferredMetaDataAttributes = inferredManifestApplication['meta-data']?.map(
-        md => md['$']
-      )!;
+      const inferredMainApplication = AndroidConfig.Manifest.getMainApplicationOrThrow(
+        inferredAndroidManifest
+      );
+      const inferredMetaDataAttributes = inferredMainApplication['meta-data']?.map(md => md['$'])!;
 
       const {
         UPDATE_URL,

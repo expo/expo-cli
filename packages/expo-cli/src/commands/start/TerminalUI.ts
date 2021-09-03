@@ -334,6 +334,7 @@ export async function startAsync(projectRoot: string, options: StartOptions) {
         if (options.isWebSocketsEnabled) {
           Log.log(`${BLT} Toggling dev menu`);
           Project.broadcastMessage('devMenu');
+          Webpack.broadcastMessage('devMenu');
         }
         break;
       }
@@ -355,6 +356,7 @@ export async function startAsync(projectRoot: string, options: StartOptions) {
               ],
             });
             Project.broadcastMessage('sendDevCommand', { name: value });
+            Webpack.broadcastMessage('sendDevCommand', { name: value });
           } catch {
             // do nothing
           } finally {
