@@ -369,11 +369,26 @@ export async function initGitRepoAsync(
       return false;
     }
   }
-
   // not in git tree, so let's init
+    
   try {
-    await spawnAsync('git', ['init'], { cwd: root });
+    await spawnAsync('git', ['init', '--initial-branch', branch], { cwd: root });
     !flags.silent && Log.log('Initialized a git repository.');
+    
+    // check for a default branch setting
+    const { stdout: initialBranch } = await spawnAsync('git', 
+      ['config', '--get', 'init.defaultBranch'], 
+      {
+        cwd: root,
+        stdio: ['ignore', 'pipe', 'ignore'],
+      }
+    );
+    
+    // if there is no setting, override the git default
+    // https://git-scm.com/docs/git-init#Documentation/git-init.txt--bltbranch-namegt
+    if (!initialBranch) {
+      await spawnAsync('git', ['branch', '-m', 'main'], { cwd: root, stdio: 'ignore' });
+    }
 
     if (flags.commit) {
       await spawnAsync('git', ['add', '--all'], { cwd: root, stdio: 'ignore' });
