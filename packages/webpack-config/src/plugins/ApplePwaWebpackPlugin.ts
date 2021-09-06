@@ -125,10 +125,6 @@ export default class ApplePwaWebpackPlugin extends ModifyHtmlWebpackPlugin {
           );
         } else {
           compilation.emitAsset(asset.asset.path, new sources.RawSource(asset.asset.source));
-          // compilation.assets[asset.asset.path] = {
-          //   source: () => asset.asset.source,
-          //   size: () => asset.asset.source.length,
-          // };
           data.assetTags.meta.push(asset.tag);
         }
       }

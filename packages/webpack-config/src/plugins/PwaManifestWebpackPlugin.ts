@@ -63,7 +63,7 @@ export default class PwaManifestWebpackPlugin extends JsonWebpackPlugin {
                 htmlCallback: (error: Error | null, data: HTMLPluginData) => void
               ) => {
                 // Skip if a custom injectFunction returns false or if
-                // the htmlWebpackPlugin optuons includes a `favicons: false` flag
+                // the htmlWebpackPlugin options includes a `favicons: false` flag
                 let isInjectionAllowed: boolean;
                 if (typeof this.pwaOptions.inject === 'boolean') {
                   isInjectionAllowed = this.pwaOptions.inject;

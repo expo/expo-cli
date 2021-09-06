@@ -13,12 +13,11 @@ import {
   getPublicPaths,
   validateEnvironment,
 } from '../env';
-import { createBabelLoader, createFontLoader } from '../loaders';
+import { createBabelLoader } from '../loaders';
 // importing from "../plugins" will cause dependency issues with next-adapter
 // other plugins import webpack4 packages which error on load when next-adapter uses webpack5
 import ExpoDefinePlugin from '../plugins/ExpoDefinePlugin';
 import { Arguments, Environment, InputEnvironment } from '../types';
-import { rulesMatchAnyFiles } from '../utils';
 import withAlias from './withAlias';
 
 /**
@@ -55,19 +54,6 @@ export default function withUnimodules(
   env.mode = env.mode || webpackConfig.mode;
 
   const environment: Environment = validateEnvironment(env);
-
-  let { supportsFontLoading } = argv;
-
-  // If the args don't specify this then we'll check if the input already supports font loading.
-  if (typeof supportsFontLoading === 'undefined') {
-    const supportedFonts = ['ttf', 'otf', 'woff', 'woff2', 'eot'];
-    const testFontFileNames = supportedFonts.map(ext =>
-      path.resolve(environment.projectRoot, `cool-font.${ext}`)
-    );
-    if (rulesMatchAnyFiles(webpackConfig, testFontFileNames)) {
-      supportsFontLoading = false;
-    }
-  }
 
   const { platform = 'web' } = env;
 
@@ -131,8 +117,6 @@ export default function withUnimodules(
 
     // Process application code with Babel.
     babelLoader,
-
-    supportsFontLoading && createFontLoader(locations.root, locations.includeModule),
   ].filter(Boolean);
 
   webpackConfig.module = {
