@@ -374,6 +374,13 @@ export async function initGitRepoAsync(
   try {
     await spawnAsync('git', ['init'], { cwd: root });
     !flags.silent && Log.log('Initialized a git repository.');
+
+    if (flags.commit) {
+      await spawnAsync('git', ['add', '--all'], { cwd: root, stdio: 'ignore' });
+      await spawnAsync('git', ['commit', '-m', 'Created a new Expo app'], {
+        cwd: root,
+        stdio: 'ignore',
+      });
     
     try {
       // check for a default branch setting
@@ -383,15 +390,7 @@ export async function initGitRepoAsync(
       // https://git-scm.com/docs/git-init#Documentation/git-init.txt--bltbranch-namegt
       if (!e?.stderr && !e?.stdout) {  // no error message and no setting value
         await spawnAsync('git', ['branch', '-m', 'main'], { cwd: root, stdio: 'ignore' });
-      } 
-    }
-
-    if (flags.commit) {
-      await spawnAsync('git', ['add', '--all'], { cwd: root, stdio: 'ignore' });
-      await spawnAsync('git', ['commit', '-m', 'Created a new Expo app'], {
-        cwd: root,
-        stdio: 'ignore',
-      });
+      }
     }
     return true;
   } catch (e) {
