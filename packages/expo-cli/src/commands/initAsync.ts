@@ -372,7 +372,7 @@ export async function initGitRepoAsync(
 
   // not in git tree, so let's init
   try {
-    await spawnAsync('git', ['init', '--initial-branch', branch], { cwd: root });
+    await spawnAsync('git', ['init'], { cwd: root });
     !flags.silent && Log.log('Initialized a git repository.');
     
     // check for a default branch setting
