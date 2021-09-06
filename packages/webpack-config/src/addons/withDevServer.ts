@@ -127,8 +127,7 @@ export function createDevServer(
   // the .bundle extension be served as javascript.
   const mimeTypes: any = isNative
     ? {
-        typeMap: { 'application/javascript': ['bundle'] },
-        force: true,
+        bundle: 'text/javascript',
       }
     : undefined;
 
@@ -155,7 +154,7 @@ export function createDevServer(
     // really know what you're doing with a special environment variable.
     // Note: ["localhost", ".localhost"] will support subdomains - but we might
     // want to allow setting the allowedHosts manually for more complex setups
-    allowedHosts: disableFirewall ? ['all'] : [allowedHost],
+    allowedHosts: disableFirewall ? ['all'] : ([allowedHost].filter(Boolean) as string[]),
     // Enable gzip compression of generated files.
     compress: true,
     static: {
@@ -219,7 +218,7 @@ export function createDevServer(
 
     // `proxy` is run between `before` and `after` `webpack-dev-server` hooks
     proxy,
-    onBeforeSetupMiddleware(app, server) {
+    onBeforeSetupMiddleware(devServer) {
       // Everything we add here is for web support
       if (isNative) {
         return;
@@ -227,11 +226,11 @@ export function createDevServer(
       // Keep `evalSourceMapMiddleware`
       // middlewares before `redirectServedPath` otherwise will not have any effect
       // This lets us fetch source contents from webpack for the error overlay
-      app.use(evalSourceMapMiddleware(server));
+      devServer.app.use(evalSourceMapMiddleware(devServer));
     },
-    onAfterSetupMiddleware(app) {
+    onAfterSetupMiddleware(devServer) {
       // Redirect to `PUBLIC_URL` or `homepage` from `package.json` if url not match
-      app.use(redirectServedPath(publicUrlOrPath));
+      devServer.app.use(redirectServedPath(publicUrlOrPath));
 
       if (isNative) {
         return;
@@ -242,13 +241,10 @@ export function createDevServer(
       // We do this in development to avoid hitting the production cache if
       // it used the same host and port.
       // https://github.com/facebook/create-react-app/issues/2272#issuecomment-302832432
-      app.use(noopServiceWorkerMiddleware(publicUrlOrPath));
+      devServer.app.use(noopServiceWorkerMiddleware(publicUrlOrPath));
     },
 
     // // TODO: Verify these work in Webpack 5 on web
-
-    // // Without disabling this on native, you get the error `Can't find variable self`.
-    // inline: !isNative,
     // // Specify the mimetypes for hosting native bundles.
     // mimeTypes,
   };

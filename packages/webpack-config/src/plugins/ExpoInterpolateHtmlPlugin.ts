@@ -9,12 +9,12 @@
 
 // Extracted to ensure the `html-webpack-plugin` was always the same.
 
-import escapeStringRegexp from 'escape-string-regexp';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import { Compiler } from 'webpack';
 
 import { getConfig, getPublicPaths } from '../env';
 import { Environment } from '../types';
+import { escapeStringRegexp } from '../utils/escapeStringRegexp';
 
 export default class InterpolateHtmlPlugin {
   static fromEnv = (

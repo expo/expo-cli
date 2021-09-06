@@ -101,12 +101,11 @@ export default function createAllLoaders(
   // @ts-ignore
   env.locations = env.locations || getPaths(env.projectRoot, env);
 
-  const { root, includeModule, template } = env.locations;
   const isNative = ['ios', 'android'].includes(env.platform);
 
   if (isNative) {
     // TODO: Support fallback loader + assets
-    return [getHtmlLoaderRule(template.folder), getBabelLoaderRule(env)];
+    return [getBabelLoaderRule(env)];
   }
 
   const isEnvDevelopment = env.mode === 'development';
@@ -136,7 +135,6 @@ export default function createAllLoaders(
     avifImageLoaderRule,
     imageLoaderRule,
     getBabelLoaderRule(env),
-    // createFontLoader(root, includeModule),
     {
       test: /\.(css)$/,
       use: getStyleLoaders({
@@ -154,7 +152,7 @@ export default function createAllLoaders(
     },
     // This needs to be the last loader
     fallbackLoaderRule,
-  ].filter(Boolean) as Rule[];
+  ].filter(Boolean) as RuleSetRule[];
 }
 
 /**

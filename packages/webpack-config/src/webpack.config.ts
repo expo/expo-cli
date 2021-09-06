@@ -120,9 +120,9 @@ function getOutput(
     // Also there are no actual files generated in dev.
     commonOutput.filename = `index.bundle`;
     // This works best for our custom native symbolication middleware
-    commonOutput.devtoolModuleFilenameTemplate = (
-      info: DevtoolModuleFilenameTemplateInfo
-    ): string => info.resourcePath.replace(/\\/g, '/');
+    // commonOutput.devtoolModuleFilenameTemplate = (
+    //   info: DevtoolModuleFilenameTemplateInfo
+    // ): string => info.resourcePath.replace(/\\/g, '/');
   }
 
   return commonOutput;
@@ -312,8 +312,26 @@ export default async function (env: Environment, argv: Arguments = {}): Promise<
     },
   };
 
+  const emacsLockfilePattern = '**/.#*';
+
   let webpackConfig: Configuration = {
-    target: ['browserslist'],
+    // Used to identify the compiler.
+    name: env.platform,
+
+    target: ['web'],
+
+    watchOptions: {
+      aggregateTimeout: 5,
+      ignored: [
+        '**/.git/**',
+        '**/node_modules/**',
+        '**/.expo/**',
+        '**/.expo-shared/**',
+        '**/web-build/**',
+        // can be removed after https://github.com/paulmillr/chokidar/issues/955 is released
+        emacsLockfilePattern,
+      ],
+    },
     mode,
     entry: appEntry,
 
@@ -328,7 +346,7 @@ export default async function (env: Environment, argv: Arguments = {}): Promise<
     output: getOutput(locations, mode, publicPath, env.platform),
 
     // Disable file info logs.
-    stats: 'none',
+    // stats: 'verbose',
 
     cache: {
       type: 'filesystem',
@@ -344,7 +362,9 @@ export default async function (env: Environment, argv: Arguments = {}): Promise<
       },
     },
     infrastructureLogging: {
-      level: 'none',
+      debug: true,
+      // level: 'none',
+      // level: 'verbose',
     },
 
     plugins: [
@@ -555,7 +575,7 @@ export default async function (env: Environment, argv: Arguments = {}): Promise<
           enforce: 'pre',
           exclude: /@babel(?:\/|\\{1,2})runtime/,
           test: /\.(js|mjs|jsx|ts|tsx|css)$/,
-          use: 'source-map-loader',
+          use: require.resolve('source-map-loader'),
         },
         {
           oneOf: createAllLoaders(env),
@@ -563,8 +583,9 @@ export default async function (env: Environment, argv: Arguments = {}): Promise<
       ].filter(Boolean),
     },
     resolve: {
-      mainFields: isNative ? ['react-native', 'browser', 'main'] : undefined,
-      aliasFields: isNative ? ['react-native', 'browser', 'main'] : undefined,
+      // modules: ['node_modules'],
+      mainFields: isNative ? ['react-native', 'browser', 'main'] : ['browser', 'module', 'main'],
+      aliasFields: isNative ? ['react-native', 'browser', 'main'] : [],
       extensions: getPlatformsExtensions(env.platform),
       symlinks: false,
     },
@@ -581,7 +602,11 @@ export default async function (env: Environment, argv: Arguments = {}): Promise<
 
   if (isNative) {
     // https://github.com/webpack/webpack/blob/f06086c53b2277e421604c5cea6f32f5c5b6d117/declarations/WebpackOptions.d.ts#L504-L518
-    webpackConfig.target = 'webworker';
+    webpackConfig.target = false;
+    webpackConfig.output!.chunkLoading = 'jsonp';
+    webpackConfig.output!.chunkFormat = 'array-push';
+    webpackConfig.output!.globalObject = 'this';
+    webpackConfig.output!.chunkLoadingGlobal = 'exLoadChunk';
   }
 
   if (isProd) {

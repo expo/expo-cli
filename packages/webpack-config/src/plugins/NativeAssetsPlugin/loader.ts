@@ -14,7 +14,7 @@ import { imageSize } from 'image-size';
 import { ISizeCalculationResult } from 'image-size/dist/types/interface';
 import utils from 'loader-utils';
 import path from 'path';
-import { validate as validateSchema } from 'schema-utils';
+import validateSchema from 'schema-utils';
 import { promisify } from 'util';
 
 import { escapeStringRegexp } from '../../utils/escapeStringRegexp';
@@ -298,18 +298,35 @@ function createAssetCodeBlock({
   width?: number;
   fileSystemLocation: string;
 }) {
+  // Convert `{ "@1x": { ... } }` -> `[1]`
+  const numericScales = Object.keys(scales)
+    .map(scale => {
+      const numericScale = scale.match(/@([\d|.]+)x/)?.[1];
+      if (!numericScale) {
+        return null;
+      }
+      try {
+        return Number(numericScale);
+      } catch {
+        return null;
+      }
+    })
+    .filter(Boolean);
+  // TODO: `fileHashes`?
   return [
-    `var AssetRegistry = require('react-native/Libraries/Image/AssetRegistry');`,
-    `module.exports = AssetRegistry.registerAsset({`,
+    `module.exports = require('react-native/Libraries/Image/AssetRegistry').registerAsset({`,
     `  __packager_asset: true,`,
-    `  scales: ${JSON.stringify(scales)},`,
+    `  httpServerLocation: ${JSON.stringify(httpServerLocation)},`,
+    // TODO: ??
+    `${persist ? '' : `  fileSystemLocation: ${JSON.stringify(fileSystemLocation)},`}`,
+    `  scales: ${JSON.stringify(numericScales)},`,
+    `  hash: ${JSON.stringify(hashes.join())},`,
     `  name: ${JSON.stringify(filename)},`,
     `  type: ${JSON.stringify(type)},`,
-    `  hash: ${JSON.stringify(hashes.join())},`,
-    `  httpServerLocation: ${JSON.stringify(httpServerLocation)},`,
-    `  ${persist ? '' : `fileSystemLocation: ${JSON.stringify(fileSystemLocation)},`}`,
-    `  ${height != null ? `height: ${height},` : ''}`,
-    `  ${width != null ? `width: ${width},` : ''}`,
+    `${width != null ? `  width: ${width},` : ''}`,
+    `${height != null ? `  height: ${height},` : ''}`,
     `});`,
-  ].join('\n');
+  ]
+    .filter(Boolean)
+    .join('\n');
 }

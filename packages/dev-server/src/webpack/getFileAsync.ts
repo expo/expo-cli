@@ -1,8 +1,6 @@
 import assert from 'assert';
 import type { IncomingMessage } from 'http';
 import webpack from 'webpack';
-// @ts-ignore
-import { getFilenameFromUrl } from 'webpack-dev-middleware/lib/util';
 
 export type AnyCompiler = webpack.Compiler | webpack.MultiCompiler;
 
@@ -60,21 +58,4 @@ export function getCompilerForPlatform(compiler: AnyCompiler, platform?: string)
   const platformCompiler = compiler.compilers.find(({ options }) => options.name === platform);
   assert(platformCompiler, `Could not find Webpack compiler for platform: ${platform}`);
   return platformCompiler;
-}
-
-export function createGetFileNameFromUrl(compiler: AnyCompiler, publicPath: string = '/') {
-  return function ({ url, platform }: { url: string; platform?: string }): string {
-    const platformCompiler = getCompilerForPlatform(compiler, platform);
-
-    const filename = getFilenameFromUrl(
-      // public path
-      publicPath,
-      platformCompiler,
-      url
-    );
-    if (!filename) {
-      throw new Error(`Cannot get Webpack file name from url: ${url}`);
-    }
-    return filename;
-  };
 }

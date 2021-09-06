@@ -32,7 +32,7 @@ import {
 
 const WEBPACK_LOG_TAG = 'expo';
 
-type DevServer = WebpackDevServer | http.Server;
+type DevServer = WebpackDevServer;
 
 let webpackDevServerInstance: DevServer | null = null;
 let webpackServerPort: number | null = null;
@@ -130,7 +130,11 @@ export async function broadcastMessage(message: 'reload' | string, data?: any) {
   // For now, just manually convert the value so our CLI interface can be unified.
   const hackyConvertedMessage = message === 'reload' ? 'content-changed' : message;
 
-  webpackDevServerInstance.sockWrite(webpackDevServerInstance.sockets, hackyConvertedMessage, data);
+  webpackDevServerInstance.sendMessage(
+    webpackDevServerInstance.sockets,
+    hackyConvertedMessage,
+    data
+  );
 }
 
 function createNativeDevServerMiddleware(
@@ -225,6 +229,10 @@ export async function startAsync(
   }
 
   const config = await loadConfigAsync(env);
+  if (!config.devServer) {
+    throw new Error('Webpack config must have dev server config defined');
+  }
+
   const port = await getAvailablePortAsync({
     projectRoot,
     defaultPort: options.port,
@@ -247,22 +255,31 @@ export async function startAsync(
     });
   }
 
-  // Create a webpack compiler that is configured with custom messages.
+  // Create a basic webpack compiler
   const compiler = webpack(config);
 
   // Create the middleware required for interacting with a native runtime (Expo Go, or Expo Dev Client).
   const nativeMiddleware = createNativeDevServerMiddleware(projectRoot, { port, compiler });
-  // Inject the native manifest middleware.
-  const originalBefore = config.devServer!.before!.bind(config.devServer!.before);
-  config.devServer!.before = (app, server, compiler) => {
-    originalBefore(app, server, compiler);
 
-    if (nativeMiddleware?.middleware) {
-      app.use(nativeMiddleware.middleware);
-    }
-  };
+  // @ts-ignore: untyped
+  if (config.devServer?.onBeforeSetupMiddleware) {
+    // @ts-ignore: untyped
+    const beforeFunc = config.devServer?.onBeforeSetupMiddleware ?? function () {};
+    // Inject the native manifest middleware.
+    const originalBefore = beforeFunc.bind(beforeFunc);
+    // @ts-ignore: untyped
+    config.devServer!.onBeforeSetupMiddleware = devServer => {
+      originalBefore(devServer);
 
-  const server = new WebpackDevServer(compiler, config.devServer);
+      if (nativeMiddleware?.middleware) {
+        devServer.app.use(nativeMiddleware.middleware);
+      }
+    };
+  } else if (isTargetingNative()) {
+    throw new Error('Webpack for native is only supported on Webpack 5+');
+  }
+
+  const server = new WebpackDevServer(config.devServer!, compiler);
   // Launch WebpackDevServer.
   server.listen(port, WebpackEnvironment.HOST, function (this: http.Server, error) {
     if (nativeMiddleware) {
@@ -292,9 +309,9 @@ export async function startAsync(
   const url = `${protocol}://${host}:${port}`;
 
   // Extend the close method to ensure that we clean up the local info.
-  const originalClose = server.close.bind(server);
+  const originalClose = server.stopCallback.bind(server);
 
-  server.close = (callback?: (err?: Error) => void) => {
+  server.stopCallback = (callback?: (err?: Error) => void) => {
     return originalClose((err?: Error) => {
       ProjectSettings.setPackagerInfoAsync(projectRoot, {
         webpackServerPort: null,
@@ -323,10 +340,10 @@ export async function startAsync(
 
 export async function stopAsync(projectRoot: string): Promise<void> {
   if (webpackDevServerInstance) {
-    await new Promise(res => {
+    await new Promise<void>(res => {
       if (webpackDevServerInstance) {
         ProjectUtils.logInfo(projectRoot, WEBPACK_LOG_TAG, '\u203A Stopping Webpack server');
-        webpackDevServerInstance.close(res);
+        webpackDevServerInstance.stopCallback(res);
       }
     });
   }
@@ -350,7 +367,7 @@ async function compileWebAppAsync(projectRoot: string, compiler: webpack.Compile
         });
       } else {
         messages = formatWebpackMessages(
-          stats.toJson({ all: false, warnings: true, errors: true })
+          stats?.toJson({ all: false, warnings: true, errors: true })
         );
       }
 
@@ -589,19 +606,9 @@ function applyEnvironmentVariables(config: WebpackConfiguration): WebpackConfigu
     const output = config.output || {};
     const optimization = config.optimization || {};
 
-    // Enable line to line mapped mode for all/specified modules.
-    // Line to line mapped mode uses a simple SourceMap where each line of the generated source is mapped to the same line of the original source.
-    // It’s a performance optimization. Only use it if your performance need to be better and you are sure that input lines match which generated lines.
-    // true enables it for all modules (not recommended)
-    output.devtoolLineToLine = true;
-
     // Add comments that describe the file import/exports.
     // This will make it easier to debug.
     output.pathinfo = true;
-    // Instead of numeric ids, give modules readable names for better debugging.
-    optimization.namedModules = true;
-    // Instead of numeric ids, give chunks readable names for better debugging.
-    optimization.namedChunks = true;
     // Readable ids for better debugging.
     // @ts-ignore Property 'moduleIds' does not exist.
     optimization.moduleIds = 'named';
@@ -609,10 +616,6 @@ function applyEnvironmentVariables(config: WebpackConfiguration): WebpackConfigu
     // This will manually enable it just to be safe.
     // @ts-ignore Property 'chunkIds' does not exist.
     optimization.chunkIds = 'named';
-
-    if (optimization.splitChunks) {
-      optimization.splitChunks.name = true;
-    }
 
     Object.assign(config, { output, optimization });
   }

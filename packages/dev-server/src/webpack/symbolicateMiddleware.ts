@@ -2,11 +2,14 @@ import Log from '@expo/bunyan';
 import { INTERNAL_CALLSITES_REGEX } from '@expo/metro-config';
 import type { IncomingMessage, ServerResponse } from 'http';
 import path from 'path';
+import webpack from 'webpack';
+// @ts-ignore
+import getFilenameFromUrl from 'webpack-dev-middleware/dist/utils/getFilenameFromUrl';
 
 import { ReactNativeStackFrame, StackFrame, Symbolicator } from './Symbolicator';
 import {
   AnyCompiler,
-  createGetFileNameFromUrl,
+  getCompilerForPlatform,
   getFileFromCompilerAsync,
   getPlatformFromRequest,
 } from './getFileAsync';
@@ -31,6 +34,44 @@ function customizeFrame(frame: StackFrame) {
   return { ...(frame || {}), collapse };
 }
 
+// TODO: Get rid of this hack
+function getImmutableWebpackDevMiddlewareContext(compiler: webpack.Compiler) {
+  const context = {
+    options: {
+      index: undefined,
+      publicPath: '/',
+    },
+    outputFileSystem: compiler.outputFileSystem,
+    stats: platformStats[compiler.name!],
+  };
+  return context;
+}
+
+const platformStats: Record<string, any> = {};
+
+// TODO: Get rid of this hack
+function listenForPlatformStats(compiler: AnyCompiler) {
+  let compilers: webpack.Compiler[] = [];
+  if ('compilers' in compiler) {
+    compilers = compiler.compilers;
+  } else {
+    compilers = [compiler];
+  }
+
+  for (const compiler of compilers) {
+    if (!compiler.name) {
+      throw new Error('Webpack config did not provide a platform as the name property');
+    }
+
+    ((compiler as any).webpack ? compiler.hooks.afterDone : compiler.hooks.done).tap(
+      'webpack-dev-middleware',
+      (stats: any) => {
+        platformStats[compiler.name!] = stats;
+      }
+    );
+  }
+}
+
 export function createSymbolicateMiddleware({
   projectRoot,
   logger,
@@ -40,20 +81,26 @@ export function createSymbolicateMiddleware({
   logger: Log;
   compiler: AnyCompiler;
 }) {
-  const getFilenameFromUrl = createGetFileNameFromUrl(compiler);
+  // TODO: Get rid of this hack
+  listenForPlatformStats(compiler);
 
   const symbolicate = new Symbolicator({
     projectRoot,
     logger,
     customizeFrame,
     async getFileAsync(props) {
-      const fileName = getFilenameFromUrl(props);
-      return getFileFromCompilerAsync(compiler, { fileName, platform: props.platform });
+      const platformCompiler = getCompilerForPlatform(compiler, props.platform);
+      const context = getImmutableWebpackDevMiddlewareContext(platformCompiler);
+      const fileName = getFilenameFromUrl(context, props.url);
+      return getFileFromCompilerAsync(platformCompiler, { fileName, platform: props.platform });
     },
     async getSourceMapAsync(props) {
-      const fileName = getFilenameFromUrl(props);
+      const platformCompiler = getCompilerForPlatform(compiler, props.platform);
+      const context = getImmutableWebpackDevMiddlewareContext(platformCompiler);
+      const fileName = getFilenameFromUrl(context, props.url);
+      // const fileName = getFilenameFromUrl(props);
       const fallbackSourceMapFilename = `${fileName}.map`;
-      const bundle = await getFileFromCompilerAsync(compiler, {
+      const bundle = await getFileFromCompilerAsync(platformCompiler, {
         fileName,
         platform: props.platform,
       });
