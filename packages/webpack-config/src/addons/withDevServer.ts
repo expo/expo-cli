@@ -7,14 +7,15 @@ import evalSourceMapMiddleware from 'react-dev-utils/evalSourceMapMiddleware';
 import ignoredFiles from 'react-dev-utils/ignoredFiles';
 import noopServiceWorkerMiddleware from 'react-dev-utils/noopServiceWorkerMiddleware';
 import redirectServedPath from 'react-dev-utils/redirectServedPathMiddleware';
-import { Configuration } from 'webpack';
-import {
+import type { Configuration } from 'webpack';
+import type {
   ProxyConfigArray,
   ProxyConfigMap,
   Configuration as WebpackDevServerConfiguration,
 } from 'webpack-dev-server';
 
 import { getPaths, getPublicPaths } from '../env';
+import { host, sockHost, sockPath, sockPort } from '../env/defaults';
 import { Environment } from '../types';
 
 // Ensure the certificate and key provided are valid and if not
@@ -75,12 +76,6 @@ function getHttpsConfig(projectRoot: string, isHttps: boolean): any {
   }
   return isHttps;
 }
-
-// @ts-ignore
-const host = process.env.HOST || '0.0.0.0';
-const sockHost = process.env.WDS_SOCKET_HOST;
-const sockPath = process.env.WDS_SOCKET_PATH; // default: '/ws'
-const sockPort = process.env.WDS_SOCKET_PORT;
 
 type SelectiveEnv = Pick<Environment, 'mode' | 'locations' | 'projectRoot' | 'https' | 'platform'>;
 
@@ -189,14 +184,21 @@ export function createDevServer(
         // Enable custom sockjs pathname for websocket connection to hot reloading server.
         // Enable custom sockjs hostname, pathname and port for websocket connection
         // to hot reloading server.
-
         hostname: sockHost,
         pathname: sockPath,
         port: sockPort,
       },
-      overlay: true,
+      overlay: false,
       // TODO: This is nonstandard, prevents logging in the browser
-      logging: 'none',
+      // logging: 'none',
+    },
+    webSocketServer: {
+      type: 'ws',
+      options: {
+        host: sockHost,
+        port: sockPort,
+        path: sockPath,
+      },
     },
     devMiddleware: {
       mimeTypes,

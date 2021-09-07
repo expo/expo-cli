@@ -14,7 +14,6 @@ import {
 } from 'expo-pwa';
 import fs from 'fs';
 import { readFileSync } from 'fs-extra';
-import { boolish } from 'getenv';
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 import { parse } from 'node-html-parser';
 import path from 'path';
@@ -33,6 +32,12 @@ import {
   getPathsAsync,
   getPublicPaths,
 } from './env';
+import {
+  isCI,
+  isFastRefreshEnabled,
+  shouldUseNativeCodeLoading,
+  shouldUseSourceMap,
+} from './env/defaults';
 import { createAllLoaders } from './loaders';
 import {
   ApplePwaWebpackPlugin,
@@ -49,12 +54,6 @@ import {
 import ExpoAppManifestWebpackPlugin from './plugins/ExpoAppManifestWebpackPlugin';
 import { HTMLLinkNode } from './plugins/ModifyHtmlWebpackPlugin';
 import { Arguments, Environment, FilePaths, Mode } from './types';
-
-// Source maps are resource heavy and can cause out of memory issue for large source files.
-const shouldUseSourceMap = boolish('GENERATE_SOURCEMAP', true);
-const shouldUseNativeCodeLoading = boolish('EXPO_WEBPACK_USE_NATIVE_CODE_LOADING', false);
-
-const isCI = boolish('CI', false);
 
 function getDevtool(
   { production, development }: { production: boolean; development: boolean },
@@ -694,7 +693,7 @@ export class HMRPlugin {
   constructor(public config: { isDev: boolean; isNative: boolean }) {}
 
   apply(compiler: webpack.Compiler) {
-    if (this.config?.isDev) {
+    if (this.config?.isDev && isFastRefreshEnabled) {
       new ReactRefreshPlugin({
         overlay: false,
       }).apply(compiler);

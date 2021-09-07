@@ -1,6 +1,6 @@
 import type Log from '@expo/bunyan';
-import { PWAConfig } from 'expo-pwa';
-import { ProxyConfigArray, ProxyConfigMap } from 'webpack-dev-server';
+import type { PWAConfig } from 'expo-pwa';
+import type { ProxyConfigArray, ProxyConfigMap } from 'webpack-dev-server';
 
 type AnyObject = Record<string, any>;
 

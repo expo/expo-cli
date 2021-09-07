@@ -72,7 +72,7 @@ const sockUrl = url.format({
   // @ts-ignore
   port: process.env.WDS_SOCKET_PORT || window.location.port,
   // Hardcoded in WebpackDevServer
-  pathname: process.env.WDS_SOCKET_PATH || '/ws',
+  pathname: process.env.WDS_SOCKET_PATH || '/_expo/ws',
   slashes: true,
 });
 

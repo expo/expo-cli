@@ -14,7 +14,6 @@ import http from 'http';
 import * as path from 'path';
 import formatWebpackMessages from 'react-dev-utils/formatWebpackMessages';
 import openBrowser from 'react-dev-utils/openBrowser';
-import resolveFrom from 'resolve-from';
 import webpack from 'webpack';
 import WebpackDevServer from 'webpack-dev-server';
 
@@ -33,14 +32,12 @@ import {
 
 const WEBPACK_LOG_TAG = 'expo';
 
-type DevServer = WebpackDevServer;
-
-let webpackDevServerInstance: DevServer | null = null;
+let webpackDevServerInstance: WebpackDevServer | null = null;
 let webpackServerPort: number | null = null;
 
 interface WebpackSettings {
   url: string;
-  server: DevServer;
+  server: WebpackDevServer;
   port: number;
   protocol: 'http' | 'https';
   host?: string;
@@ -103,7 +100,7 @@ export function isTargetingNative() {
 }
 
 export type WebpackDevServerResults = {
-  server: DevServer;
+  server: WebpackDevServer;
   location: Omit<WebpackSettings, 'server'>;
   messageSocket: MessageSocket;
 };
@@ -131,11 +128,12 @@ export async function broadcastMessage(message: 'reload' | string, data?: any) {
   // For now, just manually convert the value so our CLI interface can be unified.
   const hackyConvertedMessage = message === 'reload' ? 'content-changed' : message;
 
-  webpackDevServerInstance.sendMessage(
-    webpackDevServerInstance.sockets,
-    hackyConvertedMessage,
-    data
-  );
+  const connections = webpackDevServerInstance.webSocketServer.clients;
+
+  if (!connections.length) {
+    console.warn('No HMR clients are connected to the dev server');
+  }
+  webpackDevServerInstance.sendMessage(connections, hackyConvertedMessage, data);
 }
 
 function createNativeDevServerMiddleware(
