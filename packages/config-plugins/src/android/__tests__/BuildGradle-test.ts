@@ -153,7 +153,7 @@ describe(resolveConfigValue, () => {
         productFlavors: { example: { versionCode: '1234' } },
       },
     };
-    const result = resolveConfigValue(buildGradle, undefined, 'versionCode');
+    const result = resolveConfigValue(buildGradle, 'versionCode');
     expect(result).toEqual('123');
   });
   it('get versionCode for example flavor', async () => {
@@ -163,7 +163,7 @@ describe(resolveConfigValue, () => {
         productFlavors: { example: { versionCode: '1234' } },
       },
     };
-    const result = resolveConfigValue(buildGradle, 'example', 'versionCode');
+    const result = resolveConfigValue(buildGradle, 'versionCode', 'example');
     expect(result).toEqual('1234');
   });
   it('get versionCode for example flavor from default config', async () => {
@@ -173,7 +173,7 @@ describe(resolveConfigValue, () => {
         productFlavors: { example: { versionName: '1234' } },
       },
     };
-    const result = resolveConfigValue(buildGradle, 'example', 'versionCode');
+    const result = resolveConfigValue(buildGradle, 'versionCode', 'example');
     expect(result).toEqual('123');
   });
   it('get versionCode for example flavor from default config', async () => {
@@ -183,7 +183,7 @@ describe(resolveConfigValue, () => {
         productFlavors: { example: { versionName: '1234' } },
       },
     };
-    const result = resolveConfigValue(buildGradle, 'example', 'versionCode');
+    const result = resolveConfigValue(buildGradle, 'versionCode', 'example');
     expect(result).toEqual('123');
   });
 });

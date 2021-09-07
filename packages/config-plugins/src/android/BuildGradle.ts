@@ -4,8 +4,8 @@ import g2js from 'gradle-to-js/lib/parser';
 import { getAppBuildGradleFilePath } from './Paths';
 
 // represents gradle command
-// e.g. for `:app:buildExampleDebug` -> { moduleName: app, flavor: example, variant: debug }
-interface GradleCommandInfo {
+// e.g. for `:app:buildExampleDebug` -> { moduleName: app, flavor: example, buildType: debug }
+interface GradleCommand {
   moduleName?: string;
   flavor?: string;
   buildType?: string;
@@ -33,8 +33,8 @@ export async function getAppBuildGradleAsync(projectDir: string): Promise<AppBui
 
 export function resolveConfigValue(
   buildGradle: AppBuildGradle,
-  flavor: string | undefined,
-  field: keyof Config
+  field: keyof Config,
+  flavor?: string
 ) {
   return (
     (flavor && buildGradle?.android?.productFlavors?.[flavor]?.[field]) ??
@@ -42,20 +42,22 @@ export function resolveConfigValue(
   );
 }
 
-// based on gradle command extract name of the module, variant and flavor
-//
-// @param cmd can be any valid string that can be added after `./gradlew` call
-// e.g.
-//   - :app:buildDebug
-//   - app:buildDebug
-//   - buildDebug
-//   - buildDebug --console verbose
-// @param buildGradle is used to verify correct casing of the first letter in
-// the flavor name
-export function parseGradleCommand(cmd: string, buildGradle: AppBuildGradle): GradleCommandInfo {
+/**
+ * Extract module name, buildType, and flavor from the gradle command.
+ *
+ * @param cmd can be any valid string that can be added after `./gradlew` call
+ * e.g.
+ *   - :app:buildDebug
+ *   - app:buildDebug
+ *   - buildDebug
+ *   - buildDebug --console verbose
+ * @param buildGradle is used to verify correct casing of the first letter in
+ * the flavor name
+ **/
+export function parseGradleCommand(cmd: string, buildGradle: AppBuildGradle): GradleCommand {
   const hasFlavorDimensions = (buildGradle.android?.flavorDimensions ?? '').split(',').length > 1;
   if (hasFlavorDimensions) {
-    throw new Error('flavorDimensions in build.gradle are not supported');
+    throw new Error('flavorDimensions in build.gradle are not supported yet');
   }
   const flavors = new Set(Object.keys(buildGradle?.android?.productFlavors ?? {}));
 
@@ -63,10 +65,7 @@ export function parseGradleCommand(cmd: string, buildGradle: AppBuildGradle): Gr
   const [withoutParams] = cmd.split(' ');
 
   // remove leading :
-  let rawCmd = withoutParams;
-  if (rawCmd.startsWith(':')) {
-    rawCmd = rawCmd.slice(1);
-  }
+  const rawCmd = withoutParams.startsWith(':') ? withoutParams.slice(1) : withoutParams;
 
   // separate moduleName and rest of the definition
   const splitCmd = rawCmd.split(':');
