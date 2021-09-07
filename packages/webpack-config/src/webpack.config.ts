@@ -185,7 +185,6 @@ export default async function (env: Environment, argv: Arguments = {}): Promise<
     appEntry.push(locations.appMain);
   }
   const webpackDevClientEntry = require.resolve('./runtime/webpackHotDevClient');
-  // const webpackDevClientEntry = require.resolve('react-dev-utils/webpackHotDevClient');
 
   if (isNative) {
     const getPolyfillsPath = resolveFrom.silent(
@@ -524,18 +523,6 @@ export default async function (env: Environment, argv: Arguments = {}): Promise<
         ),
       isNative &&
         new webpack.NormalModuleReplacementPlugin(
-          /webpack-dev-server\/client\/overlay\.js$/,
-          function (resource) {
-            const request = require.resolve('./runtime/wds-overlay-shim');
-            const context = path.dirname(request);
-            resource.request = request;
-            resource.context = context;
-            resource.createData.resource = request;
-            resource.createData.context = context;
-          }
-        ),
-      isNative &&
-        new webpack.NormalModuleReplacementPlugin(
           /react-native\/Libraries\/Core\/setUpReactRefresh\.js$/,
           function (resource) {
             const request = require.resolve('./runtime/setUpReactRefresh-shim');
@@ -670,14 +657,11 @@ export default async function (env: Environment, argv: Arguments = {}): Promise<
   }
 
   if (isNative) {
-    // https://github.com/webpack/webpack/blob/f06086c53b2277e421604c5cea6f32f5c5b6d117/declarations/WebpackOptions.d.ts#L504-L518
     webpackConfig.target = false;
-    // webpackConfig.target = 'webworker';
     webpackConfig.output!.chunkLoading = 'jsonp';
-    webpackConfig.output!.hotUpdateMainFilename = 'same.hot-update.json';
     webpackConfig.output!.chunkFormat = 'array-push';
     webpackConfig.output!.globalObject = 'this';
-    // webpackConfig.output!.chunkLoadingGlobal = 'exLoadChunk';
+    webpackConfig.output!.chunkLoadingGlobal = 'exLoadChunk';
   }
 
   if (isProd) {
@@ -697,15 +681,8 @@ export default async function (env: Environment, argv: Arguments = {}): Promise<
       'react-native': path.dirname(resolveFrom(env.projectRoot, 'react-native/package.json')),
       react$: resolveFrom(env.projectRoot, 'react'),
 
-      // '../../cli/node_modules/react-refresh/runtime.js': resolveFrom(
-      //   env.projectRoot,
-      //   'react-refresh/runtime'
-      // ),
-
       'react-refresh': path.dirname(require.resolve('react-refresh/package.json')),
       'react-refresh/runtime': require.resolve('react-refresh/runtime'),
-      // 'react-refresh': path.dirname(resolveFrom(env.projectRoot, 'react-refresh/package.json')),
-      // 'react-refresh/runtime': resolveFrom(env.projectRoot, 'react-refresh/runtime'),
       'react-is$': resolveFrom(env.projectRoot, 'react-is'),
     });
   }

@@ -118,8 +118,6 @@ __webpack_require__.l = function (
   key: string,
   chunkId: string = url
 ): Promise<any> {
-  console.log('LOAD.l:', url);
-
   try {
     const stringModuleID = String(chunkId);
 
