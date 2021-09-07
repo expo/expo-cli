@@ -47,8 +47,6 @@ export const imageLoaderRule: RuleSetRule = {
     dataUrlCondition: {
       maxSize: imageInlineSizeLimit,
     },
-    // TODO: Interop assets like Metro bundler
-    esModule: false,
   },
 };
 
@@ -68,11 +66,6 @@ export const fallbackLoaderRule: RuleSetRule = {
   // by webpacks internal loaders.
   exclude: [/^$/, /\.(js|mjs|jsx|ts|tsx)$/, /\.html$/, /\.json$/],
   type: 'asset/resource',
-  // options: {
-  //   // Interop assets like Metro bundler
-  //   esModule: false,
-  //   name: 'static/media/[name].[hash:8].[ext]',
-  // },
 };
 
 /**
