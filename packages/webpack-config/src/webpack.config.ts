@@ -72,7 +72,8 @@ function getDevtool(
   }
   return false;
 }
-
+const webpackDevClientEntry = require.resolve('./runtime/webpackHotDevClient');
+const reactRefreshOverlayEntry = require.resolve('./runtime/refresh-interop');
 type Output = Configuration['output'];
 type DevtoolModuleFilenameTemplateInfo = { root: string; absoluteResourcePath: string };
 
@@ -184,8 +185,6 @@ export default async function (env: Environment, argv: Arguments = {}): Promise<
   if (locations.appMain) {
     appEntry.push(locations.appMain);
   }
-  // const webpackDevClientEntry = require.resolve('react-dev-utils/webpackHotDevClient');
-  const webpackDevClientEntry = require.resolve('./runtime/webpackHotDevClient');
 
   if (isNative) {
     const getPolyfillsPath = resolveFrom.silent(
@@ -695,9 +694,23 @@ export class HMRPlugin {
 
   apply(compiler: webpack.Compiler) {
     if (this.config?.isDev && isFastRefreshEnabled) {
-      new ReactRefreshPlugin({
-        overlay: false,
-      }).apply(compiler);
+      new ReactRefreshPlugin(
+        this.config.isNative
+          ? {
+              overlay: false,
+            }
+          : {
+              overlay: {
+                entry: webpackDevClientEntry,
+                // The expected exports are slightly different from what the overlay exports,
+                // so an interop is included here to enable feedback on module-level errors.
+                module: reactRefreshOverlayEntry,
+                // Since we ship a custom dev client and overlay integration,
+                // the bundled socket handling logic can be eliminated.
+                sockIntegration: false,
+              },
+            }
+      ).apply(compiler);
 
       // To avoid the problem from https://github.com/facebook/react/issues/20377
       // we need to move React Refresh entry that `ReactRefreshPlugin` injects to evaluate right

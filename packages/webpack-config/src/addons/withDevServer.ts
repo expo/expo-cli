@@ -188,6 +188,7 @@ export function createDevServer(
         pathname: sockPath,
         port: sockPort,
       },
+      // overlay: true,
       overlay: false,
       // TODO: This is nonstandard, prevents logging in the browser
       // logging: 'none',
@@ -222,10 +223,6 @@ export function createDevServer(
     // `proxy` is run between `before` and `after` `webpack-dev-server` hooks
     proxy,
     onBeforeSetupMiddleware(devServer) {
-      // Everything we add here is for web support
-      // if (isNative) {
-      //   return;
-      // }
       // Keep `evalSourceMapMiddleware`
       // middlewares before `redirectServedPath` otherwise will not have any effect
       // This lets us fetch source contents from webpack for the error overlay
