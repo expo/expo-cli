@@ -75,6 +75,7 @@ export type WebEnvironment = {
   mode: 'development' | 'production' | 'test' | 'none';
   https: boolean;
   logger: Log;
+  port?: number;
 };
 
 // A custom message websocket broadcaster used to send messages to a React Native runtime.
@@ -128,6 +129,7 @@ export async function broadcastMessage(message: 'reload' | string, data?: any) {
   // For now, just manually convert the value so our CLI interface can be unified.
   const hackyConvertedMessage = message === 'reload' ? 'content-changed' : message;
 
+  // @ts-ignore: type not exposed
   const connections = webpackDevServerInstance.webSocketServer.clients;
 
   if (!connections.length) {
@@ -557,6 +559,7 @@ async function getWebpackConfigEnvFromBundlingOptionsAsync(
     mode,
     https,
     logger: ProjectUtils.getLogger(projectRoot),
+    port: options.port,
     ...(options.webpackEnv || {}),
   };
 }

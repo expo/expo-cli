@@ -80,7 +80,8 @@ function getOutput(
   locations: FilePaths,
   mode: Mode,
   publicPath: string,
-  platform: Environment['platform']
+  platform: Environment['platform'],
+  port: number = 8081
 ): Output {
   const commonOutput: Output = {
     // We inferred the "public path" (such as / or /my-project) from homepage.
@@ -120,7 +121,7 @@ function getOutput(
     // Also there are no actual files generated in dev.
     commonOutput.filename = `index.bundle`;
     // commonOutput.hotUpdateMainFilename;
-    commonOutput.publicPath = `http://localhost:8081/`;
+    commonOutput.publicPath = `http://localhost:${port}/`;
     // This works best for our custom native symbolication middleware
     // commonOutput.devtoolModuleFilenameTemplate = (
     //   info: DevtoolModuleFilenameTemplateInfo
@@ -352,7 +353,7 @@ export default async function (env: Environment, argv: Arguments = {}): Promise<
     // If this is anywhere else, the source maps and errors won't show correct paths.
     context: env.projectRoot ?? __dirname,
     // configures where the build ends up
-    output: getOutput(locations, mode, publicPath, env.platform),
+    output: getOutput(locations, mode, publicPath, env.platform, env.port),
 
     // Disable file info logs.
     // stats: 'verbose',

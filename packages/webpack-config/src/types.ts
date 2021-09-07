@@ -19,6 +19,7 @@ export type InputEnvironment = {
     dangerouslyAddModulePathsToTranspile: string[];
   };
   logger?: Log;
+  port?: number;
 };
 
 export type Environment = {
@@ -64,6 +65,11 @@ export type Environment = {
    * Used for sending unified bundler logs to Expo CLI.
    */
   logger?: Log;
+
+  /**
+   * Dev server port.
+   */
+  port?: number;
 };
 
 /**
