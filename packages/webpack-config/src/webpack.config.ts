@@ -112,7 +112,7 @@ function getOutput(
     // Point sourcemap entries to original disk location (format as URL on Windows)
     commonOutput.devtoolModuleFilenameTemplate = (
       info: DevtoolModuleFilenameTemplateInfo
-      // TODO: revist for web
+      // TODO: revisit for web
     ): string => path.resolve(info.absoluteResourcePath).replace(/\\/g, '/');
   }
 
@@ -184,6 +184,7 @@ export default async function (env: Environment, argv: Arguments = {}): Promise<
   if (locations.appMain) {
     appEntry.push(locations.appMain);
   }
+  // const webpackDevClientEntry = require.resolve('react-dev-utils/webpackHotDevClient');
   const webpackDevClientEntry = require.resolve('./runtime/webpackHotDevClient');
 
   if (isNative) {
@@ -363,7 +364,7 @@ export default async function (env: Environment, argv: Arguments = {}): Promise<
       cacheDirectory: env.locations.appWebpackCache,
       store: 'pack',
       buildDependencies: {
-        defaultWebpack: ['webpack/lib/'],
+        defaultWebpack: [path.join(path.dirname(require.resolve('webpack/package.json')), 'lib/')],
         config: [__filename],
         tsconfig: [env.locations.appTsConfig, env.locations.appJsConfig].filter(f =>
           fs.existsSync(f)
@@ -724,6 +725,8 @@ export class HMRPlugin {
 
           entry[key].import = entryImports;
         }
+
+        console.log(entry);
 
         return entry;
       };
