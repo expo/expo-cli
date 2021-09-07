@@ -189,6 +189,7 @@ export function createDevServer(
         // Enable custom sockjs pathname for websocket connection to hot reloading server.
         // Enable custom sockjs hostname, pathname and port for websocket connection
         // to hot reloading server.
+
         hostname: sockHost,
         pathname: sockPath,
         port: sockPort,
@@ -220,9 +221,9 @@ export function createDevServer(
     proxy,
     onBeforeSetupMiddleware(devServer) {
       // Everything we add here is for web support
-      if (isNative) {
-        return;
-      }
+      // if (isNative) {
+      //   return;
+      // }
       // Keep `evalSourceMapMiddleware`
       // middlewares before `redirectServedPath` otherwise will not have any effect
       // This lets us fetch source contents from webpack for the error overlay
@@ -232,9 +233,9 @@ export function createDevServer(
       // Redirect to `PUBLIC_URL` or `homepage` from `package.json` if url not match
       devServer.app.use(redirectServedPath(publicUrlOrPath));
 
-      if (isNative) {
-        return;
-      }
+      // if (isNative) {
+      //   return;
+      // }
 
       // This service worker file is effectively a 'no-op' that will reset any
       // previous service worker registered for the same host:port combination.

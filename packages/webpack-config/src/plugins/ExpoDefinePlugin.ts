@@ -4,7 +4,7 @@ import semver from 'semver';
 import webpack from 'webpack';
 
 import { getConfig, getMode, getPublicPaths } from '../env';
-import { Environment, Mode } from '../types';
+import { Environment, ExpoPlatform, Mode } from '../types';
 
 function createEnvironmentConstants(appManifest: ExpoConfig) {
   return {
@@ -49,12 +49,14 @@ export interface ClientEnv {
  * @param mode defines the Metro bundler `global.__DEV__` value.
  * @param publicPath passed as `process.env.PUBLIC_URL` to the app.
  * @param nativeAppManifest public values to be used in `expo-constants`.
+ * @param platform native platform.
  * @internal
  */
 export function createClientEnvironment(
   mode: Mode,
   publicPath: string,
-  nativeAppManifest: ExpoConfig
+  nativeAppManifest: ExpoConfig,
+  platform: string
 ): ClientEnv {
   const environment = getMode({ mode });
   const __DEV__ = environment !== 'production';
@@ -96,6 +98,14 @@ export function createClientEnvironment(
          * `expo-constants` https://docs.expo.dev/versions/latest/sdk/constants/
          */
         [`${prefix}APP_MANIFEST`]: JSON.stringify(nativeAppManifest),
+
+        [`${prefix}PLATFORM`]: JSON.stringify(platform),
+        // Whether or not react-refresh is enabled.
+        // It is defined here so it is available in the webpackHotDevClient.
+        [`${prefix}FAST_REFRESH`]: process.env.FAST_REFRESH !== 'false',
+        // [`${prefix}WDS_SOCKET_HOST`]: process.env.WDS_SOCKET_HOST,
+        // [`${prefix}WDS_SOCKET_PORT`]: process.env.WDS_SOCKET_PORT,
+        // [`${prefix}WDS_SOCKET_PATH`]: process.env.WDS_SOCKET_PATH,
       } as Record<string, string>
     );
 
@@ -120,7 +130,7 @@ export function createClientEnvironment(
 export default class DefinePlugin extends webpack.DefinePlugin {
   static createClientEnvironment = createClientEnvironment;
   static fromEnv = (
-    env: Pick<Environment, 'projectRoot' | 'mode' | 'config' | 'locations'>
+    env: Pick<Environment, 'projectRoot' | 'mode' | 'config' | 'locations' | 'platform'>
   ): DefinePlugin => {
     const mode = getMode(env);
     const { publicUrl } = getPublicPaths(env);
@@ -129,12 +139,30 @@ export default class DefinePlugin extends webpack.DefinePlugin {
       mode,
       publicUrl,
       config,
+      platform: env.platform,
     });
   };
 
-  constructor({ mode, publicUrl, config }: { mode: Mode; publicUrl: string; config: ExpoConfig }) {
+  constructor({
+    mode,
+    publicUrl,
+    config,
+    platform,
+  }: {
+    mode: Mode;
+    publicUrl: string;
+    config: ExpoConfig;
+    platform: ExpoPlatform;
+  }) {
     const publicAppManifest = createEnvironmentConstants(config);
-    const environmentVariables = createClientEnvironment(mode, publicUrl, publicAppManifest);
+
+    const environmentVariables = createClientEnvironment(
+      mode,
+      publicUrl,
+      publicAppManifest,
+      platform
+    );
+
     super(environmentVariables);
   }
 }

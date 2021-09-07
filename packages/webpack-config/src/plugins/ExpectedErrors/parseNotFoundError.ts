@@ -87,7 +87,7 @@ export async function getNotFoundError(compilation: any, input: any, fileName: s
   );
 }
 
-function getImportTrace(compilation: webpack.compilation.Compilation, input: any) {
+function getImportTrace(compilation: webpack.Compilation, input: any) {
   if (!isWebpack5) {
     return '';
   }
@@ -111,7 +111,7 @@ function getImportTrace(compilation: webpack.compilation.Compilation, input: any
 // This can occur in React Native when using require incorrectly:
 // i.e. `(require: any).Systrace = Systrace;` which is valid in Metro.
 export async function getModuleDependencyWarning(
-  compilation: webpack.compilation.Compilation,
+  compilation: webpack.Compilation,
   input: any,
   fileName: string
 ) {
@@ -146,7 +146,7 @@ export async function getModuleDependencyWarning(
   );
 }
 
-function getProjectRoot(compilation: webpack.compilation.Compilation): string {
+function getProjectRoot(compilation: webpack.Compilation): string {
   // @ts-ignore: Webpack v5/v4
   return compilation.options.context ?? compilation.context;
 }

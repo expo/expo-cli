@@ -7,14 +7,11 @@ import {
   Configuration,
   Entry,
   RuleSetCondition,
-  RuleSetLoader,
   RuleSetRule,
   RuleSetUse,
   RuleSetUseItem,
   WebpackPluginInstance,
 } from 'webpack';
-
-type LoaderItemLoaderPart = Pick<LoaderItem, 'loader' | 'loaderIndex'>;
 
 interface RuleItem {
   rule: RuleSetRule;
@@ -24,33 +21,6 @@ interface RuleItem {
 interface PluginItem {
   plugin: WebpackPluginInstance;
   index: number;
-}
-
-interface LoaderItem {
-  rule: RuleSetRule;
-  ruleIndex: number;
-  loader: RuleSetUseItem;
-  loaderIndex: number;
-}
-
-/**
- *
- * @param loaderName
- * @param rules
- * @category utils
- */
-export function findLoader(loaderName: string, rules: RuleSetRule[]): RuleSetRule | null {
-  for (const rule of rules) {
-    if (
-      rule.use &&
-      (rule.use as any).loader &&
-      ((rule.use as RuleSetLoader).loader!.includes(`/${loaderName}`) ||
-        (rule.use as any).loader.includes(`\\${loaderName}`))
-    ) {
-      return rule;
-    }
-  }
-  return null;
 }
 
 /**
@@ -102,63 +72,19 @@ export function getExpoBabelLoader(config: Configuration): RuleSetRule | null {
  * @param rules
  * @category utils
  */
-export function getRulesFromRules(rules: RuleSetRule[]): RuleSetRule[] {
+export function getRulesFromRules(rules: (RuleSetRule | '...')[]): RuleSetRule[] {
   const output: RuleSetRule[] = [];
 
   for (const rule of rules) {
-    if (rule.oneOf) {
-      output.push(...getRulesFromRules(rule.oneOf));
-    } else {
-      output.push(rule);
+    if (rule !== '...') {
+      if (rule.oneOf) {
+        output.push(...getRulesFromRules(rule.oneOf));
+      } else {
+        output.push(rule);
+      }
     }
   }
   return output;
-}
-
-/**
- *
- * @param rules
- * @category utils
- */
-export function getLoadersFromRules(rules: RuleItem[]): LoaderItem[] {
-  const loaders = rules.map(({ rule, index: ruleIndex }) => {
-    if (rule.oneOf) {
-      return getLoadersFromRules(getRulesAsItems(rule.oneOf));
-    }
-    return loaderToLoaderItemLoaderPart(
-      // @ts-ignore
-      rule.loaders || rule.loader || rule.use
-    ).map(loader => ({
-      ...loader,
-      rule,
-      ruleIndex,
-    }));
-  });
-
-  return loaders.reduce((arr, a) => arr.concat(a), []);
-}
-
-/**
- *
- * @param config
- * @category utils
- */
-export function getLoaders(config: Configuration): LoaderItem[] {
-  const rules = getRules(config);
-  return getLoadersFromRules(rules);
-}
-
-function loaderToLoaderItemLoaderPart(loader: RuleSetUse | undefined): LoaderItemLoaderPart[] {
-  if (!loader) return [];
-  const loaders: LoaderItemLoaderPart[] = [];
-  if (typeof loader === 'function') {
-    loaders.push(...loaderToLoaderItemLoaderPart(loader({})));
-  } else if (isRuleSetItem(loader)) {
-    loaders.push({ loader, loaderIndex: -1 });
-  } else if (Array.isArray(loader)) {
-    loaders.push(...loader.map((loader, loaderIndex) => ({ loader, loaderIndex })));
-  }
-  return loaders;
 }
 
 /**
@@ -262,16 +188,7 @@ export function getPluginsByName(config: Configuration, name: string): PluginIte
  * @category utils
  */
 export function isRuleSetItem(loader: RuleSetUse): loader is RuleSetUseItem {
-  return typeof loader === 'string' || typeof loader === 'function' || isRuleSetLoader(loader);
-}
-
-/**
- *
- * @param loader
- * @category utils
- */
-export function isRuleSetLoader(loader: RuleSetUse): loader is RuleSetLoader {
-  return Object.keys(loader).some(k => ['loader', 'options', 'indent', 'query'].includes(k));
+  return typeof loader === 'string' || typeof loader === 'function';
 }
 
 /**

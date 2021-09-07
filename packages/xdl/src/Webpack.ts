@@ -14,6 +14,7 @@ import http from 'http';
 import * as path from 'path';
 import formatWebpackMessages from 'react-dev-utils/formatWebpackMessages';
 import openBrowser from 'react-dev-utils/openBrowser';
+import resolveFrom from 'resolve-from';
 import webpack from 'webpack';
 import WebpackDevServer from 'webpack-dev-server';
 
@@ -255,9 +256,11 @@ export async function startAsync(
     });
   }
 
+  // const webpack = require(resolveFrom(projectRoot, 'webpack'));
   // Create a basic webpack compiler
   const compiler = webpack(config);
 
+  console.log(config);
   // Create the middleware required for interacting with a native runtime (Expo Go, or Expo Dev Client).
   const nativeMiddleware = createNativeDevServerMiddleware(projectRoot, { port, compiler });
 

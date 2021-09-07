@@ -9,17 +9,22 @@ export type Options = {
 
 export type BeforeEmitOptions = Options & { plugin: JsonWebpackPlugin };
 
-const hooksMap = new WeakMap<Compilation, Record<string, AsyncSeriesWaterfallHook>>();
+export type AfterEmitOptions = Pick<Options, 'json'> & {
+  outputName: string;
+  plugin: JsonWebpackPlugin;
+};
 
-function createWebpackPluginHooks(): Record<string, AsyncSeriesWaterfallHook> {
+const hooksMap = new WeakMap<Compilation, ReturnType<typeof createWebpackPluginHooks>>();
+
+function createWebpackPluginHooks() {
   return {
-    beforeEmit: new AsyncSeriesWaterfallHook(['pluginArgs']),
-    afterEmit: new AsyncSeriesWaterfallHook(['pluginArgs']),
+    beforeEmit: new AsyncSeriesWaterfallHook<BeforeEmitOptions>(['pluginArgs']),
+    afterEmit: new AsyncSeriesWaterfallHook<AfterEmitOptions>(['pluginArgs']),
   };
 }
 
 export default class JsonWebpackPlugin {
-  static getHooks(compilation: Compilation): Record<string, AsyncSeriesWaterfallHook> {
+  static getHooks(compilation: Compilation) {
     let hooks = hooksMap.get(compilation);
     // Setup the hooks only once
     if (hooks === undefined) {

@@ -109,6 +109,7 @@ export default function withUnimodules(
       mode,
       publicUrl,
       config,
+      platform,
     })
   );
 
@@ -180,20 +181,24 @@ export function ignoreExternalModules(
   if (!Array.isArray(webpackConfig.externals)) {
     webpackConfig.externals = [webpackConfig.externals];
   }
+  // @ts-ignore
   webpackConfig.externals = webpackConfig.externals.map(external => {
     if (typeof external !== 'function') {
       return external;
     }
 
     if (isWebpack5) {
+      // @ts-ignore
       return ctx => {
         const relPath = path.join('node_modules', ctx.request);
         return shouldIncludeModule(relPath) ? undefined : (external as (content: any) => any)(ctx);
       };
     }
 
+    // @ts-ignore
     return (ctx, req, cb) => {
       const relPath = path.join('node_modules', req);
+      // @ts-ignore
       return shouldIncludeModule(relPath) ? cb() : external(ctx, req, cb);
     };
   });

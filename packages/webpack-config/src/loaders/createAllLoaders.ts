@@ -6,7 +6,6 @@ import { RuleSetRule } from 'webpack';
 import { getConfig, getPaths, getPublicPaths } from '../env';
 import { Environment } from '../types';
 import createBabelLoader from './createBabelLoader';
-// import createFontLoader from './createFontLoader';
 
 const shouldUseSourceMap = boolish('GENERATE_SOURCEMAP', true);
 

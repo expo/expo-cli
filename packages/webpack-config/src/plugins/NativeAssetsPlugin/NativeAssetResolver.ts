@@ -8,8 +8,8 @@
  * Based on https://github.com/callstack/repack/blob/3c1e059/packages/repack/src/webpack/plugins/AssetsPlugin/AssetResolver.ts
  */
 
-import fs from 'fs';
 import path from 'path';
+import { HookMap, SyncHook } from 'tapable';
 import { promisify } from 'util';
 import webpack from 'webpack';
 
@@ -46,15 +46,15 @@ interface CollectOptions {
   assetExtensions: string[];
 }
 
-type Resolver = {
-  fileSystem: typeof fs;
-  getHook: (
-    type: string
-  ) => {
-    tapAsync: (type: string, callback: (request: any, context: any, callback: any) => void) => void;
-  };
-};
-
+// Resolver is not directly exposed from webpack types so we need to do some TS trickery to
+// get the type.
+type Resolver = webpack.Compiler['resolverFactory']['hooks']['resolver'] extends HookMap<infer H>
+  ? H extends SyncHook<infer S>
+    ? S extends any[]
+      ? S[0]
+      : never
+    : never
+  : never;
 export class NativeAssetResolver {
   static collectScales(
     files: string[],
@@ -95,17 +95,20 @@ export class NativeAssetResolver {
     }
   }
 
-  private isValidPath(requestPath: string): requestPath is string {
+  private isValidPath(requestPath: any): requestPath is string {
     return typeof requestPath === 'string' && this.config.test!.test(requestPath);
   }
 
   apply(resolver: Resolver) {
     const { platforms, assetExtensions } = this.config;
     const logger = this.compiler.getInfrastructureLogger('NativeAssetResolver');
+    // @ts-ignore
     const readdirAsync = promisify(resolver.fileSystem.readdir.bind(resolver.fileSystem));
 
     resolver
+      // @ts-ignore
       .getHook('file')
+      // @ts-ignore
       .tapAsync('NativeAssetResolver', async (request, _context, callback) => {
         const requestPath = request.path;
         if (!this.isValidPath(requestPath)) {
@@ -117,7 +120,7 @@ export class NativeAssetResolver {
         let files: string[];
         const dir = path.dirname(requestPath);
         try {
-          files = (await readdirAsync(dir)).filter(result => typeof result === 'string');
+          files = ((await readdirAsync(dir)) as any[]).filter(result => typeof result === 'string');
         } catch (error) {
           logger.error(`Failed to read Webpack fs directory: ${dir}`, error);
           return callback();

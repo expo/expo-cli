@@ -10,8 +10,11 @@
 
 import crypto from 'crypto';
 import type fs from 'fs';
+// @ts-ignore
 import { imageSize } from 'image-size';
+// @ts-ignore
 import { ISizeCalculationResult } from 'image-size/dist/types/interface';
+// @ts-ignore
 import utils from 'loader-utils';
 import path from 'path';
 import validateSchema from 'schema-utils';

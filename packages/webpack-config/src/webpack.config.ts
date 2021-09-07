@@ -1,5 +1,6 @@
 /** @internal */ /** */
 /* eslint-env node */
+import ReactRefreshPlugin from '@pmmmwh/react-refresh-webpack-plugin';
 import chalk from 'chalk';
 import { CleanWebpackPlugin } from 'clean-webpack-plugin';
 import CopyWebpackPlugin from 'copy-webpack-plugin';
@@ -119,6 +120,8 @@ function getOutput(
     // Give the output bundle a constant name to prevent caching.
     // Also there are no actual files generated in dev.
     commonOutput.filename = `index.bundle`;
+    // commonOutput.hotUpdateMainFilename;
+    commonOutput.publicPath = `http://localhost:8081/`;
     // This works best for our custom native symbolication middleware
     // commonOutput.devtoolModuleFilenameTemplate = (
     //   info: DevtoolModuleFilenameTemplateInfo
@@ -181,7 +184,8 @@ export default async function (env: Environment, argv: Arguments = {}): Promise<
   if (locations.appMain) {
     appEntry.push(locations.appMain);
   }
-  const webpackDevClientEntry = require.resolve('react-dev-utils/webpackHotDevClient');
+  const webpackDevClientEntry = require.resolve('./runtime/webpackHotDevClient');
+  // const webpackDevClientEntry = require.resolve('react-dev-utils/webpackHotDevClient');
 
   if (isNative) {
     const getPolyfillsPath = resolveFrom.silent(
@@ -192,7 +196,9 @@ export default async function (env: Environment, argv: Arguments = {}): Promise<
     if (getPolyfillsPath) {
       appEntry.unshift(
         ...require(getPolyfillsPath)(),
-        resolveFrom(env.projectRoot, 'react-native/Libraries/Core/InitializeCore')
+        resolveFrom(env.projectRoot, 'react-native/Libraries/Core/InitializeCore'),
+        require.resolve('./runtime/location-polyfill'),
+        require.resolve('./runtime/fetch-async')
       );
       if (isDev) {
         // TODO: Native HMR
@@ -207,19 +213,22 @@ export default async function (env: Environment, argv: Arguments = {}): Promise<
     if (resizeObserverPolyfill) {
       appEntry.unshift(resizeObserverPolyfill);
     }
-
-    if (isDev) {
-      // https://github.com/facebook/create-react-app/blob/e59e0920f3bef0c2ac47bbf6b4ff3092c8ff08fb/packages/react-scripts/config/webpack.config.js#L144
-      // Include an alternative client for WebpackDevServer. A client's job is to
-      // connect to WebpackDevServer by a socket and get notified about changes.
-      // When you save a file, the client will either apply hot updates (in case
-      // of CSS changes), or refresh the page (in case of JS changes). When you
-      // make a syntax error, this client will display a syntax error overlay.
-      // Note: instead of the default WebpackDevServer client, we use a custom one
-      // to bring better experience for Create React App users. You can replace
-      // the line below with these two lines if you prefer the stock client:
-      // require.resolve('webpack-dev-server/client') + '?/',
-      // require.resolve('webpack/hot/dev-server'),
+  }
+  if (isDev) {
+    // https://github.com/facebook/create-react-app/blob/e59e0920f3bef0c2ac47bbf6b4ff3092c8ff08fb/packages/react-scripts/config/webpack.config.js#L144
+    // Include an alternative client for WebpackDevServer. A client's job is to
+    // connect to WebpackDevServer by a socket and get notified about changes.
+    // When you save a file, the client will either apply hot updates (in case
+    // of CSS changes), or refresh the page (in case of JS changes). When you
+    // make a syntax error, this client will display a syntax error overlay.
+    // Note: instead of the default WebpackDevServer client, we use a custom one
+    // to bring better experience for Create React App users. You can replace
+    // the line below with these two lines if you prefer the stock client:
+    // require.resolve('webpack-dev-server/client') + '?/',
+    // require.resolve('webpack/hot/dev-server'),
+    if (isNative) {
+      appEntry.push(webpackDevClientEntry);
+    } else {
       appEntry.unshift(webpackDevClientEntry);
     }
   }
@@ -314,6 +323,7 @@ export default async function (env: Environment, argv: Arguments = {}): Promise<
 
   const emacsLockfilePattern = '**/.#*';
 
+  const allLoaders = createAllLoaders(env);
   let webpackConfig: Configuration = {
     // Used to identify the compiler.
     name: env.platform,
@@ -488,21 +498,53 @@ export default async function (env: Environment, argv: Arguments = {}): Promise<
         mode,
         publicUrl,
         config,
+        platform: env.platform,
       }),
 
       // Disable chunking on native
       // https://gist.github.com/glennreyes/f538a369db0c449b681e86ef7f86a254#file-razzle-config-js
-      isNative &&
-        new webpack.optimize.LimitChunkCountPlugin({
-          maxChunks: 1,
-        }),
+      // isNative &&
+      //   new webpack.optimize.LimitChunkCountPlugin({
+      //     maxChunks: 1,
+      //   }),
 
       // Replace the Metro specific HMR code in `react-native` with
       // a shim.
       isNative &&
         new webpack.NormalModuleReplacementPlugin(
           /react-native\/Libraries\/Utilities\/HMRClient\.js$/,
-          require.resolve('./runtime/metro-runtime-shim')
+          function (resource) {
+            const request = require.resolve('./runtime/metro-runtime-shim');
+            const context = path.dirname(request);
+            resource.request = request;
+            resource.context = context;
+            resource.createData.resource = request;
+            resource.createData.context = context;
+          }
+        ),
+      isNative &&
+        new webpack.NormalModuleReplacementPlugin(
+          /webpack-dev-server\/client\/overlay\.js$/,
+          function (resource) {
+            const request = require.resolve('./runtime/wds-overlay-shim');
+            const context = path.dirname(request);
+            resource.request = request;
+            resource.context = context;
+            resource.createData.resource = request;
+            resource.createData.context = context;
+          }
+        ),
+      isNative &&
+        new webpack.NormalModuleReplacementPlugin(
+          /react-native\/Libraries\/Core\/setUpReactRefresh\.js$/,
+          function (resource) {
+            const request = require.resolve('./runtime/setUpReactRefresh-shim');
+            const context = path.dirname(request);
+            resource.request = request;
+            resource.context = context;
+            resource.createData.resource = request;
+            resource.createData.context = context;
+          }
         ),
 
       !isNative &&
@@ -550,6 +592,33 @@ export default async function (env: Environment, argv: Arguments = {}): Promise<
           },
         }),
 
+      // Replace the Metro specific HMR code in `react-native` with
+      // a shim.
+      isNative &&
+        isDev &&
+        new webpack.NormalModuleReplacementPlugin(/react-error-overlay$/, function (resource) {
+          const request = require.resolve('./runtime/react-error-overlay-shim');
+          const context = path.dirname(request);
+          resource.request = request;
+          resource.context = context;
+          resource.createData.resource = request;
+          resource.createData.context = context;
+        }),
+      isNative &&
+        isDev &&
+        new webpack.NormalModuleReplacementPlugin(
+          /webpack\/runtime\/location-polyfill.js$/,
+          function (resource) {
+            const request = require.resolve('./runtime/location-polyfill');
+            const context = path.dirname(request);
+            resource.request = request;
+            resource.context = context;
+            resource.createData.resource = request;
+            resource.createData.context = context;
+          }
+        ),
+      new HMRPlugin({ isNative, isDev }),
+
       new ExpectedErrorsPlugin(),
       // Skip using a progress bar in CI
       env.logger &&
@@ -578,7 +647,7 @@ export default async function (env: Environment, argv: Arguments = {}): Promise<
           use: require.resolve('source-map-loader'),
         },
         {
-          oneOf: createAllLoaders(env),
+          oneOf: allLoaders,
         },
       ].filter(Boolean),
     },
@@ -603,10 +672,12 @@ export default async function (env: Environment, argv: Arguments = {}): Promise<
   if (isNative) {
     // https://github.com/webpack/webpack/blob/f06086c53b2277e421604c5cea6f32f5c5b6d117/declarations/WebpackOptions.d.ts#L504-L518
     webpackConfig.target = false;
+    // webpackConfig.target = 'webworker';
     webpackConfig.output!.chunkLoading = 'jsonp';
+    webpackConfig.output!.hotUpdateMainFilename = 'same.hot-update.json';
     webpackConfig.output!.chunkFormat = 'array-push';
     webpackConfig.output!.globalObject = 'this';
-    webpackConfig.output!.chunkLoadingGlobal = 'exLoadChunk';
+    // webpackConfig.output!.chunkLoadingGlobal = 'exLoadChunk';
   }
 
   if (isProd) {
@@ -620,7 +691,75 @@ export default async function (env: Environment, argv: Arguments = {}): Promise<
 
   if (!isNative) {
     webpackConfig = withAlias(webpackConfig, getAliases(env.projectRoot));
+  } else {
+    webpackConfig = withAlias(webpackConfig, {
+      'react-native$': resolveFrom(env.projectRoot, 'react-native'),
+      'react-native': path.dirname(resolveFrom(env.projectRoot, 'react-native/package.json')),
+      react$: resolveFrom(env.projectRoot, 'react'),
+
+      // '../../cli/node_modules/react-refresh/runtime.js': resolveFrom(
+      //   env.projectRoot,
+      //   'react-refresh/runtime'
+      // ),
+
+      'react-refresh': path.dirname(require.resolve('react-refresh/package.json')),
+      'react-refresh/runtime': require.resolve('react-refresh/runtime'),
+      // 'react-refresh': path.dirname(resolveFrom(env.projectRoot, 'react-refresh/package.json')),
+      // 'react-refresh/runtime': resolveFrom(env.projectRoot, 'react-refresh/runtime'),
+      'react-is$': resolveFrom(env.projectRoot, 'react-is'),
+    });
   }
 
   return webpackConfig;
+}
+export class HMRPlugin {
+  constructor(public config: { isDev: boolean; isNative: boolean }) {}
+
+  apply(compiler: webpack.Compiler) {
+    if (this.config?.isDev) {
+      new ReactRefreshPlugin({
+        overlay: false,
+      }).apply(compiler);
+
+      // To avoid the problem from https://github.com/facebook/react/issues/20377
+      // we need to move React Refresh entry that `ReactRefreshPlugin` injects to evaluate right
+      // before the `WebpackHMRClient` and after `InitializeCore` which sets up React DevTools.
+      // Thanks to that the initialization order is correct:
+      // 0. Polyfills
+      // 1. `InitilizeCore` -> React DevTools
+      // 2. Rect Refresh Entry
+      // 3. `WebpackHMRClient`
+      const getAdjustedEntry = (entry: any) => {
+        for (const key in entry) {
+          const { import: entryImports = [] } = entry[key];
+          const refreshEntryIndex = entryImports.findIndex((value: string) =>
+            /ReactRefreshEntry\.js/.test(value)
+          );
+          if (refreshEntryIndex >= 0) {
+            const refreshEntry = entryImports[refreshEntryIndex];
+            entryImports.splice(refreshEntryIndex, 1);
+
+            const hmrClientIndex = entryImports.findIndex((value: string) =>
+              /webpackHotDevClient\.js/.test(value)
+            );
+            entryImports.splice(hmrClientIndex, 0, refreshEntry);
+          }
+
+          entry[key].import = entryImports;
+        }
+
+        return entry;
+      };
+
+      if (typeof compiler.options.entry !== 'function') {
+        compiler.options.entry = getAdjustedEntry(compiler.options.entry);
+      } else {
+        const getEntry = compiler.options.entry;
+        compiler.options.entry = async () => {
+          const entry = await getEntry();
+          return getAdjustedEntry(entry);
+        };
+      }
+    }
+  }
 }
