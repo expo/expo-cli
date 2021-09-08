@@ -55,6 +55,10 @@ describe('versionName', () => {
 });
 
 describe('versionCode', () => {
+  it(`returns 1 if no version code is provided`, () => {
+    expect(getVersionCode({})).toBe(1);
+  });
+
   it(`returns the version code if provided`, () => {
     expect(getVersionCode({ android: { versionCode: 5 } })).toBe(5);
   });

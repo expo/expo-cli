@@ -3,7 +3,7 @@ import resolveFrom from 'resolve-from';
 
 import { ConfigPlugin } from '../Plugin.types';
 import { withAndroidManifest } from '../plugins/android-plugins';
-import { ExpoConfigUpdates, getUpdateUrl } from '../utils/Updates';
+import { ExpoConfigUpdates, getRuntimeVersion, getUpdateUrl } from '../utils/Updates';
 import {
   addMetaDataItemToMainApplication,
   AndroidManifest,
@@ -35,10 +35,18 @@ export const withUpdates: ConfigPlugin<{ expoUsername: string | null }> = (
   });
 };
 
-export function getRuntimeVersion(
+/**
+ * runtime version maybe null in projects using classic updates. In that
+ * case we use SDK version
+ */
+export function getRuntimeVersionNullablle(
   config: Pick<ExpoConfigUpdates, 'runtimeVersion'>
 ): string | null {
-  return typeof config.runtimeVersion === 'string' ? config.runtimeVersion : null;
+  try {
+    return getRuntimeVersion(config, 'android');
+  } catch (e) {
+    return null;
+  }
 }
 
 export function getSDKVersion(config: Pick<ExpoConfigUpdates, 'sdkVersion'>): string | null {
@@ -103,7 +111,7 @@ export function setVersionsConfig(
 ): AndroidManifest {
   const mainApplication = getMainApplicationOrThrow(androidManifest);
 
-  const runtimeVersion = getRuntimeVersion(config);
+  const runtimeVersion = getRuntimeVersionNullablle(config);
   const sdkVersion = getSDKVersion(config);
   if (runtimeVersion) {
     removeMetaDataItemFromMainApplication(mainApplication, Config.SDK_VERSION);
@@ -204,7 +212,7 @@ export function areVersionsSynced(
   config: Pick<ExpoConfigUpdates, 'runtimeVersion' | 'sdkVersion'>,
   androidManifest: AndroidManifest
 ): boolean {
-  const expectedRuntimeVersion = getRuntimeVersion(config);
+  const expectedRuntimeVersion = getRuntimeVersionNullablle(config);
   const expectedSdkVersion = getSDKVersion(config);
 
   const currentRuntimeVersion = getMainApplicationMetaDataValue(

@@ -20,13 +20,7 @@ import {
   WriteConfigOptions,
 } from './Config.types';
 import { ConfigError } from './Errors';
-import {
-  getBuildNumber,
-  getExpoSDKVersion,
-  getRuntimeVersion,
-  getVersion,
-  getVersionCode,
-} from './Project';
+import { getExpoSDKVersion } from './Project';
 import { getDynamicConfig, getStaticConfig } from './getConfig';
 import { getFullName } from './getFullName';
 import { withConfigPlugins } from './plugins/withConfigPlugins';
@@ -494,32 +488,10 @@ function ensureConfigHasDefaultValues({
     platforms = getSupportedPlatforms(projectRoot);
   }
 
-  const defaultIos = expWithDefaults.ios
-    ? ({
-        ...expWithDefaults.ios,
-        runtimeVersion: getRuntimeVersion(expWithDefaults, 'ios'),
-        buildNumber: getBuildNumber(expWithDefaults),
-      } as any) //TODO(JJ) remove this cast in SDK 43 https://linear.app/expo/issue/ENG-1869/remove-tempruntimeversion-in-expoconfig
-    : undefined;
-  const defaultAndroid = expWithDefaults.android
-    ? ({
-        ...expWithDefaults.android,
-        runtimeVersion: getRuntimeVersion(expWithDefaults, 'android'),
-        versionCode: getVersionCode(expWithDefaults),
-      } as any) //TODO(JJ) remove this cast in SDK 43 https://linear.app/expo/issue/ENG-1869/remove-tempruntimeversion-in-expoconfig
-    : undefined;
-  // TODO(JJ) remove top level runtimeVersion in favor of platform specific definitions
-  // While there is code that expects either a string or undefined here, pass only non-object runtime Version
-  const topLevelRuntimeVersion =
-    typeof expWithDefaults.runtimeVersion === 'string' ? expWithDefaults.runtimeVersion : undefined;
-
   return {
     exp: {
       ...expWithDefaults,
-      runtimeVersion: topLevelRuntimeVersion,
       sdkVersion,
-      ios: defaultIos,
-      android: defaultAndroid,
       platforms,
     },
     pkg: pkgWithDefaults,
