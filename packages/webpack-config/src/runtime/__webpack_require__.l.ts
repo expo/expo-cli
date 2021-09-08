@@ -1,11 +1,9 @@
 import * as LoadingView from './LoadingView';
 import { requestAsync } from './requestAsync';
 
-let pendingRequests = 0;
+let pending = 0;
 
-function loadBundle(url: string) {
-  LoadingView.showMessage('Downloading...', 'load');
-
+async function loadBundle(url: string) {
   const reqHeaders = {
     // Required for android
     accept: '*/*',
@@ -13,37 +11,39 @@ function loadBundle(url: string) {
     'expo-platform': LoadingView.getPlatform(),
   };
 
-  return requestAsync(url, reqHeaders)
-    .then(({ body, headers }) => {
-      if (!body) throw new Error('unexpected request returned an empty body: ' + url);
-      if (
-        headers?.['Content-Type'] != null &&
-        headers?.['Content-Type'].indexOf('application/json') >= 0
-      ) {
-        // Errors are returned as JSON.
-        throw new Error(JSON.parse(body).message || `Unknown error fetching '${url}'`);
-      }
-      // Some engines do not support `sourceURL` as a comment. We expose a
-      // `globalEvalWithSourceUrl` function to handle updates in that case.
+  try {
+    const { body, headers } = await requestAsync(url, reqHeaders);
+    if (!body) {
+      throw new Error('unexpected request returned an empty body: ' + url);
+    }
+    if (
+      headers?.['Content-Type'] != null &&
+      headers?.['Content-Type'].indexOf('application/json') >= 0
+    ) {
+      // Errors are returned as JSON.
+      throw new Error(JSON.parse(body).message || `Unknown error fetching '${url}'`);
+    }
+    // Some engines do not support `sourceURL` as a comment. We expose a
+    // `globalEvalWithSourceUrl` function to handle updates in that case.
+    // @ts-ignore
+    if (global.globalEvalWithSourceUrl) {
       // @ts-ignore
-      if (global.globalEvalWithSourceUrl) {
-        // @ts-ignore
-        global.globalEvalWithSourceUrl(body, url);
-      } else {
-        // eslint-disable-next-line no-eval
-        eval(body);
-      }
-      // TODO: Add a native variation of global eval for byte code.
-      return body;
-    })
-    .finally(() => {
-      if (!--pendingRequests) {
-        LoadingView.hide();
-      }
-    });
+      global.globalEvalWithSourceUrl(body, url);
+    } else {
+      // eslint-disable-next-line no-eval
+      eval(body);
+    }
+    // TODO: Add a native variation of global eval for byte code.
+    return body;
+  } finally {
+    // This is probably not needed and should be removed
+    if (!--pending) {
+      LoadingView.hide();
+    }
+  }
 }
 
-const importBundlePromises: Record<string, any> = {};
+const requirePromises: Record<string, any> = {};
 
 // @ts-ignore
 __webpack_require__.l = function (
@@ -55,15 +55,14 @@ __webpack_require__.l = function (
   try {
     const stringModuleID = String(chunkId);
 
-    if (!importBundlePromises[stringModuleID]) {
+    if (!requirePromises[stringModuleID]) {
       console.log('[webpack.l] start', chunkId);
-      importBundlePromises[stringModuleID] = loadBundle(url).then(body => {
+      requirePromises[stringModuleID] = loadBundle(url).then(body => {
         console.log('[webpack.l] done', url);
-        // console.log('webpack.load.l.done', chunkId, url, body);
         return done({});
       });
     }
-    return importBundlePromises[stringModuleID];
+    return requirePromises[stringModuleID];
   } catch (error) {
     console.log('[webpack.l] fail', error);
     throw error;

@@ -202,7 +202,7 @@ export default async function (env: Environment, argv: Arguments = {}): Promise<
         require.resolve('./runtime/location-polyfill')
       );
       if (isDev) {
-        // TODO: Native HMR
+        appEntry.push(require.resolve('./runtime/__webpack_require__.l'));
       }
     }
   } else {
@@ -216,7 +216,6 @@ export default async function (env: Environment, argv: Arguments = {}): Promise<
     }
   }
   // Use a universal implementation of Webpack's remote loading method.
-  appEntry.push(require.resolve('./runtime/__webpack_require__.l'));
   if (isDev) {
     // https://github.com/facebook/create-react-app/blob/e59e0920f3bef0c2ac47bbf6b4ff3092c8ff08fb/packages/react-scripts/config/webpack.config.js#L144
     // Include an alternative client for WebpackDevServer. A client's job is to
@@ -585,8 +584,8 @@ export default async function (env: Environment, argv: Arguments = {}): Promise<
 
       // Replace the Metro specific HMR code in `react-native` with
       // a shim.
-      // isNative &&
-      isDev &&
+      isNative &&
+        isDev &&
         new webpack.NormalModuleReplacementPlugin(/react-error-overlay$/, function (resource) {
           const request = require.resolve('./runtime/react-error-overlay-shim');
           const context = path.dirname(request);
