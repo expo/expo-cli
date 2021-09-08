@@ -68,10 +68,10 @@ export async function getManifestResponseAsync({
 
   const hostUri = await UrlUtils.constructHostUriAsync(projectRoot, hostname);
 
-  const runtimeVersion = Updates.getRuntimeVersion(expoConfig, platform);
-  if (!runtimeVersion) {
-    throw new Error('Must specify runtimeVersion or sdkVersion in app.json');
-  }
+  const runtimeVersion = Updates.getRuntimeVersion(
+    { ...expoConfig, runtimeVersion: expoConfig.runtimeVersion ?? { policy: 'sdkVersion' } },
+    platform
+  );
 
   const bundleUrl = await getBundleUrlAsync({
     projectRoot,
