@@ -10,7 +10,7 @@ import { AnyCompiler, getPlatformFromRequest } from '../utils/getFileAsync';
 
 /**
  * Create Metro interop asset redirect middleware.
- * This is required for making icon assets show up in the Expo Go app.
+ * This is required for making icon assets show up in the Expo Go app (icon preview, splash screen).
  *
  * TODO: We should get rid of this Metro nonsense.
  *

@@ -1,3 +1,5 @@
+import * as LoadingView from './LoadingView';
+
 module.exports = {
   setEditorHandler(
     callback: (errorLocation: { fileName: string; lineNumber?: number; colNumber?: number }) => void
@@ -36,18 +38,6 @@ module.exports = {
     console.log('noop:reportBuildError', error);
   },
   dismissBuildError() {
-    console.log('dismissBuildError:native');
-    const { Platform } = require('react-native');
-    if (Platform.OS === 'ios') {
-      const NativeRedBox = require('react-native/Libraries/NativeModules/specs/NativeRedBox')
-        .default;
-      NativeRedBox?.dismiss?.();
-    } else {
-      const NativeExceptionsManager = require('react-native/Libraries/Core/NativeExceptionsManager')
-        .default;
-      NativeExceptionsManager?.dismissRedbox();
-    }
-    const LogBoxData = require('react-native/Libraries/LogBox/Data/LogBoxData');
-    LogBoxData.clear();
+    return LoadingView.dismissBuildError();
   },
 };

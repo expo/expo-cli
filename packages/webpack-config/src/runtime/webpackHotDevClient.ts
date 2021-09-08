@@ -8,6 +8,8 @@
 'use strict';
 import hotEmitter from 'webpack/hot/emitter.js';
 
+import * as LoadingView from './LoadingView';
+
 // This alternative WebpackDevServer combines the functionality of:
 // https://github.com/webpack/webpack-dev-server/blob/webpack-1/client/index.js
 // https://github.com/webpack/webpack/blob/webpack-1/hot/dev-server.js
@@ -110,7 +112,7 @@ function clearOutdatedErrors() {
 
 // Successful compilation.
 function handleSuccess() {
-  getLoadingView().hide();
+  LoadingView.hide();
   clearOutdatedErrors();
 
   const isHotUpdate = !isFirstCompilation;
@@ -210,18 +212,6 @@ function handleAvailableHash(hash) {
   mostRecentCompilationHash = hash;
 }
 
-function getLoadingView() {
-  // On web, this would be like tapping the URL text-input loading bar... so not available.
-  if (process.env.PLATFORM === 'web' || !process.env.PLATFORM) {
-    return {
-      showMessage() {},
-      hide() {},
-    };
-  }
-  const LoadingView = require('react-native/Libraries/Utilities/LoadingView');
-  return LoadingView;
-}
-
 // Handle messages from the server.
 // @ts-ignore
 connection.onmessage = function (e) {
@@ -230,7 +220,7 @@ connection.onmessage = function (e) {
 
   const canDiffPlatforms = !!platforms.length && !!process.env.PLATFORM;
   if (canDiffPlatforms) {
-    if (!platforms.includes(process.env.PLATFORM!)) {
+    if (!platforms.includes(LoadingView.getPlatform())) {
       // console.log('[HMR] skipping misc platform:', platforms, message);
       return;
     } else {
@@ -243,7 +233,7 @@ connection.onmessage = function (e) {
   switch (message.type) {
     // Custom for Expo
     case 'invalid':
-      getLoadingView().showMessage('Rebuilding...', 'refresh');
+      LoadingView.showMessage('Rebuilding...', 'refresh');
       // console.log('[HMRClient] Bundle rebuilding', message);
       break;
     case 'hash':
