@@ -254,8 +254,8 @@ export async function startAsync(
 
   const configs: Record<string, Configuration> = {};
 
-  for (const platform of ['android', 'ios', 'web']) {
-    // for (const platform of ['ios', 'android', 'web']) {
+  // for (const platform of ['web', 'ios']) {
+  for (const platform of ['ios', 'android', 'web']) {
     env.platform = platform;
     const config = await loadConfigAsync(env);
     if (!config.devServer) {

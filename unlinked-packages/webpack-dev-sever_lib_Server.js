@@ -143,7 +143,8 @@ class Server {
         ].includes(compiler.options.target);
 
     // TODO maybe empty empty client
-    if (this.options.client && isWebTarget) {
+    if (this.options.client && isWebTarget && this.options.client.overlay !== false) {
+      console.log('add overlay');
       let webSocketURL = '';
       if (this.options.webSocketServer) {
         const searchParams = new URLSearchParams();

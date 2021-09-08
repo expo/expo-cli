@@ -120,11 +120,14 @@ export function createDevServer(
   const { publicPath: publicUrlOrPath } = getPublicPaths(env);
   // Because native React runtimes uses .bundle we must make
   // the .bundle extension be served as javascript.
-  const mimeTypes: any = isNative
-    ? {
-        bundle: 'text/javascript',
-      }
-    : undefined;
+  const mimeTypes: any = {
+    bundle: 'text/javascript',
+  };
+  // const mimeTypes: any = isNative
+  //   ? {
+  //       bundle: 'text/javascript',
+  //     }
+  //   : undefined;
 
   const disableFirewall = !proxy || process.env.DANGEROUSLY_DISABLE_HOST_CHECK === 'true';
 

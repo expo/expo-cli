@@ -231,8 +231,10 @@ connection.onmessage = function (e) {
   const canDiffPlatforms = !!platforms.length && !!process.env.PLATFORM;
   if (canDiffPlatforms) {
     if (!platforms.includes(process.env.PLATFORM!)) {
-      console.log('[HMR] skipping misc platform:', platforms, message);
+      // console.log('[HMR] skipping misc platform:', platforms, message);
       return;
+    } else {
+      console.log('[HMR] do:', message);
     }
   } else {
     console.log('[HMR] universal', message);
