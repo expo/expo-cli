@@ -64,7 +64,12 @@ function asyncRequest(url: string): Promise<{ body: string; headers: { [key: str
       'GET',
       'asyncRequest',
       url,
-      {},
+      {
+        // Required for android
+        accept: '*/*',
+        // Required for multi-platform dev server
+        'expo-platform': process.env.PLATFORM || require('react-native').Platform.OS,
+      },
       '',
       'text',
       false,
