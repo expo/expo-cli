@@ -39,7 +39,7 @@ function getImmutableWebpackDevMiddlewareContext(compiler: webpack.Compiler) {
   const context = {
     options: {
       index: undefined,
-      publicPath: '/',
+      publicPath: compiler.options?.output?.publicPath ?? '/',
     },
     outputFileSystem: compiler.outputFileSystem,
     stats: platformStats[compiler.name!],

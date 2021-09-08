@@ -2,7 +2,7 @@ export function getPlatform() {
   return process.env.PLATFORM || 'web';
 }
 
-export function showMessage(message: string, id: string) {
+export function showMessage(message: string, type: 'load' | 'refresh') {
   const SyntheticPlatformEmitter = require('./SyntheticPlatformEmitter').default;
   // TODO: 'expo-modules-core';
   SyntheticPlatformEmitter.emit('devLoadingView:showMessage', {
