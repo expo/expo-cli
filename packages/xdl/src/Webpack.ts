@@ -254,7 +254,7 @@ export async function startAsync(
 
   const configs: Record<string, Configuration> = {};
 
-  for (const platform of ['web', 'ios', 'android']) {
+  for (const platform of ['android', 'ios', 'web']) {
     // for (const platform of ['ios', 'android', 'web']) {
     env.platform = platform;
     const config = await loadConfigAsync(env);
@@ -272,14 +272,15 @@ export async function startAsync(
   // Create the middleware required for interacting with a native runtime (Expo Go, or Expo Dev Client).
   const nativeMiddleware = createNativeDevServerMiddleware(projectRoot, { port, compiler });
 
+  const firstConfig = Object.values(configs)[0];
   // @ts-ignore: untyped
-  if (configs.ios.devServer?.onBeforeSetupMiddleware) {
+  if (firstConfig.devServer?.onBeforeSetupMiddleware) {
     // @ts-ignore: untyped
-    const beforeFunc = configs.ios.devServer?.onBeforeSetupMiddleware ?? function () {};
+    const beforeFunc = firstConfig.devServer?.onBeforeSetupMiddleware ?? function () {};
     // Inject the native manifest middleware.
     const originalBefore = beforeFunc.bind(beforeFunc);
     // @ts-ignore: untyped
-    configs.ios.devServer!.onBeforeSetupMiddleware = devServer => {
+    firstConfig.devServer!.onBeforeSetupMiddleware = devServer => {
       originalBefore(devServer);
 
       if (nativeMiddleware?.middleware) {
@@ -290,7 +291,7 @@ export async function startAsync(
     throw new Error('Webpack for native is only supported on Webpack 5+');
   }
 
-  const server = new WebpackDevServer(configs.ios.devServer!, compiler);
+  const server = new WebpackDevServer(firstConfig.devServer!, compiler);
   // Launch WebpackDevServer.
   server.listen(port, WebpackEnvironment.HOST, function (this: http.Server, error) {
     if (nativeMiddleware) {
@@ -306,9 +307,6 @@ export async function startAsync(
       options.onWebpackFinished(error);
     }
   });
-  webpackDevServerInstance = server;
-  //   resolve(server);
-  // });
 
   webpackDevServerInstance = server;
 

@@ -34,6 +34,12 @@ function getPlatformFromRequest(request) {
   ) {
     return request.headers['user-agent'].includes('CFNetwork') ? 'ios' : 'android';
   }
+  if (
+    typeof request.headers['user-agent'] === 'string' &&
+    request.headers['user-agent'].includes('okhttp')
+  ) {
+    return 'android';
+  }
   // Get the platform from the query params cheaply.
   return (_e =
     (_d =
