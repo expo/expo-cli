@@ -17,6 +17,7 @@ import type {
 import { getPaths, getPublicPaths } from '../env';
 import { host, sockHost, sockPath, sockPort } from '../env/defaults';
 import { Environment } from '../types';
+import { createRedirectAssetPathsMiddleware } from './createRedirectAssetPathsMiddleware';
 
 // Ensure the certificate and key provided are valid and if not
 // throw an easy to debug error
@@ -196,6 +197,7 @@ export function createDevServer(
       // TODO: This is nonstandard, prevents logging in the browser
       // logging: 'none',
     },
+
     webSocketServer: {
       type: 'ws',
       options: {
@@ -206,7 +208,8 @@ export function createDevServer(
     },
     devMiddleware: {
       mimeTypes,
-
+      // headers: { 'expo-platform': 'yes '},
+      index: true,
       // It is important to tell WebpackDevServer to use the same "publicPath" path as
       // we specified in the webpack config. When homepage is '.', default to serving
       // from the root.
@@ -230,6 +233,12 @@ export function createDevServer(
       // middlewares before `redirectServedPath` otherwise will not have any effect
       // This lets us fetch source contents from webpack for the error overlay
       devServer.app.use(evalSourceMapMiddleware(devServer));
+
+      // Support Metro assets redirect
+      devServer.app.use(
+        // @ts-ignore
+        createRedirectAssetPathsMiddleware(env.projectRoot, devServer.compiler)
+      );
     },
     onAfterSetupMiddleware(devServer) {
       // Redirect to `PUBLIC_URL` or `homepage` from `package.json` if url not match

@@ -91,6 +91,9 @@ function getOutput(
     // Build folder (default `web-build`)
     path: locations.production.folder,
     assetModuleFilename: 'static/media/[name].[hash][ext]',
+    // Prevent chunk naming collision across platforms since
+    // they're all coming from the same dev server.
+    uniqueName: platform,
   };
 
   if (mode === 'production') {
