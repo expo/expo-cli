@@ -33,7 +33,6 @@ describe('ExpoUpdatesManifestHandler', () => {
             icon: './icon.png',
             splash: { image: './assets/splash.png' },
             version: '0.1.0',
-            runtimeVersion: { policy: 'sdkVersion' },
             sdkVersion: '38.0.0',
             slug: 'testing-123',
             extras: { myExtra: '123' },
