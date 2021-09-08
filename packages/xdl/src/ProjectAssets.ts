@@ -404,8 +404,16 @@ export async function resolveAndCollectExpoUpdatesManifestAssets(
   projectRoot: string,
   exp: ExpoConfig,
   urlResolver: (path: string) => string
-): Promise<{ url: string; hash: string; key: string; contentType: string }[]> {
-  const manifestAssets: { url: string; hash: string; key: string; contentType: string }[] = [];
+): Promise<
+  { url: string; hash: string; key: string; contentType: string; fileExtension: string }[]
+> {
+  const manifestAssets: {
+    url: string;
+    hash: string;
+    key: string;
+    contentType: string;
+    fileExtension: string;
+  }[] = [];
   await resolveExpoUpdatesManifestAssets({
     projectRoot,
     manifest: exp,
@@ -414,11 +422,13 @@ export async function resolveAndCollectExpoUpdatesManifestAssets(
       const contents = await fs.readFile(absolutePath);
       // Expo Updates spec dictates that this hash is sha256
       const hash = crypto.createHash('sha256').update(contents).digest('hex');
+      const contentType = mime.getType(absolutePath) ?? 'application/octet-stream';
       manifestAssets.push({
         url: urlResolver(assetPath),
         hash,
         key: assetPath,
-        contentType: mime.getType(absolutePath) ?? 'application/octet-stream',
+        contentType,
+        fileExtension: path.extname(absolutePath),
       });
       return assetPath;
     },
