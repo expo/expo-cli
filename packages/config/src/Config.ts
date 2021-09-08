@@ -489,11 +489,7 @@ function ensureConfigHasDefaultValues({
   }
 
   return {
-    exp: {
-      ...expWithDefaults,
-      sdkVersion,
-      platforms,
-    },
+    exp: { ...expWithDefaults, sdkVersion, platforms },
     pkg: pkgWithDefaults,
   };
 }

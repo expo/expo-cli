@@ -2,7 +2,7 @@
 
 exports[`exports the project for a self-hosted production deployment 1`] = `
 Array [
-  "dist/android-index.json (806 B)",
+  "dist/android-index.json (716 B)",
   "dist/assetmap.json (size ignored)",
   "dist/assets (dir)",
   "dist/assets/0886a6b127c6057cee83f9c65c7ffd62 (26.2 kB)",
@@ -39,7 +39,7 @@ Array [
   "dist/bundles (dir)",
   "dist/bundles/android-XXX.js (1.17 MB)",
   "dist/bundles/ios-XXX.js (1.16 MB)",
-  "dist/ios-index.json (798 B)",
+  "dist/ios-index.json (708 B)",
 ]
 `;
 
@@ -47,8 +47,6 @@ exports[`exports the project for a self-hosted production deployment: android-in
 Object {
   "android": Object {
     "package": "com.example.minimal",
-    "runtimeVersion": "1.0.0(1)",
-    "versionCode": 1,
   },
   "assetUrlOverride": "./assets",
   "bundleUrl": Any<String>,
@@ -61,9 +59,7 @@ Object {
   ],
   "id": "@anonymous/export-test-app",
   "ios": Object {
-    "buildNumber": "1",
     "bundleIdentifier": "com.example.minimal",
-    "runtimeVersion": "1.0.0(1)",
   },
   "locales": Object {},
   "name": "export-test-app",

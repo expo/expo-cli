@@ -52,17 +52,17 @@ export function getNativeVersion(
 }
 
 /**
- * Compute any runtime version policies.
+ * Compute runtime version policies.
  * @return an expoConfig with only string valued platform specific runtime versions.
  */
 export const withRuntimeVersion: ConfigPlugin = config => {
-  if (config.ios) {
+  if (config.ios || config.runtimeVersion) {
     config.ios = {
       ...config.ios,
       runtimeVersion: getRuntimeVersion(config, 'ios'),
     } as any; //TODO(JJ) remove this cast in SDK 43 https://linear.app/expo/issue/ENG-1869/remove-tempruntimeversion-in-expoconfig
   }
-  if (config.android) {
+  if (config.android || config.runtimeVersion) {
     config.android = {
       ...config.android,
       runtimeVersion: getRuntimeVersion(config, 'android'),
@@ -101,6 +101,6 @@ export function getRuntimeVersion(
   throw new Error(
     `"${
       typeof runtimeVersion === 'object' ? JSON.stringify(runtimeVersion) : runtimeVersion
-    }" is not a valid runtime version. getRuntimeVersion only supports a string or the "nativeVersion" policy.`
+    }" is not a valid runtime version. getRuntimeVersion only supports a string, "sdkVersion", or "nativeVersion" policy.`
   );
 }

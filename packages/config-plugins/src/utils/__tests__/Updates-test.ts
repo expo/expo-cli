@@ -38,7 +38,7 @@ describe(getNativeVersion, () => {
     );
   });
   it('throws an error if platform is not recognized', () => {
-    const fakePlatform = 'doesnotexit';
+    const fakePlatform = 'doesnotexist';
     expect(() => {
       getNativeVersion({ version }, fakePlatform as any);
     }).toThrow(`"${fakePlatform}" is not a supported platform. Choose either "ios" or "android".`);
@@ -82,12 +82,12 @@ describe(getRuntimeVersion, () => {
     expect(() => {
       getRuntimeVersion({ runtimeVersion: 1 } as any, 'ios');
     }).toThrow(
-      `"1" is not a valid runtime version. getRuntimeVersion only supports a string or the "nativeVersion" policy.`
+      `"1" is not a valid runtime version. getRuntimeVersion only supports a string, "sdkVersion", or "nativeVersion" policy.`
     );
     expect(() => {
       getRuntimeVersion({ runtimeVersion: { policy: 'unsupportedPlugin' } } as any, 'ios');
     }).toThrow(
-      `"{"policy":"unsupportedPlugin"}" is not a valid runtime version. getRuntimeVersion only supports a string or the "nativeVersion" policy.`
+      `"{"policy":"unsupportedPlugin"}" is not a valid runtime version. getRuntimeVersion only supports a string, "sdkVersion", or "nativeVersion" policy.`
     );
   });
 });
