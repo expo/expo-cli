@@ -116,23 +116,28 @@ function getPlatformFromRequest(headers: http.IncomingHttpHeaders): string {
   return (headers['exponent-platform'] || 'ios').toString();
 }
 
-export function getManifestHandler(projectRoot: string) {
+export function getManifestHandler(projectRoot: string, usePlatformHeaders?: boolean) {
   return async (
     req: express.Request | http.IncomingMessage,
     res: express.Response | http.ServerResponse,
     next: (err?: Error) => void
   ) => {
     // Only support `/`, `/manifest`, `/index.exp` for the manifest middleware.
-
+    if (!req.url) {
+      return next();
+    }
     if (
-      !req.url ||
       !['/', '/manifest', '/index.exp'].includes(
         // Strip the query params
         parse(req.url).pathname || req.url
       )
     ) {
-      next();
-      return;
+      return next();
+    }
+
+    const headerPlatform = req.headers['exponent-platform'] || req.headers['expo-platform'];
+    if (usePlatformHeaders && headerPlatform !== 'ios' && headerPlatform !== 'android') {
+      return next();
     }
 
     try {

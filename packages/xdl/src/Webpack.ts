@@ -14,7 +14,7 @@ import http from 'http';
 import * as path from 'path';
 import formatWebpackMessages from 'react-dev-utils/formatWebpackMessages';
 import openBrowser from 'react-dev-utils/openBrowser';
-import webpack from 'webpack';
+import webpack, { Configuration } from 'webpack';
 import WebpackDevServer from 'webpack-dev-server';
 
 import {
@@ -76,6 +76,7 @@ export type WebEnvironment = {
   https: boolean;
   logger: Log;
   port?: number;
+  platform?: string;
 };
 
 // A custom message websocket broadcaster used to send messages to a React Native runtime.
@@ -114,7 +115,7 @@ export async function broadcastMessage(message: 'reload' | string, data?: any) {
   // Allow any message on native
   if (customMessageSocketBroadcaster) {
     customMessageSocketBroadcaster(message, data);
-    return;
+    // return;
   }
 
   if (message !== 'reload') {
@@ -140,7 +141,7 @@ export async function broadcastMessage(message: 'reload' | string, data?: any) {
 
 function createNativeDevServerMiddleware(
   projectRoot: string,
-  { port, compiler }: { port: number; compiler: webpack.Compiler }
+  { port, compiler }: { port: number; compiler: webpack.Compiler | webpack.MultiCompiler }
 ) {
   if (!isTargetingNative()) {
     return null;
@@ -153,7 +154,7 @@ function createNativeDevServerMiddleware(
   // Add manifest middleware to the other middleware.
   // TODO: Move this in to expo/dev-server.
   nativeMiddleware.middleware
-    .use(ManifestHandler.getManifestHandler(projectRoot))
+    .use(ManifestHandler.getManifestHandler(projectRoot, true))
     .use(ExpoUpdatesManifestHandler.getManifestHandler(projectRoot))
     .use(
       '/symbolicate',
@@ -229,11 +230,6 @@ export async function startAsync(
     }
   }
 
-  const config = await loadConfigAsync(env);
-  if (!config.devServer) {
-    throw new Error('Webpack config must have dev server config defined');
-  }
-
   const port = await getAvailablePortAsync({
     projectRoot,
     defaultPort: options.port,
@@ -256,22 +252,34 @@ export async function startAsync(
     });
   }
 
+  const configs: Record<string, Configuration> = {};
+
+  for (const platform of ['ios']) {
+    // for (const platform of ['ios', 'android', 'web']) {
+    env.platform = platform;
+    const config = await loadConfigAsync(env);
+    if (!config.devServer) {
+      throw new Error('Webpack config must have dev server config defined');
+    }
+    configs[platform] = config;
+  }
+
   // const webpack = require(resolveFrom(projectRoot, 'webpack'));
   // Create a basic webpack compiler
-  const compiler = webpack(config);
+  const compiler = webpack(Object.values(configs));
 
-  console.log(config);
+  // console.log(config);
   // Create the middleware required for interacting with a native runtime (Expo Go, or Expo Dev Client).
   const nativeMiddleware = createNativeDevServerMiddleware(projectRoot, { port, compiler });
 
   // @ts-ignore: untyped
-  if (config.devServer?.onBeforeSetupMiddleware) {
+  if (configs.ios.devServer?.onBeforeSetupMiddleware) {
     // @ts-ignore: untyped
-    const beforeFunc = config.devServer?.onBeforeSetupMiddleware ?? function () {};
+    const beforeFunc = configs.ios.devServer?.onBeforeSetupMiddleware ?? function () {};
     // Inject the native manifest middleware.
     const originalBefore = beforeFunc.bind(beforeFunc);
     // @ts-ignore: untyped
-    config.devServer!.onBeforeSetupMiddleware = devServer => {
+    configs.ios.devServer!.onBeforeSetupMiddleware = devServer => {
       originalBefore(devServer);
 
       if (nativeMiddleware?.middleware) {
@@ -282,7 +290,7 @@ export async function startAsync(
     throw new Error('Webpack for native is only supported on Webpack 5+');
   }
 
-  const server = new WebpackDevServer(config.devServer!, compiler);
+  const server = new WebpackDevServer(configs.ios.devServer!, compiler);
   // Launch WebpackDevServer.
   server.listen(port, WebpackEnvironment.HOST, function (this: http.Server, error) {
     if (nativeMiddleware) {

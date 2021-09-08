@@ -96,7 +96,7 @@ connection.onclose = function () {
 // Remember some state related to hot module replacement.
 let isFirstCompilation = true;
 // @ts-ignore
-let mostRecentCompilationHash = null;
+let mostRecentCompilationHash: string | null = null;
 let hasCompileErrors = false;
 
 function clearOutdatedErrors() {
@@ -226,6 +226,18 @@ function getLoadingView() {
 // @ts-ignore
 connection.onmessage = function (e) {
   const message = JSON.parse(e.data);
+  const platforms: string[] = Array.isArray(message.platforms) ? message.platforms : [];
+
+  const canDiffPlatforms = !!platforms.length && !!process.env.PLATFORM;
+  if (canDiffPlatforms) {
+    if (!platforms.includes(process.env.PLATFORM!)) {
+      console.log('[HMR] skipping misc platform:', platforms, message);
+      return;
+    }
+  } else {
+    console.log('[HMR] universal', message);
+  }
+
   switch (message.type) {
     // Custom for Expo
     case 'invalid':
@@ -307,27 +319,49 @@ function tryApplyUpdates(onHotUpdateSuccess) {
   function handleApplyUpdates(err, updatedModules) {
     const hasReactRefresh = process.env.FAST_REFRESH;
 
-    if (!hasReactRefresh) {
-      if (((err || hadRuntimeError) && !canAcceptErrors()) || !updatedModules) {
-        if (err) {
-          console.warn(
-            '[Fast Refresh] performing full reload\n\n' +
-              "Fast Refresh will perform a full reload when you edit a file that's imported by modules outside of the React rendering tree.\n" +
-              'You might have a file which exports a React component but also exports a value that is imported by a non-React component file.\n' +
-              'Consider migrating the non-React component export to a separate file and importing it into both files.\n\n' +
-              'It is also possible the parent component of the component you edited is a class component, which disables Fast Refresh.\n' +
-              'Fast Refresh requires at least one parent function component in your React tree.'
-          );
-        } else if (hadRuntimeError) {
-          console.warn(
-            '[Fast Refresh] performing full reload because your application had an unrecoverable error'
-          );
-        }
-        // @ts-ignore
-        window.location.reload();
-        return;
+    const wantsForcedReload = !updatedModules || hadRuntimeError;
+
+    // React refresh can handle hot-reloading over runtime errors.
+    if (err || (!hasReactRefresh && wantsForcedReload)) {
+      if (err) {
+        console.warn(
+          '[Fast Refresh] performing full reload\n\n' +
+            "Fast Refresh will perform a full reload when you edit a file that's imported by modules outside of the React rendering tree.\n" +
+            'You might have a file which exports a React component but also exports a value that is imported by a non-React component file.\n' +
+            'Consider migrating the non-React component export to a separate file and importing it into both files.\n\n' +
+            'It is also possible the parent component of the component you edited is a class component, which disables Fast Refresh.\n' +
+            'Fast Refresh requires at least one parent function component in your React tree.'
+        );
+      } else if (hadRuntimeError) {
+        console.warn(
+          '[Fast Refresh] performing full reload because your application had an unrecoverable error'
+        );
       }
+      window.location.reload();
+      return;
     }
+
+    // if (!hasReactRefresh) {
+    //   if (((err || hadRuntimeError) && !canAcceptErrors()) || !updatedModules) {
+    //     if (err) {
+    //       console.warn(
+    //         '[Fast Refresh] performing full reload\n\n' +
+    //           "Fast Refresh will perform a full reload when you edit a file that's imported by modules outside of the React rendering tree.\n" +
+    //           'You might have a file which exports a React component but also exports a value that is imported by a non-React component file.\n' +
+    //           'Consider migrating the non-React component export to a separate file and importing it into both files.\n\n' +
+    //           'It is also possible the parent component of the component you edited is a class component, which disables Fast Refresh.\n' +
+    //           'Fast Refresh requires at least one parent function component in your React tree.'
+    //       );
+    //     } else if (hadRuntimeError) {
+    //       console.warn(
+    //         '[Fast Refresh] performing full reload because your application had an unrecoverable error'
+    //       );
+    //     }
+    //     // @ts-ignore
+    //     window.location.reload();
+    //     return;
+    //   }
+    // }
 
     const hasUpdates = Boolean(updatedModules?.length);
     if (typeof onHotUpdateSuccess === 'function') {
