@@ -3,14 +3,17 @@
 let hasCheckedModules = false;
 
 module.exports = function (api: any) {
-  // Detect web usage (this may change in the future if Next.js changes the loader to `next-babel-loader`)
-  const isWeb = api.caller((caller?: { name: string }) => caller && caller.name === 'babel-loader');
+  // Detect web usage (this may change in the future if Next.js changes the loader)
+  const isWeb = api.caller(
+    (caller?: { name: string }) =>
+      caller && (caller.name === 'babel-loader' || caller.name === 'next-babel-turbo-loader')
+  );
 
   // Check peer dependencies
   if (!hasCheckedModules) {
     hasCheckedModules = true;
     // Only check for next support in the browser...
-    const missingPackages = ['babel-preset-expo', isWeb && 'next/babel'].filter(
+    const missingPackages = [isWeb && 'next/babel', 'babel-preset-expo'].filter(
       packageName => packageName && !hasModule(packageName)
     );
     // Throw an error if anything is missing
@@ -24,9 +27,9 @@ module.exports = function (api: any) {
 
   return {
     presets: [
-      [require('babel-preset-expo'), { web: { useTransformReactJsxExperimental: true } }],
-      // Only use next in the browser, it'll break your native project/
+      // Only use next in the browser, it'll break your native project
       isWeb && require('next/babel'),
+      [require('babel-preset-expo'), { web: { useTransformReactJsxExperimental: true } }],
     ].filter(Boolean),
   };
 };
