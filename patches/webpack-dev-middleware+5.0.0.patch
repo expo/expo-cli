@@ -1,0 +1,464 @@
+diff --git a/node_modules/webpack-dev-middleware/dist/middleware.js b/node_modules/webpack-dev-middleware/dist/middleware.js
+index 0aedf93..c3d8254 100644
+--- a/node_modules/webpack-dev-middleware/dist/middleware.js
++++ b/node_modules/webpack-dev-middleware/dist/middleware.js
+@@ -1,25 +1,113 @@
+-"use strict";
++'use strict';
+ 
+-Object.defineProperty(exports, "__esModule", {
+-  value: true
++Object.defineProperty(exports, '__esModule', {
++  value: true,
+ });
+ exports.default = wrapper;
+ 
+-var _path = _interopRequireDefault(require("path"));
++var _path = _interopRequireDefault(require('path'));
+ 
+-var _mimeTypes = _interopRequireDefault(require("mime-types"));
++var _mimeTypes = _interopRequireDefault(require('mime-types'));
+ 
+-var _getFilenameFromUrl = _interopRequireDefault(require("./utils/getFilenameFromUrl"));
++var _getFilenameFromUrl = _interopRequireDefault(require('./utils/getFilenameFromUrl'));
+ 
+-var _handleRangeHeaders = _interopRequireDefault(require("./utils/handleRangeHeaders"));
++var _handleRangeHeaders = _interopRequireDefault(require('./utils/handleRangeHeaders'));
+ 
+-var _ready = _interopRequireDefault(require("./utils/ready"));
++var _ready = _interopRequireDefault(require('./utils/ready'));
+ 
+-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
++function _interopRequireDefault(obj) {
++  return obj && obj.__esModule ? obj : { default: obj };
++}
++
++function getPlatformFromRequest(request) {
++  var _a, _b, _c, _d, _e;
++
++  console.log('getPlatformFromRequest:', request.headers, request.url);
++  // Use the expo updates spec to check the platform.
++  if (typeof request.headers['expo-platform'] === 'string') {
++    return (_a = request.headers['expo-platform']) !== null && _a !== void 0 ? _a : null;
++  }
++  if (typeof request.headers['exponent-platform'] === 'string') {
++    return (_a = request.headers['exponent-platform']) !== null && _a !== void 0 ? _a : null;
++  }
++  // Hack
++  if (
++    typeof request.headers['user-agent'] === 'string' &&
++    request.headers['user-agent'].includes('Expo')
++  ) {
++    return request.headers['user-agent'].includes('CFNetwork') ? 'ios' : 'android';
++  }
++  if (
++    (typeof request.headers['user-agent'] === 'string' &&
++      request.headers['user-agent'].includes('okhttp')) ||
++    request.headers['user-agent'].includes('Android')
++  ) {
++    return 'android';
++  }
++  // Get the platform from the query params cheaply.
++  return (_e =
++    (_d =
++      (_c =
++        (_b = request === null || request === void 0 ? void 0 : request.url) === null ||
++        _b === void 0
++          ? void 0
++          : _b.match) === null || _c === void 0
++        ? void 0
++        : _c.call(_b, /[?|&]platform=(\w+)[&|\\]/)) === null || _d === void 0
++      ? void 0
++      : _d[1]) !== null && _e !== void 0
++    ? _e
++    : null;
++}
++function getCompilerForPlatform(compiler, platform) {
++  if (!('compilers' in compiler)) {
++    return compiler;
++  }
++  const platformCompiler = compiler.compilers.find(({ options }) => options.name === platform);
++  console.log(
++    '[wdm] choose compiler:',
++    compiler.compilers.map(({ options }) => options.name)
++  );
++  return platformCompiler;
++}
++// TODO: Get rid of this hack
++function getImmutableWebpackDevMiddlewareContext(compiler) {
++  const context = {
++    options: {
++      index: undefined,
++      publicPath: ((compiler.options || {}).output || {}).publicPath || '/',
++    },
++    outputFileSystem: compiler.outputFileSystem,
++    stats: platformStats[compiler.name],
++  };
++  return context;
++}
++const platformStats = {};
++// TODO: Get rid of this hack
++function listenForPlatformStats(compiler) {
++  let compilers = [];
++  if ('compilers' in compiler) {
++    compilers = compiler.compilers;
++  } else {
++    compilers = [compiler];
++  }
++  for (const compiler of compilers) {
++    if (!compiler.name) {
++      throw new Error('Webpack config did not provide a platform as the name property');
++    }
++    (compiler.webpack ? compiler.hooks.afterDone : compiler.hooks.done).tap(
++      'webpack-dev-middleware',
++      stats => {
++        platformStats[compiler.name] = stats;
++      }
++    );
++  }
++}
+ 
+ function wrapper(context) {
++  listenForPlatformStats(context.compiler);
+   return async function middleware(req, res, next) {
+-    const acceptedMethods = context.options.methods || ["GET", "HEAD"]; // fixes #282. credit @cexoso. in certain edge situations res.locals is undefined.
++    const acceptedMethods = context.options.methods || ['GET', 'HEAD']; // fixes #282. credit @cexoso. in certain edge situations res.locals is undefined.
+     // eslint-disable-next-line no-param-reassign
+ 
+     res.locals = res.locals || {};
+@@ -37,23 +125,37 @@ function wrapper(context) {
+       }
+ 
+       return new Promise(resolve => {
+-        (0, _ready.default)(context, () => {
+-          // eslint-disable-next-line no-param-reassign
+-          res.locals.webpack = {
+-            devMiddleware: context
+-          };
+-          resolve(next());
+-        }, req);
++        (0, _ready.default)(
++          context,
++          () => {
++            // eslint-disable-next-line no-param-reassign
++            res.locals.webpack = {
++              devMiddleware: context,
++            };
++            resolve(next());
++          },
++          req
++        );
+       });
+     }
+ 
+     async function processRequest() {
+-      const filename = (0, _getFilenameFromUrl.default)(context, req.url);
+-      let {
+-        headers
+-      } = context.options;
++      let _context = context;
++      const platform = getPlatformFromRequest(req) || 'web';
++      if (platform) {
++        if (platform !== 'web') {
++          debugger;
++        }
++        console.log('[wdm] Diff request:', platform);
++        const compiler = getCompilerForPlatform(context.compiler, platform);
++        if (compiler) {
++          _context = getImmutableWebpackDevMiddlewareContext(compiler);
++        }
++      }
++      const filename = (0, _getFilenameFromUrl.default)(_context, req.url);
++      let { headers } = context.options;
+ 
+-      if (typeof headers === "function") {
++      if (typeof headers === 'function') {
+         headers = headers(req, res, context);
+       }
+ 
+@@ -65,28 +167,27 @@ function wrapper(context) {
+       }
+ 
+       try {
+-        content = context.outputFileSystem.readFileSync(filename);
++        content = _context.outputFileSystem.readFileSync(filename);
+       } catch (_ignoreError) {
+         await goNext();
+         return;
+       }
+ 
+-      const contentTypeHeader = res.get ? res.get("Content-Type") : res.getHeader("Content-Type");
++      const contentTypeHeader = res.get ? res.get('Content-Type') : res.getHeader('Content-Type');
+ 
+       if (!contentTypeHeader) {
+         // content-type name(like application/javascript; charset=utf-8) or false
+         const contentType = _mimeTypes.default.contentType(_path.default.extname(filename)); // Only set content-type header if media type is known
+         // https://tools.ietf.org/html/rfc7231#section-3.1.1.5
+ 
+-
+         if (contentType) {
+           // Express API
+           if (res.set) {
+-            res.set("Content-Type", contentType);
++            res.set('Content-Type', contentType);
+           } // Node.js API
+           else {
+-              res.setHeader("Content-Type", contentType);
+-            }
++            res.setHeader('Content-Type', contentType);
++          }
+         }
+       }
+ 
+@@ -99,26 +200,25 @@ function wrapper(context) {
+             res.set(name, headers[name]);
+           } // Node.js API
+           else {
+-              res.setHeader(name, headers[name]);
+-            }
++            res.setHeader(name, headers[name]);
++          }
+         }
+       } // Buffer
+ 
+-
+       content = (0, _handleRangeHeaders.default)(context, content, req, res); // Express API
+ 
+       if (res.send) {
+         res.send(content);
+       } // Node.js API
+       else {
+-          res.setHeader("Content-Length", content.length);
++        res.setHeader('Content-Length', content.length);
+ 
+-          if (req.method === "HEAD") {
+-            res.end();
+-          } else {
+-            res.end(content);
+-          }
++        if (req.method === 'HEAD') {
++          res.end();
++        } else {
++          res.end(content);
+         }
++      }
+     }
+   };
+ }
+diff --git a/node_modules/webpack-dev-middleware/dist/utils/getFilenameFromUrl.js b/node_modules/webpack-dev-middleware/dist/utils/getFilenameFromUrl.js
+index ae42d4f..a9fccd0 100644
+--- a/node_modules/webpack-dev-middleware/dist/utils/getFilenameFromUrl.js
++++ b/node_modules/webpack-dev-middleware/dist/utils/getFilenameFromUrl.js
+@@ -1,32 +1,31 @@
+-"use strict";
++'use strict';
+ 
+-Object.defineProperty(exports, "__esModule", {
+-  value: true
++Object.defineProperty(exports, '__esModule', {
++  value: true,
+ });
+ exports.default = getFilenameFromUrl;
+ 
+-var _path = _interopRequireDefault(require("path"));
++var _path = _interopRequireDefault(require('path'));
+ 
+-var _url = require("url");
++var _url = require('url');
+ 
+-var _querystring = _interopRequireDefault(require("querystring"));
++var _querystring = _interopRequireDefault(require('querystring'));
+ 
+-var _mem = _interopRequireDefault(require("mem"));
++var _mem = _interopRequireDefault(require('mem'));
+ 
+-var _getPaths = _interopRequireDefault(require("./getPaths"));
++var _getPaths = _interopRequireDefault(require('./getPaths'));
+ 
+-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
++function _interopRequireDefault(obj) {
++  return obj && obj.__esModule ? obj : { default: obj };
++}
+ 
+ const memoizedParse = (0, _mem.default)(_url.parse);
+ 
+ function getFilenameFromUrl(context, url) {
+-  const {
+-    options
+-  } = context;
++  const { options } = context;
+   const paths = (0, _getPaths.default)(context);
+   let foundFilename;
+   let urlObject;
+-
+   try {
+     // The `url` property of the `request` is contains only  `pathname`, `search` and `hash`
+     urlObject = memoizedParse(url, false, true);
+@@ -34,15 +33,16 @@ function getFilenameFromUrl(context, url) {
+     return;
+   }
+ 
+-  for (const {
+-    publicPath,
+-    outputPath
+-  } of paths) {
++  for (const { publicPath, outputPath } of paths) {
+     let filename;
+     let publicPathObject;
+ 
+     try {
+-      publicPathObject = memoizedParse(publicPath !== "auto" && publicPath ? publicPath : "/", false, true);
++      publicPathObject = memoizedParse(
++        publicPath !== 'auto' && publicPath ? publicPath : '/',
++        false,
++        true
++      );
+     } catch (_ignoreError) {
+       // eslint-disable-next-line no-continue
+       continue;
+@@ -70,8 +70,11 @@ function getFilenameFromUrl(context, url) {
+       if (fsStats.isFile()) {
+         foundFilename = filename;
+         break;
+-      } else if (fsStats.isDirectory() && (typeof options.index === "undefined" || options.index)) {
+-        const indexValue = typeof options.index === "undefined" || typeof options.index === "boolean" ? "index.html" : options.index;
++      } else if (fsStats.isDirectory() && (typeof options.index === 'undefined' || options.index)) {
++        const indexValue =
++          typeof options.index === 'undefined' || typeof options.index === 'boolean'
++            ? 'index.html'
++            : options.index;
+         filename = _path.default.join(filename, indexValue);
+ 
+         try {
+@@ -89,6 +92,5 @@ function getFilenameFromUrl(context, url) {
+     }
+   } // eslint-disable-next-line consistent-return
+ 
+-
+   return foundFilename;
+ }
+diff --git a/node_modules/webpack-dev-middleware/dist/utils/getPaths.js b/node_modules/webpack-dev-middleware/dist/utils/getPaths.js
+index 8abc7ea..d57c6be 100644
+--- a/node_modules/webpack-dev-middleware/dist/utils/getPaths.js
++++ b/node_modules/webpack-dev-middleware/dist/utils/getPaths.js
+@@ -1,27 +1,25 @@
+-"use strict";
++'use strict';
+ 
+-Object.defineProperty(exports, "__esModule", {
+-  value: true
++Object.defineProperty(exports, '__esModule', {
++  value: true,
+ });
+ exports.default = getPaths;
+ 
+ function getPaths(context) {
+-  const {
+-    stats,
+-    options
+-  } = context;
++  const { stats, options } = context;
+   const childStats = stats.stats ? stats.stats : [stats];
+   const publicPaths = [];
+-
+-  for (const {
+-    compilation
+-  } of childStats) {
++  for (const { compilation } of childStats) {
+     // The `output.path` is always present and always absolute
+     const outputPath = compilation.getPath(compilation.outputOptions.path);
+-    const publicPath = options.publicPath ? compilation.getPath(options.publicPath) : compilation.outputOptions.publicPath ? compilation.getPath(compilation.outputOptions.publicPath) : "";
++    const publicPath = options.publicPath
++      ? compilation.getPath(options.publicPath)
++      : compilation.outputOptions.publicPath
++      ? compilation.getPath(compilation.outputOptions.publicPath)
++      : '';
+     publicPaths.push({
+       outputPath,
+-      publicPath
++      publicPath,
+     });
+   }
+ 
+diff --git a/node_modules/webpack-dev-middleware/dist/utils/setupOutputFileSystem.js b/node_modules/webpack-dev-middleware/dist/utils/setupOutputFileSystem.js
+index fd943a8..eb8f1b2 100644
+--- a/node_modules/webpack-dev-middleware/dist/utils/setupOutputFileSystem.js
++++ b/node_modules/webpack-dev-middleware/dist/utils/setupOutputFileSystem.js
+@@ -1,48 +1,51 @@
+-"use strict";
++'use strict';
+ 
+-Object.defineProperty(exports, "__esModule", {
+-  value: true
++Object.defineProperty(exports, '__esModule', {
++  value: true,
+ });
+ exports.default = setupOutputFileSystem;
+ 
+-var _path = _interopRequireDefault(require("path"));
++var _path = _interopRequireDefault(require('path'));
+ 
+-var _memfs = require("memfs");
++var _memfs = require('memfs');
+ 
+-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
++function _interopRequireDefault(obj) {
++  return obj && obj.__esModule ? obj : { default: obj };
++}
+ 
+ function setupOutputFileSystem(context) {
+-  let outputFileSystem;
+-
+-  if (context.options.outputFileSystem) {
+-    // eslint-disable-next-line no-shadow
+-    const {
+-      outputFileSystem: outputFileSystemFromOptions
+-    } = context.options; // Todo remove when we drop webpack@4 support
++  function createFs() {
++    let outputFileSystem;
+ 
+-    if (typeof outputFileSystemFromOptions.join !== "function") {
+-      throw new Error("Invalid options: options.outputFileSystem.join() method is expected");
+-    } // Todo remove when we drop webpack@4 support
++    if (context.options.outputFileSystem) {
++      // eslint-disable-next-line no-shadow
++      const { outputFileSystem: outputFileSystemFromOptions } = context.options; // Todo remove when we drop webpack@4 support
+ 
++      if (typeof outputFileSystemFromOptions.join !== 'function') {
++        throw new Error('Invalid options: options.outputFileSystem.join() method is expected');
++      } // Todo remove when we drop webpack@4 support
+ 
+-    if (typeof outputFileSystemFromOptions.mkdirp !== "function") {
+-      throw new Error("Invalid options: options.outputFileSystem.mkdirp() method is expected");
+-    }
++      if (typeof outputFileSystemFromOptions.mkdirp !== 'function') {
++        throw new Error('Invalid options: options.outputFileSystem.mkdirp() method is expected');
++      }
+ 
+-    outputFileSystem = outputFileSystemFromOptions;
+-  } else {
+-    outputFileSystem = (0, _memfs.createFsFromVolume)(new _memfs.Volume()); // TODO: remove when we drop webpack@4 support
++      outputFileSystem = outputFileSystemFromOptions;
++    } else {
++      outputFileSystem = (0, _memfs.createFsFromVolume)(new _memfs.Volume()); // TODO: remove when we drop webpack@4 support
+ 
+-    outputFileSystem.join = _path.default.join.bind(_path.default);
++      outputFileSystem.join = _path.default.join.bind(_path.default);
++    }
++    return outputFileSystem;
+   }
+ 
+   const compilers = context.compiler.compilers || [context.compiler];
+ 
+   for (const compiler of compilers) {
+     // eslint-disable-next-line no-param-reassign
+-    compiler.outputFileSystem = outputFileSystem;
++    compiler.outputFileSystem = createFs();
+   } // eslint-disable-next-line no-param-reassign
+ 
+-
+-  context.outputFileSystem = outputFileSystem;
++  context.outputFileSystem = (
++    compilers.find(c => c.name === 'web') || compilers[0]
++  ).outputFileSystem;
+ }
