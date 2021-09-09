@@ -14,6 +14,7 @@ import { ensureTypeScriptSetupAsync } from '../utils/typescript/ensureTypeScript
 import { validateDependenciesVersionsAsync } from '../utils/validateDependenciesVersions';
 import * as TerminalUI from './TerminalUI';
 import { installCustomExitHook, installExitHooks } from './installExitHooks';
+import isDevClientInstalledInProject from './isDevClientInstalledInProject';
 import { tryOpeningDevToolsAsync } from './openDevTools';
 import { NormalizedOptions, parseStartOptions } from './parseStartOptions';
 
@@ -25,6 +26,13 @@ export async function actionAsync(projectRoot: string, options: NormalizedOption
 
   // Only validate expo in Expo Go contexts
   if (!options.devClient) {
+    const hasDevClientInstalled = isDevClientInstalledInProject(projectRoot);
+    if (hasDevClientInstalled) {
+      Log.warn(
+        'This project has expo-dev-client installed, but not enabled. Use the `expo start --dev-client` to run in custom dev client.'
+      );
+    }
+
     // Find expo binary in project/workspace node_modules
     const hasExpoInstalled = resolveFrom.silent(projectRoot, 'expo');
     if (!hasExpoInstalled) {
