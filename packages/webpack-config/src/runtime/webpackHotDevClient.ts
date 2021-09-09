@@ -105,7 +105,7 @@ function clearOutdatedErrors() {
   // Clean up outdated compile errors, if any.
   if (typeof console !== 'undefined' && typeof console.clear === 'function') {
     if (hasCompileErrors) {
-      console.clear();
+      LoadingView.dismissBuildError();
     }
   }
 }
