@@ -233,17 +233,17 @@ describe(getAppDelegateHeader, () => {
     });
   });
   it(`throws on swift project`, () => {
-    expect(() => getAppDelegate('/invalid')).toThrow(UnexpectedError);
-    expect(() => getAppDelegate('/invalid')).toThrow(/AppDelegate/);
+    expect(() => getAppDelegateHeader('/invalid')).toThrow(UnexpectedError);
+    expect(() => getAppDelegateHeader('/invalid')).toThrow(/AppDelegate/);
   });
 
   it(`throws on invalid project`, () => {
-    expect(() => getAppDelegate('/invalid')).toThrow(UnexpectedError);
-    expect(() => getAppDelegate('/invalid')).toThrow(/AppDelegate/);
+    expect(() => getAppDelegateHeader('/invalid')).toThrow(UnexpectedError);
+    expect(() => getAppDelegateHeader('/invalid')).toThrow(/AppDelegate/);
   });
 
   it(`warns when multiple paths are found`, () => {
-    expect(getAppDelegate('/confusing')).toStrictEqual({
+    expect(getAppDelegateHeader('/confusing')).toStrictEqual({
       contents: '',
       path: '/confusing/ios/testproject/AppDelegate.h',
       language: 'objc',
