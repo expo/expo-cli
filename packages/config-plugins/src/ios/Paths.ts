@@ -16,14 +16,19 @@ interface ProjectFile<L extends string = string> {
 export type AppDelegateProjectFile = ProjectFile<'objc' | 'swift'>;
 
 export function getAppDelegateFilePath(projectRoot: string): string {
-  return getFilePath(projectRoot, 'ios/*/AppDelegate.@(m|swift)', 'AppDelegate', 'app-delegate')
+  return getFilePath(projectRoot, 'ios/*/AppDelegate.@(m|swift)', 'AppDelegate', 'app-delegate');
 }
 
 export function getAppDelegateHeaderFilePath(projectRoot: string): string {
-  return getFilePath(projectRoot, 'ios/*/AppDelegate.h', 'AppDelegate.h', 'app-delegate-header')
+  return getFilePath(projectRoot, 'ios/*/AppDelegate.h', 'AppDelegate.h', 'app-delegate-header');
 }
 
-function getFilePath(projectRoot: string, globPattern: string, fileName: string, warningTag: string): string {
+function getFilePath(
+  projectRoot: string, 
+  globPattern: string, 
+  fileName: string, 
+  warningTag: string
+): string {
   const [using, ...extra] = globSync(globPattern, {
     absolute: true,
     cwd: projectRoot,

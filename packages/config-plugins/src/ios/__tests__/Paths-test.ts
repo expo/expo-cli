@@ -4,7 +4,12 @@ import * as path from 'path';
 
 import { UnexpectedError } from '../../utils/errors';
 import * as WarningAggregator from '../../utils/warnings';
-import { getAllInfoPlistPaths, getAppDelegate, getAppDelegateHeader, getXcodeProjectPath } from '../Paths';
+import { 
+  getAllInfoPlistPaths, 
+  getAppDelegate, 
+  getAppDelegateHeader, 
+  getXcodeProjectPath 
+} from '../Paths';
 
 const fsReal = jest.requireActual('fs') as typeof fs;
 
