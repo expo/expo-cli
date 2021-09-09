@@ -221,7 +221,7 @@ export function getIosModFileProviders() {
 export function getIosIntrospectModFileProviders(): Omit<
   IosDefaultProviders,
   // Get rid of mods that could potentially fail by being empty.
-  'dangerous' | 'xcodeproj' | 'appDelegate'
+  'dangerous' | 'xcodeproj' | 'appDelegate' | 'appDelegateHeader'
 > {
   const createIntrospectionProvider = (
     modName: keyof typeof defaultProviders,
