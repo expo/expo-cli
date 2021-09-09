@@ -17,7 +17,7 @@ export const sampleStringsXML = `
   <string name="app_name">expo &amp;bo&lt;y&gt;'</string>
 </resources>`;
 
-const badName = `😃/\\:<>"?*|$F0g.`;
+const badName = `😃/\\:<>'"?*|$F0g.`;
 const badNameCleaned = `😃$F0g.`;
 
 describe(sanitizeNameForGradle, () => {

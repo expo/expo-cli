@@ -8,14 +8,14 @@ import { removeStringItem, setStringItem } from './Strings';
 
 /**
  * Sanitize a name, this should be used for files and gradle names.
- * - `[/, \, :, <, >, ", ?, *, |]` are not allowed https://bit.ly/3l6xqKL
+ * - `[/, \, :, <, >, ', ", ?, *, |]` are not allowed https://bit.ly/3l6xqKL
  *
  * @param name
  */
 export function sanitizeNameForGradle(name: string): string {
   // Gradle disallows these:
-  // The project name 'My-Special 😃 Co/ol_Project' must not contain any of the following characters: [/, \, :, <, >, ", ?, *, |]. Set the 'rootProject.name' or adjust the 'include' statement (see https://docs.gradle.org/6.2/dsl/org.gradle.api.initialization.Settings.html#org.gradle.api.initialization.Settings:include(java.lang.String[]) for more details).
-  return name.replace(/(\/|\\|:|<|>|"|\?|\*|\|)/g, '');
+  // The project name 'My-Special 😃 Co/ol_Project' must not contain any of the following characters: [/, \, :, <, >, ', ", ?, *, |]. Set the 'rootProject.name' or adjust the 'include' statement (see https://docs.gradle.org/6.2/dsl/org.gradle.api.initialization.Settings.html#org.gradle.api.initialization.Settings:include(java.lang.String[]) for more details).
+  return name.replace(/(\/|\\|:|<|>|'|"|\?|\*|\|)/g, '');
 }
 
 export const withName = createStringsXmlPlugin(applyNameFromConfig, 'withName');
