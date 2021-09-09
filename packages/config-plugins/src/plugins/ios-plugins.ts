@@ -67,6 +67,20 @@ export const withAppDelegate: ConfigPlugin<Mod<AppDelegateProjectFile>> = (confi
 };
 
 /**
+ * Provides the AppDelegate file for modification.
+ *
+ * @param config
+ * @param action
+ */
+ export const withAppDelegateHeader: ConfigPlugin<Mod<AppDelegateProjectFile>> = (config, action) => {
+  return withMod(config, {
+    platform: 'ios',
+    mod: 'appDelegateHeader',
+    action,
+  });
+};
+
+/**
  * Provides the Info.plist file for modification.
  * Keeps the config's expo.ios.infoPlist object in sync with the data.
  *

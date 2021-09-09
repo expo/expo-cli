@@ -160,6 +160,10 @@ export interface ModConfig {
      */
     appDelegate?: Mod<AppDelegateProjectFile>;
     /**
+     * Modify the `ios/<name>/AppDelegate.h` as a string (dangerous)
+     */
+    appDelegateHeader?: Mod<AppDelegateProjectFile>;
+    /**
      * Modify the `ios/Podfile.properties.json` as key-value pairs
      */
     podfileProperties?: Mod<Record<string, string>>;

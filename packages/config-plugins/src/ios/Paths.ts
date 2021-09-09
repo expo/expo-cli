@@ -16,20 +16,28 @@ interface ProjectFile<L extends string = string> {
 export type AppDelegateProjectFile = ProjectFile<'objc' | 'swift'>;
 
 export function getAppDelegateFilePath(projectRoot: string): string {
-  const [using, ...extra] = globSync('ios/*/AppDelegate.@(m|swift)', {
+  return getFilePath(projectRoot, 'ios/*/AppDelegate.@(m|swift)', 'AppDelegate', 'app-delegate')
+}
+
+export function getAppDelegateHeaderFilePath(projectRoot: string): string {
+  return getFilePath(projectRoot, 'ios/*/AppDelegate.h', 'AppDelegate.h', 'app-delegate-header')
+}
+
+function getFilePath(projectRoot: string, globPattern: string, fileName: string, warningTag: string): string {
+  const [using, ...extra] = globSync(globPattern, {
     absolute: true,
     cwd: projectRoot,
     ignore: ignoredPaths,
   });
 
   if (!using) {
-    throw new UnexpectedError(`Could not locate a valid AppDelegate at root: "${projectRoot}"`);
+    throw new UnexpectedError(`Could not locate a valid ${fileName} at root: "${projectRoot}"`);
   }
 
   if (extra.length) {
     warnMultipleFiles({
-      tag: 'app-delegate',
-      fileName: 'AppDelegate',
+      tag: warningTag,
+      fileName,
       projectRoot,
       using,
       extra,
@@ -43,6 +51,7 @@ function getLanguage(filePath: string): 'objc' | 'swift' {
   const extension = path.extname(filePath);
   switch (extension) {
     case '.m':
+    case '.h':
       return 'objc';
     case '.swift':
       return 'swift';
@@ -61,6 +70,11 @@ export function getFileInfo(filePath: string) {
 
 export function getAppDelegate(projectRoot: string): AppDelegateProjectFile {
   const filePath = getAppDelegateFilePath(projectRoot);
+  return getFileInfo(filePath);
+}
+
+export function getAppDelegateHeader(projectRoot: string): AppDelegateProjectFile {
+  const filePath = getAppDelegateHeaderFilePath(projectRoot);
   return getFileInfo(filePath);
 }
 

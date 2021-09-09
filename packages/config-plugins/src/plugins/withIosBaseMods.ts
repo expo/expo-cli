@@ -41,6 +41,18 @@ const defaultProviders = {
       await writeFile(filePath, contents);
     },
   }),
+  // Append a rule to supply AppDelegate header data to mods on `mods.ios.appDelegateHeader`
+  appDelegateHeader: provider<Paths.AppDelegateProjectFile>({
+    getFilePath({ modRequest: { projectRoot } }) {
+      return Paths.getAppDelegateHeaderFilePath(projectRoot);
+    },
+    async read(filePath) {
+      return Paths.getFileInfo(filePath);
+    },
+    async write(filePath: string, { modResults: { contents } }) {
+      await writeFile(filePath, contents);
+    },
+  }),
   // Append a rule to supply Expo.plist data to mods on `mods.ios.expoPlist`
   expoPlist: provider<JSONObject>({
     getFilePath({ modRequest: { platformProjectRoot, projectName } }) {
