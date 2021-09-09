@@ -24,9 +24,9 @@ export function getAppDelegateHeaderFilePath(projectRoot: string): string {
 }
 
 function getFilePath(
-  projectRoot: string, 
-  globPattern: string, 
-  fileName: string, 
+  projectRoot: string,
+  globPattern: string,
+  fileName: string,
   warningTag: string
 ): string {
   const [using, ...extra] = globSync(globPattern, {

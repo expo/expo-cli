@@ -72,10 +72,10 @@ export const withAppDelegate: ConfigPlugin<Mod<AppDelegateProjectFile>> = (confi
  * @param config
  * @param action
  */
- export const withAppDelegateHeader: ConfigPlugin<Mod<AppDelegateProjectFile>> = (
-   config, 
-   action
-  ) => {
+export const withAppDelegateHeader: ConfigPlugin<Mod<AppDelegateProjectFile>> = (
+  config,
+  action
+) => {
   return withMod(config, {
     platform: 'ios',
     mod: 'appDelegateHeader',
