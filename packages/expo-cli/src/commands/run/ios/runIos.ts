@@ -1,8 +1,11 @@
 import { ExpoConfig, getConfig } from '@expo/config';
 import chalk from 'chalk';
 import fs from 'fs-extra';
+import getenv from 'getenv';
 import * as path from 'path';
+import tempy from 'tempy';
 import { SimControl, Simulator, UnifiedAnalytics } from 'xdl';
+import { resolveEntryPoint } from 'xdl/build/tools/resolveEntryPoint';
 
 import CommandError from '../../../CommandError';
 import StatusEventEmitter from '../../../StatusEventEmitter';
@@ -17,6 +20,7 @@ import { parseBinaryPlistAsync } from '../utils/binaryPlist';
 import * as IOSDeploy from './IOSDeploy';
 import maybePromptToSyncPodsAsync from './Podfile';
 import * as XcodeBuild from './XcodeBuild';
+import { bundleAppAsync, embedBundleAsync } from './embed';
 import { Options, resolveOptionsAsync } from './resolveOptionsAsync';
 import { startBundlerAsync } from './startBundlerAsync';
 
@@ -27,7 +31,9 @@ export async function actionAsync(projectRoot: string, options: Options) {
   // Check to ensure most of the core files are in place, and prompt to remove the folder if they aren't.
   await profileMethod(promptToClearMalformedNativeProjectsAsync)(projectRoot, ['ios']);
 
-  const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
+  const projectConfig = getConfig(projectRoot, { skipSDKVersionRequirement: true });
+  const { exp } = projectConfig;
+
   track(projectRoot, exp);
 
   if (!isMac) {
@@ -56,12 +62,31 @@ export async function actionAsync(projectRoot: string, options: Options) {
     await IOSDeploy.assertInstalledAsync();
   }
 
+  const tempDir: string = tempy.directory();
+  if (props.prebundle) {
+    // Prebundle the app
+    Log.debug('Bundling JS before building: ' + tempDir);
+    await profileMethod(bundleAppAsync)(projectRoot, {
+      resetCache: false,
+      dev: getenv.boolish('DEV', props.configuration === 'Debug'),
+      destination: tempDir,
+      entryFile: getenv.string('ENTRY_FILE', resolveEntryPoint(projectRoot, 'ios')),
+      // deliminate by spaces
+      extraPackagerArgs: [getenv.string('EXTRA_PACKAGER_ARGS', '')],
+    });
+    Log.debug('JS bundling complete');
+  }
+
   const buildOutput = await profileMethod(XcodeBuild.buildAsync, 'XcodeBuild.buildAsync')(props);
 
   const binaryPath = await profileMethod(
     XcodeBuild.getAppBinaryPath,
     'XcodeBuild.getAppBinaryPath'
   )(buildOutput);
+
+  if (props.prebundle) {
+    await embedBundleAsync(tempDir, binaryPath);
+  }
 
   if (props.shouldStartBundler) {
     await startBundlerAsync(projectRoot, {
@@ -72,6 +97,8 @@ export async function actionAsync(projectRoot: string, options: Options) {
 
   if (props.isSimulator) {
     XcodeBuild.logPrettyItem(`${chalk.bold`Installing`} on ${props.device.name}`);
+    // Uninstall to prevent caching when the current bundle is invalid in release mode
+    await SimControl.uninstallAsync({ udid: props.device.udid, bundleIdentifier });
     await SimControl.installAsync({ udid: props.device.udid, dir: binaryPath });
 
     await openInSimulatorAsync({
@@ -147,12 +174,12 @@ async function openInSimulatorAsync({
     `${chalk.bold`Opening`} on ${device.name} ${chalk.dim(`(${bundleIdentifier})`)}`
   );
 
-  if (shouldStartBundler) {
-    await Simulator.streamLogsAsync({
-      udid: device.udid,
-      bundleIdentifier,
-    });
-  }
+  // if (shouldStartBundler) {
+  await Simulator.streamLogsAsync({
+    udid: device.udid,
+    bundleIdentifier,
+  });
+  // }
 
   const schemes = await getSchemesForIosAsync(projectRoot);
   const result = await Simulator.openProjectAsync({

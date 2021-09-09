@@ -821,7 +821,7 @@ export async function openProjectAsync({
   }
 
   // No URL, and is devClient
-  if (!projectUrl) {
+  if (!projectUrl || (devClient && projectUrl === 'exp://127.0.0.1:80')) {
     applicationId = applicationId ?? (await resolveApplicationIdAsync(projectRoot));
     Logger.global.debug(`Open iOS project from app id: ${applicationId}`);
 

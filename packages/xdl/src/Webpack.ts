@@ -58,6 +58,8 @@ type BundlingOptions = {
   port?: number;
   pwa?: boolean;
   isImageEditingEnabled?: boolean;
+  entryFile?: string;
+  platform?: string;
   webpackEnv?: object;
   mode?: 'development' | 'production' | 'test' | 'none';
   https?: boolean;
@@ -454,6 +456,7 @@ export async function bundleAsync(projectRoot: string, options?: BundlingOptions
     await clearWebCacheAsync(projectRoot, env.mode);
   }
 
+  console.log('use:', env);
   const config = await loadConfigAsync(env);
   await bundleWebAppAsync(projectRoot, config);
 }

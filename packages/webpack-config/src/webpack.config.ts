@@ -1,5 +1,6 @@
 /** @internal */ /** */
 /* eslint-env node */
+import { getConfig as getRealConfig } from '@expo/config';
 import ReactRefreshPlugin from '@pmmmwh/react-refresh-webpack-plugin';
 import chalk from 'chalk';
 import { CleanWebpackPlugin } from 'clean-webpack-plugin';
@@ -19,6 +20,7 @@ import { parse } from 'node-html-parser';
 import path from 'path';
 import ModuleNotFoundPlugin from 'react-dev-utils/ModuleNotFoundPlugin';
 import resolveFrom from 'resolve-from';
+import { v4 as uuidV4 } from 'uuid';
 import webpack, { Configuration } from 'webpack';
 import { WebpackManifestPlugin } from 'webpack-manifest-plugin';
 
@@ -53,6 +55,7 @@ import {
 } from './plugins';
 import ExpoAppManifestWebpackPlugin from './plugins/ExpoAppManifestWebpackPlugin';
 import { HTMLLinkNode } from './plugins/ModifyHtmlWebpackPlugin';
+import { NativeOutputPlugin } from './plugins/NativeOutputPlugin/NativeOutputPlugin';
 import { Arguments, Environment, FilePaths, Mode } from './types';
 
 function getDevtool(
@@ -123,7 +126,8 @@ function getOutput(
   if (!shouldUseNativeCodeLoading && isPlatformNative(platform)) {
     // Give the output bundle a constant name to prevent caching.
     // Also there are no actual files generated in dev.
-    commonOutput.filename = `index.bundle`;
+    // TODO: This is required for production iOS builds
+    commonOutput.filename = mode === 'production' ? `main.jsbundle` : `index.bundle`;
     // commonOutput.hotUpdateMainFilename;
     commonOutput.publicPath = `http://localhost:${port}/`;
     // This works best for our custom native symbolication middleware
@@ -198,13 +202,13 @@ export default async function (env: Environment, argv: Arguments = {}): Promise<
     if (getPolyfillsPath) {
       appEntry.unshift(
         ...require(getPolyfillsPath)(),
-        resolveFrom(env.projectRoot, 'react-native/Libraries/Core/InitializeCore'),
-        require.resolve('./runtime/location-polyfill')
+        resolveFrom(env.projectRoot, 'react-native/Libraries/Core/InitializeCore')
       );
-      if (isDev) {
-        appEntry.push(require.resolve('./runtime/__webpack_require__.l'));
-      }
     }
+    appEntry.push(
+      require.resolve('./runtime/location-polyfill'),
+      require.resolve('./runtime/__webpack_require__.l')
+    );
   } else {
     // Add a loose requirement on the ResizeObserver polyfill if it's installed...
     const resizeObserverPolyfill = resolveFrom.silent(
@@ -311,7 +315,7 @@ export default async function (env: Environment, argv: Arguments = {}): Promise<
 
   // TODO(Bacon): Move to expo/config - manifest code from XDL Project
   const publicConfig = {
-    ...config,
+    ...getRealConfig(env.projectRoot, { isPublicConfig: true }).exp,
     developer: {
       tool: 'expo-cli',
       projectRoot: env.projectRoot,
@@ -321,6 +325,7 @@ export default async function (env: Environment, argv: Arguments = {}): Promise<
       minify: isProd,
       https: env.https,
     },
+    updateId: uuidV4(),
   };
 
   const emacsLockfilePattern = '**/.#*';
@@ -383,6 +388,7 @@ export default async function (env: Environment, argv: Arguments = {}): Promise<
       // Delete the build folder
       isProd &&
         new CleanWebpackPlugin({
+          dangerouslyAllowCleanPatternsOutsideProject: true,
           cleanOnceBeforeBuildPatterns: [locations.production.folder],
           dry: false,
           verbose: false,
@@ -441,7 +447,25 @@ export default async function (env: Environment, argv: Arguments = {}): Promise<
         new ExpoAppManifestWebpackPlugin(
           {
             template: locations.template.get('app.config.json'),
-            path: 'app.config.json',
+            // app.manifest is required otherwise:
+            // The embedded manifest is invalid or could not be read. Make sure you have configured expo-updates correctly in your Xcode Build Phases.
+            path: isProd ? 'app.manifest' : 'app.config.json',
+            publicPath,
+          },
+          // TODO: Hack
+          {
+            id: 'ab6c6658-6967-40fa-a99e-7941c5d93c48',
+            commitTime: Date.now(),
+            assets: [],
+          }
+        ),
+      isNative &&
+        new ExpoAppManifestWebpackPlugin(
+          {
+            template: locations.template.get('app.config.json'),
+            // app.manifest is required otherwise:
+            // The embedded manifest is invalid or could not be read. Make sure you have configured expo-updates correctly in your Xcode Build Phases.
+            path: 'app.config',
             publicPath,
           },
           publicConfig
@@ -545,6 +569,23 @@ export default async function (env: Environment, argv: Arguments = {}): Promise<
           filename: 'static/css/[name].[contenthash:8].css',
           chunkFilename: 'static/css/[name].[contenthash:8].chunk.css',
         }),
+
+      // isNative &&
+      //   isProd &&
+      //   new NativeOutputPlugin({
+      //     // entryFile,
+      //     // bundleOutput: bundleFile,
+      //     // assetsDest: destination,
+
+      //     // @ts-ignore
+      //     assetsDest: env.assetDest,
+      //     platform: env.platform,
+      //     projectRoot: env.projectRoot,
+      //     // @ts-ignore
+      //     bundleOutput: env.bundleOutput, // path.join(env.projectRoot, 'build', env.platform),
+      //     // localChunks: [/Async/],
+      //     // remoteChunksOutput: path.join(env.projectRoot, 'build', env.platform, 'remote'),
+      //   }),
       // Generate an asset manifest file with the following content:
       // - "files" key: Mapping of all asset filenames to their corresponding
       //   output file so that tools can pick it up without having to parse
@@ -670,11 +711,11 @@ export default async function (env: Environment, argv: Arguments = {}): Promise<
   if (isProd) {
     webpackConfig = withOptimizations(webpackConfig);
   } else {
-    webpackConfig = withDevServer(webpackConfig, env, {
-      allowedHost: argv.allowedHost,
-      proxy: argv.proxy,
-    });
   }
+  webpackConfig = withDevServer(webpackConfig, env, {
+    allowedHost: argv.allowedHost,
+    proxy: argv.proxy,
+  });
 
   if (!isNative) {
     webpackConfig = withAlias(webpackConfig, getAliases(env.projectRoot));
