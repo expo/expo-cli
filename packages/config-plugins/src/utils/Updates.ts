@@ -1,7 +1,7 @@
 import { Android, ExpoConfig, IOS } from '@expo/config-types';
 import { getRuntimeVersionForSDKVersion } from '@expo/sdk-runtime-versions';
 
-import { AndroidConfig, ConfigPlugin, IOSConfig } from '..';
+import { AndroidConfig, IOSConfig } from '..';
 
 export type ExpoConfigUpdates = Pick<
   ExpoConfig,
@@ -55,14 +55,16 @@ export function getNativeVersion(
  * Compute runtime version policies.
  * @return an expoConfig with only string valued platform specific runtime versions.
  */
-export const withRuntimeVersion: ConfigPlugin = config => {
-  if (config.ios || config.runtimeVersion) {
+export const withRuntimeVersion: (
+  config: ExpoConfig & { ios?: TempRuntimeVersion; android?: TempRuntimeVersion }
+) => ExpoConfig = config => {
+  if (config.ios?.runtimeVersion || config.runtimeVersion) {
     config.ios = {
       ...config.ios,
       runtimeVersion: getRuntimeVersion(config, 'ios'),
     } as any; //TODO(JJ) remove this cast in SDK 43 https://linear.app/expo/issue/ENG-1869/remove-tempruntimeversion-in-expoconfig
   }
-  if (config.android || config.runtimeVersion) {
+  if (config.android?.runtimeVersion || config.runtimeVersion) {
     config.android = {
       ...config.android,
       runtimeVersion: getRuntimeVersion(config, 'android'),
@@ -89,9 +91,9 @@ export function getRuntimeVersion(
 
   if (typeof runtimeVersion === 'string') {
     return runtimeVersion;
-  } else if (runtimeVersion['policy'] === 'nativeVersion') {
+  } else if (runtimeVersion.policy === 'nativeVersion') {
     return getNativeVersion(config, platform);
-  } else if (runtimeVersion['policy'] === 'sdkVersion') {
+  } else if (runtimeVersion.policy === 'sdkVersion') {
     if (!config.sdkVersion) {
       throw new Error("An sdk version must be defined when using the 'sdkVersion' runtime policy.");
     }
