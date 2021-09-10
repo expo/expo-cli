@@ -1,5 +1,6 @@
 declare module 'metro-config' {
   import { IncomingMessage, ServerResponse } from 'http';
+  import type { CustomResolver } from 'metro-resolver';
   import {
     DeltaResult,
     Graph,
@@ -14,8 +15,6 @@ declare module 'metro-config' {
 
   // TODO: import { CacheStore } from 'metro-cache';
   type CacheStore = unknown;
-  // TODO: import { CustomResolver } from 'metro-resolver';
-  type CustomResolver = unknown;
 
   import type { BasicSourceMap, MixedSourceMap } from 'metro-source-map';
 

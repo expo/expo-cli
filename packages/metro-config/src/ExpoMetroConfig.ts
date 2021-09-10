@@ -1,13 +1,17 @@
 import { getConfig, getDefaultTarget, isLegacyImportsEnabled, ProjectTarget } from '@expo/config';
 import { getBareExtensions, getManagedExtensions } from '@expo/config/paths';
 import chalk from 'chalk';
-import { boolish } from 'getenv';
 import { Reporter } from 'metro';
 import type MetroConfig from 'metro-config';
 import path from 'path';
 import resolveFrom from 'resolve-from';
 
-export const EXPO_DEBUG = boolish('EXPO_DEBUG', false);
+import { EXPO_DEBUG } from './env';
+import { importMetroConfigFromProject } from './importMetroFromProject';
+import {
+  createModuleReplacementResolver,
+  getVendoredExpoPatches,
+} from './moduleReplacementResolver';
 
 // Import only the types here, the values will be imported from the project, at runtime.
 export const INTERNAL_CALLSITES_REGEX = new RegExp(
@@ -70,6 +74,7 @@ export function getDefaultConfig(
 ): MetroConfig.InputConfigT {
   const MetroConfig = importMetroConfigFromProject(projectRoot);
 
+  const patches = getVendoredExpoPatches(projectRoot);
   const reactNativePath = path.dirname(resolveFrom(projectRoot, 'react-native/package.json'));
 
   try {
@@ -156,6 +161,7 @@ export function getDefaultConfig(
     console.log(`- Babel config: ${babelConfigPath || 'babel-preset-expo (default)'}`);
     console.log();
   }
+
   const {
     // Remove the default reporter which metro always resolves to be the react-native-community/cli reporter.
     // This prints a giant React logo which is less accessible to users on smaller terminals.
@@ -170,11 +176,12 @@ export function getDefaultConfig(
       resolverMainFields: ['react-native', 'browser', 'main'],
       platforms: ['ios', 'android', 'native'],
       sourceExts,
+      resolveRequest: createModuleReplacementResolver(projectRoot, patches),
     },
     serializer: {
       getModulesRunBeforeMainModule: () => [
         require.resolve(path.join(reactNativePath, 'Libraries/Core/InitializeCore')),
-        // TODO: Bacon: load Expo side-effects
+        // TODO(Bacon): load Expo side-effects
       ],
       getPolyfills: () => require(path.join(reactNativePath, 'rn-get-polyfills'))(),
     },
@@ -206,7 +213,7 @@ export function getDefaultConfig(
       babelTransformerPath: isCustomBabelConfigDefined
         ? // If the user defined a babel config file in their project,
           // then use the default transformer.
-          require.resolve('metro-react-native-babel-transformer')
+          resolveFrom.silent(projectRoot, 'metro-react-native-babel-transformer')
         : // Otherwise, use a custom transformer that uses `babel-preset-expo` by default for projects.
           require.resolve('./metro-expo-babel-transformer'),
       assetRegistryPath: 'react-native/Libraries/Image/AssetRegistry',
@@ -237,17 +244,4 @@ export async function loadAsync(
     { cwd: projectRoot, projectRoot, ...metroOptions },
     defaultConfig
   );
-}
-
-function importMetroConfigFromProject(projectRoot: string): typeof MetroConfig {
-  const resolvedPath = resolveFrom.silent(projectRoot, 'metro-config');
-  if (!resolvedPath) {
-    throw new Error(
-      'Missing package "metro-config" in the project. ' +
-        'This usually means `react-native` is not installed. ' +
-        'Please verify that dependencies in package.json include "react-native" ' +
-        'and run `yarn` or `npm install`.'
-    );
-  }
-  return require(resolvedPath);
 }
