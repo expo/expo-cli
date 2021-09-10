@@ -28,6 +28,7 @@ function importFromProject(projectRoot: string, moduleId: string) {
 export function importMetroConfigFromProject(projectRoot: string): typeof MetroConfig {
   return importFromProject(projectRoot, 'metro-config');
 }
+
 export function importMetroResolverFromProject(projectRoot: string): typeof MetroResolver {
   return importFromProject(projectRoot, 'metro-resolver');
 }
