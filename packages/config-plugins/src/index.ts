@@ -16,6 +16,7 @@ import {
 import * as XML from './utils/XML';
 import * as History from './utils/history';
 import * as WarningAggregator from './utils/warnings';
+export * as Updates from './utils/Updates';
 
 export { IOSConfig, AndroidConfig };
 

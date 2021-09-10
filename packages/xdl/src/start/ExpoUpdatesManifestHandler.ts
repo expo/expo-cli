@@ -1,5 +1,5 @@
 import { ExpoUpdatesManifest, getConfig } from '@expo/config';
-import { getRuntimeVersionForSDKVersion } from '@expo/sdk-runtime-versions';
+import { Updates } from '@expo/config-plugins';
 import express from 'express';
 import http from 'http';
 import { parse } from 'url';
@@ -20,13 +20,18 @@ import {
   stripPort,
 } from './ManifestHandler';
 
-function getPlatformFromRequest(req: express.Request | http.IncomingMessage): string {
+function getPlatformFromRequest(req: express.Request | http.IncomingMessage): 'android' | 'ios' {
   const url = req.url ? parse(req.url, /* parseQueryString */ true) : null;
   const platform = url?.query.platform || req.headers['expo-platform'];
   if (!platform) {
     throw new Error('Must specify expo-platform header or query parameter');
   }
-  return String(platform);
+
+  const stringifiedPlatform = String(platform);
+  if (!['android', 'ios'].includes(stringifiedPlatform)) {
+    throw new Error(`platform must be "android" or "ios". Recieved: "${platform}"`);
+  }
+  return stringifiedPlatform as 'android' | 'ios';
 }
 
 export async function getManifestResponseAsync({
@@ -35,7 +40,7 @@ export async function getManifestResponseAsync({
   host,
 }: {
   projectRoot: string;
-  platform: string;
+  platform: 'android' | 'ios';
   host?: string;
 }): Promise<{
   body: ExpoUpdatesManifest;
@@ -63,12 +68,10 @@ export async function getManifestResponseAsync({
 
   const hostUri = await UrlUtils.constructHostUriAsync(projectRoot, hostname);
 
-  const runtimeVersion =
-    expoConfig.runtimeVersion ??
-    (expoConfig.sdkVersion ? getRuntimeVersionForSDKVersion(expoConfig.sdkVersion) : null);
-  if (!runtimeVersion) {
-    throw new Error('Must specify runtimeVersion or sdkVersion in app.json');
-  }
+  const runtimeVersion = Updates.getRuntimeVersion(
+    { ...expoConfig, runtimeVersion: expoConfig.runtimeVersion ?? { policy: 'sdkVersion' } },
+    platform
+  );
 
   const bundleUrl = await getBundleUrlAsync({
     projectRoot,
