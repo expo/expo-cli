@@ -176,9 +176,29 @@ async function action(incomingProjectRoot: string, command: Command) {
   const cdPath = CreateApp.getChangeDirectoryPath(projectRoot);
 
   // Check if we should skip initializing the git tree
-  const shouldSkipInitializeGitTree = await checkSkipInitializeGitTree(projectRoot, cdPath, {
-    silent: true,
-  });
+  let shouldSkipInitializeGitTree = false;
+
+  try {
+    if (await isInsideGitRepo(projectRoot)) {
+      Log.log(
+        `Your project will be initialized inside an existing git repository (${topLevelGitRepo(
+          projectRoot
+        )})`
+      );
+
+      shouldSkipInitializeGitTree =
+        program.nonInteractive ||
+        (await confirmAsync({
+          message: `Skip initializing a git repository for ${cdPath}?`,
+        }));
+    }
+  } catch (error) {
+    if (error.code === 'GIT_NOT_INSTALLED') {
+      shouldSkipInitializeGitTree = true;
+    } else {
+      throw error;
+    }
+  }
 
   let resolvedTemplate: string | null = options.template ?? null;
   // @ts-ignore: This guards against someone passing --template without a name after it.
@@ -363,41 +383,28 @@ async function installNodeDependenciesAsync(projectRoot: string, packageManager:
   }
 }
 
-async function checkSkipInitializeGitTree(
-  root: string,
-  cdPath: string,
-  flags: { silent: boolean } = { silent: false }
-) {
-  // let's see if we're in a git tree
-  let insideGitTree = false;
-
+async function isInsideGitRepo(path: string) {
   try {
     const resultPromise = await spawnAsync('git', ['rev-parse', '--is-inside-work-tree'], {
-      cwd: root,
+      cwd: path,
     });
 
-    insideGitTree = resultPromise.stdout.trim() === 'true';
+    return resultPromise.stdout.trim() === 'true';
   } catch (e) {
-    if (e.errno === 'ENOENT') {
-      !flags.silent && Log.warn('Unable to check if within existing git repo. `git` not in PATH.');
-      return false;
-    }
+    throw new CommandError('GIT_NOT_INSTALLED', '`git` not in PATH.');
   }
+}
 
-  let shouldSkipInitializeGitTree = false;
+async function topLevelGitRepo(path: string) {
+  try {
+    const resultPromise = await spawnAsync('git', ['rev-parse', '--show-toplevel'], {
+      cwd: path,
+    });
 
-  if (insideGitTree) {
-    Log.log(
-      `Your project will be initialized inside an existing git repository (${process.cwd()})`
-    );
-    shouldSkipInitializeGitTree =
-      program.nonInteractive ||
-      (await confirmAsync({
-        message: `Skip initializing a git repository for ${cdPath}?`,
-      }));
+    return resultPromise.stdout.trim();
+  } catch (e) {
+    throw new CommandError('GIT_NOT_INSTALLED', '`git` not in PATH.');
   }
-
-  return shouldSkipInitializeGitTree;
 }
 
 export async function initGitRepoAsync(
