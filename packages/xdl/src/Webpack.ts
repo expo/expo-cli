@@ -14,6 +14,7 @@ import http from 'http';
 import * as path from 'path';
 import formatWebpackMessages from 'react-dev-utils/formatWebpackMessages';
 import openBrowser from 'react-dev-utils/openBrowser';
+import resolveFrom from 'resolve-from';
 import webpack from 'webpack';
 import WebpackDevServer from 'webpack-dev-server';
 
@@ -628,10 +629,18 @@ async function loadConfigAsync(
   argv?: string[]
 ): Promise<WebpackConfiguration> {
   setMode(env.mode);
-  // Check if the project has a webpack.config.js in the root.
-  const projectWebpackConfig = path.resolve(env.projectRoot, 'webpack.config.js');
+
+  // Check if the project has a webpack.config.{ts,js} in the root.
+  let projectWebpackConfig = resolveFrom.silent(env.projectRoot, './webpack.config.ts');
+  if (projectWebpackConfig) {
+    // Patch `require()` to transpile TypeScript when loading the file below.
+    require('ts-node/register');
+  } else {
+    projectWebpackConfig = resolveFrom.silent(env.projectRoot, './webpack.config.js');
+  }
+
   let config: WebpackConfiguration;
-  if (fs.existsSync(projectWebpackConfig)) {
+  if (projectWebpackConfig) {
     const webpackConfig = require(projectWebpackConfig);
     if (typeof webpackConfig === 'function') {
       config = await webpackConfig(env, argv);
