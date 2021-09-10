@@ -527,12 +527,13 @@ export default async function (env: Environment, argv: Arguments = {}): Promise<
         platform: env.platform,
       }),
 
-      // Disable chunking on native
+      // Disable chunking on native because offline (expo-updates) is not powerful enough
+      // to support anything more than a single hardcoded chunk in a predetermined location.
       // https://gist.github.com/glennreyes/f538a369db0c449b681e86ef7f86a254#file-razzle-config-js
-      // isNative &&
-      //   new webpack.optimize.LimitChunkCountPlugin({
-      //     maxChunks: 1,
-      //   }),
+      isNative &&
+        new webpack.optimize.LimitChunkCountPlugin({
+          maxChunks: 1,
+        }),
 
       // Replace the Metro specific HMR code in `react-native` with
       // a shim.

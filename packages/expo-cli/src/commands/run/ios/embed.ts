@@ -82,31 +82,31 @@ export async function bundleAppAsync(
   try {
     // Hack required to make content output to the correct folder.
     process.env.WEBPACK_BUILD_OUTPUT_PATH = destination;
-    await Webpack.bundleAsync(projectRoot, {
-      dev: !!dev,
-      platform: 'ios',
-      webpackEnv: {
-        platform: 'ios',
-        entryFile,
-        // @ts-ignore
-        bundleOutput: bundleFile,
-        // @ts-ignore
-        assetsDest: destination,
-      },
-      clear: resetCache,
-    });
-
-    // await spawnAsync('node', args, {
-    //   cwd: projectRoot,
-    //   stdio: 'inherit',
-    //   env: {
-    //     ...process.env,
-    //     NODE_OPTIONS: process.env.METRO_NODE_OPTIONS,
-    //     REACT_NATIVE_APP_ROOT: projectRoot,
-    //     RCT_NO_LAUNCH_PACKAGER: '1',
-    //     ELECTRON_RUN_AS_NODE: '1',
+    // await Webpack.bundleAsync(projectRoot, {
+    //   dev: !!dev,
+    //   platform: 'ios',
+    //   webpackEnv: {
+    //     platform: 'ios',
+    //     entryFile,
+    //     // @ts-ignore
+    //     bundleOutput: bundleFile,
+    //     // @ts-ignore
+    //     assetsDest: destination,
     //   },
+    //   clear: resetCache,
     // });
+
+    await spawnAsync('node', args, {
+      cwd: projectRoot,
+      stdio: 'inherit',
+      env: {
+        ...process.env,
+        NODE_OPTIONS: process.env.METRO_NODE_OPTIONS,
+        REACT_NATIVE_APP_ROOT: projectRoot,
+        RCT_NO_LAUNCH_PACKAGER: '1',
+        ELECTRON_RUN_AS_NODE: '1',
+      },
+    });
   } catch (error) {
     // ctrl+c
     if (error.signal === 'SIGINT') {
