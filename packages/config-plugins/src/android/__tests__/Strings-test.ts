@@ -1,28 +1,45 @@
-import { vol } from 'memfs';
+import { buildResourceItem } from '../Resources';
+import { setStringItem } from '../Strings';
 
-import { setFacebookAppIdString } from '../Facebook';
-import { readResourcesXMLAsync } from '../Resources';
-
-jest.mock('fs');
-
-describe('writes Facebook app id to strings.xml correctly', () => {
-  beforeAll(async () => {
-    const directoryJSON = {
-      './android/app/src/main/res/values/strings.xml': '<resources></resources>',
-    };
-    vol.fromJSON(directoryJSON, '/app');
-  });
-  afterAll(async () => {
-    vol.reset();
-  });
-
-  it(`sets the facebook_app_id item in strings.xml if facebookappid is given`, async () => {
-    expect(await setFacebookAppIdString({ facebookAppId: 'my-app-id' }, '/app')).toBe(true);
-    const stringsJSON = await readResourcesXMLAsync({
-      path: '/app/android/app/src/main/res/values/strings.xml',
+describe(setStringItem, () => {
+  it('add item from empty xml', () => {
+    const results = setStringItem([buildResourceItem({ name: 'foo', value: 'foo' })], {
+      resources: {},
     });
-    expect(stringsJSON.resources.string.filter(e => e.$.name === 'facebook_app_id')[0]._).toMatch(
-      'my-app-id'
+    expect(results).toEqual({
+      resources: { string: [{ $: { name: 'foo' }, _: 'foo' }] },
+    });
+  });
+
+  it('support adding multiple items', () => {
+    const results = setStringItem(
+      [
+        buildResourceItem({ name: 'foo', value: 'foo' }),
+        buildResourceItem({ name: 'bar', value: 'bar' }),
+      ],
+      {
+        resources: {},
+      }
     );
+    expect(results).toEqual({
+      resources: {
+        string: [
+          { $: { name: 'foo' }, _: 'foo' },
+          { $: { name: 'bar' }, _: 'bar' },
+        ],
+      },
+    });
+  });
+
+  it('override existing item', () => {
+    const results = setStringItem(
+      [buildResourceItem({ name: 'foo', value: 'bar', translatable: false })],
+      {
+        resources: { string: [{ $: { name: 'foo' }, _: 'foo' }] },
+      }
+    );
+    expect(results).toEqual({
+      resources: { string: [{ $: { name: 'foo', translatable: 'false' }, _: 'bar' }] },
+    });
   });
 });

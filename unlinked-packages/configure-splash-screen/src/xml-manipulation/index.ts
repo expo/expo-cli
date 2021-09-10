@@ -1,9 +1,8 @@
-import deepEqual from 'deep-equal';
-import { Element, js2xml, xml2js, Attributes } from 'xml-js';
+import { Attributes, Element, js2xml, xml2js } from 'xml-js';
 
 import {
-  readFileWithFallback,
   createDirAndWriteFile,
+  readFileWithFallback,
   removeFileIfExists,
 } from '../utils/file-utils';
 
@@ -147,8 +146,7 @@ function mergeXmlElementsLists(
       .filter(({ deletionFlag }) => !deletionFlag)
       .map(({ idx, ...el }) => ({ idx, ...convertToElement(el) }))
   );
-  const sortedResult = sortWithExplicitIndex(result);
-  return sortedResult;
+  return sortWithExplicitIndex(result);
 }
 
 function convertToElement({
@@ -200,14 +198,13 @@ function convertExpectedAttributes(
   expectedAttributes?: ExpectedElementAttributes
 ): Attributes | undefined {
   if (expectedAttributes) {
-    const result = Object.entries(expectedAttributes).reduce(
+    return Object.entries(expectedAttributes).reduce(
       (acc, [key, value]) => ({
         ...acc,
         [key]: unboxExplicitNewValue(value),
       }),
       {}
     );
-    return result;
   }
   return undefined;
 }
@@ -228,6 +225,32 @@ function mergeAndConvertToElement(
     result.attributes = attributes;
   }
   return result;
+}
+
+function deepEqual(e1: any, e2: any) {
+  if ((!e1 && e2) || (e1 && !e2)) {
+    return false;
+  } else if (!e1 && !e2) {
+    return true;
+  }
+
+  if (Object.keys(e1).length !== Object.keys(e2).length) {
+    return false;
+  }
+
+  for (const [key, val1] of Object.entries(e1)) {
+    const val2 = e2[key];
+    const areObjects = isObject(val1) && isObject(val2);
+    if ((areObjects && !deepEqual(val1, val2)) || (!areObjects && val1 !== val2)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+function isObject(element: any) {
+  return element && typeof element === 'object';
 }
 
 /**

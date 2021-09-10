@@ -5,7 +5,10 @@ import path from 'path';
 
 import CommandError from '../../CommandError';
 import Log from '../../log';
-import { getOrPromptForBundleIdentifier, getOrPromptForPackage } from './ConfigValidation';
+import {
+  getOrPromptForBundleIdentifier,
+  getOrPromptForPackage,
+} from '../utils/getOrPromptApplicationId';
 
 /**
  * If an Expo config file does not exist, write a new one using the in-memory config.

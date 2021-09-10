@@ -1,14 +1,12 @@
-import * as AdMob from './AdMob';
 import * as Branch from './Branch';
 import * as BuildScheme from './BuildScheme';
 import * as BundleIdentifier from './BundleIdentifier';
-import * as CustomInfoPlistEntries from './CustomInfoPlistEntries';
 import * as DeviceFamily from './DeviceFamily';
 import * as Entitlements from './Entitlements';
 import * as Facebook from './Facebook';
 import * as Google from './Google';
-import * as Icons from './Icons';
 import { ExpoPlist, InfoPlist } from './IosConfig.types';
+import * as JsEngine from './JsEngine';
 import * as Locales from './Locales';
 import * as Maps from './Maps';
 import * as Name from './Name';
@@ -17,9 +15,10 @@ import * as Paths from './Paths';
 import * as Permissions from './Permissions';
 import * as ProvisioningProfile from './ProvisioningProfile';
 import * as RequiresFullScreen from './RequiresFullScreen';
+import * as RootViewBackgroundColor from './RootViewBackgroundColor';
 import * as Scheme from './Scheme';
-import * as SplashScreen from './SplashScreen';
-import * as SwiftBridgingHeader from './SwiftBridgingHeader';
+import * as Swift from './Swift';
+import * as Target from './Target';
 import * as Updates from './Updates';
 import * as UserInterfaceStyle from './UserInterfaceStyle';
 import * as UsesNonExemptEncryption from './UsesNonExemptEncryption';
@@ -31,29 +30,28 @@ import * as XcodeUtils from './utils/Xcodeproj';
 // https://devblogs.microsoft.com/typescript/announcing-typescript-3-8-beta/#export-star-as-namespace-syntax
 // .. but we should wait for this to be the default VSCode version.
 export {
-  AdMob,
   Branch,
   BuildScheme,
   BundleIdentifier,
-  CustomInfoPlistEntries,
   DeviceFamily,
   Entitlements,
   Facebook,
   Google,
   Maps,
-  Icons,
   Locales,
-  SplashScreen,
   InfoPlist,
   ExpoPlist,
+  JsEngine,
   Name,
   Orientation,
   Paths,
   ProvisioningProfile,
   Permissions,
   RequiresFullScreen,
+  RootViewBackgroundColor,
   Scheme,
-  SwiftBridgingHeader,
+  Swift,
+  Target,
   Updates,
   UserInterfaceStyle,
   UsesNonExemptEncryption,

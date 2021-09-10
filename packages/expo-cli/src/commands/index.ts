@@ -1,4 +1,4 @@
-import { Command } from 'commander';
+import type { Command } from 'commander';
 
 const COMMANDS = [
   require('./build'),
@@ -19,9 +19,7 @@ const COMMANDS = [
   require('./prebuild'),
   require('./prepare-detached-build'),
   require('./publish'),
-  require('./publish-info'),
-  require('./publish-modify'),
-  require('./push-creds'),
+  require('./push'),
   require('./register'),
   require('./run'),
   require('./send'),

@@ -1,21 +1,23 @@
-import { ModPlatform, WarningAggregator } from '@expo/config-plugins';
-import chalk from 'chalk';
+import { ModPlatform } from '@expo/config-plugins';
 import temporary from 'tempy';
 
+import { ExpoConfig } from '../../../../config/build';
 import Log from '../../log';
+import { logNewSection } from '../../utils/ora';
 import * as CreateApp from '../utils/CreateApp';
 import { usesOldExpoUpdatesAsync } from '../utils/ProjectUtils';
-import { logConfigWarningsAndroid, logConfigWarningsIOS } from '../utils/logConfigWarnings';
 import configureProjectAsync from './configureProjectAsync';
 import { createNativeProjectsFromTemplateAsync } from './createNativeProjectsFromTemplateAsync';
 import { ensureConfigAsync } from './ensureConfigAsync';
 import { installNodeDependenciesAsync } from './installNodeDependenciesAsync';
 import { assertPlatforms, ensureValidPlatforms } from './platformOptions';
+import { resolveTemplateOption } from './resolveTemplate';
 import { warnIfDependenciesRequireAdditionalSetup } from './setupWarnings';
 
 export type EjectAsyncOptions = {
   verbose?: boolean;
   force?: boolean;
+  template?: string;
   install?: boolean;
   packageManager?: 'npm' | 'yarn';
   platforms: ModPlatform[];
@@ -58,6 +60,7 @@ export async function prebuildAsync(
     projectRoot,
     exp,
     pkg,
+    template: options.template != null ? resolveTemplateOption(options.template) : undefined,
     tempDir,
     platforms,
     skipDependencyUpdate: options.skipDependencyUpdate,
@@ -81,24 +84,17 @@ export async function prebuildAsync(
   }
 
   // Apply Expo config to native projects
-  const configSyncingStep = CreateApp.logNewSection('Config syncing');
-  // Prevent the spinner from clashing with the debug traces
-  if (Log.isDebug) {
-    configSyncingStep.stop();
-  }
-  const managedConfig = await configureProjectAsync({
-    projectRoot,
-    platforms,
-  });
-  if (WarningAggregator.hasWarningsAndroid() || WarningAggregator.hasWarningsIOS()) {
-    configSyncingStep.stopAndPersist({
-      symbol: '⚠️ ',
-      text: chalk.yellow('Config synced with warnings that should be fixed:'),
+  const configSyncingStep = logNewSection('Config syncing');
+  let managedConfig: ExpoConfig;
+  try {
+    managedConfig = await configureProjectAsync({
+      projectRoot,
+      platforms,
     });
-    logConfigWarningsAndroid();
-    logConfigWarningsIOS();
-  } else {
     configSyncingStep.succeed('Config synced');
+  } catch (error) {
+    configSyncingStep.fail('Config sync failed');
+    throw error;
   }
 
   // Install CocoaPods

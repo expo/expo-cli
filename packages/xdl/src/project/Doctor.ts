@@ -88,17 +88,27 @@ async function _checkWatchmanVersionAsync(projectRoot: string) {
     return;
   }
 
-  if (semver.lt(watchmanVersion, MIN_WATCHMAN_VERSION)) {
-    let warningMessage = `Warning: You are using an old version of watchman (v${watchmanVersion}). This may cause problems for you.\n\nWe recommend that you either uninstall watchman (and XDE will try to use a copy it is bundled with) or upgrade watchman to a newer version, at least v${MIN_WATCHMAN_VERSION}.`;
+  // Watchman versioning through homebrew is changed from semver to date since "2021.05.31.00"
+  // see: https://github.com/Homebrew/homebrew-core/commit/d299c2867503cb6ad8d90792343993c80e745071
+  const validSemver =
+    !!semver.valid(watchmanVersion) && semver.gte(watchmanVersion, MIN_WATCHMAN_VERSION);
+
+  // This new format is used later than the MIN_WATCHMAN_VERSION, we assume/estimate if the version is correct here.
+  const validNewVersion =
+    !validSemver && /[0-9]{4}\.[0-9]{2}\.[0-9]{2}\.[0-9]{2}/.test(watchmanVersion);
+
+  if (!validSemver && !validNewVersion) {
+    let warningMessage = `Warning: You are using an old version of watchman (v${watchmanVersion}).\n\nIt is recommend to always use the latest version, or at least v${MIN_WATCHMAN_VERSION}.`;
 
     // Add a note about homebrew if the user is on a Mac
     if (process.platform === 'darwin') {
       warningMessage += `\n\nIf you are using homebrew, try:\nbrew uninstall watchman; brew install watchman`;
     }
     ProjectUtils.logWarning(projectRoot, 'expo', warningMessage, 'doctor-watchman-version');
-  } else {
-    ProjectUtils.clearNotification(projectRoot, 'doctor-watchman-version');
+    return;
   }
+
+  ProjectUtils.clearNotification(projectRoot, 'doctor-watchman-version');
 }
 
 async function validateWithSchema(
@@ -124,7 +134,7 @@ async function validateWithSchema(
       schemaErrorMessage = `Error: Problem${
         e.errors.length > 1 ? 's' : ''
       } validating fields in ${configName}. ${learnMore(
-        'https://docs.expo.io/workflow/configuration/'
+        'https://docs.expo.dev/workflow/configuration/'
       )}`;
       schemaErrorMessage += e.errors.map(formatValidationError).join('');
     }
@@ -137,7 +147,7 @@ async function validateWithSchema(
       if (e instanceof SchemerError) {
         assetsErrorMessage = `Error: Problem${
           e.errors.length > 1 ? '' : 's'
-        } validating asset fields in ${configName}. ${learnMore('https://docs.expo.io/')}`;
+        } validating asset fields in ${configName}. ${learnMore('https://docs.expo.dev/')}`;
         assetsErrorMessage += e.errors.map(formatValidationError).join('');
       }
     }
@@ -330,7 +340,7 @@ async function _validateReactNativeVersionAsync(
     ProjectUtils.logWarning(
       projectRoot,
       'expo',
-      `Warning: Not using the Expo fork of react-native. ${learnMore('https://docs.expo.io/')}`,
+      `Warning: Not using the Expo fork of react-native. ${learnMore('https://docs.expo.dev/')}`,
       'doctor-not-using-expo-fork'
     );
     return WARNING;

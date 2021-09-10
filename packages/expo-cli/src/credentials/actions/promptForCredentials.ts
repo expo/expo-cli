@@ -17,6 +17,7 @@ type Results = {
   [key: string]: string | undefined;
 };
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export type CredentialSchema<T> = {
   id: string;
   canReuse?: boolean;

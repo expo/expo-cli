@@ -7,7 +7,7 @@ import * as path from 'path';
 import semver from 'semver';
 
 import Log from '../../log';
-import { ora } from '../../utils/ora';
+import { logNewSection } from '../../utils/ora';
 import { hasPackageJsonDependencyListChangedAsync } from '../run/ios/Podfile';
 
 export function validateName(name?: string): string | true {
@@ -144,14 +144,6 @@ export async function installNodeDependenciesAsync(
   }
 }
 
-export function logNewSection(title: string) {
-  const spinner = ora(Log.chalk.bold(title));
-  // respect loading indicators
-  Log.setSpinner(spinner);
-  spinner.start();
-  return spinner;
-}
-
 export function getChangeDirectoryPath(projectRoot: string): string {
   const cdPath = path.relative(process.cwd(), projectRoot);
   if (cdPath.length <= projectRoot.length) {
@@ -169,7 +161,6 @@ export async function installCocoaPodsAsync(projectRoot: string) {
 
   const packageManager = new PackageManager.CocoaPodsPackageManager({
     cwd: path.join(projectRoot, 'ios'),
-    log: Log.log,
     silent: !EXPO_DEBUG,
   });
 
@@ -177,19 +168,21 @@ export async function installCocoaPodsAsync(projectRoot: string) {
     try {
       // prompt user -- do you want to install cocoapods right now?
       step.text = 'CocoaPods CLI not found in your PATH, installing it now.';
-      step.render();
+      step.stopAndPersist();
       await PackageManager.CocoaPodsPackageManager.installCLIAsync({
         nonInteractive: true,
-        spawnOptions: packageManager.options,
+        spawnOptions: {
+          ...packageManager.options,
+          // Don't silence this part
+          stdio: ['inherit', 'inherit', 'pipe'],
+        },
       });
       step.succeed('Installed CocoaPods CLI.');
       step = logNewSection('Running `pod install` in the `ios` directory.');
     } catch (e) {
       step.stopAndPersist({
         symbol: '⚠️ ',
-        text: Log.chalk.red(
-          'Unable to install the CocoaPods CLI. Continuing with project sync, you can install CocoaPods CLI afterwards.'
-        ),
+        text: Log.chalk.red('Unable to install the CocoaPods CLI.'),
       });
       if (e instanceof PackageManager.CocoaPodsError) {
         Log.log(e.message);
@@ -201,7 +194,7 @@ export async function installCocoaPodsAsync(projectRoot: string) {
   }
 
   try {
-    await packageManager.installAsync();
+    await packageManager.installAsync({ spinner: step });
     // Create cached list for later
     await hasPackageJsonDependencyListChangedAsync(projectRoot).catch(() => null);
     step.succeed('Installed pods and initialized Xcode workspace.');
@@ -209,9 +202,7 @@ export async function installCocoaPodsAsync(projectRoot: string) {
   } catch (e) {
     step.stopAndPersist({
       symbol: '⚠️ ',
-      text: Log.chalk.red(
-        'Something went wrong running `pod install` in the `ios` directory. Continuing with project sync, you can debug this afterwards.'
-      ),
+      text: Log.chalk.red('Something went wrong running `pod install` in the `ios` directory.'),
     });
     if (e instanceof PackageManager.CocoaPodsError) {
       Log.log(e.message);

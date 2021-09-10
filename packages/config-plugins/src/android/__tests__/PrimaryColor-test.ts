@@ -1,50 +1,90 @@
-import { vol } from 'memfs';
+import { compileMockModWithResultsAsync } from '../../plugins/__tests__/mockMods';
+import { withAndroidColors, withAndroidStyles } from '../../plugins/android-plugins';
+import { parseXMLAsync } from '../../utils/XML';
+import { getColorsAsObject, getObjectAsColorsXml } from '../Colors';
+import { getPrimaryColor, withPrimaryColorColors, withPrimaryColorStyles } from '../PrimaryColor';
+import { getAppThemeLightNoActionBarGroup, getStylesGroupAsObject } from '../Styles';
 
-import { getPrimaryColor, setPrimaryColor } from '../PrimaryColor';
-import { readResourcesXMLAsync } from '../Resources';
-import { sampleStylesXML } from './StatusBar-test';
+jest.mock('../../plugins/android-plugins');
 
-jest.mock('fs');
+it(`returns default if no primary color is provided`, () => {
+  expect(getPrimaryColor({})).toBe('#023c69');
+});
 
-describe('Android primary color', () => {
-  it(`returns default if no primary color is provided`, () => {
-    expect(getPrimaryColor({})).toBe('#023c69');
+it(`returns primary color if provided`, () => {
+  expect(getPrimaryColor({ primaryColor: '#111111' })).toMatch('#111111');
+});
+
+it(`returns empty string`, () => {
+  expect(getPrimaryColor({ primaryColor: '' })).toMatch('');
+});
+
+describe(withPrimaryColorColors, () => {
+  it(`applies a custom color`, async () => {
+    const { modResults } = await compileMockModWithResultsAsync(
+      { primaryColor: '#FF00FF' },
+      {
+        plugin: withPrimaryColorColors,
+        mod: withAndroidColors,
+        modResults: { resources: {} },
+      }
+    );
+    expect(getColorsAsObject(modResults)).toStrictEqual({ colorPrimary: '#FF00FF' });
+  });
+  it(`removes color with empty string`, async () => {
+    const { modResults } = await compileMockModWithResultsAsync(
+      { primaryColor: '' },
+      {
+        plugin: withPrimaryColorColors,
+        mod: withAndroidColors,
+        // Create a colors.xml JSON from a k/v pair
+        modResults: getObjectAsColorsXml({ colorPrimary: '#FFF000' }),
+      }
+    );
+    expect(getColorsAsObject(modResults)).toStrictEqual({});
+  });
+});
+
+describe(withPrimaryColorStyles, () => {
+  it(`links a style to the custom color`, async () => {
+    const { modResults } = await compileMockModWithResultsAsync(
+      { primaryColor: '#FF00FF' },
+      {
+        plugin: withPrimaryColorStyles,
+        mod: withAndroidStyles,
+        // Empty styles object
+        modResults: { resources: {} },
+      }
+    );
+    expect(getStylesGroupAsObject(modResults, getAppThemeLightNoActionBarGroup())).toStrictEqual({
+      colorPrimary: '@color/colorPrimary',
+    });
   });
 
-  it(`returns primary color if provided`, () => {
-    expect(getPrimaryColor({ primaryColor: '#111111' })).toMatch('#111111');
-  });
+  it(`removes styles with empty string`, async () => {
+    // Parsed from a string for DX readability
+    const styles = [
+      '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>',
+      '<resources>',
+      '  <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">',
+      '    <item name="colorPrimary">@color/colorPrimary</item>',
+      '  </style>',
+      '</resources>',
+    ].join('\n');
 
-  describe('E2E: write primary color to colors.xml and styles.xml correctly', () => {
-    beforeAll(async () => {
-      const directoryJSON = {
-        './android/app/src/main/res/values/styles.xml': sampleStylesXML,
-      };
-      vol.fromJSON(directoryJSON, '/app');
-    });
-
-    afterAll(async () => {
-      vol.reset();
-    });
-
-    it(`sets the colorPrimary item in Styles.xml if backgroundColor is given`, async () => {
-      expect(await setPrimaryColor({ primaryColor: '#654321' }, '/app')).toBe(true);
-
-      const stylesJSON = await readResourcesXMLAsync({
-        path: '/app/android/app/src/main/res/values/styles.xml',
-      });
-      const colorsJSON = await readResourcesXMLAsync({
-        path: '/app/android/app/src/main/res/values/colors.xml',
-      });
-
-      expect(
-        stylesJSON.resources.style
-          .filter(e => e.$.name === 'AppTheme')[0]
-          .item.filter(item => item.$.name === 'colorPrimary')[0]._
-      ).toMatch('@color/colorPrimary');
-      expect(colorsJSON.resources.color.filter(e => e.$.name === 'colorPrimary')[0]._).toMatch(
-        '#654321'
-      );
-    });
+    const { modResults } = await compileMockModWithResultsAsync(
+      // Empty string in Expo config should disable the style
+      { primaryColor: '' },
+      {
+        plugin: withPrimaryColorStyles,
+        mod: withAndroidStyles,
+        modResults: (await parseXMLAsync(styles)) as any,
+      }
+    );
+    // Extract the styles group items given the group
+    expect(getStylesGroupAsObject(modResults, getAppThemeLightNoActionBarGroup())).toStrictEqual(
+      // Should be an empty k/v pair
+      {}
+    );
   });
 });

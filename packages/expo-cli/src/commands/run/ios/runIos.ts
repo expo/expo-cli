@@ -1,11 +1,17 @@
+import { ExpoConfig, getConfig } from '@expo/config';
 import chalk from 'chalk';
 import fs from 'fs-extra';
 import * as path from 'path';
-import { SimControl, Simulator } from 'xdl';
+import { SimControl, Simulator, UnifiedAnalytics } from 'xdl';
 
 import CommandError from '../../../CommandError';
+import StatusEventEmitter from '../../../StatusEventEmitter';
+import getDevClientProperties from '../../../analytics/getDevClientProperties';
 import Log from '../../../log';
+import { getSchemesForIosAsync } from '../../../schemes';
+import { promptToClearMalformedNativeProjectsAsync } from '../../eject/clearNativeFolder';
 import { EjectAsyncOptions, prebuildAsync } from '../../eject/prebuildAsync';
+import { installCustomExitHook } from '../../start/installExitHooks';
 import { profileMethod } from '../../utils/profileMethod';
 import { parseBinaryPlistAsync } from '../utils/binaryPlist';
 import * as IOSDeploy from './IOSDeploy';
@@ -16,7 +22,14 @@ import { startBundlerAsync } from './startBundlerAsync';
 
 const isMac = process.platform === 'darwin';
 
-export async function runIosActionAsync(projectRoot: string, options: Options) {
+export async function actionAsync(projectRoot: string, options: Options) {
+  // If the user has an empty ios folder then the project won't build, this can happen when they delete the prebuild files in git.
+  // Check to ensure most of the core files are in place, and prompt to remove the folder if they aren't.
+  await profileMethod(promptToClearMalformedNativeProjectsAsync)(projectRoot, ['ios']);
+
+  const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
+  track(projectRoot, exp);
+
   if (!isMac) {
     // TODO: Prompt to use EAS?
 
@@ -51,7 +64,9 @@ export async function runIosActionAsync(projectRoot: string, options: Options) {
   )(buildOutput);
 
   if (props.shouldStartBundler) {
-    await startBundlerAsync(projectRoot);
+    await startBundlerAsync(projectRoot, {
+      metroPort: props.port,
+    });
   }
   const bundleIdentifier = await profileMethod(getBundleIdentifierForBinaryAsync)(binaryPath);
 
@@ -60,6 +75,7 @@ export async function runIosActionAsync(projectRoot: string, options: Options) {
     await SimControl.installAsync({ udid: props.device.udid, dir: binaryPath });
 
     await openInSimulatorAsync({
+      projectRoot,
       bundleIdentifier,
       device: props.device,
       shouldStartBundler: props.shouldStartBundler,
@@ -74,12 +90,40 @@ export async function runIosActionAsync(projectRoot: string, options: Options) {
   }
 
   if (props.shouldStartBundler) {
-    Log.nested(
-      `\nLogs for your project will appear in the browser console. ${chalk.dim(
-        `Press Ctrl+C to exit.`
-      )}`
-    );
+    Log.nested(`\nLogs for your project will appear below. ${chalk.dim(`Press Ctrl+C to exit.`)}`);
   }
+}
+
+function track(projectRoot: string, exp: ExpoConfig) {
+  UnifiedAnalytics.logEvent('dev client run command', {
+    status: 'started',
+    platform: 'ios',
+    ...getDevClientProperties(projectRoot, exp),
+  });
+  StatusEventEmitter.once('bundleBuildFinish', () => {
+    // Send the 'bundle ready' event once the JS has been built.
+    UnifiedAnalytics.logEvent('dev client run command', {
+      status: 'bundle ready',
+      platform: 'ios',
+      ...getDevClientProperties(projectRoot, exp),
+    });
+  });
+  StatusEventEmitter.once('deviceLogReceive', () => {
+    // Send the 'ready' event once the app is running in a device.
+    UnifiedAnalytics.logEvent('dev client run command', {
+      status: 'ready',
+      platform: 'ios',
+      ...getDevClientProperties(projectRoot, exp),
+    });
+  });
+  installCustomExitHook(() => {
+    UnifiedAnalytics.logEvent('dev client run command', {
+      status: 'finished',
+      platform: 'ios',
+      ...getDevClientProperties(projectRoot, exp),
+    });
+    UnifiedAnalytics.flush();
+  });
 }
 
 async function getBundleIdentifierForBinaryAsync(binaryPath: string): Promise<string> {
@@ -89,15 +133,16 @@ async function getBundleIdentifierForBinaryAsync(binaryPath: string): Promise<st
 }
 
 async function openInSimulatorAsync({
+  projectRoot,
   bundleIdentifier,
   device,
   shouldStartBundler,
 }: {
+  projectRoot: string;
   bundleIdentifier: string;
   device: XcodeBuild.BuildProps['device'];
   shouldStartBundler?: boolean;
 }) {
-  let pid: string | null = null;
   XcodeBuild.logPrettyItem(
     `${chalk.bold`Opening`} on ${device.name} ${chalk.dim(`(${bundleIdentifier})`)}`
   );
@@ -109,22 +154,17 @@ async function openInSimulatorAsync({
     });
   }
 
-  const result = await SimControl.openBundleIdAsync({
+  const schemes = await getSchemesForIosAsync(projectRoot);
+  const result = await Simulator.openProjectAsync({
+    projectRoot,
     udid: device.udid,
-    bundleIdentifier,
+    devClient: true,
+    scheme: schemes[0],
+    applicationId: bundleIdentifier,
+    // We always setup native logs before launching to ensure we catch any fatal errors.
+    skipNativeLogs: true,
   });
-
-  if (result.status === 0) {
-    if (result.stdout) {
-      const pidRegExp = new RegExp(`${bundleIdentifier}:\\s?(\\d+)`);
-      const pidMatch = result.stdout.match(pidRegExp);
-      pid = pidMatch?.[1] ?? null;
-    }
-    await Simulator.activateSimulatorWindowAsync();
-  } else {
-    throw new CommandError(
-      `Failed to launch the app on simulator ${device.name} (${device.udid}). Error in "osascript" command: ${result.stderr}`
-    );
+  if (!result.success) {
+    throw new CommandError(result.error);
   }
-  return { pid };
 }

@@ -134,7 +134,7 @@ export async function startReactNativeServerAsync({
   await Watchman.addToPathAsync(); // Attempt to fix watchman if it's hanging
   await Watchman.unblockAndGetVersionAsync(projectRoot);
 
-  let packagerPort = await getFreePortAsync(19001); // Create packager options
+  let packagerPort = await getFreePortAsync(options.metroPort || 19001); // Create packager options
 
   const customLogReporterPath: string = require.resolve(
     path.join(__dirname, '../../build/reporter')
@@ -153,11 +153,14 @@ export async function startReactNativeServerAsync({
     sourceExts,
   };
 
-  if (options.nonPersistent && Versions.lteSdkVersion(exp, '32.0.0')) {
+  if (options.nonPersistent && !Versions.gteSdkVersion(exp, '33.0.0')) {
+    // Expo SDK -32 | React Native -57
     packagerOpts.nonPersistent = true;
   }
 
-  if (Versions.gteSdkVersion(exp, '33.0.0')) {
+  if (!Versions.lteSdkVersion(exp, '32.0.0')) {
+    // Expo SDK +33 | React Native +59.8 (hooks): Add asset plugins
+
     // starting with SDK 37, we bundle this plugin with the expo-asset package instead of expo,
     // so check there first and fall back to expo if we can't find it in expo-asset
     packagerOpts.assetPlugins = resolveFrom.silent(projectRoot, 'expo-asset/tools/hashAssetFiles');
@@ -175,7 +178,8 @@ export async function startReactNativeServerAsync({
     packagerOpts['max-workers'] = options.maxWorkers;
   }
 
-  if (!Versions.gteSdkVersion(exp, '16.0.0')) {
+  if (Versions.lteSdkVersion(exp, '15.0.0')) {
+    // Expo SDK -15 | React Native -42: customLogReporterPath is not supported
     delete packagerOpts.customLogReporterPath;
   }
   const userPackagerOpts = exp.packagerOpts;

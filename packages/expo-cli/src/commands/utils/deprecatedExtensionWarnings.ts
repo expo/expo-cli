@@ -1,28 +1,32 @@
 import chalk from 'chalk';
 import program from 'commander';
 import findWorkspaceRoot from 'find-yarn-workspace-root';
-import glob from 'glob';
 
 import { SilentError } from '../../CommandError';
 import Log from '../../log';
 import { confirmAsync } from '../../prompts';
 import { ora } from '../../utils/ora';
+import { everyMatchAsync, wrapGlobWithTimeout } from './glob';
 
-function queryExpoExtensionFilesAsync(projectRoot: string, ignore: string[]): Promise<string[]> {
-  return new Promise((resolve, reject) => {
-    glob(
-      '**/*.expo.@(js|jsx|ts|tsx)',
-      {
+async function queryExpoExtensionFilesAsync(
+  projectRoot: string,
+  ignore: string[]
+): Promise<string[]> {
+  const results = await wrapGlobWithTimeout(
+    () =>
+      everyMatchAsync('**/*.expo.@(js|jsx|ts|tsx)', {
         absolute: true,
         ignore,
         cwd: projectRoot,
-      },
-      (error, matches) => {
-        if (error) reject(error);
-        else resolve(matches);
-      }
-    );
-  });
+      }),
+    5000
+  );
+
+  if (results === false) {
+    Log.warn('Failed to query all project files. Skipping `.expo.*` extension check...');
+    return [];
+  }
+  return results;
 }
 
 export async function assertProjectHasExpoExtensionFilesAsync(
@@ -33,10 +37,12 @@ export async function assertProjectHasExpoExtensionFilesAsync(
     await assertModulesHasExpoExtensionFilesAsync(projectRoot);
   } else {
     Log.time('assertProjectHasExpoExtensionFilesAsync');
+
     const matches = await queryExpoExtensionFilesAsync(projectRoot, [
       `**/@(Carthage|Pods|node_modules|ts-declarations|.expo)/**`,
       '@(ios|android|web)/**',
     ]).catch(() => [] as string[]);
+
     Log.timeEnd('assertProjectHasExpoExtensionFilesAsync');
     if (matches.length) {
       await promptMatchesAsync(matches);

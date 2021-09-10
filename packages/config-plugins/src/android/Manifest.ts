@@ -32,7 +32,7 @@ type ManifestData = {
   };
 };
 
-type ManifestReciever = {
+type ManifestReceiver = {
   $: AndroidManifestAttributes & {
     'android:exported'?: StringBoolean;
     'android:enabled'?: StringBoolean;
@@ -78,6 +78,17 @@ export type ManifestActivity = {
     'android:exported'?: StringBoolean;
     'android:launchMode'?: string;
     'android:theme'?: string;
+    'android:windowSoftInputMode'?:
+      | string
+      | 'stateUnspecified'
+      | 'stateUnchanged'
+      | 'stateHidden'
+      | 'stateAlwaysHidden'
+      | 'stateVisible'
+      | 'stateAlwaysVisible'
+      | 'adjustUnspecified'
+      | 'adjustResize'
+      | 'adjustPan';
     [key: string]: string | undefined;
   };
   'intent-filter'?: ManifestIntentFilter[];
@@ -94,7 +105,7 @@ export type ManifestApplication = {
   $: ManifestApplicationAttributes;
   activity?: ManifestActivity[];
   service?: ManifestService[];
-  receiver?: ManifestReciever[];
+  receiver?: ManifestReceiver[];
   'meta-data'?: ManifestMetaData[];
   'uses-library'?: ManifestUsesLibrary[];
   // ...
@@ -169,6 +180,37 @@ export function getMainActivityOrThrow(androidManifest: AndroidManifest): Manife
   const mainActivity = getMainActivity(androidManifest);
   assert(mainActivity, 'AndroidManifest.xml is missing the required MainActivity element');
   return mainActivity;
+}
+
+export function getRunnableActivity(androidManifest: AndroidManifest): ManifestActivity | null {
+  // Get enabled activities
+  const enabledActivities = androidManifest?.manifest?.application?.[0]?.activity?.filter?.(
+    (e: any) => e.$['android:enabled'] !== 'false' && e.$['android:enabled'] !== false
+  );
+
+  if (!enabledActivities) {
+    return null;
+  }
+
+  // Get the activity that has a runnable intent-filter
+  for (const activity of enabledActivities) {
+    if (Array.isArray(activity['intent-filter'])) {
+      for (const intentFilter of activity['intent-filter']) {
+        if (
+          intentFilter.action?.find(
+            action => action.$['android:name'] === 'android.intent.action.MAIN'
+          ) &&
+          intentFilter.category?.find(
+            category => category.$['android:name'] === 'android.intent.category.LAUNCHER'
+          )
+        ) {
+          return activity;
+        }
+      }
+    }
+  }
+
+  return null;
 }
 
 export function getMainActivity(androidManifest: AndroidManifest): ManifestActivity | null {

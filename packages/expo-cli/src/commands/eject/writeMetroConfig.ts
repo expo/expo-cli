@@ -5,7 +5,7 @@ import path from 'path';
 
 import CommandError from '../../CommandError';
 import Log from '../../log';
-import * as CreateApp from '../utils/CreateApp';
+import { logNewSection } from '../../utils/ora';
 import { learnMore } from '../utils/TerminalLink';
 import { createFileHash } from './updatePackageJson';
 
@@ -23,7 +23,7 @@ export function writeMetroConfig({
    * hashAssetFiles plugin manually.
    */
 
-  const updatingMetroConfigStep = CreateApp.logNewSection('Adding Metro bundler config');
+  const updatingMetroConfigStep = logNewSection('Adding Metro bundler config');
 
   try {
     const sourceConfigPath = path.join(tempDir, 'metro.config.js');
@@ -50,7 +50,7 @@ export function writeMetroConfig({
     }
 
     fs.copySync(sourceConfigPath, targetConfigPath);
-    updatingMetroConfigStep.succeed('Added Metro config.');
+    updatingMetroConfigStep.succeed('Added Metro config');
   } catch (e) {
     updatingMetroConfigStep.stopAndPersist({
       symbol: '⚠️ ',
@@ -61,7 +61,7 @@ export function writeMetroConfig({
       `\u203A You will need to extend the default ${chalk.bold(
         '@expo/metro-config'
       )} in your Metro config.\n  ${Log.chalk.dim(
-        learnMore('https://docs.expo.io/guides/customizing-metro')
+        learnMore('https://docs.expo.dev/guides/customizing-metro')
       )}`
     );
     Log.newLine();

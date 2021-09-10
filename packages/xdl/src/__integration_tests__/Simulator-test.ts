@@ -1,3 +1,4 @@
+import { killAllAsync } from '../apple/utils/ensureSimulatorAppRunningAsync';
 import { delayAsync, SimControl, Simulator } from '../internal';
 
 describe.skip('simulator', () => {
@@ -12,7 +13,7 @@ describe.skip('simulator', () => {
 
     // Quit the simulator to start the test
     if (await Simulator.isSimulatorBootedAsync()) {
-      await SimControl.killAllAsync();
+      await killAllAsync();
       await Simulator.closeSimulatorAppAsync();
     }
 

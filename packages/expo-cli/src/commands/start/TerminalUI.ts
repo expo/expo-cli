@@ -75,8 +75,8 @@ const printUsageAsync = async (
     ['w', `open web`],
     [],
     !!options.isRemoteReloadingEnabled && ['r', `reload app`],
-    !!options.isWebSocketsEnabled && ['m', `toggle menu in Expo Go`],
-    !!options.isWebSocketsEnabled && !options.devClient && ['shift+m', `more Expo Go tools`],
+    !!options.isWebSocketsEnabled && ['m', `toggle menu`],
+    !!options.isWebSocketsEnabled && ['shift+m', `more tools`],
     ['o', `open project code in your editor`],
     ['c', `show project QR`],
     ['p', `toggle build mode`, devMode],
@@ -104,7 +104,7 @@ const printBasicUsageAsync = async (
     ['w', `open web`],
     [],
     !!options.isRemoteReloadingEnabled && ['r', `reload app`],
-    !!options.isWebSocketsEnabled && ['m', `toggle menu in Expo Go`],
+    !!options.isWebSocketsEnabled && ['m', `toggle menu`],
     ['d', `show developer tools`],
     ['shift+d', `toggle auto opening developer tools on startup`, currentToggle],
     [],
@@ -118,11 +118,10 @@ function logCommandsTable(ui: (false | string[])[]) {
       // @ts-ignore: filter doesn't work
       .map(([key, message, status]) => {
         if (!key) return '';
-        let view = ` ${BLT} `;
+        let view = `${BLT} `;
         if (key.length === 1) view += 'Press ';
         view += `${b(key)} ${div} `;
         view += message;
-        // let view = ` ${BLT} Press ${b(key)} ${div} ${message}`;
         if (status) {
           view += ` ${chalk.dim(`(${i(status)})`)}`;
         }
@@ -136,24 +135,40 @@ const printServerInfo = async (
   projectRoot: string,
   options: Pick<StartOptions, 'webOnly' | 'isWebSocketsEnabled' | 'isRemoteReloadingEnabled'> = {}
 ) => {
-  if (options.webOnly) {
-    Webpack.printConnectionInstructions(projectRoot);
-    printHelp();
-    return;
-  }
-  Log.newLine();
   const wrapLength = process.stdout.columns || 80;
-  const item = (text: string): string => ` ${BLT} ` + wrapAnsi(text, wrapLength).trimStart();
-  const url = await UrlUtils.constructDeepLinkAsync(projectRoot);
+  const item = (text: string): string => `${BLT} ` + wrapAnsi(text, wrapLength).trimStart();
 
-  urlOpts.printQRCode(url);
-  Log.nested(item(`Waiting on ${u(url)}`));
-  // Log.newLine();
-  // TODO: if dev client, change this message!
-  Log.nested(item(`Scan the QR code above with Expo Go (Android) or the Camera app (iOS)`));
+  if (!options.webOnly) {
+    try {
+      const url = await UrlUtils.constructDeepLinkAsync(projectRoot);
+
+      urlOpts.printQRCode(url);
+      Log.nested(item(`Metro waiting on ${u(url)}`));
+      // Log.newLine();
+      // TODO: if dev client, change this message!
+      Log.nested(item(`Scan the QR code above with Expo Go (Android) or the Camera app (iOS)`));
+    } catch (error) {
+      // If there is no dev client scheme, then skip the QR code.
+      if (error.code !== 'NO_DEV_CLIENT_SCHEME') {
+        throw error;
+      } else {
+        const serverUrl = await UrlUtils.constructManifestUrlAsync(projectRoot, {
+          urlType: 'http',
+        });
+        Log.nested(item(`Metro waiting on ${u(serverUrl)}`));
+        Log.nested(item(`Linking is disabled because the client scheme cannot be resolved.`));
+      }
+    }
+  }
+
+  const webUrl = await Webpack.getUrlAsync(projectRoot);
+  if (webUrl) {
+    Log.addNewLineIfNone();
+    Log.nested(item(`Webpack waiting on ${u(webUrl)}`));
+    Log.nested(chalk.gray(item(`Expo Webpack (web) is in beta, and subject to breaking changes!`)));
+  }
 
   await printBasicUsageAsync(options);
-  Webpack.printConnectionInstructions(projectRoot);
   printHelp();
   Log.addNewLineIfNone();
 };
@@ -214,86 +229,61 @@ export async function startAsync(projectRoot: string, options: StartOptions) {
   await printServerInfo(projectRoot, options);
 
   async function handleKeypress(key: string) {
-    if (options.webOnly) {
-      switch (key) {
-        case 'A':
-        case 'a':
-          if (key === 'A') {
-            Log.clear();
-          }
+    const shouldPrompt = !options.nonInteractive && ['I', 'A'].includes(key);
+    if (shouldPrompt) {
+      Log.clear();
+    }
+    switch (key) {
+      case 'A':
+      case 'a':
+        if (options.webOnly && !Webpack.isTargetingNative()) {
           Log.log(`${BLT} Opening the web project in Chrome on Android...`);
-          await Android.openWebProjectAsync({
+          const results = await Android.openWebProjectAsync({
             projectRoot,
-            shouldPrompt: !options.nonInteractive && key === 'A',
+            shouldPrompt,
           });
-          printHelp();
-          break;
-        case 'i':
-        case 'I':
-          if (key === 'I') {
-            Log.clear();
+          if (!results.success) {
+            Log.nestedError(results.error);
           }
-          Log.log(`${BLT} Opening the web project in Safari on iOS...`);
-          await Simulator.openWebProjectAsync({
-            projectRoot,
-            shouldPrompt: !options.nonInteractive && key === 'I',
-            // note(brentvatne): temporarily remove logic for picking the
-            // simulator until we have parity for Android. this also ensures that we
-            // don't interfere with the default user flow until more users have tested
-            // this out.
-            //
-            // If no simulator is booted, then prompt which simulator to use.
-            // (key === 'I' || !(await Simulator.isSimulatorBootedAsync())),
-          });
-          printHelp();
-          break;
-      }
-    } else {
-      switch (key) {
-        case 'A':
-          Log.clear();
-          await Android.openProjectAsync({
-            projectRoot,
-            shouldPrompt: true,
-            devClient: options.devClient ?? false,
-          });
-          printHelp();
-          break;
-        case 'a': {
+        } else {
           Log.log(`${BLT} Opening on Android...`);
-          await Android.openProjectAsync({ projectRoot, devClient: options.devClient ?? false });
-          printHelp();
-          break;
-        }
-        case 'I':
-          Log.clear();
-          await Simulator.openProjectAsync({
+          const results = await Android.openProjectAsync({
             projectRoot,
-            shouldPrompt: true,
+            shouldPrompt,
             devClient: options.devClient ?? false,
           });
-          printHelp();
-          break;
-        case 'i': {
-          // note(brentvatne): temporarily remove logic for picking the
-          // simulator until we have parity for Android. this also ensures that we
-          // don't interfere with the default user flow until more users have tested
-          // this out.
-          //
-          // If no simulator is booted, then prompt for which simulator to use.
-          // const shouldPrompt =
-          //   !options.nonInteractive && (key === 'I' || !(await Simulator.isSimulatorBootedAsync()));
-
+          if (!results.success && results.error !== 'escaped') {
+            Log.nestedError(
+              typeof results.error === 'string' ? results.error : results.error.message
+            );
+          }
+        }
+        printHelp();
+        break;
+      case 'I':
+      case 'i':
+        if (options.webOnly && !Webpack.isTargetingNative()) {
+          Log.log(`${BLT} Opening the web project in Safari on iOS...`);
+          const results = await Simulator.openWebProjectAsync({
+            projectRoot,
+            shouldPrompt,
+          });
+          if (!results.success) {
+            Log.nestedError(results.error);
+          }
+        } else {
           Log.log(`${BLT} Opening on iOS...`);
-          await Simulator.openProjectAsync({
+          const results = await Simulator.openProjectAsync({
             projectRoot,
-            shouldPrompt: false,
+            shouldPrompt,
             devClient: options.devClient ?? false,
           });
-          printHelp();
-          break;
+          if (!results.success && results.error !== 'escaped') {
+            Log.nestedError(results.error);
+          }
         }
-      }
+        printHelp();
+        break;
     }
 
     switch (key) {
@@ -316,9 +306,18 @@ export async function startAsync(projectRoot: string, options: StartOptions) {
         break;
       }
       case 'w': {
+        // Ensure the Webpack dev server is running first
+        const isStarted = await Webpack.getUrlAsync(projectRoot);
+
+        if (!isStarted) {
+          await Project.startAsync(projectRoot, { webOnly: true });
+          // When this is the first time webpack is started, reprint the connection info.
+          await printServerInfo(projectRoot, options);
+        }
+
         Log.log(`${BLT} Open in the web browser...`);
         await Webpack.openAsync(projectRoot);
-        await printServerInfo(projectRoot, options);
+        printHelp();
         break;
       }
       case 'c': {
@@ -342,24 +341,19 @@ export async function startAsync(projectRoot: string, options: StartOptions) {
       }
       case 'm': {
         if (options.isWebSocketsEnabled) {
-          Log.log(`${BLT} Toggling dev menu in Expo Go`);
+          Log.log(`${BLT} Toggling dev menu`);
           Project.broadcastMessage('devMenu');
+          Webpack.broadcastMessage('devMenu');
         }
         break;
       }
       case 'M': {
         if (options.isWebSocketsEnabled) {
-          // "More tools" is disabled in dev client for now because standard RN projects don't have hooks for it.
-          // In the future if the dev client package supports `sendDevCommand` then we can enable it.
-          if (options.devClient) {
-            return;
-          }
-
           Prompts.pauseInteractions();
           try {
             const value = await selectAsync({
               // Options match: Chrome > View > Developer
-              message: `Expo Go tools ${chalk.dim`(native only)`}`,
+              message: `Dev tools ${chalk.dim`(native only)`}`,
               choices: [
                 { title: 'Inspect elements', value: 'toggleElementInspector' },
                 { title: 'Toggle performance monitor', value: 'togglePerformanceMonitor' },
@@ -371,6 +365,7 @@ export async function startAsync(projectRoot: string, options: StartOptions) {
               ],
             });
             Project.broadcastMessage('sendDevCommand', { name: value });
+            Webpack.broadcastMessage('sendDevCommand', { name: value });
           } catch {
             // do nothing
           } finally {
@@ -397,10 +392,10 @@ Please reload the project in Expo Go for the change to take effect.`
       case 'r':
         if (options.isRemoteReloadingEnabled) {
           Log.log(`${BLT} Reloading apps`);
-          // Send reload requests over the metro dev server
+          // Send reload requests over the dev servers
           Project.broadcastMessage('reload');
-          // Send reload requests over the webpack dev server
-          Webpack.broadcastMessage('content-changed');
+
+          Webpack.broadcastMessage('reload');
         } else if (!options.webOnly) {
           // [SDK 40]: Restart bundler
           Log.clear();

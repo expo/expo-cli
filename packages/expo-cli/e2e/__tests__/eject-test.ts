@@ -4,7 +4,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import temporary from 'tempy';
 
-import { actionAsync } from '../../src/commands/eject';
+import { actionAsync } from '../../src/commands/ejectAsync';
 import {
   createMinimalProjectAsync,
   EXPO_CLI,
@@ -52,10 +52,8 @@ function executeDefaultAsync(cwd: string, args: string[]) {
 it(`can eject a minimal project`, async () => {
   const projectName = 'default-eject-minimal-world';
   const projectRoot = await createMinimalProjectAsync(tempDir, projectName, {
-    expo: {
-      name: 'h"&<world/>🚀',
-    },
-  } as any);
+    name: 'h"&<world/>🚀',
+  });
 
   // Run a standard eject command
   const res = executeDefaultAsync(projectRoot, ['eject']);

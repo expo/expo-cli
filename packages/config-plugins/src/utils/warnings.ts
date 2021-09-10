@@ -1,46 +1,48 @@
+import chalk from 'chalk';
+
 import { ModPlatform } from '../Plugin.types';
 
-type WarningArray = [string, string, string | undefined];
-let _warningsIOS: WarningArray[] = [];
-let _warningsAndroid: WarningArray[] = [];
-
-export function hasWarningsIOS() {
-  return !!_warningsIOS.length;
+/**
+ * Log a warning that doesn't disrupt the spinners.
+ *
+ * ```sh
+ * » android: android.package: property is invalid https://expo.fyi/android-package
+ * ```
+ *
+ * @param property Name of the config property that triggered the warning (best-effort)
+ * @param text Main warning message
+ * @param link Useful link to resources related to the warning
+ */
+export function addWarningAndroid(property: string, text: string, link?: string) {
+  console.warn(formatWarning('android', property, text, link));
 }
 
-export function hasWarningsAndroid() {
-  return !!_warningsAndroid.length;
-}
-
-export function addWarningAndroid(tag: string, text: string, link?: string) {
-  _warningsAndroid = [..._warningsAndroid, [tag, text, link]];
-}
-
-export function addWarningIOS(tag: string, text: string, link?: string) {
-  _warningsIOS = [..._warningsIOS, [tag, text, link]];
+/**
+ * Log a warning that doesn't disrupt the spinners.
+ *
+ * ```sh
+ * » ios: ios.bundleIdentifier: property is invalid https://expo.fyi/bundle-identifier
+ * ```
+ *
+ * @param property Name of the config property that triggered the warning (best-effort)
+ * @param text Main warning message
+ * @param link Useful link to resources related to the warning
+ */
+export function addWarningIOS(property: string, text: string, link?: string) {
+  console.warn(formatWarning('ios', property, text, link));
 }
 
 export function addWarningForPlatform(
   platform: ModPlatform,
-  tag: string,
+  property: string,
   text: string,
   link?: string
 ) {
-  if (platform === 'ios') {
-    addWarningIOS(tag, text, link);
-  } else {
-    addWarningAndroid(tag, text, link);
-  }
+  console.warn(formatWarning(platform, property, text, link));
 }
 
-export function flushWarningsAndroid() {
-  const result = _warningsAndroid;
-  _warningsAndroid = [];
-  return result;
-}
-
-export function flushWarningsIOS() {
-  const result = _warningsIOS;
-  _warningsIOS = [];
-  return result;
+function formatWarning(platform: string, property: string, warning: string, link?: string) {
+  return chalk.yellow`${'» ' + chalk.bold(platform)}: ${property}: ${warning}${
+    link ? chalk.gray(' ' + link) : ''
+  }`;
 }

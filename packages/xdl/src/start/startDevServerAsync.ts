@@ -1,8 +1,10 @@
 import { ProjectTarget } from '@expo/config';
-import { MetroDevServerOptions, runMetroDevServerAsync } from '@expo/dev-server';
+import { MessageSocket, MetroDevServerOptions, runMetroDevServerAsync } from '@expo/dev-server';
+import http from 'http';
 
 import {
   assertValidProjectRoot,
+  ExpoUpdatesManifestHandler,
   getFreePortAsync,
   ManifestHandler,
   ProjectSettings,
@@ -10,6 +12,8 @@ import {
 } from '../internal';
 
 export type StartOptions = {
+  metroPort?: number;
+  webpackPort?: number;
   isWebSocketsEnabled?: boolean;
   isRemoteReloadingEnabled?: boolean;
   devClient?: boolean;
@@ -21,12 +25,22 @@ export type StartOptions = {
   target?: ProjectTarget;
 };
 
-export async function startDevServerAsync(projectRoot: string, startOptions: StartOptions) {
+export async function startDevServerAsync(
+  projectRoot: string,
+  startOptions: StartOptions
+): Promise<[http.Server, any, MessageSocket]> {
   assertValidProjectRoot(projectRoot);
 
-  const port = startOptions.devClient
-    ? Number(process.env.RCT_METRO_PORT) || 8081
-    : await getFreePortAsync(19000);
+  let port: number;
+
+  if (startOptions.metroPort != null) {
+    // If the manually defined port is busy then an error should be thrown
+    port = startOptions.metroPort;
+  } else {
+    port = startOptions.devClient
+      ? Number(process.env.RCT_METRO_PORT) || 8081
+      : await getFreePortAsync(startOptions.metroPort || 19000);
+  }
   await ProjectSettings.setPackagerInfoAsync(projectRoot, {
     expoServerPort: port,
     packagerPort: port,
@@ -47,5 +61,15 @@ export async function startDevServerAsync(projectRoot: string, startOptions: Sta
 
   const { server, middleware, messageSocket } = await runMetroDevServerAsync(projectRoot, options);
   middleware.use(ManifestHandler.getManifestHandler(projectRoot));
+  middleware.use(ExpoUpdatesManifestHandler.getManifestHandler(projectRoot));
+
+  // We need the manifest handler to be the first middleware to run so our
+  // routes take precedence over static files. For example, the manifest is
+  // served from '/' and if the user has an index.html file in their project
+  // then the manifest handler will never run, the static middleware will run
+  // and serve index.html instead of the manifest.
+  // https://github.com/expo/expo/issues/13114
+  middleware.stack.unshift(middleware.stack.pop());
+
   return [server, middleware, messageSocket];
 }

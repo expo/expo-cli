@@ -1,33 +1,10 @@
 export default {
-  'android/app/src/main/java/com/reactnativeproject/MainActivity.java': `package com.reactnativeproject;
-
-import android.os.Bundle;
-
-import com.facebook.react.ReactActivity;
-
-import com.facebook.react.ReactRootView;
-
-import expo.modules.splashscreen.singletons.SplashScreen;
-import expo.modules.splashscreen.SplashScreenImageResizeMode;
-
-public class MainActivity extends ReactActivity {
-  @Override
-  protected void onCreate(Bundle savedInstanceState) {
-    super.onCreate(savedInstanceState);
-    // SplashScreen.show(...) has to be called after super.onCreate(...)
-    // Below line is handled by '@expo/configure-splash-screen' command and it's discouraged to modify it manually
-    SplashScreen.show(this, SplashScreenImageResizeMode.CONTAIN, ReactRootView.class, false);
-  }
-
-  /**
-   * Returns the name of the main component registered from JavaScript. This is used to schedule
-   * rendering of the component.
-   */
-  @Override
-  protected String getMainComponentName() {
-    return "react-native-project";
-  }
-}
+  'android/app/src/main/res/values/strings.xml': `<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <!-- Below line is handled by '@expo/configure-splash-screen' command and it's discouraged to modify it manually -->
+  <string name="expo_splash_screen_resize_mode" translatable="false">contain</string>
+  <string name="app_name">expo</string>
+</resources>
 `,
   'android/app/src/main/AndroidManifest.xml': `<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.reactnativeproject">
   <uses-permission android:name="android.permission.INTERNET"/>
@@ -74,7 +51,7 @@ public class MainActivity extends ReactActivity {
     <!-- Customize your theme here. -->
     <item name="android:textColor">#000000</item>
   </style>
-  <style name="Theme.App.SplashScreen" parent="Theme.AppCompat.Light.NoActionBar">
+  <style name="Theme.App.SplashScreen" parent="AppTheme">
     <!-- Below line is handled by '@expo/configure-splash-screen' command and it's discouraged to modify it manually -->
     <item name="android:windowBackground">@drawable/splashscreen</item>
     <!-- Customize your splash screen theme here -->

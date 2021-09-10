@@ -84,7 +84,7 @@ describe(AndroidSubmitCommand, () => {
       (ensureProjectExistsAsync as jest.Mock).mockImplementationOnce(() => projectId);
 
       const options: AndroidSubmitCommandOptions = {
-        url: 'http://expo.io/fake.apk',
+        url: 'http://expo.dev/fake.apk',
         type: 'apk',
         key: '/google-service-account.json',
         track: 'internal',
@@ -95,7 +95,7 @@ describe(AndroidSubmitCommand, () => {
       await command.runAsync();
 
       const androidSubmissionConfig: AndroidOnlineSubmissionConfig = {
-        archiveUrl: 'http://expo.io/fake.apk',
+        archiveUrl: 'http://expo.dev/fake.apk',
         archiveType: ArchiveType.apk,
         androidPackage: testProject.appJSON.expo.android?.package,
         serviceAccount: fakeFiles['/google-service-account.json'],

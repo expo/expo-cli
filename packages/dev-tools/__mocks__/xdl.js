@@ -20,17 +20,6 @@ xdl.ProjectSettings = {
   },
 };
 
-xdl.ProjectUtils = {
-  readConfigJsonAsync(project) {
-    return Promise.resolve({
-      name: 'Project Name',
-      description: 'Project Description',
-      slug: 'project-slug',
-    });
-  },
-  logError(projectRoot, tag, message, id) {},
-};
-
 xdl.UserSettings = {
   readAsync() {
     return Promise.resolve({

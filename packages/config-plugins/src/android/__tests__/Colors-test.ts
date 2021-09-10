@@ -1,6 +1,13 @@
 import { vol } from 'memfs';
 
-import { getProjectColorsXMLPathAsync, removeColorItem, setColorItem } from '../Colors';
+import { parseXMLAsync } from '../../utils/XML';
+import {
+  getColorsAsObject,
+  getObjectAsColorsXml,
+  getProjectColorsXMLPathAsync,
+  removeColorItem,
+  setColorItem,
+} from '../Colors';
 import { buildResourceItem, readResourcesXMLAsync } from '../Resources';
 
 jest.mock('fs');
@@ -45,5 +52,47 @@ describe(setColorItem, () => {
     colors = removeColorItem('somn', colors);
     // doesn't fully reset the colors.
     expect(colors).toStrictEqual({ resources: { color: [] } });
+  });
+});
+
+describe(getColorsAsObject, () => {
+  it(`converts as expected`, async () => {
+    // Parsed from a string for DX readability
+    const xml = await parseXMLAsync(
+      [
+        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>',
+        '<resources>',
+        '  <color name="colorPrimary">#FFBB86FC</color>',
+        '  <color name="navigationBar">red</color>',
+        '  <color name="foobar">@bacon</color>',
+        '</resources>',
+      ].join('\n')
+    );
+
+    const colors = getColorsAsObject(xml as any);
+
+    expect(colors).toStrictEqual({
+      colorPrimary: '#FFBB86FC',
+      foobar: '@bacon',
+      navigationBar: 'red',
+    });
+  });
+});
+
+describe(getObjectAsColorsXml, () => {
+  it(`converts object to object matching parsed colors.xml`, async () => {
+    // Parsed from a string for DX readability
+    const colors = [
+      '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>',
+      '<resources>',
+      '  <color name="colorPrimary">#FFBB86FC</color>',
+      '  <color name="navigationBar">red</color>',
+      '  <color name="foobar">@bacon</color>',
+      '</resources>',
+    ].join('\n');
+
+    expect(
+      getObjectAsColorsXml({ colorPrimary: '#FFBB86FC', navigationBar: 'red', foobar: '@bacon' })
+    ).toStrictEqual(await parseXMLAsync(colors));
   });
 });

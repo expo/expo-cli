@@ -1,6 +1,7 @@
 import { ExpoConfig } from '@expo/config-types';
 import assert from 'assert';
-import * as path from 'path';
+import path from 'path';
+import slugify from 'slugify';
 import xcode, {
   PBXFile,
   PBXGroup,
@@ -33,8 +34,26 @@ export function getProjectName(projectRoot: string) {
   return path.basename(sourceRoot);
 }
 
+export function resolvePathOrProject(
+  projectRootOrProject: string | XcodeProject
+): XcodeProject | null {
+  if (typeof projectRootOrProject === 'string') {
+    try {
+      return getPbxproj(projectRootOrProject);
+    } catch {
+      return null;
+    }
+  }
+  return projectRootOrProject;
+}
+
 // TODO: come up with a better solution for using app.json expo.name in various places
-function sanitizedName(name: string) {
+export function sanitizedName(name: string) {
+  // Default to the name `app` when every safe character has been sanitized
+  return sanitizedNameForProjects(name) || sanitizedNameForProjects(slugify(name)) || 'app';
+}
+
+function sanitizedNameForProjects(name: string) {
   return name
     .replace(/[\W_]+/g, '')
     .normalize('NFD')
@@ -79,16 +98,19 @@ export function addResourceFileToGroup({
   // Should add to `PBXBuildFile Section`
   isBuildFile,
   project,
+  verbose,
 }: {
   filepath: string;
   groupName: string;
   isBuildFile?: boolean;
   project: XcodeProject;
+  verbose?: boolean;
 }): XcodeProject {
   return addFileToGroupAndLink({
     filepath,
     groupName,
     project,
+    verbose,
     addFileToProject({ project, file }) {
       project.addToPbxFileReferenceSection(file);
       if (isBuildFile) {
@@ -107,15 +129,20 @@ export function addBuildSourceFileToGroup({
   filepath,
   groupName,
   project,
+  verbose,
+  targetUuid,
 }: {
   filepath: string;
   groupName: string;
   project: XcodeProject;
+  verbose?: boolean;
+  targetUuid?: string;
 }): XcodeProject {
   return addFileToGroupAndLink({
     filepath,
     groupName,
     project,
+    verbose,
     addFileToProject({ project, file }) {
       project.addToPbxFileReferenceSection(file);
       project.addToPbxBuildFileSection(file);
@@ -131,11 +158,15 @@ export function addFileToGroupAndLink({
   filepath,
   groupName,
   project,
+  verbose,
   addFileToProject,
+  targetUuid,
 }: {
   filepath: string;
   groupName: string;
   project: XcodeProject;
+  verbose?: boolean;
+  targetUuid?: string;
   addFileToProject: (props: { file: PBXFile; project: XcodeProject }) => void;
 }): XcodeProject {
   const group = pbxGroupByPathOrAssert(project, groupName);
@@ -143,13 +174,22 @@ export function addFileToGroupAndLink({
   const file = createProjectFileForGroup({ filepath, group });
 
   if (!file) {
-    // This can happen when a file like the GoogleService-Info.plist needs to be added and the eject command is run twice.
-    // Not much we can do here since it might be a conflicting file.
-    addWarningIOS(
-      'ios-xcode-project',
-      `Skipped adding duplicate file "${filepath}" to PBXGroup named "${groupName}"`
-    );
+    if (verbose) {
+      // This can happen when a file like the GoogleService-Info.plist needs to be added and the eject command is run twice.
+      // Not much we can do here since it might be a conflicting file.
+      addWarningIOS(
+        'ios-xcode-project',
+        `Skipped adding duplicate file "${filepath}" to PBXGroup named "${groupName}"`
+      );
+    }
     return project;
+  }
+
+  if (targetUuid != null) {
+    file.target = targetUuid;
+  } else {
+    const applicationNativeTarget = project.getTarget('com.apple.product-type.application');
+    file.target = applicationNativeTarget?.uuid;
   }
 
   file.uuid = project.generateUuid();
@@ -314,34 +354,12 @@ export function getProjectSection(project: XcodeProject) {
   return project.pbxProjectSection();
 }
 
-export function getNativeTargets(project: XcodeProject): NativeTargetSectionEntry[] {
-  const section = project.pbxNativeTargetSection();
-  return Object.entries(section).filter(isNotComment);
-}
-
-export function findFirstNativeTarget(project: XcodeProject): NativeTargetSectionEntry {
-  const { targets } = Object.values(getProjectSection(project))[0];
-  const target = targets[0].value;
-  const nativeTargets = getNativeTargets(project);
-  return nativeTargets.find(([key]) => key === target) as NativeTargetSectionEntry;
-}
-
-export function findNativeTargetByName(
-  project: XcodeProject,
-  targetName: string
-): NativeTargetSectionEntry {
-  const nativeTargets = getNativeTargets(project);
-  return nativeTargets.find(
-    ([, i]) => i.name === targetName || i.name === `"${targetName}"`
-  ) as NativeTargetSectionEntry;
-}
-
 export function getXCConfigurationListEntries(project: XcodeProject): ConfigurationListEntry[] {
   const lists = project.pbxXCConfigurationList();
   return Object.entries(lists).filter(isNotComment);
 }
 
-export function getBuildConfigurationForId(
+export function getBuildConfigurationsForListId(
   project: XcodeProject,
   configurationListId: string
 ): ConfigurationSectionEntry[] {
@@ -355,8 +373,26 @@ export function getBuildConfigurationForId(
   return Object.entries(project.pbxXCBuildConfigurationSection())
     .filter(isNotComment)
     .filter(isBuildConfig)
-    .filter(isNotTestHost)
     .filter(([key]: ConfigurationSectionEntry) => buildConfigurations.includes(key));
+}
+
+export function getBuildConfigurationForListIdAndName(
+  project: XcodeProject,
+  {
+    configurationListId,
+    buildConfiguration,
+  }: { configurationListId: string; buildConfiguration: string }
+): ConfigurationSectionEntry {
+  const xcBuildConfigurationEntry = getBuildConfigurationsForListId(
+    project,
+    configurationListId
+  ).find(i => i[1].name === buildConfiguration);
+  if (!xcBuildConfigurationEntry) {
+    throw new Error(
+      `Build configuration '${buildConfiguration}' does not exist in list with id '${configurationListId}'`
+    );
+  }
+  return xcBuildConfigurationEntry;
 }
 
 export function isBuildConfig([, sectionItem]: ConfigurationSectionEntry): boolean {
@@ -373,4 +409,13 @@ export function isNotComment([key]:
   | ConfigurationListEntry
   | NativeTargetSectionEntry): boolean {
   return !key.endsWith(`_comment`);
+}
+
+// Remove surrounding double quotes if they exist.
+export function unquote(value: string): string {
+  // projects with numeric names will fail due to a bug in the xcode package.
+  if (typeof value === 'number') {
+    value = String(value);
+  }
+  return value.match(/^"(.*)"$/)?.[1] ?? value;
 }

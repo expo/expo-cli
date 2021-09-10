@@ -1,7 +1,8 @@
 import chalk from 'chalk';
 import program from 'commander';
 import { boolish } from 'getenv';
-import { Ora } from 'ora';
+import type { Ora } from 'ora';
+import type ProgressBar from 'progress';
 import terminalLink from 'terminal-link';
 
 type Color = (...text: string[]) => string;
@@ -51,27 +52,38 @@ export default class Log {
     Log._printNewLineBeforeNextLog = true;
   }
 
-  public static setBundleProgressBar(bar: any) {
+  public static setBundleProgressBar(bar: ProgressBar | null) {
     Log._bundleProgressBar = bar;
   }
 
-  public static setSpinner(oraSpinner: Ora | null) {
+  public static setSpinner(oraSpinner: (Ora & { __modified?: boolean }) | null) {
     Log._oraSpinner = oraSpinner;
-    if (Log._oraSpinner) {
-      const originalStart = Log._oraSpinner.start.bind(Log._oraSpinner);
-      Log._oraSpinner.start = (text: any) => {
+    if (oraSpinner && !oraSpinner.__modified) {
+      oraSpinner.__modified = true;
+      const originalStart = oraSpinner.start.bind(oraSpinner);
+      oraSpinner.start = function (text: any) {
         // Reset the new line tracker
         Log._isLastLineNewLine = false;
+        // Ensure we set the observable spinner to this because it is animating.
+        Log.setSpinner(this);
         return originalStart(text);
       };
       // All other methods of stopping will invoke the stop method.
-      const originalStop = Log._oraSpinner.stop.bind(Log._oraSpinner);
-      Log._oraSpinner.stop = () => {
+      const originalStop = oraSpinner.stop.bind(oraSpinner);
+      oraSpinner.stop = () => {
         // Reset the target spinner
         Log.setSpinner(null);
         return originalStop();
       };
     }
+  }
+
+  public static getSpinner() {
+    return Log._oraSpinner || null;
+  }
+
+  public static getProgress() {
+    return Log._bundleProgressBar || null;
   }
 
   public static error(...args: any[]) {
@@ -124,8 +136,8 @@ export default class Log {
     process.stdout.write(process.platform === 'win32' ? '\x1B[2J\x1B[0f' : '\x1B[2J\x1B[3J\x1B[H');
   }
 
-  private static _bundleProgressBar: any;
-  private static _oraSpinner: any;
+  private static _bundleProgressBar: ProgressBar | null;
+  private static _oraSpinner: Ora | null;
 
   private static _printNewLineBeforeNextLog = false;
   private static _isLastLineNewLine = false;
@@ -185,20 +197,41 @@ export default class Log {
   }
 
   private static respectProgressBars(commitLogs: () => void) {
-    if (Log._bundleProgressBar) {
-      Log._bundleProgressBar.terminate();
-      Log._bundleProgressBar.lastDraw = '';
+    let progressBar = Log._bundleProgressBar;
+
+    if (progressBar) {
+      // Automatically unmount the bar if it's complete
+      if (progressBar.complete) {
+        Log.setBundleProgressBar(null);
+        progressBar = null;
+      } else if ('stream' in progressBar) {
+        // @ts-ignore
+        progressBar.stream?.clearLine?.();
+        // @ts-ignore
+        progressBar.stream?.cursorTo?.(0);
+      }
     }
-    if (Log._oraSpinner) {
-      Log._oraSpinner.stop();
+
+    const spinner = Log._oraSpinner;
+    const isSpinning = spinner?.isSpinning;
+    // Store the index, before stopping for later.
+    const frameIndex: number = (spinner as any)?.frameIndex || 0;
+    if (spinner && isSpinning) {
+      spinner.stop();
     }
     commitLogs();
 
-    if (Log._bundleProgressBar) {
-      Log._bundleProgressBar.render();
+    if (progressBar) {
+      progressBar.render();
     }
-    if (Log._oraSpinner) {
-      Log._oraSpinner.start();
+    // Only restart the spinner if it was spinning to begin with, this
+    // prevents us from accidentally starting a paused spinner.
+    if (spinner && isSpinning) {
+      // Stopping the spinner causes the frameIndex to be set to 0, we want to set it to what it was before we reset it so it continues to animate as expected.
+      // @ts-ignore
+      spinner.frameIndex = frameIndex;
+      spinner.start();
+      spinner.render();
     }
   }
 

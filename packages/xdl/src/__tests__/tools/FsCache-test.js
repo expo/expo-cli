@@ -1,6 +1,6 @@
 import { FsCache } from '../../internal';
 
-jest.mock('analytics-node');
+jest.mock('@expo/rudder-sdk-node');
 
 const fs = require('fs-extra');
 const path = require('path');

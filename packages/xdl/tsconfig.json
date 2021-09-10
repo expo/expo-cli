@@ -1,16 +1,32 @@
 {
   "extends": "../../tsconfig.base",
-  "include": ["src/**/*.ts"],
-  "exclude": ["**/__mocks__/**", "**/__tests__/**"],
+  "include": [
+    "src/**/*.ts"
+  ],
+  "exclude": [
+    "**/__mocks__/**",
+    "**/__tests__/**",
+    "**/__integration_tests__/**"
+  ],
   "compilerOptions": {
     "outDir": "build",
     "rootDir": "src"
   },
   "references": [
-    { "path": "../image-utils" },
-    { "path": "../json-file" },
-    { "path": "../osascript" },
-    { "path": "../plist" },
-    { "path": "../config" }
+    {
+      "path": "../image-utils"
+    },
+    {
+      "path": "../json-file"
+    },
+    {
+      "path": "../osascript"
+    },
+    {
+      "path": "../plist"
+    },
+    {
+      "path": "../config"
+    }
   ]
 }

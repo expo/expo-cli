@@ -1,5 +1,6 @@
 import fs from 'fs-extra';
-import Jimp from 'jimp/es';
+// @ts-ignore
+import Jimp from 'jimp-compact';
 import * as path from 'path';
 
 import {
@@ -97,16 +98,22 @@ export function circleAsync(jimp: Jimp): Promise<Jimp> {
   };
 
   return new Promise(resolve => {
-    jimp.scanQuiet(0, 0, jimp.bitmap.width, jimp.bitmap.height, (x, y, idx) => {
-      const curR = Math.sqrt(Math.pow(x - center.x, 2) + Math.pow(y - center.y, 2));
+    jimp.scanQuiet(
+      0,
+      0,
+      jimp.bitmap.width,
+      jimp.bitmap.height,
+      (x: number, y: number, idx: number) => {
+        const curR = Math.sqrt(Math.pow(x - center.x, 2) + Math.pow(y - center.y, 2));
 
-      if (radius - curR <= 0.0) {
-        jimp.bitmap.data[idx + 3] = 0;
-      } else if (radius - curR < 1.0) {
-        jimp.bitmap.data[idx + 3] = 255 * (radius - curR);
+        if (radius - curR <= 0.0) {
+          jimp.bitmap.data[idx + 3] = 0;
+        } else if (radius - curR < 1.0) {
+          jimp.bitmap.data[idx + 3] = 255 * (radius - curR);
+        }
+        resolve(jimp);
       }
-      resolve(jimp);
-    });
+    );
   });
 }
 
@@ -119,9 +126,19 @@ export async function getJimpImageAsync(input: string | Buffer | Jimp): Promise<
 
 export async function resize(
   { input, quality = 100 }: JimpGlobalOptions,
-  { background, position, fit, width, height = Jimp.AUTO }: Omit<ResizeOptions, 'operation'>
+  { background, position, fit, width, height }: Omit<ResizeOptions, 'operation'>
 ): Promise<Jimp> {
   let initialImage = await getJimpImageAsync(input);
+
+  if (width && !height) {
+    height = Jimp.AUTO;
+  } else if (!width && height) {
+    width = Jimp.AUTO;
+  } else if (!width && !height) {
+    width = initialImage.bitmap.width;
+    height = initialImage.bitmap.height;
+  }
+
   const jimpPosition = convertPosition(position);
   const jimpQuality = typeof quality !== 'number' ? 100 : quality;
   if (fit === 'cover') {

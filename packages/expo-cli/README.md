@@ -5,7 +5,7 @@ at https://github.com/expo/expo-cli. Thanks!
 
 ## Installation
 
-[Installation instructions and documentation here.](https://docs.expo.io/workflow/expo-cli/#installation)
+[Installation instructions and documentation here.](https://docs.expo.dev/workflow/expo-cli/#installation)
 
 ## Getting Started
 

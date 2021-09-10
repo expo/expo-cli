@@ -1,14 +1,13 @@
 import spawnAsync from '@expo/spawn-async';
+import { ExpoRunFormatter } from '@expo/xcpretty';
 import chalk from 'chalk';
 import { spawn, SpawnOptionsWithoutStdio } from 'child_process';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import { SimControl } from 'xdl';
 
-import CommandError from '../../../CommandError';
+import CommandError, { AbortCommandError } from '../../../CommandError';
 import Log from '../../../log';
-import { ExpoLogFormatter } from './ExpoLogFormatter';
-import { getDependenciesFromPodfileLock } from './Podfile';
 import { ensureDeviceIsCodeSignedForDeploymentAsync } from './developmentCodeSigning';
 import { ProjectInfo, XcodeConfiguration } from './resolveOptionsAsync';
 
@@ -26,6 +25,10 @@ export type BuildProps = {
 };
 
 type XcodeSDKName = 'iphoneos' | 'iphonesimulator';
+
+export function logPrettyItem(message: string) {
+  Log.log(`${chalk.whiteBright`\u203A`} ${message}`);
+}
 
 export async function getProjectBuildSettings(
   xcodeProject: ProjectInfo,
@@ -159,10 +162,6 @@ function getProcessOptions({
   };
 }
 
-export function logPrettyItem(message: string) {
-  Log.log(`${chalk.whiteBright`\u203A`} ${message}`);
-}
-
 export async function buildAsync({
   projectRoot,
   xcodeProject,
@@ -198,12 +197,9 @@ export async function buildAsync({
 
   logPrettyItem(chalk.bold`Planning build`);
   Log.debug(`  xcodebuild ${args.join(' ')}`);
-  const podfileLock = path.join(projectRoot, 'ios', 'Podfile.lock');
-  const appName = xcodeProject.name.match(/.*\/(.*)\.\w+/)?.[1] || '';
-  const formatter = new ExpoLogFormatter({
-    projectRoot,
-    appName,
-    podfile: getDependenciesFromPodfileLock(podfileLock),
+  const formatter = ExpoRunFormatter.create(projectRoot, {
+    xcodeProject,
+    isDebug: Log.isDebug,
   });
 
   return new Promise(async (resolve, reject) => {
@@ -231,8 +227,21 @@ export async function buildAsync({
     });
 
     buildProcess.on('close', (code: number) => {
-      formatter.finish();
+      Log.debug(`Exited with code: ${code}`);
+
+      if (
+        // User cancelled with ctrl-c
+        code === null ||
+        // Build interrupted
+        code === 75
+      ) {
+        reject(new AbortCommandError());
+        return;
+      }
+
+      Log.log(formatter.getBuildSummary());
       const logFilePath = writeBuildLogs(projectRoot, buildOutput, errorOutput);
+
       if (code !== 0) {
         // Determine if the logger found any errors;
         const wasErrorPresented = !!formatter.errors.length;
@@ -272,15 +281,16 @@ function writeBuildLogs(projectRoot: string, buildOutput: string, errorOutput: s
     '\n```\n\n# Error output\n\n```log\n' +
     errorOutput +
     '\n```\n';
-  const logFilePath = getErrorLogFilePath(projectRoot);
+  const [mdFilePath, logFilePath] = getErrorLogFilePath(projectRoot);
 
-  fs.writeFileSync(logFilePath, output);
-  return logFilePath;
+  fs.writeFileSync(mdFilePath, output);
+  fs.writeFileSync(logFilePath, buildOutput);
+  return mdFilePath;
 }
 
-function getErrorLogFilePath(projectRoot: string): string {
+function getErrorLogFilePath(projectRoot: string): [string, string] {
   const filename = 'xcodebuild.md';
   const folder = path.join(projectRoot, '.expo');
   fs.ensureDirSync(folder);
-  return path.join(folder, filename);
+  return [path.join(folder, filename), path.join(folder, 'xcodebuild-output.log')];
 }

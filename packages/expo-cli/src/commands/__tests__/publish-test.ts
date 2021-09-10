@@ -6,7 +6,7 @@ import {
   logBareWorkflowWarnings,
   logExpoUpdatesWarnings,
   logOptimizeWarnings,
-} from '../publish';
+} from '../publishAsync';
 
 jest.mock('fs');
 jest.mock('../../log', () => ({

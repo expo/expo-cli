@@ -1,12 +1,12 @@
 {
   "main": "./index",
   "dependencies": {
-    "expo": "37.0.11",
-    "expo-constants": "9.0.0",
-    "react": "~16.9.0",
-    "react-dom": "~16.9.0",
-    "react-native-svg": "^11.0.1",
-    "react-native-web": "~0.11.7",
+    "expo": "42",
+    "expo-constants": "~11.0.1",
+    "react": "16.13.1",
+    "react-dom": "16.13.1",
+    "react-native-svg": "~12.1.1",
+    "react-native-web": "~0.13.12",
     "resize-observer-polyfill": "^1.5.1"
   },
   "devDependencies": {

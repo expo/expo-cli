@@ -162,6 +162,10 @@ export function onMessage(simLog: SimControlLog) {
   }
 }
 
+export function isStreamingLogs(udid: string): boolean {
+  return !!forks[udid];
+}
+
 // The primary purpose of this module is to surface logs related to fatal app crashes.
 // Everything else should come through the native React logger.
 export function streamLogs({ pid, udid }: { pid: string; udid: string }): void {
@@ -253,7 +257,7 @@ export async function getImageNameFromBundleIdentifierAsync(
   udid: string,
   bundleIdentifier: string
 ): Promise<string | null> {
-  const containerPath = await SimControl.getContainerPathAsync(udid, bundleIdentifier);
+  const containerPath = await SimControl.getContainerPathAsync({ udid, bundleIdentifier });
 
   if (containerPath) {
     return getImageNameFromContainerPath(containerPath);

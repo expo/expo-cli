@@ -1,8 +1,9 @@
 import { vol } from 'memfs';
 
+import { parseXMLAsync } from '../../utils/XML';
 import { fileExistsAsync } from '../../utils/modules';
 import { getResourceXMLPathAsync } from '../Paths';
-import { readResourcesXMLAsync } from '../Resources';
+import { getObjectAsResourceGroup, readResourcesXMLAsync } from '../Resources';
 
 jest.mock('fs');
 
@@ -39,5 +40,30 @@ describe(getResourceXMLPathAsync, () => {
     expect(await fileExistsAsync(path)).toBe(true);
     // read the file with a default fallback
     expect(await readResourcesXMLAsync({ path })).toStrictEqual({ resources: {} });
+  });
+});
+
+describe(getObjectAsResourceGroup, () => {
+  it(`matches parsed xml`, async () => {
+    // Parsed from a string for DX readability
+    const styles = await parseXMLAsync(
+      [
+        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>',
+        '<resources>',
+        '  <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">',
+        '    <item name="key">value</item>',
+        '    <item name="foo">bar</item>',
+        '  </style>',
+        '</resources>',
+      ].join('\n')
+    );
+
+    expect(
+      getObjectAsResourceGroup({
+        name: 'AppTheme',
+        parent: 'Theme.AppCompat.Light.NoActionBar',
+        item: { key: 'value', foo: 'bar' },
+      })
+    ).toStrictEqual((styles.resources as any).style[0]);
   });
 });

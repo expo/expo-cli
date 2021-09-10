@@ -1,4 +1,5 @@
 import { ExpoConfig, getConfig } from '@expo/config';
+import { MessageSocket } from '@expo/dev-server';
 import { Server } from 'http';
 
 import {
@@ -21,9 +22,10 @@ import {
   stopTunnelsAsync,
   Webpack,
 } from '../internal';
+import { watchBabelConfigForProject } from './watchBabelConfig';
 
 let serverInstance: Server | null = null;
-let messageSocket: any | null = null;
+let messageSocket: MessageSocket | null = null;
 
 /**
  * Sends a message over web sockets to any connected device,
@@ -44,21 +46,29 @@ export function broadcastMessage(
 export async function startAsync(
   projectRoot: string,
   {
-    exp = getConfig(projectRoot).exp,
+    exp = getConfig(projectRoot, { skipSDKVersionRequirement: true }).exp,
     ...options
   }: StartDevServerOptions & { exp?: ExpoConfig } = {},
   verbose: boolean = true
 ): Promise<ExpoConfig> {
   assertValidProjectRoot(projectRoot);
+
   Analytics.logEvent('Start Project', {
     projectRoot,
     developerTool: Config.developerTool,
     sdkVersion: exp.sdkVersion ?? null,
   });
 
+  watchBabelConfigForProject(projectRoot);
+
   if (options.webOnly) {
-    await Webpack.restartAsync(projectRoot, options);
-    DevSession.startSession(projectRoot, exp, 'web');
+    await Webpack.startAsync(projectRoot, {
+      ...options,
+      port: options.webpackPort,
+    });
+
+    // This is used to make Expo Go open the project in either Expo Go, or the web browser.
+    DevSession.startSession(projectRoot, exp, Webpack.isTargetingNative() ? 'native' : 'web');
     return exp;
   } else if (Env.shouldUseDevServer(exp) || options.devClient) {
     [serverInstance, , messageSocket] = await startDevServerAsync(projectRoot, options);
@@ -81,22 +91,26 @@ export async function startAsync(
   return exp;
 }
 
+async function stopDevServerAsync() {
+  return new Promise<void>((resolve, reject) => {
+    if (serverInstance) {
+      serverInstance.close(error => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve();
+        }
+      });
+    }
+  });
+}
+
 async function stopInternalAsync(projectRoot: string): Promise<void> {
   DevSession.stopSession();
 
   await Promise.all([
     Webpack.stopAsync(projectRoot),
-    new Promise<void>((resolve, reject) => {
-      if (serverInstance) {
-        serverInstance.close(error => {
-          if (error) {
-            reject(error);
-          } else {
-            resolve();
-          }
-        });
-      }
-    }),
+    stopDevServerAsync(),
     stopExpoServerAsync(projectRoot),
     stopReactNativeServerAsync(projectRoot),
     async () => {

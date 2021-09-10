@@ -9,6 +9,7 @@ import FormData from 'form-data';
 import fs from 'fs-extra';
 import path from 'path';
 
+import { RobotUser } from '../User';
 import {
   Analytics,
   ApiV2,
@@ -37,6 +38,10 @@ export interface PublishedProjectResult {
    * Project manifest URL
    */
   url: string;
+  /**
+   * Project page URL
+   */
+  projectPageUrl: string;
   /**
    * TODO: What is this?
    */
@@ -78,14 +83,10 @@ export async function publishAsync(
   // Get project config
   const { exp, pkg, hooks } = await getPublishExpConfigAsync(projectRoot, options);
 
-  // Exit early if kernel builds are created with robot users
-  if (exp.isKernel && user.kind === 'robot') {
-    throw new XDLError('ROBOT_ACCOUNT_ERROR', 'Kernel builds are not available for robot users');
-  }
-
   // TODO: refactor this out to a function, throw error if length doesn't match
   const validPostPublishHooks: LoadedHook[] = prepareHooks(hooks, 'postPublish', projectRoot);
   const bundles = await createBundlesAsync(projectRoot, options, {
+    platforms: ['ios', 'android'],
     useDevServer: Env.shouldUseDevServer(exp),
   });
 
@@ -93,15 +94,15 @@ export async function publishAsync(
 
   await ProjectAssets.publishAssetsAsync({ projectRoot, exp, bundles });
 
-  const androidBundle = bundles.android.code;
-  const iosBundle = bundles.ios.code;
+  const androidBundle = bundles.android?.hermesBytecodeBundle ?? bundles.android?.code!;
+  const iosBundle = bundles.ios?.hermesBytecodeBundle ?? bundles.ios?.code!;
 
   const hasHooks = validPostPublishHooks.length > 0;
 
-  const shouldPublishAndroidMaps = !!exp.android?.publishSourceMapPath;
-  const shouldPublishIosMaps = !!exp.ios?.publishSourceMapPath;
-  const androidSourceMap = hasHooks || shouldPublishAndroidMaps ? bundles.android.map : null;
-  const iosSourceMap = hasHooks || shouldPublishIosMaps ? bundles.ios.map : null;
+  const androidSourceMap = hasHooks
+    ? bundles.android?.hermesSourcemap ?? bundles.android?.map ?? null
+    : null;
+  const iosSourceMap = hasHooks ? bundles.ios?.hermesSourcemap ?? bundles.ios?.map ?? null : null;
 
   let response;
   try {
@@ -124,6 +125,7 @@ export async function publishAsync(
 
   let androidManifest = {};
   let iosManifest = {};
+  const fullManifestUrl = response.url.replace('exp://', 'https://');
 
   if (
     validPostPublishHooks.length ||
@@ -131,15 +133,21 @@ export async function publishAsync(
     exp.android?.publishManifestPath ||
     EmbeddedAssets.shouldEmbedAssetsForExpoUpdates(projectRoot, exp, pkg, target)
   ) {
+    const sdkOrRuntimeVersion = exp.runtimeVersion
+      ? {
+          'expo-runtime-version': exp.runtimeVersion,
+        }
+      : { 'expo-sdk-version': exp.sdkVersion };
+
     [androidManifest, iosManifest] = await Promise.all([
       ExponentTools.getManifestAsync(response.url, {
-        'Exponent-SDK-Version': exp.sdkVersion,
+        ...sdkOrRuntimeVersion,
         'Exponent-Platform': 'android',
         'Expo-Release-Channel': options.releaseChannel,
         Accept: 'application/expo+json,application/json',
       }),
       ExponentTools.getManifestAsync(response.url, {
-        'Exponent-SDK-Version': exp.sdkVersion,
+        ...sdkOrRuntimeVersion,
         'Exponent-Platform': 'ios',
         'Expo-Release-Channel': options.releaseChannel,
         Accept: 'application/expo+json,application/json',
@@ -152,9 +160,11 @@ export async function publishAsync(
       iosBundle,
       iosSourceMap,
       iosManifest,
+      iosManifestUrl: fullManifestUrl,
       androidBundle,
       androidSourceMap,
       androidManifest,
+      androidManifestUrl: fullManifestUrl,
       projectRoot,
       log: (msg: any) => {
         logger.global.info({ quiet: true }, msg);
@@ -171,7 +181,6 @@ export async function publishAsync(
     }
   }
 
-  const fullManifestUrl = response.url.replace('exp://', 'https://');
   await EmbeddedAssets.configureAsync({
     projectRoot,
     pkg,
@@ -180,17 +189,14 @@ export async function publishAsync(
     iosManifestUrl: fullManifestUrl,
     iosManifest,
     iosBundle,
-    iosSourceMap,
     androidManifestUrl: fullManifestUrl,
     androidManifest,
     androidBundle,
-    androidSourceMap,
     target,
   });
 
   // TODO: move to postPublish hook
-  // This method throws early when a robot account is used for a kernel build
-  if (exp.isKernel && user.kind !== 'robot') {
+  if (exp.isKernel) {
     await _handleKernelPublishedAsync({
       user,
       exp,
@@ -199,12 +205,23 @@ export async function publishAsync(
     });
   }
 
+  // Create project manifest URL
+  const url =
+    options.releaseChannel && options.releaseChannel !== 'default'
+      ? `${response.url}?release-channel=${options.releaseChannel}`
+      : response.url;
+
+  // Create project page URL
+  const projectPageUrl = response.projectPageUrl
+    ? options.releaseChannel && options.releaseChannel !== 'default'
+      ? `${response.projectPageUrl}?release-channel=${options.releaseChannel}`
+      : response.projectPageUrl
+    : null;
+
   return {
     ...response,
-    url:
-      options.releaseChannel && options.releaseChannel !== 'default'
-        ? `${response.url}?release-channel=${options.releaseChannel}`
-        : response.url,
+    url,
+    projectPageUrl,
   };
 }
 
@@ -216,8 +233,8 @@ async function _uploadArtifactsAsync({
   pkg,
 }: {
   exp: ExpoConfig;
-  iosBundle: string;
-  androidBundle: string;
+  iosBundle: string | Uint8Array;
+  androidBundle: string | Uint8Array;
   options: PublishOptions;
   pkg: PackageJSONConfig;
 }) {
@@ -244,19 +261,35 @@ async function _handleKernelPublishedAsync({
   url,
 }: {
   projectRoot: string;
-  user: User;
+  user: User | RobotUser;
   exp: ExpoAppManifest;
   url: string;
 }) {
+  let owner = exp.owner;
+  if (!owner) {
+    if (user.kind !== 'user') {
+      throw new XDLError(
+        'ROBOT_ACCOUNT_ERROR',
+        'Kernel builds are not available for robot users when owner app.json field is not supplied'
+      );
+    }
+    owner = user.username;
+  }
+
   let kernelBundleUrl = `${Config.api.scheme}://${Config.api.host}`;
   if (Config.api.port) {
     kernelBundleUrl = `${kernelBundleUrl}:${Config.api.port}`;
   }
-  kernelBundleUrl = `${kernelBundleUrl}/@${user.username}/${exp.slug}/bundle`;
+  kernelBundleUrl = `${kernelBundleUrl}/@${owner}/${exp.slug}/bundle`;
+  const sdkOrRuntimeVersion = exp.runtimeVersion
+    ? {
+        'expo-runtime-version': exp.runtimeVersion,
+      }
+    : { 'expo-sdk-version': exp.sdkVersion };
 
   if (exp.kernel?.androidManifestPath) {
     const manifest = await ExponentTools.getManifestAsync(url, {
-      'Exponent-SDK-Version': exp.sdkVersion,
+      ...sdkOrRuntimeVersion,
       'Exponent-Platform': 'android',
       Accept: 'application/expo+json,application/json',
     });
@@ -270,7 +303,7 @@ async function _handleKernelPublishedAsync({
 
   if (exp.kernel?.iosManifestPath) {
     const manifest = await ExponentTools.getManifestAsync(url, {
-      'Exponent-SDK-Version': exp.sdkVersion,
+      ...sdkOrRuntimeVersion,
       'Exponent-Platform': 'ios',
       Accept: 'application/expo+json,application/json',
     });

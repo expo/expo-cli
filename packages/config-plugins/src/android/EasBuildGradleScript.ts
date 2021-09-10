@@ -37,7 +37,7 @@ tasks.whenTaskAdded {
     def credentialsJson = rootProject.file("../credentials.json");
 
     if (credentialsJson.exists()) {
-      if (storeFile && System.getenv("EAS_BUILD") != "true") {
+      if (storeFile && !System.getenv("EAS_BUILD")) {
         println("Path to release keystore file is already set, ignoring 'credentials.json'")
       } else {
         try {
@@ -50,7 +50,13 @@ tasks.whenTaskAdded {
           storeFile storeFilePath.toFile()
           storePassword credentials.android.keystore.keystorePassword
           keyAlias credentials.android.keystore.keyAlias
-          keyPassword credentials.android.keystore.keyPassword
+          if (credentials.android.keystore.containsKey("keyPassword")) {
+            keyPassword credentials.android.keystore.keyPassword
+          } else {
+            // key password is required by Gradle, but PKCS keystores don't have one
+            // using the keystore password seems to satisfy the requirement
+            keyPassword credentials.android.keystore.keystorePassword
+          }
         } catch (Exception e) {
           println("An error occurred while parsing 'credentials.json': " + e.message)
         }

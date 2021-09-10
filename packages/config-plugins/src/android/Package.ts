@@ -1,14 +1,18 @@
 import { ExpoConfig } from '@expo/config-types';
+import Debug from 'debug';
 import fs from 'fs-extra';
 import { sync as globSync } from 'glob';
 import path from 'path';
 
 import { ConfigPlugin } from '../Plugin.types';
 import { createAndroidManifestPlugin, withAppBuildGradle } from '../plugins/android-plugins';
-import { withDangerousMod } from '../plugins/core-plugins';
-import * as WarningAggregator from '../utils/warnings';
+import { withDangerousMod } from '../plugins/withDangerousMod';
+import { directoryExistsAsync } from '../utils/modules';
+import { addWarningAndroid } from '../utils/warnings';
 import { AndroidManifest } from './Manifest';
-import { getAppBuildGradle, getMainApplicationAsync } from './Paths';
+import { getAppBuildGradleFilePath, getProjectFilePath } from './Paths';
+
+const debug = Debug('config-plugins:android:package');
 
 export const withPackageManifest = createAndroidManifestPlugin(
   setPackageInAndroidManifest,
@@ -20,8 +24,8 @@ export const withPackageGradle: ConfigPlugin = config => {
     if (config.modResults.language === 'groovy') {
       config.modResults.contents = setPackageInBuildGradle(config, config.modResults.contents);
     } else {
-      WarningAggregator.addWarningAndroid(
-        'android-package',
+      addWarningAndroid(
+        'android.package',
         `Cannot automatically configure app build.gradle if it's not groovy`
       );
     }
@@ -43,17 +47,46 @@ export function getPackage(config: Pick<ExpoConfig, 'android'>) {
   return config.android?.package ?? null;
 }
 
-function getPackageRoot(projectRoot: string) {
-  return path.join(projectRoot, 'android', 'app', 'src', 'main', 'java');
+function getPackageRoot(projectRoot: string, type: 'main' | 'debug') {
+  return path.join(projectRoot, 'android', 'app', 'src', type, 'java');
 }
 
-async function getCurrentPackageName(projectRoot: string) {
-  const packageRoot = getPackageRoot(projectRoot);
-  const mainApplication = await getMainApplicationAsync(projectRoot);
-  const packagePath = path.dirname(mainApplication.path);
+function getCurrentPackageName(projectRoot: string, packageRoot: string) {
+  const mainApplication = getProjectFilePath(projectRoot, 'MainApplication');
+  const packagePath = path.dirname(mainApplication);
   const packagePathParts = path.relative(packageRoot, packagePath).split(path.sep).filter(Boolean);
 
   return packagePathParts.join('.');
+}
+
+function getCurrentPackageForProjectFile(
+  projectRoot: string,
+  packageRoot: string,
+  fileName: string,
+  type: string
+) {
+  const filePath = globSync(
+    path.join(projectRoot, `android/app/src/${type}/java/**/${fileName}.@(java|kt)`)
+  )[0];
+
+  if (!filePath) {
+    return null;
+  }
+
+  const packagePath = path.dirname(filePath);
+  const packagePathParts = path.relative(packageRoot, packagePath).split(path.sep).filter(Boolean);
+
+  return packagePathParts.join('.');
+}
+
+function getCurrentPackageNameForType(projectRoot: string, type: string): string | null {
+  const packageRoot = getPackageRoot(projectRoot, type as any);
+
+  if (type === 'main') {
+    return getCurrentPackageName(projectRoot, packageRoot);
+  }
+  // debug, etc..
+  return getCurrentPackageForProjectFile(projectRoot, packageRoot, '*', type);
 }
 
 // NOTE(brentvatne): this assumes that our MainApplication.java file is in the root of the package
@@ -68,15 +101,39 @@ export async function renamePackageOnDisk(
     return;
   }
 
-  const currentPackageName = await getCurrentPackageName(projectRoot);
-  if (currentPackageName === newPackageName) {
+  for (const type of ['main', 'debug']) {
+    await renamePackageOnDiskForType({ projectRoot, type, packageName: newPackageName });
+  }
+}
+
+export async function renamePackageOnDiskForType({
+  projectRoot,
+  type,
+  packageName,
+}: {
+  projectRoot: string;
+  type: string;
+  packageName: string;
+}) {
+  if (!packageName) {
     return;
   }
 
+  const currentPackageName = getCurrentPackageNameForType(projectRoot, type);
+  debug(`Found package "${currentPackageName}" for type "${type}"`);
+  if (!currentPackageName || currentPackageName === packageName) {
+    return;
+  }
+  debug(`Refactor "${currentPackageName}" to "${packageName}" for type "${type}"`);
+  const packageRoot = getPackageRoot(projectRoot, type as any);
   // Set up our paths
-  const packageRoot = getPackageRoot(projectRoot);
+  if (!(await directoryExistsAsync(packageRoot))) {
+    debug(`- skipping refactor of missing directory: ${packageRoot}`);
+    return;
+  }
+
   const currentPackagePath = path.join(packageRoot, ...currentPackageName.split('.'));
-  const newPackagePath = path.join(packageRoot, ...newPackageName.split('.'));
+  const newPackagePath = path.join(packageRoot, ...packageName.split('.'));
 
   // Create the new directory
   fs.mkdirpSync(newPackagePath);
@@ -106,19 +163,22 @@ export async function renamePackageOnDisk(
     }
   }
 
-  const filesToUpdate = [
-    ...globSync('**/*', { cwd: newPackagePath, absolute: true }),
-    path.join(projectRoot, 'android', 'app', 'BUCK'),
-  ];
+  const filesToUpdate = [...globSync('**/*', { cwd: newPackagePath, absolute: true })];
+  // Only update the BUCK file to match the main package name
+  if (type === 'main') {
+    filesToUpdate.push(path.join(projectRoot, 'android', 'app', 'BUCK'));
+  }
   // Replace all occurrences of the path in the project
   filesToUpdate.forEach((filepath: string) => {
     try {
       if (fs.lstatSync(filepath).isFile()) {
         let contents = fs.readFileSync(filepath).toString();
-        contents = contents.replace(new RegExp(currentPackageName, 'g'), newPackageName);
+        contents = contents.replace(new RegExp(currentPackageName!, 'g'), packageName);
         fs.writeFileSync(filepath, contents);
       }
-    } catch {}
+    } catch (e) {
+      debug(`Error updating "${filepath}" for type "${type}"`);
+    }
   });
 }
 
@@ -148,7 +208,7 @@ export function setPackageInAndroidManifest(
 }
 
 export async function getApplicationIdAsync(projectRoot: string): Promise<string | null> {
-  const buildGradlePath = getAppBuildGradle(projectRoot);
+  const buildGradlePath = getAppBuildGradleFilePath(projectRoot);
   if (!(await fs.pathExists(buildGradlePath))) {
     return null;
   }

@@ -11,13 +11,16 @@
 */
 export { Semaphore } from './utils/Semaphore';
 export * as Env from './Env';
+export * as CoreSimulator from './apple/CoreSimulator';
 export { default as Config } from './Config';
 export * as Xcode from './Xcode';
 export * as ConnectionStatus from './ConnectionStatus';
 export { default as Logger, Log, LogStream } from './Logger';
 export { default as NotificationCode } from './NotificationCode';
 export { learnMore } from './logs/TerminalLink';
-export { default as Analytics } from './Analytics';
+export { default as Analytics, AnalyticsClient } from './Analytics';
+export { default as UnifiedAnalytics } from './UnifiedAnalytics';
+export { watchBabelConfigForProject } from './start/watchBabelConfig';
 export * as Android from './Android';
 export { default as ApiV2 } from './ApiV2';
 export * as Binaries from './Binaries';
@@ -82,7 +85,6 @@ export { downloadAppAsync } from './utils/downloadAppAsync';
 export * as BundleIdentifier from './BundleIdentifier';
 export * as FsCache from './tools/FsCache';
 export * as WebpackEnvironment from './webpack-utils/WebpackEnvironment';
-export * as WebpackCompiler from './webpack-utils/WebpackCompiler';
 export { default as LoggerDetach, pipeOutputToLogger } from './detach/Logger';
 export { default as StandaloneBuildFlags } from './detach/StandaloneBuildFlags';
 export * as AssetBundle from './detach/AssetBundle';
@@ -98,5 +100,6 @@ export {
 } from './start/startDevServerAsync';
 export { startAsync, stopAsync, broadcastMessage } from './start/startAsync';
 export * as ManifestHandler from './start/ManifestHandler';
+export * as ExpoUpdatesManifestHandler from './start/ExpoUpdatesManifestHandler';
 export { getFreePortAsync } from './start/getFreePortAsync';
 export * as Project from './Project';

@@ -4,7 +4,11 @@ import { vol } from 'memfs';
 import { mockExpoXDL } from '../../__tests__/mock-utils';
 import { jester } from '../../credentials/__tests__/fixtures/mocks-constants';
 import Log from '../../log';
-import { collectMergeSourceUrlsAsync, ensurePublicUrlAsync, promptPublicUrlAsync } from '../export';
+import {
+  collectMergeSourceUrlsAsync,
+  ensurePublicUrlAsync,
+  promptPublicUrlAsync,
+} from '../exportAsync';
 
 jest.mock('fs');
 jest.mock('resolve-from');
@@ -27,6 +31,9 @@ mockExpoXDL({
   },
   ApiV2: {
     clientForUser: jest.fn(),
+  },
+  Doctor: {
+    validateWithoutNetworkAsync: jest.fn(() => 0),
   },
 });
 
@@ -56,7 +63,7 @@ describe('ensurePublicUrlAsync', () => {
   it(`validates a URL`, async () => {
     const logWarnSpy = jest.spyOn(Log, 'nestedWarn').mockImplementation(() => {});
 
-    await expect(ensurePublicUrlAsync('https://expo.io', true)).resolves.toBe('https://expo.io');
+    await expect(ensurePublicUrlAsync('https://expo.dev', true)).resolves.toBe('https://expo.dev');
     // No warnings thrown
     expect(logWarnSpy).toBeCalledTimes(0);
 
@@ -76,7 +83,7 @@ describe('collectMergeSourceUrlsAsync', () => {
   });
 
   it(`downloads tar files`, async () => {
-    const directories = await collectMergeSourceUrlsAsync(projectRoot, ['expo.io/app.tar.gz']);
+    const directories = await collectMergeSourceUrlsAsync(projectRoot, ['expo.dev/app.tar.gz']);
     expect(directories.length).toBe(1);
     // Ensure the file was downloaded with the expected name
     expect(directories[0]).toMatch(/\/alpha\/\.tmp\/app_/);

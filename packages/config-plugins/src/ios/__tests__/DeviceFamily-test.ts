@@ -26,7 +26,7 @@ describe(getDeviceFamilies, () => {
   it(`warns about invalid config`, () => {
     getDeviceFamilies({ ios: { isTabletOnly: true, supportsTablet: false } } as any);
     expect(WarningAggregator.addWarningIOS).toHaveBeenLastCalledWith(
-      'device-family',
+      'ios.supportsTablet',
       'Found contradictory values: `{ ios: { isTabletOnly: true, supportsTablet: false } }`. Using `{ isTabletOnly: true }`.'
     );
   });
