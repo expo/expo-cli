@@ -9,6 +9,27 @@ import { importMetroResolverFromProject } from './importMetroFromProject';
 
 export type ModuleReplacement = { match: RegExp; replace: string };
 
+export function testResolutionForReplacements(
+  result: Resolution,
+  moduleReplacements: ModuleReplacement[]
+): Resolution {
+  // Only apply resolution on source files, skipping noop and assets
+  if (result.type === 'sourceFile') {
+    // Iterate through the replacements
+    for (const matcher of moduleReplacements) {
+      if (matcher.match.test(result.filePath)) {
+        if (EXPO_DEBUG) {
+          console.log(`[emc] Replace: `, result.filePath, ' -> ', matcher.replace);
+        }
+        // @ts-ignore: readonly
+        result.filePath = matcher.replace;
+      }
+    }
+  }
+
+  return result;
+}
+
 export function createModuleReplacementResolver(
   projectRoot: string,
   moduleReplacements: ModuleReplacement[]
@@ -23,23 +44,8 @@ export function createModuleReplacementResolver(
     delete context.resolveRequest;
 
     try {
-      const result: Resolution = resolve(context, realModuleName, platform);
-
-      // Only apply resolution on source files, skipping noop and assets
-      if (result.type === 'sourceFile') {
-        // Iterate through the replacements
-        for (const matcher of moduleReplacements) {
-          if (matcher.match.test(result.filePath)) {
-            if (EXPO_DEBUG) {
-              console.log(`[emc] Replace: `, result.filePath, ' -> ', matcher.replace);
-            }
-            // @ts-ignore: readonly
-            result.filePath = matcher.replace;
-          }
-        }
-      }
-
-      return result;
+      const result = resolve(context, realModuleName, platform);
+      return testResolutionForReplacements(result, moduleReplacements);
     } catch (e) {
       throw e;
     } finally {
@@ -63,6 +69,13 @@ function getAllFiles(dirPath: string, collected: string[] = []) {
   return collected;
 }
 
+export function collectModuleReplacementsInDirectory(directory: string) {
+  return getAllFiles(directory).map(replace => ({
+    match: new RegExp(escapeRegExp(path.relative(directory, replace))),
+    replace,
+  }));
+}
+
 // We replace modules in `expo/patches/*` in the project.
 // This is used for applying patches to the upstream `react-native` package.
 export function getVendoredExpoPatches(projectRoot: string): ModuleReplacement[] {
@@ -83,10 +96,7 @@ export function getVendoredExpoPatches(projectRoot: string): ModuleReplacement[]
   }
 
   // Collect all of the patches.
-  const patches = getAllFiles(expoPatchesPath).map(replace => ({
-    match: new RegExp(escapeRegExp(path.relative(expoPatchesPath, replace))),
-    replace,
-  }));
+  const patches = collectModuleReplacementsInDirectory(expoPatchesPath);
 
   if (EXPO_DEBUG) {
     console.log('[emc] using patches:', patches);
