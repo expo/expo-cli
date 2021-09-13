@@ -71,6 +71,7 @@ const typeDefs = graphql`
     description: String
     slug: String
     githubUrl: String
+    platforms: [String]
   }
 
   input ProjectConfigInput {
