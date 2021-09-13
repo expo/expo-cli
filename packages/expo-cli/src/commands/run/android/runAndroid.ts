@@ -137,6 +137,7 @@ export async function actionAsync(projectRoot: string, options: Options) {
   if (props.bundler) {
     await startBundlerAsync(projectRoot, {
       metroPort: props.port,
+      platforms: exp.platforms,
     });
   }
 

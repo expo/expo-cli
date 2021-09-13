@@ -6,7 +6,7 @@ import { installExitHooks } from '../../start/installExitHooks';
 
 export async function startBundlerAsync(
   projectRoot: string,
-  { metroPort }: Pick<Project.StartOptions, 'metroPort'>
+  { metroPort, platforms }: Pick<Project.StartOptions, 'metroPort' | 'platforms'>
 ) {
   // Add clean up hooks
   installExitHooks(projectRoot);
@@ -23,5 +23,6 @@ export async function startBundlerAsync(
     // Enable controls
     isWebSocketsEnabled: true,
     isRemoteReloadingEnabled: true,
+    platforms,
   });
 }

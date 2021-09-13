@@ -1,3 +1,4 @@
+import { ExpoConfig } from '@expo/config-types';
 import chalk from 'chalk';
 import openBrowser from 'react-dev-utils/openBrowser';
 import wrapAnsi from 'wrap-ansi';
@@ -35,10 +36,11 @@ type StartOptions = {
   nonPersistent?: boolean;
   maxWorkers?: number;
   webOnly?: boolean;
+  platforms?: ExpoConfig['platforms'];
 };
 
 const printHelp = (): void => {
-  logCommandsTable([['?', 'show all commands']]);
+  logCommandsTable([{ key: '?', msg: 'show all commands' }]);
 };
 
 const div = chalk.dim(`│`);
@@ -56,8 +58,8 @@ const printUsageAsync = async (
   projectRoot: string,
   options: Pick<
     StartOptions,
-    'webOnly' | 'devClient' | 'isWebSocketsEnabled' | 'isRemoteReloadingEnabled'
-  > = {}
+    'webOnly' | 'devClient' | 'isWebSocketsEnabled' | 'isRemoteReloadingEnabled' | 'platforms'
+  >
 ) => {
   const { dev } = await ProjectSettings.readAsync(projectRoot);
   const openDevToolsAtStartup = await shouldOpenDevToolsOnStartupAsync();
@@ -66,64 +68,92 @@ const printUsageAsync = async (
 
   const isMac = process.platform === 'darwin';
 
+  const { platforms = ['ios', 'android', 'web'] } = options;
+
+  const isAndroidDisabled = !platforms.includes('android');
+  const isIosDisabled = !platforms.includes('ios');
+  const isWebDisable = !platforms.includes('web');
+
   logCommandsTable([
-    [],
-    ['a', `open Android`],
-    ['shift+a', `select a device or emulator`],
-    isMac && ['i', `open iOS simulator`],
-    isMac && ['shift+i', `select a simulator`],
-    ['w', `open web`],
-    [],
-    !!options.isRemoteReloadingEnabled && ['r', `reload app`],
-    !!options.isWebSocketsEnabled && ['m', `toggle menu`],
-    !!options.isWebSocketsEnabled && ['shift+m', `more tools`],
-    ['o', `open project code in your editor`],
-    ['c', `show project QR`],
-    ['p', `toggle build mode`, devMode],
+    {},
+    { key: 'a', msg: `open Android`, disabled: isAndroidDisabled },
+    { key: 'shift+a', msg: `select a device or emulator`, disabled: isAndroidDisabled },
+    isMac && { key: 'i', msg: `open iOS simulator`, disabled: isIosDisabled },
+    isMac && { key: 'shift+i', msg: `select a simulator`, disabled: isIosDisabled },
+    { key: 'w', msg: `open web`, disabled: isWebDisable },
+    {},
+    !!options.isRemoteReloadingEnabled && { key: 'r', msg: `reload app` },
+    !!options.isWebSocketsEnabled && { key: 'm', msg: `toggle menu` },
+    !!options.isWebSocketsEnabled && { key: 'shift+m', msg: `more tools` },
+    { key: 'o', msg: `open project code in your editor` },
+    { key: 'c', msg: `show project QR` },
+    { key: 'p', msg: `toggle build mode`, status: devMode },
     // TODO: Drop with SDK 40
-    !options.isRemoteReloadingEnabled && ['r', `restart bundler`],
-    !options.isRemoteReloadingEnabled && ['shift+r', `restart and clear cache`],
-    [],
-    ['d', `show developer tools`],
-    ['shift+d', `toggle auto opening developer tools on startup`, currentToggle],
-    [],
+    !options.isRemoteReloadingEnabled && { key: 'r', msg: `restart bundler` },
+    !options.isRemoteReloadingEnabled && { key: 'shift+r', msg: `restart and clear cache` },
+    {},
+    { key: 'd', msg: `show developer tools` },
+    {
+      key: 'shift+d',
+      msg: `toggle auto opening developer tools on startup`,
+      status: currentToggle,
+    },
+    {},
   ]);
 };
 
 const printBasicUsageAsync = async (
-  options: Pick<StartOptions, 'webOnly' | 'isWebSocketsEnabled' | 'isRemoteReloadingEnabled'> = {}
+  options: Pick<
+    StartOptions,
+    'webOnly' | 'isWebSocketsEnabled' | 'isRemoteReloadingEnabled' | 'platforms'
+  >
 ) => {
   const isMac = process.platform === 'darwin';
   const openDevToolsAtStartup = await shouldOpenDevToolsOnStartupAsync();
   const currentToggle = openDevToolsAtStartup ? 'enabled' : 'disabled';
 
+  const { platforms = ['ios', 'android', 'web'] } = options;
+
+  const isAndroidDisabled = !platforms.includes('android');
+  const isIosDisabled = !platforms.includes('ios');
+  const isWebDisable = !platforms.includes('web');
+
   logCommandsTable([
-    [],
-    ['a', `open Android`],
-    isMac && ['i', `open iOS simulator`],
-    ['w', `open web`],
-    [],
-    !!options.isRemoteReloadingEnabled && ['r', `reload app`],
-    !!options.isWebSocketsEnabled && ['m', `toggle menu`],
-    ['d', `show developer tools`],
-    ['shift+d', `toggle auto opening developer tools on startup`, currentToggle],
-    [],
+    {},
+    { key: 'a', msg: `open Android`, disabled: isAndroidDisabled },
+    isMac && { key: 'i', msg: `open iOS simulator`, disabled: isIosDisabled },
+    { key: 'w', msg: `open web`, disabled: isWebDisable },
+    {},
+    !!options.isRemoteReloadingEnabled && { key: 'r', msg: `reload app` },
+    !!options.isWebSocketsEnabled && { key: 'm', msg: `toggle menu` },
+    { key: 'd', msg: `show developer tools` },
+    {
+      key: 'shift+d',
+      msg: `toggle auto opening developer tools on startup`,
+      status: currentToggle,
+    },
+    {},
   ]);
 };
 
-function logCommandsTable(ui: (false | string[])[]) {
+function logCommandsTable(
+  ui: (false | { key?: string; msg?: string; status?: string; disabled?: boolean })[]
+) {
   Log.nested(
     ui
       .filter(Boolean)
       // @ts-ignore: filter doesn't work
-      .map(([key, message, status]) => {
+      .map(({ key, msg, status, disabled }) => {
         if (!key) return '';
         let view = `${BLT} `;
         if (key.length === 1) view += 'Press ';
         view += `${b(key)} ${div} `;
-        view += message;
+        view += msg;
         if (status) {
           view += ` ${chalk.dim(`(${i(status)})`)}`;
+        }
+        if (disabled) {
+          view = chalk.dim(view);
         }
         return view;
       })
@@ -133,7 +163,10 @@ function logCommandsTable(ui: (false | string[])[]) {
 
 const printServerInfo = async (
   projectRoot: string,
-  options: Pick<StartOptions, 'webOnly' | 'isWebSocketsEnabled' | 'isRemoteReloadingEnabled'> = {}
+  options: Pick<
+    StartOptions,
+    'webOnly' | 'isWebSocketsEnabled' | 'isRemoteReloadingEnabled' | 'platforms'
+  >
 ) => {
   const wrapLength = process.stdout.columns || 80;
   const item = (text: string): string => `${BLT} ` + wrapAnsi(text, wrapLength).trimStart();
@@ -148,7 +181,7 @@ const printServerInfo = async (
       // TODO: if dev client, change this message!
       Log.nested(item(`Scan the QR code above with Expo Go (Android) or the Camera app (iOS)`));
     } catch (error) {
-      // If there is no dev client scheme, then skip the QR code.
+      // @ts-ignore: If there is no dev client scheme, then skip the QR code.
       if (error.code !== 'NO_DEV_CLIENT_SCHEME') {
         throw error;
       } else {
@@ -233,6 +266,8 @@ export async function startAsync(projectRoot: string, options: StartOptions) {
     if (shouldPrompt) {
       Log.clear();
     }
+    const { platforms = ['ios', 'android', 'web'] } = options;
+
     switch (key) {
       case 'A':
       case 'a':
@@ -246,6 +281,14 @@ export async function startAsync(projectRoot: string, options: StartOptions) {
             Log.nestedError(results.error);
           }
         } else {
+          const isDisabled = !platforms.includes('android');
+          if (isDisabled) {
+            Log.nestedWarn(
+              `Android is disabled, enable it by adding ${chalk.bold`android`} to the platforms array in your app.json or app.config.js`
+            );
+            break;
+          }
+
           Log.log(`${BLT} Opening on Android...`);
           const results = await Android.openProjectAsync({
             projectRoot,
@@ -272,6 +315,13 @@ export async function startAsync(projectRoot: string, options: StartOptions) {
             Log.nestedError(results.error);
           }
         } else {
+          const isDisabled = !platforms.includes('ios');
+          if (isDisabled) {
+            Log.nestedWarn(
+              `iOS is disabled, enable it by adding ${chalk.bold`ios`} to the platforms array in your app.json or app.config.js`
+            );
+            break;
+          }
           Log.log(`${BLT} Opening on iOS...`);
           const results = await Simulator.openProjectAsync({
             projectRoot,
@@ -306,6 +356,14 @@ export async function startAsync(projectRoot: string, options: StartOptions) {
         break;
       }
       case 'w': {
+        const isDisabled = !platforms.includes('web');
+        if (isDisabled) {
+          Log.nestedWarn(
+            `Web is disabled, enable it by installing ${chalk.bold`react-native-web`}, and adding ${chalk.bold`web`} to the platforms array in your app.json or app.config.js`
+          );
+          break;
+        }
+
         // Ensure the Webpack dev server is running first
         const isStarted = await Webpack.getUrlAsync(projectRoot);
 
@@ -336,7 +394,7 @@ export async function startAsync(projectRoot: string, options: StartOptions) {
         await UserSettings.setAsync('openDevToolsAtStartup', enabled);
         const currentToggle = enabled ? 'enabled' : 'disabled';
         Log.log(`Auto opening developer tools on startup: ${chalk.bold(currentToggle)}`);
-        logCommandsTable([['d', `show developer tools now`]]);
+        logCommandsTable([{ key: 'd', msg: `show developer tools now` }]);
         break;
       }
       case 'm': {
