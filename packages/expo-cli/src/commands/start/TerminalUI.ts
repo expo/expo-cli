@@ -359,7 +359,7 @@ export async function startAsync(projectRoot: string, options: StartOptions) {
         const isDisabled = !platforms.includes('web');
         if (isDisabled) {
           Log.nestedWarn(
-            `Web is disabled, enable it by installing ${chalk.bold`react-native-web`}, and adding ${chalk.bold`web`} to the platforms array in your app.json or app.config.js`
+            `Web is disabled, enable it by installing ${chalk.bold`react-native-web`} and adding ${chalk.bold`web`} to the platforms array in your app.json or app.config.js`
           );
           break;
         }
