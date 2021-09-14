@@ -1,57 +1,23 @@
 import Debug from 'debug';
 import { readFileSync } from 'fs';
 import { boolish } from 'getenv';
-// @ts-ignore
-import type { DeviceValues, IPLookupResult } from 'native-run/dist/ios/lib';
+import * as path from 'path';
+
 import {
   AFC_STATUS,
   AFCError,
   ClientManager,
   LockdowndClient,
+  OnInstallProgressCallback,
   UsbmuxdClient,
-  // @ts-ignore
-} from 'native-run/dist/ios/lib';
-// @ts-ignore
-import { getDeveloperDiskImagePath } from 'native-run/dist/ios/utils/xcode';
-// @ts-ignore
-import { onBeforeExit, wait } from 'native-run/dist/utils/process';
-import * as path from 'path';
+} from './native-run/ios/lib';
+import type { DeviceValues, IPLookupResult } from './native-run/ios/lib';
+import { getDeveloperDiskImagePath } from './native-run/ios/utils/xcode';
+import { onBeforeExit, wait } from './native-run/utils/process';
 
 const EXPO_USE_APPLE_DEVICE = boolish('EXPO_USE_APPLE_DEVICE', false);
 
-const debug = Debug('native-run:ios:utils:device');
-
-export interface DeviceValues {
-  BasebandCertId: number;
-  BasebandKeyHashInformation: {
-    AKeyStatus: number;
-    SKeyHash: Buffer;
-    SKeyStatus: number;
-  };
-  BasebandSerialNumber: Buffer;
-  BasebandVersion: string;
-  BoardId: number;
-  BuildVersion: string;
-  ChipID: number;
-  DeviceClass: string;
-  DeviceColor: string;
-  DeviceName: string;
-  DieID: number;
-  HardwareModel: string;
-  HasSiDP: boolean;
-  PartitionType: string;
-  ProductName: string;
-  ProductType: string;
-  ProductVersion: string;
-  ProductionSOC: boolean;
-  ProtocolVersion: string;
-  TelephonyCapability: boolean;
-  UniqueChipID: number;
-  UniqueDeviceID: string;
-  // TODO: Warn if connected device is using the wrong wifi address
-  WiFiAddress: string;
-  [key: string]: any;
-}
+const debug = Debug('expo:xdl:ios:utils:device');
 
 export function isEnabled() {
   return EXPO_USE_APPLE_DEVICE;
@@ -83,12 +49,14 @@ export async function runOnDevice({
   bundleId,
   waitForApp,
   deltaPath,
+  onProgress,
 }: {
   udid: string;
   appPath: string;
   bundleId: string;
   waitForApp: boolean;
   deltaPath: string;
+  onProgress: OnInstallProgressCallback;
 }) {
   const clientManager = await ClientManager.create(udid);
 
@@ -102,22 +70,27 @@ export async function runOnDevice({
 
     const installer = await clientManager.getInstallationProxyClient();
     // TODO: Progress callback
-    await installer.installApp(destPackagePath, bundleId, {
-      // https://github.com/ios-control/ios-deploy/blob/0f2ffb1e564aa67a2dfca7cdf13de47ce489d835/src/ios-deploy/ios-deploy.m#L2491-L2508
-      ApplicationType: 'Any',
+    await installer.installApp(
+      destPackagePath,
+      bundleId,
+      {
+        // https://github.com/ios-control/ios-deploy/blob/0f2ffb1e564aa67a2dfca7cdf13de47ce489d835/src/ios-deploy/ios-deploy.m#L2491-L2508
+        ApplicationsType: 'Any',
 
-      CFBundleIdentifier: bundleId,
-      CloseOnInvalidate: '1',
-      InvalidateOnDetach: '1',
-      IsUserInitiated: '1',
-      // Disable checking for wifi devices, this is nominally faster.
-      PreferWifi: '0',
-      // Only info I could find on these:
-      // https://github.com/wwxxyx/Quectel_BG96/blob/310876f90fc1093a59e45e381160eddcc31697d0/Apple_Homekit/homekit_certification_tools/ATS%206/ATS%206/ATS.app/Contents/Frameworks/CaptureKit.framework/Versions/A/Resources/MobileDevice/MobileInstallation.h#L112-L121
-      PackageType: 'Developer',
-      ShadowParentKey: deltaPath,
-      // SkipUninstall: '1'
-    });
+        CFBundleIdentifier: bundleId,
+        CloseOnInvalidate: '1',
+        InvalidateOnDetach: '1',
+        IsUserInitiated: '1',
+        // Disable checking for wifi devices, this is nominally faster.
+        PreferWifi: '0',
+        // Only info I could find on these:
+        // https://github.com/wwxxyx/Quectel_BG96/blob/310876f90fc1093a59e45e381160eddcc31697d0/Apple_Homekit/homekit_certification_tools/ATS%206/ATS%206/ATS.app/Contents/Frameworks/CaptureKit.framework/Versions/A/Resources/MobileDevice/MobileInstallation.h#L112-L121
+        PackageType: 'Developer',
+        ShadowParentKey: deltaPath,
+        // SkipUninstall: '1'
+      },
+      onProgress
+    );
 
     const { [bundleId]: appInfo } = await installer.lookupApp([bundleId]);
     // launch fails with EBusy or ENotFound if you try to launch immediately after install

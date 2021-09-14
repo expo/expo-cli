@@ -24,7 +24,7 @@ export function getAppDeltaDirectory(bundleId: string): string {
   return deltaFolder;
 }
 
-// To debug: `export DEBUG=native-run:*`
+// To debug: `export DEBUG=expo:xdl:*`
 export async function installOnDeviceAsync(props: {
   bundle: string;
   bundleIdentifier: string;
@@ -41,38 +41,27 @@ export async function installOnDeviceAsync(props: {
 
   try {
     // TODO: Connect for logs
-    // TODO: Progress bar
     await AppleDevice.runOnDevice({
       udid,
       appPath: bundle,
       bundleId: bundleIdentifier,
       waitForApp: false,
       deltaPath: appDeltaDirectory,
-      // TODO: Use this
       onProgress({
-        phase,
+        status,
         isComplete,
-        copiedFiles,
         progress,
       }: {
-        phase: string;
+        status: string;
         isComplete: boolean;
-        copiedFiles: number;
         progress: number;
       }) {
         if (!indicator) {
-          indicator = ora(phase).start();
+          indicator = ora(status).start();
         }
+        indicator.text = `${chalk.bold(status)} ${progress}%`;
         if (isComplete) {
-          if (phase === 'Installing') {
-            const copiedMessage = chalk.gray`Copied ${copiedFiles} file(s)`;
-            // Emulate Xcode copy file count, this helps us know if app deltas are working.
-            indicator.succeed(`${chalk.bold('Installed')} ${copiedMessage}`);
-          } else {
-            indicator.succeed();
-          }
-        } else {
-          indicator.text = `${chalk.bold(phase)} ${progress}%`;
+          indicator.succeed();
         }
       },
     });
