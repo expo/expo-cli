@@ -7,6 +7,7 @@ export {
   Analytics,
   Android,
   ApiV2,
+  AppleDevice,
   Binaries,
   Config,
   AndroidCredentials,

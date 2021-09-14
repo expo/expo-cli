@@ -2,7 +2,7 @@ import { ExpoConfig, getConfig } from '@expo/config';
 import chalk from 'chalk';
 import fs from 'fs-extra';
 import * as path from 'path';
-import { SimControl, Simulator, UnifiedAnalytics } from 'xdl';
+import { AppleDevice, SimControl, Simulator, UnifiedAnalytics } from 'xdl';
 
 import CommandError from '../../../CommandError';
 import StatusEventEmitter from '../../../StatusEventEmitter';
@@ -17,6 +17,7 @@ import { parseBinaryPlistAsync } from '../utils/binaryPlist';
 import * as IOSDeploy from './IOSDeploy';
 import maybePromptToSyncPodsAsync from './Podfile';
 import * as XcodeBuild from './XcodeBuild';
+import { getAppDeltaDirectory, installOnDeviceAsync } from './installOnDeviceAsync';
 import { Options, resolveOptionsAsync } from './resolveOptionsAsync';
 import { startBundlerAsync } from './startBundlerAsync';
 
@@ -52,8 +53,16 @@ export async function actionAsync(projectRoot: string, options: Options) {
 
   const props = await resolveOptionsAsync(projectRoot, options);
   if (!props.isSimulator) {
-    // Assert as early as possible
-    await IOSDeploy.assertInstalledAsync();
+    if (AppleDevice.isEnabled()) {
+      Log.log(
+        chalk.gray(
+          `\u203A Unstable feature ${chalk.bold`EXPO_USE_APPLE_DEVICE`} is enabled. Device installation may not work as expected.`
+        )
+      );
+    } else {
+      // Assert as early as possible
+      await IOSDeploy.assertInstalledAsync();
+    }
   }
 
   const buildOutput = await profileMethod(XcodeBuild.buildAsync, 'XcodeBuild.buildAsync')(props);
@@ -82,9 +91,10 @@ export async function actionAsync(projectRoot: string, options: Options) {
       shouldStartBundler: props.shouldStartBundler,
     });
   } else {
-    await IOSDeploy.installOnDeviceAsync({
+    await profileMethod(installOnDeviceAsync)({
+      bundleIdentifier,
       bundle: binaryPath,
-      appDeltaDirectory: IOSDeploy.getAppDeltaDirectory(bundleIdentifier),
+      appDeltaDirectory: getAppDeltaDirectory(bundleIdentifier),
       udid: props.device.udid,
       deviceName: props.device.name,
     });

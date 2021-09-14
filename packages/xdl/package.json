@@ -68,6 +68,7 @@
     "md5hex": "1.0.0",
     "minimatch": "3.0.4",
     "mv": "2.1.1",
+    "native-run": "^1.4.1",
     "node-forge": "0.10.0",
     "p-map": "3.0.0",
     "p-retry": "4.1.0",
