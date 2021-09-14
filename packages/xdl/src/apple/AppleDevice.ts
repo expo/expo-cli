@@ -69,7 +69,6 @@ export async function runOnDevice({
     await uploadApp(clientManager, appPath, destPackagePath);
 
     const installer = await clientManager.getInstallationProxyClient();
-    // TODO: Progress callback
     await installer.installApp(
       destPackagePath,
       bundleId,
