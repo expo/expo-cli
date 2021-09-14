@@ -6,6 +6,7 @@ import http from 'http';
 import os from 'os';
 import { parse, URL } from 'url';
 
+import { Webpack } from '..';
 import {
   Analytics,
   ANONYMOUS_USERNAME,
@@ -183,7 +184,7 @@ export function getManifestHandler(projectRoot: string, usePlatformHeaders?: boo
   };
 }
 
-async function getManifestResponseFromHeadersAsync({
+export async function getManifestResponseFromHeadersAsync({
   projectRoot,
   headers,
 }: {
@@ -249,8 +250,11 @@ export async function getManifestResponseAsync({
   const hostname = stripPort(host);
 
   // Get project entry point and initial module
-  const entryPoint = resolveEntryPoint(projectRoot, platform, projectConfig);
-  const mainModuleName = UrlUtils.stripJSExtension(entryPoint);
+  let mainModuleName: string = 'index';
+  if (!Webpack.isTargetingNative()) {
+    const entryPoint = resolveEntryPoint(projectRoot, platform, projectConfig);
+    mainModuleName = UrlUtils.stripJSExtension(entryPoint);
+  }
   // Gather packager and host info
   const hostInfo = await createHostInfoAsync();
   const [projectSettings, bundleUrlPackagerOpts] = await getPackagerOptionsAsync(projectRoot);

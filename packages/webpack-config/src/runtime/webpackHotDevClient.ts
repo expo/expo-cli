@@ -9,6 +9,7 @@
 import hotEmitter from 'webpack/hot/emitter.js';
 
 import * as LoadingView from './LoadingView';
+import socket from './socket';
 
 // This alternative WebpackDevServer combines the functionality of:
 // https://github.com/webpack/webpack-dev-server/blob/webpack-1/client/index.js
@@ -20,27 +21,25 @@ import * as LoadingView from './LoadingView';
 // https://github.com/glenjamin/webpack-hot-middleware
 
 const formatWebpackMessages = require('react-dev-utils/formatWebpackMessages');
-const launchEditorEndpoint = require('react-dev-utils/launchEditorEndpoint');
 const ErrorOverlay = require('react-error-overlay');
 const stripAnsi = require('strip-ansi');
 const url = require('url');
+
+const openEditorEndpoint = getDevServerUrl('open-stack-frame');
 
 // @ts-ignore
 ErrorOverlay.setEditorHandler(function editorHandler(errorLocation) {
   // Keep this sync with errorOverlayMiddleware.js
   // @ts-ignore
-  fetch(
-    launchEditorEndpoint +
-      '?fileName=' +
-      // @ts-ignore
-      window.encodeURIComponent(errorLocation.fileName) +
-      '&lineNumber=' +
-      // @ts-ignore
-      window.encodeURIComponent(errorLocation.lineNumber || 1) +
-      '&colNumber=' +
-      // @ts-ignore
-      window.encodeURIComponent(errorLocation.colNumber || 1)
-  );
+  fetch(openEditorEndpoint, {
+    method: 'POST',
+    body: JSON.stringify({
+      file: errorLocation.fileName,
+      lineNumber: errorLocation.lineNumber,
+      // TODO: The RN middleware currently doesn't support colNumber
+      colNumber: errorLocation.colNumber,
+    }),
+  });
 });
 
 // We need to keep track of if there has been a runtime error.
@@ -66,34 +65,93 @@ if (module.hot && typeof module.hot.dispose === 'function') {
   });
 }
 
-const sockUrl = url.format({
-  // @ts-ignore
-  protocol: window.location.protocol === 'https:' ? 'wss' : 'ws',
-  // @ts-ignore
-  hostname: process.env.WDS_SOCKET_HOST || window.location.hostname,
-  // @ts-ignore
-  port: process.env.WDS_SOCKET_PORT || window.location.port,
-  // Hardcoded in WebpackDevServer
-  pathname: process.env.WDS_SOCKET_PATH || '/_expo/ws',
-  slashes: true,
+const sockUrl = getDevServerUrl(process.env.WDS_SOCKET_PATH || '/_expo/ws');
+
+function getDevServerUrl(pathname: string) {
+  return url.format({
+    // @ts-ignore
+    protocol: window.location.protocol === 'https:' ? 'wss' : 'ws',
+    // @ts-ignore
+    hostname: process.env.WDS_SOCKET_HOST || window.location.hostname,
+    // @ts-ignore
+    port: process.env.WDS_SOCKET_PORT || window.location.port,
+    // Hardcoded in WebpackDevServer
+    pathname,
+    slashes: true,
+  });
+}
+
+socket(sockUrl, {
+  open() {
+    console.log('[HMR] client connected');
+  },
+  close(event: { isTrusted: boolean; message: string }) {
+    LoadingView.hide();
+    setDisconnected(
+      'The development server has disconnected.\nRefresh the page if necessary. ' + event.message
+    );
+  },
+  onError(e: Error) {
+    if (!(typeof console !== 'undefined' && typeof console.warn === 'function')) return;
+
+    let error = `Cannot connect to the development server.
+  
+  Try the following to fix the issue:
+  - Ensure that Expo CLI is running and available on the same network`;
+
+    if (LoadingView.getPlatform() !== 'ios') {
+      error += `
+  - Ensure that your device/emulator is connected to your machine and has USB debugging enabled - run 'adb devices' to see a list of connected devices
+  - If you're on a physical device connected to the same machine, run 'adb reverse tcp:8081 tcp:8081' to forward requests from your device
+  - If your device is on the same Wi-Fi network, set 'Debug server host & port for device' in 'Dev settings' to your machine's IP address and the port of the local dev server - e.g. 10.0.1.1:8081`;
+    }
+
+    error += `
+  
+  URL: ${sockUrl}
+  
+  Error: ${e.message}`;
+
+    setDisconnected(error);
+  },
+  // Custom for Expo
+  invalid() {
+    LoadingView.showMessage('Rebuilding...', 'refresh');
+    // console.log('[HMRClient] Bundle rebuilding', message);
+  },
+  hash(hash: string) {
+    // There is a newer version of the code available.
+    // Update last known compilation hash.
+    mostRecentCompilationHash = hash;
+  },
+
+  'still-ok': () => {
+    handleSuccess();
+  },
+
+  ok() {
+    handleSuccess();
+    hotEmitter.emit('webpackHotUpdate', mostRecentCompilationHash);
+  },
+
+  'static-changed': () => window.location.reload(),
+  // Triggered when a file from `contentBase` changed.
+  'content-changed': () => window.location.reload(),
+
+  warnings: handleWarnings,
+  errors: handleErrors,
 });
 
-// Connect to WebpackDevServer via a socket.
-// @ts-ignore
-const connection = new WebSocket(sockUrl);
+let disconnectedReason: string | null = null;
 
-connection.onopen = () => {
-  console.log('[HMR] client connected');
-};
+function setDisconnected(reason: string) {
+  if (disconnectedReason) return;
 
-// Unlike WebpackDevServer client, we won't try to reconnect
-// to avoid spamming the console. Disconnect usually happens
-// when developer stops the server.
-connection.onclose = function () {
-  if (typeof console !== 'undefined' && typeof console.log === 'function') {
-    console.log('The development server has disconnected.\nRefresh the page if necessary.');
+  disconnectedReason = reason;
+  if (typeof console !== 'undefined' && typeof console.warn === 'function') {
+    console.warn(reason);
   }
-};
+}
 
 // Remember some state related to hot module replacement.
 let isFirstCompilation = true;
@@ -204,64 +262,6 @@ function tryDismissErrorOverlay() {
     ErrorOverlay.dismissBuildError();
   }
 }
-
-// There is a newer version of the code available.
-// @ts-ignore
-function handleAvailableHash(hash) {
-  // Update last known compilation hash.
-  mostRecentCompilationHash = hash;
-}
-
-// Handle messages from the server.
-// @ts-ignore
-connection.onmessage = function (e) {
-  const message = JSON.parse(e.data);
-  const platforms: string[] = Array.isArray(message.platforms) ? message.platforms : [];
-
-  const canDiffPlatforms = !!platforms.length && !!process.env.PLATFORM;
-  if (canDiffPlatforms) {
-    if (!platforms.includes(LoadingView.getPlatform())) {
-      // console.log('[HMR] skipping misc platform:', platforms, message);
-      return;
-    } else {
-      console.log('[HMR] do:', message);
-    }
-  } else {
-    console.log('[HMR] universal', message);
-  }
-
-  switch (message.type) {
-    // Custom for Expo
-    case 'invalid':
-      LoadingView.showMessage('Rebuilding...', 'refresh');
-      // console.log('[HMRClient] Bundle rebuilding', message);
-      break;
-    case 'hash':
-      handleAvailableHash(message.data);
-      break;
-    case 'still-ok':
-      handleSuccess();
-      break;
-    case 'ok':
-      handleSuccess();
-      hotEmitter.emit('webpackHotUpdate', mostRecentCompilationHash);
-      break;
-    case 'static-changed':
-    case 'content-changed':
-      // Triggered when a file from `contentBase` changed.
-      // @ts-ignore
-      window.location.reload();
-      break;
-    case 'warnings':
-      handleWarnings(message.data);
-      break;
-    case 'errors':
-      handleErrors(message.data);
-      break;
-    default:
-    // Do nothing.
-  }
-};
 
 // Is there a newer version of this code available?
 function isUpdateAvailable() {
