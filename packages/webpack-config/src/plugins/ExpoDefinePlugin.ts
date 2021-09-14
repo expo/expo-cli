@@ -4,7 +4,14 @@ import semver from 'semver';
 import webpack from 'webpack';
 
 import { getConfig, getMode, getPublicPaths } from '../env';
-import { host, isFastRefreshEnabled, sockHost, sockPath, sockPort } from '../env/defaults';
+import {
+  EXPO_DEBUG,
+  host,
+  isFastRefreshEnabled,
+  sockHost,
+  sockPath,
+  sockPort,
+} from '../env/defaults';
 import { Environment, ExpoPlatform, Mode } from '../types';
 
 function createEnvironmentConstants(appManifest: ExpoConfig) {
@@ -100,6 +107,7 @@ export function createClientEnvironment(
          */
         [`${prefix}APP_MANIFEST`]: JSON.stringify(nativeAppManifest),
 
+        [`${prefix}EXPO_DEBUG`]: EXPO_DEBUG,
         [`${prefix}PLATFORM`]: JSON.stringify(platform),
         // Whether or not react-refresh is enabled.
         // It is defined here so it is available in the webpackHotDevClient.

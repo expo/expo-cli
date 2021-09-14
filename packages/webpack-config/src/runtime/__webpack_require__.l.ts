@@ -1,5 +1,6 @@
 import * as LoadingView from './LoadingView';
 import { requestAsync } from './requestAsync';
+import { debug } from './socket';
 
 async function loadBundle(url: string) {
   const reqHeaders = {
@@ -48,15 +49,15 @@ __webpack_require__.l = function (
     const stringModuleID = String(chunkId);
 
     if (!requirePromises[stringModuleID]) {
-      console.log('[webpack.l] start', chunkId);
+      debug('[webpack.l] start', chunkId);
       requirePromises[stringModuleID] = loadBundle(url).then(body => {
-        console.log('[webpack.l] done', url);
+        debug('[webpack.l] done', url);
         return done({});
       });
     }
     return requirePromises[stringModuleID];
   } catch (error) {
-    console.log('[webpack.l] fail', error);
+    debug('[webpack.l] fail', error);
     throw error;
   }
 };

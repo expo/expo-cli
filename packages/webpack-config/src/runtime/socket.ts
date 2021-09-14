@@ -62,13 +62,13 @@ const socket = function initSocket(url: string, handlers: Record<string, Functio
     const canDiffPlatforms = !!platforms.length && !!process.env.PLATFORM;
     if (canDiffPlatforms) {
       if (!platforms.includes(LoadingView.getPlatform())) {
-        // console.log('[HMR] skipping misc platform:', platforms, message);
+        // debug('[HMR] skipping misc platform:', platforms, message);
         return;
       } else {
-        console.log('[HMR] do:', message);
+        debug('[HMR] do:', message);
       }
     } else {
-      console.log('[HMR] universal', message);
+      debug('[HMR] universal', message);
     }
 
     if (handlers[message.type]) {
@@ -78,3 +78,7 @@ const socket = function initSocket(url: string, handlers: Record<string, Functio
 };
 
 export default socket;
+
+export const debug = (...msg) => {
+  if (process.env.EXPO_DEBUG) console.log(msg);
+};

@@ -9,7 +9,7 @@
 import hotEmitter from 'webpack/hot/emitter.js';
 
 import * as LoadingView from './LoadingView';
-import socket from './socket';
+import socket, { debug } from './socket';
 
 // This alternative WebpackDevServer combines the functionality of:
 // https://github.com/webpack/webpack-dev-server/blob/webpack-1/client/index.js
@@ -83,7 +83,7 @@ function getDevServerUrl(pathname: string) {
 
 socket(sockUrl, {
   open() {
-    console.log('[HMR] client connected');
+    debug('[HMR] client connected');
   },
   close(event: { isTrusted: boolean; message: string }) {
     LoadingView.hide();
@@ -117,7 +117,7 @@ socket(sockUrl, {
   // Custom for Expo
   invalid() {
     LoadingView.showMessage('Rebuilding...', 'refresh');
-    // console.log('[HMRClient] Bundle rebuilding', message);
+    // debug('[HMRClient] Bundle rebuilding', message);
   },
   hash(hash: string) {
     // There is a newer version of the code available.
