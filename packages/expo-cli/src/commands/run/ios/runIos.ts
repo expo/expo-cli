@@ -66,6 +66,7 @@ export async function actionAsync(projectRoot: string, options: Options) {
   if (props.shouldStartBundler) {
     await startBundlerAsync(projectRoot, {
       metroPort: props.port,
+      platforms: exp.platforms,
     });
   }
   const bundleIdentifier = await profileMethod(getBundleIdentifierForBinaryAsync)(binaryPath);

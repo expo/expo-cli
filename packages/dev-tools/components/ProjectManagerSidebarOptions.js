@@ -77,11 +77,20 @@ const STYLES_CONTENT_GROUP = css`
   justify-content: space-between;
   align-items: center;
   transition: 200ms ease all;
+  cursor: pointer;
 
   :hover {
     background: ${Constants.colors.primary};
     color: ${Constants.colors.white};
-    cursor: pointer;
+  }
+`;
+
+const STYLES_CONTENT_GROUP_DISABLED = css`
+  opacity: 0.5;
+  cursor: not-allowed;
+  :hover {
+    background: unset;
+    color: currentColor;
   }
 `;
 
@@ -96,6 +105,33 @@ const STYLES_CONTENT_GROUP_RIGHT = css`
   align-items: center;
   justify-content: center;
 `;
+
+function SidebarOption({ children, onClick, tooltip, isDisabled = false }) {
+  return (
+    <div
+      className={`
+    ${STYLES_CONTENT_GROUP}
+    ${isDisabled ? STYLES_CONTENT_GROUP_DISABLED : ''}
+    `}
+      title={tooltip}
+      onClick={isDisabled ? undefined : onClick}>
+      <span className={STYLES_CONTENT_GROUP_LEFT}>{children}</span>
+    </div>
+  );
+}
+
+function PlatformSidebarOption({ platform, ...props }) {
+  return (
+    <SidebarOption
+      tooltip={
+        props.isDisabled
+          ? `Add '${platform}' to the 'platforms' array in the project app.json to enable this platform`
+          : ''
+      }
+      {...props}
+    />
+  );
+}
 
 export default class ProjectManagerSidebarOptions extends React.Component {
   state = { isSendFormVisible: false, showCopiedMessage: false };
@@ -125,23 +161,29 @@ export default class ProjectManagerSidebarOptions extends React.Component {
     const isDisabled = !this.props.url;
 
     const sendHeader = (
-      <div className={STYLES_CONTENT_GROUP} onClick={this._handleSendHeaderClick}>
-        <span className={STYLES_CONTENT_GROUP_LEFT}>Send link with email…</span>
-      </div>
+      <SidebarOption onClick={this._handleSendHeaderClick}>Send link with email…</SidebarOption>
     );
 
     return (
       <div>
-        <div className={STYLES_CONTENT_GROUP} onClick={this.props.onSimulatorClickAndroid}>
-          <span className={STYLES_CONTENT_GROUP_LEFT}>Run on Android device/emulator</span>
-        </div>
-        <div className={STYLES_CONTENT_GROUP} onClick={this.props.onSimulatorClickIOS}>
-          <span className={STYLES_CONTENT_GROUP_LEFT}>Run on iOS simulator</span>
-        </div>
-
-        <a className={STYLES_CONTENT_GROUP} onClick={this.props.onStartWebClick}>
-          <span className={STYLES_CONTENT_GROUP_LEFT}>Run in web browser</span>
-        </a>
+        <PlatformSidebarOption
+          platform="android"
+          onClick={this.props.onSimulatorClickAndroid}
+          isDisabled={this.props.isAndroidDisabled}>
+          Run on Android device/emulator
+        </PlatformSidebarOption>
+        <PlatformSidebarOption
+          platform="ios"
+          onClick={this.props.onSimulatorClickIOS}
+          isDisabled={this.props.isIosDisabled}>
+          Run on iOS simulator
+        </PlatformSidebarOption>
+        <PlatformSidebarOption
+          platform="web"
+          onClick={this.props.onStartWebClick}
+          isDisabled={this.props.isWebDisabled}>
+          Run in web browser
+        </PlatformSidebarOption>
 
         <ContentGroup header={sendHeader} isActive={isSendFormVisible}>
           <InputWithButton

@@ -151,6 +151,7 @@ export function parseStartOptions(
   const startOpts: Project.StartOptions = {
     metroPort: options.metroPort,
     webpackPort: options.webpackPort,
+    platforms: exp.platforms ?? ['ios', 'android', 'web'],
   };
 
   if (options.clear) {

@@ -1,4 +1,4 @@
-import { ProjectTarget } from '@expo/config';
+import { ExpoConfig, ProjectTarget } from '@expo/config';
 import { MessageSocket, MetroDevServerOptions, runMetroDevServerAsync } from '@expo/dev-server';
 import http from 'http';
 
@@ -23,6 +23,7 @@ export type StartOptions = {
   maxWorkers?: number;
   webOnly?: boolean;
   target?: ProjectTarget;
+  platforms?: ExpoConfig['platforms'];
 };
 
 export async function startDevServerAsync(
