@@ -112,16 +112,16 @@ export class ClientManager {
         const proxy: any = new UsbmuxdProxy(usbmuxdSocket);
         tlsOptions.socket = proxy;
 
-        await new Promise<void>((res, rej) => {
+        await new Promise<void>((resolve, reject) => {
           const timeoutId = setTimeout(() => {
-            rej('The TLS handshake failed to complete after 5s.');
+            reject(new Error('The TLS handshake failed to complete after 5s.'));
           }, 5000);
           tls.connect(tlsOptions, function (this: tls.TLSSocket) {
             clearTimeout(timeoutId);
             // After the handshake, we don't need TLS or the proxy anymore,
             // since we'll just pass in the naked usbmuxd socket to the service client
             this.destroy();
-            res();
+            resolve();
           });
         });
       } else {
