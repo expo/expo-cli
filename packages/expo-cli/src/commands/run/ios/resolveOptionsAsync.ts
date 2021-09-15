@@ -19,6 +19,7 @@ export type Options = {
   scheme?: string;
   configuration?: XcodeConfiguration;
   bundler?: boolean;
+  install?: boolean;
 };
 
 export type ProjectInfo = {
