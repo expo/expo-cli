@@ -12,7 +12,7 @@
     "start": "yarn run prepare && yarn run watch",
     "build": "tsc --emitDeclarationOnly && babel src --out-dir build --extensions \".ts\" --source-maps --ignore \"src/**/__mocks__/*\",\"src/**/__tests__/*\"",
     "watch": "tsc --watch --preserveWatchOutput",
-    "introspect": "ts-node ./scripts/introspect.ts",
+    "introspect": "FORCE_COLOR=0 ts-node ./scripts/introspect.ts",
     "prepare": "yarn run clean && yarn run build",
     "clean": "rimraf build ./tsconfig.tsbuildinfo",
     "preversion": "node ./scripts/preversion.js",
