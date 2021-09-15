@@ -46,24 +46,21 @@ export function withIntrospectionBaseMods(
     ...props,
   });
 
-  const preserve = {
-    ios: Object.keys(iosProviders),
-    android: Object.keys(androidProviders),
-  };
-
   if (config.mods) {
     // Remove all mods that don't have an introspection base mod, for instance `dangerous` mods.
     for (const platform of Object.keys(config.mods) as ModPlatform[]) {
-      if (!(platform in preserve)) {
-        delete config.mods[platform];
-      }
-      const platformPreserve = preserve[platform];
+      // const platformPreserve = preserve[platform];
       for (const key of Object.keys(config.mods[platform] || {})) {
-        if (!platformPreserve?.includes(key)) {
-          // @ts-ignore
-          delete config.mods[platform][key];
+        // @ts-ignore
+        if (!config.mods[platform][key].isIdempotent) {
+          debug(`removing non-idempotent mod: ${platform}.${key}`);
+          delete config.mods[platform]?.[key];
         }
       }
+
+      // if (!(platform in preserve)) {
+      //   delete config.mods[platform];
+      // }
     }
   }
 

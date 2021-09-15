@@ -43,6 +43,7 @@ function getLanguage(filePath: string): 'objc' | 'swift' {
   const extension = path.extname(filePath);
   switch (extension) {
     case '.m':
+    case '.h':
       return 'objc';
     case '.swift':
       return 'swift';

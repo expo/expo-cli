@@ -29,6 +29,8 @@ export type BaseModProviderMethods<
     config: ExportedConfigWithProps<ModType>,
     props: Props
   ) => Promise<void> | void;
+  /** Mod can be run in introspection mode without modifying the filesystem */
+  isIdempotent?: boolean;
 };
 
 export type CreateBaseModProps<
@@ -50,6 +52,7 @@ export function createBaseMod<
   getFilePath,
   read,
   write,
+  isIdempotent,
 }: CreateBaseModProps<ModType, Props>): ConfigPlugin<Props | void> {
   const withUnknown: ConfigPlugin<Props | void> = (config, _props) => {
     const props = _props || ({} as Props);
@@ -59,6 +62,7 @@ export function createBaseMod<
       skipEmptyMod: props.skipEmptyMod ?? true,
       saveToInternal: props.saveToInternal ?? false,
       isProvider: true,
+      isIdempotent,
       async action({ modRequest: { nextMod, ...modRequest }, ...config }) {
         try {
           let results: ExportedConfigWithProps<ModType> = {
@@ -80,7 +84,7 @@ export function createBaseMod<
 
           await write(filePath, results, props);
           return results;
-        } catch (error) {
+        } catch (error: any) {
           error.message = `[${platform}.${modName}]: ${methodName}: ${error.message}`;
           throw error;
         }

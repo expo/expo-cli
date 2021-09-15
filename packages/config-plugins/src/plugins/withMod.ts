@@ -14,6 +14,8 @@ export type BaseModOptions = {
   isProvider?: boolean;
   skipEmptyMod?: boolean;
   saveToInternal?: boolean;
+  /** Mod can be run in introspection mode without modifying the filesystem */
+  isIdempotent?: boolean;
 };
 
 /**
@@ -38,6 +40,7 @@ export function withBaseMod<T>(
     action,
     skipEmptyMod,
     isProvider,
+    isIdempotent,
     saveToInternal,
   }: BaseModOptions & { action: Mod<T> }
 ): ExportedConfig {
@@ -110,6 +113,11 @@ export function withBaseMod<T>(
 
   // Ensure this base mod is registered as the provider.
   interceptingMod.isProvider = isProvider;
+
+  if (isIdempotent) {
+    // Register the mode as idempotent so introspection doesn't remove it.
+    interceptingMod.isIdempotent = isIdempotent;
+  }
 
   (config.mods[platform] as any)[mod] = interceptingMod;
 
