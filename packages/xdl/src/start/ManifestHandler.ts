@@ -140,9 +140,6 @@ export function getManifestHandler(projectRoot: string, usePlatformHeaders?: boo
     if (usePlatformHeaders && headerPlatform !== 'ios' && headerPlatform !== 'android') {
       return next();
     }
-    if (Webpack.isTargetingNative()) {
-      return res.redirect('/index.json');
-    }
 
     try {
       // We intentionally don't `await`. We want to continue trying even

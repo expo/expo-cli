@@ -293,22 +293,33 @@ export async function startAsync(
     throw new Error('Webpack for native is only supported on Webpack 5+');
   }
 
-  const server = new WebpackDevServer(firstConfig.devServer!, compiler);
-  // Launch WebpackDevServer.
-  server.listen(port, WebpackEnvironment.HOST, function (this: http.Server, error) {
+  const server = new WebpackDevServer(
+    {
+      ...firstConfig.devServer!,
+      port,
+      host: WebpackEnvironment.HOST,
+    },
+    compiler
+  );
+  try {
+    // Launch WebpackDevServer.
+    await server.start();
     if (nativeMiddleware) {
       attachNativeDevServerMiddlewareToDevServer(projectRoot, {
-        server: this,
+        server: server.server,
         ...nativeMiddleware,
       });
     }
-    if (error) {
-      ProjectUtils.logError(projectRoot, WEBPACK_LOG_TAG, error.message);
+
+    if (typeof options.onWebpackFinished === 'function') {
+      options.onWebpackFinished();
     }
+  } catch (error: any) {
+    ProjectUtils.logError(projectRoot, WEBPACK_LOG_TAG, error.message);
     if (typeof options.onWebpackFinished === 'function') {
       options.onWebpackFinished(error);
     }
-  });
+  }
 
   webpackDevServerInstance = server;
 
