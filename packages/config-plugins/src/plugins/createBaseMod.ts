@@ -139,12 +139,14 @@ export function createPlatformBaseMod<
   });
 }
 
+/** A TS wrapper for creating provides */
 export function provider<ModType, Props extends ForwardedBaseModOptions = ForwardedBaseModOptions>(
   props: BaseModProviderMethods<ModType, Props>
 ) {
   return props;
 }
 
+/** Plugin to create and append base mods from file providers */
 export function withGeneratedBaseMods<ModName extends string>(
   config: ExportedConfig,
   {

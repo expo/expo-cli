@@ -15,6 +15,32 @@ interface ProjectFile<L extends string = string> {
 
 export type AppDelegateProjectFile = ProjectFile<'objc' | 'swift'>;
 
+export function getAppDelegateHeaderFilePath(projectRoot: string): string {
+  const [using, ...extra] = globSync('ios/*/AppDelegate.h', {
+    absolute: true,
+    cwd: projectRoot,
+    ignore: ignoredPaths,
+  });
+
+  if (!using) {
+    throw new UnexpectedError(
+      `Could not locate a valid AppDelegate header at root: "${projectRoot}"`
+    );
+  }
+
+  if (extra.length) {
+    warnMultipleFiles({
+      tag: 'app-delegate-header',
+      fileName: 'AppDelegate',
+      projectRoot,
+      using,
+      extra,
+    });
+  }
+
+  return using;
+}
+
 export function getAppDelegateFilePath(projectRoot: string): string {
   const [using, ...extra] = globSync('ios/*/AppDelegate.@(m|swift)', {
     absolute: true,

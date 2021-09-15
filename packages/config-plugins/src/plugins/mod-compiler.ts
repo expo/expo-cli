@@ -6,8 +6,8 @@ import { getHackyProjectName } from '../ios/utils/Xcodeproj';
 import { PluginError } from '../utils/errors';
 import * as Warnings from '../utils/warnings';
 import { assertModResults, ForwardedBaseModOptions } from './createBaseMod';
-import { getAndroidIntrospectModFileProviders, withAndroidBaseMods } from './withAndroidBaseMods';
-import { getIosIntrospectModFileProviders, withIosBaseMods } from './withIosBaseMods';
+import { withAndroidBaseMods } from './withAndroidBaseMods';
+import { withIosBaseMods } from './withIosBaseMods';
 
 const debug = Debug('config-plugins:mod-compiler');
 
@@ -29,10 +29,7 @@ export function withIntrospectionBaseMods(
   config: ExportedConfig,
   props: ForwardedBaseModOptions = {}
 ): ExportedConfig {
-  const iosProviders = getIosIntrospectModFileProviders();
-  const androidProviders = getAndroidIntrospectModFileProviders();
   config = withIosBaseMods(config, {
-    providers: iosProviders,
     saveToInternal: true,
     // This writing optimization can be skipped since we never write in introspection mode.
     // Including empty mods will ensure that all mods get introspected.
@@ -40,7 +37,6 @@ export function withIntrospectionBaseMods(
     ...props,
   });
   config = withAndroidBaseMods(config, {
-    providers: androidProviders,
     saveToInternal: true,
     skipEmptyMod: false,
     ...props,
