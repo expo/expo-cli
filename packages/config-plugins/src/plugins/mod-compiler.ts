@@ -52,15 +52,12 @@ export function withIntrospectionBaseMods(
       // const platformPreserve = preserve[platform];
       for (const key of Object.keys(config.mods[platform] || {})) {
         // @ts-ignore
-        if (!config.mods[platform][key].isIdempotent) {
+        if (!config.mods[platform]?.[key]?.isIntrospectCapable) {
           debug(`removing non-idempotent mod: ${platform}.${key}`);
+          // @ts-ignore
           delete config.mods[platform]?.[key];
         }
       }
-
-      // if (!(platform in preserve)) {
-      //   delete config.mods[platform];
-      // }
     }
   }
 

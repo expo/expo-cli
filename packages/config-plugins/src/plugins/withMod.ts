@@ -14,8 +14,13 @@ export type BaseModOptions = {
   isProvider?: boolean;
   skipEmptyMod?: boolean;
   saveToInternal?: boolean;
-  /** Mod can be run in introspection mode without modifying the filesystem */
-  isIdempotent?: boolean;
+  /**
+   * If the mod supports introspection, and avoids making any filesystem modifications during compilation.
+   * By enabling, this mod, and all of its descendants will be run in introspection mode.
+   * This should only be used for static files like JSON or XML, and not for application files that require regexes,
+   * or complex static files that require other files to be generated like Xcode `.pbxproj`.
+   */
+  isIntrospectCapable?: boolean;
 };
 
 /**
@@ -40,7 +45,7 @@ export function withBaseMod<T>(
     action,
     skipEmptyMod,
     isProvider,
-    isIdempotent,
+    isIntrospectCapable,
     saveToInternal,
   }: BaseModOptions & { action: Mod<T> }
 ): ExportedConfig {
@@ -114,9 +119,9 @@ export function withBaseMod<T>(
   // Ensure this base mod is registered as the provider.
   interceptingMod.isProvider = isProvider;
 
-  if (isIdempotent) {
+  if (isIntrospectCapable) {
     // Register the mode as idempotent so introspection doesn't remove it.
-    interceptingMod.isIdempotent = isIdempotent;
+    interceptingMod.isIntrospectCapable = isIntrospectCapable;
   }
 
   (config.mods[platform] as any)[mod] = interceptingMod;

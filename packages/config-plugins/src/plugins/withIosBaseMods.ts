@@ -217,7 +217,7 @@ export function getIosIntrospectModFileProviders(): Omit<
   ) => {
     const realProvider = defaultProviders[modName];
     return provider<any>({
-      isIdempotent: true,
+      isIntrospectCapable: true,
       async getFilePath(...props) {
         try {
           return await realProvider.getFilePath(...props);
@@ -257,7 +257,7 @@ export function getIosIntrospectModFileProviders(): Omit<
     }),
 
     infoPlist: {
-      isIdempotent: true,
+      isIntrospectCapable: true,
       async getFilePath(...props) {
         try {
           return await defaultProviders.infoPlist.getFilePath(...props);
@@ -307,7 +307,7 @@ export function getIosIntrospectModFileProviders(): Omit<
     },
 
     entitlements: {
-      isIdempotent: true,
+      isIntrospectCapable: true,
       async getFilePath(...props) {
         try {
           return await defaultProviders.entitlements.getFilePath(...props);
@@ -334,7 +334,7 @@ export function getIosIntrospectModFileProviders(): Omit<
     },
 
     podfileProperties: {
-      isIdempotent: true,
+      isIntrospectCapable: true,
       async getFilePath(...props) {
         try {
           return await defaultProviders.podfileProperties.getFilePath(...props);

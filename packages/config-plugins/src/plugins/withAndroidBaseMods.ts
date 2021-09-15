@@ -225,7 +225,7 @@ export function getAndroidIntrospectModFileProviders(): Omit<
   ) => {
     const realProvider = defaultProviders[modName];
     return provider<any>({
-      isIdempotent: true,
+      isIntrospectCapable: true,
       async getFilePath(...props) {
         try {
           return await realProvider.getFilePath(...props);
