@@ -64,7 +64,9 @@ async function shouldUseAnonymousManifestAsync(
 
 async function getScopeKeyForProjectIdAsync(projectId: string): Promise<string> {
   const user = await UserManager.ensureLoggedInAsync();
-  const project = await ApiV2.clientForUser(user).getAsync(`projects/${projectId}`);
+  const project = await ApiV2.clientForUser(user).getAsync(
+    `projects/${encodeURIComponent(projectId)}`
+  );
   return project.scopeKey;
 }
 
