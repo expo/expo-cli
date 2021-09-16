@@ -35,7 +35,7 @@ export type BaseModProviderMethods<
    * This should only be used for static files like JSON or XML, and not for application files that require regexes,
    * or complex static files that require other files to be generated like Xcode `.pbxproj`.
    */
-  isIntrospectCapable?: boolean;
+  isIntrospective?: boolean;
 };
 
 export type CreateBaseModProps<
@@ -57,7 +57,7 @@ export function createBaseMod<
   getFilePath,
   read,
   write,
-  isIntrospectCapable,
+  isIntrospective,
 }: CreateBaseModProps<ModType, Props>): ConfigPlugin<Props | void> {
   const withUnknown: ConfigPlugin<Props | void> = (config, _props) => {
     const props = _props || ({} as Props);
@@ -67,7 +67,7 @@ export function createBaseMod<
       skipEmptyMod: props.skipEmptyMod ?? true,
       saveToInternal: props.saveToInternal ?? false,
       isProvider: true,
-      isIntrospectCapable,
+      isIntrospective,
       async action({ modRequest: { nextMod, ...modRequest }, ...config }) {
         try {
           let results: ExportedConfigWithProps<ModType> = {

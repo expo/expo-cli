@@ -20,7 +20,7 @@ export type BaseModOptions = {
    * This should only be used for static files like JSON or XML, and not for application files that require regexes,
    * or complex static files that require other files to be generated like Xcode `.pbxproj`.
    */
-  isIntrospectCapable?: boolean;
+  isIntrospective?: boolean;
 };
 
 /**
@@ -45,7 +45,7 @@ export function withBaseMod<T>(
     action,
     skipEmptyMod,
     isProvider,
-    isIntrospectCapable,
+    isIntrospective,
     saveToInternal,
   }: BaseModOptions & { action: Mod<T> }
 ): ExportedConfig {
@@ -119,9 +119,9 @@ export function withBaseMod<T>(
   // Ensure this base mod is registered as the provider.
   interceptingMod.isProvider = isProvider;
 
-  if (isIntrospectCapable) {
+  if (isIntrospective) {
     // Register the mode as idempotent so introspection doesn't remove it.
-    interceptingMod.isIntrospectCapable = isIntrospectCapable;
+    interceptingMod.isIntrospective = isIntrospective;
   }
 
   (config.mods[platform] as any)[mod] = interceptingMod;

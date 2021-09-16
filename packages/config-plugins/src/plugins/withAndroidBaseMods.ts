@@ -107,7 +107,7 @@ const defaultProviders = {
 
   // Append a rule to supply gradle.properties data to mods on `mods.android.gradleProperties`
   manifest: provider<Manifest.AndroidManifest>({
-    isIntrospectCapable: true,
+    isIntrospective: true,
     getFilePath({ modRequest: { platformProjectRoot } }) {
       return path.join(platformProjectRoot, 'app/src/main/AndroidManifest.xml');
     },
@@ -129,7 +129,7 @@ const defaultProviders = {
 
   // Append a rule to supply gradle.properties data to mods on `mods.android.gradleProperties`
   gradleProperties: provider<Properties.PropertiesItem[]>({
-    isIntrospectCapable: true,
+    isIntrospective: true,
 
     getFilePath({ modRequest: { platformProjectRoot } }) {
       return path.join(platformProjectRoot, 'gradle.properties');
@@ -152,7 +152,7 @@ const defaultProviders = {
 
   // Append a rule to supply strings.xml data to mods on `mods.android.strings`
   strings: provider<Resources.ResourceXML>({
-    isIntrospectCapable: true,
+    isIntrospective: true,
 
     async getFilePath({ modRequest: { projectRoot, introspect } }) {
       try {
@@ -182,7 +182,7 @@ const defaultProviders = {
   }),
 
   colors: provider<Resources.ResourceXML>({
-    isIntrospectCapable: true,
+    isIntrospective: true,
 
     async getFilePath({ modRequest: { projectRoot, introspect } }) {
       try {
@@ -212,7 +212,7 @@ const defaultProviders = {
   }),
 
   colorsNight: provider<Resources.ResourceXML>({
-    isIntrospectCapable: true,
+    isIntrospective: true,
 
     async getFilePath({ modRequest: { projectRoot, introspect } }) {
       try {
@@ -241,7 +241,7 @@ const defaultProviders = {
   }),
 
   styles: provider<Resources.ResourceXML>({
-    isIntrospectCapable: true,
+    isIntrospective: true,
 
     async getFilePath({ modRequest: { projectRoot, introspect } }) {
       try {

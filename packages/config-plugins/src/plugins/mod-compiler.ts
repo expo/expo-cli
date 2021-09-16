@@ -48,7 +48,7 @@ export function withIntrospectionBaseMods(
       // const platformPreserve = preserve[platform];
       for (const key of Object.keys(config.mods[platform] || {})) {
         // @ts-ignore
-        if (!config.mods[platform]?.[key]?.isIntrospectCapable) {
+        if (!config.mods[platform]?.[key]?.isIntrospective) {
           debug(`removing non-idempotent mod: ${platform}.${key}`);
           // @ts-ignore
           delete config.mods[platform]?.[key];

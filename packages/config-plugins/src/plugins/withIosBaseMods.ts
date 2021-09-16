@@ -74,7 +74,7 @@ const defaultProviders = {
   }),
   // Append a rule to supply Expo.plist data to mods on `mods.ios.expoPlist`
   expoPlist: provider<JSONObject>({
-    isIntrospectCapable: true,
+    isIntrospective: true,
     getFilePath({ modRequest: { platformProjectRoot, projectName } }) {
       const supportingDirectory = path.join(platformProjectRoot, projectName!, 'Supporting');
       return path.resolve(supportingDirectory, 'Expo.plist');
@@ -112,7 +112,7 @@ const defaultProviders = {
   }),
   // Append a rule to supply Info.plist data to mods on `mods.ios.infoPlist`
   infoPlist: provider<InfoPlist, ForwardedBaseModOptions>({
-    isIntrospectCapable: true,
+    isIntrospective: true,
     async getFilePath(config) {
       let project: xcode.XcodeProject | null = null;
       try {
@@ -200,7 +200,7 @@ const defaultProviders = {
   }),
   // Append a rule to supply .entitlements data to mods on `mods.ios.entitlements`
   entitlements: provider<JSONObject, ForwardedBaseModOptions>({
-    isIntrospectCapable: true,
+    isIntrospective: true,
 
     async getFilePath(config) {
       try {
@@ -261,7 +261,7 @@ const defaultProviders = {
 
   // Append a rule to supply Podfile.properties.json data to mods on `mods.ios.podfileProperties`
   podfileProperties: provider<Record<string, string>>({
-    isIntrospectCapable: true,
+    isIntrospective: true,
 
     getFilePath({ modRequest: { platformProjectRoot } }) {
       return path.resolve(platformProjectRoot, 'Podfile.properties.json');
