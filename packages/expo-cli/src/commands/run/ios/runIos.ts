@@ -42,10 +42,10 @@ export async function actionAsync(projectRoot: string, options: Options) {
   // If the project doesn't have native code, prebuild it...
   if (!fs.existsSync(path.join(projectRoot, 'ios'))) {
     await prebuildAsync(projectRoot, {
-      install: true,
+      install: options.install,
       platforms: ['ios'],
     } as EjectAsyncOptions);
-  } else {
+  } else if (options.install) {
     await maybePromptToSyncPodsAsync(projectRoot);
     // TODO: Ensure the pods are in sync -- https://github.com/expo/expo/pull/11593
   }
