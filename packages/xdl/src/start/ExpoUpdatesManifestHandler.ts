@@ -1,17 +1,24 @@
 import { ExpoUpdatesManifest, getConfig } from '@expo/config';
 import { Updates } from '@expo/config-plugins';
+import { JSONObject } from '@expo/json-file';
 import express from 'express';
 import http from 'http';
+import nullthrows from 'nullthrows';
 import { parse } from 'url';
 import { v4 as uuidv4 } from 'uuid';
 
 import {
   Analytics,
+  ANONYMOUS_USERNAME,
+  ApiV2,
   Config,
+  ConnectionStatus,
   ProjectAssets,
   ProjectUtils,
   resolveEntryPoint,
   UrlUtils,
+  UserManager,
+  UserSettings,
 } from '../internal';
 import {
   getBundleUrlAsync,
@@ -34,14 +41,53 @@ function getPlatformFromRequest(req: express.Request | http.IncomingMessage): 'a
   return stringifiedPlatform as 'android' | 'ios';
 }
 
+/**
+ * Whether an anonymous scope key should be used. It should be used when:
+ * 1. Offline
+ * 2. Not logged-in
+ * 3. No EAS project ID in config
+ */
+async function shouldUseAnonymousManifestAsync(
+  easProjectId: string | undefined | null
+): Promise<boolean> {
+  if (!easProjectId || ConnectionStatus.isOffline()) {
+    return true;
+  }
+
+  const currentSession = await UserManager.getSessionAsync();
+  if (!currentSession) {
+    return true;
+  }
+
+  return false;
+}
+
+async function getScopeKeyForProjectIdAsync(projectId: string): Promise<string> {
+  const user = await UserManager.ensureLoggedInAsync();
+  const project = await ApiV2.clientForUser(user).getAsync(
+    `projects/${encodeURIComponent(projectId)}`
+  );
+  return project.scopeKey;
+}
+
+async function signManifestAsync(manifest: ExpoUpdatesManifest): Promise<string> {
+  const user = await UserManager.ensureLoggedInAsync();
+  const { signature } = await ApiV2.clientForUser(user).postAsync('manifest/eas/sign', {
+    manifest: (manifest as any) as JSONObject,
+  });
+  return signature;
+}
+
 export async function getManifestResponseAsync({
   projectRoot,
   platform,
   host,
+  acceptSignature,
 }: {
   projectRoot: string;
   platform: 'android' | 'ios';
   host?: string;
+  acceptSignature: boolean;
 }): Promise<{
   body: ExpoUpdatesManifest;
   headers: Map<string, number | string | readonly string[]>;
@@ -91,6 +137,13 @@ export async function getManifestResponseAsync({
     path => bundleUrl!.match(/^https?:\/\/.*?\//)![0] + 'assets/' + path
   );
 
+  const easProjectId = expoConfig.extra?.eas.projectId;
+  const shouldUseAnonymousManifest = await shouldUseAnonymousManifestAsync(easProjectId);
+  const userAnonymousIdentifier = await UserSettings.getAnonymousIdentifierAsync();
+  const scopeKey = shouldUseAnonymousManifest
+    ? `@${ANONYMOUS_USERNAME}/${expoConfig.slug}-${userAnonymousIdentifier}`
+    : await getScopeKeyForProjectIdAsync(nullthrows(easProjectId));
+
   const expoUpdatesManifest = {
     id: uuidv4(),
     createdAt: new Date().toISOString(),
@@ -103,14 +156,22 @@ export async function getManifestResponseAsync({
     assets,
     metadata: {}, // required for the client to detect that this is an expo-updates manifest
     extra: {
-      eas: {}, // TODO(wschurman): somehow inject EAS config in here if known
+      eas: {
+        projectId: easProjectId ?? undefined,
+      },
       expoClient: {
         ...expoConfig,
         hostUri,
       },
       expoGo: expoGoConfig,
+      scopeKey,
     },
   };
+
+  if (acceptSignature && !shouldUseAnonymousManifest) {
+    const manifestSignature = await signManifestAsync(expoUpdatesManifest);
+    headers.set('expo-manifest-signature', manifestSignature);
+  }
 
   return {
     body: expoUpdatesManifest,
@@ -134,6 +195,7 @@ export function getManifestHandler(projectRoot: string) {
         projectRoot,
         host: req.headers.host,
         platform: getPlatformFromRequest(req),
+        acceptSignature: !!req.headers['expo-accept-signature'],
       });
       for (const [headerName, headerValue] of headers) {
         res.setHeader(headerName, headerValue);
