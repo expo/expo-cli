@@ -414,8 +414,6 @@ export async function upgradeAsync(
   // Maybe bail out early if people are trying to update to the current version
   if (await shouldBailWhenUsingLatest(currentSdkVersionString, targetSdkVersionString)) return;
 
-  const platforms = exp.platforms || [];
-
   if (
     targetSdkVersionString === latestSdkVersionString &&
     currentSdkVersionString !== targetSdkVersionString &&
