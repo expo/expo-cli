@@ -6,7 +6,6 @@ import chalk from 'chalk';
 import child_process, { execFileSync } from 'child_process';
 import trim from 'lodash/trim';
 import os from 'os';
-import path from 'path';
 import prompts from 'prompts';
 import semver from 'semver';
 
