@@ -13,12 +13,12 @@ import { promptToClearMalformedNativeProjectsAsync } from '../../eject/clearNati
 import { EjectAsyncOptions, prebuildAsync } from '../../eject/prebuildAsync';
 import { installCustomExitHook } from '../../start/installExitHooks';
 import { profileMethod } from '../../utils/profileMethod';
+import { setGlobalDevClientSettingsAsync, startBundlerAsync } from '../ios/startBundlerAsync';
 import { parseBinaryPlistAsync } from '../utils/binaryPlist';
 import * as IOSDeploy from './IOSDeploy';
 import maybePromptToSyncPodsAsync from './Podfile';
 import * as XcodeBuild from './XcodeBuild';
 import { Options, resolveOptionsAsync } from './resolveOptionsAsync';
-import { setGlobalDevClientSettingsAsync, startBundlerAsync } from './startBundlerAsync';
 
 const isMac = process.platform === 'darwin';
 
@@ -64,7 +64,6 @@ export async function actionAsync(projectRoot: string, options: Options) {
   )(buildOutput);
 
   await setGlobalDevClientSettingsAsync(projectRoot);
-
   if (props.shouldStartBundler) {
     await startBundlerAsync(projectRoot, {
       metroPort: props.port,
