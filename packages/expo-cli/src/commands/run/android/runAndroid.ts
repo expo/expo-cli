@@ -14,10 +14,10 @@ import { promptToClearMalformedNativeProjectsAsync } from '../../eject/clearNati
 import { prebuildAsync } from '../../eject/prebuildAsync';
 import { installCustomExitHook } from '../../start/installExitHooks';
 import { profileMethod } from '../../utils/profileMethod';
-import { startBundlerAsync } from '../ios/startBundlerAsync';
+import { setGlobalDevClientSettingsAsync, startBundlerAsync } from '../ios/startBundlerAsync';
 import { resolvePortAsync } from '../utils/resolvePortAsync';
 import { resolveDeviceAsync } from './resolveDeviceAsync';
-import { spawnGradleAsync } from './spawnGradleAsync';
+import { assembleAsync, installAsync } from './spawnGradleAsync';
 
 type Options = {
   variant: string;
@@ -32,8 +32,9 @@ export type AndroidRunOptions = Omit<Options, 'device'> & {
   mainActivity: string;
   launchActivity: string;
   device: Android.Device;
-  variantFolder: string;
   appName: string;
+  buildType: string;
+  flavorDimensions?: string[];
 };
 
 async function resolveAndroidProjectPathAsync(projectRoot: string): Promise<string> {
@@ -101,9 +102,16 @@ async function resolveOptionsAsync(
     port = 8081;
   }
 
-  const variant = options.variant.toLowerCase();
-  const apkDirectory = Android.getAPKDirectory(projectRoot);
-  const apkVariantDirectory = path.join(apkDirectory, variant);
+  // TODO: why would this be different? Can we get the different name?
+  const appName = 'app';
+
+  const apkDirectory = path.join(projectRoot, 'android', appName, 'build', 'outputs', 'apk');
+
+  // buildDeveloperTrust -> build, developer, trust (where developer, and trust are flavors).
+  const [buildType, ...flavorDimensions] = options.variant
+    .split(/(?=[A-Z])/)
+    .map(v => v.toLowerCase());
+  const buildDirectory = path.join(apkDirectory, ...flavorDimensions, buildType);
 
   return {
     ...options,
@@ -112,9 +120,10 @@ async function resolveOptionsAsync(
     mainActivity,
     launchActivity: `${packageName}/${mainActivity}`,
     packageName,
-    apkVariantDirectory,
-    variantFolder: variant,
-    appName: 'app',
+    apkVariantDirectory: buildDirectory,
+    appName,
+    buildType,
+    flavorDimensions,
   };
 }
 
@@ -132,8 +141,9 @@ export async function actionAsync(projectRoot: string, options: Options) {
 
   Log.log('\u203A Building app...');
 
-  await spawnGradleAsync({ androidProjectPath, variant: options.variant });
+  await assembleAsync({ ...props, androidProjectPath });
 
+  await setGlobalDevClientSettingsAsync(projectRoot);
   if (props.bundler) {
     await startBundlerAsync(projectRoot, {
       metroPort: props.port,
@@ -144,8 +154,13 @@ export async function actionAsync(projectRoot: string, options: Options) {
   const apkFile = await getInstallApkNameAsync(props.device, props);
   Log.debug(`\u203A Installing: ${apkFile}`);
 
-  const binaryPath = path.join(props.apkVariantDirectory, apkFile);
-  await Android.installOnDeviceAsync(props.device, { binaryPath });
+  if (apkFile) {
+    const binaryPath = path.join(props.apkVariantDirectory, apkFile);
+    await Android.installOnDeviceAsync(props.device, { binaryPath });
+  } else {
+    Log.log('\u203A Failed to locate binary file, installing with Gradle...');
+    await installAsync({ ...props, androidProjectPath });
+  }
 
   const schemes = await getSchemesForAndroidAsync(projectRoot);
 
@@ -204,9 +219,10 @@ async function getInstallApkNameAsync(
   device: Android.Device,
   {
     appName,
-    variantFolder,
+    buildType,
+    flavorDimensions,
     apkVariantDirectory,
-  }: Pick<AndroidRunOptions, 'appName' | 'variantFolder' | 'apkVariantDirectory'>
+  }: Pick<AndroidRunOptions, 'appName' | 'flavorDimensions' | 'buildType' | 'apkVariantDirectory'>
 ) {
   const availableCPUs = await Android.getDeviceABIsAsync(device);
   availableCPUs.push(Android.DeviceABI.universal);
@@ -216,17 +232,35 @@ async function getInstallApkNameAsync(
 
   // Check for cpu specific builds first
   for (const availableCPU of availableCPUs) {
-    const apkName = `${appName}-${availableCPU}-${variantFolder}.apk`;
+    const apkName = getApkFileName(appName, buildType, flavorDimensions, availableCPU);
     if (fs.existsSync(path.join(apkVariantDirectory, apkName))) {
       return apkName;
     }
   }
 
   // Otherwise use the default apk named after the variant: app-debug.apk
-  const apkName = `${appName}-${variantFolder}.apk`;
+  const apkName = getApkFileName(appName, buildType, flavorDimensions);
   if (fs.existsSync(path.join(apkVariantDirectory, apkName))) {
     return apkName;
   }
 
-  throw new CommandError(`Failed to resolve APK build file in folder "${apkVariantDirectory}"`);
+  return null;
+}
+
+function getApkFileName(
+  appName: string,
+  buildType: string,
+  flavorDimensions?: string[] | null,
+  cpuArch?: string | null
+) {
+  let apkName = `${appName}-`;
+  if (flavorDimensions) {
+    apkName += flavorDimensions.reduce((rest, flav) => `${rest}${flav}-`, '');
+  }
+  if (cpuArch) {
+    apkName += `${cpuArch}-`;
+  }
+  apkName += `${buildType}.apk`;
+
+  return apkName;
 }

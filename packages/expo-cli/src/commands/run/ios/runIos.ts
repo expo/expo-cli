@@ -18,7 +18,7 @@ import * as IOSDeploy from './IOSDeploy';
 import maybePromptToSyncPodsAsync from './Podfile';
 import * as XcodeBuild from './XcodeBuild';
 import { Options, resolveOptionsAsync } from './resolveOptionsAsync';
-import { startBundlerAsync } from './startBundlerAsync';
+import { setGlobalDevClientSettingsAsync, startBundlerAsync } from './startBundlerAsync';
 
 const isMac = process.platform === 'darwin';
 
@@ -62,6 +62,8 @@ export async function actionAsync(projectRoot: string, options: Options) {
     XcodeBuild.getAppBinaryPath,
     'XcodeBuild.getAppBinaryPath'
   )(buildOutput);
+
+  await setGlobalDevClientSettingsAsync(projectRoot);
 
   if (props.shouldStartBundler) {
     await startBundlerAsync(projectRoot, {
