@@ -34,6 +34,7 @@ describe('getDependenciesFromBundledNativeModules', () => {
       sdkVersion: '3.0.0',
       workflow: 'bare',
       targetSdkVersion: null,
+      targetSdkVersionString: null,
     });
 
     expect(Log.warn).toHaveBeenCalledTimes(1);
@@ -51,6 +52,7 @@ describe('getDependenciesFromBundledNativeModules', () => {
         'jest-expo': '4.0.0',
       },
     };
+    const targetSdkVersionString = '4.0.0';
 
     it(`upgrades jest-expo to bundledNativeModules when sdkVersion and targetSdkVersion aren't defined`, () => {
       const deps = getDependenciesFromBundledNativeModules({
@@ -58,6 +60,7 @@ describe('getDependenciesFromBundledNativeModules', () => {
         bundledNativeModules,
         workflow: 'bare',
         targetSdkVersion: null,
+        targetSdkVersionString: null,
       });
       expect(deps['jest-expo']).toBe('2.0.0');
     });
@@ -69,6 +72,7 @@ describe('getDependenciesFromBundledNativeModules', () => {
         sdkVersion,
         workflow: 'bare',
         targetSdkVersion: null,
+        targetSdkVersionString: null,
       });
       expect(deps['jest-expo']).toBe('^3.0.0');
     });
@@ -80,6 +84,7 @@ describe('getDependenciesFromBundledNativeModules', () => {
         sdkVersion,
         workflow: 'bare',
         targetSdkVersion,
+        targetSdkVersionString,
       });
       expect(deps['jest-expo']).toBe('4.0.0');
     });
@@ -95,6 +100,7 @@ describe('getDependenciesFromBundledNativeModules', () => {
           relatedPackages: {},
           beta: true,
         },
+        targetSdkVersionString,
       });
       expect(deps['jest-expo']).toBe('^3.0.0-beta');
     });
@@ -119,12 +125,39 @@ describe('getDependenciesFromBundledNativeModules', () => {
           sdkVersion,
           workflow: workflow as any,
           targetSdkVersion,
+          targetSdkVersionString: '4.0.0',
         });
         expect(deps['react-native']).toBe(
           'https://github.com/expo/react-native/archive/mock-expoReactNativeTag.tar.gz'
         );
       });
     }
+
+    it(`upgrades react-native to fb version in sdk < 43.0.0 bare workflow`, () => {
+      const deps = getDependenciesFromBundledNativeModules({
+        projectDependencies: { ...projectDependencies },
+        bundledNativeModules,
+        sdkVersion,
+        workflow: 'bare',
+        targetSdkVersion,
+        targetSdkVersionString: null,
+      });
+      expect(deps['react-native']).toBe('mock-facebookReactNativeVersion');
+    });
+
+    it(`upgrades react-native to expo fork in sdk < 43.0.0 managed workflow`, () => {
+      const deps = getDependenciesFromBundledNativeModules({
+        projectDependencies: { ...projectDependencies },
+        bundledNativeModules,
+        sdkVersion,
+        workflow: 'managed',
+        targetSdkVersion,
+        targetSdkVersionString: '42.0.0',
+      });
+      expect(deps['react-native']).toBe(
+        'https://github.com/expo/react-native/archive/mock-expoReactNativeTag.tar.gz'
+      );
+    });
 
     for (const workflow of ['bare', 'managed']) {
       it(`upgrades react-native to fb version in ${workflow} workflow`, () => {
@@ -134,6 +167,7 @@ describe('getDependenciesFromBundledNativeModules', () => {
           sdkVersion,
           workflow: workflow as any,
           targetSdkVersion,
+          targetSdkVersionString: '43.0.0',
         });
         expect(deps['react-native']).toBe('mock-facebookReactNativeVersion');
       });
@@ -155,6 +189,7 @@ describe('getDependenciesFromBundledNativeModules', () => {
       sdkVersion: '100.0.0',
       workflow: 'bare',
       targetSdkVersion,
+      targetSdkVersionString: '101.0.0',
     });
     expect('react-dom' in deps).toBe(false);
   });
