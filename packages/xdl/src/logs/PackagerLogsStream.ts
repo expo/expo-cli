@@ -416,7 +416,8 @@ export default class PackagerLogsStream {
       if (msg.percentage) {
         percentProgress = msg.percentage * 100;
       } else {
-        percentProgress = Math.floor((msg.transformedFileCount / msg.totalFileCount) * 100);
+        percentProgress = (msg.transformedFileCount / msg.totalFileCount) * 100;
+        // percentProgress = Math.floor((msg.transformedFileCount / msg.totalFileCount) * 100);
       }
       progressChunk.msg = `Building JavaScript bundle: ${percentProgress}%`;
     } else {
@@ -514,11 +515,12 @@ export default class PackagerLogsStream {
   }
 
   _formatWorkerChunk(origin: 'stdout' | 'stderr', chunk: string) {
-    const lines = chunk.split('\n');
-    if (lines.length >= 1 && lines[lines.length - 1] === '') {
-      lines.splice(lines.length - 1, 1);
-    }
-    return lines.map(line => `transform[${origin}]: ${line}`).join('\n');
+    return chunk;
+    // const lines = chunk.split('\n');
+    // if (lines.length >= 1 && lines[lines.length - 1] === '') {
+    //   lines.splice(lines.length - 1, 1);
+    // }
+    // return lines.map(line => `transform[${origin}]: ${line}`).join('\n');
   }
 
   _enqueueAppendLogChunk(chunk: LogRecord) {

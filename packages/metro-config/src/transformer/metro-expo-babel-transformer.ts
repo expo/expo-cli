@@ -1,14 +1,8 @@
-import crypto from 'crypto';
-import { readFileSync } from 'fs';
+// Copyright 2021-present 650 Industries (Expo). All rights reserved.
+
 import resolveFrom from 'resolve-from';
 
-const cacheKeyParts = [
-  readFileSync(__filename),
-  // Since babel-preset-fbjs cannot be safely resolved relative to the
-  // project root, use this environment variable that we define earlier.
-  process.env.EXPO_METRO_CACHE_KEY_VERSION || '3.3.0',
-  //   require('babel-preset-fbjs/package.json').version,
-];
+import { getCacheKey } from './getCacheKey';
 
 let transformer: any = null;
 
@@ -54,13 +48,6 @@ function transform(props: {
     'babel-preset-expo'
   );
   return resolveTransformer(props.options.projectRoot).transform(props);
-}
-
-// Matches upstream
-function getCacheKey(): string {
-  const key = crypto.createHash('md5');
-  cacheKeyParts.forEach(part => key.update(part));
-  return key.digest('hex');
 }
 
 module.exports = {

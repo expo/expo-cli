@@ -35,12 +35,15 @@
   "dependencies": {
     "@expo/config": "5.0.9",
     "chalk": "^4.1.0",
+    "debug": "^4.3.2",
     "getenv": "^1.0.0",
     "metro-react-native-babel-transformer": "^0.59.0"
   },
   "devDependencies": {
+    "@babel/core": "^7.15.5",
     "expo": "37",
     "metro": "^0.59.0",
+    "metro-babel-transformer": "^0.66.2",
     "metro-config": "^0.59.0",
     "react-native": "~0.63.4"
   },
