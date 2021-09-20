@@ -34,7 +34,7 @@ export type AndroidRunOptions = Omit<Options, 'device'> & {
   device: Android.Device;
   appName: string;
   buildType: string;
-  flavorDimensions?: string[];
+  flavors?: string[];
 };
 
 async function resolveAndroidProjectPathAsync(projectRoot: string): Promise<string> {
@@ -108,10 +108,8 @@ async function resolveOptionsAsync(
   const apkDirectory = path.join(projectRoot, 'android', appName, 'build', 'outputs', 'apk');
 
   // buildDeveloperTrust -> build, developer, trust (where developer, and trust are flavors).
-  const [buildType, ...flavorDimensions] = options.variant
-    .split(/(?=[A-Z])/)
-    .map(v => v.toLowerCase());
-  const buildDirectory = path.join(apkDirectory, ...flavorDimensions, buildType);
+  const [buildType, ...flavors] = options.variant.split(/(?=[A-Z])/).map(v => v.toLowerCase());
+  const buildDirectory = path.join(apkDirectory, ...flavors, buildType);
 
   return {
     ...options,
@@ -123,7 +121,7 @@ async function resolveOptionsAsync(
     apkVariantDirectory: buildDirectory,
     appName,
     buildType,
-    flavorDimensions,
+    flavors,
   };
 }
 
@@ -220,9 +218,9 @@ async function getInstallApkNameAsync(
   {
     appName,
     buildType,
-    flavorDimensions,
+    flavors,
     apkVariantDirectory,
-  }: Pick<AndroidRunOptions, 'appName' | 'flavorDimensions' | 'buildType' | 'apkVariantDirectory'>
+  }: Pick<AndroidRunOptions, 'appName' | 'flavors' | 'buildType' | 'apkVariantDirectory'>
 ) {
   const availableCPUs = await Android.getDeviceABIsAsync(device);
   availableCPUs.push(Android.DeviceABI.universal);
@@ -232,14 +230,14 @@ async function getInstallApkNameAsync(
 
   // Check for cpu specific builds first
   for (const availableCPU of availableCPUs) {
-    const apkName = getApkFileName(appName, buildType, flavorDimensions, availableCPU);
+    const apkName = getApkFileName(appName, buildType, flavors, availableCPU);
     if (fs.existsSync(path.join(apkVariantDirectory, apkName))) {
       return apkName;
     }
   }
 
   // Otherwise use the default apk named after the variant: app-debug.apk
-  const apkName = getApkFileName(appName, buildType, flavorDimensions);
+  const apkName = getApkFileName(appName, buildType, flavors);
   if (fs.existsSync(path.join(apkVariantDirectory, apkName))) {
     return apkName;
   }
@@ -250,12 +248,12 @@ async function getInstallApkNameAsync(
 function getApkFileName(
   appName: string,
   buildType: string,
-  flavorDimensions?: string[] | null,
+  flavors?: string[] | null,
   cpuArch?: string | null
 ) {
   let apkName = `${appName}-`;
-  if (flavorDimensions) {
-    apkName += flavorDimensions.reduce((rest, flav) => `${rest}${flav}-`, '');
+  if (flavors) {
+    apkName += flavors.reduce((rest, flav) => `${rest}${flav}-`, '');
   }
   if (cpuArch) {
     apkName += `${cpuArch}-`;
