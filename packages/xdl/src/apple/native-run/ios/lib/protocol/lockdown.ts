@@ -29,6 +29,8 @@ export interface LockdownResponse {
 
 export interface LockdownErrorResponse {
   Error: string;
+  Request?: string;
+  Service?: string;
 }
 
 export interface LockdownRequest {
@@ -71,6 +73,15 @@ export class LockdownProtocolReader extends PlistProtocolReader {
     if (isLockdownErrorResponse(resp)) {
       if (resp.Error === 'DeviceLocked') {
         throw new IOSLibError('Device is currently locked.', 'DeviceLocked');
+      }
+
+      if (resp.Error === 'InvalidService') {
+        let errorMessage = `${resp.Error}: ${resp.Service} (request: ${resp.Request})`;
+        if (resp.Service === 'com.apple.debugserver') {
+          errorMessage +=
+            '\nTry reconnecting your device. You can also debug service logs with `export DEBUG=expo:xdl:ios:*`';
+        }
+        throw new Error(errorMessage);
       }
 
       throw new Error(resp.Error);
