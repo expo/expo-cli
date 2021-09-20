@@ -5,7 +5,7 @@ import Debug from 'debug';
 import type { BabelTransformer, BabelTransformerArgs } from 'metro-babel-transformer';
 import resolveFrom from 'resolve-from';
 
-import { importMetroSourceMapFromProject } from '../importMetroFromProject';
+import { generateFunctionMap } from './generateFunctionMap';
 import { getBabelConfig } from './getBabelConfig';
 
 const debug = Debug('expo:metro:exotic-babel-transformer');
@@ -133,8 +133,7 @@ export function createExoticTransformer({
 }
 
 export const loaders: Record<string, (args: BabelTransformerArgs) => any> = {
-  /** Perform the standard, and most expensive transpilation sequence. */
-
+  // Perform the standard, and most expensive transpilation sequence.
   app(args) {
     debug('app:', args.filename);
 
@@ -171,10 +170,7 @@ export const loaders: Record<string, (args: BabelTransformerArgs) => any> = {
     const result = transformFromAstSync(sourceAst, src, babelConfig);
 
     // TODO: Disable by default
-    const functionMap = importMetroSourceMapFromProject(
-      options.projectRoot
-    ).generateFunctionMap(sourceAst, { filename });
-
+    const functionMap = generateFunctionMap(options.projectRoot, sourceAst, { filename });
     // The result from `transformFromAstSync` can be null (if the file is ignored)
     if (!result) {
       return { ast: null, functionMap };
@@ -183,6 +179,7 @@ export const loaders: Record<string, (args: BabelTransformerArgs) => any> = {
     return { ast: result.ast, functionMap };
   },
 
+  // Transpile react-native with sucrase.
   reactNativeModule(args) {
     debug('rn:', args.filename);
     return sucrase(args, {
@@ -190,6 +187,7 @@ export const loaders: Record<string, (args: BabelTransformerArgs) => any> = {
     });
   },
 
+  // Transpile expo modules with sucrase.
   expoModule(args) {
     debug('expo:', args.filename);
     // TODO: Fix all expo packages
@@ -204,27 +202,28 @@ export const loaders: Record<string, (args: BabelTransformerArgs) => any> = {
     });
   },
 
+  // Transpile known community modules with the most expensive sucrase
   untranspiledModule(args) {
     debug('known issues:', args.filename);
-    // TODO: Fix all expo packages
     return sucrase(args, {
       transforms: getExpensiveSucraseTransforms(args.filename),
     });
   },
 
+  // Pass all modules through without transpiling them.
   passthroughModule(args) {
     const { filename, options, src } = args;
     debug('passthrough:', filename);
 
+    // Perform a basic ast parse, this doesn't matter since the worker will parse and ignore anyways.
     const ast = parseAst(options.projectRoot, src);
+
     // TODO: Disable by default
-    const functionMap = importMetroSourceMapFromProject(
-      options.projectRoot
-    ).generateFunctionMap(ast, { filename });
+    const functionMap = generateFunctionMap(options.projectRoot, ast, { filename });
+
     return {
       code: src,
       functionMap,
-      // Perform a basic ast parse, this doesn't matter since the worker will parse and ignore anyways.
       ast,
     };
   },
