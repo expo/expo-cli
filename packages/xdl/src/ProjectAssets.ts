@@ -1,7 +1,6 @@
 import { ExpoAppManifest, ExpoConfig } from '@expo/config';
 import { BundleAssetWithFileHashes, BundleOutput } from '@expo/dev-server';
 import assert from 'assert';
-import crypto from 'crypto';
 import FormData from 'form-data';
 import fs from 'fs-extra';
 import chunk from 'lodash/chunk';
@@ -9,7 +8,6 @@ import get from 'lodash/get';
 import set from 'lodash/set';
 import uniqBy from 'lodash/uniqBy';
 import md5hex from 'md5hex';
-import mime from 'mime';
 import minimatch from 'minimatch';
 import path from 'path';
 import urljoin from 'url-join';
@@ -66,51 +64,6 @@ async function getAssetFieldPathsForManifestAsync(manifest: ExpoConfig): Promise
   // String array like ["icon", "notification.icon", "loading.icon", "loading.backgroundImage", "ios.icon", ...]
   const sdkAssetFieldPaths = await ExpSchema.getAssetSchemasAsync(manifest.sdkVersion);
   return sdkAssetFieldPaths.filter(assetSchema => get(manifest, assetSchema));
-}
-
-async function resolveExpoUpdatesManifestAssets({
-  projectRoot,
-  manifest,
-  assetKeyResolver,
-}: {
-  projectRoot: string;
-  manifest: ExpoConfig;
-  assetKeyResolver: (assetPath: string) => Promise<string>;
-}): Promise<void> {
-  const assetSchemas = await getAssetFieldPathsForManifestAsync(manifest);
-  // Get the URLs
-  const assetInfos = await Promise.all(
-    assetSchemas.map(async manifestField => {
-      const pathOrURL = get(manifest, manifestField);
-      if (/^https?:\/\//.test(pathOrURL)) {
-        // It's a remote URL
-        return {
-          assetKey: null,
-          rawUrl: pathOrURL,
-        };
-      } else if (fs.existsSync(path.resolve(projectRoot, pathOrURL))) {
-        const assetKey = await assetKeyResolver(pathOrURL);
-        return {
-          assetKey,
-          rawUrl: null,
-        };
-      } else {
-        ProjectUtils.logError(
-          projectRoot,
-          'expo',
-          `Unable to resolve asset "${pathOrURL}" from "${manifestField}" in your app.json or app.config.js`
-        );
-        const err: ManifestResolutionError = new Error('Could not resolve local asset.');
-        err.localAssetPath = pathOrURL;
-        err.manifestField = manifestField;
-        throw err;
-      }
-    })
-  );
-
-  assetSchemas.forEach((manifestField, index: number) =>
-    set(manifest, `${manifestField}Asset`, assetInfos[index])
-  );
 }
 
 export async function resolveManifestAssets({
@@ -398,40 +351,4 @@ async function collectAssets(
   });
 
   return [...Object.values(bundles).flatMap(bundle => bundle!.assets), ...manifestAssets];
-}
-
-export async function resolveAndCollectExpoUpdatesManifestAssets(
-  projectRoot: string,
-  exp: ExpoConfig,
-  urlResolver: (path: string) => string
-): Promise<
-  { url: string; hash: string; key: string; contentType: string; fileExtension: string }[]
-> {
-  const manifestAssets: {
-    url: string;
-    hash: string;
-    key: string;
-    contentType: string;
-    fileExtension: string;
-  }[] = [];
-  await resolveExpoUpdatesManifestAssets({
-    projectRoot,
-    manifest: exp,
-    async assetKeyResolver(assetPath) {
-      const absolutePath = path.resolve(projectRoot, assetPath);
-      const contents = await fs.readFile(absolutePath);
-      // Expo Updates spec dictates that this hash is sha256
-      const hash = crypto.createHash('sha256').update(contents).digest('hex');
-      const contentType = mime.getType(absolutePath) ?? 'application/octet-stream';
-      manifestAssets.push({
-        url: urlResolver(assetPath),
-        hash,
-        key: assetPath,
-        contentType,
-        fileExtension: path.extname(absolutePath),
-      });
-      return assetPath;
-    },
-  });
-  return manifestAssets;
 }
