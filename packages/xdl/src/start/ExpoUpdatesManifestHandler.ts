@@ -128,14 +128,13 @@ export async function getManifestResponseAsync({
     hostname,
   });
 
-  // For each manifest asset (for example `icon`):
-  // - set a field on the manifest containing a reference to the asset: iconAsset: { rawUrl?: string, assetKey?: string }
-  // - gather the data needed to embed a reference to that asset in the expo-updates assets key
-  const assets = await ProjectAssets.resolveAndCollectExpoUpdatesManifestAssets(
+  await ProjectAssets.resolveManifestAssets({
     projectRoot,
-    expoConfig,
-    path => bundleUrl!.match(/^https?:\/\/.*?\//)![0] + 'assets/' + path
-  );
+    manifest: expoConfig,
+    async resolver(path) {
+      return bundleUrl!.match(/^https?:\/\/.*?\//)![0] + 'assets/' + path;
+    },
+  });
 
   const easProjectId = expoConfig.extra?.eas.projectId;
   const shouldUseAnonymousManifest = await shouldUseAnonymousManifestAsync(easProjectId);
@@ -149,11 +148,11 @@ export async function getManifestResponseAsync({
     createdAt: new Date().toISOString(),
     runtimeVersion,
     launchAsset: {
-      key: mainModuleName,
+      key: 'bundle',
       contentType: 'application/javascript',
       url: bundleUrl,
     },
-    assets,
+    assets: [], // assets are not used in development
     metadata: {}, // required for the client to detect that this is an expo-updates manifest
     extra: {
       eas: {
