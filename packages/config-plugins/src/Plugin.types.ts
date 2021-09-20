@@ -85,6 +85,13 @@ export type Mod<Props = any> = ((
    * This mod should always be the last one added.
    */
   isProvider?: boolean;
+  /**
+   * If the mod supports introspection, and avoids making any filesystem modifications during compilation.
+   * By enabling, this mod, and all of its descendants will be run in introspection mode.
+   * This should only be used for static files like JSON or XML, and not for application files that require regexes,
+   * or complex static files that require other files to be generated like Xcode `.pbxproj`.
+   */
+  isIntrospective?: boolean;
 };
 
 export interface ModConfig {
