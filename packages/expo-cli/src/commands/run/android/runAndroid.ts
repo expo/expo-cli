@@ -14,7 +14,7 @@ import { promptToClearMalformedNativeProjectsAsync } from '../../eject/clearNati
 import { prebuildAsync } from '../../eject/prebuildAsync';
 import { installCustomExitHook } from '../../start/installExitHooks';
 import { profileMethod } from '../../utils/profileMethod';
-import { startBundlerAsync } from '../ios/startBundlerAsync';
+import { setGlobalDevClientSettingsAsync, startBundlerAsync } from '../ios/startBundlerAsync';
 import { resolvePortAsync } from '../utils/resolvePortAsync';
 import { resolveDeviceAsync } from './resolveDeviceAsync';
 import { spawnGradleAsync } from './spawnGradleAsync';
@@ -134,6 +134,7 @@ export async function actionAsync(projectRoot: string, options: Options) {
 
   await spawnGradleAsync({ androidProjectPath, variant: options.variant });
 
+  await setGlobalDevClientSettingsAsync(projectRoot);
   if (props.bundler) {
     await startBundlerAsync(projectRoot, {
       metroPort: props.port,

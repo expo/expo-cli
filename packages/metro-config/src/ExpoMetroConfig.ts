@@ -206,6 +206,8 @@ export function getDefaultConfig(
       babelTransformerPath: isCustomBabelConfigDefined
         ? // If the user defined a babel config file in their project,
           // then use the default transformer.
+          // Try to use the project copy before falling back on the global version
+          resolveFrom.silent(projectRoot, 'metro-react-native-babel-transformer') ??
           require.resolve('metro-react-native-babel-transformer')
         : // Otherwise, use a custom transformer that uses `babel-preset-expo` by default for projects.
           require.resolve('./metro-expo-babel-transformer'),

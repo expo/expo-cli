@@ -96,7 +96,7 @@ function sanitizeFlags(flags: string) {
 }
 
 function formatOptionAsMarkdown(option: OptionData) {
-  return `| \`${sanitizeFlags(option.flags)}\` | ${option.description} |`;
+  return `| \`${sanitizeFlags(option.flags)}\` | ${sanitizeFlags(option.description)} |`;
 }
 
 function formatOptionsAsMarkdown(options: OptionData[]) {
@@ -117,7 +117,7 @@ function formatCommandAsMarkdown(command: CommandData): string {
     `<details>`,
     `<summary>`,
     `<h4>expo ${command.name}</h4>`,
-    `<p>${command.description}</p>`,
+    `<p>${sanitizeFlags(command.description)}</p>`,
     `</summary>`,
     `<p>`,
     ...(command.alias ? ['', `Alias: \`expo ${command.alias}\``] : []),
@@ -182,7 +182,14 @@ const commands = generateCommandJSON();
 
 log('');
 if (['markdown', 'md'].includes(process.argv[2])) {
-  const contents = formatCommandsAsMarkdown(commands);
+  let contents = formatCommandsAsMarkdown(commands);
+
+  // Add comments so users hopefully don't open PRs directly into expo/expo
+  contents =
+    `\n<!-- BEGIN GENERATED BLOCK. DO NOT MODIFY MANUALLY. https://github.com/expo/expo-cli/blob/master/packages/expo-cli/scripts/introspect.ts -->\n\n` +
+    `> Based on \`expo-cli\` v${require('../package.json').version}\n\n` +
+    contents +
+    `\n<!-- END GENERATED BLOCK. DO NOT MODIFY MANUALLY. -->`;
   log(contents);
   pbcopy(contents);
 } else if (['fig'].includes(process.argv[2])) {

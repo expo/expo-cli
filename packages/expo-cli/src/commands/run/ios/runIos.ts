@@ -13,13 +13,13 @@ import { promptToClearMalformedNativeProjectsAsync } from '../../eject/clearNati
 import { EjectAsyncOptions, prebuildAsync } from '../../eject/prebuildAsync';
 import { installCustomExitHook } from '../../start/installExitHooks';
 import { profileMethod } from '../../utils/profileMethod';
+import { setGlobalDevClientSettingsAsync, startBundlerAsync } from '../ios/startBundlerAsync';
 import { parseBinaryPlistAsync } from '../utils/binaryPlist';
 import * as IOSDeploy from './IOSDeploy';
 import maybePromptToSyncPodsAsync from './Podfile';
 import * as XcodeBuild from './XcodeBuild';
 import { getAppDeltaDirectory, installOnDeviceAsync } from './installOnDeviceAsync';
 import { Options, resolveOptionsAsync } from './resolveOptionsAsync';
-import { startBundlerAsync } from './startBundlerAsync';
 
 const isMac = process.platform === 'darwin';
 
@@ -43,10 +43,10 @@ export async function actionAsync(projectRoot: string, options: Options) {
   // If the project doesn't have native code, prebuild it...
   if (!fs.existsSync(path.join(projectRoot, 'ios'))) {
     await prebuildAsync(projectRoot, {
-      install: true,
+      install: options.install,
       platforms: ['ios'],
     } as EjectAsyncOptions);
-  } else {
+  } else if (options.install) {
     await maybePromptToSyncPodsAsync(projectRoot);
     // TODO: Ensure the pods are in sync -- https://github.com/expo/expo/pull/11593
   }
@@ -72,6 +72,7 @@ export async function actionAsync(projectRoot: string, options: Options) {
     'XcodeBuild.getAppBinaryPath'
   )(buildOutput);
 
+  await setGlobalDevClientSettingsAsync(projectRoot);
   if (props.shouldStartBundler) {
     await startBundlerAsync(projectRoot, {
       metroPort: props.port,
