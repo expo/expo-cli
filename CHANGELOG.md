@@ -66,17 +66,18 @@ This is the log of notable changes to Expo CLI and related packages.
 
 - @expo/config-plugins@4.0.0
 - @expo/config@6.0.0
+- @expo/configure-splash-screen@0.6.0
 - @expo/dev-server@0.1.85
 - @expo/dev-tools@0.13.116
-- expo-cli@4.12.0
-- expo-optimize@0.1.107
 - @expo/metro-config@0.2.0
 - @expo/next-adapter@3.1.0
 - @expo/plist@0.0.15
 - @expo/prebuild-config@3.0.0
+- @expo/webpack-config@0.16.0
+- expo-cli@4.12.0
+- expo-optimize@0.1.107
 - expo-pwa@0.0.95
 - uri-scheme@1.0.96
-- @expo/webpack-config@0.16.0
 - xdl@59.2.0
 
 ## [Fri, 6 Aug 2021 13:06:23 -0700](https://github.com/expo/expo-cli/commit/cb9ec2ec1d33f484fd956ac9669926443904a6cb)
