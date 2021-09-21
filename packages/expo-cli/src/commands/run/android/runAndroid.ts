@@ -108,6 +108,7 @@ async function resolveOptionsAsync(
   const apkDirectory = path.join(projectRoot, 'android', appName, 'build', 'outputs', 'apk');
 
   // buildDeveloperTrust -> build, developer, trust (where developer, and trust are flavors).
+  // This won't work for non-standard flavor names like "myFlavor" would be treated as "my", "flavor".
   const [buildType, ...flavors] = options.variant.split(/(?=[A-Z])/).map(v => v.toLowerCase());
   const buildDirectory = path.join(apkDirectory, ...flavors, buildType);
 
