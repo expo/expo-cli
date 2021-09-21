@@ -12,6 +12,73 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+## [Tue, 21 Sep 2021 14:39:00 -0700](https://github.com/expo/expo-cli/commit/d614ee9c98268686dbe5eeea5bfa512b89325d3f)
+
+### 🛠 Breaking changes
+
+- [cli] Remove prompts to install Expo Go on upgrade ([#3853](https://github.com/expo/expo-cli/issues/3853))
+
+### 🎉 New features
+
+- [config-cli][xdl] add getRuntimeVersion method ([#3803](https://github.com/expo/expo-cli/issues/3803))
+- [config-plugins] Add hermes support for ios Podfile.properties.json ([#3796](https://github.com/expo/expo-cli/issues/3796))
+- [config-plugins] Escape single quotes in project name ([#3838](https://github.com/expo/expo-cli/issues/3838))
+- [config-plugins] extend base mods ([#3852](https://github.com/expo/expo-cli/issues/3852))
+- [configure-splash-screen] support new expo-splash-screen to setup imageResizeMode and statusBarTranslucent in resource ([#3774](https://github.com/expo/expo-cli/issues/3774))
+- [dev-server] support building hermes bytecode bundle for ios ([#3814](https://github.com/expo/expo-cli/issues/3814))
+- [expo-cli] generate smaller QR codes ([#3800](https://github.com/expo/expo-cli/issues/3800))
+- [expo-cli] minimize spacing to fit smaller QR codes ([#3812](https://github.com/expo/expo-cli/issues/3812))
+- [expo-cli] start project using application identifier ([#3737](https://github.com/expo/expo-cli/issues/3737))
+- [expo-cli] use platforms array for disabling platforms ([#3844](https://github.com/expo/expo-cli/issues/3844))
+- [expo-cli][run:android] add flavors support ([#3856](https://github.com/expo/expo-cli/issues/3856))
+- [expo-cli][run:ios] Add --no-install option to expo run:ios ([#3851](https://github.com/expo/expo-cli/issues/3851))
+- [expo-cli][run:ios] JS API for iOS binary install, and connected devices ([#3847](https://github.com/expo/expo-cli/issues/3847))
+- [metro-config] Added improved babel loading ([#3861](https://github.com/expo/expo-cli/issues/3861))
+- [prebuild-config] Support new expo-splash-screen to manage resizeMode in resource ([#3784](https://github.com/expo/expo-cli/issues/3784))
+- [webpack-config] Add native asset loader ([#3801](https://github.com/expo/expo-cli/issues/3801))
+- [webpack] Add metro runtime shim ([#3809](https://github.com/expo/expo-cli/issues/3809))
+- [xdl][config] Implement naive manifest signing for EAS update manifests ([#3831](https://github.com/expo/expo-cli/issues/3831))
+
+### 🧹 Chores
+
+- [config-plugins] Use upstream react-native/normalize-color ([#3826](https://github.com/expo/expo-cli/issues/3826))
+- [dev-server] Added webpack symbolicator ([#3819](https://github.com/expo/expo-cli/issues/3819))
+- [dev-server] Improve the symbolicator ([#3822](https://github.com/expo/expo-cli/issues/3822))
+- [dev-server] chore: missing deps #3813 ([#3818](https://github.com/expo/expo-cli/issues/3818))
+- [eas-cli][xdl] Removes Segment ([#3805](https://github.com/expo/expo-cli/issues/3805))
+- [expo-cli] Enable sockets in native webpack ([#3823](https://github.com/expo/expo-cli/issues/3823))
+- [expo-cli] refactor export command ([#3794](https://github.com/expo/expo-cli/issues/3794))
+- [expo-cli] remove warning aggregator batched logging ([#3799](https://github.com/expo/expo-cli/issues/3799))
+- [next-adapter] Disable lint warnings ([#3866](https://github.com/expo/expo-cli/issues/3866))
+- [next-adapter] update babel config ([#3834](https://github.com/expo/expo-cli/issues/3834))
+- [webpack] Add all native middleware to webpack ([#3808](https://github.com/expo/expo-cli/issues/3808))
+- [webpack] Added unified logging ([#3766](https://github.com/expo/expo-cli/issues/3766))
+- [xdl] throw if AndroidManifest.xml is missing a MainApplication ([#3825](https://github.com/expo/expo-cli/issues/3825))
+
+### 🐛 Bug fixes
+
+- [config-plugins] dodge extraneous Info.plist warning in managed projects ([#3835](https://github.com/expo/expo-cli/issues/3835))
+- [expo-cli] remove ascii colors, add generated comments, sanitize descriptions, add version notice ([#3848](https://github.com/expo/expo-cli/issues/3848))
+- [expo-cli][run] Fix linking issues ([#3857](https://github.com/expo/expo-cli/issues/3857))
+- [xdl] Fix expo-updates EAS manifest assets for iOS ([#3860](https://github.com/expo/expo-cli/issues/3860))
+
+### 📦 Packages updated
+
+- @expo/config-plugins@4.0.0
+- @expo/config@6.0.0
+- @expo/dev-server@0.1.85
+- @expo/dev-tools@0.13.116
+- expo-cli@4.12.0
+- expo-optimize@0.1.107
+- @expo/metro-config@0.2.0
+- @expo/next-adapter@3.1.0
+- @expo/plist@0.0.15
+- @expo/prebuild-config@3.0.0
+- expo-pwa@0.0.95
+- uri-scheme@1.0.96
+- @expo/webpack-config@0.16.0
+- xdl@59.2.0
+
 ## [Fri, 6 Aug 2021 13:06:23 -0700](https://github.com/expo/expo-cli/commit/cb9ec2ec1d33f484fd956ac9669926443904a6cb)
 
 ### 🛠 Breaking changes
