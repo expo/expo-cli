@@ -6,7 +6,6 @@ import chalk from 'chalk';
 import child_process, { execFileSync } from 'child_process';
 import trim from 'lodash/trim';
 import os from 'os';
-import path from 'path';
 import prompts from 'prompts';
 import semver from 'semver';
 
@@ -1287,14 +1286,6 @@ export async function getDeviceAPIVersionAsync(
     (await getPropertyForDeviceAsync(device, PROP_API_VERSION)) ??
     LOWEST_SUPPORTED_EXPO_API_VERSION;
   return parseInt(sdkVersion, 10);
-}
-
-/**
- *
- * @returns app/android/app/build/outputs/apk
- */
-export function getAPKDirectory(projectRoot: string): string {
-  return path.join(projectRoot, 'android', 'app', 'build', 'outputs', 'apk');
 }
 
 export async function getDeviceABIsAsync(

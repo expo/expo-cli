@@ -1689,8 +1689,15 @@ Object {
           "EXUpdatesURL": "https://exp.host/@bacon/mycoolapp",
         },
         "infoPlist": Object {
+          "CFBundleDevelopmentRegion": "$(DEVELOPMENT_LANGUAGE)",
           "CFBundleDisplayName": "my cool app",
+          "CFBundleExecutable": "$(EXECUTABLE_NAME)",
+          "CFBundleIdentifier": "$(PRODUCT_BUNDLE_IDENTIFIER)",
+          "CFBundleInfoDictionaryVersion": "6.0",
+          "CFBundleName": "$(PRODUCT_NAME)",
+          "CFBundlePackageType": "$(PRODUCT_BUNDLE_PACKAGE_TYPE)",
           "CFBundleShortVersionString": "1.0.0",
+          "CFBundleSignature": "????",
           "CFBundleURLTypes": Array [
             Object {
               "CFBundleURLSchemes": Array [
@@ -1724,15 +1731,29 @@ Object {
             "fbauth2",
             "fbshareextension",
           ],
+          "LSRequiresIPhoneOS": true,
+          "NSAppTransportSecurity": Object {
+            "NSAllowsArbitraryLoads": true,
+            "NSExceptionDomains": Object {
+              "localhost": Object {
+                "NSExceptionAllowsInsecureHTTPLoads": true,
+              },
+            },
+          },
           "RCTRootViewBackgroundColor": 4294901760,
           "UILaunchStoryboardName": "SplashScreen",
+          "UIRequiredDeviceCapabilities": Array [
+            "armv7",
+          ],
           "UIRequiresFullScreen": true,
+          "UIStatusBarStyle": "UIStatusBarStyleDefault",
           "UISupportedInterfaceOrientations": Array [
             "UIInterfaceOrientationPortrait",
             "UIInterfaceOrientationPortraitUpsideDown",
             "UIInterfaceOrientationLandscapeLeft",
             "UIInterfaceOrientationLandscapeRight",
           ],
+          "UIViewControllerBasedStatusBarAppearance": false,
           "bar": Object {
             "val": Array [
               "foo",
@@ -1896,8 +1917,15 @@ Object {
     },
     "googleServicesFile": "./config/GoogleService-Info.plist",
     "infoPlist": Object {
+      "CFBundleDevelopmentRegion": "$(DEVELOPMENT_LANGUAGE)",
       "CFBundleDisplayName": "my cool app",
+      "CFBundleExecutable": "$(EXECUTABLE_NAME)",
+      "CFBundleIdentifier": "$(PRODUCT_BUNDLE_IDENTIFIER)",
+      "CFBundleInfoDictionaryVersion": "6.0",
+      "CFBundleName": "$(PRODUCT_NAME)",
+      "CFBundlePackageType": "$(PRODUCT_BUNDLE_PACKAGE_TYPE)",
       "CFBundleShortVersionString": "1.0.0",
+      "CFBundleSignature": "????",
       "CFBundleURLTypes": Array [
         Object {
           "CFBundleURLSchemes": Array [
@@ -1931,15 +1959,29 @@ Object {
         "fbauth2",
         "fbshareextension",
       ],
+      "LSRequiresIPhoneOS": true,
+      "NSAppTransportSecurity": Object {
+        "NSAllowsArbitraryLoads": true,
+        "NSExceptionDomains": Object {
+          "localhost": Object {
+            "NSExceptionAllowsInsecureHTTPLoads": true,
+          },
+        },
+      },
       "RCTRootViewBackgroundColor": 4294901760,
       "UILaunchStoryboardName": "SplashScreen",
+      "UIRequiredDeviceCapabilities": Array [
+        "armv7",
+      ],
       "UIRequiresFullScreen": true,
+      "UIStatusBarStyle": "UIStatusBarStyleDefault",
       "UISupportedInterfaceOrientations": Array [
         "UIInterfaceOrientationPortrait",
         "UIInterfaceOrientationPortraitUpsideDown",
         "UIInterfaceOrientationLandscapeLeft",
         "UIInterfaceOrientationLandscapeRight",
       ],
+      "UIViewControllerBasedStatusBarAppearance": false,
       "bar": Object {
         "val": Array [
           "foo",
