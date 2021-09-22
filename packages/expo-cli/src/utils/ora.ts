@@ -62,7 +62,7 @@ export function ora(options?: oraReal.Options | string): oraReal.Ora {
     console.error = errorReal;
   };
 
-  spinner.start = (text: string): Ora => {
+  spinner.start = (text): Ora => {
     wrapNativeLogs();
     return oraStart(text);
   };
