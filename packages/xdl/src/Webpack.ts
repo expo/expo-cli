@@ -97,8 +97,12 @@ async function clearWebCacheAsync(projectRoot: string, mode: string): Promise<vo
 }
 
 // Temporary hack while we implement multi-bundler dev server proxy.
+const _isTargetingNative: boolean = ['ios', 'android'].includes(
+  process.env.EXPO_WEBPACK_PLATFORM || ''
+);
+
 export function isTargetingNative() {
-  return ['ios', 'android'].includes(process.env.EXPO_WEBPACK_PLATFORM || '');
+  return _isTargetingNative;
 }
 
 export type WebpackDevServerResults = {
