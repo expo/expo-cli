@@ -111,6 +111,7 @@ export async function getUpdatedDependenciesAsync(
     sdkVersion: exp.sdkVersion,
     workflow,
     targetSdkVersion,
+    targetSdkVersionString,
   });
 
   const removed: string[] = [];
@@ -145,6 +146,7 @@ export type UpgradeDependenciesOptions = {
   sdkVersion?: string;
   workflow: ExpoWorkflow;
   targetSdkVersion: TargetSDKVersion | null;
+  targetSdkVersionString: string | null;
 };
 
 export function getDependenciesFromBundledNativeModules({
@@ -153,6 +155,7 @@ export function getDependenciesFromBundledNativeModules({
   sdkVersion,
   workflow,
   targetSdkVersion,
+  targetSdkVersionString,
 }: UpgradeDependenciesOptions): DependencyList {
   const result: DependencyList = {};
 
@@ -181,7 +184,16 @@ export function getDependenciesFromBundledNativeModules({
   }
 
   // Get the supported react/react-native/react-dom versions and other related packages
-  if (workflow === 'managed' || projectDependencies['expokit']) {
+
+  // Use expo forked react-native in these situations:
+  // 1. expokit installed
+  // 2. managed workflow and sdk version < 43.0.0 (in sdk 43 or above, we try to use the official react-native)
+  const shouldUseExpoReactNativeFork =
+    projectDependencies['expokit'] ||
+    (workflow === 'managed' &&
+      targetSdkVersionString &&
+      semver.lt(targetSdkVersionString, '43.0.0'));
+  if (shouldUseExpoReactNativeFork) {
     result[
       'react-native'
     ] = `https://github.com/expo/react-native/archive/${targetSdkVersion.expoReactNativeTag}.tar.gz`;
