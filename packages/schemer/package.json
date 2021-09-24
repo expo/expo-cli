@@ -30,6 +30,9 @@
     "probe-image-size": "~6.0.0",
     "read-chunk": "^3.2.0"
   },
+  "devDependencies": {
+    "@types/lodash": "^4.14.173"
+  },
   "publishConfig": {
     "access": "public"
   }
