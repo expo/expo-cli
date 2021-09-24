@@ -14,7 +14,7 @@ import { UserManager, Versions } from 'xdl';
 
 import CommandError, { SilentError } from '../CommandError';
 import Log from '../log';
-import prompts, { selectAsync } from '../prompts';
+import prompts, { confirmAsync, selectAsync } from '../prompts';
 import { extractAndPrepareTemplateAppAsync } from '../utils/extractTemplateAppAsync';
 import { logNewSection } from '../utils/ora';
 import * as CreateApp from './utils/CreateApp';
@@ -169,6 +169,33 @@ export async function actionAsync(incomingProjectRoot: string, command: Partial<
     projectRoot = await resolveProjectRootAsync(incomingProjectRoot || options.name);
   }
 
+  const cdPath = CreateApp.getChangeDirectoryPath(projectRoot);
+
+  // Check if we should skip initializing the git tree
+  let shouldSkipInitializeGitTree = false;
+
+  try {
+    if (await isInsideGitRepo(projectRoot)) {
+      Log.log(
+        `Your project will be initialized inside an existing git repository (${await topLevelGitRepo(
+          projectRoot
+        )})`
+      );
+
+      shouldSkipInitializeGitTree =
+        program.nonInteractive ||
+        (await confirmAsync({
+          message: `Skip initializing a git repository for ${cdPath}?`,
+        }));
+    }
+  } catch (error) {
+    if (error.code === 'GIT_NOT_INSTALLED') {
+      shouldSkipInitializeGitTree = true;
+    } else {
+      throw error;
+    }
+  }
+
   let resolvedTemplate: string | null = options.template ?? null;
   // @ts-ignore: This guards against someone passing --template without a name after it.
   if (resolvedTemplate === true) {
@@ -290,8 +317,6 @@ export async function actionAsync(incomingProjectRoot: string, command: Partial<
 
   // Configure updates (?)
 
-  const cdPath = CreateApp.getChangeDirectoryPath(projectRoot);
-
   let showPublishBeforeBuildWarning: boolean | undefined;
   let didConfigureUpdatesProjectFiles: boolean = false;
   let username: string | null = null;
@@ -333,9 +358,9 @@ export async function actionAsync(incomingProjectRoot: string, command: Partial<
   // at some point check if git is installed and actually bail out if not, because
   // npm install will fail with a confusing error if so.
   try {
-    // check if git is installed
-    // check if inside git repo
-    await initGitRepoAsync(projectPath, { silent: true, commit: true });
+    if (!shouldSkipInitializeGitTree) {
+      await initGitRepoAsync(projectPath, { silent: true, commit: true });
+    }
   } catch {
     // todo: check if git is installed, bail out
   }
@@ -353,24 +378,37 @@ async function installNodeDependenciesAsync(projectRoot: string, packageManager:
   }
 }
 
+async function isInsideGitRepo(path: string) {
+  try {
+    const resultPromise = await spawnAsync('git', ['rev-parse', '--is-inside-work-tree'], {
+      cwd: path,
+    });
+
+    return resultPromise.stdout.trim() === 'true';
+  } catch (e) {
+    if (e.stderr.includes('fatal: not a git repository')) {
+      return false;
+    }
+    throw new CommandError('GIT_NOT_INSTALLED', '`git` not in PATH.');
+  }
+}
+
+async function topLevelGitRepo(path: string) {
+  try {
+    const resultPromise = await spawnAsync('git', ['rev-parse', '--show-toplevel'], {
+      cwd: path,
+    });
+
+    return resultPromise.stdout.trim();
+  } catch (e) {
+    throw new CommandError('GIT_NOT_INSTALLED', '`git` not in PATH.');
+  }
+}
+
 export async function initGitRepoAsync(
   root: string,
   flags: { silent: boolean; commit: boolean } = { silent: false, commit: true }
 ) {
-  // let's see if we're in a git tree
-  try {
-    await spawnAsync('git', ['rev-parse', '--is-inside-work-tree'], {
-      cwd: root,
-    });
-    !flags.silent && Log.log('New project is already inside of a git repo, skipping git init.');
-  } catch (e) {
-    if (e.errno === 'ENOENT') {
-      !flags.silent && Log.warn('Unable to initialize git repo. `git` not in PATH.');
-      return false;
-    }
-  }
-
-  // not in git tree, so let's init
   try {
     await spawnAsync('git', ['init'], { cwd: root });
     !flags.silent && Log.log('Initialized a git repository.');
