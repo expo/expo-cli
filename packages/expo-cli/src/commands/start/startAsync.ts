@@ -26,7 +26,7 @@ export async function actionAsync(projectRoot: string, options: NormalizedOption
 
   // Only validate expo in Expo Go contexts
   if (!options.devClient) {
-    const hasDevClientInstalled = isDevClientInstalledInProject(projectRoot);
+    const hasDevClientInstalled = profileMethod(isDevClientInstalledInProject)(projectRoot);
     if (hasDevClientInstalled) {
       Log.warn(
         'This project has expo-dev-client installed, but not enabled. Use the `expo start --dev-client` to run in custom dev client.'
