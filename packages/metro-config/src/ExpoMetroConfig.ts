@@ -164,7 +164,6 @@ export function getDefaultConfig(
   }
 
   const babelConfigPath = getProjectBabelConfigFile(projectRoot);
-  const isCustomBabelConfigDefined = !!babelConfigPath;
 
   if (EXPO_DEBUG) {
     console.log();
@@ -235,13 +234,7 @@ export function getDefaultConfig(
       allowOptionalDependencies: true,
       babelTransformerPath: EXPO_USE_EXOTIC
         ? require.resolve('./transformer/metro-expo-exotic-babel-transformer')
-        : isCustomBabelConfigDefined
-        ? // If the user defined a babel config file in their project,
-          // then use the default transformer.
-          // Try to use the project copy before falling back on the global version
-          resolveFrom.silent(projectRoot, 'metro-react-native-babel-transformer')
-        : // Otherwise, use a custom transformer that uses `babel-preset-expo` by default for projects.
-          require.resolve('./transformer/metro-expo-babel-transformer'),
+        : require.resolve('./transformer/metro-expo-babel-transformer'),
       assetRegistryPath: 'react-native/Libraries/Image/AssetRegistry',
       assetPlugins: hashAssetFilesPath ? [hashAssetFilesPath] : undefined,
     },

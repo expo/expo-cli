@@ -44,9 +44,9 @@ Object {
   "devtool": false,
   "entry": Object {
     "app": Array [
-      "node_modules/react-native/Libraries/polyfills/console.js",
-      "node_modules/react-native/Libraries/polyfills/error-guard.js",
-      "node_modules/react-native/Libraries/polyfills/Object.es7.js",
+      "node_modules/@react-native/polyfills/console.js",
+      "node_modules/@react-native/polyfills/error-guard.js",
+      "node_modules/@react-native/polyfills/Object.es7.js",
       "node_modules/react-native/Libraries/Core/InitializeCore.js",
       "packages/webpack-config/e2e/basic/index.js",
     ],
@@ -178,9 +178,9 @@ Object {
   "devtool": false,
   "entry": Object {
     "app": Array [
-      "node_modules/react-native/Libraries/polyfills/console.js",
-      "node_modules/react-native/Libraries/polyfills/error-guard.js",
-      "node_modules/react-native/Libraries/polyfills/Object.es7.js",
+      "node_modules/@react-native/polyfills/console.js",
+      "node_modules/@react-native/polyfills/error-guard.js",
+      "node_modules/@react-native/polyfills/Object.es7.js",
       "node_modules/react-native/Libraries/Core/InitializeCore.js",
       "packages/webpack-config/e2e/basic/index.js",
     ],
