@@ -165,6 +165,12 @@ class ProjectManager extends React.Component {
       </div>
     );
 
+    const platforms = this.props.project.config.platforms || ['ios', 'android', 'web'];
+
+    const isIosDisabled = !platforms.includes('ios');
+    const isAndroidDisabled = !platforms.includes('android');
+    const isWebDisabled = !platforms.includes('web');
+
     const viewingElements = (
       <ProjectManagerSidebarOptions
         url={this.props.project.manifestUrl}
@@ -185,6 +191,9 @@ class ProjectManager extends React.Component {
         onEmailOrNumberValidation={this._handleEmailOrPhoneNumberValidation}
         onToggleProductionMode={this.props.onToggleProductionMode}
         user={this.props.user}
+        isIosDisabled={isIosDisabled}
+        isAndroidDisabled={isAndroidDisabled}
+        isWebDisabled={isWebDisabled}
         isProduction={!this.props.project.settings.dev}
         isPublishing={this.props.isPublishing}
         isActiveDeviceIOS={this.props.isActiveDeviceIOS}

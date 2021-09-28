@@ -1,10 +1,10 @@
-import fs from 'fs-extra';
+import fs from 'fs';
 import path from 'path';
 import resolveFrom from 'resolve-from';
 
 import { getConfig } from '../Config';
 import { ProjectConfig } from '../Config.types';
-import { getManagedExtensions } from './extensions';
+import { getBareExtensions } from './extensions';
 
 // https://github.com/facebook/create-react-app/blob/9750738cce89a967cc71f28390daf5d4311b193c/packages/react-scripts/config/paths.js#L22
 export function ensureSlash(inputPath: string, needsSlash: boolean): string {
@@ -22,13 +22,23 @@ export function getPossibleProjectRoot(): string {
   return fs.realpathSync(process.cwd());
 }
 
+const nativePlatforms = ['ios', 'android'];
+
+export function resolveEntryPoint(
+  projectRoot: string,
+  { platform, projectConfig }: { platform: string; projectConfig?: ProjectConfig }
+) {
+  const platforms = nativePlatforms.includes(platform) ? [platform, 'native'] : [platform];
+  return getEntryPoint(projectRoot, ['./index'], platforms, projectConfig);
+}
+
 export function getEntryPoint(
   projectRoot: string,
   entryFiles: string[],
   platforms: string[],
   projectConfig?: ProjectConfig
 ): string | null {
-  const extensions = getManagedExtensions(platforms);
+  const extensions = getBareExtensions(platforms);
   return getEntryPointWithExtensions(projectRoot, entryFiles, extensions, projectConfig);
 }
 

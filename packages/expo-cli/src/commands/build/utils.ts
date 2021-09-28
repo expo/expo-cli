@@ -1,9 +1,63 @@
 import chalk from 'chalk';
 import program from 'commander';
-import { Versions } from 'xdl';
+import { UrlUtils, Versions } from 'xdl';
 
+import CommandError from '../../CommandError';
 import Log from '../../log';
-import prompts from '../../prompts';
+import prompts, { confirmAsync } from '../../prompts';
+import * as ProjectUtils from '../utils/ProjectUtils';
+
+export async function maybeBailOnWorkflowWarning({
+  projectRoot,
+  platform,
+  nonInteractive,
+}: {
+  projectRoot: string;
+  platform: 'ios' | 'android';
+  nonInteractive: boolean;
+}) {
+  const { workflow } = await ProjectUtils.findProjectRootAsync(projectRoot);
+  if (workflow === 'managed') {
+    return false;
+  }
+
+  const command = `expo build:${platform}`;
+  Log.warn(chalk.bold(`⚠️  ${command} currently only supports managed workflow apps.`));
+  Log.warn(
+    `If you proceed with this command, we can run the build for you but it will not include any custom native modules or changes that you have made to your local native projects.`
+  );
+  Log.warn(
+    `Unless you are sure that you know what you are doing, we recommend aborting the build and doing a native release build through ${
+      platform === 'ios' ? 'Xcode' : 'Android Studio'
+    }.`
+  );
+
+  if (nonInteractive) {
+    Log.warn(`Skipping confirmation prompt because non-interactive mode is enabled.`);
+    return false;
+  }
+
+  const answer = await confirmAsync({
+    message: `Would you like to proceed?`,
+  });
+
+  return !answer;
+}
+
+export function assertReleaseChannel(releaseChannel: any): asserts releaseChannel {
+  const channelRe = new RegExp(/^[a-z\d][a-z\d._-]*$/);
+  if (!channelRe.test(releaseChannel)) {
+    throw new CommandError(
+      'Release channel name can only contain lowercase letters, numbers and special characters . _ and -'
+    );
+  }
+}
+
+export function assertPublicUrl(publicUrl: any) {
+  if (publicUrl && !UrlUtils.isHttps(publicUrl)) {
+    throw new CommandError('INVALID_PUBLIC_URL', '--public-url must be a valid HTTPS URL');
+  }
+}
 
 export async function checkIfSdkIsSupported(
   sdkVersion: string,

@@ -25,6 +25,7 @@ import * as Styles from './Styles';
 import * as Updates from './Updates';
 import * as UserInterfaceStyle from './UserInterfaceStyle';
 import * as Version from './Version';
+import * as WindowSoftInputMode from './WindowSoftInputMode';
 
 export {
   AllowBackup,
@@ -54,4 +55,5 @@ export {
   UserInterfaceStyle,
   Version,
   JsEngine,
+  WindowSoftInputMode,
 };

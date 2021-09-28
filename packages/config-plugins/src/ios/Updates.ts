@@ -5,6 +5,7 @@ import xcode from 'xcode';
 
 import { ConfigPlugin } from '../Plugin.types';
 import { withExpoPlist } from '../plugins/ios-plugins';
+import { getRuntimeVersion, getUpdateUrl } from '../utils/Updates';
 import { ExpoPlist } from './IosConfig.types';
 
 const CREATE_MANIFEST_IOS_PATH = 'expo-updates/scripts/create-manifest-ios.sh';
@@ -25,21 +26,18 @@ export enum Config {
   UPDATES_CONFIGURATION_REQUEST_HEADERS_KEY = 'EXUpdatesRequestHeaders',
 }
 
-export function getUpdateUrl(
-  config: Pick<ExpoConfigUpdates, 'owner' | 'slug'>,
-  username: string | null
-): string | null {
-  const user = typeof config.owner === 'string' ? config.owner : username;
-  if (!user) {
-    return null;
-  }
-  return `https://exp.host/@${user}/${config.slug}`;
-}
-
-export function getRuntimeVersion(
+/**
+ * runtime version maybe null in projects using classic updates. In that
+ * case we use SDK version
+ */
+export function getRuntimeVersionNullable(
   config: Pick<ExpoConfigUpdates, 'runtimeVersion'>
 ): string | null {
-  return typeof config.runtimeVersion === 'string' ? config.runtimeVersion : null;
+  try {
+    return getRuntimeVersion(config, 'ios');
+  } catch (e) {
+    return null;
+  }
 }
 
 export function getSDKVersion(config: Pick<ExpoConfigUpdates, 'sdkVersion'>): string | null {
@@ -100,7 +98,7 @@ export function setUpdatesConfig(
 export function setVersionsConfig(config: ExpoConfigUpdates, expoPlist: ExpoPlist): ExpoPlist {
   const newExpoPlist = { ...expoPlist };
 
-  const runtimeVersion = getRuntimeVersion(config);
+  const runtimeVersion = getRuntimeVersionNullable(config);
   const sdkVersion = getSDKVersion(config);
   if (runtimeVersion) {
     delete newExpoPlist[Config.SDK_VERSION];
@@ -209,7 +207,7 @@ export function isPlistVersionConfigurationSynced(
   config: Pick<ExpoConfigUpdates, 'sdkVersion' | 'runtimeVersion'>,
   expoPlist: ExpoPlist
 ): boolean {
-  const expectedRuntimeVersion = getRuntimeVersion(config);
+  const expectedRuntimeVersion = getRuntimeVersionNullable(config);
   const expectedSdkVersion = getSDKVersion(config);
 
   const currentRuntimeVersion = expoPlist.EXUpdatesRuntimeVersion ?? null;

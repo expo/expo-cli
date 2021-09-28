@@ -8,14 +8,19 @@ import { serializeAfterStaticPlugins } from '../Serialize';
  * @param config
  * @param projectRoot
  */
-export const withConfigPlugins: ConfigPlugin = config => {
+export const withConfigPlugins: ConfigPlugin<boolean> = (config, skipPlugins) => {
   // @ts-ignore: plugins not on config type yet -- TODO
   if (!Array.isArray(config.plugins) || !config.plugins?.length) {
     return config;
   }
-  // Resolve and evaluate plugins
-  // @ts-ignore: TODO: add plugins to the config schema
-  config = withPlugins(config, config.plugins);
+  if (!skipPlugins) {
+    // Resolve and evaluate plugins
+    // @ts-ignore: TODO: add plugins to the config schema
+    config = withPlugins(config, config.plugins);
+  } else {
+    // Delete the plugins array in case someone added functions or other values which cannot be automatically serialized.
+    delete config.plugins;
+  }
   // plugins aren't serialized by default, serialize the plugins after resolving them.
   return serializeAfterStaticPlugins(config);
 };

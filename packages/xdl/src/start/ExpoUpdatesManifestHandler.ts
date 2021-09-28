@@ -1,17 +1,24 @@
 import { ExpoUpdatesManifest, getConfig } from '@expo/config';
-import { getRuntimeVersionForSDKVersion } from '@expo/sdk-runtime-versions';
+import { Updates } from '@expo/config-plugins';
+import { JSONObject } from '@expo/json-file';
 import express from 'express';
 import http from 'http';
+import nullthrows from 'nullthrows';
 import { parse } from 'url';
-import uuid from 'uuid';
+import { v4 as uuidv4 } from 'uuid';
 
 import {
   Analytics,
+  ANONYMOUS_USERNAME,
+  ApiV2,
   Config,
+  ConnectionStatus,
   ProjectAssets,
   ProjectUtils,
   resolveEntryPoint,
   UrlUtils,
+  UserManager,
+  UserSettings,
 } from '../internal';
 import {
   getBundleUrlAsync,
@@ -20,23 +27,67 @@ import {
   stripPort,
 } from './ManifestHandler';
 
-function getPlatformFromRequest(req: express.Request | http.IncomingMessage): string {
+function getPlatformFromRequest(req: express.Request | http.IncomingMessage): 'android' | 'ios' {
   const url = req.url ? parse(req.url, /* parseQueryString */ true) : null;
   const platform = url?.query.platform || req.headers['expo-platform'];
   if (!platform) {
     throw new Error('Must specify expo-platform header or query parameter');
   }
-  return String(platform);
+
+  const stringifiedPlatform = String(platform);
+  if (!['android', 'ios'].includes(stringifiedPlatform)) {
+    throw new Error(`platform must be "android" or "ios". Recieved: "${platform}"`);
+  }
+  return stringifiedPlatform as 'android' | 'ios';
+}
+
+/**
+ * Whether an anonymous scope key should be used. It should be used when:
+ * 1. Offline
+ * 2. Not logged-in
+ * 3. No EAS project ID in config
+ */
+async function shouldUseAnonymousManifestAsync(
+  easProjectId: string | undefined | null
+): Promise<boolean> {
+  if (!easProjectId || ConnectionStatus.isOffline()) {
+    return true;
+  }
+
+  const currentSession = await UserManager.getSessionAsync();
+  if (!currentSession) {
+    return true;
+  }
+
+  return false;
+}
+
+async function getScopeKeyForProjectIdAsync(projectId: string): Promise<string> {
+  const user = await UserManager.ensureLoggedInAsync();
+  const project = await ApiV2.clientForUser(user).getAsync(
+    `projects/${encodeURIComponent(projectId)}`
+  );
+  return project.scopeKey;
+}
+
+async function signManifestAsync(manifest: ExpoUpdatesManifest): Promise<string> {
+  const user = await UserManager.ensureLoggedInAsync();
+  const { signature } = await ApiV2.clientForUser(user).postAsync('manifest/eas/sign', {
+    manifest: (manifest as any) as JSONObject,
+  });
+  return signature;
 }
 
 export async function getManifestResponseAsync({
   projectRoot,
   platform,
   host,
+  acceptSignature,
 }: {
   projectRoot: string;
-  platform: string;
+  platform: 'android' | 'ios';
   host?: string;
+  acceptSignature: boolean;
 }): Promise<{
   body: ExpoUpdatesManifest;
   headers: Map<string, number | string | readonly string[]>;
@@ -63,12 +114,10 @@ export async function getManifestResponseAsync({
 
   const hostUri = await UrlUtils.constructHostUriAsync(projectRoot, hostname);
 
-  const runtimeVersion =
-    expoConfig.runtimeVersion ??
-    (expoConfig.sdkVersion ? getRuntimeVersionForSDKVersion(expoConfig.sdkVersion) : null);
-  if (!runtimeVersion) {
-    throw new Error('Must specify runtimeVersion or sdkVersion in app.json');
-  }
+  const runtimeVersion = Updates.getRuntimeVersion(
+    { ...expoConfig, runtimeVersion: expoConfig.runtimeVersion ?? { policy: 'sdkVersion' } },
+    platform
+  );
 
   const bundleUrl = await getBundleUrlAsync({
     projectRoot,
@@ -79,35 +128,49 @@ export async function getManifestResponseAsync({
     hostname,
   });
 
-  // For each manifest asset (for example `icon`):
-  // - set a field on the manifest containing a reference to the asset: iconAsset: { rawUrl?: string, assetKey?: string }
-  // - gather the data needed to embed a reference to that asset in the expo-updates assets key
-  const assets = await ProjectAssets.resolveAndCollectExpoUpdatesManifestAssets(
+  await ProjectAssets.resolveManifestAssets({
     projectRoot,
-    expoConfig,
-    path => bundleUrl!.match(/^https?:\/\/.*?\//)![0] + 'assets/' + path
-  );
+    manifest: expoConfig,
+    async resolver(path) {
+      return bundleUrl!.match(/^https?:\/\/.*?\//)![0] + 'assets/' + path;
+    },
+  });
+
+  const easProjectId = expoConfig.extra?.eas.projectId;
+  const shouldUseAnonymousManifest = await shouldUseAnonymousManifestAsync(easProjectId);
+  const userAnonymousIdentifier = await UserSettings.getAnonymousIdentifierAsync();
+  const scopeKey = shouldUseAnonymousManifest
+    ? `@${ANONYMOUS_USERNAME}/${expoConfig.slug}-${userAnonymousIdentifier}`
+    : await getScopeKeyForProjectIdAsync(nullthrows(easProjectId));
 
   const expoUpdatesManifest = {
-    id: uuid.v4(),
+    id: uuidv4(),
     createdAt: new Date().toISOString(),
     runtimeVersion,
     launchAsset: {
-      key: mainModuleName,
+      key: 'bundle',
       contentType: 'application/javascript',
       url: bundleUrl,
     },
-    assets,
+    assets: [], // assets are not used in development
     metadata: {}, // required for the client to detect that this is an expo-updates manifest
     extra: {
-      eas: {}, // TODO(wschurman): somehow inject EAS config in here if known
+      eas: {
+        projectId: easProjectId ?? undefined,
+      },
       expoClient: {
         ...expoConfig,
         hostUri,
       },
       expoGo: expoGoConfig,
+      scopeKey,
     },
   };
+
+  if (acceptSignature && !shouldUseAnonymousManifest) {
+    const manifestSignature = await signManifestAsync(expoUpdatesManifest);
+    headers.set('expo-manifest-signature', manifestSignature);
+  }
 
   return {
     body: expoUpdatesManifest,
@@ -131,6 +194,7 @@ export function getManifestHandler(projectRoot: string) {
         projectRoot,
         host: req.headers.host,
         platform: getPlatformFromRequest(req),
+        acceptSignature: !!req.headers['expo-accept-signature'],
       });
       for (const [headerName, headerValue] of headers) {
         res.setHeader(headerName, headerValue);

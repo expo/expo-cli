@@ -25,6 +25,7 @@ export type ResourceItemXML = {
   $: {
     name: string;
     'tools:targetApi'?: string;
+    translatable?: string;
   };
 };
 /**
@@ -87,14 +88,19 @@ export function buildResourceItem({
   name,
   value,
   targetApi,
+  translatable,
 }: {
   name: string;
   value: string;
   targetApi?: string;
+  translatable?: boolean;
 }): ResourceItemXML {
   const item: ResourceItemXML = { $: { name }, _: value };
   if (targetApi) {
     item.$['tools:targetApi'] = targetApi;
+  }
+  if (translatable !== undefined) {
+    item.$['translatable'] = String(translatable);
   }
   return item;
 }

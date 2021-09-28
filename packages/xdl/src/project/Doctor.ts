@@ -134,7 +134,7 @@ async function validateWithSchema(
       schemaErrorMessage = `Error: Problem${
         e.errors.length > 1 ? 's' : ''
       } validating fields in ${configName}. ${learnMore(
-        'https://docs.expo.io/workflow/configuration/'
+        'https://docs.expo.dev/workflow/configuration/'
       )}`;
       schemaErrorMessage += e.errors.map(formatValidationError).join('');
     }
@@ -147,7 +147,7 @@ async function validateWithSchema(
       if (e instanceof SchemerError) {
         assetsErrorMessage = `Error: Problem${
           e.errors.length > 1 ? '' : 's'
-        } validating asset fields in ${configName}. ${learnMore('https://docs.expo.io/')}`;
+        } validating asset fields in ${configName}. ${learnMore('https://docs.expo.dev/')}`;
         assetsErrorMessage += e.errors.map(formatValidationError).join('');
       }
     }
@@ -324,57 +324,63 @@ async function _validateReactNativeVersionAsync(
     ProjectUtils.clearNotification(projectRoot, 'doctor-legacy-async-storage');
   }
 
-  if (!exp.isDetached) {
-    return NO_ISSUES;
-
-    // (TODO-2017-07-20): Validate the react-native version if it uses
-    // officially published package rather than Expo fork. Expo fork of
-    // react-native was required before CRNA. We now only run the react-native
-    // validation of the version if we are using the fork. We should probably
-    // validate the version here as well such that it matches with the
-    // react-native version compatible with the selected SDK.
-  }
-
-  // Expo fork of react-native is required
-  if (!/expo\/react-native/.test(reactNative)) {
-    ProjectUtils.logWarning(
-      projectRoot,
-      'expo',
-      `Warning: Not using the Expo fork of react-native. ${learnMore('https://docs.expo.io/')}`,
-      'doctor-not-using-expo-fork'
-    );
-    return WARNING;
-  }
-  ProjectUtils.clearNotification(projectRoot, 'doctor-not-using-expo-fork');
-
-  try {
-    const reactNativeTag = reactNative.match(/sdk-\d+\.\d+\.\d+/)[0];
-    const sdkVersionObject = sdkVersions[sdkVersion];
-
-    // TODO: Want to be smarter about this. Maybe warn if there's a newer version.
-    if (
-      semver.major(Versions.parseSdkVersionFromTag(reactNativeTag)) !==
-      semver.major(Versions.parseSdkVersionFromTag(sdkVersionObject['expoReactNativeTag']))
-    ) {
+  const isExpoForkedReactNative = /expo\/react-native/.test(reactNative);
+  if (!isExpoForkedReactNative) {
+    // Expo fork of react-native is required for deprecated `isDetached` project
+    if (exp.isDetached) {
       ProjectUtils.logWarning(
         projectRoot,
         'expo',
-        `Warning: Invalid version of react-native for sdkVersion ${sdkVersion}. Use github:expo/react-native#${sdkVersionObject['expoReactNativeTag']}`,
+        `Warning: Not using the Expo fork of react-native. ${learnMore('https://docs.expo.dev/')}`,
+        'doctor-not-using-expo-fork'
+      );
+      return WARNING;
+    }
+    ProjectUtils.clearNotification(projectRoot, 'doctor-not-using-expo-fork');
+
+    // Check react-native version satisfies with sdk's `facebookReactNativeVersion`
+    const { facebookReactNativeVersion } = sdkVersions[sdkVersion];
+    if (!semver.satisfies(reactNative, `~${facebookReactNativeVersion}`)) {
+      ProjectUtils.logWarning(
+        projectRoot,
+        'expo',
+        `Warning: Invalid version of react-native for sdkVersion ${sdkVersion}. Use react-native@${facebookReactNativeVersion}`,
         'doctor-invalid-version-of-react-native'
       );
       return WARNING;
     }
     ProjectUtils.clearNotification(projectRoot, 'doctor-invalid-version-of-react-native');
+  } else {
+    // If `isExpoForkedReactNative === true`
+    try {
+      const reactNativeTag = reactNative.match(/sdk-\d+\.\d+\.\d+/)[0];
+      const sdkVersionObject = sdkVersions[sdkVersion];
 
-    ProjectUtils.clearNotification(projectRoot, 'doctor-malformed-version-of-react-native');
-  } catch (e) {
-    ProjectUtils.logWarning(
-      projectRoot,
-      'expo',
-      `Warning: ${reactNative} is not a valid version. Version must be in the form of sdk-x.y.z. Please update your package.json file.`,
-      'doctor-malformed-version-of-react-native'
-    );
-    return WARNING;
+      // TODO: Want to be smarter about this. Maybe warn if there's a newer version.
+      if (
+        semver.major(Versions.parseSdkVersionFromTag(reactNativeTag)) !==
+        semver.major(Versions.parseSdkVersionFromTag(sdkVersionObject['expoReactNativeTag']))
+      ) {
+        ProjectUtils.logWarning(
+          projectRoot,
+          'expo',
+          `Warning: Invalid version of react-native for sdkVersion ${sdkVersion}. Use github:expo/react-native#${sdkVersionObject['expoReactNativeTag']}`,
+          'doctor-invalid-version-of-react-native'
+        );
+        return WARNING;
+      }
+      ProjectUtils.clearNotification(projectRoot, 'doctor-invalid-version-of-react-native');
+
+      ProjectUtils.clearNotification(projectRoot, 'doctor-malformed-version-of-react-native');
+    } catch (e) {
+      ProjectUtils.logWarning(
+        projectRoot,
+        'expo',
+        `Warning: ${reactNative} is not a valid version. Version must be in the form of sdk-x.y.z. Please update your package.json file.`,
+        'doctor-malformed-version-of-react-native'
+      );
+      return WARNING;
+    }
   }
 
   return NO_ISSUES;

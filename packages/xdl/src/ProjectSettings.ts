@@ -188,8 +188,3 @@ export function dotExpoProjectDirectoryExists(projectRoot: string): boolean {
 
   return false;
 }
-
-export async function getPackagerOptsAsync(projectRoot: string): Promise<ProjectSettings> {
-  const projectSettings = await readAsync(projectRoot);
-  return projectSettings;
-}

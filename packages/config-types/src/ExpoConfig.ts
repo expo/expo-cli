@@ -13,7 +13,7 @@ export interface ExpoConfig {
    */
   description?: string;
   /**
-   * The friendly URL name for publishing. For example, `myAppName` will refer to the `expo.io/@project-owner/myAppName` project.
+   * The friendly URL name for publishing. For example, `myAppName` will refer to the `expo.dev/@project-owner/myAppName` project.
    */
   slug: string;
   /**
@@ -43,7 +43,7 @@ export interface ExpoConfig {
    */
   runtimeVersion?: string;
   /**
-   * Your app version. In addition to this field, you'll also use `ios.buildNumber` and `android.versionCode` — read more about how to version your app [here](https://docs.expo.io/distribution/app-stores/#versioning-your-app). On iOS this corresponds to `CFBundleShortVersionString`, and on Android, this corresponds to `versionName`. The required format can be found [here](https://developer.apple.com/documentation/bundleresources/information_property_list/cfbundleshortversionstring).
+   * Your app version. In addition to this field, you'll also use `ios.buildNumber` and `android.versionCode` — read more about how to version your app [here](https://docs.expo.dev/distribution/app-stores/#versioning-your-app). On iOS this corresponds to `CFBundleShortVersionString`, and on Android, this corresponds to `versionName`. The required format can be found [here](https://developer.apple.com/documentation/bundleresources/information_property_list/cfbundleshortversionstring).
    */
   version?: string;
   /**
@@ -87,7 +87,7 @@ export interface ExpoConfig {
      */
     color?: string;
     /**
-     * Whether or not to display notifications when the app is in the foreground on iOS. `_displayInForeground` option in the individual push notification message overrides this option. [Learn more.](https://docs.expo.io/push-notifications/receiving-notifications/#foreground-notification-behavior) Defaults to `false`.
+     * Whether or not to display notifications when the app is in the foreground on iOS. `_displayInForeground` option in the individual push notification message overrides this option. [Learn more.](https://docs.expo.dev/push-notifications/receiving-notifications/#foreground-notification-behavior) Defaults to `false`.
      */
     iosDisplayInForeground?: boolean;
     /**
@@ -104,11 +104,7 @@ export interface ExpoConfig {
    */
   appKey?: string;
   /**
-   * @deprecated Use `androidStatusBar` instead.
-   */
-  androidStatusBarColor?: string;
-  /**
-   * Configuration for the status bar on Android. For more details please navigate to [Configuring StatusBar](https://docs.expo.io/guides/configuring-statusbar/).
+   * Configuration for the status bar on Android. For more details please navigate to [Configuring StatusBar](https://docs.expo.dev/guides/configuring-statusbar/).
    */
   androidStatusBar?: {
     /**
@@ -124,7 +120,7 @@ export interface ExpoConfig {
      */
     hidden?: boolean;
     /**
-     * Specifies whether the status bar should be translucent (whether it should be treated as a block element that will take up space on the device's screen and limit space available for the rest of your app to be rendered, or be treated as an element with `'position = absolute'` that is rendered above your app's content). Defaults to `true` (default iOS behavior, the iOS status bar cannot be set translucent by the system)
+     * Sets `android:windowTranslucentStatus` in `styles.xml`. When false, the system status bar pushes the content of your app down (similar to `position: relative`). When true, the status bar floats above the content in your app (similar to `position: absolute`). Defaults to `true` to match the iOS status bar behavior (which can only float above content).
      */
     translucent?: boolean;
   };
@@ -169,13 +165,13 @@ export interface ExpoConfig {
    */
   entryPoint?: string;
   /**
-   * Any extra fields you want to pass to your experience. Values are accessible via `Expo.Constants.manifest.extra` ([Learn more](https://docs.expo.io/versions/latest/sdk/constants/#constantsmanifest))
+   * Any extra fields you want to pass to your experience. Values are accessible via `Expo.Constants.manifest.extra` ([Learn more](https://docs.expo.dev/versions/latest/sdk/constants/#constantsmanifest))
    */
   extra?: {
     [k: string]: any;
   };
   /**
-   * @deprecated Use a `metro.config.js` file instead. [Learn more](https://docs.expo.io/guides/customizing-metro/)
+   * @deprecated Use a `metro.config.js` file instead. [Learn more](https://docs.expo.dev/guides/customizing-metro/)
    */
   packagerOpts?: {
     [k: string]: any;
@@ -193,7 +189,7 @@ export interface ExpoConfig {
      */
     checkAutomatically?: 'ON_ERROR_RECOVERY' | 'ON_LOAD';
     /**
-     * How long (in ms) to allow for fetching OTA updates before falling back to a cached version of the app. Defaults to 30000 (30 sec). Must be between 0 and 300000 (5 minutes).
+     * How long (in ms) to allow for fetching OTA updates before falling back to a cached version of the app. Defaults to 0. Must be between 0 and 300000 (5 minutes).
      */
     fallbackToCacheTimeout?: number;
     /**
@@ -246,14 +242,18 @@ export interface ExpoConfig {
     [k: string]: any;
   };
   /**
-   * An array of file glob strings which point to assets that will be bundled within your standalone app binary. Read more in the [Offline Support guide](https://docs.expo.io/guides/offline-support/)
+   * An array of file glob strings which point to assets that will be bundled within your standalone app binary. Read more in the [Offline Support guide](https://docs.expo.dev/guides/offline-support/)
    */
   assetBundlePatterns?: string[];
   /**
-   * Config plugins for adding extra functionality to your project. [Learn more](https://docs.expo.io/guides/config-plugins/).
+   * Config plugins for adding extra functionality to your project. [Learn more](https://docs.expo.dev/guides/config-plugins/).
    */
   plugins?: (string | [] | [string] | [string, any])[];
   splash?: Splash;
+  /**
+   * Specifies the JavaScript engine for apps. Supported only on EAS Build. Defaults to `jsc`. Valid values: `hermes`, `jsc`.
+   */
+  jsEngine?: 'hermes' | 'jsc';
   ios?: IOS;
   android?: Android;
   web?: Web;
@@ -335,7 +335,7 @@ export interface IOS {
    */
   icon?: string;
   /**
-   * Merchant ID for use with Apple Pay in your standalone app.
+   * @deprecated Merchant ID for use with Apple Pay in your standalone app.
    */
   merchantId?: string;
   /**
@@ -382,17 +382,9 @@ export interface IOS {
     };
   };
   /**
-   * @deprecated Use `updates.enabled` instead.
-   */
-  isRemoteJSEnabled?: boolean;
-  /**
    * [Firebase Configuration File](https://support.google.com/firebase/answer/7015592) Location of the `GoogleService-Info.plist` file for configuring Firebase.
    */
   googleServicesFile?: string;
-  /**
-   * @deprecated Use `updates` key with `fallbackToCacheTimeout: 0` instead.
-   */
-  loadJSInBackgroundExperimental?: boolean;
   /**
    * Whether your standalone iOS app supports tablet screen sizes. Defaults to `false`.
    */
@@ -402,7 +394,7 @@ export interface IOS {
    */
   isTabletOnly?: boolean;
   /**
-   * If true, indicates that your standalone iOS app does not support Slide Over and Split View on iPad. Defaults to `true` currently, but will change to `false` in a future SDK version.
+   * If true, indicates that your standalone iOS app does not support Slide Over and Split View on iPad. Defaults to `false`
    */
   requireFullScreen?: boolean;
   /**
@@ -442,7 +434,7 @@ export interface IOS {
    */
   splash?: {
     /**
-     * Local path to a XIB file as the loading screen. It overrides other loading screen options. Note: This will only be used in the standalone app (i.e., after you build the app). It will not be used in the Expo Go.
+     * @deprecated Apple has deprecated `.xib` splash screens in favor of `.storyboard` files. Local path to a XIB file as the loading screen. It overrides other loading screen options. Note: This will only be used in the standalone app (i.e., after you build the app). It will not be used in the Expo Go.
      */
     xib?: string;
     /**
@@ -463,6 +455,10 @@ export interface IOS {
     tabletImage?: string;
     [k: string]: any;
   };
+  /**
+   * Specifies the JavaScript engine for iOS apps. Supported only on EAS Build. Defaults to `jsc`. Valid values: `hermes`, `jsc`.
+   */
+  jsEngine?: 'hermes' | 'jsc';
 }
 /**
  * Configuration that is specific to the Android platform.
@@ -493,7 +489,7 @@ export interface Android {
    */
   userInterfaceStyle?: 'light' | 'dark' | 'automatic';
   /**
-   * A Boolean value that indicates whether the app should use the new notifications API.
+   * @deprecated A Boolean value that indicates whether the app should use the new notifications API.
    */
   useNextNotificationsApi?: boolean;
   /**
@@ -686,37 +682,37 @@ export interface Android {
    */
   softwareKeyboardLayoutMode?: 'resize' | 'pan';
   /**
-   * Specifies the JavaScript engine. Supported only on EAS Build. Defaults to `jsc`. Valid values: `hermes`, `jsc`.
+   * Specifies the JavaScript engine for Android apps. Supported only on EAS Build and in Expo Go. Defaults to `jsc`. Valid values: `hermes`, `jsc`.
    */
   jsEngine?: 'hermes' | 'jsc';
 }
 export interface AndroidIntentFiltersData {
   /**
-   * the scheme of the URL, e.g. `https`
+   * Scheme of the URL, e.g. `https`
    */
   scheme?: string;
   /**
-   * the hostname, e.g. `myapp.io`
+   * Hostname, e.g. `myapp.io`
    */
   host?: string;
   /**
-   * the port, e.g. `3000`
+   * Port, e.g. `3000`
    */
   port?: string;
   /**
-   * an exact path for URLs that should be matched by the filter, e.g. `/records`
+   * Exact path for URLs that should be matched by the filter, e.g. `/records`
    */
   path?: string;
   /**
-   *  a regex for paths that should be matched by the filter, e.g. `.*`
+   * Pattern for paths that should be matched by the filter, e.g. `.*`. Must begin with `/`
    */
   pathPattern?: string;
   /**
-   * a prefix for paths that should be matched by the filter, e.g. `/records/` will match `/records/123`
+   * Prefix for paths that should be matched by the filter, e.g. `/records/` will match `/records/123`
    */
   pathPrefix?: string;
   /**
-   * a MIME type for URLs that should be matched by the filter
+   * MIME type for URLs that should be matched by the filter
    */
   mimeType?: string;
 }

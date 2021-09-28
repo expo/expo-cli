@@ -1,18 +1,8 @@
 export default {
-  'android/app/src/main/java/com/reactnativeproject/MainActivity.java': `package com.reactnativeproject;
-
-import com.facebook.react.ReactActivity;
-
-public class MainActivity extends ReactActivity {
-  /**
-   * Returns the name of the main component registered from JavaScript. This is used to schedule
-   * rendering of the component.
-   */
-  @Override
-  protected String getMainComponentName() {
-    return "react-native-project";
-  }
-}
+  'android/app/src/main/res/values/strings.xml': `<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="app_name">expo</string>
+</resources>
 `,
   'android/app/src/main/AndroidManifest.xml': `<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.reactnativeproject">
 

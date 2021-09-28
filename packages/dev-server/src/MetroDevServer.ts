@@ -1,28 +1,24 @@
-import Log from '@expo/bunyan';
+import type Log from '@expo/bunyan';
 import { ExpoConfig, getConfigFilePaths } from '@expo/config';
 import * as ExpoMetroConfig from '@expo/metro-config';
-import {
-  createDevServerMiddleware,
-  securityHeadersMiddleware,
-} from '@react-native-community/cli-server-api';
-import bodyParser from 'body-parser';
-import type { Server as ConnectServer, HandleFunction } from 'connect';
+import chalk from 'chalk';
+import type { Server as ConnectServer } from 'connect';
 import http from 'http';
-import type { IncomingMessage, ServerResponse } from 'http';
 import type Metro from 'metro';
-import path from 'path';
-import resolveFrom from 'resolve-from';
-import semver from 'semver';
-import { parse as parseUrl } from 'url';
 
 import {
   buildHermesBundleAsync,
   isEnableHermesManaged,
-  maybeInconsistentEngineAsync,
+  maybeThrowFromInconsistentEngineAsync,
 } from './HermesBundler';
 import LogReporter from './LogReporter';
-import clientLogsMiddleware from './middleware/clientLogsMiddleware';
-import createJsInspectorMiddleware from './middleware/createJsInspectorMiddleware';
+import { createDevServerAsync } from './metro/createDevServerAsync';
+import {
+  importInspectorProxyServerFromProject,
+  importMetroFromProject,
+  importMetroServerFromProject,
+} from './metro/importMetroFromProject';
+import { createDevServerMiddleware } from './middleware/devServerMiddleware';
 
 export type MetroDevServerOptions = ExpoMetroConfig.LoadOptions & {
   logger: Log;
@@ -57,8 +53,6 @@ export async function runMetroDevServerAsync(
   middleware: any;
   messageSocket: MessageSocket;
 }> {
-  const Metro = importMetroFromProject(projectRoot);
-
   const reporter = new LogReporter(options.logger);
 
   const metroConfig = await ExpoMetroConfig.loadAsync(projectRoot, { reporter, ...options });
@@ -66,20 +60,8 @@ export async function runMetroDevServerAsync(
   const { middleware, attachToServer } = createDevServerMiddleware({
     port: metroConfig.server.port,
     watchFolders: metroConfig.watchFolders,
+    logger: options.logger,
   });
-
-  // securityHeadersMiddleware does not support cross-origin requests for remote devtools to get the sourcemap.
-  // We replace with the enhanced version.
-  replaceMiddlewareWith(
-    middleware as ConnectServer,
-    securityHeadersMiddleware,
-    remoteDevtoolsSecurityHeadersMiddleware
-  );
-  middleware.use(remoteDevtoolsCorsMiddleware);
-
-  middleware.use(bodyParser.json());
-  middleware.use('/logs', clientLogsMiddleware(options.logger));
-  middleware.use('/inspector', createJsInspectorMiddleware());
 
   const customEnhanceMiddleware = metroConfig.server.enhanceMiddleware;
   // @ts-ignore can't mutate readonly config
@@ -90,13 +72,16 @@ export async function runMetroDevServerAsync(
     return middleware.use(metroMiddleware);
   };
 
-  const serverInstance = await Metro.runServer(metroConfig, { hmrEnabled: true });
+  const { server } = await createDevServerAsync(projectRoot, {
+    config: metroConfig,
+    logger: options.logger,
+  });
 
-  const { messageSocket, eventsSocket } = attachToServer(serverInstance);
+  const { messageSocket, eventsSocket } = attachToServer(server);
   reporter.reportEvent = eventsSocket.reportEvent;
 
   return {
-    server: serverInstance,
+    server,
     middleware,
     messageSocket,
   };
@@ -170,39 +155,25 @@ export async function bundleAsync(
     bundle: BundleOptions,
     bundleOutput: BundleOutput
   ): Promise<BundleOutput> => {
-    if (!gteSdkVersion(expoConfig, '42.0.0')) {
-      return bundleOutput;
-    }
-    const isHermesManaged = isEnableHermesManaged(expoConfig, bundle.platform);
+    const { platform } = bundle;
+    const isHermesManaged = isEnableHermesManaged(expoConfig, platform);
 
-    const maybeInconsistentEngine = await maybeInconsistentEngineAsync(
+    const paths = getConfigFilePaths(projectRoot);
+    const configFilePath = paths.dynamicConfigPath ?? paths.staticConfigPath ?? 'app.json';
+    await maybeThrowFromInconsistentEngineAsync(
       projectRoot,
-      bundle.platform,
+      configFilePath,
+      platform,
       isHermesManaged
     );
-    if (maybeInconsistentEngine) {
-      const platform = bundle.platform === 'ios' ? 'iOS' : 'Android';
-      const paths = getConfigFilePaths(projectRoot);
-      const configFilePath = paths.dynamicConfigPath ?? paths.staticConfigPath ?? 'app.json';
-      const configFileName = path.basename(configFilePath);
-      throw new Error(
-        `JavaScript engine configuration is inconsistent between ${configFileName} and ${platform} native project.\n` +
-          `In ${configFileName}: Hermes is ${isHermesManaged ? 'enabled' : 'not enabled'}\n` +
-          `In ${platform} native project: Hermes is ${
-            isHermesManaged ? 'not enabled' : 'enabled'
-          }\n` +
-          `Please check the following files for inconsistencies:\n` +
-          `  - ${configFilePath}\n` +
-          `  - ${path.join(projectRoot, 'android', 'gradle.properties')}\n` +
-          `  - ${path.join(projectRoot, 'android', 'app', 'build.gradle')}\n` +
-          'Learn more: https://expo.fyi/hermes-android-config'
-      );
-    }
 
     if (isHermesManaged) {
+      const platformTag = chalk.bold(
+        { ios: 'iOS', android: 'Android', web: 'Web' }[platform] || platform
+      );
       options.logger.info(
         { tag: 'expo' },
-        `💿 Building Hermes bytecode for the bundle - platform[${bundle.platform}]`
+        `💿 ${platformTag} Building Hermes bytecode for the bundle`
       );
       const hermesBundleOutput = await buildHermesBundleAsync(
         projectRoot,
@@ -213,133 +184,55 @@ export async function bundleAsync(
       bundleOutput.hermesBytecodeBundle = hermesBundleOutput.hbc;
       bundleOutput.hermesSourcemap = hermesBundleOutput.sourcemap;
     }
-
     return bundleOutput;
   };
 
   try {
-    return await Promise.all(
-      bundles.map(async (bundle: BundleOptions) => {
-        const bundleOutput = await buildAsync(bundle);
-        return maybeAddHermesBundleAsync(bundle, bundleOutput);
-      })
-    );
+    const intermediateOutputs = await Promise.all(bundles.map(bundle => buildAsync(bundle)));
+    const bundleOutputs: BundleOutput[] = [];
+    for (let i = 0; i < bundles.length; ++i) {
+      // hermesc does not support parallel building even we spawn processes.
+      // we should build them sequentially.
+      bundleOutputs.push(await maybeAddHermesBundleAsync(bundles[i], intermediateOutputs[i]));
+    }
+    return bundleOutputs;
   } finally {
     metroServer.end();
   }
 }
 
-function importMetroFromProject(projectRoot: string): typeof Metro {
-  const resolvedPath = resolveFrom.silent(projectRoot, 'metro');
-  if (!resolvedPath) {
-    throw new Error(
-      'Missing package "metro" in the project at ' +
-        projectRoot +
-        '. ' +
-        'This usually means `react-native` is not installed. ' +
-        'Please verify that dependencies in package.json include "react-native" ' +
-        'and run `yarn` or `npm install`.'
-    );
-  }
-  return require(resolvedPath);
-}
-
-function importMetroServerFromProject(projectRoot: string): typeof Metro.Server {
-  const resolvedPath = resolveFrom.silent(projectRoot, 'metro/src/Server');
-  if (!resolvedPath) {
-    throw new Error(
-      'Missing module "metro/src/Server" in the project. ' +
-        'This usually means React Native is not installed. ' +
-        'Please verify that dependencies in package.json include "react-native" ' +
-        'and run `yarn` or `npm install`.'
-    );
-  }
-  return require(resolvedPath);
-}
-
-function replaceMiddlewareWith(
-  app: ConnectServer,
-  sourceMiddleware: HandleFunction,
-  targetMiddleware: HandleFunction
+/**
+ * Attach the inspector proxy to a development server.
+ * Inspector proxy is used for viewing the JS context in a browser.
+ * This must be attached after the server is listening.
+ * Attaching consists of pushing custom middleware and appending WebSockets to the server.
+ *
+ *
+ * @param projectRoot
+ * @param props.server dev server to add WebSockets to
+ * @param props.middleware dev server middleware to add extra middleware to
+ */
+export function attachInspectorProxy(
+  projectRoot: string,
+  { server, middleware }: { server: http.Server; middleware: ConnectServer }
 ) {
-  const item = app.stack.find(middleware => middleware.handle === sourceMiddleware);
-  if (item) {
-    item.handle = targetMiddleware;
+  const { InspectorProxy } = importInspectorProxyServerFromProject(projectRoot);
+  const inspectorProxy = new InspectorProxy(projectRoot);
+  if ('addWebSocketListener' in inspectorProxy) {
+    // metro@0.59.0
+    inspectorProxy.addWebSocketListener(server);
+  } else if ('createWebSocketListeners' in inspectorProxy) {
+    // metro@0.66.0
+    // TODO: This isn't properly support without a ws router.
+    inspectorProxy.createWebSocketListeners(server);
   }
+  // TODO(hypuk): Refactor inspectorProxy.processRequest into separate request handlers
+  // so that we could provide routes (/json/list and /json/version) here.
+  // Currently this causes Metro to give warning about T31407894.
+  // $FlowFixMe[method-unbinding] added when improving typing for this parameters
+  middleware.use(inspectorProxy.processRequest.bind(inspectorProxy));
+
+  return { inspectorProxy };
 }
 
-// Like securityHeadersMiddleware but further allow cross-origin requests
-// from https://chrome-devtools-frontend.appspot.com/
-function remoteDevtoolsSecurityHeadersMiddleware(
-  req: IncomingMessage,
-  res: ServerResponse,
-  next: (err?: Error) => void
-) {
-  // Block any cross origin request.
-  if (
-    typeof req.headers.origin === 'string' &&
-    !req.headers.origin.match(/^https?:\/\/localhost:/) &&
-    !req.headers.origin.match(/^https:\/\/chrome-devtools-frontend\.appspot\.com/)
-  ) {
-    next(
-      new Error(
-        `Unauthorized request from ${req.headers.origin}. ` +
-          'This may happen because of a conflicting browser extension to intercept HTTP requests. ' +
-          'Please try again without browser extensions or using incognito mode.'
-      )
-    );
-    return;
-  }
-
-  // Block MIME-type sniffing.
-  res.setHeader('X-Content-Type-Options', 'nosniff');
-
-  next();
-}
-
-// Middleware that accepts multiple Access-Control-Allow-Origin for processing *.map.
-// This is a hook middleware before metro processing *.map,
-// which originally allow only devtools://devtools
-function remoteDevtoolsCorsMiddleware(
-  req: IncomingMessage,
-  res: ServerResponse,
-  next: (err?: Error) => void
-) {
-  if (req.url) {
-    const url = parseUrl(req.url);
-    const origin = req.headers.origin;
-    const isValidOrigin =
-      origin &&
-      ['devtools://devtools', 'https://chrome-devtools-frontend.appspot.com'].includes(origin);
-    if (url.pathname?.endsWith('.map') && origin && isValidOrigin) {
-      res.setHeader('Access-Control-Allow-Origin', origin);
-
-      // Prevent metro overwrite Access-Control-Allow-Origin header
-      const setHeader = res.setHeader.bind(res);
-      res.setHeader = (key, ...args) => {
-        if (key === 'Access-Control-Allow-Origin') {
-          return;
-        }
-        setHeader(key, ...args);
-      };
-    }
-  }
-  next();
-}
-
-// Cloned from xdl/src/Versions.ts, we cannot use that because of circular dependency
-function gteSdkVersion(expJson: Pick<ExpoConfig, 'sdkVersion'>, sdkVersion: string): boolean {
-  if (!expJson.sdkVersion) {
-    return false;
-  }
-
-  if (expJson.sdkVersion === 'UNVERSIONED') {
-    return true;
-  }
-
-  try {
-    return semver.gte(expJson.sdkVersion, sdkVersion);
-  } catch (e) {
-    throw new Error(`${expJson.sdkVersion} is not a valid version. Must be in the form of x.y.z`);
-  }
-}
+export { LogReporter, createDevServerMiddleware };

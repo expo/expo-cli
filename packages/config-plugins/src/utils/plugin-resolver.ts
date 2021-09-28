@@ -113,7 +113,7 @@ export function resolveConfigPluginFunctionWithInfo(projectRoot: string, pluginR
     result = requirePluginFile(pluginFile);
   } catch (error) {
     if (error instanceof SyntaxError) {
-      const learnMoreLink = `Learn more: https://docs.expo.io/guides/config-plugins/#creating-a-plugin`;
+      const learnMoreLink = `Learn more: https://docs.expo.dev/guides/config-plugins/#creating-a-plugin`;
       // If the plugin reference is a node module, and that node module has a syntax error, then it probably doesn't have an official config plugin.
       if (!isPluginFile && !moduleNameIsDirectFileReference(pluginReference)) {
         const pluginError = new PluginError(
@@ -162,7 +162,7 @@ export function resolveConfigPluginExport({
     plugin = plugin.default;
   }
   if (typeof plugin !== 'function') {
-    const learnMoreLink = `Learn more: https://docs.expo.io/guides/config-plugins/#creating-a-plugin`;
+    const learnMoreLink = `Learn more: https://docs.expo.dev/guides/config-plugins/#creating-a-plugin`;
     // If the plugin reference is a node module, and that node module does not export a function then it probably doesn't have a config plugin.
     if (!isPluginFile && !moduleNameIsDirectFileReference(pluginReference)) {
       throw new PluginError(

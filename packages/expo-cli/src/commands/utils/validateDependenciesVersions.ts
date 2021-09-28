@@ -65,10 +65,10 @@ export async function validateDependenciesVersionsAsync(
 }
 
 function getPackagesToCheck(
-  dependencies: Record<string, string>,
+  dependencies: Record<string, string> | null | undefined,
   bundledNativeModules: BundledNativeModules
 ): string[] {
-  const dependencyNames = Object.keys(dependencies || {});
+  const dependencyNames = Object.keys(dependencies ?? {});
   const result: string[] = [];
   for (const dependencyName of dependencyNames) {
     if (dependencyName in bundledNativeModules) {

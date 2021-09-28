@@ -1,8 +1,7 @@
 import { getPossibleProjectRoot } from '@expo/config/paths';
 import { Configuration } from 'webpack';
 
-import { withWorkbox } from './addons';
-import { getPublicPaths, validateEnvironment } from './env';
+import { validateEnvironment } from './env';
 import { Arguments, DevConfiguration, Environment, InputEnvironment } from './types';
 import webpackConfig from './webpack.config';
 
@@ -34,21 +33,10 @@ export default async function createWebpackConfigAsync(
     console.warn('environment.info is deprecated');
   }
 
-  if (environment.offline === true) {
-    const { workbox = {} } = argv;
-    const publicUrl = workbox.publicUrl || getPublicPaths(environment).publicUrl;
-
-    // No SW for native
-    if (['ios', 'android'].includes(env.platform || '')) {
-      return config;
-    }
-
-    return withWorkbox(config, {
-      projectRoot: environment.projectRoot,
-      ...workbox,
-      publicUrl,
-      platform: env.platform,
-    });
+  if ('offline' in environment) {
+    throw new Error(
+      'The `offline` flag is deprecated. Please setup a service worker for your web project manually.'
+    );
   }
   return config;
 }

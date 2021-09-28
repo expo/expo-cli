@@ -43,12 +43,14 @@ export const withIosExpoPlugins: ConfigPlugin<{
     IOSConfig.Name.withDisplayName,
     IOSConfig.Orientation.withOrientation,
     IOSConfig.RequiresFullScreen.withRequiresFullScreen,
+    IOSConfig.RootViewBackgroundColor.withRootViewBackgroundColor,
     IOSConfig.Scheme.withScheme,
     IOSConfig.UserInterfaceStyle.withUserInterfaceStyle,
     IOSConfig.UsesNonExemptEncryption.withUsesNonExemptEncryption,
     IOSConfig.Version.withBuildNumber,
     IOSConfig.Version.withVersion,
     IOSConfig.Google.withGoogleServicesFile,
+    IOSConfig.JsEngine.withJsEnginePodfileProps,
     // Entitlements
     IOSConfig.Entitlements.withAssociatedDomains,
     // XcodeProject
@@ -88,6 +90,7 @@ export const withAndroidExpoPlugins: ConfigPlugin<{
     // AndroidManifest.xml
     AndroidConfig.Package.withPackageManifest,
     AndroidConfig.AllowBackup.withAllowBackup,
+    AndroidConfig.WindowSoftInputMode.withWindowSoftInputMode,
     // Note: The withAndroidIntentFilters plugin must appear before the withScheme
     // plugin or withScheme will override the output of withAndroidIntentFilters.
     AndroidConfig.IntentFilters.withAndroidIntentFilters,

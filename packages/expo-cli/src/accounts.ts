@@ -13,7 +13,7 @@ import { nonEmptyInput } from './validators';
 
 UserManager.initialize();
 
-type CommandOptions = {
+export type CommandOptions = {
   username?: string;
   password?: string;
   otp?: string;
@@ -341,7 +341,7 @@ async function _usernamePasswordAuth(
   }
 }
 
-export const REGISTRATION_URL = `https://expo.io/signup`;
+export const REGISTRATION_URL = `https://expo.dev/signup`;
 
 export function openRegistrationInBrowser() {
   const spinner = ora(`Opening ${REGISTRATION_URL}...`).start();

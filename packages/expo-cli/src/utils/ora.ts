@@ -1,8 +1,17 @@
 import chalk from 'chalk';
 import program from 'commander';
-import oraReal from 'ora';
+import oraReal, { Ora } from 'ora';
 
 import Log from '../log';
+
+// eslint-disable-next-line no-console
+const logReal = console.log;
+// eslint-disable-next-line no-console
+const infoReal = console.info;
+// eslint-disable-next-line no-console
+const warnReal = console.warn;
+// eslint-disable-next-line no-console
+const errorReal = console.error;
 
 /**
  * A custom ora spinner that sends the stream to stdout in CI, non-TTY, or expo's non-interactive flag instead of stderr (the default).
@@ -13,7 +22,7 @@ import Log from '../log';
 export function ora(options?: oraReal.Options | string): oraReal.Ora {
   const inputOptions = typeof options === 'string' ? { text: options } : options || {};
   const disabled = program.nonInteractive || Log.isDebug;
-  const ora = oraReal({
+  const spinner = oraReal({
     // Ensure our non-interactive mode emulates CI mode.
     isEnabled: !disabled,
     // In non-interactive mode, send the stream to stdout so it prevents looking like an error.
@@ -21,10 +30,59 @@ export function ora(options?: oraReal.Options | string): oraReal.Ora {
     ...inputOptions,
   });
 
-  // Always make the central logging module aware of the current spinner
-  Log.setSpinner(ora);
+  const oraStart = spinner.start.bind(spinner);
+  const oraStop = spinner.stop.bind(spinner);
+  const oraStopAndPersist = spinner.stopAndPersist.bind(spinner);
 
-  return ora;
+  const logWrap = (method: any, args: any[]): void => {
+    oraStop();
+    method(...args);
+    spinner.start();
+  };
+
+  const wrapNativeLogs = (): void => {
+    // eslint-disable-next-line no-console
+    console.log = (...args: any) => logWrap(logReal, args);
+    // eslint-disable-next-line no-console
+    console.info = (...args: any) => logWrap(infoReal, args);
+    // eslint-disable-next-line no-console
+    console.warn = (...args: any) => logWrap(warnReal, args);
+    // eslint-disable-next-line no-console
+    console.error = (...args: any) => logWrap(errorReal, args);
+  };
+
+  const resetNativeLogs = (): void => {
+    // eslint-disable-next-line no-console
+    console.log = logReal;
+    // eslint-disable-next-line no-console
+    console.info = logReal;
+    // eslint-disable-next-line no-console
+    console.warn = warnReal;
+    // eslint-disable-next-line no-console
+    console.error = errorReal;
+  };
+
+  spinner.start = (text): Ora => {
+    wrapNativeLogs();
+    return oraStart(text);
+  };
+
+  spinner.stopAndPersist = (options): Ora => {
+    const result = oraStopAndPersist(options);
+    resetNativeLogs();
+    return result;
+  };
+
+  spinner.stop = (): Ora => {
+    const result = oraStop();
+    resetNativeLogs();
+    return result;
+  };
+
+  // Always make the central logging module aware of the current spinner
+  Log.setSpinner(spinner);
+
+  return spinner;
 }
 
 /**

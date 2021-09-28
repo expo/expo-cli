@@ -1,11 +1,10 @@
-// @ts-ignore
+import { readFileSync } from 'fs';
 import requireString from 'require-from-string';
+import { transform } from 'sucrase';
 
 import { AppJSONConfig, ConfigContext, ExpoConfig } from './Config.types';
 import { ConfigError } from './Errors';
 import { serializeSkippingMods } from './Serialize';
-import { getBabelPreset } from './getBabelPreset';
-// import babel from '@babel/core';
 
 type RawDynamicConfig = AppJSONConfig | Partial<ExpoConfig> | null;
 
@@ -22,21 +21,70 @@ export function evalConfig(
   configFile: string,
   request: ConfigContext | null
 ): DynamicConfigResults {
-  const babel = require('@babel/core');
+  const contents = readFileSync(configFile, 'utf8');
+  let result: any;
+  try {
+    const { code } = transform(contents, {
+      filePath: configFile,
+      transforms: ['typescript', 'imports'],
+    });
 
-  const { code } = babel.transformFileSync(configFile, {
-    // only: [configFile],
-    cwd: request?.projectRoot || process.cwd(),
-    babelrc: false,
-    configFile: false,
-    comments: false,
-    ignore: [/node_modules/],
-    filename: 'unknown',
-    presets: [getBabelPreset()],
-  });
+    result = requireString(code, configFile);
+  } catch (error) {
+    const location = extractLocationFromSyntaxError(error);
 
-  const result = requireString(code, configFile);
+    // Apply a code frame preview to the error if possible, sucrase doesn't do this by default.
+    if (location) {
+      const { codeFrameColumns } = require('@babel/code-frame');
+      const codeFrame = codeFrameColumns(contents, { start: error.loc }, { highlightCode: true });
+      error.codeFrame = codeFrame;
+      error.message += `\n${codeFrame}`;
+    } else {
+      const importantStack = extractImportantStackFromNodeError(error);
+
+      if (importantStack) {
+        error.message += `\n${importantStack}`;
+      }
+    }
+    throw error;
+  }
   return resolveConfigExport(result, configFile, request);
+}
+
+function extractLocationFromSyntaxError(
+  error: Error | any
+): { line: number; column?: number } | null {
+  // sucrase provides the `loc` object
+  if (error.loc) {
+    return error.loc;
+  }
+
+  // `SyntaxError`s provide the `lineNumber` and `columnNumber` properties
+  if ('lineNumber' in error && 'columnNumber' in error) {
+    return { line: error.lineNumber, column: error.columnNumber };
+  }
+
+  return null;
+}
+
+// These kinda errors often come from syntax errors in files that were imported by the main file.
+// An example is a module that includes an import statement.
+function extractImportantStackFromNodeError(error: any): string | null {
+  if (isSyntaxError(error)) {
+    const traces = error.stack?.split('\n').filter(line => !line.startsWith('    at '));
+    if (!traces) return null;
+
+    // Remove redundant line
+    if (traces[traces.length - 1].startsWith('SyntaxError:')) {
+      traces.pop();
+    }
+    return traces.join('\n');
+  }
+  return null;
+}
+
+function isSyntaxError(error: any): error is SyntaxError {
+  return error instanceof SyntaxError || error.constructor.name === 'SyntaxError';
 }
 
 /**

@@ -57,20 +57,18 @@ export function getSetupWarnings({
     )} is not available in the bare workflow. You should replace it with ${chalk.bold(
       'Updates.manifest'
     )}. ${Log.chalk.dim(
-      learnMore('https://docs.expo.io/versions/latest/sdk/updates/#updatesmanifest')
+      learnMore('https://docs.expo.dev/versions/latest/sdk/updates/#updatesmanifest')
     )}`;
   }
 
-  const warnings = Object.keys(pkg.dependencies).reduce<Record<string, string>>((prev, key) => {
-    if (!(key in pkgsWithExtraSetup)) {
-      return prev;
+  const warnings: Record<string, string> = {};
+  if (pkg.dependencies) {
+    for (const key in pkg.dependencies) {
+      if (key in pkgsWithExtraSetup) {
+        warnings[key] = pkgsWithExtraSetup[key];
+      }
     }
-    return {
-      ...prev,
-      [key]: pkgsWithExtraSetup[key],
-    };
-  }, {});
-
+  }
   return warnings;
 }
 

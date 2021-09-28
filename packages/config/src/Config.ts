@@ -1,6 +1,6 @@
 import { ModConfig } from '@expo/config-plugins';
 import JsonFile, { JSONObject } from '@expo/json-file';
-import fs from 'fs-extra';
+import fs from 'fs';
 import { sync as globSync } from 'glob';
 import path from 'path';
 import resolveFrom from 'resolve-from';
@@ -78,6 +78,7 @@ function getSupportedPlatforms(projectRoot: string): Platform[] {
  *   config.slug = 'new slug'
  *   return { expo: config };
  * }
+ * ```
  *
  * **Supports**
  * - `app.config.ts`
@@ -122,7 +123,10 @@ export function getConfig(projectRoot: string, options: GetConfigOptions = {}): 
     }
 
     // Apply static json plugins, should be done after _internal
-    configWithDefaultValues.exp = withConfigPlugins(configWithDefaultValues.exp);
+    configWithDefaultValues.exp = withConfigPlugins(
+      configWithDefaultValues.exp,
+      !!options.skipPlugins
+    );
 
     if (!options.isModdedConfig) {
       // @ts-ignore: Delete mods added by static plugins when they won't have a chance to be evaluated
@@ -543,8 +547,12 @@ export function getNameFromConfig(
   };
 }
 
-export function getDefaultTarget(projectRoot: string): ProjectTarget {
-  const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
+export function getDefaultTarget(
+  projectRoot: string,
+  exp?: Pick<ExpoConfig, 'sdkVersion'>
+): ProjectTarget {
+  exp ??= getConfig(projectRoot, { skipSDKVersionRequirement: true }).exp;
+
   // before SDK 37, always default to managed to preserve previous behavior
   if (exp.sdkVersion && exp.sdkVersion !== 'UNVERSIONED' && semver.lt(exp.sdkVersion, '37.0.0')) {
     return 'managed';

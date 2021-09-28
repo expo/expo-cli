@@ -1,4 +1,4 @@
-import { JSONObject } from '@expo/json-file';
+import JsonFile, { JSONObject } from '@expo/json-file';
 import plist from '@expo/plist';
 import assert from 'assert';
 import { promises } from 'fs';
@@ -8,6 +8,7 @@ import xcode, { XcodeProject } from 'xcode';
 import { ExportedConfig, ModConfig } from '../Plugin.types';
 import { Entitlements, Paths } from '../ios';
 import { InfoPlist } from '../ios/IosConfig.types';
+import { getPbxproj } from '../ios/utils/Xcodeproj';
 import { getInfoPlistPathFromPbxproj } from '../ios/utils/getInfoPlistPath';
 import { fileExists } from '../utils/modules';
 import { sortObject } from '../utils/sortObject';
@@ -17,6 +18,37 @@ import { ForwardedBaseModOptions, provider, withGeneratedBaseMods } from './crea
 const { readFile, writeFile } = promises;
 
 type IosModName = keyof Required<ModConfig>['ios'];
+
+function getEntitlementsPlistTemplate() {
+  // TODO: Fetch the versioned template file if possible
+  return {};
+}
+
+function getInfoPlistTemplate() {
+  // TODO: Fetch the versioned template file if possible
+  return {
+    CFBundleDevelopmentRegion: '$(DEVELOPMENT_LANGUAGE)',
+    CFBundleExecutable: '$(EXECUTABLE_NAME)',
+    CFBundleIdentifier: '$(PRODUCT_BUNDLE_IDENTIFIER)',
+    CFBundleName: '$(PRODUCT_NAME)',
+    CFBundlePackageType: '$(PRODUCT_BUNDLE_PACKAGE_TYPE)',
+    CFBundleInfoDictionaryVersion: '6.0',
+    CFBundleSignature: '????',
+    LSRequiresIPhoneOS: true,
+    NSAppTransportSecurity: {
+      NSAllowsArbitraryLoads: true,
+      NSExceptionDomains: {
+        localhost: {
+          NSExceptionAllowsInsecureHTTPLoads: true,
+        },
+      },
+    },
+    UILaunchStoryboardName: 'SplashScreen',
+    UIRequiredDeviceCapabilities: ['armv7'],
+    UIViewControllerBasedStatusBarAppearance: false,
+    UIStatusBarStyle: 'UIStatusBarStyleDefault',
+  };
+}
 
 const defaultProviders = {
   dangerous: provider<unknown>({
@@ -42,14 +74,25 @@ const defaultProviders = {
   }),
   // Append a rule to supply Expo.plist data to mods on `mods.ios.expoPlist`
   expoPlist: provider<JSONObject>({
+    isIntrospective: true,
     getFilePath({ modRequest: { platformProjectRoot, projectName } }) {
       const supportingDirectory = path.join(platformProjectRoot, projectName!, 'Supporting');
       return path.resolve(supportingDirectory, 'Expo.plist');
     },
-    async read(filePath) {
-      return plist.parse(await readFile(filePath, 'utf8'));
+    async read(filePath, { modRequest: { introspect } }) {
+      try {
+        return plist.parse(await readFile(filePath, 'utf8'));
+      } catch (error) {
+        if (introspect) {
+          return {};
+        }
+        throw error;
+      }
     },
-    async write(filePath, { modResults }) {
+    async write(filePath, { modResults, modRequest: { introspect } }) {
+      if (introspect) {
+        return;
+      }
       await writeFile(filePath, plist.build(sortObject(modResults)));
     },
   }),
@@ -69,29 +112,49 @@ const defaultProviders = {
   }),
   // Append a rule to supply Info.plist data to mods on `mods.ios.infoPlist`
   infoPlist: provider<InfoPlist, ForwardedBaseModOptions>({
-    getFilePath(config) {
-      const infoPlistBuildProperty = getInfoPlistPathFromPbxproj(config.modRequest.projectRoot);
-
-      if (infoPlistBuildProperty) {
-        //: [root]/myapp/ios/MyApp/Info.plist
-        const infoPlistPath = path.join(
-          //: myapp/ios
-          config.modRequest.platformProjectRoot,
-          //: MyApp/Info.plist
-          infoPlistBuildProperty
-        );
-        if (fileExists(infoPlistPath)) {
-          return infoPlistPath;
-        }
-        addWarningIOS(
-          'mods.ios.infoPlist',
-          `Info.plist file linked to Xcode project does not exist: ${infoPlistPath}`
-        );
-      } else {
-        addWarningIOS('mods.ios.infoPlist', 'Failed to find Info.plist linked to Xcode project.');
+    isIntrospective: true,
+    async getFilePath(config) {
+      let project: xcode.XcodeProject | null = null;
+      try {
+        project = getPbxproj(config.modRequest.projectRoot);
+      } catch {
+        // noop
       }
-      // Fallback on glob...
-      return Paths.getInfoPlistPath(config.modRequest.projectRoot);
+
+      // Only check / warn if a project actually exists, this'll provide
+      // more accurate warning messages for users in managed projects.
+      if (project) {
+        const infoPlistBuildProperty = getInfoPlistPathFromPbxproj(project);
+
+        if (infoPlistBuildProperty) {
+          //: [root]/myapp/ios/MyApp/Info.plist
+          const infoPlistPath = path.join(
+            //: myapp/ios
+            config.modRequest.platformProjectRoot,
+            //: MyApp/Info.plist
+            infoPlistBuildProperty
+          );
+          if (fileExists(infoPlistPath)) {
+            return infoPlistPath;
+          }
+          addWarningIOS(
+            'mods.ios.infoPlist',
+            `Info.plist file linked to Xcode project does not exist: ${infoPlistPath}`
+          );
+        } else {
+          addWarningIOS('mods.ios.infoPlist', 'Failed to find Info.plist linked to Xcode project.');
+        }
+      }
+      try {
+        // Fallback on glob...
+        return await Paths.getInfoPlistPath(config.modRequest.projectRoot);
+      } catch (error: any) {
+        if (config.modRequest.introspect) {
+          // fallback to an empty string in introspection mode.
+          return '';
+        }
+        throw error;
+      }
     },
     async read(filePath, config) {
       // Apply all of the Info.plist values to the expo.ios.infoPlist object
@@ -99,9 +162,19 @@ const defaultProviders = {
       if (!config.ios) config.ios = {};
       if (!config.ios.infoPlist) config.ios.infoPlist = {};
 
-      const contents = await readFile(filePath, 'utf8');
-      assert(contents, 'Info.plist is empty');
-      const modResults = plist.parse(contents) as InfoPlist;
+      let modResults: InfoPlist;
+      try {
+        const contents = await readFile(filePath, 'utf8');
+        assert(contents, 'Info.plist is empty');
+        modResults = plist.parse(contents) as InfoPlist;
+      } catch (error: any) {
+        // Throw errors in introspection mode.
+        if (!config.modRequest.introspect) {
+          throw error;
+        }
+        // Fallback to using the infoPlist object from the Expo config.
+        modResults = getInfoPlistTemplate();
+      }
 
       config.ios.infoPlist = {
         ...(modResults || {}),
@@ -112,21 +185,50 @@ const defaultProviders = {
     },
     async write(filePath, config) {
       // Update the contents of the static infoPlist object
-      if (!config.ios) config.ios = {};
+      if (!config.ios) {
+        config.ios = {};
+      }
       config.ios.infoPlist = config.modResults;
+
+      // Return early without writing, in introspection mode.
+      if (config.modRequest.introspect) {
+        return;
+      }
 
       await writeFile(filePath, plist.build(sortObject(config.modResults)));
     },
   }),
   // Append a rule to supply .entitlements data to mods on `mods.ios.entitlements`
   entitlements: provider<JSONObject, ForwardedBaseModOptions>({
-    getFilePath(config) {
-      return Entitlements.getEntitlementsPath(config.modRequest.projectRoot);
+    isIntrospective: true,
+
+    async getFilePath(config) {
+      try {
+        // Fallback on glob...
+        return await Entitlements.getEntitlementsPath(config.modRequest.projectRoot);
+      } catch (error: any) {
+        if (config.modRequest.introspect) {
+          // fallback to an empty string in introspection mode.
+          return '';
+        }
+        throw error;
+      }
     },
+
     async read(filePath, config) {
-      const contents = await readFile(filePath, 'utf8');
-      assert(contents, 'Entitlements plist is empty');
-      const modResults = plist.parse(contents);
+      let modResults: JSONObject;
+      try {
+        const contents = await readFile(filePath, 'utf8');
+        assert(contents, 'Entitlements plist is empty');
+        modResults = plist.parse(contents);
+      } catch (error: any) {
+        // Throw errors in introspection mode.
+        if (!config.modRequest.introspect) {
+          throw error;
+        }
+        // Fallback to using the template file.
+        modResults = getEntitlementsPlistTemplate();
+      }
 
       // Apply all of the .entitlements values to the expo.ios.entitlements object
       // TODO: Remove this in favor of just overwriting the .entitlements with the Expo object. This will enable people to actually remove values.
@@ -140,6 +242,7 @@ const defaultProviders = {
 
       return config.ios.entitlements!;
     },
+
     async write(filePath, config) {
       // Update the contents of the static entitlements object
       if (!config.ios) {
@@ -147,7 +250,34 @@ const defaultProviders = {
       }
       config.ios.entitlements = config.modResults;
 
+      // Return early without writing, in introspection mode.
+      if (config.modRequest.introspect) {
+        return;
+      }
+
       await writeFile(filePath, plist.build(sortObject(config.modResults)));
+    },
+  }),
+
+  // Append a rule to supply Podfile.properties.json data to mods on `mods.ios.podfileProperties`
+  podfileProperties: provider<Record<string, string>>({
+    isIntrospective: true,
+
+    getFilePath({ modRequest: { platformProjectRoot } }) {
+      return path.resolve(platformProjectRoot, 'Podfile.properties.json');
+    },
+    async read(filePath) {
+      let results: Record<string, string> = {};
+      try {
+        results = await JsonFile.readAsync(filePath);
+      } catch (e) {}
+      return results;
+    },
+    async write(filePath, { modResults, modRequest: { introspect } }) {
+      if (introspect) {
+        return;
+      }
+      await JsonFile.writeAsync(filePath, modResults);
     },
   }),
 };
@@ -170,136 +300,4 @@ export function withIosBaseMods(
 
 export function getIosModFileProviders() {
   return defaultProviders;
-}
-
-/**
- * Get file providers that run introspection without modifying the actual native source code.
- * This can be used to determine the absolute static `ios.infoPlist` and `ios.entitlements` objects.
- *
- * @returns
- */
-export function getIosIntrospectModFileProviders(): Omit<
-  IosDefaultProviders,
-  // Get rid of mods that could potentially fail by being empty.
-  'dangerous' | 'xcodeproj' | 'appDelegate'
-> {
-  const createIntrospectionProvider = (
-    modName: keyof typeof defaultProviders,
-    { fallbackContents }: { fallbackContents: any }
-  ) => {
-    const realProvider = defaultProviders[modName];
-    return provider<any>({
-      async getFilePath(...props) {
-        try {
-          return await realProvider.getFilePath(...props);
-        } catch {
-          // fallback to an empty string in introspection mode.
-          return '';
-        }
-      },
-      async read(...props) {
-        try {
-          return await realProvider.read(...props);
-        } catch {
-          // fallback if a file is missing in introspection mode.
-          return fallbackContents;
-        }
-      },
-      async write() {
-        // write nothing in introspection mode.
-      },
-    });
-  };
-
-  // dangerous should never be added
-  return {
-    // appDelegate: createIntrospectionProvider('appDelegate', {
-    //   fallbackContents: {
-    //     path: '',
-    //     contents: '',
-    //     language: 'objc',
-    //   } as Paths.AppDelegateProjectFile,
-    // }),
-    // xcodeproj: createIntrospectionProvider('xcodeproj', {
-    //   fallbackContents: {} as XcodeProject,
-    // }),
-    expoPlist: createIntrospectionProvider('expoPlist', {
-      fallbackContents: {} as JSONObject,
-    }),
-
-    infoPlist: {
-      async getFilePath(...props) {
-        try {
-          return await defaultProviders.infoPlist.getFilePath(...props);
-        } catch {
-          return '';
-        }
-      },
-
-      async read(filePath, config, props) {
-        try {
-          return await defaultProviders.infoPlist.read(filePath, config, props);
-        } catch {
-          // Fallback to using the infoPlist object from the Expo config.
-          return (
-            config.ios?.infoPlist ?? {
-              CFBundleDevelopmentRegion: '$(DEVELOPMENT_LANGUAGE)',
-              CFBundleExecutable: '$(EXECUTABLE_NAME)',
-              CFBundleIdentifier: '$(PRODUCT_BUNDLE_IDENTIFIER)',
-              CFBundleName: '$(PRODUCT_NAME)',
-              CFBundlePackageType: '$(PRODUCT_BUNDLE_PACKAGE_TYPE)',
-              CFBundleInfoDictionaryVersion: '6.0',
-              CFBundleSignature: '????',
-              LSRequiresIPhoneOS: true,
-              NSAppTransportSecurity: {
-                NSAllowsArbitraryLoads: true,
-                NSExceptionDomains: {
-                  localhost: {
-                    NSExceptionAllowsInsecureHTTPLoads: true,
-                  },
-                },
-              },
-              UILaunchStoryboardName: 'SplashScreen',
-              UIRequiredDeviceCapabilities: ['armv7'],
-              UIViewControllerBasedStatusBarAppearance: false,
-              UIStatusBarStyle: 'UIStatusBarStyleDefault',
-            }
-          );
-        }
-      },
-
-      write(filePath, config) {
-        // Update the contents of the static infoPlist object
-        if (!config.ios) config.ios = {};
-
-        config.ios.infoPlist = config.modResults;
-      },
-    },
-
-    entitlements: {
-      async getFilePath(...props) {
-        try {
-          return await defaultProviders.entitlements.getFilePath(...props);
-        } catch {
-          return '';
-        }
-      },
-
-      async read(filePath, config, props) {
-        try {
-          return await defaultProviders.entitlements.read(filePath, config, props);
-        } catch {
-          // Fallback to using the entitlements object from the Expo config.
-          return config.ios?.entitlements ?? {};
-        }
-      },
-
-      write(filePath, config) {
-        // Update the contents of the static entitlements object
-        if (!config.ios) config.ios = {};
-
-        config.ios.entitlements = config.modResults;
-      },
-    },
-  };
 }

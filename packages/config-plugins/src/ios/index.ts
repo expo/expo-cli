@@ -6,6 +6,7 @@ import * as Entitlements from './Entitlements';
 import * as Facebook from './Facebook';
 import * as Google from './Google';
 import { ExpoPlist, InfoPlist } from './IosConfig.types';
+import * as JsEngine from './JsEngine';
 import * as Locales from './Locales';
 import * as Maps from './Maps';
 import * as Name from './Name';
@@ -14,6 +15,7 @@ import * as Paths from './Paths';
 import * as Permissions from './Permissions';
 import * as ProvisioningProfile from './ProvisioningProfile';
 import * as RequiresFullScreen from './RequiresFullScreen';
+import * as RootViewBackgroundColor from './RootViewBackgroundColor';
 import * as Scheme from './Scheme';
 import * as Swift from './Swift';
 import * as Target from './Target';
@@ -39,12 +41,14 @@ export {
   Locales,
   InfoPlist,
   ExpoPlist,
+  JsEngine,
   Name,
   Orientation,
   Paths,
   ProvisioningProfile,
   Permissions,
   RequiresFullScreen,
+  RootViewBackgroundColor,
   Scheme,
   Swift,
   Target,

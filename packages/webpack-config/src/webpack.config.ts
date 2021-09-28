@@ -1,6 +1,5 @@
 /** @internal */ /** */
 /* eslint-env node */
-import ReactRefreshWebpackPlugin from '@pmmmwh/react-refresh-webpack-plugin';
 import chalk from 'chalk';
 import { CleanWebpackPlugin } from 'clean-webpack-plugin';
 import CopyWebpackPlugin from 'copy-webpack-plugin';
@@ -21,7 +20,6 @@ import ModuleNotFoundPlugin from 'react-dev-utils/ModuleNotFoundPlugin';
 import WatchMissingNodeModulesPlugin from 'react-dev-utils/WatchMissingNodeModulesPlugin';
 import resolveFrom from 'resolve-from';
 import webpack, { Configuration, HotModuleReplacementPlugin, Options, Output } from 'webpack';
-import WebpackDeepScopeAnalysisPlugin from 'webpack-deep-scope-plugin';
 import ManifestPlugin from 'webpack-manifest-plugin';
 
 import {
@@ -44,22 +42,22 @@ import { createAllLoaders } from './loaders';
 import {
   ApplePwaWebpackPlugin,
   ChromeIconsWebpackPlugin,
+  ExpectedErrorsPlugin,
   ExpoDefinePlugin,
   ExpoHtmlWebpackPlugin,
   ExpoInterpolateHtmlPlugin,
   ExpoProgressBarPlugin,
   ExpoPwaManifestWebpackPlugin,
   FaviconWebpackPlugin,
+  NativeAssetsPlugin,
 } from './plugins';
 import ExpoAppManifestWebpackPlugin from './plugins/ExpoAppManifestWebpackPlugin';
 import { HTMLLinkNode } from './plugins/ModifyHtmlWebpackPlugin';
 import { Arguments, DevConfiguration, Environment, FilePaths, Mode } from './types';
-import { overrideWithPropertyOrConfig } from './utils';
 
 // Source maps are resource heavy and can cause out of memory issue for large source files.
 const shouldUseSourceMap = boolish('GENERATE_SOURCEMAP', true);
-const shouldUseNativeCodeLoading = boolish('EXPO_WEBPACK_USE_NATIVE_CODE_LOADING', true);
-const shouldUseReactRefresh = boolish('EXPO_WEBPACK_FAST_REFRESH', false);
+const shouldUseNativeCodeLoading = boolish('EXPO_WEBPACK_USE_NATIVE_CODE_LOADING', false);
 
 const isCI = boolish('CI', false);
 
@@ -118,6 +116,7 @@ function getOutput(
     // Point sourcemap entries to original disk location (format as URL on Windows)
     commonOutput.devtoolModuleFilenameTemplate = (
       info: webpack.DevtoolModuleFilenameTemplateInfo
+      // TODO: Revisit for web
     ): string => path.resolve(info.absoluteResourcePath).replace(/\\/g, '/');
   }
 
@@ -125,6 +124,10 @@ function getOutput(
     // Give the output bundle a constant name to prevent caching.
     // Also there are no actual files generated in dev.
     commonOutput.filename = `index.bundle`;
+    // This works best for our custom native symbolication middleware
+    commonOutput.devtoolModuleFilenameTemplate = (
+      info: webpack.DevtoolModuleFilenameTemplateInfo
+    ): string => info.resourcePath.replace(/\\/g, '/');
   }
 
   return commonOutput;
@@ -161,14 +164,9 @@ export default async function (
   // some core modifications to webpack.
   const isNative = ['ios', 'android'].includes(env.platform);
 
-  // Enables deep scope analysis in production mode.
-  // Remove unused import/exports
-  // override: `env.removeUnusedImportExports`
-  const deepScopeAnalysisEnabled = overrideWithPropertyOrConfig(
-    env.removeUnusedImportExports,
-    false
-    // isProd
-  );
+  if (isNative) {
+    env.pwa = false;
+  }
 
   const locations = env.locations || (await getPathsAsync(env.projectRoot));
 
@@ -192,19 +190,18 @@ export default async function (
   const webpackDevClientEntry = require.resolve('react-dev-utils/webpackHotDevClient');
 
   if (isNative) {
-    const reactNativeModulePath = resolveFrom.silent(env.projectRoot, 'react-native');
-    if (reactNativeModulePath) {
-      for (const polyfill of [
-        'Core/InitializeCore.js',
-        'polyfills/Object.es7.js',
-        'polyfills/error-guard.js',
-        'polyfills/console.js',
-      ]) {
-        const resolvedPolyfill = resolveFrom.silent(
-          env.projectRoot,
-          `react-native/Libraries/${polyfill}`
-        );
-        if (resolvedPolyfill) appEntry.unshift(resolvedPolyfill);
+    const getPolyfillsPath = resolveFrom.silent(
+      env.projectRoot,
+      'react-native/rn-get-polyfills.js'
+    );
+
+    if (getPolyfillsPath) {
+      appEntry.unshift(
+        ...require(getPolyfillsPath)(),
+        resolveFrom(env.projectRoot, 'react-native/Libraries/Core/InitializeCore')
+      );
+      if (isDev) {
+        // TODO: Native HMR
       }
     }
   } else {
@@ -249,12 +246,9 @@ export default async function (
         dot: true,
         // We generate new versions of these based on the templates
         ignore: [
-          '**/expo-service-worker.*',
           // '**/serve.json',
           // '**/index.html',
           '**/icon.png',
-          // We copy this over in `withWorkbox` as it must be part of the Webpack `entry` and have templates replaced.
-          '**/register-service-worker.js',
         ],
       },
     },
@@ -263,13 +257,6 @@ export default async function (
       to: locations.production.serveJson,
     },
   ];
-
-  if (env.offline === true) {
-    filesToCopy.push({
-      from: locations.template.serviceWorker,
-      to: locations.production.serviceWorker,
-    });
-  }
 
   const templateIndex = parse(readFileSync(locations.template.indexHtml, { encoding: 'utf8' }));
 
@@ -303,7 +290,7 @@ export default async function (
     // to our docs means they want to use a custom manifest.json instead of having a new one generated.
     //
     // Normalize the link (removing the beginning slash) so it can be resolved relative to the user's static folder.
-    // Ref: https://docs.expo.io/guides/progressive-web-apps/#manual-setup
+    // Ref: https://docs.expo.dev/guides/progressive-web-apps/#manual-setup
     if (manifestLink.href.startsWith('/')) {
       manifestLink.href = manifestLink.href.substring(1);
     }
@@ -337,12 +324,16 @@ export default async function (
     entry: {
       app: appEntry,
     },
+    // Disable file info logs.
+    stats: 'none',
+
     // https://webpack.js.org/configuration/other-options/#bail
     // Fail out on the first error instead of tolerating it.
     bail: isProd,
     devtool,
-    // TODO(Bacon): Simplify this while ensuring gatsby support continues to work.
-    context: isNative ? env.projectRoot ?? __dirname : __dirname,
+    // This must point to the project root (where the webpack.config.js would normally be located).
+    // If this is anywhere else, the source maps and errors won't show correct paths.
+    context: env.projectRoot ?? __dirname,
     // configures where the build ends up
     output: getOutput(locations, mode, publicPath, env.platform),
     plugins: [
@@ -354,12 +345,54 @@ export default async function (
           verbose: false,
         }),
       // Copy the template files over
-      isProd && new CopyWebpackPlugin({ patterns: filesToCopy }),
+      isProd && !isNative && new CopyWebpackPlugin({ patterns: filesToCopy }),
 
       // Generate the `index.html`
-      new ExpoHtmlWebpackPlugin(env, templateIndex),
+      (!isNative || shouldUseNativeCodeLoading) && new ExpoHtmlWebpackPlugin(env, templateIndex),
 
-      ExpoInterpolateHtmlPlugin.fromEnv(env, ExpoHtmlWebpackPlugin),
+      (!isNative || shouldUseNativeCodeLoading) &&
+        ExpoInterpolateHtmlPlugin.fromEnv(env, ExpoHtmlWebpackPlugin),
+
+      isNative &&
+        new NativeAssetsPlugin({
+          platforms: [env.platform, 'native'],
+          persist: isProd,
+          assetExtensions: [
+            // Image formats
+            'bmp',
+            'gif',
+            'jpg',
+            'jpeg',
+            'png',
+            'psd',
+            'svg',
+            'webp',
+            // Video formats
+            'm4v',
+            'mov',
+            'mp4',
+            'mpeg',
+            'mpg',
+            'webm',
+            // Audio formats
+            'aac',
+            'aiff',
+            'caf',
+            'm4a',
+            'mp3',
+            'wav',
+            // Document formats
+            'html',
+            'pdf',
+            'yaml',
+            'yml',
+            // Font formats
+            'otf',
+            'ttf',
+            // Archives (virtual files)
+            'zip',
+          ],
+        }),
 
       isNative &&
         new ExpoAppManifestWebpackPlugin(
@@ -436,15 +469,13 @@ export default async function (
       // This is necessary to emit hot updates (currently CSS only):
       !isNative && isDev && new HotModuleReplacementPlugin(),
 
-      // Experimental hot reloading for React .
-      // https://github.com/facebook/react/tree/master/packages/react-refresh
-      isDev &&
-        shouldUseReactRefresh &&
-        new ReactRefreshWebpackPlugin({
-          overlay: {
-            entry: webpackDevClientEntry,
-          },
-        }),
+      // Replace the Metro specific HMR code in `react-native` with
+      // a shim.
+      isNative &&
+        new webpack.NormalModuleReplacementPlugin(
+          /react-native\/Libraries\/Utilities\/HMRClient\.js$/,
+          require.resolve('./runtime/metro-runtime-shim')
+        ),
 
       // If you require a missing module and then `npm install` it, you still have
       // to restart the development server for Webpack to discover it. This plugin
@@ -497,10 +528,20 @@ export default async function (
           },
         }),
 
-      deepScopeAnalysisEnabled && new WebpackDeepScopeAnalysisPlugin(),
-
+      new ExpectedErrorsPlugin(),
       // Skip using a progress bar in CI
-      !isCI && new ExpoProgressBarPlugin(),
+      env.logger &&
+        new ExpoProgressBarPlugin({
+          logger: env.logger,
+          nonInteractive: isCI,
+          bundleDetails: {
+            bundleType: 'bundle',
+            platform: env.platform,
+            entryFile: locations.appMain,
+            dev: isDev ?? false,
+            minify: isProd ?? false,
+          },
+        }),
     ].filter(Boolean),
     module: {
       strictExportPresence: false,
@@ -520,6 +561,8 @@ export default async function (
       ],
     },
     resolve: {
+      mainFields: isNative ? ['react-native', 'browser', 'main'] : undefined,
+      aliasFields: isNative ? ['react-native', 'browser', 'main'] : undefined,
       extensions: getPlatformsExtensions(env.platform),
       plugins: [
         // Adds support for installing with Plug'n'Play, leading to faster installs and adding

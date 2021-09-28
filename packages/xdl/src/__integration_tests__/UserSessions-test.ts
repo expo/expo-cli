@@ -1,6 +1,6 @@
 import fs from 'fs-extra';
 import HashIds from 'hashids';
-import uuid from 'uuid';
+import { v1 as uuidv1 } from 'uuid';
 
 import { ApiV2 as ApiV2Client, User, UserManagerInstance, UserSettings } from '../internal';
 
@@ -20,8 +20,8 @@ describe.skip('User Sessions', () => {
 
     const UserManager = _newTestUserManager();
 
-    const username = `xdl-test-${_makeShortId(uuid.v1())}`;
-    const password = uuid.v1();
+    const username = `xdl-test-${_makeShortId(uuidv1())}`;
+    const password = uuidv1();
 
     // Register a new user that we can use for this test run
     const newUser = await UserManager.registerAsync({
