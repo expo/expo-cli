@@ -3,7 +3,7 @@ import fetch from 'node-fetch';
 import open from 'open';
 import path from 'path';
 
-interface MetroInspectorProxyApp {
+export interface MetroInspectorProxyApp {
   description: string;
   devtoolsFrontendUrl: string;
   faviconUrl: string;
