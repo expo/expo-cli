@@ -24,9 +24,9 @@ export class AnalyticsClient {
     return this._version;
   }
 
-  public flush() {
+  public async flush() {
     if (this.rudderstackClient) {
-      this.rudderstackClient.flush();
+      await this.rudderstackClient.flush();
     }
   }
 
@@ -43,7 +43,6 @@ export class AnalyticsClient {
         flushInterval: 300,
       }
     );
-    this.rudderstackClient.logger.silent = true;
     this._version = packageVersion;
   }
 
