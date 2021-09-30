@@ -1,4 +1,6 @@
-export const METRO_INSPECTOR_RESPONSE_FIXTURE = JSON.stringify([
+import type { MetroInspectorProxyApp } from '../../JsInspector';
+
+export const METRO_INSPECTOR_RESPONSE_FIXTURE: MetroInspectorProxyApp[] = [
   {
     description: 'io.expo.test.devclient',
     devtoolsFrontendUrl:
@@ -43,4 +45,4 @@ export const METRO_INSPECTOR_RESPONSE_FIXTURE = JSON.stringify([
     vm: "don't use",
     webSocketDebuggerUrl: 'ws://[::]:8081/inspector/debug?device=1&page=-1',
   },
-]);
+];

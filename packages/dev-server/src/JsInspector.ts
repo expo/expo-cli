@@ -33,18 +33,16 @@ export async function queryInspectorAppAsync(
   metroServerOrigin: string,
   appId: string
 ): Promise<MetroInspectorProxyApp | null> {
+  const apps = await queryAllInspectorAppsAsync(metroServerOrigin);
+  return apps.find(app => app.description === appId) ?? null;
+}
+
+export async function queryAllInspectorAppsAsync(
+  metroServerOrigin: string
+): Promise<MetroInspectorProxyApp[]> {
   const resp = await fetch(`${metroServerOrigin}/json/list`);
   const apps: MetroInspectorProxyApp[] = await resp.json();
-
-  let result: MetroInspectorProxyApp | null = null;
-  for (const app of apps) {
-    if (app.description === appId && app.vm !== "don't use") {
-      result = app;
-      break;
-    }
-  }
-
-  return result;
+  return apps.filter(app => app.vm !== "don't use");
 }
 
 async function launchChromiumAsync(url: string): Promise<void> {

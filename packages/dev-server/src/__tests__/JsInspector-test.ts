@@ -2,8 +2,11 @@ import { ChildProcess } from 'child_process';
 import fetch from 'node-fetch';
 import open from 'open';
 
-import { openJsInspector, queryInspectorAppAsync } from '../JsInspector';
-import type { MetroInspectorProxyApp } from '../JsInspector';
+import {
+  openJsInspector,
+  queryAllInspectorAppsAsync,
+  queryInspectorAppAsync,
+} from '../JsInspector';
 import { METRO_INSPECTOR_RESPONSE_FIXTURE } from '../__tests__/fixtures/metroInspectorResponse';
 
 jest.mock('fs-extra');
@@ -27,21 +30,35 @@ describe(openJsInspector, () => {
       }
     );
 
-    const app: MetroInspectorProxyApp = JSON.parse(METRO_INSPECTOR_RESPONSE_FIXTURE)[0];
+    const app = METRO_INSPECTOR_RESPONSE_FIXTURE[0];
     openJsInspector(app);
+  });
+});
+
+describe(queryAllInspectorAppsAsync, () => {
+  it('should return all available app entities', async () => {
+    const entities = METRO_INSPECTOR_RESPONSE_FIXTURE.filter(app => app.vm !== "don't use");
+
+    const mockFetch = fetch as jest.MockedFunction<typeof fetch>;
+    mockFetch.mockReturnValue(
+      Promise.resolve(new Response(JSON.stringify(METRO_INSPECTOR_RESPONSE_FIXTURE)))
+    );
+
+    const result = await queryAllInspectorAppsAsync('http://localhost:8081');
+    expect(result).toEqual(entities);
   });
 });
 
 describe(queryInspectorAppAsync, () => {
   it('should return specific app entity for given appId', async () => {
     const appId = 'io.expo.test.devclient';
-    const entities = JSON.parse(METRO_INSPECTOR_RESPONSE_FIXTURE) as { [key: string]: string }[];
-    const entity = entities.find(object => object.description === appId);
-
     const mockFetch = fetch as jest.MockedFunction<typeof fetch>;
-    mockFetch.mockReturnValue(Promise.resolve(new Response(METRO_INSPECTOR_RESPONSE_FIXTURE)));
+    mockFetch.mockReturnValue(
+      Promise.resolve(new Response(JSON.stringify(METRO_INSPECTOR_RESPONSE_FIXTURE)))
+    );
 
     const result = await queryInspectorAppAsync('http://localhost:8081', appId);
-    expect(result).toEqual(entity);
+    expect(result?.description).toBe(appId);
+    expect(result?.vm).not.toBe("don't use");
   });
 });
