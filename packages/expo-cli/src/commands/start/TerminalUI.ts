@@ -1,4 +1,5 @@
 import { ExpoConfig } from '@expo/config-types';
+import { openJsInspector, queryAllInspectorAppsAsync } from '@expo/dev-server';
 import chalk from 'chalk';
 import openBrowser from 'react-dev-utils/openBrowser';
 import wrapAnsi from 'wrap-ansi';
@@ -213,6 +214,21 @@ export function openDeveloperTools(url: string) {
   }
 }
 
+async function openJsInsectorAsync(projectRoot: string) {
+  const { packagerPort } = await ProjectSettings.readPackagerInfoAsync(projectRoot);
+  const metroServerOrigin = `http://localhost:${packagerPort}`;
+  const apps = await queryAllInspectorAppsAsync(metroServerOrigin);
+  if (apps.length === 0) {
+    Log.warn(
+      'No apps connected. The feature is only avaiable for apps running with Hermes runtime.'
+    );
+    return;
+  }
+  for (const app of apps) {
+    openJsInspector(app);
+  }
+}
+
 export async function startAsync(projectRoot: string, options: StartOptions) {
   const { stdin } = process;
   const startWaitingForCommand = () => {
@@ -420,8 +436,13 @@ export async function startAsync(projectRoot: string, options: StartOptions) {
                 // TODO: Maybe a "View Source" option to open code.
                 // Toggling Remote JS Debugging is pretty rough, so leaving it disabled.
                 // { title: 'Toggle Remote Debugging', value: 'toggleRemoteDebugging' },
+                { title: 'Open in-device JavaScript inspector', value: 'openJsInspector' },
               ],
             });
+            if (value === 'openJsInspector') {
+              await openJsInsectorAsync(projectRoot);
+              return;
+            }
             Project.broadcastMessage('sendDevCommand', { name: value });
             Webpack.broadcastMessage('sendDevCommand', { name: value });
           } catch {
