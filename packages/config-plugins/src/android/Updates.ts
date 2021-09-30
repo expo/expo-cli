@@ -40,10 +40,11 @@ export const withUpdates: ConfigPlugin<{ expoUsername: string | null }> = (
  * case we use SDK version
  */
 export function getRuntimeVersionNullable(
-  config: Pick<ExpoConfigUpdates, 'runtimeVersion'>
+  config: Pick<ExpoConfigUpdates, 'runtimeVersion'>,
+  isManagedProject: boolean
 ): string | null {
   try {
-    return getRuntimeVersion(config, 'android');
+    return getRuntimeVersion(config, 'android', isManagedProject);
   } catch (e) {
     return null;
   }
@@ -111,7 +112,7 @@ export function setVersionsConfig(
 ): AndroidManifest {
   const mainApplication = getMainApplicationOrThrow(androidManifest);
 
-  const runtimeVersion = getRuntimeVersionNullable(config);
+  const runtimeVersion = getRuntimeVersionNullable(config, /* isManagedProject */ false);
   const sdkVersion = getSDKVersion(config);
   if (runtimeVersion) {
     removeMetaDataItemFromMainApplication(mainApplication, Config.SDK_VERSION);
@@ -212,7 +213,7 @@ export function areVersionsSynced(
   config: Pick<ExpoConfigUpdates, 'runtimeVersion' | 'sdkVersion'>,
   androidManifest: AndroidManifest
 ): boolean {
-  const expectedRuntimeVersion = getRuntimeVersionNullable(config);
+  const expectedRuntimeVersion = getRuntimeVersionNullable(config, /* isManagedProject */ false);
   const expectedSdkVersion = getSDKVersion(config);
 
   const currentRuntimeVersion = getMainApplicationMetaDataValue(

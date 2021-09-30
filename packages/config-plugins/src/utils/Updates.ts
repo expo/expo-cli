@@ -56,18 +56,19 @@ export function getNativeVersion(
  * @return an expoConfig with only string valued platform specific runtime versions.
  */
 export const withRuntimeVersion: (
-  config: ExpoConfig & { ios?: TempRuntimeVersion; android?: TempRuntimeVersion }
-) => ExpoConfig = config => {
+  config: ExpoConfig & { ios?: TempRuntimeVersion; android?: TempRuntimeVersion },
+  { isManagedProject }: { isManagedProject: boolean }
+) => ExpoConfig = (config, { isManagedProject }) => {
   if (config.ios?.runtimeVersion || config.runtimeVersion) {
     config.ios = {
       ...config.ios,
-      runtimeVersion: getRuntimeVersion(config, 'ios'),
+      runtimeVersion: getRuntimeVersion(config, 'ios', isManagedProject),
     } as any; //TODO(JJ) remove this cast in SDK 43 https://linear.app/expo/issue/ENG-1869/remove-tempruntimeversion-in-expoconfig
   }
   if (config.android?.runtimeVersion || config.runtimeVersion) {
     config.android = {
       ...config.android,
-      runtimeVersion: getRuntimeVersion(config, 'android'),
+      runtimeVersion: getRuntimeVersion(config, 'android', isManagedProject),
     } as any; //TODO(JJ) remove this cast in SDK 43 https://linear.app/expo/issue/ENG-1869/remove-tempruntimeversion-in-expoconfig
   }
   delete config.runtimeVersion;
@@ -80,13 +81,17 @@ export function getRuntimeVersion(
       android?: Pick<Android, 'versionCode'> & TempRuntimeVersion;
       ios?: Pick<IOS, 'buildNumber'> & TempRuntimeVersion;
     },
-  platform: 'android' | 'ios'
+  platform: 'android' | 'ios',
+  isManagedProject: boolean
 ): string {
   const runtimeVersion = config[platform]?.runtimeVersion ?? config.runtimeVersion;
   if (!runtimeVersion) {
     throw new Error(
       `There is neither a value or a policy set for the runtime version on "${platform}"`
     );
+  }
+  if (!(isManagedProject || typeof runtimeVersion === 'string')) {
+    throw new Error('Dynamic runtime versions are only supported for managed projects.');
   }
 
   if (typeof runtimeVersion === 'string') {

@@ -55,13 +55,18 @@ describe(getNativeVersion, () => {
 });
 
 describe(getRuntimeVersion, () => {
+  it('throws if runtime version is dynamic and the project is not managed', () => {
+    expect(() => {
+      getRuntimeVersion({ runtimeVersion: { policy: 'nativeVersion' } }, 'ios', false);
+    }).toThrow('Dynamic runtime versions are only supported for managed projects.');
+  });
   it('works if the top level runtimeVersion is a string', () => {
     const runtimeVersion = '42';
-    expect(getRuntimeVersion({ runtimeVersion }, 'ios')).toBe(runtimeVersion);
+    expect(getRuntimeVersion({ runtimeVersion }, 'ios', true)).toBe(runtimeVersion);
   });
   it('works if the platform specific runtimeVersion is a string', () => {
     const runtimeVersion = '42';
-    expect(getRuntimeVersion({ ios: { runtimeVersion } }, 'ios')).toBe(runtimeVersion);
+    expect(getRuntimeVersion({ ios: { runtimeVersion } }, 'ios', true)).toBe(runtimeVersion);
   });
   it('works if the runtimeVersion is a policy', () => {
     const version = '1';
@@ -69,23 +74,24 @@ describe(getRuntimeVersion, () => {
     expect(
       getRuntimeVersion(
         { version, runtimeVersion: { policy: 'nativeVersion' }, ios: { buildNumber } },
-        'ios'
+        'ios',
+        true
       )
     ).toBe(`${version}(${buildNumber})`);
   });
   it('throws no runtime version is supplied', () => {
     expect(() => {
-      getRuntimeVersion({}, 'ios');
+      getRuntimeVersion({}, 'ios', true);
     }).toThrow(`There is neither a value or a policy set for the runtime version on "ios"`);
   });
   it('throws if runtime version is not parseable', () => {
     expect(() => {
-      getRuntimeVersion({ runtimeVersion: 1 } as any, 'ios');
+      getRuntimeVersion({ runtimeVersion: 1 } as any, 'ios', true);
     }).toThrow(
       `"1" is not a valid runtime version. getRuntimeVersion only supports a string, "sdkVersion", or "nativeVersion" policy.`
     );
     expect(() => {
-      getRuntimeVersion({ runtimeVersion: { policy: 'unsupportedPlugin' } } as any, 'ios');
+      getRuntimeVersion({ runtimeVersion: { policy: 'unsupportedPlugin' } } as any, 'ios', true);
     }).toThrow(
       `"{"policy":"unsupportedPlugin"}" is not a valid runtime version. getRuntimeVersion only supports a string, "sdkVersion", or "nativeVersion" policy.`
     );

@@ -52,6 +52,11 @@ export async function actionAsync(
   // Log building info before building.
   // This gives the user sometime to bail out if the info is unexpected.
   if (runtimeVersion) {
+    if (typeof runtimeVersion !== 'string') {
+      throw new Error(
+        'Dynamic runtime versions are not available for classic updates. Please look into EAS.'
+      );
+    }
     Log.log(`\u203A Runtime version: ${Log.chalk.bold(runtimeVersion)}`);
   } else if (sdkVersion) {
     Log.log(`\u203A Expo SDK: ${Log.chalk.bold(sdkVersion)}`);

@@ -1,4 +1,4 @@
-import { ExpoUpdatesManifest, getConfig } from '@expo/config';
+import { ExpoUpdatesManifest, getConfig, getDefaultTarget } from '@expo/config';
 import { Updates } from '@expo/config-plugins';
 import { JSONObject } from '@expo/json-file';
 import express from 'express';
@@ -114,9 +114,11 @@ export async function getManifestResponseAsync({
 
   const hostUri = await UrlUtils.constructHostUriAsync(projectRoot, hostname);
 
+  const isManagedProject = getDefaultTarget(projectRoot) === 'managed';
   const runtimeVersion = Updates.getRuntimeVersion(
     { ...expoConfig, runtimeVersion: expoConfig.runtimeVersion ?? { policy: 'sdkVersion' } },
-    platform
+    platform,
+    isManagedProject
   );
 
   const bundleUrl = await getBundleUrlAsync({
