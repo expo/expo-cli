@@ -1,4 +1,4 @@
-function mockedResolveFrom(fromDirectory, request, silent = false) {
+function mockedResolveFrom(fromDirectory, request) {
   const fs = require('fs');
   const path = require('path');
 
@@ -18,5 +18,5 @@ function mockedResolveFrom(fromDirectory, request, silent = false) {
   }
 }
 
-module.exports = mockedResolveFrom;
-module.exports.silent = mockedResolveFrom;
+module.exports = jest.fn(mockedResolveFrom);
+module.exports.silent = jest.fn(mockedResolveFrom);
