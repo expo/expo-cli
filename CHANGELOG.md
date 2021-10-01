@@ -12,6 +12,32 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+## [Fri, 1 Oct 2021 14:44:35 -0700](https://github.com/expo/expo-cli/commit/7621454e3b2e47e5341da5076183f5da819cbd8e)
+
+### 🛠 Breaking changes
+
+### 🎉 New features
+
+- [expo-cli] Add version check fallback for packages with exports ([#3878](https://github.com/expo/expo-cli/issues/3878))
+- [expo-cli][xdl] Remove expo forked react-native from managed apps on SDK 43+ ([#3821](https://github.com/expo/expo-cli/issues/3821))
+
+### 🧹 Chores
+
+- [expo-cli] bump @expo/rudder-sdk-node ([#3875](https://github.com/expo/expo-cli/issues/3875))
+- [pod-install] mention `macos` directory in Readme ([#3870](https://github.com/expo/expo-cli/issues/3870))
+
+### 🐛 Bug fixes
+
+- [expo-cli] Remove incorrect platform from 'dev client start command' event ([#3874](https://github.com/expo/expo-cli/issues/3874))
+- [expo-cli] Fix loader bug ([#3867](https://github.com/expo/expo-cli/issues/3867))
+
+### 📦 Packages updated
+
+- @expo/dev-tools@0.13.117
+- expo-cli@4.12.1
+- pod-install@0.1.28
+- xdl@59.2.1
+
 ## [Tue, 21 Sep 2021 14:39:00 -0700](https://github.com/expo/expo-cli/commit/d614ee9c98268686dbe5eeea5bfa512b89325d3f)
 
 ### 🛠 Breaking changes
