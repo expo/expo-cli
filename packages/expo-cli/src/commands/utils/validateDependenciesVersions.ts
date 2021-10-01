@@ -92,7 +92,7 @@ async function resolvePackageVersionsAsync(
 }
 
 async function getPackageVersionAsync(projectRoot: string, packageName: string): Promise<string> {
-  let packageJsonPath = '';
+  let packageJsonPath: string | undefined;
   try {
     packageJsonPath = resolveFrom(projectRoot, `${packageName}/package.json`);
   } catch (error: any) {
@@ -101,7 +101,7 @@ async function getPackageVersionAsync(projectRoot: string, packageName: string):
     if (error.code === 'ERR_PACKAGE_PATH_NOT_EXPORTED') {
       packageJsonPath = error.message.match(/ in (.*)$/i)?.[1];
     } else {
-      throw error;
+      packageJsonPath = resolveFrom.silent(projectRoot, `${packageName}/package.json`);
     }
   }
   if (!packageJsonPath) {

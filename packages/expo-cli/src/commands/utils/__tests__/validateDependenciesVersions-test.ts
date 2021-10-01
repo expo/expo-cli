@@ -9,6 +9,7 @@ jest.mock('../bundledNativeModules', () => ({
   getBundledNativeModulesAsync: () => ({
     'expo-splash-screen': '~1.2.3',
     'expo-updates': '~2.3.4',
+    firebase: '9.1.0',
   }),
 }));
 
@@ -71,6 +72,34 @@ describe(validateDependenciesVersionsAsync, () => {
 
     await expect(validateDependenciesVersionsAsync(projectRoot, exp as any, pkg)).resolves.toBe(
       false
+    );
+  });
+
+  it('resolves to true when installed package uses "exports"', async () => {
+    vol.fromJSON({
+      [path.join(projectRoot, 'node_modules/firebase/package.json')]: JSON.stringify({
+        version: '9.1.0',
+        exports: {
+          './analytics': {
+            node: {
+              require: './analytics/dist/index.cjs.js',
+              import: './analytics/dist/index.mjs',
+            },
+            default: './analytics/dist/index.esm.js',
+          },
+        },
+      }),
+    });
+
+    const exp = {
+      sdkVersion: '43.0.0',
+    };
+    const pkg = {
+      dependencies: { firebase: '~9.1.0' },
+    };
+
+    await expect(validateDependenciesVersionsAsync(projectRoot, exp as any, pkg)).resolves.toBe(
+      true
     );
   });
 });
