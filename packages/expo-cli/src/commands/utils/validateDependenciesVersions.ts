@@ -100,8 +100,6 @@ async function getPackageVersionAsync(projectRoot: string, packageName: string):
     // include `package.json`, we have to use the error message to get the location.
     if (error.code === 'ERR_PACKAGE_PATH_NOT_EXPORTED') {
       packageJsonPath = error.message.match(/ in (.*)$/i)?.[1];
-    } else {
-      packageJsonPath = resolveFrom.silent(projectRoot, `${packageName}/package.json`);
     }
   }
   if (!packageJsonPath) {
