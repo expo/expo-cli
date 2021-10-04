@@ -12,7 +12,7 @@ type FigArg = {
   name?: string;
   generators?: any;
   debounce?: boolean;
-  variadic?: boolean;
+  isVariadic?: boolean;
   isOptional?: boolean;
   icon?: string;
   template?: string;
@@ -20,7 +20,7 @@ type FigArg = {
 };
 
 type FigSpec = {
-  name: string[];
+  name: string[] | string;
   description: string;
   hidden?: boolean;
   priority?: number;
@@ -322,8 +322,8 @@ if (['markdown', 'md'].includes(process.argv[2])) {
     const booleanArg: FigArg = {
       name: 'boolean',
       suggestions: [
-        { name: 'true', icon: ICON.true },
-        { name: 'false', icon: ICON.false },
+        // { name: 'true', icon: ICON.true },
+        // { name: 'false', icon: ICON.false },
       ],
     };
     const helpOption: FigSpec = {
@@ -346,8 +346,15 @@ if (['markdown', 'md'].includes(process.argv[2])) {
       if (options.isOptional === false) {
         delete options.isOptional;
       }
-      if (options.variadic === false) {
-        delete options.variadic;
+      if (options.isVariadic === false) {
+        delete options.isVariadic;
+      }
+      return options;
+    };
+    const simplifyArgsType = (options: FigArg | FigArg[]): FigArg | FigArg[] => {
+      if (Array.isArray(options)) {
+        options = options.map(option => simplifyArgsType(option) as FigArg);
+        return options.length === 1 ? options[0] : options;
       }
       return options;
     };
@@ -363,18 +370,20 @@ if (['markdown', 'md'].includes(process.argv[2])) {
         priorityIndex = helpGroupOrder.length - priorityIndex;
       }
 
+      const subcommandNames = [command.name, command.alias].filter(Boolean) as string[];
       const subcommand: FigSpec = {
-        name: [command.name, command.alias].filter(Boolean) as string[],
+        name: subcommandNames.length === 1 ? subcommandNames[0] : subcommandNames,
         hidden: command.group === 'internal',
         description: stripAnsi(command.description),
         priority: 50 + priorityIndex,
         // fig uses `isOptional` instead of `required`
-        args: (command.args || []).map(({ required, ...arg }) => {
+        args: (command.args || []).map(({ required, variadic, ...arg }) => {
           // `expo start [path]` is a common pattern in expo-cli, this defaults them to folders.
           const template = arg.name === 'path' ? 'folders' : undefined;
 
           return {
             isOptional: !required,
+            isVariadic: variadic,
             template,
             ...arg,
           };
@@ -562,7 +571,7 @@ if (['markdown', 'md'].includes(process.argv[2])) {
         };
 
         const suboption: FigSpec = {
-          name,
+          name: name.length === 1 ? name[0] : name,
           description: stripAnsi(option.description),
           args,
           icon: getOptionIcon(option),
@@ -595,6 +604,7 @@ if (['markdown', 'md'].includes(process.argv[2])) {
       subcommands: figSubcommands.map(command => {
         if (command.args) {
           command.args = clearOptionalProperties(command.args);
+          command.args = simplifyArgsType(command.args);
         }
         return command;
       }),
@@ -677,7 +687,9 @@ if (['markdown', 'md'].includes(process.argv[2])) {
       }
     }
   
-    export const completionSpec: Fig.Spec = ${parsed};
+    const completionSpec: Fig.Spec = ${parsed};
+
+    export default completionSpec;
     `;
 
     // Generate a schema for https://github.com/withfig/autocomplete
