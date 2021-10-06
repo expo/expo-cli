@@ -115,6 +115,8 @@ export async function getManifestResponseAsync({
   const hostUri = await UrlUtils.constructHostUriAsync(projectRoot, hostname);
 
   const runtimeVersion = Updates.getRuntimeVersion(
+    // TODO(@jkhales): remove ts-ignore once sdkVersion policy is added to @expo/config-types and www schema is updated
+    // @ts-ignore
     { ...expoConfig, runtimeVersion: expoConfig.runtimeVersion ?? { policy: 'sdkVersion' } },
     platform
   );
