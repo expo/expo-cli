@@ -123,7 +123,6 @@ export function getManifestHandler(projectRoot: string) {
     next: (err?: Error) => void
   ) => {
     // Only support `/`, `/manifest`, `/index.exp` for the manifest middleware.
-
     if (
       !req.url ||
       !['/', '/manifest', '/index.exp'].includes(
