@@ -1,6 +1,6 @@
 import fs from 'fs-extra';
 import fetch from 'node-fetch';
-import open from 'open';
+import open, { openApp } from 'open';
 import path from 'path';
 
 export interface MetroInspectorProxyApp {
@@ -25,7 +25,7 @@ export function openJsInspector(app: MetroInspectorProxyApp) {
 
   const urlBase = `https://chrome-devtools-frontend.appspot.com/serve_rev/@${devtoolsFrontendRev}/inspector.html`;
   const ws = app.webSocketDebuggerUrl.replace('ws://[::]:', 'localhost:');
-  const url = `${urlBase}?experiments=true&v8only=true&ws=${encodeURIComponent(ws)}`;
+  const url = `${urlBase}?panel=sources&v8only=true&ws=${encodeURIComponent(ws)}`;
   launchChromiumAsync(url);
 }
 
@@ -55,6 +55,7 @@ async function launchChromiumAsync(url: string): Promise<void> {
   const tmpDir = require('temp-dir');
   const tempProfileDir = fs.mkdtempSync(path.join(tmpDir, 'chromium-for-inspector-'));
   const launchArgs = [
+    `--app=${url}`,
     '--allow-running-insecure-content',
     `--user-data-dir=${tempProfileDir}`,
     '--no-first-run',
@@ -63,21 +64,15 @@ async function launchChromiumAsync(url: string): Promise<void> {
   ];
 
   try {
-    const result = await open(url, {
-      app: {
-        name: open.apps.chrome,
-        arguments: launchArgs,
-      },
+    const result = await openApp(open.apps.chrome, {
+      arguments: launchArgs,
       newInstance: true,
       wait: true,
     });
 
     if (result.exitCode !== 0) {
-      await open(url, {
-        app: {
-          name: open.apps.edge,
-          arguments: launchArgs,
-        },
+      await openApp(open.apps.edge, {
+        arguments: launchArgs,
         newInstance: true,
         wait: true,
       });
