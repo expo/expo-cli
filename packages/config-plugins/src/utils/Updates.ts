@@ -70,9 +70,9 @@ export const withRuntimeVersion: (config: ExpoConfig) => ExpoConfig = config => 
 };
 
 export function getRuntimeVersion(
-  config: Pick<ExpoConfig, 'version' | 'sdkVersion'> & {
-    android?: Pick<Android, 'versionCode'>;
-    ios?: Pick<IOS, 'buildNumber'>;
+  config: Pick<ExpoConfig, 'version' | 'runtimeVersion' | 'sdkVersion'> & {
+    android?: Pick<Android, 'versionCode' | 'runtimeVersion'>;
+    ios?: Pick<IOS, 'buildNumber' | 'runtimeVersion'>;
   },
   platform: 'android' | 'ios'
 ): string {
