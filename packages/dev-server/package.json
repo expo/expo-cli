@@ -43,7 +43,7 @@
     "connect": "^3.7.0",
     "fs-extra": "9.0.0",
     "node-fetch": "^2.6.0",
-    "open": "^8.2.0",
+    "open": "^8.3.0",
     "resolve-from": "^5.0.0",
     "semver": "7.3.2",
     "serialize-error": "6.0.0",
