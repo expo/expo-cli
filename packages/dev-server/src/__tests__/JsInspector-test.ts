@@ -19,12 +19,9 @@ const { Response } = jest.requireActual('node-fetch');
 
 describe(openJsInspector, () => {
   it('should open browser for PUT request with given app', async () => {
-    const mockOpen = open as jest.MockedFunction<typeof open>;
+    const mockOpen = open.openApp as jest.MockedFunction<typeof open.openApp>;
     mockOpen.mockImplementation(
-      (target: string): Promise<ChildProcess> => {
-        expect(target).toMatch(
-          /^https:\/\/chrome-devtools-frontend\.appspot\.com\/serve_rev\/@.+\/inspector.html/
-        );
+      (): Promise<ChildProcess> => {
         const result: Partial<ChildProcess> = { exitCode: 0 };
         return Promise.resolve(result as ChildProcess);
       }
