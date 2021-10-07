@@ -41,11 +41,6 @@ export async function actionAsync(
   });
   const { sdkVersion, runtimeVersion } = exp;
 
-  // TODO(@jkhales): remove this check when runtimeVersion policies are supported, if they are ever supported
-  if (typeof runtimeVersion !== 'undefined' && typeof runtimeVersion !== 'string') {
-    throw new CommandError(`Runtime version policies are not supported by the publish command.`);
-  }
-
   const target = options.target ?? getDefaultTarget(projectRoot);
 
   // note: this validates the exp.owner when the user is a robot
