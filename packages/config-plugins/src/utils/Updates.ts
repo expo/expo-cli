@@ -8,9 +8,6 @@ export type ExpoConfigUpdates = Pick<
   'sdkVersion' | 'owner' | 'runtimeVersion' | 'updates' | 'slug'
 >;
 
-// TODO(JJ) once SDK 43 is pubished, remove TempRuntimeVersion https://linear.app/expo/issue/ENG-1869/remove-tempruntimeversion-in-expoconfig
-type TempRuntimeVersion = { runtimeVersion?: string | { policy: 'nativeVersion' | 'sdkVersion' } };
-
 export function getUpdateUrl(
   config: Pick<ExpoConfigUpdates, 'owner' | 'slug' | 'updates'>,
   username: string | null
@@ -28,8 +25,8 @@ export function getUpdateUrl(
 
 export function getNativeVersion(
   config: Pick<ExpoConfig, 'version'> & {
-    android?: Pick<Android, 'versionCode'> & TempRuntimeVersion;
-    ios?: Pick<IOS, 'buildNumber'> & TempRuntimeVersion;
+    android?: Pick<Android, 'versionCode'>;
+    ios?: Pick<IOS, 'buildNumber'>;
   },
   platform: 'android' | 'ios'
 ): string {
@@ -55,31 +52,28 @@ export function getNativeVersion(
  * Compute runtime version policies.
  * @return an expoConfig with only string valued platform specific runtime versions.
  */
-export const withRuntimeVersion: (
-  config: ExpoConfig & { ios?: TempRuntimeVersion; android?: TempRuntimeVersion }
-) => ExpoConfig = config => {
+export const withRuntimeVersion: (config: ExpoConfig) => ExpoConfig = config => {
   if (config.ios?.runtimeVersion || config.runtimeVersion) {
     config.ios = {
       ...config.ios,
       runtimeVersion: getRuntimeVersion(config, 'ios'),
-    } as any; //TODO(JJ) remove this cast in SDK 43 https://linear.app/expo/issue/ENG-1869/remove-tempruntimeversion-in-expoconfig
+    };
   }
   if (config.android?.runtimeVersion || config.runtimeVersion) {
     config.android = {
       ...config.android,
       runtimeVersion: getRuntimeVersion(config, 'android'),
-    } as any; //TODO(JJ) remove this cast in SDK 43 https://linear.app/expo/issue/ENG-1869/remove-tempruntimeversion-in-expoconfig
+    };
   }
   delete config.runtimeVersion;
   return config;
 };
 
 export function getRuntimeVersion(
-  config: Pick<ExpoConfig, 'version' | 'sdkVersion'> &
-    TempRuntimeVersion & {
-      android?: Pick<Android, 'versionCode'> & TempRuntimeVersion;
-      ios?: Pick<IOS, 'buildNumber'> & TempRuntimeVersion;
-    },
+  config: Pick<ExpoConfig, 'version' | 'sdkVersion'> & {
+    android?: Pick<Android, 'versionCode'>;
+    ios?: Pick<IOS, 'buildNumber'>;
+  },
   platform: 'android' | 'ios'
 ): string {
   const runtimeVersion = config[platform]?.runtimeVersion ?? config.runtimeVersion;
@@ -95,7 +89,7 @@ export function getRuntimeVersion(
     return getNativeVersion(config, platform);
   } else if (runtimeVersion.policy === 'sdkVersion') {
     if (!config.sdkVersion) {
-      throw new Error("An sdk version must be defined when using the 'sdkVersion' runtime policy.");
+      throw new Error("An SDK version must be defined when using the 'sdkVersion' runtime policy.");
     }
     return getRuntimeVersionForSDKVersion(config.sdkVersion);
   }
