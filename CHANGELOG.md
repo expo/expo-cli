@@ -12,6 +12,34 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+## [Tue, 5 Oct 2021 17:10:41 -0700](https://github.com/expo/expo-cli/commit/b6d4505fb66ce1809096c45099294b4f0c7f657c)
+
+### 🧹 Chores
+
+- [config-types] Update for SDK 43. [31edae](https://github.com/expo/expo-cli/commit/31edae)
+
+### 🐛 Bug fixes
+
+- [config-plugins][expo-cli][xdl] Fix runtimeVersion related code to build against config-types. [909d47](https://github.com/expo/expo-cli/commit/909d47)
+
+### 📦 Packages updated
+
+*Note*: a patch version was skipped due to a failed build that was resolved in [909d47](https://github.com/expo/expo-cli/commit/909d47)
+
+- @expo/config-plugins@4.0.2
+- @expo/config@6.0.2
+- @expo/dev-server@0.1.87
+- @expo/dev-tools@0.13.119
+- expo-cli@4.12.3
+- expo-optimize@0.1.109
+- @expo/metro-config@0.2.2
+- @expo/next-adapter@3.1.2
+- @expo/prebuild-config@3.0.2
+- expo-pwa@0.0.97
+- uri-scheme@1.0.98
+- @expo/webpack-config@0.16.2
+- xdl@59.2.3
+
 ## [Fri, 1 Oct 2021 14:44:35 -0700](https://github.com/expo/expo-cli/commit/7621454e3b2e47e5341da5076183f5da819cbd8e)
 
 ### 🛠 Breaking changes

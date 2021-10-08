@@ -39,9 +39,14 @@ export interface ExpoConfig {
   /**
    * **Note: Don't use this property unless you are sure what you're doing**
    *
-   * The runtime version associated with this manifest for bare workflow projects. If provided, this must match the version set in Expo.plist or AndroidManifest.xml.
+   * The runtime version associated with this manifest.
+   * Set this to `{"policy": "nativeBuildVersion"}` to generate it automatically.
    */
-  runtimeVersion?: string;
+  runtimeVersion?:
+    | string
+    | {
+        policy: 'nativeBuildVersion';
+      };
   /**
    * Your app version. In addition to this field, you'll also use `ios.buildNumber` and `android.versionCode` — read more about how to version your app [here](https://docs.expo.dev/distribution/app-stores/#versioning-your-app). On iOS this corresponds to `CFBundleShortVersionString`, and on Android, this corresponds to `versionName`. The required format can be found [here](https://developer.apple.com/documentation/bundleresources/information_property_list/cfbundleshortversionstring).
    */
@@ -459,6 +464,17 @@ export interface IOS {
    * Specifies the JavaScript engine for iOS apps. Supported only on EAS Build. Defaults to `jsc`. Valid values: `hermes`, `jsc`.
    */
   jsEngine?: 'hermes' | 'jsc';
+  /**
+   * **Note: Don't use this property unless you are sure what you're doing**
+   *
+   * The runtime version associated with this manifest for the iOS platform. If provided, this will override the top level runtimeVersion key.
+   * Set this to `{"policy": "nativeBuildVersion"}` to generate it automatically.
+   */
+  runtimeVersion?:
+    | string
+    | {
+        policy: 'nativeBuildVersion';
+      };
 }
 /**
  * Configuration that is specific to the Android platform.
@@ -685,6 +701,17 @@ export interface Android {
    * Specifies the JavaScript engine for Android apps. Supported only on EAS Build and in Expo Go. Defaults to `jsc`. Valid values: `hermes`, `jsc`.
    */
   jsEngine?: 'hermes' | 'jsc';
+  /**
+   * **Note: Don't use this property unless you are sure what you're doing**
+   *
+   * The runtime version associated with this manifest for the Android platform. If provided, this will override the top level runtimeVersion key.
+   * Set this to `{"policy": "nativeBuildVersion"}` to generate it automatically.
+   */
+  runtimeVersion?:
+    | string
+    | {
+        policy: 'nativeBuildVersion';
+      };
 }
 export interface AndroidIntentFiltersData {
   /**

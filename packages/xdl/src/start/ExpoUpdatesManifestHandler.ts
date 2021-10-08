@@ -115,6 +115,8 @@ export async function getManifestResponseAsync({
   const hostUri = await UrlUtils.constructHostUriAsync(projectRoot, hostname);
 
   const runtimeVersion = Updates.getRuntimeVersion(
+    // TODO(@jkhales): remove ts-ignore once sdkVersion policy is added to @expo/config-types and www schema is updated
+    // @ts-ignore
     { ...expoConfig, runtimeVersion: expoConfig.runtimeVersion ?? { policy: 'sdkVersion' } },
     platform
   );
@@ -184,7 +186,14 @@ export function getManifestHandler(projectRoot: string) {
     res: express.Response | http.ServerResponse,
     next: (err?: Error) => void
   ) => {
-    if (!req.url || parse(req.url).pathname !== '/update-manifest-experimental') {
+    // Only support `/`, `/manifest`, `/index.exp` for the manifest middleware.
+    if (
+      !req.url ||
+      !['/', '/manifest', '/index.exp'].includes(
+        // Strip the query params
+        parse(req.url).pathname || req.url
+      )
+    ) {
       next();
       return;
     }
