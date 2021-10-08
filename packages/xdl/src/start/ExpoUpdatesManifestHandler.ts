@@ -186,7 +186,14 @@ export function getManifestHandler(projectRoot: string) {
     res: express.Response | http.ServerResponse,
     next: (err?: Error) => void
   ) => {
-    if (!req.url || parse(req.url).pathname !== '/update-manifest-experimental') {
+    // Only support `/`, `/manifest`, `/index.exp` for the manifest middleware.
+    if (
+      !req.url ||
+      !['/', '/manifest', '/index.exp'].includes(
+        // Strip the query params
+        parse(req.url).pathname || req.url
+      )
+    ) {
       next();
       return;
     }
