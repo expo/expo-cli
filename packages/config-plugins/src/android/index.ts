@@ -27,12 +27,13 @@ import * as UserInterfaceStyle from './UserInterfaceStyle';
 import * as Version from './Version';
 import * as WindowSoftInputMode from './WindowSoftInputMode';
 
+export { Manifest, Colors, Paths, Permissions, Properties, Resources, Scheme, Strings, Styles };
+
+// TODO: Move
 export {
   AllowBackup,
   EasBuild,
-  Manifest,
   Branch,
-  Colors,
   Facebook,
   GoogleMapsApiKey,
   GoogleServices,
@@ -41,16 +42,9 @@ export {
   NavigationBar,
   Orientation,
   Package,
-  Paths,
-  Permissions,
   PrimaryColor,
-  Properties,
-  Resources,
   RootViewBackgroundColor,
-  Scheme,
   StatusBar,
-  Strings,
-  Styles,
   Updates,
   UserInterfaceStyle,
   Version,

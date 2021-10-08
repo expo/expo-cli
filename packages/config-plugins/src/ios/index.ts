@@ -29,24 +29,22 @@ import * as XcodeUtils from './utils/Xcodeproj';
 // We can change this to export * as X with TypeScript 3.8+
 // https://devblogs.microsoft.com/typescript/announcing-typescript-3-8-beta/#export-star-as-namespace-syntax
 // .. but we should wait for this to be the default VSCode version.
+export { InfoPlist, ExpoPlist, Entitlements, Paths, Permissions, XcodeUtils };
+
+// TODO: Move
 export {
+  BundleIdentifier,
   Branch,
   BuildScheme,
-  BundleIdentifier,
   DeviceFamily,
-  Entitlements,
   Facebook,
   Google,
   Maps,
   Locales,
-  InfoPlist,
-  ExpoPlist,
   JsEngine,
   Name,
   Orientation,
-  Paths,
   ProvisioningProfile,
-  Permissions,
   RequiresFullScreen,
   RootViewBackgroundColor,
   Scheme,
@@ -57,5 +55,4 @@ export {
   UsesNonExemptEncryption,
   Version,
   XcodeProjectFile,
-  XcodeUtils,
 };
