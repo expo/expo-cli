@@ -1,5 +1,6 @@
 import spawnAsync from '@expo/spawn-async';
 import { boolish } from 'getenv';
+import path from 'path';
 import resolveFrom from 'resolve-from';
 import semver from 'semver';
 
@@ -159,6 +160,17 @@ export async function findSharpInstanceAsync(): Promise<any | null> {
     const sharp = require('sharp');
     _sharpInstance = sharp;
     return sharp;
+  } catch {}
+
+  // Attempt to resolve the sharp instance on systems without which
+  // See: https://github.com/expo/expo-cli/issues/2708
+  try {
+    const yarnPath = (await spawnAsync('yarn', ['global', 'dir'])).stdout.toString().trim();
+    const sharpPath = require.resolve('sharp', {
+      paths: [path.join(yarnPath, 'node_modules'), ...(require.resolve.paths('sharp') || [])],
+    });
+    _sharpInstance = require(sharpPath);
+    return _sharpInstance;
   } catch {}
 
   // Attempt to resolve the sharp instance used by the global CLI
