@@ -162,7 +162,7 @@ export async function findSharpInstanceAsync(): Promise<any | null> {
     return sharp;
   } catch {}
 
-  // Attempt to resolve the sharp instance on systems without which
+  // Attempt to resolve the sharp instance on systems with "detached" global yarn install path
   // See: https://github.com/expo/expo-cli/issues/2708
   try {
     const yarnPath = (await spawnAsync('yarn', ['global', 'dir'])).stdout.toString().trim();
