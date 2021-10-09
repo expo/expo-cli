@@ -162,33 +162,42 @@ export async function findSharpInstanceAsync(): Promise<any | null> {
     return sharp;
   } catch {}
 
-  // Attempt to resolve the sharp instance on systems with "detached" global yarn install path
-  // See: https://github.com/expo/expo-cli/issues/2708
-  try {
-    const yarnPath = (await spawnAsync('yarn', ['global', 'dir'])).stdout.toString().trim();
-    const sharpPath = require.resolve('sharp', {
-      paths: [path.join(yarnPath, 'node_modules'), ...(require.resolve.paths('sharp') || [])],
-    });
-    _sharpInstance = require(sharpPath);
-    return _sharpInstance;
-  } catch {}
-
   // Attempt to resolve the sharp instance used by the global CLI
   let sharpCliPath;
-  try {
-    sharpCliPath = (await spawnAsync('which', ['sharp'])).stdout.toString().trim();
-  } catch (e) {
-    throw new Error(`Failed to find the instance of sharp used by the global sharp-cli package.`);
+  if (process.platform !== 'win32') {
+    try {
+      sharpCliPath = (await spawnAsync('which', ['sharp'])).stdout.toString().trim();
+    } catch {}
+  } else {
+    // On Windows systems, nested dependencies aren't linked to the paths within `require.resolve.paths`.
+    // Yarn installs these modules in a different folder, let's add yarn to the other attempts.
+    // See: https://github.com/expo/expo-cli/issues/2708
+    let yarnGlobalPath = '';
+    try {
+      yarnGlobalPath = path.join(
+        (await spawnAsync('yarn', ['global', 'dir'])).stdout.toString().trim(),
+        'node_modules'
+      );
+    } catch {}
+    try {
+      sharpCliPath = require.resolve('sharp-cli/package.json', {
+        paths: (require.resolve.paths('sharp-cli') || []).concat(yarnGlobalPath),
+      });
+    } catch {}
   }
 
   // resolve sharp from the sharp-cli package
-  const sharpPath = resolveFrom.silent(sharpCliPath, 'sharp');
+  const sharpPath = resolveFrom.silent(sharpCliPath || '', 'sharp');
 
   if (sharpPath) {
     try {
       // attempt to require the global sharp package
       _sharpInstance = require(sharpPath);
     } catch {}
+  }
+
+  if (!_sharpInstance) {
+    throw new Error(`Failed to find the instance of sharp used by the global sharp-cli package.`);
   }
 
   return _sharpInstance;
