@@ -99,6 +99,14 @@ export async function constructLogUrlAsync(
   return `${baseUrl}/logs`;
 }
 
+export async function constructLoadingUrlAsync(
+  projectRoot: string,
+  requestHostname?: string
+): Promise<string> {
+  const baseUrl = await constructUrlAsync(projectRoot, { urlType: 'http' }, false, requestHostname);
+  return `${baseUrl}/loading`;
+}
+
 export async function constructUrlWithExtensionAsync(
   projectRoot: string,
   entryPoint: string,

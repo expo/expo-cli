@@ -11,6 +11,7 @@ import {
   assertValidProjectRoot,
   ExpoUpdatesManifestHandler,
   getFreePortAsync,
+  LoadingPageHandler,
   ManifestHandler,
   ProjectSettings,
   ProjectUtils,
@@ -87,6 +88,8 @@ export async function startDevServerAsync(
       ? ExpoUpdatesManifestHandler.getManifestHandler(projectRoot)
       : ManifestHandler.getManifestHandler(projectRoot)
   );
+
+  middleware.use(LoadingPageHandler.getLoadingPageHandler(projectRoot));
 
   return [server, middleware, messageSocket];
 }

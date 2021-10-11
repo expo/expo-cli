@@ -18,9 +18,11 @@ import {
   CoreSimulator,
   delayAsync,
   downloadAppAsync,
+  isDevClientPackageInstalled,
   learnMore,
   Logger,
   NotificationCode,
+  ProjectSettings,
   Prompts,
   SimControl,
   SimControlLogs,
@@ -626,6 +628,8 @@ async function openUrlInSimulatorSafeAsync({
     } else if (!isDetached) {
       await profileMethod(ensureExpoClientInstalledAsync)(simulator, sdkVersion);
       _lastUrl = url;
+    } else if (!devClient && isDevClientPackageInstalled(projectRoot)) {
+      bundleIdentifier = ''; // it will open browser.
     }
 
     await Promise.all([
@@ -766,6 +770,30 @@ export async function resolveApplicationIdAsync(projectRoot: string) {
   return exp.ios?.bundleIdentifier;
 }
 
+async function constructDeepLinkAsync(
+  projectRoot: string,
+  scheme?: string,
+  devClient?: boolean
+): Promise<string | null> {
+  if (
+    process.env['EXPO_ENABLE_INTERSTITIAL_PAGE'] &&
+    !devClient &&
+    isDevClientPackageInstalled(projectRoot)
+  ) {
+    return UrlUtils.constructLoadingUrlAsync(projectRoot, 'localhost');
+  } else {
+    return await UrlUtils.constructDeepLinkAsync(projectRoot, {
+      hostType: 'localhost',
+      scheme,
+    }).catch(e => {
+      if (devClient) {
+        return null;
+      }
+      throw e;
+    });
+  }
+}
+
 export async function openProjectAsync({
   projectRoot,
   shouldPrompt,
@@ -793,16 +821,7 @@ export async function openProjectAsync({
     };
   }
 
-  const projectUrl = await UrlUtils.constructDeepLinkAsync(projectRoot, {
-    hostType: 'localhost',
-    scheme,
-  }).catch(e => {
-    if (devClient) {
-      return null;
-    }
-    throw e;
-  });
-
+  const projectUrl = await constructDeepLinkAsync(projectRoot, scheme, devClient);
   Logger.global.debug(`iOS project url: ${projectUrl}`);
 
   const { exp } = getConfig(projectRoot, {
