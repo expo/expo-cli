@@ -2,7 +2,6 @@ import * as AllowBackup from './AllowBackup';
 import * as Branch from './Branch';
 import * as Colors from './Colors';
 import * as EasBuild from './EasBuild';
-import * as Facebook from './Facebook';
 import * as GoogleMapsApiKey from './GoogleMapsApiKey';
 import * as GoogleServices from './GoogleServices';
 import * as IntentFilters from './IntentFilters';
@@ -34,7 +33,6 @@ export {
   AllowBackup,
   EasBuild,
   Branch,
-  Facebook,
   GoogleMapsApiKey,
   GoogleServices,
   IntentFilters,

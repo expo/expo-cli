@@ -3,7 +3,6 @@ import * as BuildScheme from './BuildScheme';
 import * as BundleIdentifier from './BundleIdentifier';
 import * as DeviceFamily from './DeviceFamily';
 import * as Entitlements from './Entitlements';
-import * as Facebook from './Facebook';
 import * as Google from './Google';
 import { ExpoPlist, InfoPlist } from './IosConfig.types';
 import * as JsEngine from './JsEngine';
@@ -37,7 +36,6 @@ export {
   Branch,
   BuildScheme,
   DeviceFamily,
-  Facebook,
   Google,
   Maps,
   Locales,
