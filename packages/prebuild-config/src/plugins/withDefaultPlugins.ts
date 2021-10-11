@@ -15,7 +15,7 @@ import { withAndroidIcons } from './icons/withAndroidIcons';
 import { withIosIcons } from './icons/withIosIcons';
 import withAdMob from './unversioned/expo-ads-admob/expo-ads-admob';
 import withAppleAuthentication from './unversioned/expo-apple-authentication';
-import withBranch from './unversioned/expo-branch';
+import withBranch from './unversioned/expo-branch/expo-branch';
 import withContacts from './unversioned/expo-contacts';
 import withDocumentPicker from './unversioned/expo-document-picker';
 import withFacebook from './unversioned/expo-facebook';

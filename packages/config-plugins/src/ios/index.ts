@@ -1,4 +1,3 @@
-import * as Branch from './Branch';
 import * as BuildScheme from './BuildScheme';
 import * as BundleIdentifier from './BundleIdentifier';
 import * as DeviceFamily from './DeviceFamily';
@@ -30,7 +29,6 @@ import * as XcodeUtils from './utils/Xcodeproj';
 // https://devblogs.microsoft.com/typescript/announcing-typescript-3-8-beta/#export-star-as-namespace-syntax
 // .. but we should wait for this to be the default VSCode version.
 export {
-  Branch,
   BuildScheme,
   BundleIdentifier,
   DeviceFamily,

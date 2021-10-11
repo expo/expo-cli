@@ -1,22 +1,29 @@
+import { AndroidConfig, ConfigPlugin, withAndroidManifest } from '@expo/config-plugins';
 import { ExpoConfig } from '@expo/config-types';
 
-import { createAndroidManifestPlugin } from '../plugins/android-plugins';
-import {
+const {
   addMetaDataItemToMainApplication,
-  AndroidManifest,
   getMainApplicationOrThrow,
   removeMetaDataItemFromMainApplication,
-} from './Manifest';
+} = AndroidConfig.Manifest;
 
 const META_BRANCH_KEY = 'io.branch.sdk.BranchKey';
 
-export const withBranch = createAndroidManifestPlugin(setBranchApiKey, 'withBranch');
+export const withAndroidBranch: ConfigPlugin = config => {
+  return withAndroidManifest(config, config => {
+    config.modResults = setBranchApiKey(config, config.modResults);
+    return config;
+  });
+};
 
 export function getBranchApiKey(config: ExpoConfig) {
   return config.android?.config?.branch?.apiKey ?? null;
 }
 
-export function setBranchApiKey(config: ExpoConfig, androidManifest: AndroidManifest) {
+export function setBranchApiKey(
+  config: ExpoConfig,
+  androidManifest: AndroidConfig.Manifest.AndroidManifest
+) {
   const apiKey = getBranchApiKey(config);
 
   const mainApplication = getMainApplicationOrThrow(androidManifest);
