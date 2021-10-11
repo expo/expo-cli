@@ -1,11 +1,11 @@
+import {
+  AndroidConfig,
+  ConfigPlugin,
+  WarningAggregator,
+  withAndroidColors,
+  withAndroidStyles,
+} from '@expo/config-plugins';
 import { ExpoConfig } from '@expo/config-types';
-
-import { ConfigPlugin } from '../Plugin.types';
-import { withAndroidColors, withAndroidStyles } from '../plugins/android-plugins';
-import { addWarningAndroid } from '../utils/warnings';
-import { setColorItem } from './Colors';
-import { buildResourceItem, ResourceXML } from './Resources';
-import { assignStylesValue, getAppThemeLightNoActionBarGroup } from './Styles';
 
 const NAVIGATION_BAR_COLOR = 'navigationBarColor';
 
@@ -14,9 +14,10 @@ export const withNavigationBar: ConfigPlugin = config => {
   if (immersiveMode) {
     // Immersive mode needs to be set programmatically
     // TODO: Resolve
-    addWarningAndroid(
+    WarningAggregator.addWarningAndroid(
       'androidNavigationBar.visible',
-      'Hiding the navigation bar must be done programmatically',
+      // Versioning is important because the functionality depends on the MainActivity delegate, introduced in the SDK +43 template.
+      'Install expo-navigation-bar, and ensure your project is using Expo SDK +43 to enable this functionality.',
       'https://developer.android.com/training/system-ui/immersive'
     );
   }
@@ -42,12 +43,12 @@ const withNavigationBarStyles: ConfigPlugin = config => {
 
 export function setNavigationBarColors(
   config: Pick<ExpoConfig, 'androidNavigationBar'>,
-  colors: ResourceXML
-): ResourceXML {
+  colors: AndroidConfig.Resources.ResourceXML
+): AndroidConfig.Resources.ResourceXML {
   const hexString = getNavigationBarColor(config);
   if (hexString) {
-    colors = setColorItem(
-      buildResourceItem({
+    colors = AndroidConfig.Colors.setColorItem(
+      AndroidConfig.Resources.buildResourceItem({
         name: NAVIGATION_BAR_COLOR,
         value: hexString,
       }),
@@ -59,18 +60,18 @@ export function setNavigationBarColors(
 
 export function setNavigationBarStyles(
   config: Pick<ExpoConfig, 'androidNavigationBar'>,
-  styles: ResourceXML
-): ResourceXML {
-  styles = assignStylesValue(styles, {
+  styles: AndroidConfig.Resources.ResourceXML
+): AndroidConfig.Resources.ResourceXML {
+  styles = AndroidConfig.Styles.assignStylesValue(styles, {
     add: !!getNavigationBarColor(config),
-    parent: getAppThemeLightNoActionBarGroup(),
+    parent: AndroidConfig.Styles.getAppThemeLightNoActionBarGroup(),
     name: `android:${NAVIGATION_BAR_COLOR}`,
     value: `@color/${NAVIGATION_BAR_COLOR}`,
   });
 
-  styles = assignStylesValue(styles, {
+  styles = AndroidConfig.Styles.assignStylesValue(styles, {
     add: getNavigationBarStyle(config) === 'dark-content',
-    parent: getAppThemeLightNoActionBarGroup(),
+    parent: AndroidConfig.Styles.getAppThemeLightNoActionBarGroup(),
     name: 'android:windowLightNavigationBar',
     value: 'true',
   });
