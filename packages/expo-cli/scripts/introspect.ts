@@ -364,6 +364,11 @@ if (['markdown', 'md'].includes(process.argv[2])) {
       ...args,
     });
 
+    const stripTrailingDot = (str: string): string => str.replace(/\.$/, '');
+    const capitalizeFirst = (str: string): string => str.charAt(0).toUpperCase() + str.slice(1);
+    const formatDescription = (str: string): string =>
+      capitalizeFirst(stripTrailingDot(stripAnsi(str)));
+
     for (const command of commands) {
       let priorityIndex = helpGroupOrder.findIndex(v => v === command.group);
       if (priorityIndex > -1) {
@@ -374,7 +379,7 @@ if (['markdown', 'md'].includes(process.argv[2])) {
       const subcommand: FigSpec = {
         name: subcommandNames.length === 1 ? subcommandNames[0] : subcommandNames,
         hidden: command.group === 'internal',
-        description: stripAnsi(command.description),
+        description: formatDescription(command.description),
         priority: 50 + priorityIndex,
         // fig uses `isOptional` instead of `required`
         args: (command.args || []).map(({ required, variadic, ...arg }) => {
@@ -572,7 +577,7 @@ if (['markdown', 'md'].includes(process.argv[2])) {
 
         const suboption: FigSpec = {
           name: name.length === 1 ? name[0] : name,
-          description: stripAnsi(option.description),
+          description: formatDescription(option.description),
           args,
           icon: getOptionIcon(option),
           // ensure that command options are placed above path suggestions (+76)
