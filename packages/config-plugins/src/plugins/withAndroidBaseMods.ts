@@ -330,6 +330,18 @@ const defaultProviders = {
       await writeFile(filePath, contents);
     },
   }),
+
+  mainApplication: provider<Paths.ApplicationProjectFile>({
+    getFilePath({ modRequest: { projectRoot } }) {
+      return Paths.getProjectFilePath(projectRoot, 'MainApplication');
+    },
+    async read(filePath) {
+      return Paths.getFileInfo(filePath);
+    },
+    async write(filePath, { modResults: { contents } }) {
+      await writeFile(filePath, contents);
+    },
+  }),
 };
 
 type AndroidDefaultProviders = typeof defaultProviders;
