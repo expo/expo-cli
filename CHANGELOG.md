@@ -12,6 +12,60 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+## [Tue, 5 Oct 2021 17:10:41 -0700](https://github.com/expo/expo-cli/commit/b6d4505fb66ce1809096c45099294b4f0c7f657c)
+
+### 🧹 Chores
+
+- [config-types] Update for SDK 43. [31edae](https://github.com/expo/expo-cli/commit/31edae)
+
+### 🐛 Bug fixes
+
+- [config-plugins][expo-cli][xdl] Fix runtimeVersion related code to build against config-types. [909d47](https://github.com/expo/expo-cli/commit/909d47)
+
+### 📦 Packages updated
+
+*Note*: a patch version was skipped due to a failed build that was resolved in [909d47](https://github.com/expo/expo-cli/commit/909d47)
+
+- @expo/config-plugins@4.0.2
+- @expo/config@6.0.2
+- @expo/dev-server@0.1.87
+- @expo/dev-tools@0.13.119
+- expo-cli@4.12.3
+- expo-optimize@0.1.109
+- @expo/metro-config@0.2.2
+- @expo/next-adapter@3.1.2
+- @expo/prebuild-config@3.0.2
+- expo-pwa@0.0.97
+- uri-scheme@1.0.98
+- @expo/webpack-config@0.16.2
+- xdl@59.2.3
+
+## [Fri, 1 Oct 2021 14:44:35 -0700](https://github.com/expo/expo-cli/commit/7621454e3b2e47e5341da5076183f5da819cbd8e)
+
+### 🛠 Breaking changes
+
+### 🎉 New features
+
+- [expo-cli] Add version check fallback for packages with exports ([#3878](https://github.com/expo/expo-cli/issues/3878))
+- [expo-cli][xdl] Remove expo forked react-native from managed apps on SDK 43+ ([#3821](https://github.com/expo/expo-cli/issues/3821))
+
+### 🧹 Chores
+
+- [expo-cli] bump @expo/rudder-sdk-node ([#3875](https://github.com/expo/expo-cli/issues/3875))
+- [pod-install] mention `macos` directory in Readme ([#3870](https://github.com/expo/expo-cli/issues/3870))
+
+### 🐛 Bug fixes
+
+- [expo-cli] Remove incorrect platform from 'dev client start command' event ([#3874](https://github.com/expo/expo-cli/issues/3874))
+- [expo-cli] Fix loader bug ([#3867](https://github.com/expo/expo-cli/issues/3867))
+
+### 📦 Packages updated
+
+- @expo/dev-tools@0.13.117
+- expo-cli@4.12.1
+- pod-install@0.1.28
+- xdl@59.2.1
+
 ## [Tue, 21 Sep 2021 14:39:00 -0700](https://github.com/expo/expo-cli/commit/d614ee9c98268686dbe5eeea5bfa512b89325d3f)
 
 ### 🛠 Breaking changes

@@ -1,4 +1,5 @@
 import type Log from '@expo/bunyan';
+import { getConfig } from '@expo/config';
 import {
   attachInspectorProxy,
   createDevServerMiddleware,
@@ -52,6 +53,7 @@ type CLIWebOptions = {
   nonInteractive?: boolean;
   port?: number;
   onWebpackFinished?: (error?: Error) => void;
+  forceManifestType?: 'classic' | 'expo-updates';
 };
 
 type BundlingOptions = {
@@ -135,7 +137,11 @@ export async function broadcastMessage(message: 'reload' | string, data?: any) {
 
 function createNativeDevServerMiddleware(
   projectRoot: string,
-  { port, compiler }: { port: number; compiler: webpack.Compiler }
+  {
+    port,
+    compiler,
+    forceManifestType,
+  }: { port: number; compiler: webpack.Compiler; forceManifestType?: 'classic' | 'expo-updates' }
 ) {
   if (!isTargetingNative()) {
     return null;
@@ -147,17 +153,24 @@ function createNativeDevServerMiddleware(
   });
   // Add manifest middleware to the other middleware.
   // TODO: Move this in to expo/dev-server.
-  nativeMiddleware.middleware
-    .use(ManifestHandler.getManifestHandler(projectRoot))
-    .use(ExpoUpdatesManifestHandler.getManifestHandler(projectRoot))
-    .use(
-      '/symbolicate',
-      createSymbolicateMiddleware({
-        projectRoot,
-        compiler,
-        logger: nativeMiddleware.logger,
-      })
-    );
+
+  const projectConfig = getConfig(projectRoot);
+  const easProjectId = projectConfig.exp.extra?.eas.projectId;
+  const useExpoUpdatesManifest =
+    forceManifestType === 'expo-updates' || (forceManifestType !== 'classic' && easProjectId);
+
+  const middleware = useExpoUpdatesManifest
+    ? ExpoUpdatesManifestHandler.getManifestHandler(projectRoot)
+    : ManifestHandler.getManifestHandler(projectRoot);
+
+  nativeMiddleware.middleware.use(middleware).use(
+    '/symbolicate',
+    createSymbolicateMiddleware({
+      projectRoot,
+      compiler,
+      logger: nativeMiddleware.logger,
+    })
+  );
   return nativeMiddleware;
 }
 
@@ -251,7 +264,11 @@ export async function startAsync(
   const compiler = webpack(config);
 
   // Create the middleware required for interacting with a native runtime (Expo Go, or Expo Dev Client).
-  const nativeMiddleware = createNativeDevServerMiddleware(projectRoot, { port, compiler });
+  const nativeMiddleware = createNativeDevServerMiddleware(projectRoot, {
+    port,
+    compiler,
+    forceManifestType: options.forceManifestType,
+  });
   // Inject the native manifest middleware.
   const originalBefore = config.devServer!.before!.bind(config.devServer!.before);
   config.devServer!.before = (app, server, compiler) => {

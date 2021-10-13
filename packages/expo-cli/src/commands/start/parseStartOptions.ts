@@ -22,6 +22,7 @@ export type NormalizedOptions = URLOptions & {
   tunnel?: boolean;
   metroPort?: number;
   webpackPort?: number;
+  forceManifestType?: string;
 };
 
 export type RawStartOptions = NormalizedOptions & {
@@ -172,6 +173,15 @@ export function parseStartOptions(
 
   if (options.devClient) {
     startOpts.devClient = true;
+  }
+
+  if (options.forceManifestType) {
+    startOpts.forceManifestType =
+      options.forceManifestType === 'classic'
+        ? 'classic'
+        : options.forceManifestType === 'expo-updates'
+        ? 'expo-updates'
+        : undefined;
   }
 
   if (isLegacyImportsEnabled(exp)) {

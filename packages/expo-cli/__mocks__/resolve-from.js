@@ -1,6 +1,4 @@
-module.exports = require(require.resolve('resolve-from'));
-
-module.exports.silent = (fromDirectory, request) => {
+function mockedResolveFrom(fromDirectory, request) {
   const fs = require('fs');
   const path = require('path');
 
@@ -18,4 +16,7 @@ module.exports.silent = (fromDirectory, request) => {
   if (fs.existsSync(outputPath)) {
     return outputPath;
   }
-};
+}
+
+module.exports = jest.fn(mockedResolveFrom);
+module.exports.silent = jest.fn(mockedResolveFrom);
