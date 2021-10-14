@@ -28,6 +28,10 @@ Object {
         "name": "expo-facebook",
         "version": "UNVERSIONED",
       },
+      "expo-navigation-bar": Object {
+        "name": "expo-navigation-bar",
+        "version": "UNVERSIONED",
+      },
       "expo-notifications": Object {
         "name": "expo-notifications",
         "version": "UNVERSIONED",
@@ -295,13 +299,13 @@ Object {
               },
               Object {
                 "$": Object {
-                  "name": "navigationBarColor",
+                  "name": "activityBackground",
                 },
                 "_": "#ff0000",
               },
               Object {
                 "$": Object {
-                  "name": "activityBackground",
+                  "name": "navigationBarColor",
                 },
                 "_": "#ff0000",
               },
@@ -795,9 +799,9 @@ Object {
                   },
                   Object {
                     "$": Object {
-                      "name": "android:navigationBarColor",
+                      "name": "android:windowBackground",
                     },
-                    "_": "@color/navigationBarColor",
+                    "_": "@color/activityBackground",
                   },
                   Object {
                     "$": Object {
@@ -807,9 +811,9 @@ Object {
                   },
                   Object {
                     "$": Object {
-                      "name": "android:windowBackground",
+                      "name": "android:navigationBarColor",
                     },
-                    "_": "@color/activityBackground",
+                    "_": "@color/navigationBarColor",
                   },
                 ],
               },
@@ -952,6 +956,10 @@ Object {
       },
       "expo-facebook": Object {
         "name": "expo-facebook",
+        "version": "UNVERSIONED",
+      },
+      "expo-navigation-bar": Object {
+        "name": "expo-navigation-bar",
         "version": "UNVERSIONED",
       },
       "expo-notifications": Object {
@@ -1221,13 +1229,13 @@ Object {
               },
               Object {
                 "$": Object {
-                  "name": "navigationBarColor",
+                  "name": "activityBackground",
                 },
                 "_": "#ff0000",
               },
               Object {
                 "$": Object {
-                  "name": "activityBackground",
+                  "name": "navigationBarColor",
                 },
                 "_": "#ff0000",
               },
@@ -1634,9 +1642,9 @@ Object {
                   },
                   Object {
                     "$": Object {
-                      "name": "android:navigationBarColor",
+                      "name": "android:windowBackground",
                     },
-                    "_": "@color/navigationBarColor",
+                    "_": "@color/activityBackground",
                   },
                   Object {
                     "$": Object {
@@ -1646,9 +1654,9 @@ Object {
                   },
                   Object {
                     "$": Object {
-                      "name": "android:windowBackground",
+                      "name": "android:navigationBarColor",
                     },
-                    "_": "@color/activityBackground",
+                    "_": "@color/navigationBarColor",
                   },
                 ],
               },
@@ -1791,6 +1799,10 @@ Object {
       },
       "expo-facebook": Object {
         "name": "expo-facebook",
+        "version": "UNVERSIONED",
+      },
+      "expo-navigation-bar": Object {
+        "name": "expo-navigation-bar",
         "version": "UNVERSIONED",
       },
       "expo-notifications": Object {

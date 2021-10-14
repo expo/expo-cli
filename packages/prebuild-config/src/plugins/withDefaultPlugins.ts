@@ -148,10 +148,10 @@ export const withVersionedExpoSDKPlugins: ConfigPlugin<{ expoUsername: string | 
     withNotifications,
     [withUpdates, { expoUsername }],
     withBranch,
-    withNavigationBar,
     withDocumentPicker,
     withFacebook,
     withSplashScreen,
+    withNavigationBar,
   ]);
 };
 
