@@ -79,7 +79,7 @@ export function updateModulesAppDelegateObjcImpl(contents: string): string {
   // application:didFinishLaunchingWithOptions:
   const superDidFinishLaunchingWithOptionsCode =
     '[super application:application didFinishLaunchingWithOptions:launchOptions];';
-  if (contents.indexOf(` ${superDidFinishLaunchingWithOptionsCode}`) < 0) {
+  if (!contents.includes(` ${superDidFinishLaunchingWithOptionsCode}`)) {
     contents = insertContentsInsideObjcFunctionBlock(
       contents,
       'application:didFinishLaunchingWithOptions:',
@@ -116,7 +116,7 @@ export function updateModulesAppDelegateSwift(contents: string): string {
   // application:didFinishLaunchingWithOptions:
   const superDidFinishLaunchingWithOptionsCode =
     'super.application(application, didFinishLaunchingWithOptions: launchOptions)';
-  if (contents.indexOf(` ${superDidFinishLaunchingWithOptionsCode}`) < 0) {
+  if (!contents.includes(` ${superDidFinishLaunchingWithOptionsCode}`)) {
     contents = insertContentsInsideSwiftFunctionBlock(
       contents,
       'application(_:didFinishLaunchingWithOptions:)',
