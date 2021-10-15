@@ -8,7 +8,15 @@ import {
 import { createMultiRuleTransformer, loaders } from './createMultiRuleTransformer';
 import { getCacheKey } from './getCacheKey';
 
-export function createExoticTransformer({ nodeModulesPaths }: { nodeModulesPaths: string[] }) {
+export function createExoticTransformer({
+  nodeModulesPaths,
+  transpileModules,
+  expensiveTranspileModules,
+}: {
+  nodeModulesPaths: string[];
+  expensiveTranspileModules?: string[];
+  transpileModules: string[];
+}) {
   // Match any node modules, or monorepo module.
   const nodeModuleMatcher = createModuleMatcher({ folders: nodeModulesPaths, moduleIds: [] });
 
@@ -21,6 +29,7 @@ export function createExoticTransformer({ nodeModulesPaths }: { nodeModulesPaths
       'victory',
       // vector icons has some hidden issues that break NCL
       '@expo/vector-icons',
+      ...(expensiveTranspileModules || []),
     ],
     folders: nodeModulesPaths,
   });
@@ -62,7 +71,10 @@ export function createExoticTransformer({ nodeModulesPaths }: { nodeModulesPaths
       // Match known problematic modules, convert them statically using an expensive, dynamic sucrase.
       {
         type: 'module',
-        test: createKnownCommunityMatcher({ folders: nodeModulesPaths }),
+        test: createKnownCommunityMatcher({
+          folders: nodeModulesPaths,
+          moduleIds: transpileModules,
+        }),
         transform: loaders.untranspiledModule,
         warn: true,
       },

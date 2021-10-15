@@ -45,6 +45,8 @@ export const createKnownCommunityMatcher = ({
       // The more complex, the longer the entire project takes...
       // react-native-community, react-native-masked-view, react-native-picker, react-native-segmented-control, react-native
       '@react-',
+      // @sentry/react-native
+      '@(?:[\\w|-]+)/react-native',
       'react-native-',
       'victory-',
       'native-base',
