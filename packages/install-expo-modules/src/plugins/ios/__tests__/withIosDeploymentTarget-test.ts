@@ -21,7 +21,7 @@ target 'HelloWorld' do
   )
 end
 `;
-    expect(updateDeploymentTargetPodfile(contents)).toEqual(expectContents);
+    expect(updateDeploymentTargetPodfile(contents, '12.0')).toEqual(expectContents);
   });
 
   it('should support multiple deployment targets in Podfile', () => {
@@ -56,7 +56,7 @@ target 'HelloWorld2' do
   )
 end
 `;
-    expect(updateDeploymentTargetPodfile(contents)).toEqual(expectContents);
+    expect(updateDeploymentTargetPodfile(contents, '12.0')).toEqual(expectContents);
   });
 
   it('should leave unmodified if deployment target meets requirements', () => {
@@ -70,6 +70,6 @@ target 'HelloWorld' do
 end
 `;
 
-    expect(updateDeploymentTargetPodfile(contents)).toEqual(contents);
+    expect(updateDeploymentTargetPodfile(contents, '12.0')).toEqual(contents);
   });
 });

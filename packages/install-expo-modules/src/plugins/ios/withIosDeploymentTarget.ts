@@ -6,22 +6,23 @@ import {
 } from '@expo/config-plugins';
 import fs from 'fs';
 import path from 'path';
+import semver from 'semver';
 
-export const EXPO_MODULES_MIN_DEPLOYMENT_TARGET = 12;
+type IosDeploymentTargetConfigPlugin = ConfigPlugin<{ deploymentTarget: string }>;
 
-export const withIosDeploymentTarget: ConfigPlugin = config => {
-  config = withIosDeploymentTargetPodfile(config);
-  config = withIosDeploymentTargetXcodeProject(config);
+export const withIosDeploymentTarget: IosDeploymentTargetConfigPlugin = (config, props) => {
+  config = withIosDeploymentTargetPodfile(config, props);
+  config = withIosDeploymentTargetXcodeProject(config, props);
   return config;
 };
 
-const withIosDeploymentTargetPodfile: ConfigPlugin = config => {
+const withIosDeploymentTargetPodfile: IosDeploymentTargetConfigPlugin = (config, props) => {
   return withDangerousMod(config, [
     'ios',
     async config => {
       const podfile = path.join(config.modRequest.platformProjectRoot, 'Podfile');
       let contents = await fs.promises.readFile(podfile, 'utf8');
-      contents = updateDeploymentTargetPodfile(contents);
+      contents = updateDeploymentTargetPodfile(contents, props.deploymentTarget);
 
       await fs.promises.writeFile(podfile, contents);
       return config;
@@ -29,35 +30,45 @@ const withIosDeploymentTargetPodfile: ConfigPlugin = config => {
   ]);
 };
 
-export function updateDeploymentTargetPodfile(contents: string): string {
+export function updateDeploymentTargetPodfile(contents: string, deploymentTarget: string): string {
   return contents.replace(
-    /^(\s*platform :ios, ['"])(\d+)\.(\d+)(['"])/gm,
-    (match, prefix, majorVersion, minorVersion, suffix) => {
-      if (Number(majorVersion) < EXPO_MODULES_MIN_DEPLOYMENT_TARGET) {
-        return `${prefix}12.0${suffix}`;
+    /^(\s*platform :ios, ['"])([\d.]+)(['"])/gm,
+    (match, prefix, version, suffix) => {
+      if (semver.lt(toSemVer(version), toSemVer(deploymentTarget))) {
+        return `${prefix}${deploymentTarget}${suffix}`;
       }
       return match;
     }
   );
 }
 
-const withIosDeploymentTargetXcodeProject: ConfigPlugin = config => {
+const withIosDeploymentTargetXcodeProject: IosDeploymentTargetConfigPlugin = (config, props) => {
   return withXcodeProject(config, config => {
-    config.modResults = updateDeploymentTargetXcodeProject(config.modResults);
+    config.modResults = updateDeploymentTargetXcodeProject(
+      config.modResults,
+      props.deploymentTarget
+    );
     return config;
   });
 };
 
-export function updateDeploymentTargetXcodeProject(project: XcodeProject): XcodeProject {
+export function updateDeploymentTargetXcodeProject(
+  project: XcodeProject,
+  deploymentTarget: string
+): XcodeProject {
   const configurations = project.pbxXCBuildConfigurationSection();
   for (const { buildSettings } of Object.values(configurations ?? {})) {
-    const deploymentTarget = buildSettings?.IPHONEOS_DEPLOYMENT_TARGET;
+    const currDeploymentTarget = buildSettings?.IPHONEOS_DEPLOYMENT_TARGET;
     if (
-      deploymentTarget &&
-      Number(deploymentTarget.split('.')[0]) < EXPO_MODULES_MIN_DEPLOYMENT_TARGET
+      currDeploymentTarget &&
+      semver.lt(toSemVer(currDeploymentTarget), toSemVer(deploymentTarget))
     ) {
-      buildSettings.IPHONEOS_DEPLOYMENT_TARGET = `${EXPO_MODULES_MIN_DEPLOYMENT_TARGET}.0`;
+      buildSettings.IPHONEOS_DEPLOYMENT_TARGET = deploymentTarget;
     }
   }
   return project;
+}
+
+function toSemVer(version: string): semver.SemVer {
+  return semver.coerce(version) ?? new semver.SemVer('0.0.0');
 }
