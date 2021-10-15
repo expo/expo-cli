@@ -166,6 +166,15 @@ export function getDefaultConfig(
   const babelConfigPath = getProjectBabelConfigFile(projectRoot);
   const isCustomBabelConfigDefined = !!babelConfigPath;
 
+  const resolverMainFields: string[] = [];
+
+  // Disable `react-native` in exotic mode, since library authors
+  // use it to ship raw application code to the project.
+  if (!EXPO_USE_EXOTIC) {
+    resolverMainFields.push('react-native');
+  }
+  resolverMainFields.push('browser', 'main');
+
   if (EXPO_DEBUG) {
     console.log();
     console.log(`Expo Metro config:`);
@@ -174,6 +183,7 @@ export function getDefaultConfig(
     console.log(`- Extensions: ${sourceExts.join(', ')}`);
     console.log(`- React Native: ${reactNativePath}`);
     console.log(`- Babel config: ${babelConfigPath || 'babel-preset-expo (default)'}`);
+    console.log(`- Resolver Fields: ${resolverMainFields.join(', ')}`);
     console.log(`- Exotic: ${EXPO_USE_EXOTIC}`);
     console.log();
   }
@@ -183,15 +193,6 @@ export function getDefaultConfig(
     reporter,
     ...metroDefaultValues
   } = MetroConfig.getDefaultConfig.getDefaultValues(projectRoot);
-
-  const resolverMainFields: string[] = [];
-
-  // Disable `react-native` in exotic mode, since library authors
-  // use it to ship raw application code to the project.
-  if (!EXPO_USE_EXOTIC) {
-    resolverMainFields.push('react-native');
-  }
-  resolverMainFields.push('browser', 'main');
 
   // Merge in the default config from Metro here, even though loadConfig uses it as defaults.
   // This is a convenience for getDefaultConfig use in metro.config.js, e.g. to modify assetExts.
