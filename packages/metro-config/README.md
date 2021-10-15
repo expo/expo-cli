@@ -33,7 +33,7 @@ If you need more customization, you can import the multi-rule transformer and ex
 
 ### Source Maps
 
-Exotic also disables the `x_facebook_sources` generation by default. The feature can be re-enabled with `EXPO_USE_FB_SOURCES`. Here are the results:
+Metro bundler adds an undocumented extension to source maps which provides slightly different names for anonymous functions. The source map sizes increase a lot by adding the `x_facebook_sources` object, and the net transformation time also increases by a noticable amount. By default, exotic disables this feature. The feature can be re-enabled with `EXPO_USE_FB_SOURCES`. Here are the results:
 
 <table>
 <tr>
@@ -49,6 +49,9 @@ Exotic also disables the `x_facebook_sources` generation by default. The feature
     <td><img src="https://user-images.githubusercontent.com/9664363/134078781-9f79e9d8-56c7-4e20-952f-8214deb3f0ca.png" width="200" /></td>
   </tr>
 </table>
+
+- Most error reporting services don't support `x_facebook_sources` so the larger size mostly just increases hosting costs (when uploaded).
+- Documentation for `x_facebook_sources` is not provided.
 
 Cite: [#3861](https://github.com/expo/expo-cli/pull/3861)
 
