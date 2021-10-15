@@ -4,7 +4,7 @@ import {
   withXcodeProject,
   XcodeProject,
 } from '@expo/config-plugins';
-import fs from 'fs-extra';
+import fs from 'fs';
 import path from 'path';
 
 export const EXPO_MODULES_MIN_DEPLOYMENT_TARGET = 12;
@@ -20,10 +20,10 @@ const withIosDeploymentTargetPodfile: ConfigPlugin = config => {
     'ios',
     async config => {
       const podfile = path.join(config.modRequest.platformProjectRoot, 'Podfile');
-      let contents = await fs.readFile(podfile, 'utf8');
+      let contents = await fs.promises.readFile(podfile, 'utf8');
       contents = updateDeploymentTargetPodfile(contents);
 
-      await fs.writeFile(podfile, contents);
+      await fs.promises.writeFile(podfile, contents);
       return config;
     },
   ]);

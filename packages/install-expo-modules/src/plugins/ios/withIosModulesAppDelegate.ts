@@ -9,7 +9,7 @@ import {
   insertContentsInsideObjcFunctionBlock,
   insertContentsInsideSwiftFunctionBlock,
 } from '@expo/config-plugins/build/ios/codeMod';
-import fs from 'fs-extra';
+import fs from 'fs';
 import { sync as globSync } from 'glob';
 import xcode from 'xcode';
 
@@ -31,9 +31,9 @@ export const withIosModulesAppDelegateObjcHeader: ConfigPlugin = config => {
         const appDelegateObjcHeaderPath = getAppDelegateObjcHeaderFilePath(
           config.modRequest.projectRoot
         );
-        let contents = await fs.readFile(appDelegateObjcHeaderPath, 'utf8');
+        let contents = await fs.promises.readFile(appDelegateObjcHeaderPath, 'utf8');
         contents = updateModulesAppDelegateObjcHeader(contents);
-        await fs.writeFile(appDelegateObjcHeaderPath, contents);
+        await fs.promises.writeFile(appDelegateObjcHeaderPath, contents);
       } catch {}
       return config;
     },
@@ -63,13 +63,13 @@ export const withIosModulesSwiftBridgingHeader: ConfigPlugin = config => {
       if (!bridgingHeaderFilePath) {
         return config;
       }
-      let contents = await fs.readFile(bridgingHeaderFilePath, 'utf8');
+      let contents = await fs.promises.readFile(bridgingHeaderFilePath, 'utf8');
 
       if (!contents.match(/^#import\s+<Expo\/Expo\.h>\s*$/m)) {
         contents = addObjcImports(contents, ['<Expo/Expo.h>']);
       }
 
-      await fs.writeFile(bridgingHeaderFilePath, contents);
+      await fs.promises.writeFile(bridgingHeaderFilePath, contents);
       return config;
     },
   ]);

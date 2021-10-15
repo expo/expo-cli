@@ -1,7 +1,7 @@
 import { ConfigPlugin, withDangerousMod } from '@expo/config-plugins';
 import { getProjectName } from '@expo/config-plugins/build/ios/utils/Xcodeproj';
 import { insertContentsAtOffset } from '@expo/config-plugins/build/utils/commonCodeMod';
-import fs from 'fs-extra';
+import fs from 'fs';
 import path from 'path';
 
 export const withIosModulesPodfile: ConfigPlugin = config => {
@@ -9,11 +9,11 @@ export const withIosModulesPodfile: ConfigPlugin = config => {
     'ios',
     async config => {
       const podfile = path.join(config.modRequest.platformProjectRoot, 'Podfile');
-      let contents = await fs.readFile(podfile, 'utf8');
+      let contents = await fs.promises.readFile(podfile, 'utf8');
       const projectName = getProjectName(config.modRequest.projectRoot);
       contents = updatePodfile(contents, projectName);
 
-      await fs.writeFile(podfile, contents);
+      await fs.promises.writeFile(podfile, contents);
       return config;
     },
   ]);
