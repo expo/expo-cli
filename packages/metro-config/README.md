@@ -11,6 +11,8 @@ When enabled, exotic mode adds the following assumptions:
   - Packages using `react-native-builder-bob` will default to using the CommonJS setting in exotic. If you need to modify your Node modules manually, be sure to change the files in your `lib/commonjs/` folder.
 - Extensions: `ts, tsx, js, jsx, json, cjs`
   - `cjs` is added.
+- `.babelrc` support is removed in favor of `babel.config.js`.
+- `x_facebook_sources` is toggled off by default.
 
 ### Default Rules
 
@@ -29,10 +31,9 @@ When enabled, exotic mode adds the following assumptions:
 
 If you need more customization, you can import the multi-rule transformer and extend it locally. Check the contents of [createExoticTransformer.ts](./src/transformer/createExoticTransformer.ts) for an example.
 
-
 ### Source Maps
 
-This PR also disables the `x_facebook_sources` generation by default. The feature can be re-enabled with `EXPO_USE_FB_SOURCES`. Here are the results:
+Exotic also disables the `x_facebook_sources` generation by default. The feature can be re-enabled with `EXPO_USE_FB_SOURCES`. Here are the results:
 
 <table>
 <tr>
