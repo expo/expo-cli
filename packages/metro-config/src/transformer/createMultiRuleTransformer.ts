@@ -12,7 +12,7 @@ const debug = Debug('expo:metro:exotic-babel-transformer');
 
 let babelCore: typeof import('@babel/core') | undefined;
 
-export function getBabelCoreFromProject(projectRoot: string) {
+function getBabelCoreFromProject(projectRoot: string) {
   if (babelCore) return babelCore;
   babelCore = require(resolveFrom(projectRoot, '@babel/core'));
   return babelCore!;
@@ -82,7 +82,7 @@ export function createMultiRuleTransformer({
 }: {
   getRuleType: (args: BabelTransformerArgs) => string;
   rules: Rule[];
-}) {
+}): BabelTransformer['transform'] {
   // const warnings: string[] = [];
   return function transform(args: BabelTransformerArgs) {
     const { filename, options } = args;

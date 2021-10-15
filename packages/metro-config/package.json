@@ -30,7 +30,8 @@
   },
   "homepage": "https://github.com/expo/expo-cli/tree/master/packages/metro-config#readme",
   "files": [
-    "build"
+    "build",
+    "transformer"
   ],
   "dependencies": {
     "@expo/config": "6.0.2",

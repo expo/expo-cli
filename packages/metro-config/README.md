@@ -31,19 +31,17 @@ When enabled, exotic mode adds the following assumptions:
 
 > Experimental
 
-You can reach into the internals of the package to extend the experimental transformer API.
+You can use `@expo/metro-config/transformer` to extend the experimental transformer API.
 This can be used for:
 
-- Adding extra modules that need to be transpiled locally.
+- Adding extra modules that need to be transpiled locally (`transpileModules`).
 - Adding extra `nodeModulesPaths` for monorepo support.
 - Adding support for the `react-native` main resolver field back.
 
 `metro-exotic-transformer.js`
 
 ```js
-const {
-  createExoticTransformer,
-} = require('@expo/metro-config/build/transformer/createExoticTransformer');
+const { createExoticTransformer } = require('@expo/metro-config/transformer');
 
 module.exports = createExoticTransformer({
   transpileModules: ['@stripe/stripe-react-native'],
