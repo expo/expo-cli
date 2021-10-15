@@ -33,7 +33,7 @@ If you need more customization, you can import the multi-rule transformer and ex
 
 ### Source Maps
 
-Metro bundler adds an undocumented extension to source maps which provides slightly different names for anonymous functions. The source map sizes increase a lot by adding the `x_facebook_sources` object, and the net transformation time also increases by a noticable amount. By default, exotic disables this feature. The feature can be re-enabled with `EXPO_USE_FB_SOURCES`. Here are the results:
+Metro bundler adds an undocumented extension to source maps which provides slightly different names for anonymous functions. The source map sizes increase a lot by adding the `x_facebook_sources` object, and the net transformation time also increases by a noticeable amount. By default, exotic disables this feature. The feature can be re-enabled with `EXPO_USE_FB_SOURCES`. Here are the results:
 
 <table>
 <tr>
