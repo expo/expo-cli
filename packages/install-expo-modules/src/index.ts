@@ -28,28 +28,28 @@ async function runAsync(programName: string) {
   config = withIosModules(config);
   config = withIosDeploymentTarget(config);
 
-  console.log(chalk.magenta('\u203A Updating your project...'));
+  console.log('\u203A Updating your project...');
   await compileModsAsync(config, {
     projectRoot,
     platforms,
   });
 
-  console.log(chalk.magenta('\u203A Installing expo package...'));
+  console.log('\u203A Installing expo package...');
   const packageManager = PackageManager.createForProject(projectRoot);
   // TODO: remove next
   await packageManager.addAsync('expo@next');
   // await packageManager.addAsync('expo');
 
-  console.log(chalk.magenta('\u203A Installing ios pods...'));
+  console.log('\u203A Installing ios pods...');
   const podPackageManager = new PackageManager.CocoaPodsPackageManager({
     cwd: path.join(projectRoot, 'ios'),
   });
   await podPackageManager.installAsync();
 
-  console.log(chalk.magenta('\u203A Installation completed!'));
+  console.log(chalk.bold('\u203A Installation completed!'));
   console.log(
-    chalk.red(
-      `\u2757 [BREAKING CHANGES] expo-modules requires iOS ${EXPO_MODULES_MIN_DEPLOYMENT_TARGET} at minimal. Your ios deployment target was changed to ${EXPO_MODULES_MIN_DEPLOYMENT_TARGET} after installation.`
+    chalk.yellow(
+      `⚠️  [BREAKING CHANGES] expo-modules requires iOS ${EXPO_MODULES_MIN_DEPLOYMENT_TARGET} at minimal. Your ios deployment target was changed to ${EXPO_MODULES_MIN_DEPLOYMENT_TARGET} after installation.`
     )
   );
 }
