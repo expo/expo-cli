@@ -1,8 +1,9 @@
-import { ConfigPlugin, withDangerousMod } from '@expo/config-plugins';
-import { getProjectName } from '@expo/config-plugins/build/ios/utils/Xcodeproj';
+import { ConfigPlugin, IOSConfig, withDangerousMod } from '@expo/config-plugins';
 import { insertContentsAtOffset } from '@expo/config-plugins/build/utils/commonCodeMod';
 import fs from 'fs';
 import path from 'path';
+
+const { getProjectName } = IOSConfig.XcodeUtils;
 
 export const withIosModulesPodfile: ConfigPlugin = config => {
   return withDangerousMod(config, [
