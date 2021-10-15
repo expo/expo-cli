@@ -29,6 +29,29 @@ When enabled, exotic mode adds the following assumptions:
 
 If you need more customization, you can import the multi-rule transformer and extend it locally. Check the contents of [createExoticTransformer.ts](./src/transformer/createExoticTransformer.ts) for an example.
 
+
+### Source Maps
+
+This PR also disables the `x_facebook_sources` generation by default. The feature can be re-enabled with `EXPO_USE_FB_SOURCES`. Here are the results:
+
+<table>
+<tr>
+    <th>Enabled</th>
+    <th>Disabled</th>
+  </tr>
+ <tr>
+    <td>iOS Bundling: <b>7664ms</b></td>
+    <td>iOS Bundling: <b>6875ms</b></td>
+  </tr>
+ <tr>
+    <td><img src="https://user-images.githubusercontent.com/9664363/134078785-c9b0d93d-3dfb-4552-b786-b45059e10c3b.png" width="200" /></td>
+    <td><img src="https://user-images.githubusercontent.com/9664363/134078781-9f79e9d8-56c7-4e20-952f-8214deb3f0ca.png" width="200" /></td>
+  </tr>
+</table>
+
+Cite: [#3861](https://github.com/expo/expo-cli/pull/3861)
+
+
 ### Troubleshooting
 
 You should see the following log when Exotic is enabled:
