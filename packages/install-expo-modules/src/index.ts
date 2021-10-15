@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import { getConfig } from '@expo/config';
 import { compileModsAsync, ModPlatform } from '@expo/config-plugins';
 import * as PackageManager from '@expo/package-manager';
@@ -11,6 +13,8 @@ import {
 } from './plugins/ios/withIosDeploymentTarget';
 import { withIosModules } from './plugins/ios/withIosModules';
 import { getProjectRoot } from './utils/getProjectRoot';
+
+const packageJSON = require('../package.json');
 
 async function runAsync(programName: string) {
   const projectRoot = getProjectRoot();
@@ -50,9 +54,11 @@ async function runAsync(programName: string) {
   );
 }
 
-export function run(programName: string = 'install-expo-modules') {
-  runAsync(programName).catch(e => {
+(async () => {
+  try {
+    await runAsync(packageJSON.name);
+  } catch (e) {
     console.error('Uncaught Error', e);
     process.exit(1);
-  });
-}
+  }
+})();
