@@ -76,7 +76,8 @@ export function getDefaultConfig(
   projectRoot: string,
   options: DefaultConfigOptions = {}
 ): MetroConfig.InputConfigT {
-  const isExotic = EXPO_USE_EXOTIC || options.mode === 'exotic';
+  const isExotic = options.mode === 'exotic' || EXPO_USE_EXOTIC;
+
   if (isExotic && !hasWarnedAboutExotic) {
     hasWarnedAboutExotic = true;
     console.log(

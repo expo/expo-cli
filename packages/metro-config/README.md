@@ -29,21 +29,58 @@ When enabled, exotic mode adds the following assumptions:
 
 ### Extra Customization
 
-If you need more customization, you can import the multi-rule transformer and extend it locally. Check the contents of [createExoticTransformer.ts](./src/transformer/createExoticTransformer.ts) for an example.
+> Experimental
 
-### Adding Resolver Fields 
+You can reach into the internals of the package to extend the experimental transformer API.
+This can be used for:
 
-You can add the `react-native` field back manually when exotic mode is enabled, we will investigate adding it back after more community packages have had time to adjust to transforming their code ahead of time.
+- Adding extra modules that need to be transpiled locally.
+- Adding extra `nodeModulesPaths` for monorepo support.
+- Adding support for the `react-native` main resolver field back.
+
+`metro-exotic-transformer.js`
+
+```js
+const {
+  createExoticTransformer,
+} = require('@expo/metro-config/build/transformer/createExoticTransformer');
+
+module.exports = createExoticTransformer({
+  transpileModules: ['@stripe/stripe-react-native'],
+  // You can uncomment the following lines to add any extra node_modules paths in a monorepo:
+  //   nodeModulesPaths: [
+  //     'node_modules',
+  //     // Generally you'll add this when your config is in `apps/my-app/metro.config.js`
+  //     '../../node_modules',
+  //     // If you have custom packages in a `packages/` folder
+  //     '../../packages',
+  //   ],
+});
+```
+
+Then use it in your project:
 
 `metro.config.js`
+
 ```js
 const { getDefaultConfig } = require('@expo/metro-config');
 
-const defaultConfig = getDefaultConfig(__dirname);
+const defaultConfig = getDefaultConfig(__dirname, {
+  // Initialize in exotic mode.
+  // If you want to preserve `react-native` resolver main field, and omit cjs support, then leave this undefined
+  // and skip setting the `EXPO_USE_EXOTIC` environment variable.
+  mode: 'exotic',
+});
 
-defaultConfig.resolver.resolverMainFields.unshift('react-native');
+// Use the new transformer
+baseConfig.transformer.babelTransformerPath = require.resolve('./metro-exotic-transformer');
 
-module.exports = defaultConfig;
+// Optionally, you can add support for the `react-native` resolver field back
+// doing this will increase bundling time and size as many community packages ship untransformed code using this feature.
+// Other packages like `nanoid` use the field to support `react-native` so you may need to enable it regardless.
+// defaultConfig.resolver.resolverMainFields.unshift('react-native');
+
+module.exports = baseConfig;
 ```
 
 ### Source Maps
@@ -70,7 +107,6 @@ Metro bundler adds an undocumented extension to source maps which provides sligh
 
 Cite: [#3861](https://github.com/expo/expo-cli/pull/3861)
 
-
 ### Troubleshooting
 
 You should see the following log when Exotic is enabled:
@@ -83,46 +119,18 @@ If you don't see this message, check to ensure your `metro.config.js` is using `
 
 The transformer can be debugged using the environment variable: `DEBUG=expo:metro:exotic-babel-transformer` or `DEBUG=expo:metro:*`
 
-### Monorepos
+### Adding Resolver Fields
 
-> Experimental
-
-You can reach into the internals of the package to extend the transformer and add monorepo support:
-
-`metro-exotic-transformer.js`
-
-```js
-const {
-  createExoticTransformer,
-} = require('@expo/metro-config/build/transformer/createExoticTransformer');
-
-module.exports = createExoticTransformer({
-  // Add extra node_module paths
-  nodeModulesPaths: [
-    'node_modules',
-    // Generally you'll add this when your config is in `apps/my-app/metro.config.js`
-    '../../node_modules',
-    // If you have custom packages in a `packages/` folder
-    '../../packages',
-  ],
-});
-```
-
-Then use it in your project:
+You can add the `react-native` field back manually when exotic mode is enabled, we will investigate adding it back after more community packages have had time to adjust to transforming their code ahead of time.
 
 `metro.config.js`
 
 ```js
-const { createMetroConfiguration } = require('expo-yarn-workspaces');
-const { EXPO_USE_EXOTIC } = require('@expo/metro-config');
-const baseConfig = createMetroConfiguration(__dirname);
+const { getDefaultConfig } = require('@expo/metro-config');
 
-// Optionally you can keep the environment variable working.
-if (EXPO_USE_EXOTIC) {
-  // Use the new transformer
-  if (!baseConfig.transformer) baseConfig.transformer = {};
-  baseConfig.transformer.babelTransformerPath = require.resolve('./metro-exotic-transformer');
-}
+const defaultConfig = getDefaultConfig(__dirname);
 
-module.exports = baseConfig;
+defaultConfig.resolver.resolverMainFields.unshift('react-native');
+
+module.exports = defaultConfig;
 ```

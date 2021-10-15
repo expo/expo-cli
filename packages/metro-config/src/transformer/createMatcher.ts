@@ -31,6 +31,7 @@ export const createExpoMatcher = ({ folders }: { folders?: string[] }) =>
   });
 
 // TODO: Make this list as short as possible before releasing.
+// TODO: Add SDK version compat list.
 export const createKnownCommunityMatcher = ({
   folders,
   moduleIds = [],
