@@ -31,6 +31,21 @@ When enabled, exotic mode adds the following assumptions:
 
 If you need more customization, you can import the multi-rule transformer and extend it locally. Check the contents of [createExoticTransformer.ts](./src/transformer/createExoticTransformer.ts) for an example.
 
+### Adding Resolver Fields 
+
+You can add the `react-native` field back manually when exotic mode is enabled, we will investigate adding it back after more community packages have had time to adjust to transforming their code ahead of time.
+
+`metro.config.js`
+```js
+const { getDefaultConfig } = require('@expo/metro-config');
+
+const defaultConfig = getDefaultConfig(__dirname);
+
+defaultConfig.resolver.resolverMainFields.unshift('react-native');
+
+module.exports = defaultConfig;
+```
+
 ### Source Maps
 
 Metro bundler adds an undocumented extension to source maps which provides slightly different names for anonymous functions. The source map sizes increase a lot by adding the `x_facebook_sources` object, and the net transformation time also increases by a noticeable amount. By default, exotic disables this feature. The feature can be re-enabled with `EXPO_USE_FB_SOURCES`. Here are the results:
