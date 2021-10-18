@@ -68,7 +68,7 @@ describe(getRuntimeVersion, () => {
     const buildNumber = '2';
     expect(
       getRuntimeVersion(
-        { version, runtimeVersion: { policy: 'nativeBuildVersion' }, ios: { buildNumber } },
+        { version, runtimeVersion: { policy: 'nativeVersion' }, ios: { buildNumber } },
         'ios'
       )
     ).toBe(`${version}(${buildNumber})`);

@@ -1,4 +1,3 @@
-import * as Branch from './Branch';
 import * as BuildScheme from './BuildScheme';
 import * as BundleIdentifier from './BundleIdentifier';
 import * as DeviceFamily from './DeviceFamily';
@@ -30,10 +29,8 @@ import * as XcodeUtils from './utils/Xcodeproj';
 // .. but we should wait for this to be the default VSCode version.
 export { InfoPlist, ExpoPlist, Entitlements, Paths, Permissions, XcodeUtils };
 
-// TODO: Move
 export {
   BundleIdentifier,
-  Branch,
   BuildScheme,
   DeviceFamily,
   Google,

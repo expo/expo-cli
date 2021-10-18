@@ -3,8 +3,13 @@ import { getRuntimeVersionForSDKVersion } from '@expo/sdk-runtime-versions';
 
 import { AndroidConfig, IOSConfig } from '..';
 
+export type ExpoConfigUpdates = Pick<
+  ExpoConfig,
+  'sdkVersion' | 'owner' | 'runtimeVersion' | 'updates' | 'slug'
+>;
+
 export function getUpdateUrl(
-  config: Pick<ExpoConfig, 'owner' | 'slug' | 'updates'>,
+  config: Pick<ExpoConfigUpdates, 'owner' | 'slug' | 'updates'>,
   username: string | null
 ): string | null {
   if (config.updates?.url) {
@@ -20,8 +25,8 @@ export function getUpdateUrl(
 
 export function getNativeVersion(
   config: Pick<ExpoConfig, 'version'> & {
-    android?: Pick<Android, 'versionCode' | 'runtimeVersion'>;
-    ios?: Pick<IOS, 'buildNumber' | 'runtimeVersion'>;
+    android?: Pick<Android, 'versionCode'>;
+    ios?: Pick<IOS, 'buildNumber'>;
   },
   platform: 'android' | 'ios'
 ): string {
@@ -65,7 +70,7 @@ export const withRuntimeVersion: (config: ExpoConfig) => ExpoConfig = config => 
 };
 
 export function getRuntimeVersion(
-  config: Pick<ExpoConfig, 'version' | 'sdkVersion' | 'runtimeVersion'> & {
+  config: Pick<ExpoConfig, 'version' | 'runtimeVersion' | 'sdkVersion'> & {
     android?: Pick<Android, 'versionCode' | 'runtimeVersion'>;
     ios?: Pick<IOS, 'buildNumber' | 'runtimeVersion'>;
   },
@@ -80,7 +85,7 @@ export function getRuntimeVersion(
 
   if (typeof runtimeVersion === 'string') {
     return runtimeVersion;
-  } else if (runtimeVersion.policy === 'nativeBuildVersion') {
+  } else if (runtimeVersion.policy === 'nativeVersion') {
     return getNativeVersion(config, platform);
   } else if (runtimeVersion.policy === 'sdkVersion') {
     if (!config.sdkVersion) {

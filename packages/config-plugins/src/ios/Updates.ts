@@ -1,11 +1,10 @@
-import { ExpoConfig } from '@expo/config-types';
 import * as path from 'path';
 import resolveFrom from 'resolve-from';
 import xcode from 'xcode';
 
 import { ConfigPlugin } from '../Plugin.types';
 import { withExpoPlist } from '../plugins/ios-plugins';
-import { getRuntimeVersion, getUpdateUrl } from '../utils/Updates';
+import { ExpoConfigUpdates, getRuntimeVersion, getUpdateUrl } from '../utils/Updates';
 import { ExpoPlist } from './IosConfig.types';
 
 const CREATE_MANIFEST_IOS_PATH = 'expo-updates/scripts/create-manifest-ios.sh';
@@ -26,7 +25,7 @@ export enum Config {
  * case we use SDK version
  */
 export function getRuntimeVersionNullable(
-  config: Pick<ExpoConfig, 'runtimeVersion'>
+  config: Pick<ExpoConfigUpdates, 'runtimeVersion'>
 ): string | null {
   try {
     return getRuntimeVersion(config, 'ios');
@@ -35,19 +34,21 @@ export function getRuntimeVersionNullable(
   }
 }
 
-export function getSDKVersion(config: Pick<ExpoConfig, 'sdkVersion'>): string | null {
+export function getSDKVersion(config: Pick<ExpoConfigUpdates, 'sdkVersion'>): string | null {
   return typeof config.sdkVersion === 'string' ? config.sdkVersion : null;
 }
 
-export function getUpdatesEnabled(config: Pick<ExpoConfig, 'updates'>): boolean {
+export function getUpdatesEnabled(config: Pick<ExpoConfigUpdates, 'updates'>): boolean {
   return config.updates?.enabled !== false;
 }
 
-export function getUpdatesTimeout(config: Pick<ExpoConfig, 'updates'>) {
+export function getUpdatesTimeout(config: Pick<ExpoConfigUpdates, 'updates'>) {
   return config.updates?.fallbackToCacheTimeout ?? 0;
 }
 
-export function getUpdatesCheckOnLaunch(config: Pick<ExpoConfig, 'updates'>): 'NEVER' | 'ALWAYS' {
+export function getUpdatesCheckOnLaunch(
+  config: Pick<ExpoConfigUpdates, 'updates'>
+): 'NEVER' | 'ALWAYS' {
   if (config.updates?.checkAutomatically === 'ON_ERROR_RECOVERY') {
     return 'NEVER';
   } else if (config.updates?.checkAutomatically === 'ON_LOAD') {
@@ -67,7 +68,7 @@ export const withUpdates: ConfigPlugin<{ expoUsername: string | null }> = (
 };
 
 export function setUpdatesConfig(
-  config: ExpoConfig,
+  config: ExpoConfigUpdates,
   expoPlist: ExpoPlist,
   username: string | null
 ): ExpoPlist {
@@ -88,7 +89,7 @@ export function setUpdatesConfig(
   return setVersionsConfig(config, newExpoPlist);
 }
 
-export function setVersionsConfig(config: ExpoConfig, expoPlist: ExpoPlist): ExpoPlist {
+export function setVersionsConfig(config: ExpoConfigUpdates, expoPlist: ExpoPlist): ExpoPlist {
   const newExpoPlist = { ...expoPlist };
 
   const runtimeVersion = getRuntimeVersionNullable(config);
@@ -183,7 +184,7 @@ export function isPlistConfigurationSet(expoPlist: ExpoPlist): boolean {
 }
 
 export function isPlistConfigurationSynced(
-  config: ExpoConfig,
+  config: ExpoConfigUpdates,
   expoPlist: ExpoPlist,
   username: string | null
 ): boolean {
@@ -197,7 +198,7 @@ export function isPlistConfigurationSynced(
 }
 
 export function isPlistVersionConfigurationSynced(
-  config: Pick<ExpoConfig, 'sdkVersion' | 'runtimeVersion'>,
+  config: Pick<ExpoConfigUpdates, 'sdkVersion' | 'runtimeVersion'>,
   expoPlist: ExpoPlist
 ): boolean {
   const expectedRuntimeVersion = getRuntimeVersionNullable(config);

@@ -1,5 +1,4 @@
 import * as AllowBackup from './AllowBackup';
-import * as Branch from './Branch';
 import * as Colors from './Colors';
 import * as EasBuild from './EasBuild';
 import * as GoogleMapsApiKey from './GoogleMapsApiKey';
@@ -28,11 +27,9 @@ import * as WindowSoftInputMode from './WindowSoftInputMode';
 
 export { Manifest, Colors, Paths, Permissions, Properties, Resources, Scheme, Strings, Styles };
 
-// TODO: Move
 export {
   AllowBackup,
   EasBuild,
-  Branch,
   GoogleMapsApiKey,
   GoogleServices,
   IntentFilters,
