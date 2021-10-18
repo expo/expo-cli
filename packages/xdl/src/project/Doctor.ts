@@ -4,11 +4,13 @@ import spawnAsync from '@expo/spawn-async';
 import { execSync } from 'child_process';
 import getenv from 'getenv';
 import isReachable from 'is-reachable';
+import memoize from 'lodash/memoize';
 import resolveFrom from 'resolve-from';
 import semver from 'semver';
 
 import { ExpSchema, ProjectUtils, Versions, Watchman } from '../internal';
 import { learnMore } from '../logs/TerminalLink';
+import { profileMethod } from '../utils/profileMethod';
 
 export const NO_ISSUES = 0;
 export const WARNING = 1;
@@ -280,6 +282,13 @@ async function _validateExpJsonAsync(
   return NO_ISSUES;
 }
 
+const resolveReactNativeVersionFromProjectRoot = memoize((projectRoot: string): string | null => {
+  try {
+    return require(resolveFrom(projectRoot, 'react-native/package.json')).version;
+  } catch {}
+  return null;
+});
+
 async function _validateReactNativeVersionAsync(
   exp: ExpoConfig,
   pkg: PackageJSONConfig,
@@ -307,6 +316,7 @@ async function _validateReactNativeVersionAsync(
     );
     return ERROR;
   }
+
   ProjectUtils.clearNotification(projectRoot, 'doctor-no-react-native-in-package-json');
 
   if (
@@ -331,20 +341,32 @@ async function _validateReactNativeVersionAsync(
       ProjectUtils.logWarning(
         projectRoot,
         'expo',
-        `Warning: Not using the Expo fork of react-native. ${learnMore('https://docs.expo.dev/')}`,
+        `Warning: Not using the Expo fork of react-native (${reactNative}). ${learnMore(
+          'https://docs.expo.dev/'
+        )}`,
         'doctor-not-using-expo-fork'
       );
       return WARNING;
     }
     ProjectUtils.clearNotification(projectRoot, 'doctor-not-using-expo-fork');
 
+    // Get the exact version as late as possible
+    // `semver` will match `semver.satisfies('~1.0.0', '~1.0.0')` as `false` even though it's technically allowed,
+    // to combat this, attempt to get the exact installed version.
+    const exactReactNativeVersion = profileMethod(resolveReactNativeVersionFromProjectRoot)(
+      projectRoot
+    );
+
+    reactNative = exactReactNativeVersion || reactNative;
+
     // Check react-native version satisfies with sdk's `facebookReactNativeVersion`
     const { facebookReactNativeVersion } = sdkVersions[sdkVersion];
-    if (!semver.satisfies(reactNative, `~${facebookReactNativeVersion}`)) {
+    const anyReactNativePatchVersion = `~${facebookReactNativeVersion}`;
+    if (!semver.satisfies(reactNative, anyReactNativePatchVersion)) {
       ProjectUtils.logWarning(
         projectRoot,
         'expo',
-        `Warning: Invalid version of react-native for sdkVersion ${sdkVersion}. Use react-native@${facebookReactNativeVersion}`,
+        `Warning: Invalid version react-native@${reactNative} for expo sdkVersion ${sdkVersion}. Use react-native@${facebookReactNativeVersion}`,
         'doctor-invalid-version-of-react-native'
       );
       return WARNING;
