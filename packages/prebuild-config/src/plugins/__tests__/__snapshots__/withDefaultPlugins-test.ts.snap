@@ -706,6 +706,35 @@ Object {
                 ],
               },
             ],
+            "queries": Array [
+              Object {
+                "intent": Array [
+                  Object {
+                    "action": Array [
+                      Object {
+                        "$": Object {
+                          "android:name": "android.intent.action.VIEW",
+                        },
+                      },
+                    ],
+                    "category": Array [
+                      Object {
+                        "$": Object {
+                          "android:name": "android.intent.category.BROWSABLE",
+                        },
+                      },
+                    ],
+                    "data": Array [
+                      Object {
+                        "$": Object {
+                          "android:scheme": "https",
+                        },
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
             "uses-permission": Array [
               Object {
                 "$": Object {
@@ -1517,6 +1546,35 @@ Object {
                       "android:name": "org.apache.http.legacy",
                       "android:required": false,
                     },
+                  },
+                ],
+              },
+            ],
+            "queries": Array [
+              Object {
+                "intent": Array [
+                  Object {
+                    "action": Array [
+                      Object {
+                        "$": Object {
+                          "android:name": "android.intent.action.VIEW",
+                        },
+                      },
+                    ],
+                    "category": Array [
+                      Object {
+                        "$": Object {
+                          "android:name": "android.intent.category.BROWSABLE",
+                        },
+                      },
+                    ],
+                    "data": Array [
+                      Object {
+                        "$": Object {
+                          "android:scheme": "https",
+                        },
+                      },
+                    ],
                   },
                 ],
               },
