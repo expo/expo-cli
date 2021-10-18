@@ -247,7 +247,7 @@ export function getDefaultConfig(
         : // Otherwise, use a custom transformer that uses `babel-preset-expo` by default for projects.
           require.resolve('./transformer/metro-expo-babel-transformer'),
       assetRegistryPath: 'react-native/Libraries/Image/AssetRegistry',
-      assetPlugins: hashAssetFilesPath ? [hashAssetFilesPath] : undefined,
+      assetPlugins: hashAssetFilesPath ? [hashAssetFilesPath] : [],
     },
   });
 }
