@@ -70,6 +70,7 @@ function parseAst(projectRoot: string, sourceCode: string) {
 export type Rule = {
   warn?: boolean;
   type?: 'module' | 'app';
+  name?: string;
   test: ((args: BabelTransformerArgs) => boolean) | RegExp;
   transform: BabelTransformer['transform'];
 };
@@ -81,12 +82,12 @@ export function createMultiRuleTransformer({
 }: {
   getRuleType: (args: BabelTransformerArgs) => string;
   rules: Rule[];
-}) {
+}): BabelTransformer['transform'] {
   // const warnings: string[] = [];
   return function transform(args: BabelTransformerArgs) {
     const { filename, options } = args;
     const OLD_BABEL_ENV = process.env.BABEL_ENV;
-    process.env.BABEL_ENV = options.dev ? 'development' : process.env.BABEL_ENV || 'production';
+    process.env.BABEL_ENV = options?.dev ? 'development' : process.env.BABEL_ENV || 'production';
 
     try {
       const ruleType = getRuleType(args);
@@ -101,11 +102,12 @@ export function createMultiRuleTransformer({
           typeof rule.test === 'function' ? rule.test(args) : rule.test.test(args.filename);
         if (isMatched) {
           const results = rule.transform(args);
-
+          // @ts-ignore: Add extra property for testing
+          results._ruleName = rule.name;
           // Perform a basic parse if none exists, this enables us to control the output, but only if it changed.
           if (results.code && !results.ast) {
             // Parse AST with babel otherwise Metro transformer will throw away the returned results.
-            results.ast = parseAst(options.projectRoot, results.code);
+            results.ast = parseAst(options?.projectRoot, results.code);
           }
 
           // TODO: Suboptimal warnings

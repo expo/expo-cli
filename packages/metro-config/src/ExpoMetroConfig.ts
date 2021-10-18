@@ -12,7 +12,7 @@ import resolveFrom from 'resolve-from';
 import { importMetroConfigFromProject } from './importMetroFromProject';
 
 export const EXPO_DEBUG = boolish('EXPO_DEBUG', false);
-export const EXPO_USE_EXOTIC = boolish('EXPO_USE_EXOTIC', false);
+const EXPO_USE_EXOTIC = boolish('EXPO_USE_EXOTIC', false);
 
 // Import only the types here, the values will be imported from the project, at runtime.
 export const INTERNAL_CALLSITES_REGEX = new RegExp(
@@ -54,6 +54,7 @@ export const INTERNAL_CALLSITES_REGEX = new RegExp(
 
 export interface DefaultConfigOptions {
   target?: ProjectTarget;
+  mode?: 'exotic';
 }
 
 function readIsLegacyImportsEnabled(projectRoot: string): boolean {
@@ -75,7 +76,9 @@ export function getDefaultConfig(
   projectRoot: string,
   options: DefaultConfigOptions = {}
 ): MetroConfig.InputConfigT {
-  if (EXPO_USE_EXOTIC && !hasWarnedAboutExotic) {
+  const isExotic = options.mode === 'exotic' || EXPO_USE_EXOTIC;
+
+  if (isExotic && !hasWarnedAboutExotic) {
     hasWarnedAboutExotic = true;
     console.log(
       chalk.gray(
@@ -158,7 +161,7 @@ export function getDefaultConfig(
       ? getBareExtensions([], sourceExtsConfig)
       : getManagedExtensions([], sourceExtsConfig);
 
-  if (EXPO_USE_EXOTIC) {
+  if (isExotic) {
     // Add support for cjs (without platform extensions).
     sourceExts.push('cjs');
   }
@@ -170,7 +173,7 @@ export function getDefaultConfig(
 
   // Disable `react-native` in exotic mode, since library authors
   // use it to ship raw application code to the project.
-  if (!EXPO_USE_EXOTIC) {
+  if (!isExotic) {
     resolverMainFields.push('react-native');
   }
   resolverMainFields.push('browser', 'main');
@@ -184,7 +187,7 @@ export function getDefaultConfig(
     console.log(`- React Native: ${reactNativePath}`);
     console.log(`- Babel config: ${babelConfigPath || 'babel-preset-expo (default)'}`);
     console.log(`- Resolver Fields: ${resolverMainFields.join(', ')}`);
-    console.log(`- Exotic: ${EXPO_USE_EXOTIC}`);
+    console.log(`- Exotic: ${isExotic}`);
     console.log();
   }
   const {
@@ -234,7 +237,7 @@ export function getDefaultConfig(
     },
     transformer: {
       allowOptionalDependencies: true,
-      babelTransformerPath: EXPO_USE_EXOTIC
+      babelTransformerPath: isExotic
         ? require.resolve('./transformer/metro-expo-exotic-babel-transformer')
         : isCustomBabelConfigDefined
         ? // If the user defined a babel config file in their project,
