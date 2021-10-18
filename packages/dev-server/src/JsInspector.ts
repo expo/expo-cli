@@ -53,7 +53,7 @@ async function launchChromiumAsync(url: string): Promise<void> {
   // However, if there is existing chromium browser process, the argument will not take effect.
   // We also pass a `--user-data-dir=` as temporary profile and force chromium to create new browser process.
   const tmpDir = require('temp-dir');
-  const tempProfileDir = fs.mkdtempSync(path.join(tmpDir, 'chromium-for-inspector-'));
+  const tempProfileDir = path.join(tmpDir, 'expo-inspector');
   const launchArgs = [
     `--app=${url}`,
     '--allow-running-insecure-content',
@@ -63,21 +63,17 @@ async function launchChromiumAsync(url: string): Promise<void> {
     '--no-default-browser-check',
   ];
 
-  try {
-    const result = await openApp(open.apps.chrome, {
+  const result = await openApp(open.apps.chrome, {
+    arguments: launchArgs,
+    newInstance: true,
+    wait: true,
+  });
+
+  if (result.exitCode !== 0) {
+    await openApp(open.apps.edge, {
       arguments: launchArgs,
       newInstance: true,
       wait: true,
     });
-
-    if (result.exitCode !== 0) {
-      await openApp(open.apps.edge, {
-        arguments: launchArgs,
-        newInstance: true,
-        wait: true,
-      });
-    }
-  } finally {
-    await fs.remove(tempProfileDir);
   }
 }
