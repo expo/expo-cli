@@ -237,7 +237,6 @@ export default class PackagerLogsStream {
       return;
     }
 
-    console.log(require('util').inspect(chunk, { depth: 4 }));
     chunk = this._maybeParseMsgJSON(chunk);
     chunk = this._cleanUpNodeErrors(chunk);
     if (chunk.tag === 'metro') {
