@@ -62,7 +62,8 @@ export async function startDevServerAsync(
   }
 
   const { server, middleware, messageSocket } = await runMetroDevServerAsync(projectRoot, options);
-  const projectConfig = getConfig(projectRoot);
+  // TODO: reduce getConfig calls
+  const projectConfig = getConfig(projectRoot, { skipSDKVersionRequirement: true });
 
   const easProjectId = projectConfig.exp.extra?.eas.projectId;
   const useExpoUpdatesManifest =
