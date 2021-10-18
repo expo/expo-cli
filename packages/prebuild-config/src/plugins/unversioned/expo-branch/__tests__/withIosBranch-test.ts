@@ -1,4 +1,4 @@
-import { getBranchApiKey, setBranchApiKey } from '../Branch';
+import { getBranchApiKey, setBranchApiKey } from '../withIosBranch';
 
 describe('branch', () => {
   it(`returns null if no api key is provided`, () => {
