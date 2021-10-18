@@ -1,0 +1,11 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`PackagerLogsStream formats a snippet error 1`] = `
+"[31mnode_modules/react-native/Libraries/NewAppScreen/components/logo.png: Cannot read property 'length' of undefined[39m
+[90mTypeError: Cannot read property 'length' of undefined[39m
+[90m    at applyAssetDataPlugins (/Users/evanbacon/Documents/GitHub/lab/rolo5/node_modules/metro/src/Assets.js:182:25)[39m
+[90m    at getAssetData (/Users/evanbacon/Documents/GitHub/lab/rolo5/node_modules/metro/src/Assets.js:178:16)[39m
+[90m    at async Object.transform (/Users/evanbacon/Documents/GitHub/lab/rolo5/node_modules/metro-transform-worker/src/utils/assetTransformer.js:30:16)[39m
+[90m    at async transformAsset (/Users/evanbacon/Documents/GitHub/lab/rolo5/node_modules/metro-transform-worker/src/index.js:371:18)[39m
+[90m    at async Object.transform (/Users/evanbacon/Documents/GitHub/lab/rolo5/node_modules/metro-transform-worker/src/index.js:559:14)[39m"
+`;
