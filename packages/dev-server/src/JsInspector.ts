@@ -1,4 +1,3 @@
-import fs from 'fs-extra';
 import fetch from 'node-fetch';
 import open, { openApp } from 'open';
 import path from 'path';
