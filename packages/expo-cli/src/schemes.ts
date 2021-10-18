@@ -1,5 +1,6 @@
 import { getConfig } from '@expo/config';
 import { AndroidConfig, IOSConfig } from '@expo/config-plugins';
+import { getInfoPlistPathFromPbxproj } from '@expo/config-plugins/build/ios/utils/getInfoPlistPath';
 import plist from '@expo/plist';
 import fs from 'fs';
 import resolveFrom from 'resolve-from';
@@ -12,7 +13,10 @@ import Log from './log';
 
 export async function getSchemesForIosAsync(projectRoot: string) {
   try {
-    const configPath = IOSConfig.Paths.getInfoPlistPath(projectRoot);
+    // Try to get the Info.plist that is associated with an xcodeproj file before using globs.
+    // This improves the accuracy in projects with multiple targets.
+    const configPath =
+      getInfoPlistPathFromPbxproj(projectRoot) ?? IOSConfig.Paths.getInfoPlistPath(projectRoot);
     const rawPlist = fs.readFileSync(configPath, 'utf8');
     const plistObject = plist.parse(rawPlist);
     return sortLongest(IOSConfig.Scheme.getSchemesFromPlist(plistObject));
