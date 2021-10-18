@@ -513,7 +513,14 @@ export default class PackagerLogsStream {
       message += `\n${snippet}`;
     }
 
-    if (error.stack) {
+    // Import errors are already pretty useful and don't need extra info added to them.
+    const isAmbiguousError = !error.name || ['SyntaxError'].includes(error.name);
+    // When you have a basic syntax error in application code it will tell you the file
+    // and usually also provide a well informed error.
+    const isComprehensiveTransformError = error.type === 'TransformError' && error.filename;
+
+    // console.log(require('util').inspect(error, { depth: 4 }));
+    if (error.stack && isAmbiguousError && !isComprehensiveTransformError) {
       message += `\n${chalk.gray(error.stack)}`;
     }
     return message;
