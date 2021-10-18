@@ -86,6 +86,7 @@ const printUsageAsync = async (
     !!options.isRemoteReloadingEnabled && { key: 'r', msg: `reload app` },
     !!options.isWebSocketsEnabled && { key: 'm', msg: `toggle menu` },
     !!options.isWebSocketsEnabled && { key: 'shift+m', msg: `more tools` },
+    !!options.isWebSocketsEnabled && { key: 'j', msg: `open javascript inspector` },
     { key: 'o', msg: `open project code in your editor` },
     { key: 'c', msg: `show project QR` },
     { key: 'p', msg: `toggle build mode`, status: devMode },
@@ -413,6 +414,10 @@ export async function startAsync(projectRoot: string, options: StartOptions) {
         logCommandsTable([{ key: 'd', msg: `show developer tools now` }]);
         break;
       }
+      case 'j': {
+        await openJsInsectorAsync(projectRoot);
+        break;
+      }
       case 'm': {
         if (options.isWebSocketsEnabled) {
           Log.log(`${BLT} Toggling dev menu`);
@@ -436,13 +441,8 @@ export async function startAsync(projectRoot: string, options: StartOptions) {
                 // TODO: Maybe a "View Source" option to open code.
                 // Toggling Remote JS Debugging is pretty rough, so leaving it disabled.
                 // { title: 'Toggle Remote Debugging', value: 'toggleRemoteDebugging' },
-                { title: 'Open in-device JavaScript inspector', value: 'openJsInspector' },
               ],
             });
-            if (value === 'openJsInspector') {
-              await openJsInsectorAsync(projectRoot);
-              return;
-            }
             Project.broadcastMessage('sendDevCommand', { name: value });
             Webpack.broadcastMessage('sendDevCommand', { name: value });
           } catch {
