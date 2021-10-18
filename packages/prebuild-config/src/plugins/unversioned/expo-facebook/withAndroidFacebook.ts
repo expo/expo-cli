@@ -1,17 +1,19 @@
+import {
+  AndroidConfig,
+  ConfigPlugin,
+  withAndroidManifest,
+  withStringsXml,
+} from '@expo/config-plugins';
 import { ExpoConfig } from '@expo/config-types';
 
-import { createAndroidManifestPlugin, createStringsXmlPlugin } from '../plugins/android-plugins';
-import {
+const { buildResourceItem } = AndroidConfig.Resources;
+const { removeStringItem, setStringItem } = AndroidConfig.Strings;
+const {
   addMetaDataItemToMainApplication,
-  AndroidManifest,
   getMainApplicationOrThrow,
-  ManifestActivity,
-  ManifestApplication,
   prefixAndroidKeys,
   removeMetaDataItemFromMainApplication,
-} from './Manifest';
-import { buildResourceItem, ResourceXML } from './Resources';
-import { removeStringItem, setStringItem } from './Strings';
+} = AndroidConfig.Manifest;
 
 const CUSTOM_TAB_ACTIVITY = 'com.facebook.CustomTabActivity';
 const STRING_FACEBOOK_APP_ID = 'facebook_app_id';
@@ -21,14 +23,19 @@ const META_AUTO_INIT = 'com.facebook.sdk.AutoInitEnabled';
 const META_AUTO_LOG_APP_EVENTS = 'com.facebook.sdk.AutoLogAppEventsEnabled';
 const META_AD_ID_COLLECTION = 'com.facebook.sdk.AdvertiserIDCollectionEnabled';
 
-export const withFacebookAppIdString = createStringsXmlPlugin(
-  applyFacebookAppIdString,
-  'withFacebookAppIdString'
-);
-export const withFacebookManifest = createAndroidManifestPlugin(
-  setFacebookConfig,
-  'withFacebookManifest'
-);
+export const withFacebookAppIdString: ConfigPlugin = config => {
+  return withStringsXml(config, config => {
+    config.modResults = applyFacebookAppIdString(config, config.modResults);
+    return config;
+  });
+};
+
+export const withFacebookManifest: ConfigPlugin = config => {
+  return withAndroidManifest(config, config => {
+    config.modResults = setFacebookConfig(config, config.modResults);
+    return config;
+  });
+};
 
 function buildXMLItem({
   head,
@@ -48,17 +55,17 @@ function buildAndroidItem(datum: string | Record<string, any>) {
 
 function getFacebookSchemeActivity(scheme: string) {
   /**
- <activity
-    android:name="com.facebook.CustomTabActivity"
-    android:exported="true">
-    <intent-filter>
-        <action android:name="android.intent.action.VIEW" />
-        <category android:name="android.intent.category.DEFAULT" />
-        <category android:name="android.intent.category.BROWSABLE" />
-        <data android:scheme="${scheme}" />
-    </intent-filter>
-</activity>
-   */
+   <activity
+      android:name="com.facebook.CustomTabActivity"
+      android:exported="true">
+      <intent-filter>
+          <action android:name="android.intent.action.VIEW" />
+          <category android:name="android.intent.category.DEFAULT" />
+          <category android:name="android.intent.category.BROWSABLE" />
+          <data android:scheme="${scheme}" />
+      </intent-filter>
+  </activity>
+     */
   return buildXMLItem({
     head: prefixAndroidKeys({
       name: CUSTOM_TAB_ACTIVITY,
@@ -76,7 +83,7 @@ function getFacebookSchemeActivity(scheme: string) {
         },
       ],
     },
-  }) as ManifestActivity;
+  }) as AndroidConfig.Manifest.ManifestActivity;
 }
 
 type ExpoConfigFacebook = Pick<
@@ -116,7 +123,7 @@ function ensureFacebookActivity({
   mainApplication,
   scheme,
 }: {
-  mainApplication: ManifestApplication;
+  mainApplication: AndroidConfig.Manifest.ManifestApplication;
   scheme: string | null;
 }) {
   if (Array.isArray(mainApplication.activity)) {
@@ -135,7 +142,10 @@ function ensureFacebookActivity({
   return mainApplication;
 }
 
-function applyFacebookAppIdString(config: ExpoConfigFacebook, stringsJSON: ResourceXML) {
+function applyFacebookAppIdString(
+  config: ExpoConfigFacebook,
+  stringsJSON: AndroidConfig.Resources.ResourceXML
+) {
   const appId = getFacebookAppId(config);
 
   if (appId) {
@@ -147,7 +157,10 @@ function applyFacebookAppIdString(config: ExpoConfigFacebook, stringsJSON: Resou
   return removeStringItem(STRING_FACEBOOK_APP_ID, stringsJSON);
 }
 
-export function setFacebookConfig(config: ExpoConfigFacebook, androidManifest: AndroidManifest) {
+export function setFacebookConfig(
+  config: ExpoConfigFacebook,
+  androidManifest: AndroidConfig.Manifest.AndroidManifest
+) {
   const scheme = getFacebookScheme(config);
 
   const appId = getFacebookAppId(config);
@@ -156,6 +169,7 @@ export function setFacebookConfig(config: ExpoConfigFacebook, androidManifest: A
   const autoLogAppEvents = getFacebookAutoLogAppEvents(config);
   const advertiserIdCollection = getFacebookAdvertiserIDCollection(config);
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   let mainApplication = getMainApplicationOrThrow(androidManifest);
 
   mainApplication = ensureFacebookActivity({ scheme, mainApplication });
@@ -164,7 +178,6 @@ export function setFacebookConfig(config: ExpoConfigFacebook, androidManifest: A
     mainApplication = addMetaDataItemToMainApplication(
       mainApplication,
       META_APP_ID,
-      // The corresponding string is set in applyFacebookAppIdString
       `@string/${STRING_FACEBOOK_APP_ID}`
     );
   } else {
@@ -197,14 +210,13 @@ export function setFacebookConfig(config: ExpoConfigFacebook, androidManifest: A
     );
   }
   if (advertiserIdCollection !== null) {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     mainApplication = addMetaDataItemToMainApplication(
       mainApplication,
       META_AD_ID_COLLECTION,
       advertiserIdCollection ? 'true' : 'false'
     );
   } else {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    // eslint-disable-next-line
     mainApplication = removeMetaDataItemFromMainApplication(mainApplication, META_AD_ID_COLLECTION);
   }
 
