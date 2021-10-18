@@ -24,7 +24,8 @@ const withAndroidModulesSettingGradle: ConfigPlugin = config => {
           'useExpoModules()',
         ]
       : [
-          'apply(from: new File(["node", "--print", "require.resolve(\'expo/package.json\')"].execute().text.trim(), "../scripts/autolinking.gradle"))',
+          'val pathExpoPackageJson = org.codehaus.groovy.runtime.ProcessGroovyMethods.getText(org.codehaus.groovy.runtime.ProcessGroovyMethods.execute("node --print require.resolve(\'expo/package.json\')"))',
+          'apply(from = File(pathExpoPackageJson.trim(), "../scripts/autolinking.gradle"))',
           'val useExpoModules = extra["useExpoModules"] as groovy.lang.Closure<Any>',
           'useExpoModules()',
         ];
