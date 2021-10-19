@@ -34,7 +34,7 @@ export async function getPrebuildConfigAsync(
     platforms: ModPlatform[];
     expoUsername?: string | ((config: ExpoConfig) => string | null);
   }
-) {
+): Promise<ReturnType<typeof getConfig>> {
   return getPrebuildConfig(projectRoot, {
     ...props,
     autolinking: await getAutolinkedPackagesAsync(projectRoot),
