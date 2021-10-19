@@ -1,5 +1,10 @@
 import { ExpoConfig, getConfig, ProjectTarget } from '@expo/config';
-import { MessageSocket, MetroDevServerOptions, runMetroDevServerAsync } from '@expo/dev-server';
+import {
+  MessageSocket,
+  MetroDevServerOptions,
+  prependMiddleware,
+  runMetroDevServerAsync,
+} from '@expo/dev-server';
 import http from 'http';
 
 import {
@@ -70,19 +75,18 @@ export async function startDevServerAsync(
     startOptions.forceManifestType === 'expo-updates' ||
     (startOptions.forceManifestType !== 'classic' && easProjectId);
 
-  if (useExpoUpdatesManifest) {
-    middleware.use(ExpoUpdatesManifestHandler.getManifestHandler(projectRoot));
-  } else {
-    middleware.use(ManifestHandler.getManifestHandler(projectRoot));
-  }
-
   // We need the manifest handler to be the first middleware to run so our
   // routes take precedence over static files. For example, the manifest is
   // served from '/' and if the user has an index.html file in their project
   // then the manifest handler will never run, the static middleware will run
   // and serve index.html instead of the manifest.
   // https://github.com/expo/expo/issues/13114
-  middleware.stack.unshift(middleware.stack.pop());
+  prependMiddleware(
+    middleware,
+    useExpoUpdatesManifest
+      ? ExpoUpdatesManifestHandler.getManifestHandler(projectRoot)
+      : ManifestHandler.getManifestHandler(projectRoot)
+  );
 
   return [server, middleware, messageSocket];
 }
