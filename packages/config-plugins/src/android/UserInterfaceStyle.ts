@@ -4,6 +4,7 @@ import { ConfigPlugin } from '../Plugin.types';
 import { createAndroidManifestPlugin, withMainActivity } from '../plugins/android-plugins';
 import { addWarningAndroid } from '../utils/warnings';
 import { AndroidManifest, getMainActivityOrThrow } from './Manifest';
+import { addImports } from './codeMod';
 
 export const CONFIG_CHANGES_ATTRIBUTE = 'android:configChanges';
 
@@ -79,7 +80,7 @@ export function addOnConfigurationChangedMainActivity(
     return mainActivity;
   }
 
-  const MainActivityWithImports = addJavaImports(
+  const MainActivityWithImports = addImports(
     mainActivity,
     ['android.content.Intent', 'android.content.res.Configuration'],
     true
@@ -87,17 +88,4 @@ export function addOnConfigurationChangedMainActivity(
 
   const pattern = new RegExp(`public class MainActivity extends ReactActivity {`);
   return MainActivityWithImports.replace(pattern, ON_CONFIGURATION_CHANGED);
-}
-
-// TODO: we should have a generic utility for doing this
-export function addJavaImports(javaSource: string, javaImports: string[], isJava: boolean): string {
-  const lines = javaSource.split('\n');
-  const lineIndexWithPackageDeclaration = lines.findIndex(line => line.match(/^package .*;?$/));
-  for (const javaImport of javaImports) {
-    if (!javaSource.includes(javaImport)) {
-      const importStatement = `import ${javaImport}${isJava ? ';' : ''}`;
-      lines.splice(lineIndexWithPackageDeclaration + 1, 0, importStatement);
-    }
-  }
-  return lines.join('\n');
 }

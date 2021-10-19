@@ -1,4 +1,5 @@
-import { AndroidConfig, ConfigPlugin, withMainActivity } from '@expo/config-plugins';
+import { ConfigPlugin, withMainActivity } from '@expo/config-plugins';
+import { addImports } from '@expo/config-plugins/build/android/codeMod';
 import { mergeContents, removeContents } from '@expo/config-plugins/build/utils/generateCode';
 import { ExpoConfig } from '@expo/config-types';
 import Debug from 'debug';
@@ -49,7 +50,7 @@ export function setSplashScreenLegacyMainActivity(
   const isJava = language === 'java';
   const LE = isJava ? ';' : '';
 
-  mainActivity = AndroidConfig.UserInterfaceStyle.addJavaImports(
+  mainActivity = addImports(
     mainActivity,
     [
       'expo.modules.splashscreen.SplashScreen',
