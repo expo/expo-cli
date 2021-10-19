@@ -38,7 +38,6 @@
     "chalk": "^4.1.0",
     "debug": "^4.3.2",
     "getenv": "^1.0.0",
-    "metro-react-native-babel-transformer": "^0.59.0",
     "sucrase": "^3.20.0"
   },
   "devDependencies": {
