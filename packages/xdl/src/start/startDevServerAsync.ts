@@ -70,7 +70,7 @@ export async function startDevServerAsync(
   // TODO: reduce getConfig calls
   const projectConfig = getConfig(projectRoot, { skipSDKVersionRequirement: true });
 
-  const easProjectId = projectConfig.exp.extra?.eas.projectId;
+  const easProjectId = projectConfig.exp.extra?.eas?.projectId;
   const useExpoUpdatesManifest =
     startOptions.forceManifestType === 'expo-updates' ||
     (startOptions.forceManifestType !== 'classic' && easProjectId);
