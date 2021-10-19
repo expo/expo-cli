@@ -19,6 +19,7 @@ import { loginOrRegisterIfLoggedOutAsync } from '../../accounts';
 import Log from '../../log';
 import { selectAsync } from '../../prompts';
 import urlOpts from '../../urlOpts';
+import { learnMore } from '../utils/TerminalLink';
 import { openInEditorAsync } from '../utils/openInEditorAsync';
 
 const CTRL_C = '\u0003';
@@ -86,7 +87,7 @@ const printUsageAsync = async (
     !!options.isRemoteReloadingEnabled && { key: 'r', msg: `reload app` },
     !!options.isWebSocketsEnabled && { key: 'm', msg: `toggle menu` },
     !!options.isWebSocketsEnabled && { key: 'shift+m', msg: `more tools` },
-    !!options.isWebSocketsEnabled && { key: 'j', msg: `open javascript inspector` },
+    !!options.isWebSocketsEnabled && { key: 'j', msg: `open Hermes JavaScript inspector` },
     { key: 'o', msg: `open project code in your editor` },
     { key: 'c', msg: `show project QR` },
     { key: 'p', msg: `toggle build mode`, status: devMode },
@@ -221,7 +222,9 @@ async function openJsInsectorAsync(projectRoot: string) {
   const apps = await queryAllInspectorAppsAsync(metroServerOrigin);
   if (apps.length === 0) {
     Log.warn(
-      'No compatible apps connected. This feature is only available for apps using the Hermes runtime.'
+      `No compatible apps connected. This feature is only available for apps using the Hermes runtime. ${learnMore(
+        'https://docs.expo.dev/guides/using-hermes/'
+      )}`
     );
     return;
   }
