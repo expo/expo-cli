@@ -221,7 +221,7 @@ async function openJsInsectorAsync(projectRoot: string) {
   const apps = await queryAllInspectorAppsAsync(metroServerOrigin);
   if (apps.length === 0) {
     Log.warn(
-      'No apps connected. The feature is only avaiable for apps running with Hermes runtime.'
+      'No compatible apps connected. This feature is only available for apps using the Hermes runtime.'
     );
     return;
   }
