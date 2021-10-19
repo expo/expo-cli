@@ -204,7 +204,6 @@ Object {
         },
       },
       "NSLocationWhenInUseUsageDescription": "",
-      "NSUserTrackingUsageDescription": "This identifier will be used to deliver personalized ads to you.",
       "RCTRootViewBackgroundColor": 4294901760,
       "SKAdNetworkItems": Array [
         Object {
@@ -940,7 +939,6 @@ Object {
             },
           },
           "NSLocationWhenInUseUsageDescription": "",
-          "NSUserTrackingUsageDescription": "This identifier will be used to deliver personalized ads to you.",
           "RCTRootViewBackgroundColor": 4294901760,
           "SKAdNetworkItems": Array [
             Object {
@@ -1177,7 +1175,6 @@ Object {
         },
       },
       "NSLocationWhenInUseUsageDescription": "",
-      "NSUserTrackingUsageDescription": "This identifier will be used to deliver personalized ads to you.",
       "RCTRootViewBackgroundColor": 4294901760,
       "SKAdNetworkItems": Array [
         Object {
@@ -1825,7 +1822,6 @@ Object {
               },
             },
           },
-          "NSUserTrackingUsageDescription": "This identifier will be used to deliver personalized ads to you.",
           "RCTRootViewBackgroundColor": 4294901760,
           "SKAdNetworkItems": Array [
             Object {
@@ -2062,7 +2058,6 @@ Object {
           },
         },
       },
-      "NSUserTrackingUsageDescription": "This identifier will be used to deliver personalized ads to you.",
       "RCTRootViewBackgroundColor": 4294901760,
       "SKAdNetworkItems": Array [
         Object {
