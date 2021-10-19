@@ -31,6 +31,7 @@ export const createExpoMatcher = ({ folders }: { folders?: string[] }) =>
   });
 
 // TODO: Make this list as short as possible before releasing.
+// TODO: Add SDK version compat list.
 export const createKnownCommunityMatcher = ({
   folders,
   moduleIds = [],
@@ -45,6 +46,8 @@ export const createKnownCommunityMatcher = ({
       // The more complex, the longer the entire project takes...
       // react-native-community, react-native-masked-view, react-native-picker, react-native-segmented-control, react-native
       '@react-',
+      // @sentry/react-native
+      '@(?:[\\w|-]+)/react-native',
       'react-native-',
       'victory-',
       'native-base',

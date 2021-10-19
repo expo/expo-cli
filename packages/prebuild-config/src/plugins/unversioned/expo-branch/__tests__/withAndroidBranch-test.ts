@@ -1,10 +1,15 @@
+import { AndroidConfig } from '@expo/config-plugins';
 import { resolve } from 'path';
 
-import { getBranchApiKey, setBranchApiKey } from '../Branch';
-import { findMetaDataItem, getMainApplication, readAndroidManifestAsync } from '../Manifest';
+import { getBranchApiKey, setBranchApiKey } from '../withAndroidBranch';
 
-const fixturesPath = resolve(__dirname, 'fixtures');
-const sampleManifestPath = resolve(fixturesPath, 'react-native-AndroidManifest.xml');
+const { findMetaDataItem, getMainApplication, readAndroidManifestAsync } = AndroidConfig.Manifest;
+
+const sampleManifestPath = resolve(
+  __dirname,
+  '../../../__tests__/fixtures',
+  'react-native-AndroidManifest.xml'
+);
 
 describe('Android branch test', () => {
   it(`returns null if no android branch api key is provided`, () => {

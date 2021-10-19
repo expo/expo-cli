@@ -1,8 +1,6 @@
 import * as AllowBackup from './AllowBackup';
-import * as Branch from './Branch';
 import * as Colors from './Colors';
 import * as EasBuild from './EasBuild';
-import * as Facebook from './Facebook';
 import * as GoogleMapsApiKey from './GoogleMapsApiKey';
 import * as GoogleServices from './GoogleServices';
 import * as IntentFilters from './IntentFilters';
@@ -26,29 +24,20 @@ import * as UserInterfaceStyle from './UserInterfaceStyle';
 import * as Version from './Version';
 import * as WindowSoftInputMode from './WindowSoftInputMode';
 
+export { Manifest, Colors, Paths, Permissions, Properties, Resources, Scheme, Strings, Styles };
+
 export {
   AllowBackup,
   EasBuild,
-  Manifest,
-  Branch,
-  Colors,
-  Facebook,
   GoogleMapsApiKey,
   GoogleServices,
   IntentFilters,
   Name,
   Orientation,
   Package,
-  Paths,
-  Permissions,
   PrimaryColor,
-  Properties,
-  Resources,
   RootViewBackgroundColor,
-  Scheme,
   StatusBar,
-  Strings,
-  Styles,
   Updates,
   UserInterfaceStyle,
   Version,

@@ -9,7 +9,7 @@ import {
   setFacebookAppId,
   setFacebookAutoInitEnabled,
   setFacebookConfig,
-} from '../Facebook';
+} from '../withIosFacebook';
 
 describe('ios facebook config', () => {
   it(`returns null from all getters if no value provided`, () => {

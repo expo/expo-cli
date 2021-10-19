@@ -1,3 +1,4 @@
+import { AndroidConfig } from '@expo/config-plugins';
 import { resolve } from 'path';
 import { Parser } from 'xml2js';
 
@@ -9,16 +10,29 @@ import {
   getFacebookDisplayName,
   getFacebookScheme,
   setFacebookConfig,
-} from '../Facebook';
-import { getMainApplication, readAndroidManifestAsync } from '../Manifest';
+} from '../withAndroidFacebook';
 
-const fixturesPath = resolve(__dirname, 'fixtures');
-const sampleManifestPath = resolve(fixturesPath, 'react-native-AndroidManifest.xml');
+const { getMainApplication, readAndroidManifestAsync } = AndroidConfig.Manifest;
+
+const sampleManifestPath = resolve(
+  __dirname,
+  '../../../__tests__/fixtures',
+  'react-native-AndroidManifest.xml'
+);
 
 const filledManifest = `<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.expo.mycoolapp">
 
     <uses-permission android:name="android.permission.INTERNET" />
 
+    <queries>
+      <!-- Support checking for http(s) links via the Linking API -->
+      <intent>
+        <action android:name="android.intent.action.VIEW" />
+        <category android:name="android.intent.category.BROWSABLE" />
+        <data android:scheme="https" />
+      </intent>
+    </queries>
+    
     <application
       android:name=".MainApplication"
       android:label="@string/app_name"

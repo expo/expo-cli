@@ -419,7 +419,8 @@ export default class PackagerLogsStream {
         percentProgress = (msg.transformedFileCount / msg.totalFileCount) * 100;
         // percentProgress = Math.floor((msg.transformedFileCount / msg.totalFileCount) * 100);
       }
-      progressChunk.msg = `Building JavaScript bundle: ${percentProgress}%`;
+      const roundedPercentProgress = Math.floor(100 * percentProgress) / 100;
+      progressChunk.msg = `Building JavaScript bundle: ${roundedPercentProgress}%`;
     } else {
       return;
     }
