@@ -9,17 +9,51 @@ import {
   withVersionedExpoSDKPlugins,
 } from './plugins/withDefaultPlugins';
 
+export async function getAutolinkedPackagesAsync(projectRoot: string) {
+  const searchPaths = await require('expo-modules-autolinking/build/autolinking').resolveSearchPathsAsync(
+    null,
+    projectRoot
+  );
+
+  const [ios, android] = await Promise.all(
+    ['ios', 'android'].map(platform =>
+      require('expo-modules-autolinking/build/autolinking').findModulesAsync({
+        platform,
+        searchPaths,
+      })
+    )
+  );
+  return [...new Set(Object.keys(ios).concat(Object.keys(android)))];
+}
+
+export async function getPrebuildConfigAsync(
+  projectRoot: string,
+  props: {
+    bundleIdentifier?: string;
+    packageName?: string;
+    platforms: ModPlatform[];
+    expoUsername?: string | ((config: ExpoConfig) => string | null);
+  }
+) {
+  return getPrebuildConfig(projectRoot, {
+    ...props,
+    autolinking: await getAutolinkedPackagesAsync(projectRoot),
+  });
+}
+
 export function getPrebuildConfig(
   projectRoot: string,
   {
     platforms,
     bundleIdentifier,
     packageName,
+    autolinking,
     expoUsername,
   }: {
     bundleIdentifier?: string;
     packageName?: string;
     platforms: ModPlatform[];
+    autolinking?: string[];
     expoUsername?: string | ((config: ExpoConfig) => string | null);
   }
 ) {
@@ -28,6 +62,11 @@ export function getPrebuildConfig(
     skipSDKVersionRequirement: true,
     isModdedConfig: true,
   });
+
+  if (autolinking) {
+    if (!config._internal) config._internal = {};
+    config._internal.autolinking = autolinking;
+  }
 
   const resolvedExpoUsername =
     typeof expoUsername === 'function'

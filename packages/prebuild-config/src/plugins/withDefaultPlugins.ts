@@ -10,6 +10,7 @@ import {
   withStaticPlugin,
 } from '@expo/config-plugins';
 import { ExpoConfig } from '@expo/config-types';
+import Debug from 'debug';
 
 import { withAndroidIcons } from './icons/withAndroidIcons';
 import { withIosIcons } from './icons/withIosIcons';
@@ -23,6 +24,8 @@ import withNotifications from './unversioned/expo-notifications/expo-notificatio
 import withSplashScreen from './unversioned/expo-splash-screen/expo-splash-screen';
 import withUpdates from './unversioned/expo-updates';
 import withMaps from './unversioned/react-native-maps';
+
+const debug = Debug('expo:prebuild-config');
 
 /**
  * Config plugin to apply all of the custom Expo iOS config plugins we support by default.
@@ -114,7 +117,7 @@ export const withAndroidExpoPlugins: ConfigPlugin<{
     AndroidConfig.StatusBar.withStatusBar,
     AndroidConfig.PrimaryColor.withPrimaryColor,
 
-    c => withAndroidIcons(c),
+    withAndroidIcons,
     // If we renamed the package, we should also move it around and rename it in source files
     // Added last to ensure this plugin runs first. Out of tree solutions will mistakenly resolve the package incorrectly otherwise.
     AndroidConfig.Package.withPackageRefactor,
@@ -194,8 +197,26 @@ const expoManagedVersionedPlugins = [
   'expo-google-sign-in',
 ];
 
+function shouldSkipAutoPlugin(config: ExpoConfig, plugin: StaticPlugin | string) {
+  if (Array.isArray(config._internal?.autolinking)) {
+    const pluginId = Array.isArray(plugin) ? plugin[0] : plugin;
+    if (typeof pluginId === 'string') {
+      const isIncluded = config._internal!.autolinking.includes(plugin);
+      if (!isIncluded) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 const withOptionalLegacyPlugins: ConfigPlugin<(StaticPlugin | string)[]> = (config, plugins) => {
   return plugins.reduce((prev, plugin) => {
+    if (shouldSkipAutoPlugin(config, plugin)) {
+      debug('Skipping unlinked auto plugin:', plugin);
+      return prev;
+    }
+
     return withStaticPlugin(prev, {
       // hide errors
       _isLegacyPlugin: true,

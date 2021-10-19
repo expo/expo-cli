@@ -16,11 +16,15 @@ const withGoogleMapsKey = createInfoPlistPlugin(setGoogleMapsApiKey, 'withGoogle
 export const withMaps: ConfigPlugin = config => {
   config = withGoogleMapsKey(config);
 
-  const apiKey = getGoogleMapsApiKey(config);
-  // Technically adds react-native-maps (Apple maps) and google maps.
-  config = withMapsCocoaPods(config, { useGoogleMaps: !!apiKey });
-  // Adds/Removes AppDelegate setup for Google Maps API on iOS
-  config = withGoogleMapsAppDelegate(config, { apiKey });
+  const isLinked =
+    !config._internal?.autolinking || config._internal.autolinking.includes('react-native-maps');
+  if (isLinked) {
+    const apiKey = getGoogleMapsApiKey(config);
+    // Technically adds react-native-maps (Apple maps) and google maps.
+    config = withMapsCocoaPods(config, { useGoogleMaps: !!apiKey });
+    // Adds/Removes AppDelegate setup for Google Maps API on iOS
+    config = withGoogleMapsAppDelegate(config, { apiKey });
+  }
 
   return config;
 };

@@ -1,4 +1,4 @@
 /* eslint-disable import/export */
 
-export { getPrebuildConfig } from './getPrebuildConfig';
+export { getPrebuildConfig, getPrebuildConfigAsync } from './getPrebuildConfig';
 export * from './plugins/withDefaultPlugins';
