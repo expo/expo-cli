@@ -12,6 +12,18 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+## [Tue, 19 Oct 2021 16:13:11 -0700](https://github.com/expo/expo-cli/commit/159c7fc92ed430962a5a799b23743196867449ac)
+
+### 🐛 Bug fixes
+
+- [cli] Fix reading EAS project ID from app.json during start ([#3929](https://github.com/expo/expo-cli/issues/3929))
+
+### 📦 Packages updated
+
+- @expo/dev-tools@0.13.121
+- expo-cli@4.12.5
+- xdl@59.2.5
+
 ## [Tue, 19 Oct 2021 12:55:08 -0700](https://github.com/expo/expo-cli/commit/93426f59c26c89e22f88420aed14c89cde6807d3)
 
 ### 🛠 Breaking changes
