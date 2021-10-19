@@ -87,7 +87,7 @@ const printUsageAsync = async (
     !!options.isRemoteReloadingEnabled && { key: 'r', msg: `reload app` },
     !!options.isWebSocketsEnabled && { key: 'm', msg: `toggle menu` },
     !!options.isWebSocketsEnabled && { key: 'shift+m', msg: `more tools` },
-    !!options.isWebSocketsEnabled && { key: 'j', msg: `open Hermes JavaScript inspector` },
+    !!options.isWebSocketsEnabled && { key: 'j', msg: `open JavaScript inspector for Hermes` },
     { key: 'o', msg: `open project code in your editor` },
     { key: 'c', msg: `show project QR` },
     { key: 'p', msg: `toggle build mode`, status: devMode },
