@@ -50,7 +50,7 @@ async function runAsync(programName: string) {
   const sdkVersion = getSdkVersion();
 
   const iosDeploymentTarget = getIosDeploymentTarget(sdkVersion);
-  const deploymentTargetMessage = `expo-modules' minimal iOS requirement are ${iosDeploymentTarget}. This tool will change your iOS deployment target to ${iosDeploymentTarget}.`;
+  const deploymentTargetMessage = `Expo modules minimum iOS requirement is ${iosDeploymentTarget}. This tool will change your iOS deployment target to ${iosDeploymentTarget}.`;
   if (program.nonInteractive) {
     console.log(chalk.yellow(`⚠️  ${deploymentTargetMessage}`));
   } else {
