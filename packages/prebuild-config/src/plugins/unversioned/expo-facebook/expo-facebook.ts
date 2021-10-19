@@ -1,6 +1,6 @@
 import { createLegacyPlugin } from '../createLegacyPlugin';
 import { withFacebookAppIdString, withFacebookManifest } from './withAndroidFacebook';
-import { withIosFacebook, withUserTrackingPermission } from './withIosFacebook';
+import { withIosFacebook } from './withIosFacebook';
 import { withSKAdNetworkIdentifiers } from './withSKAdNetworkIdentifiers';
 
 export default createLegacyPlugin({
@@ -11,7 +11,6 @@ export default createLegacyPlugin({
     withFacebookManifest,
     // iOS
     withIosFacebook,
-    withUserTrackingPermission,
     [
       withSKAdNetworkIdentifiers,
       // https://developers.facebook.com/docs/SKAdNetwork

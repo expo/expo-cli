@@ -15,8 +15,6 @@ type ExpoConfigFacebook = Pick<
 
 const fbSchemes = ['fbapi', 'fb-messenger-api', 'fbauth2', 'fbshareextension'];
 
-const USER_TRACKING = 'This identifier will be used to deliver personalized ads to you.';
-
 export const withIosFacebook: ConfigPlugin = config => {
   return withInfoPlist(config, config => {
     config.modResults = setFacebookConfig(config, config.modResults);
@@ -201,17 +199,3 @@ export function setFacebookApplicationQuerySchemes(
     LSApplicationQueriesSchemes: updatedSchemes,
   };
 }
-
-export const withUserTrackingPermission: ConfigPlugin<{
-  userTrackingPermission?: string | false;
-} | void> = (config, { userTrackingPermission } = {}) => {
-  if (userTrackingPermission === false) {
-    return config;
-  }
-  if (!config.ios) config.ios = {};
-  if (!config.ios.infoPlist) config.ios.infoPlist = {};
-  config.ios.infoPlist.NSUserTrackingUsageDescription =
-    userTrackingPermission || config.ios.infoPlist.NSUserTrackingUsageDescription || USER_TRACKING;
-
-  return config;
-};
