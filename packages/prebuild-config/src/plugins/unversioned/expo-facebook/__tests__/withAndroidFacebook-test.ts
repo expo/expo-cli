@@ -24,6 +24,15 @@ const filledManifest = `<manifest xmlns:android="http://schemas.android.com/apk/
 
     <uses-permission android:name="android.permission.INTERNET" />
 
+    <queries>
+      <!-- Support checking for http(s) links via the Linking API -->
+      <intent>
+        <action android:name="android.intent.action.VIEW" />
+        <category android:name="android.intent.category.BROWSABLE" />
+        <data android:scheme="https" />
+      </intent>
+    </queries>
+    
     <application
       android:name=".MainApplication"
       android:label="@string/app_name"
