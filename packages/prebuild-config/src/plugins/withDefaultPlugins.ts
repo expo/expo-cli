@@ -18,7 +18,7 @@ import withAppleAuthentication from './unversioned/expo-apple-authentication';
 import withBranch from './unversioned/expo-branch/expo-branch';
 import withContacts from './unversioned/expo-contacts';
 import withDocumentPicker from './unversioned/expo-document-picker';
-import withFacebook from './unversioned/expo-facebook';
+import withFacebook from './unversioned/expo-facebook/expo-facebook';
 import withNotifications from './unversioned/expo-notifications/expo-notifications';
 import withSplashScreen from './unversioned/expo-splash-screen/expo-splash-screen';
 import withUpdates from './unversioned/expo-updates';

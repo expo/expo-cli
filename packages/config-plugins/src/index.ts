@@ -9,6 +9,8 @@ import { getIosModFileProviders, withIosBaseMods } from './plugins/withIosBaseMo
 import * as XML from './utils/XML';
 import * as History from './utils/history';
 import * as WarningAggregator from './utils/warnings';
+
+// TODO: Remove
 export * as Updates from './utils/Updates';
 
 export { IOSConfig, AndroidConfig };

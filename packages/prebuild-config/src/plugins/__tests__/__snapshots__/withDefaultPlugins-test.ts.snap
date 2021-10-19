@@ -204,7 +204,16 @@ Object {
         },
       },
       "NSLocationWhenInUseUsageDescription": "",
+      "NSUserTrackingUsageDescription": "This identifier will be used to deliver personalized ads to you.",
       "RCTRootViewBackgroundColor": 4294901760,
+      "SKAdNetworkItems": Array [
+        Object {
+          "SKAdNetworkIdentifier": "v9wttpbfk9.skadnetwork",
+        },
+        Object {
+          "SKAdNetworkIdentifier": "n38lu8286q.skadnetwork",
+        },
+      ],
       "UILaunchStoryboardName": "SplashScreen",
       "UIRequiredDeviceCapabilities": Array [
         "armv7",
@@ -931,7 +940,16 @@ Object {
             },
           },
           "NSLocationWhenInUseUsageDescription": "",
+          "NSUserTrackingUsageDescription": "This identifier will be used to deliver personalized ads to you.",
           "RCTRootViewBackgroundColor": 4294901760,
+          "SKAdNetworkItems": Array [
+            Object {
+              "SKAdNetworkIdentifier": "v9wttpbfk9.skadnetwork",
+            },
+            Object {
+              "SKAdNetworkIdentifier": "n38lu8286q.skadnetwork",
+            },
+          ],
           "UILaunchStoryboardName": "SplashScreen",
           "UIRequiredDeviceCapabilities": Array [
             "armv7",
@@ -1159,7 +1177,16 @@ Object {
         },
       },
       "NSLocationWhenInUseUsageDescription": "",
+      "NSUserTrackingUsageDescription": "This identifier will be used to deliver personalized ads to you.",
       "RCTRootViewBackgroundColor": 4294901760,
+      "SKAdNetworkItems": Array [
+        Object {
+          "SKAdNetworkIdentifier": "v9wttpbfk9.skadnetwork",
+        },
+        Object {
+          "SKAdNetworkIdentifier": "n38lu8286q.skadnetwork",
+        },
+      ],
       "UILaunchStoryboardName": "SplashScreen",
       "UIRequiredDeviceCapabilities": Array [
         "armv7",
@@ -1798,7 +1825,16 @@ Object {
               },
             },
           },
+          "NSUserTrackingUsageDescription": "This identifier will be used to deliver personalized ads to you.",
           "RCTRootViewBackgroundColor": 4294901760,
+          "SKAdNetworkItems": Array [
+            Object {
+              "SKAdNetworkIdentifier": "v9wttpbfk9.skadnetwork",
+            },
+            Object {
+              "SKAdNetworkIdentifier": "n38lu8286q.skadnetwork",
+            },
+          ],
           "UILaunchStoryboardName": "SplashScreen",
           "UIRequiredDeviceCapabilities": Array [
             "armv7",
@@ -2026,7 +2062,16 @@ Object {
           },
         },
       },
+      "NSUserTrackingUsageDescription": "This identifier will be used to deliver personalized ads to you.",
       "RCTRootViewBackgroundColor": 4294901760,
+      "SKAdNetworkItems": Array [
+        Object {
+          "SKAdNetworkIdentifier": "v9wttpbfk9.skadnetwork",
+        },
+        Object {
+          "SKAdNetworkIdentifier": "n38lu8286q.skadnetwork",
+        },
+      ],
       "UILaunchStoryboardName": "SplashScreen",
       "UIRequiredDeviceCapabilities": Array [
         "armv7",
