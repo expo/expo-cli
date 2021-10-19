@@ -1,5 +1,7 @@
 import { ConfigPlugin } from '@expo/config-plugins';
 
+import { getFacebookAppId } from './withIosFacebook';
+
 /**
  * Plugin to add [`SKAdNetworkIdentifier`](https://developer.apple.com/documentation/storekit/skadnetwork/configuring_the_participating_apps)s to the Info.plist safely.
  *
@@ -8,6 +10,12 @@ import { ConfigPlugin } from '@expo/config-plugins';
  * @param props.identifiers array of lowercase string ids to push to the `SKAdNetworkItems` array in the `Info.plist`.
  */
 export const withSKAdNetworkIdentifiers: ConfigPlugin<string[]> = (config, identifiers) => {
+  // Only add the iOS ad network values if facebookAppId is defined.
+  const facebookAppId = getFacebookAppId(config);
+  if (!facebookAppId) {
+    return config;
+  }
+
   if (!config.ios) {
     config.ios = {};
   }
