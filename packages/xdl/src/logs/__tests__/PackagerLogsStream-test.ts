@@ -1,3 +1,5 @@
+import stripAnsi from 'strip-ansi';
+
 import PackagerLogsStream from '../PackagerLogsStream';
 
 jest.mock('../../internal', () => {
@@ -85,15 +87,17 @@ describe(PackagerLogsStream, () => {
       type: 'TransformError',
     });
 
+    const msg = stripAnsi(streamer._logsToAdd[0].msg);
+
     expect(streamer._logsToAdd.length).toBe(1);
     // Since the message has formatting, use a snapshot to keep it in an expected format.
-    expect(streamer._logsToAdd[0].msg).toMatchSnapshot();
+    expect(msg).toMatchSnapshot();
     // Title is expected.
-    expect(streamer._logsToAdd[0].msg).toMatch(
-      /node_modules\/react-native\/Libraries\/NewAppScreen\/components\/logo.png: Cannot read property 'length' of undefined/
+    expect(msg).toMatch(
+      /node_modules\/react-native\/Libraries\/NewAppScreen\/components\/logo.png: Cannot read property 'length' of undefined/
     );
     // Stack trace is added.
-    expect(streamer._logsToAdd[0].msg).toMatch(
+    expect(msg).toMatch(
       /at applyAssetDataPlugins \(\/app\/node_modules\/metro\/src\/Assets\.js:182:25\)/
     );
   });
@@ -158,12 +162,12 @@ describe(PackagerLogsStream, () => {
       })
     );
 
+    const msg = stripAnsi(streamer._logsToAdd[0].msg);
+
     expect(streamer._logsToAdd.length).toBe(1);
     // Since the message has formatting, use a snapshot to keep it in an expected format.
-    expect(streamer._logsToAdd[0].msg).toMatchSnapshot();
+    expect(msg).toMatchSnapshot();
     // Title is expected.
-    expect(streamer._logsToAdd[0].msg).toMatch(
-      /SyntaxError: \/app\/App.js: Unexpected token \(5:0\)/
-    );
+    expect(msg).toMatch(/SyntaxError: \/app\/App.js: Unexpected token \(5:0\)/);
   });
 });

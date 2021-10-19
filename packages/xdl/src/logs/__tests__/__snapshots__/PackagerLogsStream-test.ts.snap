@@ -1,23 +1,23 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`PackagerLogsStream formats a Metro internal error 1`] = `
-"[31mnode_modules/react-native/Libraries/NewAppScreen/components/logo.png: Cannot read property 'length' of undefined[39m
-[90mTypeError: Cannot read property 'length' of undefined[39m
-[90m    at applyAssetDataPlugins (/app/node_modules/metro/src/Assets.js:182:25)[39m
-[90m    at getAssetData (/app/node_modules/metro/src/Assets.js:178:16)[39m
-[90m    at async Object.transform (/app/node_modules/metro-transform-worker/src/utils/assetTransformer.js:30:16)[39m
-[90m    at async transformAsset (/app/node_modules/metro-transform-worker/src/index.js:371:18)[39m
-[90m    at async Object.transform (/app/node_modules/metro-transform-worker/src/index.js:559:14)[39m"
+"node_modules/react-native/Libraries/NewAppScreen/components/logo.png: Cannot read property 'length' of undefined
+TypeError: Cannot read property 'length' of undefined
+    at applyAssetDataPlugins (/app/node_modules/metro/src/Assets.js:182:25)
+    at getAssetData (/app/node_modules/metro/src/Assets.js:178:16)
+    at async Object.transform (/app/node_modules/metro-transform-worker/src/utils/assetTransformer.js:30:16)
+    at async transformAsset (/app/node_modules/metro-transform-worker/src/index.js:371:18)
+    at async Object.transform (/app/node_modules/metro-transform-worker/src/index.js:559:14)"
 `;
 
 exports[`PackagerLogsStream formats an application code syntax error 1`] = `
-"[31mSyntaxError: /app/App.js: Unexpected token (5:0)[39m
-[31m[39m
-[31m[0m [90m 3 |[39m[31m [36mimport[39m[31m { [33mStyleSheet[39m[31m[33m,[39m[31m [33mText[39m[31m[33m,[39m[31m [33mView[39m[31m } [36mfrom[39m[31m [32m'react-native'[39m[31m[33m;[39m[31m[0m[39m
-[31m[0m [90m 4 |[39m[31m[0m[39m
-[31m[0m[31m[1m>[22m[39m[31m[90m 5 |[39m[31m [33m>[39m[31m[0m[39m
-[31m[0m [90m   |[39m[31m [31m[1m^[22m[39m[31m[0m[39m
-[31m[0m [90m 6 |[39m[31m [36mexport[39m[31m [36mdefault[39m[31m [36mfunction[39m[31m [33mApp[39m[31m() {[0m[39m
-[31m[0m [90m 7 |[39m[31m   [36mreturn[39m[31m ([0m[39m
-[31m[0m [90m 8 |[39m[31m     [33m<[39m[31m[33mView[39m[31m style[33m=[39m[31m{styles[33m.[39m[31mcontainer}[33m>[39m[31m[0m[39m"
+"SyntaxError: /app/App.js: Unexpected token (5:0)
+
+  3 | import { StyleSheet, Text, View } from 'react-native';
+  4 |
+> 5 | >
+    | ^
+  6 | export default function App() {
+  7 |   return (
+  8 |     <View style={styles.container}>"
 `;
