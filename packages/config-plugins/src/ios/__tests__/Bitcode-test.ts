@@ -88,11 +88,12 @@ function getConfigurations(project: XcodeProject) {
 }
 
 function setBitcodeEnabledForRoot(
-  config: Pick<ExpoConfig, 'ios'>,
+  config: { ios?: { bitcode?: boolean | string } },
   projectRoot: string,
   validate: (project: XcodeProject) => void
 ) {
   let project = getPbxproj(projectRoot);
+  // @ts-ignore: TODO
   project = setBitcode(config, { project });
   validate(project);
   fs.writeFileSync(project.filepath, project.writeSync());

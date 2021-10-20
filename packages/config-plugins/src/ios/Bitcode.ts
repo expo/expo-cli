@@ -16,6 +16,7 @@ export const withBitcode: ConfigPlugin = config => {
 };
 
 export function getBitcode(config: Pick<ExpoConfig, 'ios'>): boolean | string {
+  // @ts-ignore: TODO
   return config.ios?.bitcode ?? true;
 }
 
