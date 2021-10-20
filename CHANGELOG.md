@@ -12,6 +12,18 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+## [Wed, 20 Oct 2021 10:33:37 -0700](https://github.com/expo/expo-cli/commit/5d0a7bf6368e044fd5f0624d6b355c20f4528b5c)
+
+### 🐛 Bug fixes
+
+- [xdl] Add missing nullthrows package
+
+### 📦 Packages updated
+
+- @expo/dev-tools@0.13.122
+- expo-cli@4.12.6
+- xdl@59.2.6
+
 ## [Tue, 19 Oct 2021 16:13:11 -0700](https://github.com/expo/expo-cli/commit/159c7fc92ed430962a5a799b23743196867449ac)
 
 ### 🐛 Bug fixes
