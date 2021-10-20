@@ -1,3 +1,4 @@
+import * as Bitcode from './Bitcode';
 import * as BuildScheme from './BuildScheme';
 import * as BundleIdentifier from './BundleIdentifier';
 import * as DeviceFamily from './DeviceFamily';
@@ -30,6 +31,7 @@ import * as XcodeUtils from './utils/Xcodeproj';
 export { InfoPlist, ExpoPlist, Entitlements, Paths, Permissions, XcodeUtils };
 
 export {
+  Bitcode,
   BundleIdentifier,
   BuildScheme,
   DeviceFamily,

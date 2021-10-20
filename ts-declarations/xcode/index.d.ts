@@ -348,7 +348,7 @@ declare module 'xcode' {
     pbxEmbedFrameworksBuildPhaseObj(target: unknown): unknown;
     buildPhase(group: unknown, target: unknown): string;
     buildPhaseObject(name: string, group: unknown, target: unknown): unknown;
-    addBuildProperty(prop: unknown, value: unknown, build_name: unknown): void;
+    addBuildProperty(prop: unknown, value: unknown, buildName?: string): void;
     removeBuildProperty(prop: unknown, build_name: unknown): void;
     updateBuildProperty(prop: string, value: unknown, build: string): void;
     updateProductName(name: string): void;

@@ -55,6 +55,7 @@ export const withIosExpoPlugins: ConfigPlugin<{
     IOSConfig.Entitlements.withAssociatedDomains,
     // XcodeProject
     IOSConfig.DeviceFamily.withDeviceFamily,
+    IOSConfig.Bitcode.withBitcode,
     IOSConfig.Locales.withLocales,
     // Dangerous
     withIosIcons,
