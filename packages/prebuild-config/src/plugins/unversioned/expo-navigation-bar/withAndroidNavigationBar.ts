@@ -15,8 +15,7 @@ export const withNavigationBar: ConfigPlugin = config => {
     // Immersive mode needs to be set programmatically
     WarningAggregator.addWarningAndroid(
       'androidNavigationBar.visible',
-      // Versioning is important because the functionality depends on the MainActivity delegate, introduced in the SDK +43 template.
-      'Install expo-navigation-bar, and ensure your project is using Expo SDK +43 to enable this deprecated functionality.',
+      'Property is deprecated in Android 11 (API 30) and will be removed from Expo SDK.',
       'https://expo.fyi/android-navigation-bar-visible-deprecated'
     );
   }
