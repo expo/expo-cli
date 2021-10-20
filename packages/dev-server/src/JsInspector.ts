@@ -41,7 +41,8 @@ export async function queryAllInspectorAppsAsync(
 ): Promise<MetroInspectorProxyApp[]> {
   const resp = await fetch(`${metroServerOrigin}/json/list`);
   const apps: MetroInspectorProxyApp[] = await resp.json();
-  return apps.filter(app => app.vm !== "don't use");
+  // Only use targets with better reloading support
+  return apps.filter(app => app.title === 'React Native Experimental (Improved Chrome Reloads)');
 }
 
 async function launchChromiumAsync(url: string): Promise<void> {
