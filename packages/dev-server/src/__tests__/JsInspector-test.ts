@@ -34,7 +34,9 @@ describe(openJsInspector, () => {
 
 describe(queryAllInspectorAppsAsync, () => {
   it('should return all available app entities', async () => {
-    const entities = METRO_INSPECTOR_RESPONSE_FIXTURE.filter(app => app.vm !== "don't use");
+    const entities = METRO_INSPECTOR_RESPONSE_FIXTURE.filter(
+      app => app.title === 'React Native Experimental (Improved Chrome Reloads)'
+    );
 
     const mockFetch = fetch as jest.MockedFunction<typeof fetch>;
     mockFetch.mockReturnValue(
@@ -42,7 +44,11 @@ describe(queryAllInspectorAppsAsync, () => {
     );
 
     const result = await queryAllInspectorAppsAsync('http://localhost:8081');
-    expect(result).toEqual(entities);
+    expect(result.length).toBe(entities.length);
+    for (let i = 0; i < result.length; ++i) {
+      expect(result[i].webSocketDebuggerUrl).toBe(entities[i].webSocketDebuggerUrl);
+      expect(result[i].description).not.toBe("don't use");
+    }
   });
 });
 
@@ -56,6 +62,5 @@ describe(queryInspectorAppAsync, () => {
 
     const result = await queryInspectorAppAsync('http://localhost:8081', appId);
     expect(result?.description).toBe(appId);
-    expect(result?.vm).not.toBe("don't use");
   });
 });
