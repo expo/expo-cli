@@ -182,6 +182,8 @@ export function parseStartOptions(
         : options.forceManifestType === 'expo-updates'
         ? 'expo-updates'
         : undefined;
+  } else {
+    startOpts.forceManifestType = 'classic';
   }
 
   if (isLegacyImportsEnabled(exp)) {
