@@ -12,6 +12,18 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+## [Wed, 20 Oct 2021 19:32:55 -0700](https://github.com/expo/expo-cli/commit/8f9bd4c43889826f5058a91d060dba2b594240ef)
+
+### 🐛 Bug fixes
+
+- [cli] Disable auto detection of manifest type until a more reliable mechanism is ready
+
+### 📦 Packages updated
+
+- @expo/dev-tools@0.13.123
+- expo-cli@4.12.7
+- xdl@59.2.7
+
 ## [Wed, 20 Oct 2021 10:33:37 -0700](https://github.com/expo/expo-cli/commit/5d0a7bf6368e044fd5f0624d6b355c20f4528b5c)
 
 ### 🐛 Bug fixes
