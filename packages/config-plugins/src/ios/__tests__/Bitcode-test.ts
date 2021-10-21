@@ -1,4 +1,3 @@
-import { ExpoConfig } from '@expo/config-types';
 import * as fs from 'fs';
 import { vol } from 'memfs';
 import * as path from 'path';
@@ -32,8 +31,12 @@ describe(setBitcode, () => {
     vol.reset();
   });
 
-  it('defaults to enabling bitcode', async () => {
-    setBitcodeEnabledForRoot({ ios: {} }, projectRoot, project => {
+  it('defaults to not modifying the bitcode settings', async () => {
+    setBitcodeEnabledForRoot({ ios: {} }, projectRoot, validateDefaultBitcode);
+  });
+
+  it('enables bitcode for everything', async () => {
+    setBitcodeEnabledForRoot({ ios: { bitcode: true } }, projectRoot, project => {
       const configurations = getConfigurations(project);
       for (const [, configuration] of configurations) {
         expect(configuration.buildSettings.ENABLE_BITCODE).toBe('YES');
@@ -41,7 +44,7 @@ describe(setBitcode, () => {
     });
   });
 
-  it('disables bitcode', async () => {
+  it('disables bitcode for everything', async () => {
     setBitcodeEnabledForRoot({ ios: { bitcode: false } }, projectRoot, project => {
       const configurations = getConfigurations(project);
       for (const [, configuration] of configurations) {
@@ -54,6 +57,7 @@ describe(setBitcode, () => {
     setBitcodeEnabledForRoot({ ios: { bitcode: 'Debug' } }, projectRoot, project => {
       const configurations = getConfigurations(project);
       for (const [, configuration] of configurations) {
+        // ensure all others are disabled
         expect(configuration.buildSettings.ENABLE_BITCODE).toBe(
           configuration.name === 'Debug' ? 'YES' : 'NO'
         );
@@ -62,20 +66,7 @@ describe(setBitcode, () => {
   });
 
   it('warns when enabling bitcode on an invalid configuration', async () => {
-    setBitcodeEnabledForRoot({ ios: { bitcode: 'Bacon' } }, projectRoot, project => {
-      const configurations = getConfigurations(project);
-      for (const [id, configuration] of configurations) {
-        expect(configuration.buildSettings.ENABLE_BITCODE).toBe(
-          // Ensure nothing changed.
-          {
-            '13B07F941A680F5B00A75B9A': 'NO',
-            '13B07F951A680F5B00A75B9A': undefined,
-            '83CBBA201A601CBA00E9B192': undefined,
-            '83CBBA211A601CBA00E9B192': undefined,
-          }[id]
-        );
-      }
-    });
+    setBitcodeEnabledForRoot({ ios: { bitcode: 'Bacon' } }, projectRoot, validateDefaultBitcode);
     expect(WarningAggregator.addWarningIOS).toHaveBeenLastCalledWith(
       'ios.bitcode',
       'No configuration named "Bacon". Expected one of: "Debug", "Release".'
@@ -97,4 +88,19 @@ function setBitcodeEnabledForRoot(
   project = setBitcode(config, { project });
   validate(project);
   fs.writeFileSync(project.filepath, project.writeSync());
+}
+
+function validateDefaultBitcode(project: XcodeProject) {
+  const configurations = getConfigurations(project);
+  for (const [id, configuration] of configurations) {
+    expect(configuration.buildSettings.ENABLE_BITCODE).toBe(
+      // Ensure nothing changed.
+      {
+        '13B07F941A680F5B00A75B9A': 'NO',
+        '13B07F951A680F5B00A75B9A': undefined,
+        '83CBBA201A601CBA00E9B192': undefined,
+        '83CBBA211A601CBA00E9B192': undefined,
+      }[id]
+    );
+  }
 }

@@ -15,9 +15,9 @@ export const withBitcode: ConfigPlugin = config => {
   });
 };
 
-export function getBitcode(config: Pick<ExpoConfig, 'ios'>): boolean | string {
+export function getBitcode(config: Pick<ExpoConfig, 'ios'>): boolean | string | undefined {
   // @ts-ignore: TODO
-  return config.ios?.bitcode ?? true;
+  return config.ios?.bitcode;
 }
 
 /**
@@ -28,9 +28,15 @@ export function setBitcode(
   { project }: { project: XcodeProject }
 ): XcodeProject {
   const bitcode = getBitcode(config);
+
+  const isDefaultBehavior = bitcode == null;
+  // If the value is undefined, then do nothing.
+  if (isDefaultBehavior) {
+    return project;
+  }
+
   const targetName = typeof bitcode === 'string' ? bitcode : undefined;
   const isBitcodeEnabled = !!bitcode;
-
   if (targetName) {
     // Assert if missing
     const configs = Object.entries(project.pbxXCBuildConfigurationSection()).filter(isNotComment);
