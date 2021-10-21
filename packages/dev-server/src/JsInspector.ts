@@ -40,9 +40,31 @@ export async function queryAllInspectorAppsAsync(
   metroServerOrigin: string
 ): Promise<MetroInspectorProxyApp[]> {
   const resp = await fetch(`${metroServerOrigin}/json/list`);
-  const apps: MetroInspectorProxyApp[] = await resp.json();
+  const apps: MetroInspectorProxyApp[] = transformApps(await resp.json());
   // Only use targets with better reloading support
   return apps.filter(app => app.title === 'React Native Experimental (Improved Chrome Reloads)');
+}
+
+// The description of `React Native Experimental (Improved Chrome Reloads)` target is `don't use` from metro.
+// This function tries to transform the unmeaningful description to appId
+function transformApps(apps: MetroInspectorProxyApp[]): MetroInspectorProxyApp[] {
+  const deviceIdToAppId: Record<string, string> = {};
+
+  for (const app of apps) {
+    if (app.description !== "don't use") {
+      const deviceId = app.id.split('-')[0];
+      const appId = app.description;
+      deviceIdToAppId[deviceId] = appId;
+    }
+  }
+
+  return apps.map(app => {
+    if (app.description === "don't use") {
+      const deviceId = app.id.split('-')[0];
+      app.description = deviceIdToAppId[deviceId] ?? app.description;
+    }
+    return app;
+  });
 }
 
 async function launchChromiumAsync(url: string): Promise<void> {
