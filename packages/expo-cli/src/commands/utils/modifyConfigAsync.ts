@@ -39,6 +39,7 @@ export async function attemptAddingPluginsAsync(
   };
   const modification = await modifyConfigAsync(projectRoot, edits, {
     skipSDKVersionRequirement: true,
+    skipPlugins: true,
   });
   if (modification.type === 'success') {
     Log.log(`\u203A Added config plugin${plugins.length === 1 ? '' : 's'}: ${plugins.join(', ')}`);
