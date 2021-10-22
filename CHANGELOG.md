@@ -12,6 +12,40 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+## [Fri, 22 Oct 2021 14:41:44 -0700](https://github.com/expo/expo-cli/commit/6b6cedbfa1cb96c1a6d22f3cf9dbcdc87160c2ef)
+
+### 🛠 Breaking changes
+
+### 🎉 New features
+
+- [config-plugins] Add property to update iOS bitcode setting ([#3933](https://github.com/expo/expo-cli/issues/3933))
+
+### 🧹 Chores
+
+- [config-types] Bump version
+- [expo-cli] Fix lint warning accidentally introduced in hotfix
+
+### 🐛 Bug fixes
+
+- [prebuild-config] Skip deleting UIUserInterfaceStyle for now ([#3941](https://github.com/expo/expo-cli/issues/3941))
+
+### 📦 Packages updated
+
+- @expo/config-plugins@4.0.6
+- @expo/config@6.0.6
+- @expo/dev-server@0.1.91
+- @expo/dev-tools@0.13.126
+- expo-cli@4.12.10
+- expo-optimize@0.1.113
+- install-expo-modules@0.0.5
+- @expo/metro-config@0.2.6
+- @expo/next-adapter@3.1.6
+- @expo/prebuild-config@3.0.6
+- expo-pwa@0.0.101
+- uri-scheme@1.0.102
+- @expo/webpack-config@0.16.6
+- xdl@59.2.10
+
 ## [Thu, 21 Oct 2021 18:23:36 -0700](https://github.com/expo/expo-cli/commit/7d8d7202185f79061a0e69cb7a84bfb6b879efe4)
 
 ### 🛠 Breaking changes
