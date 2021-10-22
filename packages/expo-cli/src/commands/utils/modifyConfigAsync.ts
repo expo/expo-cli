@@ -35,7 +35,7 @@ export async function attemptAddingPluginsAsync(
   if (!plugins.length) return;
 
   const edits = {
-    plugins: (exp.plugins || []).concat(plugins),
+    plugins: [...new Set((exp.plugins || []).concat(plugins))],
   };
   const modification = await modifyConfigAsync(projectRoot, edits, {
     skipSDKVersionRequirement: true,
