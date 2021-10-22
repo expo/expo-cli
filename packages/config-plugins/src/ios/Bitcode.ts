@@ -6,8 +6,7 @@ import { withXcodeProject } from '../plugins/ios-plugins';
 import { addWarningIOS } from '../utils/warnings';
 import { isNotComment } from './utils/Xcodeproj';
 
-// TODO: Use from expo/config-types
-type Bitcode = string | boolean | undefined;
+type Bitcode = NonNullable<ExpoConfig['ios']>['bitcode'];
 
 /**
  * Plugin to set a bitcode preference for the Xcode project
@@ -41,7 +40,6 @@ export const withCustomBitcode: ConfigPlugin<Bitcode> = (config, bitcode) => {
  * Get the bitcode preference from the Expo config.
  */
 export function getBitcode(config: Pick<ExpoConfig, 'ios'>): Bitcode {
-  // @ts-ignore: TODO
   return config.ios?.bitcode;
 }
 
