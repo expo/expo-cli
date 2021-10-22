@@ -22,7 +22,6 @@ import {
   learnMore,
   Logger,
   NotificationCode,
-  ProjectSettings,
   Prompts,
   SimControl,
   SimControlLogs,
