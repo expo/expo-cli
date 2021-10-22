@@ -6,8 +6,6 @@ import { attemptAddingPluginsAsync } from '../modifyConfigAsync';
 jest.mock('fs');
 
 describe(attemptAddingPluginsAsync, () => {
-  const projectRoot = '/test-project';
-
   beforeEach(() => {
     vol.reset();
   });
