@@ -1,6 +1,7 @@
 {
   "extends": "@tsconfig/node12/tsconfig.json",
   "compilerOptions": {
+    "useUnknownInCatchVariables": false,
     "declaration": true,
     "composite": true,
     "inlineSources": true,
