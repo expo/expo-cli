@@ -6,16 +6,41 @@ import { withXcodeProject } from '../plugins/ios-plugins';
 import { addWarningIOS } from '../utils/warnings';
 import { isNotComment } from './utils/Xcodeproj';
 
+// TODO: Use from expo/config-types
+type Bitcode = string | boolean | undefined;
+
+/**
+ * Plugin to set a bitcode preference for the Xcode project
+ * based on the project's Expo config `ios.bitcode` value.
+ */
 export const withBitcode: ConfigPlugin = config => {
   return withXcodeProject(config, async config => {
-    config.modResults = await setBitcode(config, {
+    config.modResults = await setBitcodeWithConfig(config, {
       project: config.modResults,
     });
     return config;
   });
 };
 
-export function getBitcode(config: Pick<ExpoConfig, 'ios'>): boolean | string | undefined {
+/**
+ * Plugin to set a custom bitcode preference for the Xcode project.
+ * Does not read from the Expo config `ios.bitcode`.
+ *
+ * @param bitcode custom bitcode setting.
+ */
+export const withCustomBitcode: ConfigPlugin<Bitcode> = (config, bitcode) => {
+  return withXcodeProject(config, async config => {
+    config.modResults = await setBitcode(bitcode, {
+      project: config.modResults,
+    });
+    return config;
+  });
+};
+
+/**
+ * Get the bitcode preference from the Expo config.
+ */
+export function getBitcode(config: Pick<ExpoConfig, 'ios'>): Bitcode {
   // @ts-ignore: TODO
   return config.ios?.bitcode;
 }
@@ -23,12 +48,18 @@ export function getBitcode(config: Pick<ExpoConfig, 'ios'>): boolean | string | 
 /**
  * Enable or disable the `ENABLE_BITCODE` property of the project configurations.
  */
-export function setBitcode(
+export function setBitcodeWithConfig(
   config: Pick<ExpoConfig, 'ios'>,
   { project }: { project: XcodeProject }
 ): XcodeProject {
   const bitcode = getBitcode(config);
+  return setBitcode(bitcode, { project });
+}
 
+/**
+ * Enable or disable the `ENABLE_BITCODE` property.
+ */
+export function setBitcode(bitcode: Bitcode, { project }: { project: XcodeProject }): XcodeProject {
   const isDefaultBehavior = bitcode == null;
   // If the value is undefined, then do nothing.
   if (isDefaultBehavior) {

@@ -4,7 +4,7 @@ import * as path from 'path';
 
 import { XcodeProject } from '../../Plugin.types';
 import * as WarningAggregator from '../../utils/warnings';
-import { setBitcode } from '../Bitcode';
+import { setBitcodeWithConfig } from '../Bitcode';
 import { getPbxproj, isNotComment } from '../utils/Xcodeproj';
 
 const fsReal = jest.requireActual('fs') as typeof fs;
@@ -12,7 +12,7 @@ const fsReal = jest.requireActual('fs') as typeof fs;
 jest.mock('fs');
 jest.mock('../../utils/warnings');
 
-describe(setBitcode, () => {
+describe(setBitcodeWithConfig, () => {
   const projectRoot = '/tablet';
   beforeEach(async () => {
     vol.fromJSON(
@@ -79,13 +79,12 @@ function getConfigurations(project: XcodeProject) {
 }
 
 function setBitcodeEnabledForRoot(
-  config: { ios?: { bitcode?: boolean | string } },
+  config: { ios?: { bitcode?: boolean | string } & any },
   projectRoot: string,
   validate: (project: XcodeProject) => void
 ) {
   let project = getPbxproj(projectRoot);
-  // @ts-ignore: TODO
-  project = setBitcode(config, { project });
+  project = setBitcodeWithConfig(config, { project });
   validate(project);
   fs.writeFileSync(project.filepath, project.writeSync());
 }
