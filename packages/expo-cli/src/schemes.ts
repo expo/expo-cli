@@ -1,6 +1,5 @@
 import { getConfig } from '@expo/config';
 import { AndroidConfig, IOSConfig } from '@expo/config-plugins';
-import { getInfoPlistPathFromPbxproj } from '@expo/config-plugins/build/ios/utils/getInfoPlistPath';
 import plist from '@expo/plist';
 import fs from 'fs';
 import resolveFrom from 'resolve-from';
