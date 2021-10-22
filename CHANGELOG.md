@@ -12,6 +12,38 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+## [Thu, 21 Oct 2021 18:23:36 -0700](https://github.com/expo/expo-cli/commit/7d8d7202185f79061a0e69cb7a84bfb6b879efe4)
+
+### 🛠 Breaking changes
+
+### 🎉 New features
+
+### 🧹 Chores
+
+- [config-plugins] Convert NavigationBar to an unversioned plugin ([#3902](https://github.com/expo/expo-cli/issues/3902))
+
+### 🐛 Bug fixes
+
+- [expo-cli] Revert Info.plist lookup change
+- [dev-server] fix app hanging if hermes inspector opening and reload app ([#3932](https://github.com/expo/expo-cli/issues/3932))
+
+### 📦 Packages updated
+
+- @expo/config-plugins@4.0.4
+- @expo/config@6.0.4
+- @expo/dev-server@0.1.89
+- @expo/dev-tools@0.13.124
+- expo-cli@4.12.8
+- expo-optimize@0.1.111
+- install-expo-modules@0.0.3
+- @expo/metro-config@0.2.4
+- @expo/next-adapter@3.1.4
+- @expo/prebuild-config@3.0.4
+- expo-pwa@0.0.99
+- uri-scheme@1.0.100
+- @expo/webpack-config@0.16.4
+- xdl@59.2.8
+
 ## [Wed, 20 Oct 2021 19:32:55 -0700](https://github.com/expo/expo-cli/commit/8f9bd4c43889826f5058a91d060dba2b594240ef)
 
 ### 🐛 Bug fixes
