@@ -35,7 +35,7 @@ async function deeplinkEndpointHandler(
   res: express.Response | http.ServerResponse
 ) {
   const { query } = parse(req.url!, true);
-  if (query['choice'] === 'client') {
+  if (query['choice'] === 'expo-dev-client') {
     const projectUrl = await UrlUtils.constructDevClientUrlAsync(projectRoot, {
       hostType: 'localhost',
     });

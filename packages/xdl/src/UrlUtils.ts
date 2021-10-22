@@ -104,7 +104,7 @@ export async function constructLoadingUrlAsync(
   requestHostname?: string
 ): Promise<string> {
   const baseUrl = await constructUrlAsync(projectRoot, { urlType: 'http' }, false, requestHostname);
-  return `${baseUrl}/loading`;
+  return `${baseUrl}/_expo/loading`;
 }
 
 export async function constructUrlWithExtensionAsync(
