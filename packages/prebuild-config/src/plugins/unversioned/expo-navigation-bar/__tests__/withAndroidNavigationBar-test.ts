@@ -1,4 +1,5 @@
-import { getColorsAsObject } from '../Colors';
+import { AndroidConfig, WarningAggregator } from '@expo/config-plugins';
+
 import {
   getNavigationBarColor,
   getNavigationBarImmersiveMode,
@@ -6,12 +7,15 @@ import {
   setNavigationBarColors,
   setNavigationBarStyles,
   withNavigationBar,
-} from '../NavigationBar';
-import { getAppThemeLightNoActionBarGroup, getStylesGroupAsObject } from '../Styles';
+} from '../withAndroidNavigationBar';
 
-jest.mock('../../utils/warnings');
-
-const { addWarningAndroid } = require('../../utils/warnings');
+jest.mock('@expo/config-plugins', () => {
+  const plugins = jest.requireActual('@expo/config-plugins');
+  return {
+    ...plugins,
+    WarningAggregator: { addWarningAndroid: jest.fn() },
+  };
+});
 
 describe('Android navigation bar', () => {
   it(`returns 'translucent' if no status bar color is provided`, () => {
@@ -52,7 +56,10 @@ describe('Android navigation bar', () => {
         { resources: {} }
       );
 
-      const group = getStylesGroupAsObject(stylesJSON, getAppThemeLightNoActionBarGroup());
+      const group = AndroidConfig.Styles.getStylesGroupAsObject(
+        stylesJSON,
+        AndroidConfig.Styles.getAppThemeLightNoActionBarGroup()
+      );
       expect(group['android:navigationBarColor']).toBe('@color/navigationBarColor');
       expect(group['android:windowLightNavigationBar']).toBe('true');
     });
@@ -63,13 +70,14 @@ describe('Android navigation bar', () => {
         { resources: {} }
       );
 
-      expect(getColorsAsObject(colorsJSON).navigationBarColor).toBe('#111111');
+      expect(AndroidConfig.Colors.getColorsAsObject(colorsJSON).navigationBarColor).toBe('#111111');
     });
 
     it(`adds android warning androidNavigationBar.visible is provided`, async () => {
-      addWarningAndroid.mockImplementationOnce();
+      // @ts-ignore: jest
+      WarningAggregator.addWarningAndroid.mockImplementationOnce();
       withNavigationBar({ androidNavigationBar: { visible: 'leanback' } } as any);
-      expect(addWarningAndroid).toHaveBeenCalledTimes(1);
+      expect(WarningAggregator.addWarningAndroid).toHaveBeenCalledTimes(1);
     });
   });
 });

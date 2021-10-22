@@ -7,7 +7,6 @@ import * as IntentFilters from './IntentFilters';
 import * as JsEngine from './JsEngine';
 import * as Manifest from './Manifest';
 import * as Name from './Name';
-import * as NavigationBar from './NavigationBar';
 import * as Orientation from './Orientation';
 import * as Package from './Package';
 import * as Paths from './Paths';
@@ -34,7 +33,6 @@ export {
   GoogleServices,
   IntentFilters,
   Name,
-  NavigationBar,
   Orientation,
   Package,
   PrimaryColor,
