@@ -1,5 +1,4 @@
 import { vol } from 'memfs';
-import path from 'path';
 
 import { SilentError } from '../../../CommandError';
 import { attemptAddingPluginsAsync } from '../modifyConfigAsync';
