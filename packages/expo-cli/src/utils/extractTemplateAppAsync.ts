@@ -83,13 +83,15 @@ export async function extractAndPrepareTemplateAppAsync(
   await appFile.writeAsync(appJson);
 
   const packageFile = new JsonFile(path.join(projectRoot, 'package.json'));
-  let packageJson = await packageFile.readAsync();
-  // Adding `private` stops npm from complaining about missing `name` and `version` fields.
-  // We don't add a `name` field because it also exists in `app.json`.
-  packageJson = { ...packageJson, private: true };
+  const packageJson = await packageFile.readAsync();
+  // name and version are required for yarn workspaces (monorepos)
+  const inputName = 'name' in config ? config.name : config.expo.name;
+  packageJson.name = sanitizeNpmPackageName(inputName);
   // These are metadata fields related to the template package, let's remove them from the package.json.
-  delete packageJson.name;
-  delete packageJson.version;
+  // A good place to start
+  packageJson.version = '1.0.0';
+  packageJson.private = true;
+
   delete packageJson.description;
   delete packageJson.tags;
   delete packageJson.repository;
@@ -97,14 +99,6 @@ export async function extractAndPrepareTemplateAppAsync(
   delete packageJson._resolved;
   delete packageJson._integrity;
   delete packageJson._from;
-
-  // A good place to start
-  packageJson.version = '1.0.0';
-
-  // name and version are required for yarn workspaces (monorepos)
-
-  const inputName = 'name' in config ? config.name : config.expo.name;
-  packageJson.name = sanitizeNpmPackageName(inputName);
 
   await packageFile.writeAsync(packageJson);
 
