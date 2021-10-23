@@ -1,4 +1,5 @@
 import { ExpoConfig } from '@expo/config-types';
+import Debug from 'debug';
 import fs from 'fs-extra';
 import path from 'path';
 
@@ -8,6 +9,8 @@ import { withDangerousMod } from '../plugins/withDangerousMod';
 import { mergeContents, MergeResults, removeContents } from '../utils/generateCode';
 import { resolvePackageRootFolder } from '../utils/resolvePackageRootFolder';
 
+const debug = Debug('expo:config-plugins:ios:maps');
+
 // Match against `UMModuleRegistryAdapter` (unimodules), and React Native without unimodules (Expo Modules).
 export const MATCH_INIT = /(?:(self\.|_)(\w+)\s?=\s?\[\[UMModuleRegistryAdapter alloc\])|(?:RCTBridge\s?\*\s?(\w+)\s?=\s?\[\[RCTBridge alloc\])/g;
 
@@ -16,20 +19,14 @@ const withGoogleMapsKey = createInfoPlistPlugin(setGoogleMapsApiKey, 'withGoogle
 export const withMaps: ConfigPlugin = config => {
   config = withGoogleMapsKey(config);
 
-  // Only add the native code changes if we know that the package is going to be linked natively.
-  // This is specifically for monorepo support where one app might have react-native-maps (adding it to the node_modules)
-  // but another app will not have it installed in the package.json, causing it to not be linked natively.
-  // This workaround only exists because react-native-maps doesn't have a config plugin vendored in the package.
-  const isLinked =
-    !config._internal?.autolinkedModules ||
-    config._internal.autolinkedModules.includes('react-native-maps');
-  if (isLinked) {
-    const apiKey = getGoogleMapsApiKey(config);
-    // Technically adds react-native-maps (Apple maps) and google maps.
-    config = withMapsCocoaPods(config, { useGoogleMaps: !!apiKey });
-    // Adds/Removes AppDelegate setup for Google Maps API on iOS
-    config = withGoogleMapsAppDelegate(config, { apiKey });
-  }
+  const apiKey = getGoogleMapsApiKey(config);
+  // Technically adds react-native-maps (Apple maps) and google maps.
+
+  debug('Google Maps API Key:', apiKey);
+  config = withMapsCocoaPods(config, { useGoogleMaps: !!apiKey });
+
+  // Adds/Removes AppDelegate setup for Google Maps API on iOS
+  config = withGoogleMapsAppDelegate(config, { apiKey });
 
   return config;
 };
@@ -131,6 +128,16 @@ export function removeMapsCocoaPods(src: string): MergeResults {
 function isReactNativeMapsInstalled(projectRoot: string): string | null {
   return resolvePackageRootFolder(projectRoot, 'react-native-maps');
 }
+function isReactNativeMapsAutolinked(config: Pick<ExpoConfig, '_internal'>): string | null {
+  // Only add the native code changes if we know that the package is going to be linked natively.
+  // This is specifically for monorepo support where one app might have react-native-maps (adding it to the node_modules)
+  // but another app will not have it installed in the package.json, causing it to not be linked natively.
+  // This workaround only exists because react-native-maps doesn't have a config plugin vendored in the package.
+  return (
+    !config._internal?.autolinkedModules ||
+    config._internal.autolinkedModules.includes('react-native-maps')
+  );
+}
 
 const withMapsCocoaPods: ConfigPlugin<{ useGoogleMaps: boolean }> = (config, { useGoogleMaps }) => {
   return withDangerousMod(config, [
@@ -142,7 +149,10 @@ const withMapsCocoaPods: ConfigPlugin<{ useGoogleMaps: boolean }> = (config, { u
       // Only add the block if react-native-maps is installed in the project (best effort).
       // Generally prebuild runs after a yarn install so this should always work as expected.
       const googleMapsPath = isReactNativeMapsInstalled(config.modRequest.projectRoot);
-      if (googleMapsPath && useGoogleMaps) {
+      const isLinked = isReactNativeMapsAutolinked(config);
+      debug('Is Expo Autolinked:', isLinked);
+      debug('react-native-maps path:', googleMapsPath);
+      if (isLinked && googleMapsPath && useGoogleMaps) {
         // Make the pod path relative to the ios folder.
         const googleMapsPodPath = path.relative(
           config.modRequest.platformProjectRoot,
@@ -150,7 +160,7 @@ const withMapsCocoaPods: ConfigPlugin<{ useGoogleMaps: boolean }> = (config, { u
         );
         try {
           results = addMapsCocoaPods(contents, googleMapsPodPath);
-        } catch (error) {
+        } catch (error: any) {
           if (error.code === 'ERR_NO_MATCH') {
             throw new Error(
               `Cannot add react-native-maps to the project's ios/Podfile because it's malformed. Please report this with a copy of your project Podfile.`
@@ -173,7 +183,11 @@ const withMapsCocoaPods: ConfigPlugin<{ useGoogleMaps: boolean }> = (config, { u
 const withGoogleMapsAppDelegate: ConfigPlugin<{ apiKey: string | null }> = (config, { apiKey }) => {
   return withAppDelegate(config, config => {
     if (config.modResults.language === 'objc') {
-      if (apiKey && isReactNativeMapsInstalled(config.modRequest.projectRoot)) {
+      if (
+        apiKey &&
+        isReactNativeMapsAutolinked(config) &&
+        isReactNativeMapsInstalled(config.modRequest.projectRoot)
+      ) {
         try {
           config.modResults.contents = addGoogleMapsAppDelegateImport(
             config.modResults.contents
