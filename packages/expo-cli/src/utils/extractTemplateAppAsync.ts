@@ -6,6 +6,7 @@ import merge from 'lodash/merge';
 import Minipass from 'minipass';
 import pacote, { PackageSpec } from 'pacote';
 import path from 'path';
+import slugify from 'slugify';
 import { Readable } from 'stream';
 import tar, { ReadEntry } from 'tar';
 import { UserSettings } from 'xdl';
@@ -96,9 +97,47 @@ export async function extractAndPrepareTemplateAppAsync(
   delete packageJson._resolved;
   delete packageJson._integrity;
   delete packageJson._from;
+
+  // A good place to start
+  packageJson.version = '1.0.0';
+
+  // name and version are required for yarn workspaces (monorepos)
+
+  const inputName = 'name' in config ? config.name : config.expo.name;
+  packageJson.name = sanitizeNpmPackageName(inputName);
+
   await packageFile.writeAsync(packageJson);
 
   return projectRoot;
+}
+
+export function sanitizeNpmPackageName(name: string): string {
+  // https://github.com/npm/validate-npm-package-name/#naming-rules
+  return (
+    applyKnownNpmPackageNameRules(name) ||
+    applyKnownNpmPackageNameRules(slugify(name)) ||
+    // If nothing is left use 'app' like we do in Xcode projects.
+    'app'
+  );
+}
+
+function applyKnownNpmPackageNameRules(name: string): string | null {
+  // https://github.com/npm/validate-npm-package-name/#naming-rules
+
+  // package name cannot start with '.' or '_'.
+  while (/^(\.|_)/.test(name)) {
+    name = name.substring(1);
+  }
+
+  name = name.toLowerCase().replace(/[^a-zA-Z._\-/@]/g, '');
+
+  return (
+    name
+      // .replace(/![a-z0-9-._~]+/g, '')
+      // Remove special characters
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '') || null
+  );
 }
 
 /**
