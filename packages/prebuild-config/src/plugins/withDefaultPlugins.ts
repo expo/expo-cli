@@ -12,6 +12,7 @@ import {
 import { ExpoConfig } from '@expo/config-types';
 import Debug from 'debug';
 
+import { shouldSkipAutoPlugin } from '../getAutolinkedPackages';
 import { withAndroidIcons } from './icons/withAndroidIcons';
 import { withIosIcons } from './icons/withIosIcons';
 import withAdMob from './unversioned/expo-ads-admob/expo-ads-admob';
@@ -196,19 +197,6 @@ const expoManagedVersionedPlugins = [
   'expo-firebase-core',
   'expo-google-sign-in',
 ];
-
-function shouldSkipAutoPlugin(config: ExpoConfig, plugin: StaticPlugin | string) {
-  if (Array.isArray(config._internal?.autolinking)) {
-    const pluginId = Array.isArray(plugin) ? plugin[0] : plugin;
-    if (typeof pluginId === 'string') {
-      const isIncluded = config._internal!.autolinking.includes(plugin);
-      if (!isIncluded) {
-        return true;
-      }
-    }
-  }
-  return false;
-}
 
 const withOptionalLegacyPlugins: ConfigPlugin<(StaticPlugin | string)[]> = (config, plugins) => {
   return plugins.reduce((prev, plugin) => {

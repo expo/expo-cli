@@ -40,7 +40,7 @@
     "@expo/image-utils": "0.3.16",
     "@expo/json-file": "8.2.33",
     "debug": "^4.3.1",
-    "expo-modules-autolinking": "^0.0.3",
+    "expo-modules-autolinking": "^0.3.3",
     "fs-extra": "^9.0.0",
     "resolve-from": "^5.0.0",
     "semver": "7.3.2"

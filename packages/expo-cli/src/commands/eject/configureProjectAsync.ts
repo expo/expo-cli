@@ -1,6 +1,6 @@
 import { ExpoConfig, ProjectConfig } from '@expo/config';
 import { compileModsAsync, ModPlatform } from '@expo/config-plugins';
-import { getPrebuildConfig, getPrebuildConfigAsync } from '@expo/prebuild-config';
+import { getPrebuildConfigAsync } from '@expo/prebuild-config';
 import util from 'util';
 import { UserManager } from 'xdl';
 

@@ -16,8 +16,13 @@ const withGoogleMapsKey = createInfoPlistPlugin(setGoogleMapsApiKey, 'withGoogle
 export const withMaps: ConfigPlugin = config => {
   config = withGoogleMapsKey(config);
 
+  // Only add the native code changes if we know that the package is going to be linked natively.
+  // This is specifically for monorepo support where one app might have react-native-maps (adding it to the node_modules)
+  // but another app will not have it installed in the package.json, causing it to not be linked natively.
+  // This workaround only exists because react-native-maps doesn't have a config plugin vendored in the package.
   const isLinked =
-    !config._internal?.autolinking || config._internal.autolinking.includes('react-native-maps');
+    !config._internal?.autolinkedModules ||
+    config._internal.autolinkedModules.includes('react-native-maps');
   if (isLinked) {
     const apiKey = getGoogleMapsApiKey(config);
     // Technically adds react-native-maps (Apple maps) and google maps.

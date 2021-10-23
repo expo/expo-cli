@@ -2,29 +2,13 @@ import { getAccountUsername, getConfig } from '@expo/config';
 import { ModPlatform } from '@expo/config-plugins';
 import { ExpoConfig } from '@expo/config-types';
 
+import { getAutolinkedPackagesAsync } from './getAutolinkedPackages';
 import {
   withAndroidExpoPlugins,
   withIosExpoPlugins,
   withLegacyExpoPlugins,
   withVersionedExpoSDKPlugins,
 } from './plugins/withDefaultPlugins';
-
-export async function getAutolinkedPackagesAsync(projectRoot: string) {
-  const searchPaths = await require('expo-modules-autolinking/build/autolinking').resolveSearchPathsAsync(
-    null,
-    projectRoot
-  );
-
-  const [ios, android] = await Promise.all(
-    ['ios', 'android'].map(platform =>
-      require('expo-modules-autolinking/build/autolinking').findModulesAsync({
-        platform,
-        searchPaths,
-      })
-    )
-  );
-  return [...new Set(Object.keys(ios).concat(Object.keys(android)))];
-}
 
 export async function getPrebuildConfigAsync(
   projectRoot: string,
@@ -35,25 +19,27 @@ export async function getPrebuildConfigAsync(
     expoUsername?: string | ((config: ExpoConfig) => string | null);
   }
 ): Promise<ReturnType<typeof getConfig>> {
+  const autolinkedModules = await getAutolinkedPackagesAsync(projectRoot);
+
   return getPrebuildConfig(projectRoot, {
     ...props,
-    autolinking: await getAutolinkedPackagesAsync(projectRoot),
+    autolinkedModules,
   });
 }
 
-export function getPrebuildConfig(
+function getPrebuildConfig(
   projectRoot: string,
   {
     platforms,
     bundleIdentifier,
     packageName,
-    autolinking,
+    autolinkedModules,
     expoUsername,
   }: {
     bundleIdentifier?: string;
     packageName?: string;
     platforms: ModPlatform[];
-    autolinking?: string[];
+    autolinkedModules?: string[];
     expoUsername?: string | ((config: ExpoConfig) => string | null);
   }
 ) {
@@ -63,9 +49,11 @@ export function getPrebuildConfig(
     isModdedConfig: true,
   });
 
-  if (autolinking) {
-    if (!config._internal) config._internal = {};
-    config._internal.autolinking = autolinking;
+  if (autolinkedModules) {
+    if (!config._internal) {
+      config._internal = {};
+    }
+    config._internal.autolinkedModules = autolinkedModules;
   }
 
   const resolvedExpoUsername =
