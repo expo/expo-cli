@@ -181,10 +181,10 @@ const printServerInfo = async (
       urlOpts.printQRCode(url);
       Log.nested(item(`Metro waiting on ${u(url)}`));
       // Log.newLine();
-      // TODO: if dev client, change this message!
+      // TODO: if development build, change this message!
       Log.nested(item(`Scan the QR code above with Expo Go (Android) or the Camera app (iOS)`));
     } catch (error) {
-      // @ts-ignore: If there is no dev client scheme, then skip the QR code.
+      // @ts-ignore: If there is no development build scheme, then skip the QR code.
       if (error.code !== 'NO_DEV_CLIENT_SCHEME') {
         throw error;
       } else {

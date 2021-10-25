@@ -25,7 +25,7 @@ function addOptions(program: Command) {
       '--dev-client',
       'Experimental: Starts the bundler for use with the expo-development-client'
     )
-    .option('--scheme <scheme>', 'Custom URI protocol to use with a dev client')
+    .option('--scheme <scheme>', 'Custom URI protocol to use with a development build')
     .option('-a, --android', 'Opens your app in Expo Go on a connected Android device')
     .option(
       '-i, --ios',

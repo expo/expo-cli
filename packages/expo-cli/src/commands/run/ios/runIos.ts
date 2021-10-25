@@ -107,14 +107,14 @@ export async function actionAsync(projectRoot: string, options: Options) {
 }
 
 function track(projectRoot: string, exp: ExpoConfig) {
-  UnifiedAnalytics.logEvent('dev client run command', {
+  UnifiedAnalytics.logEvent('development build run command', {
     status: 'started',
     platform: 'ios',
     ...getDevClientProperties(projectRoot, exp),
   });
   StatusEventEmitter.once('bundleBuildFinish', () => {
     // Send the 'bundle ready' event once the JS has been built.
-    UnifiedAnalytics.logEvent('dev client run command', {
+    UnifiedAnalytics.logEvent('development build run command', {
       status: 'bundle ready',
       platform: 'ios',
       ...getDevClientProperties(projectRoot, exp),
@@ -122,14 +122,14 @@ function track(projectRoot: string, exp: ExpoConfig) {
   });
   StatusEventEmitter.once('deviceLogReceive', () => {
     // Send the 'ready' event once the app is running in a device.
-    UnifiedAnalytics.logEvent('dev client run command', {
+    UnifiedAnalytics.logEvent('development build run command', {
       status: 'ready',
       platform: 'ios',
       ...getDevClientProperties(projectRoot, exp),
     });
   });
   installCustomExitHook(() => {
-    UnifiedAnalytics.logEvent('dev client run command', {
+    UnifiedAnalytics.logEvent('development build run command', {
       status: 'finished',
       platform: 'ios',
       ...getDevClientProperties(projectRoot, exp),

@@ -125,7 +125,7 @@ export async function actionAsync(projectRoot: string, options: NormalizedOption
     );
   }
   if (options.devClient) {
-    UnifiedAnalytics.logEvent('dev client start command', {
+    UnifiedAnalytics.logEvent('development build start command', {
       status: 'ready',
       ...getDevClientProperties(projectRoot, exp),
     });
@@ -133,12 +133,12 @@ export async function actionAsync(projectRoot: string, options: NormalizedOption
 }
 
 function track(projectRoot: string, exp: ExpoConfig) {
-  UnifiedAnalytics.logEvent('dev client start command', {
+  UnifiedAnalytics.logEvent('development build start command', {
     status: 'started',
     ...getDevClientProperties(projectRoot, exp),
   });
   installCustomExitHook(() => {
-    UnifiedAnalytics.logEvent('dev client start command', {
+    UnifiedAnalytics.logEvent('development build start command', {
       status: 'finished',
       ...getDevClientProperties(projectRoot, exp),
     });
