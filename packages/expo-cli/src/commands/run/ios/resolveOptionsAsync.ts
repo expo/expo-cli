@@ -20,6 +20,7 @@ export type Options = {
   configuration?: XcodeConfiguration;
   bundler?: boolean;
   install?: boolean;
+  clean?: boolean;
 };
 
 export type ProjectInfo = {
@@ -40,7 +41,7 @@ function findXcodeProjectPaths(
   });
 }
 
-function resolveXcodeProject(projectRoot: string): ProjectInfo {
+export function resolveXcodeProject(projectRoot: string): ProjectInfo {
   let paths = findXcodeProjectPaths(projectRoot, 'xcworkspace');
   if (paths.length) {
     return {
@@ -166,6 +167,7 @@ export async function resolveOptionsAsync(
     shouldStartBundler: options.bundler ?? false,
     shouldSkipInitialBundling,
     port,
+    clean: options.clean ?? false,
     terminal: getDefaultUserTerminal(),
     scheme: resolvedScheme.name,
   };
