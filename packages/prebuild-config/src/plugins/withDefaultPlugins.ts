@@ -15,10 +15,11 @@ import { withAndroidIcons } from './icons/withAndroidIcons';
 import { withIosIcons } from './icons/withIosIcons';
 import withAdMob from './unversioned/expo-ads-admob/expo-ads-admob';
 import withAppleAuthentication from './unversioned/expo-apple-authentication';
-import withBranch from './unversioned/expo-branch';
+import withBranch from './unversioned/expo-branch/expo-branch';
 import withContacts from './unversioned/expo-contacts';
 import withDocumentPicker from './unversioned/expo-document-picker';
-import withFacebook from './unversioned/expo-facebook';
+import withFacebook from './unversioned/expo-facebook/expo-facebook';
+import withNavigationBar from './unversioned/expo-navigation-bar/expo-navigation-bar';
 import withNotifications from './unversioned/expo-notifications/expo-notifications';
 import withSplashScreen from './unversioned/expo-splash-screen/expo-splash-screen';
 import withUpdates from './unversioned/expo-updates';
@@ -55,6 +56,7 @@ export const withIosExpoPlugins: ConfigPlugin<{
     IOSConfig.Entitlements.withAssociatedDomains,
     // XcodeProject
     IOSConfig.DeviceFamily.withDeviceFamily,
+    IOSConfig.Bitcode.withBitcode,
     IOSConfig.Locales.withLocales,
     // Dangerous
     withIosIcons,
@@ -110,7 +112,6 @@ export const withAndroidExpoPlugins: ConfigPlugin<{
 
     // Modify colors.xml and styles.xml
     AndroidConfig.RootViewBackgroundColor.withRootViewBackgroundColor,
-    AndroidConfig.NavigationBar.withNavigationBar,
     AndroidConfig.StatusBar.withStatusBar,
     AndroidConfig.PrimaryColor.withPrimaryColor,
 
@@ -130,6 +131,7 @@ const versionedExpoSDKPackages: string[] = [
   'expo-notifications',
   'expo-updates',
   'expo-branch',
+  'expo-navigation-bar',
   'expo-document-picker',
   'expo-facebook',
   'expo-splash-screen',
@@ -150,6 +152,7 @@ export const withVersionedExpoSDKPlugins: ConfigPlugin<{ expoUsername: string | 
     withDocumentPicker,
     withFacebook,
     withSplashScreen,
+    withNavigationBar,
   ]);
 };
 

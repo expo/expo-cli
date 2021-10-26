@@ -6,6 +6,8 @@ describe(createKnownCommunityMatcher, () => {
       'node_modules/native-base/src/index.js',
       'node_modules/@react-native-community/somn/foobar.js',
       'node_modules/@react-native/polyfills/index.js',
+      'node_modules/@sentry/react-native/index.js',
+      'node_modules/victory-native/index.js',
     ]) {
       expect(createKnownCommunityMatcher().test(id)).toBe(true);
     }

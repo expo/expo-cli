@@ -8,6 +8,7 @@ import { withDangerousMod } from '../plugins/withDangerousMod';
 import { mergeContents, MergeResults, removeContents } from '../utils/generateCode';
 import { resolvePackageRootFolder } from '../utils/resolvePackageRootFolder';
 
+// Match against `UMModuleRegistryAdapter` (unimodules), and React Native without unimodules (Expo Modules).
 export const MATCH_INIT = /(?:(self\.|_)(\w+)\s?=\s?\[\[UMModuleRegistryAdapter alloc\])|(?:RCTBridge\s?\*\s?(\w+)\s?=\s?\[\[RCTBridge alloc\])/g;
 
 const withGoogleMapsKey = createInfoPlistPlugin(setGoogleMapsApiKey, 'withGoogleMapsKey');

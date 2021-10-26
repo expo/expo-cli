@@ -6,11 +6,12 @@ import {
 import bodyParser from 'body-parser';
 import type { Server as ConnectServer } from 'connect';
 
+import { prependMiddleware, replaceMiddlewareWith } from '../middlwareMutations';
 import clientLogsMiddleware from './clientLogsMiddleware';
 import createJsInspectorMiddleware from './createJsInspectorMiddleware';
 import { remoteDevtoolsCorsMiddleware } from './remoteDevtoolsCorsMiddleware';
 import { remoteDevtoolsSecurityHeadersMiddleware } from './remoteDevtoolsSecurityHeadersMiddleware';
-import { replaceMiddlewareWith } from './replaceMiddlewareWith';
+import { suppressRemoteDebuggingErrorMiddleware } from './suppressErrorMiddleware';
 
 export type AttachToServerFunction = ReturnType<
   typeof createReactNativeDevServerMiddleware
@@ -54,6 +55,7 @@ export function createDevServerMiddleware({
     remoteDevtoolsSecurityHeadersMiddleware
   );
   middleware.use(remoteDevtoolsCorsMiddleware);
+  prependMiddleware(middleware, suppressRemoteDebuggingErrorMiddleware);
 
   middleware.use(bodyParser.json());
   middleware.use('/logs', clientLogsMiddleware(logger));

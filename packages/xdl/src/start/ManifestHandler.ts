@@ -4,7 +4,7 @@ import chalk from 'chalk';
 import express from 'express';
 import http from 'http';
 import os from 'os';
-import { parse, URL } from 'url';
+import { parse, resolve, URL } from 'url';
 
 import {
   Analytics,
@@ -22,6 +22,7 @@ import {
   UserManager,
   UserSettings,
   Versions,
+  Webpack,
 } from '../internal';
 
 interface HostInfo {
@@ -123,7 +124,6 @@ export function getManifestHandler(projectRoot: string) {
     next: (err?: Error) => void
   ) => {
     // Only support `/`, `/manifest`, `/index.exp` for the manifest middleware.
-
     if (
       !req.url ||
       !['/', '/manifest', '/index.exp'].includes(
@@ -283,6 +283,11 @@ export async function getManifestResponseAsync({
     projectRoot,
     manifest,
     async resolver(path) {
+      if (Webpack.isTargetingNative()) {
+        // When using our custom dev server, just do assets normally
+        // without the `assets/` subpath redirect.
+        return resolve(manifest.bundleUrl!.match(/^https?:\/\/.*?\//)![0], path);
+      }
       return manifest.bundleUrl!.match(/^https?:\/\/.*?\//)![0] + 'assets/' + path;
     },
   });

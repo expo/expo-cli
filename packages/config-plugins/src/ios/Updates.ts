@@ -1,19 +1,13 @@
-import { ExpoConfig } from '@expo/config-types';
 import * as path from 'path';
 import resolveFrom from 'resolve-from';
 import xcode from 'xcode';
 
 import { ConfigPlugin } from '../Plugin.types';
 import { withExpoPlist } from '../plugins/ios-plugins';
-import { getRuntimeVersion, getUpdateUrl } from '../utils/Updates';
+import { ExpoConfigUpdates, getRuntimeVersion, getUpdateUrl } from '../utils/Updates';
 import { ExpoPlist } from './IosConfig.types';
 
 const CREATE_MANIFEST_IOS_PATH = 'expo-updates/scripts/create-manifest-ios.sh';
-
-type ExpoConfigUpdates = Pick<
-  ExpoConfig,
-  'sdkVersion' | 'owner' | 'runtimeVersion' | 'updates' | 'slug'
->;
 
 export enum Config {
   ENABLED = 'EXUpdatesEnabled',

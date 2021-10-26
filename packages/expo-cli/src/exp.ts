@@ -348,8 +348,7 @@ Command.prototype.asyncAction = function (asyncFn: Action) {
       await asyncFn(...args);
       // After a command, flush the analytics queue so the program will not have any active timers
       // This allows node js to exit immediately
-      Analytics.flush();
-      UnifiedAnalytics.flush();
+      await Promise.all([Analytics.flush(), UnifiedAnalytics.flush()]);
     } catch (err) {
       // TODO: Find better ways to consolidate error messages
       if (err instanceof AbortCommandError || err instanceof SilentError) {

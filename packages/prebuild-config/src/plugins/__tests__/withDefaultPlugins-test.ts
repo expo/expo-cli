@@ -22,7 +22,7 @@ import { PodfileBasic } from './fixtures/Podfile';
 import rnFixture from './fixtures/react-native-project';
 import { getDirFromFS } from './getDirFromFS';
 
-const { withBranch } = IOSConfig.Branch;
+const { withRootViewBackgroundColor } = IOSConfig.RootViewBackgroundColor;
 
 const { readXMLAsync } = XML;
 const fsReal = jest.requireActual('fs') as typeof fs;
@@ -234,7 +234,7 @@ describe('built-in plugins', () => {
 
   // Ensure helpful error messages are thrown
   it(`fails to locate the project name in an invalid project`, async () => {
-    const config = withBranch({
+    const config = withRootViewBackgroundColor({
       name: 'app',
       slug: '',
       ios: {},
@@ -245,11 +245,12 @@ describe('built-in plugins', () => {
   });
 
   it(`skips platforms`, async () => {
-    const config = withBranch({
+    const config = withRootViewBackgroundColor({
       name: 'app',
       slug: '',
       ios: {},
     });
+
     // should throw if the platform isn't skipped
     await compileModsAsync(config, { projectRoot: '/invalid', platforms: ['android'] });
   });

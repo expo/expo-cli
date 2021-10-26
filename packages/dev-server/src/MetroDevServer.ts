@@ -236,3 +236,5 @@ export function attachInspectorProxy(
 }
 
 export { LogReporter, createDevServerMiddleware };
+export * from './middlwareMutations';
+export * from './JsInspector';
