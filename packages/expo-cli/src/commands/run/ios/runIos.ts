@@ -66,7 +66,6 @@ export async function actionAsync(projectRoot: string, options: Options) {
   }
 
   const buildOutput = await profileMethod(XcodeBuild.buildAsync, 'XcodeBuild.buildAsync')(props);
-
   const binaryPath = await profileMethod(
     XcodeBuild.getAppBinaryPath,
     'XcodeBuild.getAppBinaryPath'

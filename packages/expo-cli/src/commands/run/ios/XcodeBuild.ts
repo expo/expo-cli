@@ -8,6 +8,7 @@ import { SimControl } from 'xdl';
 
 import CommandError, { AbortCommandError } from '../../../CommandError';
 import Log from '../../../log';
+import { parseXcodeBuildResultBundleAsync } from './XcodeBuildResultBundle';
 import { ensureDeviceIsCodeSignedForDeploymentAsync } from './developmentCodeSigning';
 import { ProjectInfo, XcodeConfiguration } from './resolveOptionsAsync';
 
@@ -53,7 +54,7 @@ export async function getProjectBuildSettings(
   const { stdout } = await spawnAsync('xcodebuild', args, { stdio: 'pipe' });
   try {
     return JSON.parse(stdout);
-  } catch (error) {
+  } catch (error: any) {
     // This can fail if the xcodebuild command throws a simulator error:
     // 2021-01-24 14:22:43.802 xcodebuild[73087:14664906]  DVTAssertions: Warning in /Library/Caches/com.apple.xbs/Sources/DVTiOSFrameworks/DVTiOSFrameworks-17705/DTDeviceKitBase/DTDKRemoteDeviceData.m:371
     Log.warn(error.message);
@@ -162,6 +163,10 @@ function getProcessOptions({
   };
 }
 
+function getResultBundlePath(projectRoot: string) {
+  return path.join(projectRoot, '.expo/ios', `${require('uuid').v4()}`);
+}
+
 export async function buildAsync({
   projectRoot,
   xcodeProject,
@@ -173,6 +178,7 @@ export async function buildAsync({
   terminal,
   port,
 }: BuildProps): Promise<string> {
+  const results = getResultBundlePath(projectRoot);
   const args = [
     xcodeProject.isWorkspace ? '-workspace' : '-project',
     xcodeProject.name,
@@ -182,6 +188,11 @@ export async function buildAsync({
     scheme,
     '-destination',
     `id=${device.udid}`,
+    // Like ``
+    '-resultBundlePath',
+    results,
+    // getRandomXCActivityLogDirectory(xcodeProject.name),
+    '-showBuildTimingSummary',
   ];
 
   if (!isSimulator) {
@@ -193,6 +204,10 @@ export async function buildAsync({
         '-allowProvisioningDeviceRegistration'
       );
     }
+  }
+
+  if (Log.isProfiling) {
+    args.push('XC' + 'Em' + 'itT' + 'ime' + 'Tra' + 'ce' + '=Y' + 'ES');
   }
 
   logPrettyItem(chalk.bold`Planning build`);
@@ -269,6 +284,12 @@ export async function buildAsync({
         );
         return;
       }
+      parseXcodeBuildResultBundleAsync(results).then(res => {
+        Log.log('GOT:', res);
+        for (const warning of res?.issues?.warningSummaries || []) {
+          Log.log('warn:', warning);
+        }
+      });
       resolve(buildOutput);
     });
   });

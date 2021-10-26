@@ -1,7 +1,9 @@
 // Copyright (c) 2021-present Expo
 
 import crypto from 'crypto';
+import os from 'os';
 import path from 'path';
+import { v4 } from 'uuid';
 
 function divmod(a: bigint, b: bigint) {
   return [a / b, a % b];
@@ -69,12 +71,30 @@ export function createDerivedDataHash(path: string) {
 /**
  * Create the DerivedData build folder path for the project path
  *
- * @parameter path to a `.xcworkspace` or an `.xcodeproj` directory
- *
+ * @parameter projectFilePath to a `.xcworkspace` or an `.xcodeproj` directory
  */
 export function getFolderWithHash(projectFilePath: string) {
   const _path = path.resolve(projectFilePath);
   const projectName = path.basename(_path).replace('.xcworkspace', '').replace('.xcodeproj', '');
   const hash = createDerivedDataHash(_path);
   return `${projectName}-${hash}`;
+}
+
+export function getDerivedDataDirectory(projectFilePath: string): string {
+  return path.join(
+    os.homedir(),
+    'Library/Developer/Xcode/DerivedData',
+    getFolderWithHash(projectFilePath)
+  );
+}
+
+export function getRandomXCActivityLogDirectory(projectFilePath: string): string {
+  return path.join(
+    getDerivedDataDirectory(projectFilePath),
+    'Logs/Build',
+    // TODO: This isn't exactly what Xcode uses, examples:
+    // 1E021C27-CAE1-46A0-9C5D-C3C7FC849C12.xcactivitylog
+    // 731203A6-15BC-498F-B9A7-3DFDF1811EAF.xcactivitylog
+    `${v4()}.xcactivitylog`
+  );
 }
