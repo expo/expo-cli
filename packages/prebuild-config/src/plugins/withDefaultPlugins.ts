@@ -99,10 +99,6 @@ export const withAndroidExpoPlugins: ConfigPlugin<{
     AndroidConfig.Scheme.withScheme,
     AndroidConfig.Orientation.withOrientation,
     AndroidConfig.Permissions.withPermissions,
-    AndroidConfig.UserInterfaceStyle.withUiModeManifest,
-
-    // MainActivity.*
-    AndroidConfig.UserInterfaceStyle.withUiModeMainActivity,
 
     // strings.xml
     AndroidConfig.Name.withName,
