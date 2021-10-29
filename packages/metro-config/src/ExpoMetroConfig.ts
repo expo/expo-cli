@@ -3,13 +3,28 @@
 import { getConfig, getDefaultTarget, isLegacyImportsEnabled, ProjectTarget } from '@expo/config';
 import { getBareExtensions, getManagedExtensions } from '@expo/config/paths';
 import chalk from 'chalk';
+import findWorkspaceRoot from 'find-yarn-workspace-root';
 import { boolish } from 'getenv';
+import type { IncomingMessage, ServerResponse } from 'http';
 import { Reporter } from 'metro';
 import type MetroConfig from 'metro-config';
 import path from 'path';
 import resolveFrom from 'resolve-from';
 
+import { getWatchFolders } from './getWatchFolders';
 import { importMetroConfigFromProject } from './importMetroFromProject';
+
+export function getModulesPaths(projectRoot: string): string[] {
+  const paths: string[] = [];
+  paths.push(path.resolve(projectRoot, 'node_modules'));
+
+  const workspaceRoot = findWorkspaceRoot(path.resolve(projectRoot)); // Absolute path or null
+  if (workspaceRoot) {
+    paths.push(path.resolve(workspaceRoot, 'node_modules'));
+  }
+
+  return paths;
+}
 
 export const EXPO_DEBUG = boolish('EXPO_DEBUG', false);
 const EXPO_USE_EXOTIC = boolish('EXPO_USE_EXOTIC', false);
@@ -70,6 +85,28 @@ function getProjectBabelConfigFile(projectRoot: string): string | undefined {
   );
 }
 
+function getAssetPlugins(projectRoot: string): string[] {
+  const assetPlugins: string[] = [];
+
+  assetPlugins.push(require.resolve('./monorepoAssetsPlugin'));
+
+  let hashAssetFilesPath;
+  try {
+    hashAssetFilesPath = resolveFrom(projectRoot, 'expo-asset/tools/hashAssetFiles');
+  } catch {
+    // TODO: we should warn/throw an error if the user has expo-updates installed but does not
+    // have hashAssetFiles available, or if the user is in managed workflow and does not have
+    // hashAssetFiles available. but in a bare app w/o expo-updates, just using dev-client,
+    // it is not needed
+  }
+
+  if (hashAssetFilesPath) {
+    assetPlugins.push(hashAssetFilesPath);
+  }
+
+  return assetPlugins;
+}
+
 let hasWarnedAboutExotic = false;
 
 export function getDefaultConfig(
@@ -98,16 +135,6 @@ export function getDefaultConfig(
     process.env.EXPO_METRO_CACHE_KEY_VERSION = String(require(babelPresetFbjsPath).version);
   } catch {
     // noop -- falls back to a hardcoded value.
-  }
-
-  let hashAssetFilesPath;
-  try {
-    hashAssetFilesPath = resolveFrom(projectRoot, 'expo-asset/tools/hashAssetFiles');
-  } catch {
-    // TODO: we should warn/throw an error if the user has expo-updates installed but does not
-    // have hashAssetFiles available, or if the user is in managed workflow and does not have
-    // hashAssetFiles available. but in a bare app w/o expo-updates, just using dev-client,
-    // it is not needed
   }
 
   const isLegacy = readIsLegacyImportsEnabled(projectRoot);
@@ -178,6 +205,8 @@ export function getDefaultConfig(
   }
   resolverMainFields.push('browser', 'main');
 
+  const watchFolders = getWatchFolders(projectRoot);
+  const nodeModulesPaths = getModulesPaths(projectRoot);
   if (EXPO_DEBUG) {
     console.log();
     console.log(`Expo Metro config:`);
@@ -187,6 +216,8 @@ export function getDefaultConfig(
     console.log(`- React Native: ${reactNativePath}`);
     console.log(`- Babel config: ${babelConfigPath || 'babel-preset-expo (default)'}`);
     console.log(`- Resolver Fields: ${resolverMainFields.join(', ')}`);
+    console.log(`- Watch Folders: ${watchFolders.join(', ')}`);
+    console.log(`- Node Module Paths: ${nodeModulesPaths.join(', ')}`);
     console.log(`- Exotic: ${isExotic}`);
     console.log();
   }
@@ -197,13 +228,38 @@ export function getDefaultConfig(
     ...metroDefaultValues
   } = MetroConfig.getDefaultConfig.getDefaultValues(projectRoot);
 
+  const customEnhanceMiddleware = metroDefaultValues.server?.enhanceMiddleware;
+
+  // @ts-ignore can't mutate readonly config
+  const enhanceMiddleware = (metroMiddleware: any, server: Metro.Server) => {
+    if (customEnhanceMiddleware) {
+      metroMiddleware = customEnhanceMiddleware(metroMiddleware, server);
+    }
+
+    const debug = require('debug')('expo:metro-config:middleware');
+
+    // Add extra middleware to redirect assets in a monorepo.
+    return (req: IncomingMessage, res: ServerResponse, next: (err?: Error) => void) => {
+      const { url } = req;
+      if (url && url.startsWith('/assets/')) {
+        // Added by the assetPlugins
+        req.url = url.replace(/@@\//g, '../');
+        debug('Redirect asset:', url, '->', req.url);
+      }
+
+      return metroMiddleware(req, res, next);
+    };
+  };
+
   // Merge in the default config from Metro here, even though loadConfig uses it as defaults.
   // This is a convenience for getDefaultConfig use in metro.config.js, e.g. to modify assetExts.
   return MetroConfig.mergeConfig(metroDefaultValues, {
+    watchFolders,
     resolver: {
       resolverMainFields,
       platforms: ['ios', 'android', 'native'],
       sourceExts,
+      nodeModulesPaths,
     },
     serializer: {
       getModulesRunBeforeMainModule: () => [
@@ -214,6 +270,7 @@ export function getDefaultConfig(
     },
     server: {
       port: Number(process.env.RCT_METRO_PORT) || 8081,
+      enhanceMiddleware,
     },
     symbolicator: {
       customizeFrame: frame => {
@@ -247,7 +304,7 @@ export function getDefaultConfig(
         : // Otherwise, use a custom transformer that uses `babel-preset-expo` by default for projects.
           require.resolve('./transformer/metro-expo-babel-transformer'),
       assetRegistryPath: 'react-native/Libraries/Image/AssetRegistry',
-      assetPlugins: hashAssetFilesPath ? [hashAssetFilesPath] : [],
+      assetPlugins: getAssetPlugins(projectRoot),
     },
   });
 }
