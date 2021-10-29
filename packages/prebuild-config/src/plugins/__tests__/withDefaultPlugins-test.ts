@@ -379,9 +379,7 @@ describe('built-in plugins', () => {
     expect(after['android/app/src/main/java/com/bacon/todo/MainApplication.java']).toMatch(
       'package com.bacon.todo;'
     );
-    expect(after['android/app/src/main/java/com/bacon/todo/MainActivity.java']).toMatch(
-      '// Added automatically by Expo Config'
-    );
+
     expect(after['android/app/src/main/res/values/strings.xml']).toMatch(
       '<string name="app_name">my cool app</string>'
     );

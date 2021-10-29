@@ -1,108 +1,57 @@
-import { resolveProps, setStrings } from '../withAndroidUserInterfaceStyle';
+import { WarningAggregator, withStringsXml } from '@expo/config-plugins';
 
-describe(resolveProps, () => {
-  it(`resolves no props`, () => {
-    expect(resolveProps({})).toStrictEqual({
-      userInterfaceStyle: undefined,
-    });
-  });
+import { withAndroidUserInterfaceStyle } from '../withAndroidUserInterfaceStyle';
+import { compileMockModWithResultsAsync } from './mockMods';
 
-  it(`uses more specific key`, () => {
-    expect(
-      resolveProps({
-        userInterfaceStyle: 'dark',
-        android: {
-          userInterfaceStyle: 'light',
-        },
-      })
-    ).toStrictEqual({
-      userInterfaceStyle: 'light',
-    });
-  });
+jest.mock('@expo/config-plugins', () => {
+  const plugins = jest.requireActual('@expo/config-plugins');
+  return {
+    ...plugins,
+    withStringsXml: jest.fn(),
+    WarningAggregator: { addWarningAndroid: jest.fn() },
+  };
 });
 
-describe(setStrings, () => {
-  function getAllProps() {
-    return resolveProps({ userInterfaceStyle: 'dark' });
-  }
-  // TODO: Should we do validation on backgroundColor just for convenience?
-  it(`asserts an invalid color`, () => {
-    expect(() =>
-      setStrings(
-        { resources: {} },
-        resolveProps({
-          // @ts-expect-error
-          userInterfaceStyle: '-bacon-',
-        })
-      )
-    ).toThrow(/expo-system-ui: Invalid userInterfaceStyle: "-bacon-"/);
-  });
+// jest.mock('@expo/config-plugins');
 
-  it(`sets all strings`, () => {
-    expect(setStrings({ resources: {} }, getAllProps())).toStrictEqual({
-      resources: {
-        string: [
-          {
-            $: {
-              name: 'expo_system_ui_user_interface_style',
-              translatable: 'false',
-            },
-            _: 'dark',
-          },
-        ],
-      },
-    });
-  });
+describe(withAndroidUserInterfaceStyle, () => {
+  it(`does not warn when the key isn't defined`, async () => {
+    // @ts-ignore: jest
+    WarningAggregator.addWarningAndroid.mockImplementationOnce();
 
-  it(`sets no strings`, () => {
-    expect(
-      setStrings(
-        {
-          resources: {
-            string: [],
-          },
-        },
-        {}
-      )
-    ).toStrictEqual({
-      resources: {
-        string: [],
-      },
-    });
-  });
-  it(`unsets string`, () => {
-    // Set all strings
-    const strings = setStrings({ resources: {} }, getAllProps());
-    // Unset all strings
-    expect(setStrings(strings, resolveProps({}))).toStrictEqual({
-      resources: {
-        string: [],
-      },
-    });
-  });
-  it(`redefines duplicates`, () => {
-    // Set all strings
-    const strings = setStrings({ resources: {} }, { userInterfaceStyle: 'dark' });
-
-    expect(strings.resources.string).toStrictEqual([
+    const { modResults } = await compileMockModWithResultsAsync(
+      {},
       {
-        $: {
-          name: 'expo_system_ui_user_interface_style',
-          translatable: 'false',
-        },
-        // Test an initial value
-        _: 'dark',
-      },
-    ]);
+        plugin: withAndroidUserInterfaceStyle,
+        mod: withStringsXml,
+        modResults: { resources: {} },
+      }
+    );
 
-    expect(
-      setStrings(strings, resolveProps({ userInterfaceStyle: 'light' })).resources.string
-    ).toStrictEqual([
+    // Check if the warning was thrown
+    expect(WarningAggregator.addWarningAndroid).toHaveBeenCalledTimes(0);
+
+    // Unchanged
+    expect(modResults).toStrictEqual({ resources: {} });
+  });
+
+  it(`warns about unsupported feature`, async () => {
+    // @ts-ignore: jest
+    WarningAggregator.addWarningAndroid.mockImplementationOnce();
+
+    const { modResults } = await compileMockModWithResultsAsync(
+      { userInterfaceStyle: 'dark' },
       {
-        $: { name: 'expo_system_ui_user_interface_style', translatable: 'false' },
-        // Test a redefined value
-        _: 'light',
-      },
-    ]);
+        plugin: withAndroidUserInterfaceStyle,
+        mod: withStringsXml,
+        modResults: { resources: {} },
+      }
+    );
+
+    // Check if the warning was thrown
+    expect(WarningAggregator.addWarningAndroid).toHaveBeenCalledTimes(1);
+
+    // Unchanged
+    expect(modResults).toStrictEqual({ resources: {} });
   });
 });
