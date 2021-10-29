@@ -163,7 +163,7 @@ export type OptimizationOptions = {
 
 async function pool<T, R>(items: T[], process: (item: T) => Promise<R>): Promise<R[]> {
   const result = await PromisePool.for(items)
-    .withConcurrency(cpus.length - 1)
+    .withConcurrency(Math.max(1, cpus.length - 1))
     .process(process);
 
   if (result.errors.length) {
