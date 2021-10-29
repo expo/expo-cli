@@ -1,4 +1,4 @@
-import { getUserInterfaceStyle, setUserInterfaceStyle } from '../UserInterfaceStyle';
+import { getUserInterfaceStyle, setUserInterfaceStyle } from '../withIosUserInterfaceStyle';
 
 describe('user interface style', () => {
   // TODO: should we default to 'Light' just as we do in the client if none is specified?
