@@ -39,19 +39,16 @@ const getBabelRC = (function () {
     // TODO look into adding a command line option to specify this location
     let projectBabelRCPath;
 
-    // Since this is an opt-in system, we can make certain
-    // assumptions like dropping support for `.babelrc` to speed up resolution.
-
     // .babelrc
-    // if (projectRoot) {
-    //   projectBabelRCPath = path.resolve(projectRoot, '.babelrc');
-    // }
+    if (projectRoot) {
+      projectBabelRCPath = path.resolve(projectRoot, '.babelrc');
+    }
 
     if (projectBabelRCPath) {
       // .babelrc.js
-      // if (!fs.existsSync(projectBabelRCPath)) {
-      //   projectBabelRCPath = path.resolve(projectRoot, '.babelrc.js');
-      // }
+      if (!fs.existsSync(projectBabelRCPath)) {
+        projectBabelRCPath = path.resolve(projectRoot, '.babelrc.js');
+      }
 
       // babel.config.js
       if (!fs.existsSync(projectBabelRCPath)) {
@@ -80,6 +77,8 @@ const getBabelRC = (function () {
         [
           require(presetPath),
           {
+            // Default to React 17 automatic JSX transform.
+            jsxRuntime: 'automatic',
             ...presetOptions,
             disableImportExportTransform: experimentalImportSupport,
             enableBabelRuntime: options.enableBabelRuntime,
