@@ -495,7 +495,7 @@ Please reload the project in Expo Go for the change to take effect.`
         break;
       case 'o':
         Log.log(`${BLT} Opening the editor...`);
-        await openInEditorAsync(projectRoot);
+        await openInEditorAsync(projectRoot, { editor: process.env.EXPO_EDITOR });
     }
   }
 }
