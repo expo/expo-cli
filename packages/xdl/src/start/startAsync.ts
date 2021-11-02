@@ -1,5 +1,5 @@
 import { ExpoConfig, getConfig } from '@expo/config';
-import { MessageSocket } from '@expo/dev-server';
+import { closeJsInspector, MessageSocket } from '@expo/dev-server';
 import { Server } from 'http';
 
 import {
@@ -94,6 +94,7 @@ export async function startAsync(
 async function stopDevServerAsync() {
   return new Promise<void>((resolve, reject) => {
     if (serverInstance) {
+      closeJsInspector();
       serverInstance.close(error => {
         if (error) {
           reject(error);

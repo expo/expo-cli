@@ -217,6 +217,7 @@ export function openDeveloperTools(url: string) {
 }
 
 async function openJsInsectorAsync(projectRoot: string) {
+  Log.log(`Opening JavaScript inspector in the browser...`);
   const { packagerPort } = await ProjectSettings.readPackagerInfoAsync(projectRoot);
   const metroServerOrigin = `http://localhost:${packagerPort}`;
   const apps = await queryAllInspectorAppsAsync(metroServerOrigin);
