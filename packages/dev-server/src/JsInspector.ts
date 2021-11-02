@@ -1,5 +1,9 @@
+import * as osascript from '@expo/osascript';
+import { ChildProcess, spawn } from 'child_process';
+import { sync as globSync } from 'glob';
 import fetch from 'node-fetch';
-import open, { openApp } from 'open';
+import open from 'open';
+import os from 'os';
 import path from 'path';
 
 export interface MetroInspectorProxyApp {
@@ -12,6 +16,8 @@ export interface MetroInspectorProxyApp {
   vm: 'Hermes' | "don't use";
   webSocketDebuggerUrl: string;
 }
+
+let openingChildProcess: ChildProcess | null = null;
 
 export function openJsInspector(app: MetroInspectorProxyApp) {
   // To update devtoolsFrontendRev, find the full commit hash in the url:
@@ -26,6 +32,13 @@ export function openJsInspector(app: MetroInspectorProxyApp) {
   const ws = app.webSocketDebuggerUrl.replace('ws://[::]:', 'localhost:');
   const url = `${urlBase}?panel=sources&v8only=true&ws=${encodeURIComponent(ws)}`;
   launchChromiumAsync(url);
+}
+
+export function closeJsInspector() {
+  if (openingChildProcess != null) {
+    openingChildProcess.kill();
+    openingChildProcess = null;
+  }
 }
 
 export async function queryInspectorAppAsync(
@@ -85,17 +98,42 @@ async function launchChromiumAsync(url: string): Promise<void> {
     '--no-default-browser-check',
   ];
 
-  const result = await openApp(open.apps.chrome, {
+  const supportedChromiums = [open.apps.chrome, open.apps.edge];
+  for (const chromium of supportedChromiums) {
+    try {
+      await launchAppAsync(chromium, launchArgs);
+      return;
+    } catch {}
+  }
+
+  throw new Error(
+    'Unable to find a browser on the host to open the inspector. Supported browsers: Google Chrome, Microsoft Edge'
+  );
+}
+
+async function launchAppAsync(
+  appName: string | readonly string[],
+  launchArgs: string[]
+): Promise<void> {
+  if (os.platform() === 'darwin' && !Array.isArray(appName)) {
+    const appDirectory = await osascript.execAsync(
+      `POSIX path of (path to application "${appName}")`
+    );
+    const appPath = globSync('Contents/MacOS/*', { cwd: appDirectory.trim(), absolute: true })?.[0];
+    if (!appPath) {
+      throw new Error(`Cannot find application path from ${appDirectory}Contents/MacOS`);
+    }
+    closeJsInspector();
+    openingChildProcess = spawn(appPath, launchArgs, { stdio: 'ignore' });
+    return;
+  }
+
+  const result = await open.openApp(appName, {
     arguments: launchArgs,
     newInstance: true,
     wait: true,
   });
-
   if (result.exitCode !== 0) {
-    await openApp(open.apps.edge, {
-      arguments: launchArgs,
-      newInstance: true,
-      wait: true,
-    });
+    throw new Error(`Cannot find application: ${appName}`);
   }
 }
