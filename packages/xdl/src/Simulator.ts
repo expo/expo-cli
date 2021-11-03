@@ -781,15 +781,17 @@ async function constructDeepLinkAsync(
   ) {
     return UrlUtils.constructLoadingUrlAsync(projectRoot, 'localhost');
   } else {
-    return await UrlUtils.constructDeepLinkAsync(projectRoot, {
-      hostType: 'localhost',
-      scheme,
-    }).catch(e => {
+    try {
+      return await UrlUtils.constructDeepLinkAsync(projectRoot, {
+        hostType: 'localhost',
+        scheme,
+      });
+    } catch (e) {
       if (devClient) {
         return null;
       }
       throw e;
-    });
+    }
   }
 }
 

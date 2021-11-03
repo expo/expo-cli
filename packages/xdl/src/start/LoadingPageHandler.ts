@@ -80,12 +80,15 @@ export function getLoadingPageHandler(projectRoot: string) {
       }
     } catch (exception) {
       res.statusCode = 520;
-      res.end(
-        JSON.stringify({
-          //@ts-ignore
-          error: exception.toString(),
-        })
-      );
+      if (typeof exception == 'object' && exception != null) {
+        res.end(
+          JSON.stringify({
+            error: exception.toString(),
+          })
+        );
+      } else {
+        res.end('Unexpected error.');
+      }
     }
   };
 }
