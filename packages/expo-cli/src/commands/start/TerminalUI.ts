@@ -217,6 +217,7 @@ export function openDeveloperTools(url: string) {
 }
 
 async function openJsInsectorAsync(projectRoot: string) {
+  Log.log(`Opening JavaScript inspector in the browser...`);
   const { packagerPort } = await ProjectSettings.readPackagerInfoAsync(projectRoot);
   const metroServerOrigin = `http://localhost:${packagerPort}`;
   const apps = await queryAllInspectorAppsAsync(metroServerOrigin);
@@ -495,7 +496,7 @@ Please reload the project in Expo Go for the change to take effect.`
         break;
       case 'o':
         Log.log(`${BLT} Opening the editor...`);
-        await openInEditorAsync(projectRoot);
+        await openInEditorAsync(projectRoot, { editor: process.env.EXPO_EDITOR });
     }
   }
 }
