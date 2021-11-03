@@ -10,6 +10,8 @@ import CommandError, { AbortCommandError } from '../../../CommandError';
 import Log from '../../../log';
 import { ensureDeviceIsCodeSignedForDeploymentAsync } from './developmentCodeSigning';
 import { ProjectInfo, XcodeConfiguration } from './resolveOptionsAsync';
+import * as ChromeTrace from './xcresult/ChromeTrace';
+import * as XCResultTool from './xcresult/XCResultTool';
 
 export type BuildProps = {
   projectRoot: string;
@@ -22,6 +24,7 @@ export type BuildProps = {
   terminal?: string;
   port: number;
   scheme: string;
+  clean: boolean;
 };
 
 type XcodeSDKName = 'iphoneos' | 'iphonesimulator';
@@ -49,11 +52,12 @@ export async function getProjectBuildSettings(
     '-showBuildSettings',
     '-json',
   ];
+
   Log.debug(`  xcodebuild ${args.join(' ')}`);
   const { stdout } = await spawnAsync('xcodebuild', args, { stdio: 'pipe' });
   try {
     return JSON.parse(stdout);
-  } catch (error) {
+  } catch (error: any) {
     // This can fail if the xcodebuild command throws a simulator error:
     // 2021-01-24 14:22:43.802 xcodebuild[73087:14664906]  DVTAssertions: Warning in /Library/Caches/com.apple.xbs/Sources/DVTiOSFrameworks/DVTiOSFrameworks-17705/DTDeviceKitBase/DTDKRemoteDeviceData.m:371
     Log.warn(error.message);
@@ -162,6 +166,21 @@ function getProcessOptions({
   };
 }
 
+/**
+ * @returns String like `2021-11-03_13-54-04`
+ */
+function getDateStringId() {
+  const format = (v: number) => String(v).padStart(2, '0');
+  const date = new Date();
+  const year = date.getFullYear();
+  const month = format(date.getMonth() + 1);
+  const day = format(date.getDate());
+  const hour = format(date.getHours());
+  const min = format(date.getMinutes());
+  const second = format(date.getSeconds());
+  return [[year, month, day].join('-'), [hour, min, second].join('-')].join('_');
+}
+
 export async function buildAsync({
   projectRoot,
   xcodeProject,
@@ -172,7 +191,9 @@ export async function buildAsync({
   shouldSkipInitialBundling,
   terminal,
   port,
+  clean,
 }: BuildProps): Promise<string> {
+  const buildId = getDateStringId();
   const args = [
     xcodeProject.isWorkspace ? '-workspace' : '-project',
     xcodeProject.name,
@@ -182,6 +203,7 @@ export async function buildAsync({
     scheme,
     '-destination',
     `id=${device.udid}`,
+    // Like ``
   ];
 
   if (!isSimulator) {
@@ -193,6 +215,28 @@ export async function buildAsync({
         '-allowProvisioningDeviceRegistration'
       );
     }
+  }
+
+  const resultBundlePath = XCResultTool.getResultBundlePath(projectRoot, buildId);
+
+  // TODO: Determine how much time this adds to the build.
+  // if (Log.isProfiling) {
+  args.push(
+    // Create the xcresult file for profiling info.
+    '-resultBundlePath',
+    resultBundlePath,
+    // getRandomXCActivityLogDirectory(xcodeProject.name),
+
+    // Adds legacy activity log file to the build.
+    // 'XC' + 'Em' + 'itT' + 'ime' + 'Tra' + 'ce' + '=Y' + 'ES',
+    // Adds `Build Timing Summary` of domainType `com.apple.dt.IDE.BuildLogTimingSummarySection` to the xcresults.
+    '-showBuildTimingSummary'
+  );
+  // }
+
+  // Add last
+  if (clean) {
+    args.push('clean', 'build');
   }
 
   logPrettyItem(chalk.bold`Planning build`);
@@ -269,6 +313,7 @@ export async function buildAsync({
         );
         return;
       }
+
       resolve(buildOutput);
     });
   });
@@ -292,5 +337,6 @@ function getErrorLogFilePath(projectRoot: string): [string, string] {
   const filename = 'xcodebuild.md';
   const folder = path.join(projectRoot, '.expo');
   fs.ensureDirSync(folder);
+  // TODO: Move to `.expo/ios/run/date-id/`
   return [path.join(folder, filename), path.join(folder, 'xcodebuild-output.log')];
 }
