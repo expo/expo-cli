@@ -85,6 +85,7 @@ declare module 'metro-config' {
     extraNodeModules: {
       [name: string]: string;
     };
+    nodeModulesPaths?: readonly string[];
     hasteImplModulePath: string | null | undefined;
     platforms: ReadonlyArray<string>;
     resolverMainFields: ReadonlyArray<string>;

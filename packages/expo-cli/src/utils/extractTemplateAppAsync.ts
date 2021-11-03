@@ -1,23 +1,18 @@
 import { BareAppConfig, ExpoConfig } from '@expo/config';
+import { IOSConfig } from '@expo/config-plugins';
 import JsonFile from '@expo/json-file';
 import fs from 'fs-extra';
 import merge from 'lodash/merge';
 import Minipass from 'minipass';
 import pacote, { PackageSpec } from 'pacote';
 import path from 'path';
+import slugify from 'slugify';
 import { Readable } from 'stream';
 import tar, { ReadEntry } from 'tar';
 import { UserSettings } from 'xdl';
 
 type AppJsonInput = { expo: Partial<ExpoConfig> & { name: string } };
 type TemplateConfig = { name: string };
-
-function sanitizedName(name: string) {
-  return name
-    .replace(/[\W_]+/g, '')
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '');
-}
 
 function escapeXMLCharacters(original: string): string {
   const noAmps = original.replace('&', '&amp;');
@@ -50,8 +45,8 @@ class Transformer extends Minipass {
     const name = this.getNormalizedName();
     const replaced = this.data
       .replace(/Hello App Display Name/g, name)
-      .replace(/HelloWorld/g, sanitizedName(name))
-      .replace(/helloworld/g, sanitizedName(name.toLowerCase()));
+      .replace(/HelloWorld/g, IOSConfig.XcodeUtils.sanitizedName(name))
+      .replace(/helloworld/g, IOSConfig.XcodeUtils.sanitizedName(name.toLowerCase()));
     super.write(replaced);
     return super.end();
   }
@@ -88,13 +83,15 @@ export async function extractAndPrepareTemplateAppAsync(
   await appFile.writeAsync(appJson);
 
   const packageFile = new JsonFile(path.join(projectRoot, 'package.json'));
-  let packageJson = await packageFile.readAsync();
-  // Adding `private` stops npm from complaining about missing `name` and `version` fields.
-  // We don't add a `name` field because it also exists in `app.json`.
-  packageJson = { ...packageJson, private: true };
+  const packageJson = await packageFile.readAsync();
+  // name and version are required for yarn workspaces (monorepos)
+  const inputName = 'name' in config ? config.name : config.expo.name;
+  packageJson.name = sanitizeNpmPackageName(inputName);
   // These are metadata fields related to the template package, let's remove them from the package.json.
-  delete packageJson.name;
-  delete packageJson.version;
+  // A good place to start
+  packageJson.version = '1.0.0';
+  packageJson.private = true;
+
   delete packageJson.description;
   delete packageJson.tags;
   delete packageJson.repository;
@@ -102,9 +99,39 @@ export async function extractAndPrepareTemplateAppAsync(
   delete packageJson._resolved;
   delete packageJson._integrity;
   delete packageJson._from;
+
   await packageFile.writeAsync(packageJson);
 
   return projectRoot;
+}
+
+export function sanitizeNpmPackageName(name: string): string {
+  // https://github.com/npm/validate-npm-package-name/#naming-rules
+  return (
+    applyKnownNpmPackageNameRules(name) ||
+    applyKnownNpmPackageNameRules(slugify(name)) ||
+    // If nothing is left use 'app' like we do in Xcode projects.
+    'app'
+  );
+}
+
+function applyKnownNpmPackageNameRules(name: string): string | null {
+  // https://github.com/npm/validate-npm-package-name/#naming-rules
+
+  // package name cannot start with '.' or '_'.
+  while (/^(\.|_)/.test(name)) {
+    name = name.substring(1);
+  }
+
+  name = name.toLowerCase().replace(/[^a-zA-Z._\-/@]/g, '');
+
+  return (
+    name
+      // .replace(/![a-z0-9-._~]+/g, '')
+      // Remove special characters
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '') || null
+  );
 }
 
 /**
@@ -145,9 +172,11 @@ export function createEntryResolver(name: string) {
       entry.path = entry.path
         .replace(
           /HelloWorld/g,
-          entry.path.includes('android') ? sanitizedName(name.toLowerCase()) : sanitizedName(name)
+          entry.path.includes('android')
+            ? IOSConfig.XcodeUtils.sanitizedName(name.toLowerCase())
+            : IOSConfig.XcodeUtils.sanitizedName(name)
         )
-        .replace(/helloworld/g, sanitizedName(name).toLowerCase());
+        .replace(/helloworld/g, IOSConfig.XcodeUtils.sanitizedName(name).toLowerCase());
     }
     if (entry.type && /^file$/i.test(entry.type) && path.basename(entry.path) === 'gitignore') {
       // Rename `gitignore` because npm ignores files named `.gitignore` when publishing.

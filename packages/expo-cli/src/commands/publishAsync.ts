@@ -41,6 +41,11 @@ export async function actionAsync(
   });
   const { sdkVersion, runtimeVersion } = exp;
 
+  // TODO(@jkhales): remove this check when runtimeVersion policies are supported, if they are ever supported
+  if (typeof runtimeVersion !== 'undefined' && typeof runtimeVersion !== 'string') {
+    throw new CommandError(`Runtime version policies are not supported by the publish command.`);
+  }
+
   const target = options.target ?? getDefaultTarget(projectRoot);
 
   // note: this validates the exp.owner when the user is a robot
@@ -162,7 +167,7 @@ function logManifestUrl({
 
 /**
  *
- * @example ⚙️   Project page: https://expo.io/@bacon/projects/my-app [copied to clipboard] Learn more: https://expo.fyi/project-page
+ * @example ⚙️   Project page: https://expo.dev/@bacon/projects/my-app [copied to clipboard] Learn more: https://expo.fyi/project-page
  * @param options
  */
 function logProjectPageUrl({
@@ -242,7 +247,7 @@ export function logOptimizeWarnings({ projectRoot }: { projectRoot: string }): v
       `Project may contain uncompressed images. Optimizing image assets can improve app size and performance.\n  To fix this, run ${chalk.bold(
         `npx expo-optimize`
       )}`,
-      'https://docs.expo.io/distribution/optimizing-updates/#optimize-images'
+      'https://docs.expo.dev/distribution/optimizing-updates/#optimize-images'
     )
   );
 }

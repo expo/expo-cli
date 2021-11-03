@@ -8,7 +8,7 @@ import { ConfigPlugin } from '../Plugin.types';
 import { createAndroidManifestPlugin, withAppBuildGradle } from '../plugins/android-plugins';
 import { withDangerousMod } from '../plugins/withDangerousMod';
 import { directoryExistsAsync } from '../utils/modules';
-import * as WarningAggregator from '../utils/warnings';
+import { addWarningAndroid } from '../utils/warnings';
 import { AndroidManifest } from './Manifest';
 import { getAppBuildGradleFilePath, getProjectFilePath } from './Paths';
 
@@ -24,8 +24,8 @@ export const withPackageGradle: ConfigPlugin = config => {
     if (config.modResults.language === 'groovy') {
       config.modResults.contents = setPackageInBuildGradle(config, config.modResults.contents);
     } else {
-      WarningAggregator.addWarningAndroid(
-        'android-package',
+      addWarningAndroid(
+        'android.package',
         `Cannot automatically configure app build.gradle if it's not groovy`
       );
     }

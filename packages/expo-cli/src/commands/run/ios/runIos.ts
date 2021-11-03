@@ -2,27 +2,32 @@ import { ExpoConfig, getConfig } from '@expo/config';
 import chalk from 'chalk';
 import fs from 'fs-extra';
 import * as path from 'path';
-import { SimControl, Simulator, UnifiedAnalytics } from 'xdl';
+import { AppleDevice, SimControl, Simulator, UnifiedAnalytics } from 'xdl';
 
 import CommandError from '../../../CommandError';
 import StatusEventEmitter from '../../../StatusEventEmitter';
 import getDevClientProperties from '../../../analytics/getDevClientProperties';
 import Log from '../../../log';
 import { getSchemesForIosAsync } from '../../../schemes';
+import { promptToClearMalformedNativeProjectsAsync } from '../../eject/clearNativeFolder';
 import { EjectAsyncOptions, prebuildAsync } from '../../eject/prebuildAsync';
 import { installCustomExitHook } from '../../start/installExitHooks';
 import { profileMethod } from '../../utils/profileMethod';
+import { setGlobalDevClientSettingsAsync, startBundlerAsync } from '../ios/startBundlerAsync';
 import { parseBinaryPlistAsync } from '../utils/binaryPlist';
-import { isDevMenuInstalled } from '../utils/isDevMenuInstalled';
 import * as IOSDeploy from './IOSDeploy';
 import maybePromptToSyncPodsAsync from './Podfile';
 import * as XcodeBuild from './XcodeBuild';
+import { getAppDeltaDirectory, installOnDeviceAsync } from './installOnDeviceAsync';
 import { Options, resolveOptionsAsync } from './resolveOptionsAsync';
-import { startBundlerAsync } from './startBundlerAsync';
 
 const isMac = process.platform === 'darwin';
 
 export async function actionAsync(projectRoot: string, options: Options) {
+  // If the user has an empty ios folder then the project won't build, this can happen when they delete the prebuild files in git.
+  // Check to ensure most of the core files are in place, and prompt to remove the folder if they aren't.
+  await profileMethod(promptToClearMalformedNativeProjectsAsync)(projectRoot, ['ios']);
+
   const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
   track(projectRoot, exp);
 
@@ -38,18 +43,26 @@ export async function actionAsync(projectRoot: string, options: Options) {
   // If the project doesn't have native code, prebuild it...
   if (!fs.existsSync(path.join(projectRoot, 'ios'))) {
     await prebuildAsync(projectRoot, {
-      install: true,
+      install: options.install,
       platforms: ['ios'],
     } as EjectAsyncOptions);
-  } else {
+  } else if (options.install) {
     await maybePromptToSyncPodsAsync(projectRoot);
     // TODO: Ensure the pods are in sync -- https://github.com/expo/expo/pull/11593
   }
 
   const props = await resolveOptionsAsync(projectRoot, options);
   if (!props.isSimulator) {
-    // Assert as early as possible
-    await IOSDeploy.assertInstalledAsync();
+    if (AppleDevice.isEnabled()) {
+      Log.log(
+        chalk.gray(
+          `\u203A Unstable feature ${chalk.bold`EXPO_USE_APPLE_DEVICE`} is enabled. Device installation may not work as expected.`
+        )
+      );
+    } else {
+      // Assert as early as possible
+      await IOSDeploy.assertInstalledAsync();
+    }
   }
 
   const buildOutput = await profileMethod(XcodeBuild.buildAsync, 'XcodeBuild.buildAsync')(props);
@@ -59,9 +72,11 @@ export async function actionAsync(projectRoot: string, options: Options) {
     'XcodeBuild.getAppBinaryPath'
   )(buildOutput);
 
+  await setGlobalDevClientSettingsAsync(projectRoot);
   if (props.shouldStartBundler) {
     await startBundlerAsync(projectRoot, {
       metroPort: props.port,
+      platforms: exp.platforms,
     });
   }
   const bundleIdentifier = await profileMethod(getBundleIdentifierForBinaryAsync)(binaryPath);
@@ -77,9 +92,10 @@ export async function actionAsync(projectRoot: string, options: Options) {
       shouldStartBundler: props.shouldStartBundler,
     });
   } else {
-    await IOSDeploy.installOnDeviceAsync({
+    await profileMethod(installOnDeviceAsync)({
+      bundleIdentifier,
       bundle: binaryPath,
-      appDeltaDirectory: IOSDeploy.getAppDeltaDirectory(bundleIdentifier),
+      appDeltaDirectory: getAppDeltaDirectory(bundleIdentifier),
       udid: props.device.udid,
       deviceName: props.device.name,
     });
@@ -151,43 +167,16 @@ async function openInSimulatorAsync({
   }
 
   const schemes = await getSchemesForIosAsync(projectRoot);
-
-  if (
-    // If the dev-menu is installed, then deep link directly into the app so the user never sees the switcher screen.
-    isDevMenuInstalled(projectRoot) &&
-    // Ensure the app can handle custom URI schemes before attempting to deep link.
-    // This can happen when someone manually removes all URI schemes from the native app.
-    schemes.length
-  ) {
-    // TODO: set to ensure TerminalUI uses this same scheme.
-    const scheme = schemes[0];
-
-    Log.debug(`Deep linking into simulator: ${device.udid}, using scheme: ${scheme}`);
-
-    const result = await Simulator.openProjectAsync({
-      projectRoot,
-      udid: device.udid,
-      devClient: true,
-      scheme,
-      // We always setup native logs before launching to ensure we catch any fatal errors.
-      skipNativeLogs: true,
-    });
-    if (!result.success) {
-      // TODO: Maybe fallback on using the bundle identifier.
-      throw new CommandError(result.error);
-    }
-  } else {
-    Log.debug('Opening app in simulator via bundle identifier: ' + device.udid);
-    const result = await SimControl.openBundleIdAsync({
-      udid: device.udid,
-      bundleIdentifier,
-    });
-    if (result.status === 0) {
-      await Simulator.activateSimulatorWindowAsync();
-    } else {
-      throw new CommandError(
-        `Failed to launch the app on simulator ${device.name} (${device.udid}). Error in "osascript" command: ${result.stderr}`
-      );
-    }
+  const result = await Simulator.openProjectAsync({
+    projectRoot,
+    udid: device.udid,
+    devClient: true,
+    scheme: schemes[0],
+    applicationId: bundleIdentifier,
+    // We always setup native logs before launching to ensure we catch any fatal errors.
+    skipNativeLogs: true,
+  });
+  if (!result.success) {
+    throw new CommandError(result.error);
   }
 }

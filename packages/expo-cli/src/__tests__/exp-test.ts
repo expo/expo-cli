@@ -45,7 +45,6 @@ describe(bootstrapAnalyticsAsync.name, () => {
         userId: userData.userId,
         currentConnection: userData?.currentConnection,
         username: userData?.username,
-        userType: '',
       });
     });
   });

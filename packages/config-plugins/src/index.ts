@@ -3,19 +3,15 @@
  */
 import * as AndroidConfig from './android';
 import * as IOSConfig from './ios';
-import {
-  getAndroidIntrospectModFileProviders,
-  getAndroidModFileProviders,
-  withAndroidBaseMods,
-} from './plugins/withAndroidBaseMods';
-import {
-  getIosIntrospectModFileProviders,
-  getIosModFileProviders,
-  withIosBaseMods,
-} from './plugins/withIosBaseMods';
+import { provider, withGeneratedBaseMods } from './plugins/createBaseMod';
+import { getAndroidModFileProviders, withAndroidBaseMods } from './plugins/withAndroidBaseMods';
+import { getIosModFileProviders, withIosBaseMods } from './plugins/withIosBaseMods';
 import * as XML from './utils/XML';
 import * as History from './utils/history';
 import * as WarningAggregator from './utils/warnings';
+
+// TODO: Remove
+export * as Updates from './utils/Updates';
 
 export { IOSConfig, AndroidConfig };
 
@@ -49,6 +45,7 @@ export {
   withAndroidColorsNight,
   withAndroidStyles,
   withMainActivity,
+  withMainApplication,
   withProjectBuildGradle,
   withAppBuildGradle,
   withSettingsGradle,
@@ -62,10 +59,10 @@ export { compileModsAsync, withDefaultBaseMods, evalModsAsync } from './plugins/
 export { PluginError } from './utils/errors';
 
 export const BaseMods = {
+  withGeneratedBaseMods,
+  provider,
   withAndroidBaseMods,
   getAndroidModFileProviders,
-  getAndroidIntrospectModFileProviders,
   withIosBaseMods,
   getIosModFileProviders,
-  getIosIntrospectModFileProviders,
 };

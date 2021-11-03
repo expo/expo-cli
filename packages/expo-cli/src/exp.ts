@@ -18,6 +18,7 @@ import {
   ApiV2,
   Binaries,
   Config,
+  Env,
   Logger,
   LogRecord,
   LogUpdater,
@@ -331,7 +332,7 @@ export type Action = (...args: any[]) => void;
 // parsing the command input
 Command.prototype.asyncAction = function (asyncFn: Action) {
   return this.action(async (...args: any[]) => {
-    if (!getenv.boolish('EAS_BUILD', false)) {
+    if (!getenv.boolish('EAS_BUILD', false) && !program.nonInteractive) {
       try {
         await profileMethod(checkCliVersionAsync)();
       } catch (e) {}
@@ -347,8 +348,7 @@ Command.prototype.asyncAction = function (asyncFn: Action) {
       await asyncFn(...args);
       // After a command, flush the analytics queue so the program will not have any active timers
       // This allows node js to exit immediately
-      Analytics.flush();
-      UnifiedAnalytics.flush();
+      await Promise.all([Analytics.flush(), UnifiedAnalytics.flush()]);
     } catch (err) {
       // TODO: Find better ways to consolidate error messages
       if (err instanceof AbortCommandError || err instanceof SilentError) {
@@ -359,6 +359,9 @@ Command.prototype.asyncAction = function (asyncFn: Action) {
         Log.error(err.message);
       } else if (err.isXDLError || err.isConfigError) {
         Log.error(err.message);
+        if (Log.isDebug) {
+          Log.error(chalk.gray(err.stack));
+        }
       } else if (err.isJsonFileError || err.isPackageManagerError) {
         if (err.code === 'EJSONEMPTY') {
           // Empty JSON is an easy bug to debug. Often this is thrown for package.json or app.json being empty.
@@ -558,9 +561,10 @@ Command.prototype.asyncActionProjectDir = function (
     // eslint-disable-next-line no-new
     new PackagerLogsStream({
       projectRoot,
-      onStartBuildBundle: () => {
+      onStartBuildBundle({ bundleDetails }) {
         // TODO: Unify with commands/utils/progress.ts
-        bar = new ProgressBar('Building JavaScript bundle [:bar] :percent', {
+        const platform = PackagerLogsStream.getPlatformTagForBuildDetails(bundleDetails);
+        bar = new ProgressBar(`${platform}Bundling JavaScript [:bar] :percent`, {
           width: 64,
           total: 100,
           clear: true,
@@ -570,12 +574,12 @@ Command.prototype.asyncActionProjectDir = function (
 
         Log.setBundleProgressBar(bar);
       },
-      onProgressBuildBundle: (percent: number) => {
+      onProgressBuildBundle({ progress }) {
         if (!bar || bar.complete) return;
-        const ticks = percent - bar.curr;
+        const ticks = progress - bar.curr;
         ticks > 0 && bar.tick(ticks);
       },
-      onFinishBuildBundle: (err, startTime, endTime) => {
+      onFinishBuildBundle({ error, start, end, bundleDetails }) {
         if (bar && !bar.complete) {
           bar.tick(100 - bar.curr);
         }
@@ -585,11 +589,13 @@ Command.prototype.asyncActionProjectDir = function (
           bar.terminate();
           bar = null;
 
-          if (err) {
-            Log.log(chalk.red('Failed building JavaScript bundle.'));
+          const platform = PackagerLogsStream.getPlatformTagForBuildDetails(bundleDetails);
+          const totalBuildTimeMs = end.getTime() - start.getTime();
+          const durationSuffix = chalk.gray(` ${totalBuildTimeMs}ms`);
+          if (error) {
+            Log.log(chalk.red(`${platform}Bundling failed` + durationSuffix));
           } else {
-            const totalBuildTimeMs = endTime.getTime() - startTime.getTime();
-            Log.log(chalk.green(`Finished building JavaScript bundle in ${totalBuildTimeMs}ms.`));
+            Log.log(chalk.green(`${platform}Bundling complete` + durationSuffix));
             StatusEventEmitter.emit('bundleBuildFinish', { totalBuildTimeMs });
           }
         }
@@ -655,8 +661,17 @@ Command.prototype.asyncActionProjectDir = function (
 };
 
 export async function bootstrapAnalyticsAsync(): Promise<void> {
-  Analytics.initializeClient('vGu92cdmVaggGA26s3lBX6Y5fILm8SQ7', packageJSON.version);
-  UnifiedAnalytics.initializeClient('u4e9dmCiNpwIZTXuyZPOJE7KjCMowdx5', packageJSON.version);
+  Analytics.initializeClient(
+    '1wHTzmVgmZvNjCalKL45chlc2VN',
+    'https://cdp.expo.dev',
+    packageJSON.version
+  );
+
+  UnifiedAnalytics.initializeClient(
+    '1wabJGd5IiuF9Q8SGlcI90v8WTs',
+    'https://cdp.expo.dev',
+    packageJSON.version
+  );
 
   const userData = await profileMethod(
     UserManager.getCachedUserDataAsync,
@@ -669,7 +684,6 @@ export async function bootstrapAnalyticsAsync(): Promise<void> {
     userId: userData.userId,
     currentConnection: userData?.currentConnection,
     username: userData?.username,
-    userType: '', // not available without hitting api
   });
 }
 
@@ -692,7 +706,10 @@ async function runAsync(programName: string) {
   try {
     _registerLogs();
 
-    await bootstrapAnalyticsAsync();
+    if (Env.shouldEnableAnalytics()) {
+      await bootstrapAnalyticsAsync();
+    }
+
     UserManager.setInteractiveAuthenticationCallback(loginOrRegisterAsync);
 
     if (process.env.SERVER_URL) {
@@ -810,16 +827,17 @@ function _registerLogs() {
               return;
             }
             case NotificationCode.TICK_PROGRESS_BAR: {
-              const spinner = Log.getProgress();
-              if (spinner) {
-                spinner.tick(1, chunk.msg);
+              const bar = Log.getProgress();
+              if (bar) {
+                bar.tick(1, chunk.msg);
               }
               return;
             }
             case NotificationCode.STOP_PROGRESS_BAR: {
-              const spinner = Log.getProgress();
-              if (spinner) {
-                spinner.terminate();
+              const bar = Log.getProgress();
+              if (bar) {
+                Log.setBundleProgressBar(null);
+                bar.terminate();
               }
               return;
             }

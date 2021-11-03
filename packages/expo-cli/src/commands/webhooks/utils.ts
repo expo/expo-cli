@@ -64,6 +64,6 @@ export async function setupAsync(projectRoot: string) {
 function projectNotFoundError(experienceName: string) {
   return new CommandError(
     ErrorCodes.PROJECT_NOT_FOUND,
-    `Project ${experienceName} not found. The project is created the first time you run \`expo publish\` or build the project (https://docs.expo.io/distribution/building-standalone-apps/).`
+    `Project ${experienceName} not found. The project is created the first time you run \`expo publish\` or build the project (https://docs.expo.dev/distribution/building-standalone-apps/).`
   );
 }

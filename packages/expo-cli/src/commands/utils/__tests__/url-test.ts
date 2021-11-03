@@ -9,7 +9,7 @@ describe(constructBuildLogsUrl, () => {
     });
 
     expect(result).toBe(
-      'https://expo.io/accounts/test-username/projects/test-project-slug/builds/test-build-id'
+      'https://expo.dev/accounts/test-username/projects/test-project-slug/builds/test-build-id'
     );
   });
 
@@ -20,7 +20,7 @@ describe(constructBuildLogsUrl, () => {
       buildId: 'test-build-id',
     });
 
-    expect(result).toBe('https://expo.io/accounts/test-username/builds/test-build-id');
+    expect(result).toBe('https://expo.dev/accounts/test-username/builds/test-build-id');
   });
   it('returns URL without account or project slug', () => {
     const result = constructBuildLogsUrl({
@@ -29,6 +29,6 @@ describe(constructBuildLogsUrl, () => {
       buildId: 'test-build-id',
     });
 
-    expect(result).toBe('https://expo.io/builds/test-build-id');
+    expect(result).toBe('https://expo.dev/builds/test-build-id');
   });
 });

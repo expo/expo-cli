@@ -160,6 +160,7 @@ query IndexPageQuery {
       name
       description
       slug
+      platforms
     }
     sources {
       __typename

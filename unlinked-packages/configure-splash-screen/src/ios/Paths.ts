@@ -5,7 +5,7 @@ import { sync as globSync } from 'glob';
 import * as path from 'path';
 import { XcodeProject } from 'xcode';
 
-const ignoredPaths = ['**/@(Carthage|Pods|node_modules)/**'];
+const ignoredPaths = ['**/@(Carthage|Pods|vendor|node_modules)/**'];
 
 export function getAllXcodeProjectPaths(projectRoot: string): string[] {
   const iosFolder = 'ios';

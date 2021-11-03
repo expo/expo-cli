@@ -1,3 +1,4 @@
+import type Log from '@expo/bunyan';
 import { PWAConfig } from 'expo-pwa';
 import { Configuration as WebpackConfiguration } from 'webpack';
 import {
@@ -25,10 +26,10 @@ export type InputEnvironment = {
   locations?: FilePaths;
   mode?: Mode;
   pwa?: boolean;
-  offline?: boolean;
   babel?: {
     dangerouslyAddModulePathsToTranspile: string[];
   };
+  logger?: Log;
 };
 
 export type Environment = {
@@ -53,12 +54,6 @@ export type Environment = {
    */
   projectRoot: string;
   /**
-   * Passing `true` will enable offline support and add a service worker.
-   *
-   * @default false
-   */
-  offline?: boolean;
-  /**
    * The Webpack mode to bundle the project in.
    */
   mode: Mode;
@@ -76,6 +71,10 @@ export type Environment = {
    * Control how the default Babel loader is configured.
    */
   babel?: ExpoBabelOptions;
+  /**
+   * Used for sending unified bundler logs to Expo CLI.
+   */
+  logger?: Log;
 };
 
 /**
@@ -102,8 +101,6 @@ export interface FilePathsFolder {
   manifest: string;
   serveJson: string;
   favicon: string;
-  serviceWorker: string;
-  registerServiceWorker: string;
 }
 export interface FilePaths {
   absolute: PathResolver;

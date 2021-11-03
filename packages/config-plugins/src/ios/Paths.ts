@@ -3,9 +3,9 @@ import { sync as globSync } from 'glob';
 import * as path from 'path';
 
 import { UnexpectedError } from '../utils/errors';
-import * as WarningAggregator from '../utils/warnings';
+import { addWarningIOS } from '../utils/warnings';
 
-const ignoredPaths = ['**/@(Carthage|Pods|node_modules)/**'];
+const ignoredPaths = ['**/@(Carthage|Pods|vendor|node_modules)/**'];
 
 interface ProjectFile<L extends string = string> {
   path: string;
@@ -14,6 +14,32 @@ interface ProjectFile<L extends string = string> {
 }
 
 export type AppDelegateProjectFile = ProjectFile<'objc' | 'swift'>;
+
+export function getAppDelegateHeaderFilePath(projectRoot: string): string {
+  const [using, ...extra] = globSync('ios/*/AppDelegate.h', {
+    absolute: true,
+    cwd: projectRoot,
+    ignore: ignoredPaths,
+  });
+
+  if (!using) {
+    throw new UnexpectedError(
+      `Could not locate a valid AppDelegate header at root: "${projectRoot}"`
+    );
+  }
+
+  if (extra.length) {
+    warnMultipleFiles({
+      tag: 'app-delegate-header',
+      fileName: 'AppDelegate',
+      projectRoot,
+      using,
+      extra,
+    });
+  }
+
+  return using;
+}
 
 export function getAppDelegateFilePath(projectRoot: string): string {
   const [using, ...extra] = globSync('ios/*/AppDelegate.@(m|swift)', {
@@ -39,10 +65,35 @@ export function getAppDelegateFilePath(projectRoot: string): string {
   return using;
 }
 
+export function getAppDelegateObjcHeaderFilePath(projectRoot: string): string {
+  const [using, ...extra] = globSync('ios/*/AppDelegate.h', {
+    absolute: true,
+    cwd: projectRoot,
+    ignore: ignoredPaths,
+  });
+
+  if (!using) {
+    throw new UnexpectedError(`Could not locate a valid AppDelegate.h at root: "${projectRoot}"`);
+  }
+
+  if (extra.length) {
+    warnMultipleFiles({
+      tag: 'app-delegate-objc-header',
+      fileName: 'AppDelegate.h',
+      projectRoot,
+      using,
+      extra,
+    });
+  }
+
+  return using;
+}
+
 function getLanguage(filePath: string): 'objc' | 'swift' {
   const extension = path.extname(filePath);
   switch (extension) {
     case '.m':
+    case '.h':
       return 'objc';
     case '.swift':
       return 'swift';
@@ -235,7 +286,7 @@ function warnMultipleFiles({
 }) {
   const usingPath = projectRoot ? path.relative(projectRoot, using) : using;
   const extraPaths = projectRoot ? extra.map(v => path.relative(projectRoot, v)) : extra;
-  WarningAggregator.addWarningIOS(
+  addWarningIOS(
     `paths-${tag}`,
     `Found multiple ${fileName} file paths, using "${usingPath}". Ignored paths: ${JSON.stringify(
       extraPaths

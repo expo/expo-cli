@@ -834,6 +834,10 @@ export default {
         rootObject = 83CBB9F71A601CBA00E9B192 /* Project object */;
     }
     `,
+  'ios/Podfile.properties.json': `\
+{
+  "expo.jsEngine": "jsc"
+}`,
   // Android
   'android/app/src/main/java/com/reactnativeproject/MainActivity.java': `package com.reactnativeproject;
   
@@ -975,6 +979,15 @@ export default {
   
     <uses-permission android:name="android.permission.INTERNET" />
   
+    <queries>
+      <!-- Support checking for http(s) links via the Linking API -->
+      <intent>
+        <action android:name="android.intent.action.VIEW" />
+        <category android:name="android.intent.category.BROWSABLE" />
+        <data android:scheme="https" />
+      </intent>
+    </queries>
+    
     <application
       android:name=".MainApplication"
       android:label="@string/app_name"

@@ -50,13 +50,13 @@ export async function updatePackageJSONAsync({
   );
 
   updatingPackageJsonStep.succeed(
-    'Updated package.json and added index.js entry point for iOS and Android.'
+    'Updated package.json and added index.js entry point for iOS and Android'
   );
   if (removedPkgMain) {
     Log.log(
       `\u203A Removed ${chalk.bold(
         `"main": "${removedPkgMain}"`
-      )} from package.json because we recommend using index.js as main instead.`
+      )} from package.json because we recommend using index.js as main instead`
     );
     Log.newLine();
   }
@@ -249,7 +249,7 @@ function normalizeDependencyMap(deps: DependenciesMap): string[] {
     .sort();
 }
 
-export function hashForDependencyMap(deps: DependenciesMap): string {
+export function hashForDependencyMap(deps: DependenciesMap = {}): string {
   const depsList = normalizeDependencyMap(deps);
   const depsString = depsList.join('\n');
   return createFileHash(depsString);

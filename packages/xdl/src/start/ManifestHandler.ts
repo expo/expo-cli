@@ -4,7 +4,7 @@ import chalk from 'chalk';
 import express from 'express';
 import http from 'http';
 import os from 'os';
-import { URL } from 'url';
+import { parse, resolve, URL } from 'url';
 
 import {
   Analytics,
@@ -22,6 +22,7 @@ import {
   UserManager,
   UserSettings,
   Versions,
+  Webpack,
 } from '../internal';
 
 interface HostInfo {
@@ -123,7 +124,13 @@ export function getManifestHandler(projectRoot: string) {
     next: (err?: Error) => void
   ) => {
     // Only support `/`, `/manifest`, `/index.exp` for the manifest middleware.
-    if (!req.url || !['/', '/manifest', '/index.exp'].includes(req.url)) {
+    if (
+      !req.url ||
+      !['/', '/manifest', '/index.exp'].includes(
+        // Strip the query params
+        parse(req.url).pathname || req.url
+      )
+    ) {
       next();
       return;
     }
@@ -228,7 +235,11 @@ export async function getManifestResponseAsync({
   acceptSignature?: string | string[];
 }): Promise<{ exp: ExpoAppManifest; manifestString: string; hostInfo: HostInfo }> {
   // Read the config
-  const projectConfig = getConfig(projectRoot);
+  const projectConfig = getConfig(projectRoot, { skipSDKVersionRequirement: true });
+  // Opt towards newest functionality when expo isn't installed.
+  if (!projectConfig.exp.sdkVersion) {
+    projectConfig.exp.sdkVersion = 'UNVERSIONED';
+  }
   // Read from headers
   const hostname = stripPort(host);
 
@@ -272,6 +283,11 @@ export async function getManifestResponseAsync({
     projectRoot,
     manifest,
     async resolver(path) {
+      if (Webpack.isTargetingNative()) {
+        // When using our custom dev server, just do assets normally
+        // without the `assets/` subpath redirect.
+        return resolve(manifest.bundleUrl!.match(/^https?:\/\/.*?\//)![0], path);
+      }
       return manifest.bundleUrl!.match(/^https?:\/\/.*?\//)![0] + 'assets/' + path;
     },
   });
@@ -291,7 +307,7 @@ export async function getManifestResponseAsync({
           `@${manifest.owner}`
         )} and you have not been granted the appropriate permissions.\n` +
           `Please request access from an admin of @${manifest.owner} or change the "owner" field to an account you belong to.\n` +
-          learnMore('https://docs.expo.io/versions/latest/config/app/#owner')
+          learnMore('https://docs.expo.dev/versions/latest/config/app/#owner')
       );
       ConnectionStatus.setIsOffline(true);
       manifestString = await getManifestStringAsync(manifest, hostInfo.host, acceptSignature);

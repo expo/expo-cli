@@ -1,7 +1,7 @@
 import { ExpoConfig } from '@expo/config-types';
 
 import { createAndroidManifestPlugin } from '../plugins/android-plugins';
-import * as WarningAggregator from '../utils/warnings';
+import { addWarningAndroid } from '../utils/warnings';
 import { AndroidManifest, ManifestActivity } from './Manifest';
 
 export type IntentFilterProps = {
@@ -44,9 +44,10 @@ export function setScheme(
   }
 
   if (!ensureManifestHasValidIntentFilter(androidManifest)) {
-    WarningAggregator.addWarningAndroid(
+    addWarningAndroid(
       'scheme',
-      `Cannot add schemes because the provided manifest does not have a valid Activity with \`android:launchMode="singleTask"\`.\nThis guide can help you get setup properly https://expo.fyi/setup-android-uri-scheme`
+      `Cannot add schemes because the provided manifest does not have a valid Activity with \`android:launchMode="singleTask"\``,
+      'https://expo.fyi/setup-android-uri-scheme'
     );
     return androidManifest;
   }

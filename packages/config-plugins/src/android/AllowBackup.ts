@@ -7,7 +7,7 @@ export const withAllowBackup = createAndroidManifestPlugin(setAllowBackup, 'with
 
 export function getAllowBackup(config: Pick<ExpoConfig, 'android'>) {
   // Defaults to true.
-  // https://docs.expo.io/versions/latest/config/app/#allowbackup
+  // https://docs.expo.dev/versions/latest/config/app/#allowbackup
   return config.android?.allowBackup ?? true;
 }
 

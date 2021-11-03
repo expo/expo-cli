@@ -1,11 +1,11 @@
-import * as Branch from './Branch';
+import * as Bitcode from './Bitcode';
 import * as BuildScheme from './BuildScheme';
 import * as BundleIdentifier from './BundleIdentifier';
 import * as DeviceFamily from './DeviceFamily';
 import * as Entitlements from './Entitlements';
-import * as Facebook from './Facebook';
 import * as Google from './Google';
 import { ExpoPlist, InfoPlist } from './IosConfig.types';
+import * as JsEngine from './JsEngine';
 import * as Locales from './Locales';
 import * as Maps from './Maps';
 import * as Name from './Name';
@@ -28,23 +28,20 @@ import * as XcodeUtils from './utils/Xcodeproj';
 // We can change this to export * as X with TypeScript 3.8+
 // https://devblogs.microsoft.com/typescript/announcing-typescript-3-8-beta/#export-star-as-namespace-syntax
 // .. but we should wait for this to be the default VSCode version.
+export { InfoPlist, ExpoPlist, Entitlements, Paths, Permissions, XcodeUtils };
+
 export {
-  Branch,
-  BuildScheme,
+  Bitcode,
   BundleIdentifier,
+  BuildScheme,
   DeviceFamily,
-  Entitlements,
-  Facebook,
   Google,
   Maps,
   Locales,
-  InfoPlist,
-  ExpoPlist,
+  JsEngine,
   Name,
   Orientation,
-  Paths,
   ProvisioningProfile,
-  Permissions,
   RequiresFullScreen,
   RootViewBackgroundColor,
   Scheme,
@@ -55,5 +52,4 @@ export {
   UsesNonExemptEncryption,
   Version,
   XcodeProjectFile,
-  XcodeUtils,
 };

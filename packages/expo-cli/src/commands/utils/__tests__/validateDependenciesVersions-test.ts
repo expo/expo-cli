@@ -1,5 +1,6 @@
 import { vol } from 'memfs';
 import path from 'path';
+import resolveFrom from 'resolve-from';
 
 import { validateDependenciesVersionsAsync } from '../validateDependenciesVersions';
 
@@ -9,6 +10,7 @@ jest.mock('../bundledNativeModules', () => ({
   getBundledNativeModulesAsync: () => ({
     'expo-splash-screen': '~1.2.3',
     'expo-updates': '~2.3.4',
+    firebase: '9.1.0',
   }),
 }));
 
@@ -71,6 +73,46 @@ describe(validateDependenciesVersionsAsync, () => {
 
     await expect(validateDependenciesVersionsAsync(projectRoot, exp as any, pkg)).resolves.toBe(
       false
+    );
+  });
+
+  it('resolves to true when installed package uses "exports"', async () => {
+    const packageJsonPath = path.join(projectRoot, 'node_modules/firebase/package.json');
+
+    vol.fromJSON({
+      [packageJsonPath]: JSON.stringify({
+        version: '9.1.0',
+        exports: {
+          './analytics': {
+            node: {
+              require: './analytics/dist/index.cjs.js',
+              import: './analytics/dist/index.mjs',
+            },
+            default: './analytics/dist/index.esm.js',
+          },
+        },
+      }),
+    });
+
+    // Manually trigger the Node import error for "exports".
+    // This isn't triggered by memfs, or our mock, that's why we need to do it manually.
+    // see: https://github.com/expo/expo-cli/pull/3878
+    (resolveFrom as jest.MockedFunction<typeof resolveFrom>).mockImplementationOnce(() => {
+      const message = `Package subpath './package.json' is not defined by "exports" in ${packageJsonPath}`;
+      const error: any = new Error(message);
+      error.code = 'ERR_PACKAGE_PATH_NOT_EXPORTED';
+      throw error;
+    });
+
+    const exp = {
+      sdkVersion: '43.0.0',
+    };
+    const pkg = {
+      dependencies: { firebase: '~9.1.0' },
+    };
+
+    await expect(validateDependenciesVersionsAsync(projectRoot, exp as any, pkg)).resolves.toBe(
+      true
     );
   });
 });

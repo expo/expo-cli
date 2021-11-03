@@ -20,6 +20,7 @@ export default function (program: Command) {
       .command('run:ios [path]')
       .description('Run the iOS app binary locally')
       .helpGroup('core')
+      .option('--no-install', 'Skip installing dependencies')
       .option('--no-bundler', 'Skip starting the Metro bundler')
       .option('-d, --device [device]', 'Device name or UDID to build the app on')
       .option('-p, --port <port>', 'Port to start the Metro bundler on. Default: 8081')

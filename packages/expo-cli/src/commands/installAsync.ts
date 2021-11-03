@@ -51,7 +51,7 @@ export async function actionAsync(
   // If using `expo install` in a project without the expo package even listed
   // in package.json, just fall through to npm/yarn.
   //
-  if (!pkg.dependencies['expo']) {
+  if (!pkg.dependencies?.['expo']) {
     return await packageManager.addAsync(...packages);
   }
 
@@ -122,7 +122,7 @@ export async function actionAsync(
   await packageManager.addAsync(...versionedPackages);
 
   try {
-    exp = getConfig(projectRoot, { skipSDKVersionRequirement: true }).exp;
+    exp = getConfig(projectRoot, { skipSDKVersionRequirement: true, skipPlugins: true }).exp;
 
     // Only auto add plugins if the plugins array is defined or if the project is using SDK +42.
     await autoAddConfigPluginsAsync(
@@ -132,7 +132,7 @@ export async function actionAsync(
     );
   } catch (error) {
     if (error.isPluginError) {
-      Log.error(`Skipping plugin check: ` + error.message);
+      Log.warn(`Skipping config plugin check: ` + error.message);
       return;
     }
     throw error;

@@ -1,18 +1,11 @@
 import chalk from 'chalk';
-import { SimControl, Simulator } from 'xdl';
+import { AppleDevice, SimControl, Simulator } from 'xdl';
 
 import CommandError from '../../../CommandError';
 import Log from '../../../log';
 import prompt from '../../../prompts';
 import { ora } from '../../../utils/ora';
 import { profileMethod } from '../../utils/profileMethod';
-
-async function getSimulatorsAsync(): Promise<SimControl.SimulatorDevice[]> {
-  const simulatorDeviceInfo = await SimControl.listAsync('devices');
-  return Object.values(simulatorDeviceInfo.devices).reduce((prev, runtime) => {
-    return prev.concat(runtime);
-  }, []);
-}
 
 async function getBuildDestinationsAsync({ osType }: { osType?: string } = {}) {
   const devices = (
@@ -22,7 +15,7 @@ async function getBuildDestinationsAsync({ osType }: { osType?: string } = {}) {
   });
 
   const simulators = await Simulator.sortDefaultDeviceToBeginningAsync(
-    await profileMethod(getSimulatorsAsync)(),
+    await profileMethod(SimControl.listSimulatorDevicesAsync)(),
     osType
   );
 
@@ -30,7 +23,7 @@ async function getBuildDestinationsAsync({ osType }: { osType?: string } = {}) {
 }
 
 export async function resolveDeviceAsync(
-  device: string | boolean | undefined,
+  device?: string | boolean,
   { osType }: { osType?: string } = {}
 ): Promise<SimControl.SimulatorDevice | SimControl.XCTraceDevice> {
   if (!(await profileMethod(Simulator.ensureXcodeCommandLineToolsInstalledAsync)())) {
@@ -46,15 +39,16 @@ export async function resolveDeviceAsync(
     return simulator;
   }
 
-  const spinner = ora(
-    `🔍 Finding ${device === true ? 'devices' : `device ${chalk.cyan(device)}`}`
-  ).start();
-  let devices: (
-    | SimControl.SimulatorDevice
-    | SimControl.XCTraceDevice
-  )[] = await getBuildDestinationsAsync({ osType }).catch(() => []);
+  // Only use the spinner with xctrace since it's so slow (~2s), alternative
+  // method is very fast (~50ms) and the flicker makes it seem slower.
+  const spinner = AppleDevice.isEnabled()
+    ? null
+    : ora(`🔍 Finding ${device === true ? 'devices' : `device ${chalk.cyan(device)}`}`).start();
+  let devices: (SimControl.SimulatorDevice | SimControl.XCTraceDevice)[] = await profileMethod(
+    getBuildDestinationsAsync
+  )({ osType }).catch(() => []);
 
-  spinner.stop();
+  spinner?.stop();
 
   if (device === true) {
     // If osType is defined, then filter out ineligible simulators.
@@ -76,7 +70,7 @@ export async function resolveDeviceAsync(
       limit: 11,
       message: 'Select a simulator',
       choices: devices.map(item => {
-        const isConnected = 'deviceType' in item;
+        const isConnected = 'deviceType' in item && item.deviceType === 'device';
         const isActive = 'state' in item && item.state === 'Booted';
         const symbol = isConnected ? '🔌 ' : '';
         const format = isActive ? chalk.bold : (text: string) => text;
@@ -94,7 +88,9 @@ export async function resolveDeviceAsync(
     });
     Log.log(chalk.dim`\u203A Using --device ${value}`);
     const device = devices.find(device => device.udid === value)!;
-    const isSimulator = !('deviceType' in device);
+    const isSimulator =
+      !('deviceType' in device) ||
+      device.deviceType.startsWith('com.apple.CoreSimulator.SimDeviceType.');
     if (isSimulator) {
       return await Simulator.ensureSimulatorOpenAsync({ udid: device.udid });
     }
@@ -109,7 +105,9 @@ export async function resolveDeviceAsync(
     throw new CommandError(`No device UDID or name matching "${device}"`);
   }
 
-  const isSimulator = !('deviceType' in resolved);
+  const isSimulator =
+    !('deviceType' in resolved) ||
+    resolved.deviceType.startsWith('com.apple.CoreSimulator.SimDeviceType.');
   if (isSimulator) {
     return await Simulator.ensureSimulatorOpenAsync({ udid: resolved.udid });
   }

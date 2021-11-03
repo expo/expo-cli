@@ -10,7 +10,7 @@ import {
   removeMapsCocoaPods,
   setGoogleMapsApiKey,
 } from '../Maps';
-import { UnimodulesAppDelegate } from './fixtures/AppDelegate';
+import { ExpoModulesAppDelegate, UnimodulesAppDelegate } from './fixtures/AppDelegate';
 import { PodfileBasic } from './fixtures/Podfile';
 
 describe('MATCH_INIT', () => {
@@ -146,6 +146,16 @@ describe(addGoogleMapsAppDelegateInit, () => {
   });
   it(`adds maps import to Unimodules AppDelegate`, () => {
     const results = addGoogleMapsAppDelegateInit(UnimodulesAppDelegate, 'mykey');
+    // matches a static snapshot
+    expect(results.contents).toMatchSnapshot();
+    expect(results.contents).toMatch(/97501819d6911e5f50d66c63d369b0cec62853c2/);
+    // did add new content
+    expect(results.didMerge).toBe(true);
+    // didn't remove old content
+    expect(results.didClear).toBe(false);
+  });
+  it(`adds maps import to Expo Modules AppDelegate`, () => {
+    const results = addGoogleMapsAppDelegateInit(ExpoModulesAppDelegate, 'mykey');
     // matches a static snapshot
     expect(results.contents).toMatchSnapshot();
     expect(results.contents).toMatch(/97501819d6911e5f50d66c63d369b0cec62853c2/);

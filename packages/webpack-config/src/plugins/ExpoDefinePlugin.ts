@@ -6,26 +6,27 @@ import { DefinePlugin as OriginalDefinePlugin } from 'webpack';
 import { getConfig, getMode, getPublicPaths } from '../env';
 import { Environment, Mode } from '../types';
 
+const RESTRICTED_MANIFEST_FIELDS = [
+  // Omit app.json properties that get removed during the native build
+  'facebookScheme',
+  'facebookAppId',
+  'facebookDisplayName',
+  // Remove iOS and Android.
+  'ios',
+  'android',
+  // Hide internal / build values
+  'plugins',
+  'hooks',
+  '_internal',
+  // Remove metro-specific values
+  'assetBundlePatterns',
+];
+
 function createEnvironmentConstants(appManifest: ExpoConfig) {
-  return {
+  const publicManifest: Record<string, any> = {
     ...appManifest,
     // @ts-ignore: displayName doesn't exist on ExpoConfig
     name: appManifest.displayName || appManifest.name,
-    /**
-     * Omit app.json properties that get removed during the native turtle build
-     *
-     * `facebookScheme`
-     * `facebookAppId`
-     * `facebookDisplayName`
-     */
-    facebookScheme: undefined,
-    facebookAppId: undefined,
-    facebookDisplayName: undefined,
-
-    // Remove iOS and Android.
-    ios: undefined,
-    android: undefined,
-
     // Use the PWA `manifest.json` as the native web manifest.
     web: {
       // Pass through config properties that are not stored in the
@@ -34,6 +35,11 @@ function createEnvironmentConstants(appManifest: ExpoConfig) {
       config: appManifest.web?.config,
     },
   };
+
+  for (const field of RESTRICTED_MANIFEST_FIELDS) {
+    delete publicManifest[field];
+  }
+  return publicManifest;
 }
 
 /**
@@ -93,7 +99,7 @@ export function createClientEnvironment(
 
         /**
          * Surfaces the `app.json` (config) as an environment variable which is then parsed by
-         * `expo-constants` https://docs.expo.io/versions/latest/sdk/constants/
+         * `expo-constants` https://docs.expo.dev/versions/latest/sdk/constants/
          */
         [`${prefix}APP_MANIFEST`]: JSON.stringify(nativeAppManifest),
       } as Record<string, string>
@@ -113,7 +119,7 @@ export function createClientEnvironment(
 }
 
 /**
- * Required for `expo-constants` https://docs.expo.io/versions/latest/sdk/constants/.
+ * Required for `expo-constants` https://docs.expo.dev/versions/latest/sdk/constants/.
  * This surfaces the `app.json` (config) as an environment variable which is then parsed by `expo-constants`.
  * @category plugins
  */
@@ -135,7 +141,7 @@ export default class DefinePlugin extends OriginalDefinePlugin {
   constructor({ mode, publicUrl, config }: { mode: Mode; publicUrl: string; config: ExpoConfig }) {
     const publicAppManifest = createEnvironmentConstants(config);
 
-    const environmentVariables = createClientEnvironment(mode, publicUrl, publicAppManifest);
+    const environmentVariables = createClientEnvironment(mode, publicUrl, publicAppManifest as any);
 
     super(environmentVariables);
   }

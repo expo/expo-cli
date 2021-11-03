@@ -1,5 +1,5 @@
 import { ExpoConfig, isLegacyImportsEnabled } from '@expo/config';
-import { Project, ProjectSettings, Versions } from 'xdl';
+import { Project, ProjectSettings, Versions, Webpack } from 'xdl';
 import * as WebpackEnvironment from 'xdl/build/webpack-utils/WebpackEnvironment';
 
 import { AbortCommandError } from '../../CommandError';
@@ -22,6 +22,7 @@ export type NormalizedOptions = URLOptions & {
   tunnel?: boolean;
   metroPort?: number;
   webpackPort?: number;
+  forceManifestType?: string;
 };
 
 export type RawStartOptions = NormalizedOptions & {
@@ -151,6 +152,7 @@ export function parseStartOptions(
   const startOpts: Project.StartOptions = {
     metroPort: options.metroPort,
     webpackPort: options.webpackPort,
+    platforms: exp.platforms ?? ['ios', 'android', 'web'],
   };
 
   if (options.clear) {
@@ -173,9 +175,20 @@ export function parseStartOptions(
     startOpts.devClient = true;
   }
 
+  if (options.forceManifestType) {
+    startOpts.forceManifestType =
+      options.forceManifestType === 'classic'
+        ? 'classic'
+        : options.forceManifestType === 'expo-updates'
+        ? 'expo-updates'
+        : undefined;
+  } else {
+    startOpts.forceManifestType = 'classic';
+  }
+
   if (isLegacyImportsEnabled(exp)) {
     // For `expo start`, the default target is 'managed', for both managed *and* bare apps.
-    // See: https://docs.expo.io/bare/using-expo-client
+    // See: https://docs.expo.dev/bare/using-expo-client
     startOpts.target = options.devClient ? 'bare' : 'managed';
     Log.debug('Using target: ', startOpts.target);
   }
@@ -183,7 +196,7 @@ export function parseStartOptions(
   // The SDK 41 client has web socket support.
   if (Versions.gteSdkVersion(exp, '41.0.0')) {
     startOpts.isRemoteReloadingEnabled = true;
-    if (!startOpts.webOnly) {
+    if (!startOpts.webOnly || Webpack.isTargetingNative()) {
       startOpts.isWebSocketsEnabled = true;
     }
   }
