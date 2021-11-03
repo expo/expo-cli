@@ -12,6 +12,34 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+## [Tue, 2 Nov 2021 10:48:05 -0700](https://github.com/expo/expo-cli/commit/7c096e60ac0a6ce52f90a8532d3e6184d4ead597)
+
+### 🛠 Breaking changes
+
+### 🎉 New features
+
+- [dev-server] Enhance hermes inspector opening experience ([#3967](https://github.com/expo/expo-cli/issues/3967))
+- [metro-config] Add built-in support for Yarn workspaces ([#3945](https://github.com/expo/expo-cli/issues/3945))
+
+### 🧹 Chores
+
+- [cli][init] add package.json name and version ([#3942](https://github.com/expo/expo-cli/issues/3942))
+- [cli][install] Reduce plugin validation after install ([#3940](https://github.com/expo/expo-cli/issues/3940))
+
+### 🐛 Bug fixes
+
+- [cli] Bump to apple-utils 26 to fix unhandled error on 403 from Apple ([#3958](https://github.com/expo/expo-cli/issues/3958))
+- [cli] Revert open in editor to a more stable revision ([#3964](https://github.com/expo/expo-cli/issues/3964))
+- [metro-config] Fix bug preventing babel.config.js from being used ([#3965](https://github.com/expo/expo-cli/issues/3965))
+
+### 📦 Packages updated
+
+- @expo/dev-server@0.1.92
+- @expo/dev-tools@0.13.127
+- expo-cli@4.12.11
+- @expo/metro-config@0.2.7
+- xdl@59.2.11
+
 ## [Fri, 22 Oct 2021 14:41:44 -0700](https://github.com/expo/expo-cli/commit/6b6cedbfa1cb96c1a6d22f3cf9dbcdc87160c2ef)
 
 ### 🛠 Breaking changes
