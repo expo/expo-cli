@@ -23,6 +23,9 @@
   "files": [
     "build"
   ],
+  "devDependencies": {
+    "@types/lodash": "^4.14.176"
+  },
   "dependencies": {
     "ajv": "^5.2.2",
     "json-schema-traverse": "0.3.1",
