@@ -1,3 +1,4 @@
+/* eslint-disable import/namespace */
 /* eslint-disable import/order */
 import React from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -9,7 +10,6 @@ import * as DocumentPicker from 'expo-document-picker';
 import Constants from 'expo-constants';
 import * as FileSystem from 'expo-file-system';
 
-// eslint-disable-next-line import/namespace
 Expo.Updates.addListener(() => {});
 
 const documentDirectory = FileSystem.documentDirectory,
