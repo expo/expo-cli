@@ -170,7 +170,7 @@ function getProcessOptions({
  * @returns String like `2021-11-03_13-54-04`
  */
 function getDateStringId() {
-  const format = (v: number) => String(date.getMonth()).padStart(2, '0');
+  const format = (v: number) => String(v).padStart(2, '0');
   const date = new Date();
   const year = date.getFullYear();
   const month = format(date.getMonth() + 1);
@@ -219,19 +219,20 @@ export async function buildAsync({
 
   const resultBundlePath = XCResultTool.getResultBundlePath(projectRoot, buildId);
 
-  if (Log.isProfiling) {
-    args.push(
-      // Create the xcresult file for profiling info.
-      '-resultBundlePath',
-      resultBundlePath,
-      // getRandomXCActivityLogDirectory(xcodeProject.name),
+  // TODO: Determine how much time this adds to the build.
+  // if (Log.isProfiling) {
+  args.push(
+    // Create the xcresult file for profiling info.
+    '-resultBundlePath',
+    resultBundlePath,
+    // getRandomXCActivityLogDirectory(xcodeProject.name),
 
-      // Adds legacy activity log file to the build.
-      // 'XC' + 'Em' + 'itT' + 'ime' + 'Tra' + 'ce' + '=Y' + 'ES',
-      // Adds `Build Timing Summary` of domainType `com.apple.dt.IDE.BuildLogTimingSummarySection` to the xcresults.
-      '-showBuildTimingSummary'
-    );
-  }
+    // Adds legacy activity log file to the build.
+    // 'XC' + 'Em' + 'itT' + 'ime' + 'Tra' + 'ce' + '=Y' + 'ES',
+    // Adds `Build Timing Summary` of domainType `com.apple.dt.IDE.BuildLogTimingSummarySection` to the xcresults.
+    '-showBuildTimingSummary'
+  );
+  // }
 
   // Add last
   if (clean) {
@@ -313,18 +314,6 @@ export async function buildAsync({
         return;
       }
 
-      if (Log.isProfiling) {
-        XCResultTool.parseXCResultFileAsync(resultBundlePath).then(async actions => {
-          const activities = await XCResultTool.getActivityLogSectionAsync(
-            resultBundlePath,
-            actions
-          );
-          if (activities) {
-            const json = await ChromeTrace.toChromeTraceAsync(activities);
-            await ChromeTrace.exportChromeTraceAsync(projectRoot, json, buildId);
-          }
-        });
-      }
       resolve(buildOutput);
     });
   });
