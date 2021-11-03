@@ -9,6 +9,7 @@ import * as DocumentPicker from 'expo-document-picker';
 import Constants from 'expo-constants';
 import * as FileSystem from 'expo-file-system';
 
+// eslint-disable-next-line import/namespace
 Expo.Updates.addListener(() => {});
 
 const documentDirectory = FileSystem.documentDirectory,
