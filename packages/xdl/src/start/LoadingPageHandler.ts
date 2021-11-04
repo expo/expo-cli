@@ -87,7 +87,7 @@ export function getLoadingPageHandler(projectRoot: string) {
           })
         );
       } else {
-        res.end('Unexpected error.');
+        res.end(`Unexpected error: ${exception}`);
       }
     }
   };
