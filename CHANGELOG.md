@@ -10,6 +10,28 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🧹 Chores
 
+## [Thu, 4 Nov 2021 13:01:04 -0700](https://github.com/expo/expo-cli/commit/507c1e8c6973290a649675d292a137fb75306bcd)
+
+### 🎉 New features
+
+- Use expo run commands on prebuild/eject ([#3549](https://github.com/expo/expo-cli/issues/3549))
+
+### 🧹 Chores
+
+- Bump @expo/xcpretty@4.0.0 ([#3968](https://github.com/expo/expo-cli/issues/3968))
+
+### 🐛 Bug fixes
+
+- Revert "Add built-in support for Yarn workspaces ([#3945](https://github.com/expo/expo-cli/issues/3945))"
+
+### 📦 Packages updated
+
+- @expo/dev-server@0.1.93
+- @expo/dev-tools@0.13.128
+- expo-cli@4.12.12
+- @expo/metro-config@0.2.8
+- xdl@59.2.12
+
 ### 🐛 Bug fixes
 
 ## [Tue, 2 Nov 2021 10:48:05 -0700](https://github.com/expo/expo-cli/commit/7c096e60ac0a6ce52f90a8532d3e6184d4ead597)
