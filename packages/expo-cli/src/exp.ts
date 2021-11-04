@@ -348,8 +348,7 @@ Command.prototype.asyncAction = function (asyncFn: Action) {
       await asyncFn(...args);
       // After a command, flush the analytics queue so the program will not have any active timers
       // This allows node js to exit immediately
-      Analytics.flush();
-      UnifiedAnalytics.flush();
+      await Promise.all([Analytics.flush(), UnifiedAnalytics.flush()]);
     } catch (err) {
       // TODO: Find better ways to consolidate error messages
       if (err instanceof AbortCommandError || err instanceof SilentError) {
@@ -360,6 +359,9 @@ Command.prototype.asyncAction = function (asyncFn: Action) {
         Log.error(err.message);
       } else if (err.isXDLError || err.isConfigError) {
         Log.error(err.message);
+        if (Log.isDebug) {
+          Log.error(chalk.gray(err.stack));
+        }
       } else if (err.isJsonFileError || err.isPackageManagerError) {
         if (err.code === 'EJSONEMPTY') {
           // Empty JSON is an easy bug to debug. Often this is thrown for package.json or app.json being empty.

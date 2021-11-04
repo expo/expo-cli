@@ -61,6 +61,6 @@ export function applyNameSettingsGradle(config: Pick<ExpoConfig, 'name'>, settin
   // Select rootProject.name = '***' and replace the contents between the quotes.
   return settingsGradle.replace(
     /rootProject.name\s?=\s?(["'])(?:(?=(\\?))\2.)*?\1/g,
-    `rootProject.name = '${name}'`
+    `rootProject.name = '${name.replace(/'/g, "\\'")}'`
   );
 }

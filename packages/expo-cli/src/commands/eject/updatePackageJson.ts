@@ -197,10 +197,10 @@ function updatePackageJSONScripts({ pkg }: { pkg: PackageJSONConfig }) {
     pkg.scripts.start = 'react-native start';
   }
   if (!pkg.scripts.android?.includes('run')) {
-    pkg.scripts.android = 'react-native run-android';
+    pkg.scripts.android = 'expo run:android';
   }
   if (!pkg.scripts.ios?.includes('run')) {
-    pkg.scripts.ios = 'react-native run-ios';
+    pkg.scripts.ios = 'expo run:ios';
   }
 }
 

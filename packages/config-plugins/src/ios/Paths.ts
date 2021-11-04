@@ -15,6 +15,32 @@ interface ProjectFile<L extends string = string> {
 
 export type AppDelegateProjectFile = ProjectFile<'objc' | 'swift'>;
 
+export function getAppDelegateHeaderFilePath(projectRoot: string): string {
+  const [using, ...extra] = globSync('ios/*/AppDelegate.h', {
+    absolute: true,
+    cwd: projectRoot,
+    ignore: ignoredPaths,
+  });
+
+  if (!using) {
+    throw new UnexpectedError(
+      `Could not locate a valid AppDelegate header at root: "${projectRoot}"`
+    );
+  }
+
+  if (extra.length) {
+    warnMultipleFiles({
+      tag: 'app-delegate-header',
+      fileName: 'AppDelegate',
+      projectRoot,
+      using,
+      extra,
+    });
+  }
+
+  return using;
+}
+
 export function getAppDelegateFilePath(projectRoot: string): string {
   const [using, ...extra] = globSync('ios/*/AppDelegate.@(m|swift)', {
     absolute: true,
@@ -39,10 +65,35 @@ export function getAppDelegateFilePath(projectRoot: string): string {
   return using;
 }
 
+export function getAppDelegateObjcHeaderFilePath(projectRoot: string): string {
+  const [using, ...extra] = globSync('ios/*/AppDelegate.h', {
+    absolute: true,
+    cwd: projectRoot,
+    ignore: ignoredPaths,
+  });
+
+  if (!using) {
+    throw new UnexpectedError(`Could not locate a valid AppDelegate.h at root: "${projectRoot}"`);
+  }
+
+  if (extra.length) {
+    warnMultipleFiles({
+      tag: 'app-delegate-objc-header',
+      fileName: 'AppDelegate.h',
+      projectRoot,
+      using,
+      extra,
+    });
+  }
+
+  return using;
+}
+
 function getLanguage(filePath: string): 'objc' | 'swift' {
   const extension = path.extname(filePath);
   switch (extension) {
     case '.m':
+    case '.h':
       return 'objc';
     case '.swift':
       return 'swift';

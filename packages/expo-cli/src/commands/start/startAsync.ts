@@ -135,7 +135,6 @@ export async function actionAsync(projectRoot: string, options: NormalizedOption
 function track(projectRoot: string, exp: ExpoConfig) {
   UnifiedAnalytics.logEvent('dev client start command', {
     status: 'started',
-    platform: 'ios',
     ...getDevClientProperties(projectRoot, exp),
   });
   installCustomExitHook(() => {

@@ -28,6 +28,10 @@ Object {
         "name": "expo-facebook",
         "version": "UNVERSIONED",
       },
+      "expo-navigation-bar": Object {
+        "name": "expo-navigation-bar",
+        "version": "UNVERSIONED",
+      },
       "expo-notifications": Object {
         "name": "expo-notifications",
         "version": "UNVERSIONED",
@@ -205,6 +209,14 @@ Object {
       },
       "NSLocationWhenInUseUsageDescription": "",
       "RCTRootViewBackgroundColor": 4294901760,
+      "SKAdNetworkItems": Array [
+        Object {
+          "SKAdNetworkIdentifier": "v9wttpbfk9.skadnetwork",
+        },
+        Object {
+          "SKAdNetworkIdentifier": "n38lu8286q.skadnetwork",
+        },
+      ],
       "UILaunchStoryboardName": "SplashScreen",
       "UIRequiredDeviceCapabilities": Array [
         "armv7",
@@ -216,6 +228,7 @@ Object {
         "UIInterfaceOrientationLandscapeLeft",
         "UIInterfaceOrientationLandscapeRight",
       ],
+      "UIUserInterfaceStyle": "Automatic",
       "UIViewControllerBasedStatusBarAppearance": false,
       "bar": Object {
         "val": Array [
@@ -295,13 +308,13 @@ Object {
               },
               Object {
                 "$": Object {
-                  "name": "navigationBarColor",
+                  "name": "activityBackground",
                 },
                 "_": "#ff0000",
               },
               Object {
                 "$": Object {
-                  "name": "activityBackground",
+                  "name": "navigationBarColor",
                 },
                 "_": "#ff0000",
               },
@@ -706,6 +719,35 @@ Object {
                 ],
               },
             ],
+            "queries": Array [
+              Object {
+                "intent": Array [
+                  Object {
+                    "action": Array [
+                      Object {
+                        "$": Object {
+                          "android:name": "android.intent.action.VIEW",
+                        },
+                      },
+                    ],
+                    "category": Array [
+                      Object {
+                        "$": Object {
+                          "android:name": "android.intent.category.BROWSABLE",
+                        },
+                      },
+                    ],
+                    "data": Array [
+                      Object {
+                        "$": Object {
+                          "android:scheme": "https",
+                        },
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
             "uses-permission": Array [
               Object {
                 "$": Object {
@@ -795,9 +837,9 @@ Object {
                   },
                   Object {
                     "$": Object {
-                      "name": "android:navigationBarColor",
+                      "name": "android:windowBackground",
                     },
-                    "_": "@color/navigationBarColor",
+                    "_": "@color/activityBackground",
                   },
                   Object {
                     "$": Object {
@@ -807,9 +849,9 @@ Object {
                   },
                   Object {
                     "$": Object {
-                      "name": "android:windowBackground",
+                      "name": "android:navigationBarColor",
                     },
-                    "_": "@color/activityBackground",
+                    "_": "@color/navigationBarColor",
                   },
                 ],
               },
@@ -903,6 +945,14 @@ Object {
           },
           "NSLocationWhenInUseUsageDescription": "",
           "RCTRootViewBackgroundColor": 4294901760,
+          "SKAdNetworkItems": Array [
+            Object {
+              "SKAdNetworkIdentifier": "v9wttpbfk9.skadnetwork",
+            },
+            Object {
+              "SKAdNetworkIdentifier": "n38lu8286q.skadnetwork",
+            },
+          ],
           "UILaunchStoryboardName": "SplashScreen",
           "UIRequiredDeviceCapabilities": Array [
             "armv7",
@@ -914,6 +964,7 @@ Object {
             "UIInterfaceOrientationLandscapeLeft",
             "UIInterfaceOrientationLandscapeRight",
           ],
+          "UIUserInterfaceStyle": "Automatic",
           "UIViewControllerBasedStatusBarAppearance": false,
           "bar": Object {
             "val": Array [
@@ -952,6 +1003,10 @@ Object {
       },
       "expo-facebook": Object {
         "name": "expo-facebook",
+        "version": "UNVERSIONED",
+      },
+      "expo-navigation-bar": Object {
+        "name": "expo-navigation-bar",
         "version": "UNVERSIONED",
       },
       "expo-notifications": Object {
@@ -1131,6 +1186,14 @@ Object {
       },
       "NSLocationWhenInUseUsageDescription": "",
       "RCTRootViewBackgroundColor": 4294901760,
+      "SKAdNetworkItems": Array [
+        Object {
+          "SKAdNetworkIdentifier": "v9wttpbfk9.skadnetwork",
+        },
+        Object {
+          "SKAdNetworkIdentifier": "n38lu8286q.skadnetwork",
+        },
+      ],
       "UILaunchStoryboardName": "SplashScreen",
       "UIRequiredDeviceCapabilities": Array [
         "armv7",
@@ -1142,6 +1205,7 @@ Object {
         "UIInterfaceOrientationLandscapeLeft",
         "UIInterfaceOrientationLandscapeRight",
       ],
+      "UIUserInterfaceStyle": "Automatic",
       "UIViewControllerBasedStatusBarAppearance": false,
       "bar": Object {
         "val": Array [
@@ -1221,13 +1285,13 @@ Object {
               },
               Object {
                 "$": Object {
-                  "name": "navigationBarColor",
+                  "name": "activityBackground",
                 },
                 "_": "#ff0000",
               },
               Object {
                 "$": Object {
-                  "name": "activityBackground",
+                  "name": "navigationBarColor",
                 },
                 "_": "#ff0000",
               },
@@ -1521,6 +1585,35 @@ Object {
                 ],
               },
             ],
+            "queries": Array [
+              Object {
+                "intent": Array [
+                  Object {
+                    "action": Array [
+                      Object {
+                        "$": Object {
+                          "android:name": "android.intent.action.VIEW",
+                        },
+                      },
+                    ],
+                    "category": Array [
+                      Object {
+                        "$": Object {
+                          "android:name": "android.intent.category.BROWSABLE",
+                        },
+                      },
+                    ],
+                    "data": Array [
+                      Object {
+                        "$": Object {
+                          "android:scheme": "https",
+                        },
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
             "uses-permission": Array [
               Object {
                 "$": Object {
@@ -1634,9 +1727,9 @@ Object {
                   },
                   Object {
                     "$": Object {
-                      "name": "android:navigationBarColor",
+                      "name": "android:windowBackground",
                     },
-                    "_": "@color/navigationBarColor",
+                    "_": "@color/activityBackground",
                   },
                   Object {
                     "$": Object {
@@ -1646,9 +1739,9 @@ Object {
                   },
                   Object {
                     "$": Object {
-                      "name": "android:windowBackground",
+                      "name": "android:navigationBarColor",
                     },
-                    "_": "@color/activityBackground",
+                    "_": "@color/navigationBarColor",
                   },
                 ],
               },
@@ -1689,8 +1782,15 @@ Object {
           "EXUpdatesURL": "https://exp.host/@bacon/mycoolapp",
         },
         "infoPlist": Object {
+          "CFBundleDevelopmentRegion": "$(DEVELOPMENT_LANGUAGE)",
           "CFBundleDisplayName": "my cool app",
+          "CFBundleExecutable": "$(EXECUTABLE_NAME)",
+          "CFBundleIdentifier": "$(PRODUCT_BUNDLE_IDENTIFIER)",
+          "CFBundleInfoDictionaryVersion": "6.0",
+          "CFBundleName": "$(PRODUCT_NAME)",
+          "CFBundlePackageType": "$(PRODUCT_BUNDLE_PACKAGE_TYPE)",
           "CFBundleShortVersionString": "1.0.0",
+          "CFBundleSignature": "????",
           "CFBundleURLTypes": Array [
             Object {
               "CFBundleURLSchemes": Array [
@@ -1724,15 +1824,38 @@ Object {
             "fbauth2",
             "fbshareextension",
           ],
+          "LSRequiresIPhoneOS": true,
+          "NSAppTransportSecurity": Object {
+            "NSAllowsArbitraryLoads": true,
+            "NSExceptionDomains": Object {
+              "localhost": Object {
+                "NSExceptionAllowsInsecureHTTPLoads": true,
+              },
+            },
+          },
           "RCTRootViewBackgroundColor": 4294901760,
+          "SKAdNetworkItems": Array [
+            Object {
+              "SKAdNetworkIdentifier": "v9wttpbfk9.skadnetwork",
+            },
+            Object {
+              "SKAdNetworkIdentifier": "n38lu8286q.skadnetwork",
+            },
+          ],
           "UILaunchStoryboardName": "SplashScreen",
+          "UIRequiredDeviceCapabilities": Array [
+            "armv7",
+          ],
           "UIRequiresFullScreen": true,
+          "UIStatusBarStyle": "UIStatusBarStyleDefault",
           "UISupportedInterfaceOrientations": Array [
             "UIInterfaceOrientationPortrait",
             "UIInterfaceOrientationPortraitUpsideDown",
             "UIInterfaceOrientationLandscapeLeft",
             "UIInterfaceOrientationLandscapeRight",
           ],
+          "UIUserInterfaceStyle": "Automatic",
+          "UIViewControllerBasedStatusBarAppearance": false,
           "bar": Object {
             "val": Array [
               "foo",
@@ -1770,6 +1893,10 @@ Object {
       },
       "expo-facebook": Object {
         "name": "expo-facebook",
+        "version": "UNVERSIONED",
+      },
+      "expo-navigation-bar": Object {
+        "name": "expo-navigation-bar",
         "version": "UNVERSIONED",
       },
       "expo-notifications": Object {
@@ -1896,8 +2023,15 @@ Object {
     },
     "googleServicesFile": "./config/GoogleService-Info.plist",
     "infoPlist": Object {
+      "CFBundleDevelopmentRegion": "$(DEVELOPMENT_LANGUAGE)",
       "CFBundleDisplayName": "my cool app",
+      "CFBundleExecutable": "$(EXECUTABLE_NAME)",
+      "CFBundleIdentifier": "$(PRODUCT_BUNDLE_IDENTIFIER)",
+      "CFBundleInfoDictionaryVersion": "6.0",
+      "CFBundleName": "$(PRODUCT_NAME)",
+      "CFBundlePackageType": "$(PRODUCT_BUNDLE_PACKAGE_TYPE)",
       "CFBundleShortVersionString": "1.0.0",
+      "CFBundleSignature": "????",
       "CFBundleURLTypes": Array [
         Object {
           "CFBundleURLSchemes": Array [
@@ -1931,15 +2065,38 @@ Object {
         "fbauth2",
         "fbshareextension",
       ],
+      "LSRequiresIPhoneOS": true,
+      "NSAppTransportSecurity": Object {
+        "NSAllowsArbitraryLoads": true,
+        "NSExceptionDomains": Object {
+          "localhost": Object {
+            "NSExceptionAllowsInsecureHTTPLoads": true,
+          },
+        },
+      },
       "RCTRootViewBackgroundColor": 4294901760,
+      "SKAdNetworkItems": Array [
+        Object {
+          "SKAdNetworkIdentifier": "v9wttpbfk9.skadnetwork",
+        },
+        Object {
+          "SKAdNetworkIdentifier": "n38lu8286q.skadnetwork",
+        },
+      ],
       "UILaunchStoryboardName": "SplashScreen",
+      "UIRequiredDeviceCapabilities": Array [
+        "armv7",
+      ],
       "UIRequiresFullScreen": true,
+      "UIStatusBarStyle": "UIStatusBarStyleDefault",
       "UISupportedInterfaceOrientations": Array [
         "UIInterfaceOrientationPortrait",
         "UIInterfaceOrientationPortraitUpsideDown",
         "UIInterfaceOrientationLandscapeLeft",
         "UIInterfaceOrientationLandscapeRight",
       ],
+      "UIUserInterfaceStyle": "Automatic",
+      "UIViewControllerBasedStatusBarAppearance": false,
       "bar": Object {
         "val": Array [
           "foo",

@@ -40,7 +40,9 @@ export function setSplashInfoPlist(
     // assigning it to auto anyways, but this is fragile because the order of operations matter now
     infoPlist.UIUserInterfaceStyle = 'Automatic';
   } else {
-    delete infoPlist.UIUserInterfaceStyle;
+    // NOTE(brentvatne): Commented out this line because it causes https://github.com/expo/expo-cli/issues/3935
+    // We should revisit this approach.
+    // delete infoPlist.UIUserInterfaceStyle;
   }
 
   if (splash) {

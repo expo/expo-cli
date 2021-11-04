@@ -1,14 +1,9 @@
-import * as osascript from '@expo/osascript';
 import spawnAsync from '@expo/spawn-async';
 import editors from 'env-editor';
 
 import Log from '../../log';
 
-function guessEditor() {
-  if (process.env.EXPO_EDITOR) {
-    return editors.getEditor(process.env.EXPO_EDITOR);
-  }
-
+export function guessEditor() {
   try {
     return editors.defaultEditor();
   } catch {
@@ -16,24 +11,29 @@ function guessEditor() {
   }
 }
 
-export async function openInEditorAsync(path: string, options: { editor?: string } = {}) {
+export async function openInEditorAsync(
+  path: string,
+  options: { editor?: string } = {}
+): Promise<boolean> {
   const editor = options.editor ? editors.getEditor(options.editor) : guessEditor();
 
-  if (process.platform === 'darwin') {
-    // This will use the ENV var $EXPO_EDITOR if set, or else will try various
-    // popular editors, looking for one that is open, or if none are, one that is installed
-    await osascript.openInEditorAsync(path, editor.name);
+  Log.debug(`Opening ${path} in ${editor.name} (bin: ${editor.binary}, id: ${editor.id})`);
+  if (editor) {
+    try {
+      await spawnAsync(editor.binary, [path]);
+      return true;
+    } catch {}
   }
 
-  if (!editor) {
+  if (options.editor) {
     Log.error(
-      'Could not find your editor, you can set it by defining $EXPO_EDITOR environment variable (e.g. "code" or "atom")'
+      `Could not resolve editor from environment variable $EXPO_EDITOR="${options.editor}". Trying again with system default.`
     );
-    return;
+    return openInEditorAsync(path, {});
   }
 
-  const stdio = editor.isTerminalEditor ? 'inherit' : 'ignore';
-  const editorProcess = spawnAsync(editor.binary, [path], { stdio, detached: true });
-  editorProcess.child.unref();
-  return editorProcess;
+  Log.error(
+    'Could not open editor, you can set it by defining the $EDITOR environment variable with the binary of your editor. (e.g. "code" or "atom")'
+  );
+  return false;
 }
