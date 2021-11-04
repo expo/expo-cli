@@ -3,7 +3,6 @@
 import { getConfig, getDefaultTarget, isLegacyImportsEnabled, ProjectTarget } from '@expo/config';
 import { getBareExtensions, getManagedExtensions } from '@expo/config/paths';
 import chalk from 'chalk';
-import findWorkspaceRoot from 'find-yarn-workspace-root';
 import { boolish } from 'getenv';
 import type { IncomingMessage, ServerResponse } from 'http';
 import { Reporter } from 'metro';
@@ -13,18 +12,6 @@ import resolveFrom from 'resolve-from';
 
 import { getWatchFolders } from './getWatchFolders';
 import { importMetroConfigFromProject } from './importMetroFromProject';
-
-export function getModulesPaths(projectRoot: string): string[] {
-  const paths: string[] = [];
-  paths.push(path.resolve(projectRoot, 'node_modules'));
-
-  const workspaceRoot = findWorkspaceRoot(path.resolve(projectRoot)); // Absolute path or null
-  if (workspaceRoot) {
-    paths.push(path.resolve(workspaceRoot, 'node_modules'));
-  }
-
-  return paths;
-}
 
 export const EXPO_DEBUG = boolish('EXPO_DEBUG', false);
 const EXPO_USE_EXOTIC = boolish('EXPO_USE_EXOTIC', false);
@@ -206,7 +193,8 @@ export function getDefaultConfig(
   resolverMainFields.push('browser', 'main');
 
   const watchFolders = getWatchFolders(projectRoot);
-  const nodeModulesPaths = getModulesPaths(projectRoot);
+  // TODO: nodeModulesPaths does not work with the new Node.js package.json exports API, this causes packages like uuid to fail. Disabling for now.
+  // const nodeModulesPaths = getModulesPaths(projectRoot);
   if (EXPO_DEBUG) {
     console.log();
     console.log(`Expo Metro config:`);
@@ -220,7 +208,7 @@ export function getDefaultConfig(
     console.log(`- Babel config: ${babelConfigPath || 'babel-preset-expo (default)'}`);
     console.log(`- Resolver Fields: ${resolverMainFields.join(', ')}`);
     console.log(`- Watch Folders: ${watchFolders.join(', ')}`);
-    console.log(`- Node Module Paths: ${nodeModulesPaths.join(', ')}`);
+    // console.log(`- Node Module Paths: ${nodeModulesPaths.join(', ')}`);
     console.log(`- Exotic: ${isExotic}`);
     console.log();
   }
@@ -262,7 +250,7 @@ export function getDefaultConfig(
       resolverMainFields,
       platforms: ['ios', 'android', 'native'],
       sourceExts,
-      nodeModulesPaths,
+      // nodeModulesPaths,
     },
     serializer: {
       getModulesRunBeforeMainModule: () => [
