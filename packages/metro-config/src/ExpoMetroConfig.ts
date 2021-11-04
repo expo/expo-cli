@@ -210,6 +210,9 @@ export function getDefaultConfig(
   if (EXPO_DEBUG) {
     console.log();
     console.log(`Expo Metro config:`);
+    try {
+      console.log(`- Version: ${require('../package.json').version}`);
+    } catch {}
     console.log(`- Bundler target: ${target}`);
     console.log(`- Legacy: ${isLegacy}`);
     console.log(`- Extensions: ${sourceExts.join(', ')}`);

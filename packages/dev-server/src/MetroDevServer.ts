@@ -47,6 +47,29 @@ export type MessageSocket = {
   broadcast: (method: string, params?: Record<string, any> | undefined) => void;
 };
 
+function getExpoMetroConfig(
+  projectRoot: string,
+  { logger, unversioned }: Pick<MetroDevServerOptions, 'logger' | 'unversioned'>
+): typeof import('@expo/metro-config') {
+  if (!unversioned) {
+    try {
+      return importExpoMetroConfigFromProject(projectRoot);
+    } catch {
+      // If expo isn't installed, use the unversioned config and warn about installing expo.
+    }
+  }
+
+  const unversionedVersion = require('@expo/metro-config/package.json').version;
+  logger.info(
+    { tag: 'expo' },
+    chalk.gray(
+      `\u203A Unversioned ${chalk.bold`@expo/metro-config@${unversionedVersion}`} is being used. Bundling apps may not work as expected, and is subject to breaking changes. Install ${chalk.bold`expo`} or set the app.json sdkVersion to use a stable version of @expo/metro-config.`
+    )
+  );
+
+  return require('@expo/metro-config');
+}
+
 export async function runMetroDevServerAsync(
   projectRoot: string,
   options: MetroDevServerOptions
@@ -57,9 +80,7 @@ export async function runMetroDevServerAsync(
 }> {
   const reporter = new LogReporter(options.logger);
 
-  const ExpoMetroConfig = options.unversioned
-    ? require('@expo/metro-config')
-    : importExpoMetroConfigFromProject(projectRoot);
+  const ExpoMetroConfig = getExpoMetroConfig(projectRoot, options);
 
   const metroConfig = await ExpoMetroConfig.loadAsync(projectRoot, { reporter, ...options });
 
@@ -106,9 +127,8 @@ export async function bundleAsync(
   const Server = importMetroServerFromProject(projectRoot);
 
   const reporter = new LogReporter(options.logger);
-  const ExpoMetroConfig = options.unversioned
-    ? require('@expo/metro-config')
-    : importExpoMetroConfigFromProject(projectRoot);
+  const ExpoMetroConfig = getExpoMetroConfig(projectRoot, options);
+
   const config = await ExpoMetroConfig.loadAsync(projectRoot, { reporter, ...options });
   const buildID = `bundle_${nextBuildID++}`;
 
