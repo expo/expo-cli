@@ -2,6 +2,14 @@ import * as LoadingView from './LoadingView';
 import { requestAsync } from './requestAsync';
 import { debug } from './socket';
 
+declare let __webpack_public_path__: string | undefined;
+
+if (__webpack_public_path__) {
+  // Refine for Genymotion support
+  const { hostname } = window.location;
+  __webpack_public_path__ = __webpack_public_path__.replace('localhost', hostname);
+}
+
 async function loadBundle(url: string) {
   const reqHeaders = {
     // Required for android
@@ -45,6 +53,19 @@ __webpack_require__.l = function (
   key: string,
   chunkId: string = url
 ): Promise<any> {
+  if (chunkId !== undefined && key !== undefined) {
+    // TODO: Load from offline chunks / manifest
+    // return
+  }
+
+  if (
+    process.env.NODE_ENV !== 'development' ||
+    // @ts-ignore
+    !module.hot
+  ) {
+    throw new Error('[webpack.l] HMR is disabled');
+  }
+
   try {
     const stringModuleID = String(chunkId);
 

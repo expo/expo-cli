@@ -23,6 +23,7 @@ if (!('host' in window.location)) {
   // TODO: What will we do in production? HMR isn't needed in prod, but people may attempt to depend on it.
   if (!url) url = 'http://localhost:8081/';
   const { parse } = require('url');
+  // TODO: Add toString method
   window.location = parse(url);
 }
 
