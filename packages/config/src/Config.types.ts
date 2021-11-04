@@ -3,7 +3,7 @@ import { ExpoConfig } from '@expo/config-types';
 
 export { ExpoConfig };
 
-export type PackageJSONConfig = Record<string, any>;
+export type PackageJSONConfig = { dependencies?: Record<string, string>; [key: string]: any };
 
 export interface ProjectConfig {
   /**
@@ -52,9 +52,11 @@ export type HookArguments = {
   iosBundle: string | Uint8Array;
   iosSourceMap: string | null;
   iosManifest: any;
+  iosManifestUrl: string;
   androidBundle: string | Uint8Array;
   androidSourceMap: string | null;
   androidManifest: any;
+  androidManifestUrl: string;
   projectRoot: string;
   log: (msg: any) => void;
 };
@@ -76,21 +78,33 @@ export type ExpoGoConfig = {
   };
 };
 
-export type ExpoAppManifest = ExpoConfig &
+export type EASConfig = {
+  projectId?: string;
+};
+
+export type ClientScopingConfig = {
+  scopeKey?: string;
+};
+
+export type ExpoClientConfig = ExpoConfig & {
+  id?: string;
+  releaseId?: string;
+  revisionId?: string;
+  bundleUrl?: string;
+  hostUri?: string;
+  publishedTime?: string;
+};
+
+export type ExpoAppManifest = ExpoClientConfig &
+  EASConfig &
   Partial<ExpoGoConfig> & {
     sdkVersion: string;
     bundledAssets?: string[];
     isKernel?: boolean;
     kernel?: { androidManifestPath?: string; iosManifestPath?: string };
     assetUrlOverride?: string;
-    publishedTime?: string;
     commitTime?: string;
-    releaseId?: string;
-    revisionId?: string;
     env?: Record<string, any>;
-    bundleUrl?: string;
-    hostUri?: string;
-    id?: string;
   };
 
 export interface ExpoUpdatesManifestAsset {
@@ -107,7 +121,11 @@ export interface ExpoUpdatesManifest {
   launchAsset: ExpoUpdatesManifestAsset;
   assets: ExpoUpdatesManifestAsset[];
   metadata: { [key: string]: string };
-  extra: { [key: string]: any };
+  extra: ClientScopingConfig & {
+    expoClient?: ExpoClientConfig;
+    expoGo?: ExpoGoConfig;
+    eas?: EASConfig;
+  };
 }
 
 export type Hook = {

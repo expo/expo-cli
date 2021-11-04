@@ -12,7 +12,7 @@ type FigArg = {
   name?: string;
   generators?: any;
   debounce?: boolean;
-  variadic?: boolean;
+  isVariadic?: boolean;
   isOptional?: boolean;
   icon?: string;
   template?: string;
@@ -20,7 +20,7 @@ type FigArg = {
 };
 
 type FigSpec = {
-  name: string[];
+  name: string[] | string;
   description: string;
   hidden?: boolean;
   priority?: number;
@@ -96,7 +96,7 @@ function sanitizeFlags(flags: string) {
 }
 
 function formatOptionAsMarkdown(option: OptionData) {
-  return `| \`${sanitizeFlags(option.flags)}\` | ${option.description} |`;
+  return `| \`${sanitizeFlags(option.flags)}\` | ${sanitizeFlags(option.description)} |`;
 }
 
 function formatOptionsAsMarkdown(options: OptionData[]) {
@@ -117,7 +117,7 @@ function formatCommandAsMarkdown(command: CommandData): string {
     `<details>`,
     `<summary>`,
     `<h4>expo ${command.name}</h4>`,
-    `<p>${command.description}</p>`,
+    `<p>${sanitizeFlags(command.description)}</p>`,
     `</summary>`,
     `<p>`,
     ...(command.alias ? ['', `Alias: \`expo ${command.alias}\``] : []),
@@ -182,7 +182,14 @@ const commands = generateCommandJSON();
 
 log('');
 if (['markdown', 'md'].includes(process.argv[2])) {
-  const contents = formatCommandsAsMarkdown(commands);
+  let contents = formatCommandsAsMarkdown(commands);
+
+  // Add comments so users hopefully don't open PRs directly into expo/expo
+  contents =
+    `\n<!-- BEGIN GENERATED BLOCK. DO NOT MODIFY MANUALLY. https://github.com/expo/expo-cli/blob/master/packages/expo-cli/scripts/introspect.ts -->\n\n` +
+    `> Based on \`expo-cli\` v${require('../package.json').version}\n\n` +
+    contents +
+    `\n<!-- END GENERATED BLOCK. DO NOT MODIFY MANUALLY. -->`;
   log(contents);
   pbcopy(contents);
 } else if (['fig'].includes(process.argv[2])) {
@@ -315,8 +322,8 @@ if (['markdown', 'md'].includes(process.argv[2])) {
     const booleanArg: FigArg = {
       name: 'boolean',
       suggestions: [
-        { name: 'true', icon: ICON.true },
-        { name: 'false', icon: ICON.false },
+        // { name: 'true', icon: ICON.true },
+        // { name: 'false', icon: ICON.false },
       ],
     };
     const helpOption: FigSpec = {
@@ -339,8 +346,15 @@ if (['markdown', 'md'].includes(process.argv[2])) {
       if (options.isOptional === false) {
         delete options.isOptional;
       }
-      if (options.variadic === false) {
-        delete options.variadic;
+      if (options.isVariadic === false) {
+        delete options.isVariadic;
+      }
+      return options;
+    };
+    const simplifyArgsType = (options: FigArg | FigArg[]): FigArg | FigArg[] => {
+      if (Array.isArray(options)) {
+        options = options.map(option => simplifyArgsType(option) as FigArg);
+        return options.length === 1 ? options[0] : options;
       }
       return options;
     };
@@ -350,24 +364,31 @@ if (['markdown', 'md'].includes(process.argv[2])) {
       ...args,
     });
 
+    const stripTrailingDot = (str: string): string => str.replace(/\.$/, '');
+    const capitalizeFirst = (str: string): string => str.charAt(0).toUpperCase() + str.slice(1);
+    const formatDescription = (str: string): string =>
+      capitalizeFirst(stripTrailingDot(stripAnsi(str)));
+
     for (const command of commands) {
       let priorityIndex = helpGroupOrder.findIndex(v => v === command.group);
       if (priorityIndex > -1) {
         priorityIndex = helpGroupOrder.length - priorityIndex;
       }
 
+      const subcommandNames = [command.name, command.alias].filter(Boolean) as string[];
       const subcommand: FigSpec = {
-        name: [command.name, command.alias].filter(Boolean) as string[],
+        name: subcommandNames.length === 1 ? subcommandNames[0] : subcommandNames,
         hidden: command.group === 'internal',
-        description: stripAnsi(command.description),
+        description: formatDescription(command.description),
         priority: 50 + priorityIndex,
         // fig uses `isOptional` instead of `required`
-        args: (command.args || []).map(({ required, ...arg }) => {
+        args: (command.args || []).map(({ required, variadic, ...arg }) => {
           // `expo start [path]` is a common pattern in expo-cli, this defaults them to folders.
           const template = arg.name === 'path' ? 'folders' : undefined;
 
           return {
             isOptional: !required,
+            isVariadic: variadic,
             template,
             ...arg,
           };
@@ -555,8 +576,8 @@ if (['markdown', 'md'].includes(process.argv[2])) {
         };
 
         const suboption: FigSpec = {
-          name,
-          description: stripAnsi(option.description),
+          name: name.length === 1 ? name[0] : name,
+          description: formatDescription(option.description),
           args,
           icon: getOptionIcon(option),
           // ensure that command options are placed above path suggestions (+76)
@@ -588,6 +609,7 @@ if (['markdown', 'md'].includes(process.argv[2])) {
       subcommands: figSubcommands.map(command => {
         if (command.args) {
           command.args = clearOptionalProperties(command.args);
+          command.args = simplifyArgsType(command.args);
         }
         return command;
       }),
@@ -670,7 +692,9 @@ if (['markdown', 'md'].includes(process.argv[2])) {
       }
     }
   
-    export const completionSpec: Fig.Spec = ${parsed};
+    const completionSpec: Fig.Spec = ${parsed};
+
+    export default completionSpec;
     `;
 
     // Generate a schema for https://github.com/withfig/autocomplete

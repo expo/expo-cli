@@ -12,6 +12,7 @@
 export { Semaphore } from './utils/Semaphore';
 export * as Env from './Env';
 export * as CoreSimulator from './apple/CoreSimulator';
+export * as AppleDevice from './apple/AppleDevice';
 export { default as Config } from './Config';
 export * as Xcode from './Xcode';
 export * as ConnectionStatus from './ConnectionStatus';
@@ -85,7 +86,6 @@ export { downloadAppAsync } from './utils/downloadAppAsync';
 export * as BundleIdentifier from './BundleIdentifier';
 export * as FsCache from './tools/FsCache';
 export * as WebpackEnvironment from './webpack-utils/WebpackEnvironment';
-export * as WebpackCompiler from './webpack-utils/WebpackCompiler';
 export { default as LoggerDetach, pipeOutputToLogger } from './detach/Logger';
 export { default as StandaloneBuildFlags } from './detach/StandaloneBuildFlags';
 export * as AssetBundle from './detach/AssetBundle';

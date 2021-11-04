@@ -413,5 +413,9 @@ export function isNotComment([key]:
 
 // Remove surrounding double quotes if they exist.
 export function unquote(value: string): string {
+  // projects with numeric names will fail due to a bug in the xcode package.
+  if (typeof value === 'number') {
+    value = String(value);
+  }
   return value.match(/^"(.*)"$/)?.[1] ?? value;
 }

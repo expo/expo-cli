@@ -4,7 +4,7 @@ import { execSync } from 'child_process';
 import path from 'path';
 
 import { waitForActionAsync } from './apple/utils/waitForActionAsync';
-import { CoreSimulator, Logger, XDLError } from './internal';
+import { AppleDevice, CoreSimulator, Logger, XDLError } from './internal';
 import { profileMethod } from './utils/profileMethod';
 
 type DeviceState = 'Shutdown' | 'Booted';
@@ -127,7 +127,7 @@ export async function getContainerPathAsync({
       bundleIdentifier,
     ]);
     return stdout.trim();
-  } catch (error) {
+  } catch (error: any) {
     if (error.stderr?.match(/No such file or directory/)) {
       return null;
     }
@@ -147,7 +147,7 @@ export async function openURLAsync(options: { udid?: string; url: string }): Pro
   try {
     // Skip logging since this is likely to fail.
     await xcrunAsync(['simctl', 'openurl', deviceUDIDOrBooted(options.udid), options.url]);
-  } catch (error) {
+  } catch (error: any) {
     if (!error.stderr?.match(/Unable to lookup in current state: Shut/)) {
       throw error;
     }
@@ -166,7 +166,12 @@ export async function openBundleIdAsync(options: {
   udid?: string;
   bundleIdentifier: string;
 }): Promise<SpawnResult> {
-  return simctlAsync(['launch', deviceUDIDOrBooted(options.udid), options.bundleIdentifier]);
+  return xcrunAsync([
+    'simctl',
+    'launch',
+    deviceUDIDOrBooted(options.udid),
+    options.bundleIdentifier,
+  ]);
 }
 
 // This will only boot in headless mode if the Simulator app is not running.
@@ -210,7 +215,7 @@ export async function runBootAsync({ udid }: { udid: string }) {
   try {
     // Skip logging since this is likely to fail.
     await xcrunAsync(['simctl', 'boot', udid]);
-  } catch (error) {
+  } catch (error: any) {
     if (!error.stderr?.match(/Unable to boot device in current state: Booted/)) {
       throw error;
     }
@@ -231,7 +236,7 @@ export async function uninstallAsync(options: {
 function parseSimControlJSONResults(input: string): any {
   try {
     return JSON.parse(input);
-  } catch (error) {
+  } catch (error: any) {
     // Nov 15, 2020: Observed this can happen when opening the simulator and the simulator prompts the user to update the XC command line tools.
     // Unexpected token I in JSON at position 0
     if (error.message.match('Unexpected token')) {
@@ -282,6 +287,19 @@ export async function listSimulatorDevicesAsync() {
  * Get a list of all connected devices.
  */
 export async function listDevicesAsync(): Promise<XCTraceDevice[]> {
+  if (AppleDevice.isEnabled()) {
+    const results = await AppleDevice.getConnectedDevices();
+    // TODO: Add support for osType (ipad, watchos, etc)
+    return results.map(device => ({
+      // TODO: Better name
+      name: device.DeviceName ?? device.ProductType ?? 'unknown ios device',
+      model: device.ProductType,
+      osVersion: device.ProductVersion,
+      deviceType: 'device',
+      udid: device.UniqueDeviceID,
+    }));
+  }
+
   const { output } = await xcrunAsync(['xctrace', 'list', 'devices']);
 
   const text = output.join('');
@@ -315,7 +333,7 @@ export async function listDevicesAsync(): Promise<XCTraceDevice[]> {
 export async function shutdownAsync(udid?: string) {
   try {
     return simctlAsync(['shutdown', deviceUDIDOrBooted(udid)]);
-  } catch (e) {
+  } catch (e: any) {
     if (!e.message?.includes('No devices are booted.')) {
       throw e;
     }
@@ -441,7 +459,7 @@ export async function xcrunWithLogging(
 ): Promise<SpawnResult> {
   try {
     return await xcrunAsync(args, options);
-  } catch (e) {
+  } catch (e: any) {
     Logger.global.error(`Error running \`xcrun ${args.join(' ')}\`: ${e.stderr || e.message}`);
     throw e;
   }

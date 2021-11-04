@@ -2,7 +2,6 @@ import spawnAsync from '@expo/spawn-async';
 import chalk from 'chalk';
 import { spawn } from 'child_process';
 import program from 'commander';
-import fs from 'fs-extra';
 import { Ora } from 'ora';
 import os from 'os';
 import path from 'path';
@@ -12,20 +11,6 @@ import { Prompts } from 'xdl';
 import CommandError, { SilentError } from '../../../CommandError';
 import Log from '../../../log';
 import { ora } from '../../../utils/ora';
-
-/**
- * Get the app_delta folder for faster subsequent rebuilds on devices.
- *
- * @param bundleId
- * @returns
- */
-export function getAppDeltaDirectory(bundleId: string): string {
-  // TODO: Maybe use .expo folder instead for debugging
-  // TODO: Reuse existing folder from xcode?
-  const deltaFolder = path.join(os.tmpdir(), 'ios', 'app-delta', bundleId);
-  fs.ensureDirSync(deltaFolder);
-  return deltaFolder;
-}
 
 export async function isInstalledAsync() {
   try {

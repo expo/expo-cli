@@ -18,7 +18,7 @@ export type PublishOptions = {
 
 export async function getPublishExpConfigAsync(
   projectRoot: string,
-  options: Pick<PublishOptions, 'releaseChannel'>
+  options: Pick<PublishOptions, 'releaseChannel'> = {}
 ): Promise<{
   exp: ExpoAppManifest;
   pkg: PackageJSONConfig;

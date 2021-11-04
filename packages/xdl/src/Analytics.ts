@@ -1,6 +1,6 @@
 import RudderAnalytics from '@expo/rudder-sdk-node';
-import SegmentAnalytics from 'analytics-node';
 import os from 'os';
+import { URL } from 'url';
 
 import { ip } from './internal';
 
@@ -10,15 +10,9 @@ const PLATFORM_TO_ANALYTICS_PLATFORM: { [platform: string]: string } = {
   linux: 'Linux',
 };
 
-type RudderAnalyticsConfig = {
-  apiKey: string;
-  dataPlaneUrl: string;
-};
-
 export class AnalyticsClient {
   private userTraits?: { [key: string]: any };
   private rudderstackClient?: RudderAnalytics;
-  private segmentClient?: SegmentAnalytics; // should be removed when we've confirmed rudder client works as expected
   private _userId?: string;
   private _version?: string;
 
@@ -30,33 +24,25 @@ export class AnalyticsClient {
     return this._version;
   }
 
-  public flush() {
+  public async flush() {
     if (this.rudderstackClient) {
-      this.rudderstackClient.flush();
-    }
-
-    if (this.segmentClient) {
-      this.segmentClient.flush();
+      await this.rudderstackClient.flush();
     }
   }
 
   public initializeClient(
-    segmentWriteKey: string,
-    rudderConfig: RudderAnalyticsConfig,
+    rudderstackWriteKey: string,
+    rudderstackDataPlaneURL: string,
     packageVersion: string
   ) {
     // Do not wait before flushing, we want node to close immediately if the programs ends
     this.rudderstackClient = new RudderAnalytics(
-      rudderConfig.apiKey,
-      `${rudderConfig.dataPlaneUrl}/v1/batch`,
+      rudderstackWriteKey,
+      new URL('/v1/batch', rudderstackDataPlaneURL).toString(),
       {
         flushInterval: 300,
       }
     );
-    this.rudderstackClient.logger.silent = true;
-    this.segmentClient = new SegmentAnalytics(segmentWriteKey, {
-      flushInterval: 300,
-    });
     this._version = packageVersion;
   }
 
@@ -71,27 +57,11 @@ export class AnalyticsClient {
         context: this.getContext(),
       });
     }
-    if (this.segmentClient) {
-      this.segmentClient.identify({
-        userId: this._userId,
-        traits: this.userTraits,
-        context: this.getContext(),
-      });
-    }
   }
 
   public logEvent(name: string, properties: any = {}) {
     if (this.rudderstackClient && this._userId) {
       this.rudderstackClient.track({
-        userId: this._userId,
-        event: name,
-        properties,
-        context: this.getContext(),
-      });
-    }
-
-    if (this.segmentClient && this._userId) {
-      this.segmentClient.track({
         userId: this._userId,
         event: name,
         properties,

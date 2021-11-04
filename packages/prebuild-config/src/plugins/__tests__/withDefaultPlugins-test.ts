@@ -22,7 +22,7 @@ import { PodfileBasic } from './fixtures/Podfile';
 import rnFixture from './fixtures/react-native-project';
 import { getDirFromFS } from './getDirFromFS';
 
-const { withBranch } = IOSConfig.Branch;
+const { withRootViewBackgroundColor } = IOSConfig.RootViewBackgroundColor;
 
 const { readXMLAsync } = XML;
 const fsReal = jest.requireActual('fs') as typeof fs;
@@ -234,7 +234,7 @@ describe('built-in plugins', () => {
 
   // Ensure helpful error messages are thrown
   it(`fails to locate the project name in an invalid project`, async () => {
-    const config = withBranch({
+    const config = withRootViewBackgroundColor({
       name: 'app',
       slug: '',
       ios: {},
@@ -245,11 +245,12 @@ describe('built-in plugins', () => {
   });
 
   it(`skips platforms`, async () => {
-    const config = withBranch({
+    const config = withRootViewBackgroundColor({
       name: 'app',
       slug: '',
       ios: {},
     });
+
     // should throw if the platform isn't skipped
     await compileModsAsync(config, { projectRoot: '/invalid', platforms: ['android'] });
   });
@@ -345,6 +346,7 @@ describe('built-in plugins', () => {
       'ios/ReactNativeProject/SplashScreen.storyboard',
       'ios/ReactNativeProject/ReactNativeProject.entitlements',
       'ios/ReactNativeProject.xcodeproj/project.pbxproj',
+      'ios/Podfile.properties.json',
       'ios/Podfile',
       'android/app/src/main/java/com/bacon/todo/MainActivity.java',
       'android/app/src/main/java/com/bacon/todo/MainApplication.java',
@@ -487,6 +489,7 @@ describe('built-in plugins', () => {
       'ios/ReactNativeProject/Images.xcassets/Contents.json',
       'ios/ReactNativeProject/ReactNativeProject.entitlements',
       'ios/ReactNativeProject.xcodeproj/project.pbxproj',
+      'ios/Podfile.properties.json',
       'ios/Podfile',
       'android/app/src/main/java/com/reactnativeproject/MainActivity.java',
       'android/app/src/main/java/com/reactnativeproject/MainApplication.java',
@@ -602,6 +605,21 @@ describe('built-in plugins', () => {
       'config/google-services.json',
       'locales/en-US.json',
     ]);
+  });
+
+  it('create Podfile.properties.json file for backward compatible', async () => {
+    const { '/app/ios/Podfile.properties.json': _, ...volWithoutPodfileProperties } = vol.toJSON();
+    vol.reset();
+    vol.fromJSON(volWithoutPodfileProperties);
+
+    let config = getPrebuildConfig();
+    // change jsEngine to hermes
+    config.jsEngine = 'hermes';
+
+    config = await compileModsAsync(config, { projectRoot: '/app' });
+
+    const result = await JsonFile.readAsync('/app/ios/Podfile.properties.json');
+    expect(result).toMatchObject({ 'expo.jsEngine': 'hermes' });
   });
 });
 

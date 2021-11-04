@@ -9,7 +9,7 @@ import * as path from 'path';
 
 import { CommandError, Options } from './Options';
 
-const ignoredPaths = ['**/@(Carthage|Pods|node_modules)/**'];
+const ignoredPaths = ['**/@(Carthage|Pods|vendor|node_modules)/**'];
 
 export function isAvailable(projectRoot: string): boolean {
   const reactNativeIos = globSync('ios/*.xcodeproj', {

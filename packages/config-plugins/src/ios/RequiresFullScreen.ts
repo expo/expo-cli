@@ -2,7 +2,7 @@ import { ExpoConfig } from '@expo/config-types';
 
 import { createInfoPlistPlugin } from '../plugins/ios-plugins';
 import { gteSdkVersion } from '../utils/versions';
-import * as WarningAggregator from '../utils/warnings';
+import { addWarningIOS } from '../utils/warnings';
 import { InfoPlist } from './IosConfig.types';
 
 export const withRequiresFullScreen = createInfoPlistPlugin(
@@ -66,7 +66,7 @@ function resolveExistingIpadInterfaceOrientations(interfaceOrientations: any): s
     !hasMinimumOrientations(interfaceOrientations)
   ) {
     const existingList = interfaceOrientations!.join(', ');
-    WarningAggregator.addWarningIOS(
+    addWarningIOS(
       'ios.requireFullScreen',
       `iPad multitasking requires all \`${iPadInterfaceKey}\` orientations to be defined in the Info.plist. The Info.plist currently defines values that are incompatible with multitasking, these will be overwritten to prevent submission failure. Existing: ${existingList}`
     );
