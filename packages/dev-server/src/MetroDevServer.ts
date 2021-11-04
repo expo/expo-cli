@@ -1,6 +1,6 @@
 import type Log from '@expo/bunyan';
 import { ExpoConfig, getConfigFilePaths } from '@expo/config';
-import * as ExpoMetroConfig from '@expo/metro-config';
+import type { LoadOptions } from '@expo/metro-config';
 import chalk from 'chalk';
 import type { Server as ConnectServer } from 'connect';
 import http from 'http';
@@ -14,15 +14,17 @@ import {
 import LogReporter from './LogReporter';
 import { createDevServerAsync } from './metro/createDevServerAsync';
 import {
+  importExpoMetroConfigFromProject,
   importInspectorProxyServerFromProject,
   importMetroFromProject,
   importMetroServerFromProject,
 } from './metro/importMetroFromProject';
 import { createDevServerMiddleware } from './middleware/devServerMiddleware';
 
-export type MetroDevServerOptions = ExpoMetroConfig.LoadOptions & {
+export type MetroDevServerOptions = LoadOptions & {
   logger: Log;
   quiet?: boolean;
+  unversioned?: boolean;
 };
 export type BundleOptions = {
   entryPoint: string;
@@ -54,6 +56,10 @@ export async function runMetroDevServerAsync(
   messageSocket: MessageSocket;
 }> {
   const reporter = new LogReporter(options.logger);
+
+  const ExpoMetroConfig = options.unversioned
+    ? require('@expo/metro-config')
+    : importExpoMetroConfigFromProject(projectRoot);
 
   const metroConfig = await ExpoMetroConfig.loadAsync(projectRoot, { reporter, ...options });
 
@@ -100,6 +106,9 @@ export async function bundleAsync(
   const Server = importMetroServerFromProject(projectRoot);
 
   const reporter = new LogReporter(options.logger);
+  const ExpoMetroConfig = options.unversioned
+    ? require('@expo/metro-config')
+    : importExpoMetroConfigFromProject(projectRoot);
   const config = await ExpoMetroConfig.loadAsync(projectRoot, { reporter, ...options });
   const buildID = `bundle_${nextBuildID++}`;
 

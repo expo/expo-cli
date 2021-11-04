@@ -66,9 +66,14 @@ export async function startDevServerAsync(
     options.maxWorkers = startOptions.maxWorkers;
   }
 
-  const { server, middleware, messageSocket } = await runMetroDevServerAsync(projectRoot, options);
   // TODO: reduce getConfig calls
   const projectConfig = getConfig(projectRoot, { skipSDKVersionRequirement: true });
+
+  // Use the unversioned metro config.
+  options.unversioned =
+    !projectConfig.exp.sdkVersion || projectConfig.exp.sdkVersion === 'UNVERSIONED';
+
+  const { server, middleware, messageSocket } = await runMetroDevServerAsync(projectRoot, options);
 
   const easProjectId = projectConfig.exp.extra?.eas?.projectId;
   const useExpoUpdatesManifest =
