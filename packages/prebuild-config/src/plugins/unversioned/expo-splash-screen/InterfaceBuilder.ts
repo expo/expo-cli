@@ -1,4 +1,4 @@
-import { v4 as uuidv4 } from 'uuid';
+import crypto from 'crypto';
 import { Builder, Parser } from 'xml2js';
 
 export type IBBoolean = 'YES' | 'NO' | boolean;
@@ -172,9 +172,14 @@ function createConstraint(
       firstAttribute,
       secondItem,
       secondAttribute,
-      id: uuidv4(),
+      // Prevent updating between runs
+      id: createConstraintId(firstItem, firstAttribute, secondItem, secondAttribute),
     },
   };
+}
+
+function createConstraintId(...attributes: string[]) {
+  return crypto.createHash('sha1').update(attributes.join('-')).digest('hex');
 }
 
 export function applyImageToSplashScreenXML(
