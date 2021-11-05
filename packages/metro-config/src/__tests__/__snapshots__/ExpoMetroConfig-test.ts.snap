@@ -1,9 +1,0 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
-
-exports[`getDefaultConfig complains about an invalid target setting 1`] = `
-"Invalid target: 'blooper'. Debug info: 
-{
-  \\"options.target\\": \\"blooper\\",
-  \\"default\\": \\"managed\\"
-}"
-`;
