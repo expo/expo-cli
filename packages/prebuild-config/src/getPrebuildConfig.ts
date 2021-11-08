@@ -19,7 +19,7 @@ export async function getPrebuildConfigAsync(
     expoUsername?: string | ((config: ExpoConfig) => string | null);
   }
 ): Promise<ReturnType<typeof getConfig>> {
-  const autolinkedModules = await getAutolinkedPackagesAsync(projectRoot);
+  const autolinkedModules = await getAutolinkedPackagesAsync(projectRoot, props.platforms);
 
   return getPrebuildConfig(projectRoot, {
     ...props,
