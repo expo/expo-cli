@@ -106,6 +106,7 @@ export async function createBundlesAsync(
       resetCache: publishOptions.resetCache,
       logger: ProjectUtils.getLogger(projectRoot),
       quiet: publishOptions.quiet,
+      unversioned: !config.exp.sdkVersion || config.exp.sdkVersion === 'UNVERSIONED',
     },
     bundleOptions.platforms.map((platform: Platform) => ({
       platform,

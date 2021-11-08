@@ -1,14 +1,18 @@
+import {
+  AndroidConfig,
+  ConfigPlugin,
+  withAndroidColors,
+  withAndroidStyles,
+} from '@expo/config-plugins';
 import { ExpoConfig } from '@expo/config-types';
 
-import { ConfigPlugin } from '../Plugin.types';
-import { withAndroidColors, withAndroidStyles } from '../plugins/android-plugins';
-import { assignColorValue } from './Colors';
-import { assignStylesValue, getAppThemeLightNoActionBarGroup } from './Styles';
+const { assignColorValue } = AndroidConfig.Colors;
+const { assignStylesValue, getAppThemeLightNoActionBarGroup } = AndroidConfig.Styles;
 
 const ANDROID_WINDOW_BACKGROUND = 'android:windowBackground';
 const WINDOW_BACKGROUND_COLOR = 'activityBackground';
 
-export const withRootViewBackgroundColor: ConfigPlugin = config => {
+export const withAndroidRootViewBackgroundColor: ConfigPlugin = config => {
   config = withRootViewBackgroundColorColors(config);
   config = withRootViewBackgroundColorStyles(config);
   return config;

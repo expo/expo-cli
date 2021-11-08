@@ -1,15 +1,24 @@
-import { compileMockModWithResultsAsync } from '../../plugins/__tests__/mockMods';
-import { withAndroidColors, withAndroidStyles } from '../../plugins/android-plugins';
-import { parseXMLAsync } from '../../utils/XML';
-import { getColorsAsObject, getObjectAsColorsXml } from '../Colors';
+import { AndroidConfig, withAndroidColors, withAndroidStyles, XML } from '@expo/config-plugins';
+
 import {
   getRootViewBackgroundColor,
   withRootViewBackgroundColorColors,
   withRootViewBackgroundColorStyles,
-} from '../RootViewBackgroundColor';
-import { getAppThemeLightNoActionBarGroup, getStylesGroupAsObject } from '../Styles';
+} from '../withAndroidRootViewBackgroundColor';
+import { compileMockModWithResultsAsync } from './mockMods';
 
-jest.mock('../../plugins/android-plugins');
+const { parseXMLAsync } = XML;
+const { getColorsAsObject, getObjectAsColorsXml } = AndroidConfig.Colors;
+const { getAppThemeLightNoActionBarGroup, getStylesGroupAsObject } = AndroidConfig.Styles;
+
+jest.mock('@expo/config-plugins', () => {
+  const plugins = jest.requireActual('@expo/config-plugins');
+  return {
+    ...plugins,
+    withAndroidColors: jest.fn(),
+    withAndroidStyles: jest.fn(),
+  };
+});
 
 describe(getRootViewBackgroundColor, () => {
   it(`returns null if no backgroundColor is provided`, () => {

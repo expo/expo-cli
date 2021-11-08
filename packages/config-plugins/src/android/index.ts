@@ -14,13 +14,11 @@ import * as Permissions from './Permissions';
 import * as PrimaryColor from './PrimaryColor';
 import * as Properties from './Properties';
 import * as Resources from './Resources';
-import * as RootViewBackgroundColor from './RootViewBackgroundColor';
 import * as Scheme from './Scheme';
 import * as StatusBar from './StatusBar';
 import * as Strings from './Strings';
 import * as Styles from './Styles';
 import * as Updates from './Updates';
-import * as UserInterfaceStyle from './UserInterfaceStyle';
 import * as Version from './Version';
 import * as WindowSoftInputMode from './WindowSoftInputMode';
 
@@ -36,10 +34,8 @@ export {
   Orientation,
   Package,
   PrimaryColor,
-  RootViewBackgroundColor,
   StatusBar,
   Updates,
-  UserInterfaceStyle,
   Version,
   JsEngine,
   WindowSoftInputMode,

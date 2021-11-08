@@ -1,4 +1,4 @@
-import { setRootViewBackgroundColor } from '../RootViewBackgroundColor';
+import { setRootViewBackgroundColor } from '../withIosRootViewBackgroundColor';
 
 describe(setRootViewBackgroundColor, () => {
   it(`sets color`, () => {
