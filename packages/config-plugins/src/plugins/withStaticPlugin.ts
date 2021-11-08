@@ -68,10 +68,7 @@ export const withStaticPlugin: ConfigPlugin<{
 
   let withPlugin: ConfigPlugin<unknown>;
 
-  if (EXPO_USE_UNVERSIONED_PLUGINS && props._isLegacyPlugin && props.fallback) {
-    console.log(`Force "${pluginResolve}" to unversioned plugin`);
-    withPlugin = props.fallback;
-  } else if (
+  if (
     // Function was provided, no need to resolve: [withPlugin, {}]
     typeof pluginResolve === 'function'
   ) {
@@ -80,6 +77,18 @@ export const withStaticPlugin: ConfigPlugin<{
     try {
       // Resolve and evaluate plugins.
       withPlugin = resolveConfigPluginFunction(projectRoot, pluginResolve);
+
+      // Only force if the project has the versioned plugin, otherwise use default behavior.
+      // This helps see which plugins are being skipped.
+      if (
+        EXPO_USE_UNVERSIONED_PLUGINS &&
+        !!withPlugin &&
+        !!props._isLegacyPlugin &&
+        !!props.fallback
+      ) {
+        console.log(`Force "${pluginResolve}" to unversioned plugin`);
+        withPlugin = props.fallback;
+      }
     } catch (error: any) {
       if (EXPO_DEBUG) {
         if (EXPO_CONFIG_PLUGIN_VERBOSE_ERRORS) {
@@ -124,6 +133,7 @@ export const withStaticPlugin: ConfigPlugin<{
       'INVALID_PLUGIN_TYPE'
     );
   }
+
   // Execute the plugin.
   config = withPlugin(config, pluginProps);
   return config;
