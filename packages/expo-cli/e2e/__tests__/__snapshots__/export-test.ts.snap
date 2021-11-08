@@ -55,8 +55,8 @@ Array [
   "dist/assetmap.json (size ignored)",
   "dist/assets (dir)",
   "dist/bundles (dir)",
-  "dist/bundles/android-XXX.js (689 kB)",
-  "dist/bundles/ios-XXX.js (687 kB)",
+  "dist/bundles/android-XXX.js (837 kB)",
+  "dist/bundles/ios-XXX.js (835 kB)",
   "dist/ios-index.json (658 B)",
 ]
 `;
@@ -97,52 +97,3 @@ Object {
 `;
 
 exports[`EXPO_USE_EXOTIC=true exports the project for a self-hosted production deployment: assetmap 1`] = `Object {}`;
-
-exports[`should export hbc bundle if jsEngine is hermes 1`] = `
-Array [
-  "dist/android-index.json (666 B)",
-  "dist/assetmap.json (size ignored)",
-  "dist/assets (dir)",
-  "dist/bundles (dir)",
-  "dist/bundles/android-XXX.js (837 kB)",
-  "dist/bundles/ios-XXX.js (835 kB)",
-  "dist/ios-index.json (658 B)",
-]
-`;
-
-exports[`should export hbc bundle if jsEngine is hermes: android-index 1`] = `
-Object {
-  "android": Object {
-    "package": "com.example.minimal",
-  },
-  "assetUrlOverride": "./assets",
-  "bundleUrl": Any<String>,
-  "commitTime": Any<String>,
-  "currentFullName": "@anonymous/basic",
-  "dependencies": Array [
-    "expo",
-    "react",
-    "react-native",
-  ],
-  "id": "@anonymous/basic",
-  "ios": Object {
-    "bundleIdentifier": "com.example.minimal",
-  },
-  "locales": Object {},
-  "name": "basic",
-  "originalFullName": "@anonymous/basic",
-  "platform": "android",
-  "platforms": Array [
-    "ios",
-    "android",
-  ],
-  "publishedTime": Any<String>,
-  "releaseId": Any<String>,
-  "revisionId": Any<String>,
-  "sdkVersion": "43.0.0",
-  "slug": "basic",
-  "version": "1.0.0",
-}
-`;
-
-exports[`should export hbc bundle if jsEngine is hermes: assetmap 1`] = `Object {}`;
