@@ -1,0 +1,20 @@
+{
+    "name": "basic",
+    "version": "1.0.0",
+    "private": true,
+    "scripts": {
+      "android": "expo start --android",
+      "ios": "expo start --ios",
+      "web": "expo start --web",
+      "start": "expo start"
+    },
+    "dependencies": {
+      "expo": "~43.0.0",
+      "react": "17.0.1",
+      "react-native": "0.64.3"
+    },
+    "devDependencies": {
+      "@babel/core": "^7.12.9"
+    }
+  }
+  

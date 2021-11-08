@@ -1,7 +1,10 @@
 import { ExpoConfig } from '@expo/config';
+import JsonFile from '@expo/json-file';
 import spawnAsync, { SpawnOptions, SpawnResult } from '@expo/spawn-async';
 import fs from 'fs';
 import path from 'path';
+
+import Log from '../src/log';
 
 export const EXPO_CLI = path.join(__dirname, '../bin/expo.js');
 
@@ -35,39 +38,17 @@ export async function tryRunAsync(args: string[], options?: SpawnOptions): Promi
   }
 }
 
-// TODO(Bacon): This is too much stuff
-export const minimumNativePkgJson = {
-  main: 'node_modules/expo/AppEntry.js',
-  dependencies: {
-    expo: '~43.0.0',
-    react: '^17.0.1',
-    'react-native': '~0.64.2',
-  },
-  devDependencies: {
-    '@babel/core': '^7.9.0',
-  },
-  scripts: {
-    start: 'expo start',
-    android: 'expo start --android',
-    ios: 'expo start --ios',
-    web: 'expo web',
-  },
-  private: true,
-};
+export function getBasicAppJs() {
+  return fs.readFileSync(path.join(__dirname, './fixtures/basic/App.js'), 'utf8');
+}
 
-export const minimumAppJson = {
-  expo: {
-    // sdkVersion: '42.0.0',
-    android: { package: 'com.example.minimal' },
-    ios: { bundleIdentifier: 'com.example.minimal' },
-  },
-};
+export function getBasicExpoConfig() {
+  return JsonFile.read(path.join(__dirname, './fixtures/basic/app.json')) as any;
+}
 
-export const appJs = `
-import React from 'react';
-import { View } from 'react-native';
-export default () => <View />;
-`;
+export function getBasicPackageJson() {
+  return JsonFile.read(path.join(__dirname, './fixtures/basic/package.json')) as any;
+}
 
 export async function createMinimalProjectAsync(
   parentDir: string,
@@ -77,33 +58,35 @@ export async function createMinimalProjectAsync(
 ) {
   // Create a minimal project
   const projectRoot = path.join(parentDir, projectName);
-
+  Log.log('creating:', projectRoot, projectName);
   // Create the project root
   fs.mkdirSync(projectRoot, { recursive: true });
 
+  const pkgJson = getBasicPackageJson();
   // Create a package.json
   const packageJson = {
-    ...minimumNativePkgJson,
+    ...pkgJson,
     dependencies: {
-      ...minimumNativePkgJson.dependencies,
+      ...pkgJson.dependencies,
       ...extraNativePackage,
     },
   };
   fs.writeFileSync(path.join(projectRoot, 'package.json'), JSON.stringify(packageJson));
 
-  // TODO(Bacon): We shouldn't need this
+  const appJson = getBasicExpoConfig();
+
   fs.writeFileSync(
     path.join(projectRoot, 'app.json'),
     JSON.stringify({
-      ...minimumAppJson,
+      ...appJson,
       expo: {
-        ...minimumAppJson.expo,
+        ...appJson.expo,
         ...config,
       },
     })
   );
 
-  fs.writeFileSync(path.join(projectRoot, 'App.js'), appJs);
+  fs.writeFileSync(path.join(projectRoot, 'App.js'), getBasicAppJs());
 
   // TODO(Bacon): We shouldn't need this
   // Install the packages so eject can infer the versions
