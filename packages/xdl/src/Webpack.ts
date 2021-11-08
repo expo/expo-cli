@@ -159,7 +159,7 @@ function createNativeDevServerMiddleware(
   // TODO: Move this in to expo/dev-server.
 
   const projectConfig = getConfig(projectRoot);
-  const easProjectId = projectConfig.exp.extra?.eas.projectId;
+  const easProjectId = projectConfig.exp.extra?.eas?.projectId;
   const useExpoUpdatesManifest =
     forceManifestType === 'expo-updates' || (forceManifestType !== 'classic' && easProjectId);
 

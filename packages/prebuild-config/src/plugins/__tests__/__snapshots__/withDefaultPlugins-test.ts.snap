@@ -28,12 +28,20 @@ Object {
         "name": "expo-facebook",
         "version": "UNVERSIONED",
       },
+      "expo-navigation-bar": Object {
+        "name": "expo-navigation-bar",
+        "version": "UNVERSIONED",
+      },
       "expo-notifications": Object {
         "name": "expo-notifications",
         "version": "UNVERSIONED",
       },
       "expo-splash-screen": Object {
         "name": "expo-splash-screen",
+        "version": "UNVERSIONED",
+      },
+      "expo-system-ui": Object {
+        "name": "expo-system-ui",
         "version": "UNVERSIONED",
       },
       "expo-updates": Object {
@@ -205,6 +213,14 @@ Object {
       },
       "NSLocationWhenInUseUsageDescription": "",
       "RCTRootViewBackgroundColor": 4294901760,
+      "SKAdNetworkItems": Array [
+        Object {
+          "SKAdNetworkIdentifier": "v9wttpbfk9.skadnetwork",
+        },
+        Object {
+          "SKAdNetworkIdentifier": "n38lu8286q.skadnetwork",
+        },
+      ],
       "UILaunchStoryboardName": "SplashScreen",
       "UIRequiredDeviceCapabilities": Array [
         "armv7",
@@ -216,6 +232,7 @@ Object {
         "UIInterfaceOrientationLandscapeLeft",
         "UIInterfaceOrientationLandscapeRight",
       ],
+      "UIUserInterfaceStyle": "Automatic",
       "UIViewControllerBasedStatusBarAppearance": false,
       "bar": Object {
         "val": Array [
@@ -301,15 +318,15 @@ Object {
               },
               Object {
                 "$": Object {
-                  "name": "activityBackground",
-                },
-                "_": "#ff0000",
-              },
-              Object {
-                "$": Object {
                   "name": "splashscreen_background",
                 },
                 "_": "#ff00ff",
+              },
+              Object {
+                "$": Object {
+                  "name": "activityBackground",
+                },
+                "_": "#ff0000",
               },
               Object {
                 "$": Object {
@@ -824,15 +841,15 @@ Object {
                   },
                   Object {
                     "$": Object {
-                      "name": "android:navigationBarColor",
-                    },
-                    "_": "@color/navigationBarColor",
-                  },
-                  Object {
-                    "$": Object {
                       "name": "android:windowLightNavigationBar",
                     },
                     "_": "true",
+                  },
+                  Object {
+                    "$": Object {
+                      "name": "android:navigationBarColor",
+                    },
+                    "_": "@color/navigationBarColor",
                   },
                   Object {
                     "$": Object {
@@ -932,6 +949,14 @@ Object {
           },
           "NSLocationWhenInUseUsageDescription": "",
           "RCTRootViewBackgroundColor": 4294901760,
+          "SKAdNetworkItems": Array [
+            Object {
+              "SKAdNetworkIdentifier": "v9wttpbfk9.skadnetwork",
+            },
+            Object {
+              "SKAdNetworkIdentifier": "n38lu8286q.skadnetwork",
+            },
+          ],
           "UILaunchStoryboardName": "SplashScreen",
           "UIRequiredDeviceCapabilities": Array [
             "armv7",
@@ -943,6 +968,7 @@ Object {
             "UIInterfaceOrientationLandscapeLeft",
             "UIInterfaceOrientationLandscapeRight",
           ],
+          "UIUserInterfaceStyle": "Automatic",
           "UIViewControllerBasedStatusBarAppearance": false,
           "bar": Object {
             "val": Array [
@@ -983,12 +1009,20 @@ Object {
         "name": "expo-facebook",
         "version": "UNVERSIONED",
       },
+      "expo-navigation-bar": Object {
+        "name": "expo-navigation-bar",
+        "version": "UNVERSIONED",
+      },
       "expo-notifications": Object {
         "name": "expo-notifications",
         "version": "UNVERSIONED",
       },
       "expo-splash-screen": Object {
         "name": "expo-splash-screen",
+        "version": "UNVERSIONED",
+      },
+      "expo-system-ui": Object {
+        "name": "expo-system-ui",
         "version": "UNVERSIONED",
       },
       "expo-updates": Object {
@@ -1160,6 +1194,14 @@ Object {
       },
       "NSLocationWhenInUseUsageDescription": "",
       "RCTRootViewBackgroundColor": 4294901760,
+      "SKAdNetworkItems": Array [
+        Object {
+          "SKAdNetworkIdentifier": "v9wttpbfk9.skadnetwork",
+        },
+        Object {
+          "SKAdNetworkIdentifier": "n38lu8286q.skadnetwork",
+        },
+      ],
       "UILaunchStoryboardName": "SplashScreen",
       "UIRequiredDeviceCapabilities": Array [
         "armv7",
@@ -1171,6 +1213,7 @@ Object {
         "UIInterfaceOrientationLandscapeLeft",
         "UIInterfaceOrientationLandscapeRight",
       ],
+      "UIUserInterfaceStyle": "Automatic",
       "UIViewControllerBasedStatusBarAppearance": false,
       "bar": Object {
         "val": Array [
@@ -1256,15 +1299,15 @@ Object {
               },
               Object {
                 "$": Object {
-                  "name": "activityBackground",
-                },
-                "_": "#ff0000",
-              },
-              Object {
-                "$": Object {
                   "name": "splashscreen_background",
                 },
                 "_": "#ff00ff",
+              },
+              Object {
+                "$": Object {
+                  "name": "activityBackground",
+                },
+                "_": "#ff0000",
               },
               Object {
                 "$": Object {
@@ -1692,15 +1735,15 @@ Object {
                   },
                   Object {
                     "$": Object {
-                      "name": "android:navigationBarColor",
-                    },
-                    "_": "@color/navigationBarColor",
-                  },
-                  Object {
-                    "$": Object {
                       "name": "android:windowLightNavigationBar",
                     },
                     "_": "true",
+                  },
+                  Object {
+                    "$": Object {
+                      "name": "android:navigationBarColor",
+                    },
+                    "_": "@color/navigationBarColor",
                   },
                   Object {
                     "$": Object {
@@ -1799,6 +1842,14 @@ Object {
             },
           },
           "RCTRootViewBackgroundColor": 4294901760,
+          "SKAdNetworkItems": Array [
+            Object {
+              "SKAdNetworkIdentifier": "v9wttpbfk9.skadnetwork",
+            },
+            Object {
+              "SKAdNetworkIdentifier": "n38lu8286q.skadnetwork",
+            },
+          ],
           "UILaunchStoryboardName": "SplashScreen",
           "UIRequiredDeviceCapabilities": Array [
             "armv7",
@@ -1811,6 +1862,7 @@ Object {
             "UIInterfaceOrientationLandscapeLeft",
             "UIInterfaceOrientationLandscapeRight",
           ],
+          "UIUserInterfaceStyle": "Automatic",
           "UIViewControllerBasedStatusBarAppearance": false,
           "bar": Object {
             "val": Array [
@@ -1851,12 +1903,20 @@ Object {
         "name": "expo-facebook",
         "version": "UNVERSIONED",
       },
+      "expo-navigation-bar": Object {
+        "name": "expo-navigation-bar",
+        "version": "UNVERSIONED",
+      },
       "expo-notifications": Object {
         "name": "expo-notifications",
         "version": "UNVERSIONED",
       },
       "expo-splash-screen": Object {
         "name": "expo-splash-screen",
+        "version": "UNVERSIONED",
+      },
+      "expo-system-ui": Object {
+        "name": "expo-system-ui",
         "version": "UNVERSIONED",
       },
       "expo-updates": Object {
@@ -2027,6 +2087,14 @@ Object {
         },
       },
       "RCTRootViewBackgroundColor": 4294901760,
+      "SKAdNetworkItems": Array [
+        Object {
+          "SKAdNetworkIdentifier": "v9wttpbfk9.skadnetwork",
+        },
+        Object {
+          "SKAdNetworkIdentifier": "n38lu8286q.skadnetwork",
+        },
+      ],
       "UILaunchStoryboardName": "SplashScreen",
       "UIRequiredDeviceCapabilities": Array [
         "armv7",
@@ -2039,6 +2107,7 @@ Object {
         "UIInterfaceOrientationLandscapeLeft",
         "UIInterfaceOrientationLandscapeRight",
       ],
+      "UIUserInterfaceStyle": "Automatic",
       "UIViewControllerBasedStatusBarAppearance": false,
       "bar": Object {
         "val": Array [

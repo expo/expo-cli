@@ -1,4 +1,5 @@
 import { ExpoConfig } from '@expo/config-types';
+import { openJsInspector, queryAllInspectorAppsAsync } from '@expo/dev-server';
 import chalk from 'chalk';
 import openBrowser from 'react-dev-utils/openBrowser';
 import wrapAnsi from 'wrap-ansi';
@@ -18,6 +19,7 @@ import { loginOrRegisterIfLoggedOutAsync } from '../../accounts';
 import Log from '../../log';
 import { selectAsync } from '../../prompts';
 import urlOpts from '../../urlOpts';
+import { learnMore } from '../utils/TerminalLink';
 import { openInEditorAsync } from '../utils/openInEditorAsync';
 
 const CTRL_C = '\u0003';
@@ -85,6 +87,7 @@ const printUsageAsync = async (
     !!options.isRemoteReloadingEnabled && { key: 'r', msg: `reload app` },
     !!options.isWebSocketsEnabled && { key: 'm', msg: `toggle menu` },
     !!options.isWebSocketsEnabled && { key: 'shift+m', msg: `more tools` },
+    !!options.isWebSocketsEnabled && { key: 'j', msg: `open JavaScript inspector for Hermes` },
     { key: 'o', msg: `open project code in your editor` },
     { key: 'c', msg: `show project QR` },
     { key: 'p', msg: `toggle build mode`, status: devMode },
@@ -210,6 +213,24 @@ export function openDeveloperTools(url: string) {
   Log.log(`Opening developer tools in the browser...`);
   if (!openBrowser(url)) {
     Log.warn(`Unable to open developer tools in the browser`);
+  }
+}
+
+async function openJsInsectorAsync(projectRoot: string) {
+  Log.log(`Opening JavaScript inspector in the browser...`);
+  const { packagerPort } = await ProjectSettings.readPackagerInfoAsync(projectRoot);
+  const metroServerOrigin = `http://localhost:${packagerPort}`;
+  const apps = await queryAllInspectorAppsAsync(metroServerOrigin);
+  if (apps.length === 0) {
+    Log.warn(
+      `No compatible apps connected. This feature is only available for apps using the Hermes runtime. ${learnMore(
+        'https://docs.expo.dev/guides/using-hermes/'
+      )}`
+    );
+    return;
+  }
+  for (const app of apps) {
+    openJsInspector(app);
   }
 }
 
@@ -397,6 +418,10 @@ export async function startAsync(projectRoot: string, options: StartOptions) {
         logCommandsTable([{ key: 'd', msg: `show developer tools now` }]);
         break;
       }
+      case 'j': {
+        await openJsInsectorAsync(projectRoot);
+        break;
+      }
       case 'm': {
         if (options.isWebSocketsEnabled) {
           Log.log(`${BLT} Toggling dev menu`);
@@ -471,7 +496,7 @@ Please reload the project in Expo Go for the change to take effect.`
         break;
       case 'o':
         Log.log(`${BLT} Opening the editor...`);
-        await openInEditorAsync(projectRoot);
+        await openInEditorAsync(projectRoot, { editor: process.env.EXPO_EDITOR });
     }
   }
 }

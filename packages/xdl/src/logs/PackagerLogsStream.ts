@@ -215,35 +215,35 @@ export default class PackagerLogsStream {
     this._attachLoggerStream();
   }
 
+  projectId?: number;
+
   _attachLoggerStream() {
-    const projectId = this._getCurrentOpenProjectId();
+    this.projectId = this._getCurrentOpenProjectId();
 
     ProjectUtils.attachLoggerStream(this._projectRoot, {
       stream: {
-        write: (chunk: LogRecord) => {
-          if (chunk.tag !== 'metro' && chunk.tag !== 'expo') {
-            return;
-          } else if (this._getCurrentOpenProjectId() !== projectId) {
-            // TODO: We should be confident that we are properly unsubscribing
-            // from the stream rather than doing a defensive check like this.
-            return;
-          }
-
-          chunk = this._maybeParseMsgJSON(chunk);
-          chunk = this._cleanUpNodeErrors(chunk);
-          if (chunk.tag === 'metro') {
-            this._handleMetroEvent(chunk);
-          } else if (
-            typeof chunk.msg === 'string' &&
-            chunk.msg.match(/\w/) &&
-            chunk.msg[0] !== '{'
-          ) {
-            this._enqueueAppendLogChunk(chunk);
-          }
-        },
+        write: this._handleChunk.bind(this),
       },
       type: 'raw',
     });
+  }
+
+  _handleChunk(chunk: LogRecord) {
+    if (chunk.tag !== 'metro' && chunk.tag !== 'expo') {
+      return;
+    } else if (this._getCurrentOpenProjectId() !== this.projectId) {
+      // TODO: We should be confident that we are properly unsubscribing
+      // from the stream rather than doing a defensive check like this.
+      return;
+    }
+
+    chunk = this._maybeParseMsgJSON(chunk);
+    chunk = this._cleanUpNodeErrors(chunk);
+    if (chunk.tag === 'metro') {
+      this._handleMetroEvent(chunk);
+    } else if (typeof chunk.msg === 'string' && chunk.msg.match(/\w/) && chunk.msg[0] !== '{') {
+      this._enqueueAppendLogChunk(chunk);
+    }
   }
 
   _handleMetroEvent(originalChunk: MetroLogRecord) {
@@ -511,6 +511,17 @@ export default class PackagerLogsStream {
     const snippet = (this._getSnippetForError && this._getSnippetForError(error)) || error.snippet;
     if (snippet) {
       message += `\n${snippet}`;
+    }
+
+    // Import errors are already pretty useful and don't need extra info added to them.
+    const isAmbiguousError = !error.name || ['SyntaxError'].includes(error.name);
+    // When you have a basic syntax error in application code it will tell you the file
+    // and usually also provide a well informed error.
+    const isComprehensiveTransformError = error.type === 'TransformError' && error.filename;
+
+    // console.log(require('util').inspect(error, { depth: 4 }));
+    if (error.stack && isAmbiguousError && !isComprehensiveTransformError) {
+      message += `\n${chalk.gray(error.stack)}`;
     }
     return message;
   }
