@@ -76,7 +76,7 @@ it(`can eject a minimal project`, async () => {
   // Scripts should be rewritten to use react-native-community/cli
   expect(outputPkgJson.scripts['ios']).toBe('expo run:ios');
   expect(outputPkgJson.scripts['android']).toBe('expo run:android');
-  expect(outputPkgJson.scripts['web']).toBe('expo web');
+  expect(outputPkgJson.scripts['web']).toBe('expo start --web');
   // The react-native fork is replaced with the upstream react-native version
   expect(outputPkgJson.dependencies['react-native']).not.toBe(
     getBasicPackageJson().dependencies['react-native']
