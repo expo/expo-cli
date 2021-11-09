@@ -36,5 +36,5 @@ export type ErrorCode =
   | 'NETWORK_REQUIRED'
   // Shell Apps
   | 'CREDENTIAL_ERROR'
-  // Dev Client
+  // Development build
   | 'NO_DEV_CLIENT_SCHEME';
