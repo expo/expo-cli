@@ -52,7 +52,7 @@
   },
   "devDependencies": {
     "@types/connect": "^3.4.33",
-    "metro-inspector-proxy": "^0.59.0"
+    "metro-inspector-proxy": "^0.64.0"
   },
   "publishConfig": {
     "access": "public"
