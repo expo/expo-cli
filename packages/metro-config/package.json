@@ -43,10 +43,10 @@
   "devDependencies": {
     "@babel/core": "^7.15.5",
     "expo": "43",
-    "metro": "^0.59.0",
-    "metro-babel-transformer": "^0.66.2",
-    "metro-config": "^0.59.0",
-    "react-native": "~0.64.0"
+    "metro": "~0.64.0",
+    "metro-babel-transformer": "~0.64.0",
+    "metro-config": "~0.64.0",
+    "react-native": "~0.64.3"
   },
   "publishConfig": {
     "access": "public"
