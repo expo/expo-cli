@@ -10,7 +10,12 @@ import {
 } from '../utils/plugin-resolver';
 
 const EXPO_DEBUG = boolish('EXPO_DEBUG', false);
+
+// Show all error info related to plugin resolution.
 const EXPO_CONFIG_PLUGIN_VERBOSE_ERRORS = boolish('EXPO_CONFIG_PLUGIN_VERBOSE_ERRORS', false);
+// Force using the fallback unversioned plugin instead of a local versioned copy,
+// this should only be used for testing the CLI.
+const EXPO_USE_UNVERSIONED_PLUGINS = boolish('EXPO_USE_UNVERSIONED_PLUGINS', false);
 
 function isModuleMissingError(name: string, error: Error): boolean {
   // @ts-ignore
@@ -62,14 +67,29 @@ export const withStaticPlugin: ConfigPlugin<{
   );
 
   let withPlugin: ConfigPlugin<unknown>;
-  // Function was provided, no need to resolve: [withPlugin, {}]
-  if (typeof pluginResolve === 'function') {
+
+  if (
+    // Function was provided, no need to resolve: [withPlugin, {}]
+    typeof pluginResolve === 'function'
+  ) {
     withPlugin = pluginResolve;
   } else if (typeof pluginResolve === 'string') {
     try {
       // Resolve and evaluate plugins.
       withPlugin = resolveConfigPluginFunction(projectRoot, pluginResolve);
-    } catch (error) {
+
+      // Only force if the project has the versioned plugin, otherwise use default behavior.
+      // This helps see which plugins are being skipped.
+      if (
+        EXPO_USE_UNVERSIONED_PLUGINS &&
+        !!withPlugin &&
+        !!props._isLegacyPlugin &&
+        !!props.fallback
+      ) {
+        console.log(`Force "${pluginResolve}" to unversioned plugin`);
+        withPlugin = props.fallback;
+      }
+    } catch (error: any) {
       if (EXPO_DEBUG) {
         if (EXPO_CONFIG_PLUGIN_VERBOSE_ERRORS) {
           // Log the error in debug mode for plugins with fallbacks (like the Expo managed plugins).
@@ -113,6 +133,7 @@ export const withStaticPlugin: ConfigPlugin<{
       'INVALID_PLUGIN_TYPE'
     );
   }
+
   // Execute the plugin.
   config = withPlugin(config, pluginProps);
   return config;
