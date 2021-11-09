@@ -1,6 +1,3 @@
-import type Metro from 'metro';
-import type MetroConfig from 'metro-config';
-import type { composeSourceMaps } from 'metro-source-map';
 import os from 'os';
 import resolveFrom from 'resolve-from';
 
@@ -29,27 +26,21 @@ function importFromProject(projectRoot: string, moduleId: string) {
 
 export function importMetroSourceMapComposeSourceMapsFromProject(
   projectRoot: string
-): typeof composeSourceMaps {
+): typeof import('metro-source-map').composeSourceMaps {
   return importFromProject(projectRoot, 'metro-source-map/src/composeSourceMaps');
 }
 
-export function importMetroConfigFromProject(projectRoot: string): typeof MetroConfig {
+export function importMetroConfigFromProject(projectRoot: string): typeof import('metro-config') {
   return importFromProject(projectRoot, 'metro-config');
 }
 
-export function importMetroFromProject(projectRoot: string): typeof Metro {
+export function importMetroFromProject(projectRoot: string): typeof import('metro') {
   return importFromProject(projectRoot, 'metro');
 }
 
-export function importMetroHmrServerFromProject(projectRoot: string): any {
-  return importFromProject(projectRoot, 'metro/src/HmrServer');
-}
-
-export function importMetroLibAttachWebsocketServerFromProject(projectRoot: string): any {
-  return importFromProject(projectRoot, 'metro/src/lib/attachWebsocketServer');
-}
-
-export function importMetroServerFromProject(projectRoot: string): typeof Metro.Server {
+export function importMetroServerFromProject(
+  projectRoot: string
+): typeof import('metro/src/Server') {
   return importFromProject(projectRoot, 'metro/src/Server');
 }
 
