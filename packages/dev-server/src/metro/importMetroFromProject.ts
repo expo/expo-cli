@@ -64,6 +64,12 @@ export function importInspectorProxyServerFromProject(
   return importFromProject(projectRoot, 'metro-inspector-proxy');
 }
 
+export function importExpoMetroConfigFromProject(
+  projectRoot: string
+): typeof import('@expo/metro-config') {
+  return importFromProject(projectRoot, '@expo/metro-config');
+}
+
 export function importHermesCommandFromProject(projectRoot: string): string {
   const platformExecutable = getHermesCommandPlatform();
   return resolveFromProject(projectRoot, `hermes-engine/${platformExecutable}`);

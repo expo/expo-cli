@@ -6,7 +6,7 @@ import configureAndroidManifestXml from './AndroidManifest.xml';
 import configureColorsXml from './Colors.xml';
 import configureDrawableXml from './Drawable.xml';
 import configureDrawables from './Drawables';
-import configureMainActivity from './MainActivity';
+import configureStringsXml from './Strings.xml';
 import configureStylesXml from './Styles.xml';
 
 export default async function configureAndroid(
@@ -23,6 +23,6 @@ export default async function configureAndroid(
     configureDrawableXml(androidMainPath, validatedConfig),
     configureStylesXml(androidMainPath, validatedConfig),
     configureAndroidManifestXml(androidMainPath),
-    configureMainActivity(projectRootPath, validatedConfig),
+    configureStringsXml(androidMainPath, validatedConfig),
   ]);
 }

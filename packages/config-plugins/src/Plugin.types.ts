@@ -85,6 +85,13 @@ export type Mod<Props = any> = ((
    * This mod should always be the last one added.
    */
   isProvider?: boolean;
+  /**
+   * If the mod supports introspection, and avoids making any filesystem modifications during compilation.
+   * By enabling, this mod, and all of its descendants will be run in introspection mode.
+   * This should only be used for static files like JSON or XML, and not for application files that require regexes,
+   * or complex static files that require other files to be generated like Xcode `.pbxproj`.
+   */
+  isIntrospective?: boolean;
 };
 
 export interface ModConfig {
@@ -117,6 +124,10 @@ export interface ModConfig {
      * Modify the `android/app/src/main/<package>/MainActivity.java` as a string.
      */
     mainActivity?: Mod<AndroidPaths.ApplicationProjectFile>;
+    /**
+     * Modify the `android/app/src/main/<package>/MainApplication.java` as a string.
+     */
+    mainApplication?: Mod<AndroidPaths.ApplicationProjectFile>;
     /**
      * Modify the `android/app/build.gradle` as a string.
      */
@@ -159,6 +170,10 @@ export interface ModConfig {
      * Modify the `ios/<name>/AppDelegate.m` as a string (dangerous)
      */
     appDelegate?: Mod<AppDelegateProjectFile>;
+    /**
+     * Modify the `ios/Podfile.properties.json` as key-value pairs
+     */
+    podfileProperties?: Mod<Record<string, string>>;
   };
 }
 

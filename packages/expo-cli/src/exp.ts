@@ -332,7 +332,7 @@ export type Action = (...args: any[]) => void;
 // parsing the command input
 Command.prototype.asyncAction = function (asyncFn: Action) {
   return this.action(async (...args: any[]) => {
-    if (!getenv.boolish('EAS_BUILD', false)) {
+    if (!getenv.boolish('EAS_BUILD', false) && !program.nonInteractive) {
       try {
         await profileMethod(checkCliVersionAsync)();
       } catch (e) {}
@@ -348,8 +348,7 @@ Command.prototype.asyncAction = function (asyncFn: Action) {
       await asyncFn(...args);
       // After a command, flush the analytics queue so the program will not have any active timers
       // This allows node js to exit immediately
-      Analytics.flush();
-      UnifiedAnalytics.flush();
+      await Promise.all([Analytics.flush(), UnifiedAnalytics.flush()]);
     } catch (err) {
       // TODO: Find better ways to consolidate error messages
       if (err instanceof AbortCommandError || err instanceof SilentError) {
@@ -659,25 +658,15 @@ Command.prototype.asyncActionProjectDir = function (
 };
 
 export async function bootstrapAnalyticsAsync(): Promise<void> {
-  if (Env.shouldDisableAnalytics()) {
-    return; // do not allow E2E to fire events
-  }
-
   Analytics.initializeClient(
-    'vGu92cdmVaggGA26s3lBX6Y5fILm8SQ7',
-    {
-      apiKey: '1wHTzmVgmZvNjCalKL45chlc2VN',
-      dataPlaneUrl: 'https://cdp.expo.dev',
-    },
+    '1wHTzmVgmZvNjCalKL45chlc2VN',
+    'https://cdp.expo.dev',
     packageJSON.version
   );
 
   UnifiedAnalytics.initializeClient(
-    'u4e9dmCiNpwIZTXuyZPOJE7KjCMowdx5',
-    {
-      apiKey: '1wabJGd5IiuF9Q8SGlcI90v8WTs',
-      dataPlaneUrl: 'https://cdp.expo.dev',
-    },
+    '1wabJGd5IiuF9Q8SGlcI90v8WTs',
+    'https://cdp.expo.dev',
     packageJSON.version
   );
 
@@ -714,7 +703,10 @@ async function runAsync(programName: string) {
   try {
     _registerLogs();
 
-    await bootstrapAnalyticsAsync();
+    if (Env.shouldEnableAnalytics()) {
+      await bootstrapAnalyticsAsync();
+    }
+
     UserManager.setInteractiveAuthenticationCallback(loginOrRegisterAsync);
 
     if (process.env.SERVER_URL) {

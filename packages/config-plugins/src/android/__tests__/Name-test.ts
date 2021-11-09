@@ -39,4 +39,8 @@ describe(applyNameSettingsGradle, () => {
     // Replaces with expected linting
     expect(modified).toBe(`rootProject.name = '${badNameCleaned}'`);
   });
+  it('escapes single quotes in name', () => {
+    const modified = applyNameSettingsGradle({ name: "Nora's" }, `rootProject.name="Replace me"`);
+    expect(modified).toBe(`rootProject.name = 'Nora\\'s'`);
+  });
 });

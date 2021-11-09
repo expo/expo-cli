@@ -50,7 +50,7 @@ type MetroError =
   | ({
       originModulePath: string;
       message: string;
-      errors: object[];
+      errors: { description: string; filename: string; lineNumber: number }[];
     } & ErrorObject)
   | ({
       type: 'TransformError';
@@ -58,7 +58,7 @@ type MetroError =
       lineNumber: number;
       column: number;
       filename: string;
-      errors: object[];
+      errors: { description: string; filename: string; lineNumber: number }[];
     } & ErrorObject)
   | ErrorObject;
 
@@ -108,6 +108,11 @@ type ReportableEvent =
       type: 'bundling_error';
     }
   | {
+      // Currently only sent from Webpack
+      warning: string;
+      type: 'bundling_warning';
+    }
+  | {
       type: 'dep_graph_loading';
     }
   | {
@@ -118,6 +123,9 @@ type ReportableEvent =
       type: 'bundle_transform_progressed';
       transformedFileCount: number;
       totalFileCount: number;
+
+      // A special property added for webpack support
+      percentage?: number;
     }
   | {
       type: 'global_cache_error';
@@ -207,35 +215,35 @@ export default class PackagerLogsStream {
     this._attachLoggerStream();
   }
 
+  projectId?: number;
+
   _attachLoggerStream() {
-    const projectId = this._getCurrentOpenProjectId();
+    this.projectId = this._getCurrentOpenProjectId();
 
     ProjectUtils.attachLoggerStream(this._projectRoot, {
       stream: {
-        write: (chunk: LogRecord) => {
-          if (chunk.tag !== 'metro' && chunk.tag !== 'expo') {
-            return;
-          } else if (this._getCurrentOpenProjectId() !== projectId) {
-            // TODO: We should be confident that we are properly unsubscribing
-            // from the stream rather than doing a defensive check like this.
-            return;
-          }
-
-          chunk = this._maybeParseMsgJSON(chunk);
-          chunk = this._cleanUpNodeErrors(chunk);
-          if (chunk.tag === 'metro') {
-            this._handleMetroEvent(chunk);
-          } else if (
-            typeof chunk.msg === 'string' &&
-            chunk.msg.match(/\w/) &&
-            chunk.msg[0] !== '{'
-          ) {
-            this._enqueueAppendLogChunk(chunk);
-          }
-        },
+        write: this._handleChunk.bind(this),
       },
       type: 'raw',
     });
+  }
+
+  _handleChunk(chunk: LogRecord) {
+    if (chunk.tag !== 'metro' && chunk.tag !== 'expo') {
+      return;
+    } else if (this._getCurrentOpenProjectId() !== this.projectId) {
+      // TODO: We should be confident that we are properly unsubscribing
+      // from the stream rather than doing a defensive check like this.
+      return;
+    }
+
+    chunk = this._maybeParseMsgJSON(chunk);
+    chunk = this._cleanUpNodeErrors(chunk);
+    if (chunk.tag === 'metro') {
+      this._handleMetroEvent(chunk);
+    } else if (typeof chunk.msg === 'string' && chunk.msg.match(/\w/) && chunk.msg[0] !== '{') {
+      this._enqueueAppendLogChunk(chunk);
+    }
   }
 
   _handleMetroEvent(originalChunk: MetroLogRecord) {
@@ -283,6 +291,10 @@ export default class PackagerLogsStream {
           this._formatBundlingError(msg.error) ||
           msg;
         chunk.level = Logger.ERROR;
+        break;
+      case 'bundling_warning':
+        chunk.msg = msg.warning;
+        chunk.level = Logger.WARN;
         break;
       case 'transform_cache_reset':
         chunk.msg =
@@ -401,8 +413,14 @@ export default class PackagerLogsStream {
       progressChunk.msg = `Building JavaScript bundle: error`;
       progressChunk.level = Logger.ERROR;
     } else if (msg.type === 'bundle_transform_progressed') {
-      percentProgress = Math.floor((msg.transformedFileCount / msg.totalFileCount) * 100);
-      progressChunk.msg = `Building JavaScript bundle: ${percentProgress}%`;
+      if (msg.percentage) {
+        percentProgress = msg.percentage * 100;
+      } else {
+        percentProgress = (msg.transformedFileCount / msg.totalFileCount) * 100;
+        // percentProgress = Math.floor((msg.transformedFileCount / msg.totalFileCount) * 100);
+      }
+      const roundedPercentProgress = Math.floor(100 * percentProgress) / 100;
+      progressChunk.msg = `Building JavaScript bundle: ${roundedPercentProgress}%`;
     } else {
       return;
     }
@@ -494,15 +512,27 @@ export default class PackagerLogsStream {
     if (snippet) {
       message += `\n${snippet}`;
     }
+
+    // Import errors are already pretty useful and don't need extra info added to them.
+    const isAmbiguousError = !error.name || ['SyntaxError'].includes(error.name);
+    // When you have a basic syntax error in application code it will tell you the file
+    // and usually also provide a well informed error.
+    const isComprehensiveTransformError = error.type === 'TransformError' && error.filename;
+
+    // console.log(require('util').inspect(error, { depth: 4 }));
+    if (error.stack && isAmbiguousError && !isComprehensiveTransformError) {
+      message += `\n${chalk.gray(error.stack)}`;
+    }
     return message;
   }
 
   _formatWorkerChunk(origin: 'stdout' | 'stderr', chunk: string) {
-    const lines = chunk.split('\n');
-    if (lines.length >= 1 && lines[lines.length - 1] === '') {
-      lines.splice(lines.length - 1, 1);
-    }
-    return lines.map(line => `transform[${origin}]: ${line}`).join('\n');
+    return chunk;
+    // const lines = chunk.split('\n');
+    // if (lines.length >= 1 && lines[lines.length - 1] === '') {
+    //   lines.splice(lines.length - 1, 1);
+    // }
+    // return lines.map(line => `transform[${origin}]: ${line}`).join('\n');
   }
 
   _enqueueAppendLogChunk(chunk: LogRecord) {

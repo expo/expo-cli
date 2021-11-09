@@ -46,9 +46,9 @@ describe('android', () => {
       const received = getDirFromFS(vol.toJSON(), '/app');
       const expected = {
         ...reactNativeProjectWithSplashScreenConfigured,
-        'android/app/src/main/java/com/reactnativeproject/MainActivity.java': reactNativeProjectWithSplashScreenConfigured[
-          'android/app/src/main/java/com/reactnativeproject/MainActivity.java'
-        ].replace('CONTAIN', 'NATIVE'),
+        'android/app/src/main/res/values/strings.xml': reactNativeProjectWithSplashScreenConfigured[
+          'android/app/src/main/res/values/strings.xml'
+        ].replace('contain', 'native'),
         'android/app/src/main/res/drawable/splashscreen.xml': reactNativeProjectWithSplashScreenConfigured[
           'android/app/src/main/res/drawable/splashscreen.xml'
         ].replace(
@@ -76,9 +76,9 @@ describe('android', () => {
       const received = getDirFromFS(vol.toJSON(), '/app');
       const expected = {
         ...reactNativeProjectWithSplashScreenConfigured,
-        'android/app/src/main/java/com/reactnativeproject/MainActivity.java': reactNativeProjectWithSplashScreenConfigured[
-          'android/app/src/main/java/com/reactnativeproject/MainActivity.java'
-        ].replace('CONTAIN', 'COVER'),
+        'android/app/src/main/res/values/strings.xml': reactNativeProjectWithSplashScreenConfigured[
+          'android/app/src/main/res/values/strings.xml'
+        ].replace('contain', 'cover'),
         'android/app/src/main/res/values/colors.xml': reactNativeProjectWithSplashScreenConfigured[
           'android/app/src/main/res/values/colors.xml'
         ].replace('#38E3F292', '#FFFF00'),

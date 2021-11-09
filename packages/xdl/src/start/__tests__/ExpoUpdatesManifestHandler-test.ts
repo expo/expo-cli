@@ -64,6 +64,7 @@ describe('ExpoUpdatesManifestHandler', () => {
         projectRoot: '/alpha',
         host: '127.0.0.1:19000',
         platform: 'ios',
+        acceptSignature: false,
       });
 
       expect(res.headers).toEqual(
@@ -82,24 +83,11 @@ describe('ExpoUpdatesManifestHandler', () => {
         createdAt: expect.any(String),
         runtimeVersion: 'exposdk:38.0.0',
         launchAsset: {
-          key: 'index',
+          key: 'bundle',
           contentType: 'application/javascript',
           url: 'http://127.0.0.1:80/index.bundle?platform=ios&dev=true&hot=false&minify=false',
         },
-        assets: [
-          {
-            contentType: 'image/png',
-            hash: 'bc8dff68bbfd008f5c5cd9f33711cb31d4ffc207d31e7da9b944f9d79a07e4ef',
-            key: './icon.png',
-            url: 'http://127.0.0.1:80/assets/./icon.png',
-          },
-          {
-            contentType: 'image/png',
-            hash: 'bc8dff68bbfd008f5c5cd9f33711cb31d4ffc207d31e7da9b944f9d79a07e4ef',
-            key: './assets/splash.png',
-            url: 'http://127.0.0.1:80/assets/./assets/splash.png',
-          },
-        ],
+        assets: [],
         metadata: {},
         extra: {
           eas: {},
@@ -112,14 +100,11 @@ describe('ExpoUpdatesManifestHandler', () => {
             platforms: [],
             extras: { myExtra: '123' },
             icon: './icon.png',
-            iconAsset: { assetKey: './icon.png', rawUrl: null },
+            iconUrl: 'http://127.0.0.1:80/assets/./icon.png',
             hostUri: '127.0.0.1:80',
             splash: {
               image: './assets/splash.png',
-              imageAsset: {
-                assetKey: './assets/splash.png',
-                rawUrl: null,
-              },
+              imageUrl: 'http://127.0.0.1:80/assets/./assets/splash.png',
             },
             _internal: {
               isDebug: expect.any(Boolean),

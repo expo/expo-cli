@@ -75,7 +75,7 @@ describe('e2e: iOS locales', () => {
     expect(after[locales[1]]).toMatch(/spanish-name/);
     // Test a warning is thrown for an invalid locale JSON file.
     expect(WarningAggregator.addWarningIOS).toHaveBeenCalledWith(
-      'locales-xx',
+      'locales.xx',
       'Failed to parse JSON of locale file for language: xx',
       'https://docs.expo.dev/distribution/app-stores/#localizing-your-ios-app'
     );

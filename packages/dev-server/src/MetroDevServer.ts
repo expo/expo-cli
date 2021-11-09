@@ -1,40 +1,33 @@
 import type Log from '@expo/bunyan';
 import { ExpoConfig, getConfigFilePaths } from '@expo/config';
-import * as ExpoMetroConfig from '@expo/metro-config';
-import {
-  createDevServerMiddleware,
-  securityHeadersMiddleware,
-} from '@react-native-community/cli-server-api';
-import bodyParser from 'body-parser';
+import type { LoadOptions } from '@expo/metro-config';
+import chalk from 'chalk';
 import type { Server as ConnectServer } from 'connect';
 import http from 'http';
 import type Metro from 'metro';
-import path from 'path';
-import semver from 'semver';
 
 import {
   buildHermesBundleAsync,
   isEnableHermesManaged,
-  maybeInconsistentEngineAsync,
+  maybeThrowFromInconsistentEngineAsync,
 } from './HermesBundler';
 import LogReporter from './LogReporter';
 import { BundleAssetWithFileHashes } from './assets/copyAssetsAsync';
 import { saveAssetsAsync } from './assets/saveAssetsAsync';
 import { createDevServerAsync } from './metro/createDevServerAsync';
 import {
+  importExpoMetroConfigFromProject,
+  importInspectorProxyServerFromProject,
   importMetroFromProject,
   importMetroOutputBundleFromProject,
   importMetroServerFromProject,
 } from './metro/importMetroFromProject';
-import clientLogsMiddleware from './middleware/clientLogsMiddleware';
-import createJsInspectorMiddleware from './middleware/createJsInspectorMiddleware';
-import { remoteDevtoolsCorsMiddleware } from './middleware/remoteDevtoolsCorsMiddleware';
-import { remoteDevtoolsSecurityHeadersMiddleware } from './middleware/remoteDevtoolsSecurityHeadersMiddleware';
-import { replaceMiddlewareWith } from './middleware/replaceMiddlewareWith';
+import { createDevServerMiddleware } from './middleware/devServerMiddleware';
 
-export type MetroDevServerOptions = ExpoMetroConfig.LoadOptions & {
+export type MetroDevServerOptions = LoadOptions & {
   logger: Log;
   quiet?: boolean;
+  unversioned?: boolean;
 };
 export type BundleOptions = {
   entryPoint: string;
@@ -65,6 +58,29 @@ export type MessageSocket = {
   broadcast: (method: string, params?: Record<string, any> | undefined) => void;
 };
 
+function getExpoMetroConfig(
+  projectRoot: string,
+  { logger, unversioned }: Pick<MetroDevServerOptions, 'logger' | 'unversioned'>
+): typeof import('@expo/metro-config') {
+  if (!unversioned) {
+    try {
+      return importExpoMetroConfigFromProject(projectRoot);
+    } catch {
+      // If expo isn't installed, use the unversioned config and warn about installing expo.
+    }
+  }
+
+  const unversionedVersion = require('@expo/metro-config/package.json').version;
+  logger.info(
+    { tag: 'expo' },
+    chalk.gray(
+      `\u203A Unversioned ${chalk.bold`@expo/metro-config@${unversionedVersion}`} is being used. Bundling apps may not work as expected, and is subject to breaking changes. Install ${chalk.bold`expo`} or set the app.json sdkVersion to use a stable version of @expo/metro-config.`
+    )
+  );
+
+  return require('@expo/metro-config');
+}
+
 export async function runMetroDevServerAsync(
   projectRoot: string,
   options: MetroDevServerOptions
@@ -75,25 +91,15 @@ export async function runMetroDevServerAsync(
 }> {
   const reporter = new LogReporter(options.logger);
 
+  const ExpoMetroConfig = getExpoMetroConfig(projectRoot, options);
+
   const metroConfig = await ExpoMetroConfig.loadAsync(projectRoot, { reporter, ...options });
 
   const { middleware, attachToServer } = createDevServerMiddleware({
     port: metroConfig.server.port,
     watchFolders: metroConfig.watchFolders,
+    logger: options.logger,
   });
-
-  // securityHeadersMiddleware does not support cross-origin requests for remote devtools to get the sourcemap.
-  // We replace with the enhanced version.
-  replaceMiddlewareWith(
-    middleware as ConnectServer,
-    securityHeadersMiddleware,
-    remoteDevtoolsSecurityHeadersMiddleware
-  );
-  middleware.use(remoteDevtoolsCorsMiddleware);
-
-  middleware.use(bodyParser.json());
-  middleware.use('/logs', clientLogsMiddleware(options.logger));
-  middleware.use('/inspector', createJsInspectorMiddleware());
 
   const customEnhanceMiddleware = metroConfig.server.enhanceMiddleware;
   // @ts-ignore can't mutate readonly config
@@ -133,6 +139,8 @@ export async function bundleAsync(
   const outputBundle = importMetroOutputBundleFromProject(projectRoot);
 
   const reporter = new LogReporter(options.logger);
+  const ExpoMetroConfig = getExpoMetroConfig(projectRoot, options);
+
   const config = await ExpoMetroConfig.loadAsync(projectRoot, { reporter, ...options });
   const buildID = `bundle_${nextBuildID++}`;
 
@@ -219,39 +227,25 @@ export async function bundleAsync(
     bundle: BundleOptions,
     bundleOutput: BundleOutput
   ): Promise<BundleOutput> => {
-    if (!gteSdkVersion(expoConfig, '42.0.0')) {
-      return bundleOutput;
-    }
-    const isHermesManaged = isEnableHermesManaged(expoConfig, bundle.platform);
+    const { platform } = bundle;
+    const isHermesManaged = isEnableHermesManaged(expoConfig, platform);
 
-    const maybeInconsistentEngine = await maybeInconsistentEngineAsync(
+    const paths = getConfigFilePaths(projectRoot);
+    const configFilePath = paths.dynamicConfigPath ?? paths.staticConfigPath ?? 'app.json';
+    await maybeThrowFromInconsistentEngineAsync(
       projectRoot,
-      bundle.platform,
+      configFilePath,
+      platform,
       isHermesManaged
     );
-    if (maybeInconsistentEngine) {
-      const platform = bundle.platform === 'ios' ? 'iOS' : 'Android';
-      const paths = getConfigFilePaths(projectRoot);
-      const configFilePath = paths.dynamicConfigPath ?? paths.staticConfigPath ?? 'app.json';
-      const configFileName = path.basename(configFilePath);
-      throw new Error(
-        `JavaScript engine configuration is inconsistent between ${configFileName} and ${platform} native project.\n` +
-          `In ${configFileName}: Hermes is ${isHermesManaged ? 'enabled' : 'not enabled'}\n` +
-          `In ${platform} native project: Hermes is ${
-            isHermesManaged ? 'not enabled' : 'enabled'
-          }\n` +
-          `Please check the following files for inconsistencies:\n` +
-          `  - ${configFilePath}\n` +
-          `  - ${path.join(projectRoot, 'android', 'gradle.properties')}\n` +
-          `  - ${path.join(projectRoot, 'android', 'app', 'build.gradle')}\n` +
-          'Learn more: https://expo.fyi/hermes-android-config'
-      );
-    }
 
     if (isHermesManaged) {
+      const platformTag = chalk.bold(
+        { ios: 'iOS', android: 'Android', web: 'Web' }[platform] || platform
+      );
       options.logger.info(
         { tag: 'expo' },
-        `💿 Building Hermes bytecode for the bundle - platform[${bundle.platform}]`
+        `💿 ${platformTag} Building Hermes bytecode for the bundle`
       );
       const hermesBundleOutput = await buildHermesBundleAsync(
         projectRoot,
@@ -262,35 +256,57 @@ export async function bundleAsync(
       bundleOutput.hermesBytecodeBundle = hermesBundleOutput.hbc;
       bundleOutput.hermesSourcemap = hermesBundleOutput.sourcemap;
     }
-
     return bundleOutput;
   };
 
   try {
-    return await Promise.all(
-      bundles.map(async (bundle: BundleOptions) => {
-        const bundleOutput = await buildAsync(bundle);
-        return maybeAddHermesBundleAsync(bundle, bundleOutput);
-      })
-    );
+    const intermediateOutputs = await Promise.all(bundles.map(bundle => buildAsync(bundle)));
+    const bundleOutputs: BundleOutput[] = [];
+    for (let i = 0; i < bundles.length; ++i) {
+      // hermesc does not support parallel building even we spawn processes.
+      // we should build them sequentially.
+      bundleOutputs.push(await maybeAddHermesBundleAsync(bundles[i], intermediateOutputs[i]));
+    }
+    return bundleOutputs;
   } finally {
     metroServer.end();
   }
 }
 
-// Cloned from xdl/src/Versions.ts, we cannot use that because of circular dependency
-function gteSdkVersion(expJson: Pick<ExpoConfig, 'sdkVersion'>, sdkVersion: string): boolean {
-  if (!expJson.sdkVersion) {
-    return false;
+/**
+ * Attach the inspector proxy to a development server.
+ * Inspector proxy is used for viewing the JS context in a browser.
+ * This must be attached after the server is listening.
+ * Attaching consists of pushing custom middleware and appending WebSockets to the server.
+ *
+ *
+ * @param projectRoot
+ * @param props.server dev server to add WebSockets to
+ * @param props.middleware dev server middleware to add extra middleware to
+ */
+export function attachInspectorProxy(
+  projectRoot: string,
+  { server, middleware }: { server: http.Server; middleware: ConnectServer }
+) {
+  const { InspectorProxy } = importInspectorProxyServerFromProject(projectRoot);
+  const inspectorProxy = new InspectorProxy(projectRoot);
+  if ('addWebSocketListener' in inspectorProxy) {
+    // metro@0.59.0
+    inspectorProxy.addWebSocketListener(server);
+  } else if ('createWebSocketListeners' in inspectorProxy) {
+    // metro@0.66.0
+    // TODO: This isn't properly support without a ws router.
+    inspectorProxy.createWebSocketListeners(server);
   }
+  // TODO(hypuk): Refactor inspectorProxy.processRequest into separate request handlers
+  // so that we could provide routes (/json/list and /json/version) here.
+  // Currently this causes Metro to give warning about T31407894.
+  // $FlowFixMe[method-unbinding] added when improving typing for this parameters
+  middleware.use(inspectorProxy.processRequest.bind(inspectorProxy));
 
-  if (expJson.sdkVersion === 'UNVERSIONED') {
-    return true;
-  }
-
-  try {
-    return semver.gte(expJson.sdkVersion, sdkVersion);
-  } catch (e) {
-    throw new Error(`${expJson.sdkVersion} is not a valid version. Must be in the form of x.y.z`);
-  }
+  return { inspectorProxy };
 }
+
+export { LogReporter, createDevServerMiddleware };
+export * from './middlwareMutations';
+export * from './JsInspector';

@@ -1,4 +1,5 @@
 import { ConfigPlugin, IOSConfig, withDangerousMod } from '@expo/config-plugins';
+import { generateImageAsync } from '@expo/image-utils';
 import Debug from 'debug';
 import fs from 'fs-extra';
 // @ts-ignore
@@ -15,6 +16,7 @@ import { IOSSplashConfig } from './getIosSplashConfig';
 
 const debug = Debug('expo:prebuild-config:expo-splash-screen:ios:assets');
 
+const IMAGE_CACHE_NAME = 'splash-ios';
 const IMAGESET_PATH = 'Images.xcassets/SplashScreen.imageset';
 const BACKGROUND_IMAGESET_PATH = 'Images.xcassets/SplashScreenBackground.imageset';
 const PNG_FILENAME = 'image.png';
@@ -29,15 +31,16 @@ export const withIosSplashAssets: ConfigPlugin<IOSSplashConfig> = (config, splas
   return withDangerousMod(config, [
     'ios',
     async config => {
-      const projectPath = IOSConfig.Paths.getSourceRoot(config.modRequest.projectRoot);
+      const iosNamedProjectRoot = IOSConfig.Paths.getSourceRoot(config.modRequest.projectRoot);
 
       await createSplashScreenBackgroundImageAsync({
-        iosNamedProjectRoot: projectPath,
+        iosNamedProjectRoot,
         splash,
       });
 
       await configureImageAssets({
-        projectPath,
+        projectRoot: config.modRequest.projectRoot,
+        iosNamedProjectRoot,
         image: splash.image,
         darkImage: splash.dark?.image,
         tabletImage: splash.tabletImage,
@@ -53,19 +56,21 @@ export const withIosSplashAssets: ConfigPlugin<IOSSplashConfig> = (config, splas
  * Creates imageset containing image for Splash/Launch Screen.
  */
 async function configureImageAssets({
-  projectPath,
+  projectRoot,
+  iosNamedProjectRoot,
   image,
   darkImage,
   tabletImage,
   darkTabletImage,
 }: {
-  projectPath: string;
+  projectRoot: string;
+  iosNamedProjectRoot: string;
   image?: string | null;
   darkImage?: string | null;
   tabletImage: string | null;
   darkTabletImage?: string | null;
 }) {
-  const imageSetPath = path.resolve(projectPath, IMAGESET_PATH);
+  const imageSetPath = path.resolve(iosNamedProjectRoot, IMAGESET_PATH);
 
   // ensure old SplashScreen imageSet is removed
   await fs.remove(imageSetPath);
@@ -82,7 +87,14 @@ async function configureImageAssets({
     darkTabletImage: darkTabletImage ? DARK_TABLET_PNG_FILENAME : null,
   });
 
-  await copyImageFiles({ projectPath, image, darkImage, tabletImage, darkTabletImage });
+  await copyImageFiles({
+    projectRoot,
+    iosNamedProjectRoot,
+    image,
+    darkImage,
+    tabletImage,
+    darkTabletImage,
+  });
 }
 
 async function createPngFileAsync(color: string, filePath: string) {
@@ -91,13 +103,13 @@ async function createPngFileAsync(color: string, filePath: string) {
 }
 
 async function createBackgroundImagesAsync({
-  projectPath,
+  iosNamedProjectRoot,
   color,
   darkColor,
   tabletColor,
   darkTabletColor,
 }: {
-  projectPath: string;
+  iosNamedProjectRoot: string;
   color: string;
   darkColor: string | null;
   tabletColor: string | null;
@@ -105,7 +117,10 @@ async function createBackgroundImagesAsync({
 }) {
   await generateImagesAssetsAsync({
     async generateImageAsset(item, fileName) {
-      await createPngFileAsync(item, path.resolve(projectPath, BACKGROUND_IMAGESET_PATH, fileName));
+      await createPngFileAsync(
+        item,
+        path.resolve(iosNamedProjectRoot, BACKGROUND_IMAGESET_PATH, fileName)
+      );
     },
     anyItem: color,
     darkItem: darkColor,
@@ -115,13 +130,15 @@ async function createBackgroundImagesAsync({
 }
 
 async function copyImageFiles({
-  projectPath,
+  projectRoot,
+  iosNamedProjectRoot,
   image,
   darkImage,
   tabletImage,
   darkTabletImage,
 }: {
-  projectPath: string;
+  projectRoot: string;
+  iosNamedProjectRoot: string;
   image: string;
   darkImage?: string | null;
   tabletImage?: string | null;
@@ -129,7 +146,14 @@ async function copyImageFiles({
 }) {
   await generateImagesAssetsAsync({
     async generateImageAsset(item, fileName) {
-      await fs.copyFile(item, path.resolve(projectPath, IMAGESET_PATH, fileName));
+      // Using this method will cache the images in `.expo` based on the properties used to generate them.
+      // this method also supports remote URLs and using the global sharp instance.
+      const { source } = await generateImageAsync({ projectRoot, cacheType: IMAGE_CACHE_NAME }, {
+        src: item,
+      } as any);
+      // Write image buffer to the file system.
+      // const assetPath = join(iosNamedProjectRoot, IMAGESET_PATH, filename);
+      await fs.writeFile(path.resolve(iosNamedProjectRoot, IMAGESET_PATH, fileName), source);
     },
     anyItem: image,
     darkItem: darkImage,
@@ -180,7 +204,7 @@ async function createSplashScreenBackgroundImageAsync({
   await fs.ensureDir(imagesetPath);
 
   await createBackgroundImagesAsync({
-    projectPath: iosNamedProjectRoot,
+    iosNamedProjectRoot,
     color,
     darkColor: darkColor ? darkColor : null,
     tabletColor: tabletColor ? tabletColor : null,

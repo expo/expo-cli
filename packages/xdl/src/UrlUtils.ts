@@ -38,8 +38,7 @@ export async function constructDeepLinkAsync(
   opts?: Partial<URLOptions>,
   requestHostname?: string
 ): Promise<string> {
-  const { devClient } = await ProjectSettings.getPackagerOptsAsync(projectRoot);
-
+  const { devClient } = await ProjectSettings.readAsync(projectRoot);
   if (devClient) {
     return constructDevClientUrlAsync(projectRoot, opts, requestHostname);
   } else {
@@ -64,7 +63,7 @@ export async function constructDevClientUrlAsync(
   if (opts?.scheme) {
     _scheme = opts?.scheme;
   } else {
-    const { scheme } = await ProjectSettings.getPackagerOptsAsync(projectRoot);
+    const { scheme } = await ProjectSettings.readAsync(projectRoot);
     if (!scheme || typeof scheme !== 'string') {
       throw new XDLError('NO_DEV_CLIENT_SCHEME', 'No scheme specified for development client');
     }
@@ -269,7 +268,7 @@ async function ensureOptionsAsync(
     assertValidOptions(opts);
   }
 
-  const defaultOpts = await ProjectSettings.getPackagerOptsAsync(projectRoot);
+  const defaultOpts = await ProjectSettings.readAsync(projectRoot);
   if (!opts) {
     return { urlType: null, ...defaultOpts };
   }

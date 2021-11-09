@@ -16,7 +16,7 @@ import pickBy from 'lodash/pickBy';
 import resolveFrom from 'resolve-from';
 import semver from 'semver';
 import terminalLink from 'terminal-link';
-import { Android, Project, ProjectSettings, Simulator, Versions } from 'xdl';
+import { Project, ProjectSettings, Versions } from 'xdl';
 
 import CommandError from '../CommandError';
 import Log from '../log';
@@ -111,6 +111,7 @@ export async function getUpdatedDependenciesAsync(
     sdkVersion: exp.sdkVersion,
     workflow,
     targetSdkVersion,
+    targetSdkVersionString,
   });
 
   const removed: string[] = [];
@@ -145,6 +146,7 @@ export type UpgradeDependenciesOptions = {
   sdkVersion?: string;
   workflow: ExpoWorkflow;
   targetSdkVersion: TargetSDKVersion | null;
+  targetSdkVersionString: string | null;
 };
 
 export function getDependenciesFromBundledNativeModules({
@@ -153,6 +155,7 @@ export function getDependenciesFromBundledNativeModules({
   sdkVersion,
   workflow,
   targetSdkVersion,
+  targetSdkVersionString,
 }: UpgradeDependenciesOptions): DependencyList {
   const result: DependencyList = {};
 
@@ -181,7 +184,16 @@ export function getDependenciesFromBundledNativeModules({
   }
 
   // Get the supported react/react-native/react-dom versions and other related packages
-  if (workflow === 'managed' || projectDependencies['expokit']) {
+
+  // Use expo forked react-native in these situations:
+  // 1. expokit installed
+  // 2. managed workflow and sdk version < 43.0.0 (in sdk 43 or above, we try to use the official react-native)
+  const shouldUseExpoReactNativeFork =
+    projectDependencies['expokit'] ||
+    (workflow === 'managed' &&
+      targetSdkVersionString &&
+      semver.lt(targetSdkVersionString, '43.0.0'));
+  if (shouldUseExpoReactNativeFork) {
     result[
       'react-native'
     ] = `https://github.com/expo/react-native/archive/${targetSdkVersion.expoReactNativeTag}.tar.gz`;
@@ -357,77 +369,6 @@ async function shouldBailWhenUsingLatest(
   return false;
 }
 
-async function shouldUpgradeSimulatorAsync(): Promise<boolean> {
-  // Check if we can, and probably should, upgrade the (ios) simulator
-  if (!Simulator.isPlatformSupported()) {
-    return false;
-  }
-  if (program.nonInteractive) {
-    Log.warn(`Skipping attempt to upgrade the client app on iOS simulator.`);
-    return false;
-  }
-
-  const answer = await confirmAsync({
-    message: 'Would you like to upgrade the Expo app in the iOS simulator?',
-    initial: false,
-  });
-
-  Log.newLine();
-  return answer;
-}
-
-async function maybeUpgradeSimulatorAsync(sdkVersion: TargetSDKVersion) {
-  // Check if we can, and probably should, upgrade the (ios) simulator
-  if (await shouldUpgradeSimulatorAsync()) {
-    const result = await Simulator.upgradeExpoAsync({
-      url: sdkVersion.iosClientUrl,
-      version: sdkVersion.iosClientVersion,
-    });
-    if (!result) {
-      Log.error(
-        "The upgrade of your simulator didn't go as planned. You might have to reinstall it manually with expo client:install:ios."
-      );
-    }
-
-    Log.newLine();
-  }
-}
-
-async function shouldUpgradeEmulatorAsync(): Promise<boolean> {
-  // Check if we can, and probably should, upgrade the android client
-  if (!Android.isPlatformSupported()) {
-    return false;
-  }
-  if (program.nonInteractive) {
-    Log.warn(`Skipping attempt to upgrade the Expo app on the Android emulator.`);
-    return false;
-  }
-
-  const answer = await confirmAsync({
-    message: 'Would you like to upgrade the Expo app in the Android emulator?',
-    initial: false,
-  });
-
-  Log.newLine();
-  return answer;
-}
-
-async function maybeUpgradeEmulatorAsync(sdkVersion: TargetSDKVersion) {
-  // Check if we can, and probably should, upgrade the android client
-  if (await shouldUpgradeEmulatorAsync()) {
-    const result = await Android.upgradeExpoAsync({
-      url: sdkVersion.androidClientUrl,
-      version: sdkVersion.androidClientVersion,
-    });
-    if (!result) {
-      Log.error(
-        "The upgrade of your Android client didn't go as planned. You might have to reinstall it manually with expo client:install:android."
-      );
-    }
-    Log.newLine();
-  }
-}
-
 async function promptSelectSDKVersionAsync(
   sdkVersions: string[],
   exp: Pick<ExpoConfig, 'sdkVersion'>
@@ -485,8 +426,6 @@ export async function upgradeAsync(
   // Maybe bail out early if people are trying to update to the current version
   if (await shouldBailWhenUsingLatest(currentSdkVersionString, targetSdkVersionString)) return;
 
-  const platforms = exp.platforms || [];
-
   if (
     targetSdkVersionString === latestSdkVersionString &&
     currentSdkVersionString !== targetSdkVersionString &&
@@ -537,16 +476,6 @@ export async function upgradeAsync(
           `Valid SDK versions are in the range of ${minSdkVersion}.0.0 to ${maxSdkVersion}.0.0.`
       );
     }
-  }
-
-  // Check if we can, and probably should, upgrade the (ios) simulator
-  if (platforms.includes('ios') && targetSdkVersion.iosClientUrl) {
-    await maybeUpgradeSimulatorAsync(targetSdkVersion);
-  }
-
-  // Check if we can, and probably should, upgrade the android client
-  if (platforms.includes('android') && targetSdkVersion.androidClientUrl) {
-    await maybeUpgradeEmulatorAsync(targetSdkVersion);
   }
 
   const packageManager = PackageManager.createForProject(projectRoot, {
