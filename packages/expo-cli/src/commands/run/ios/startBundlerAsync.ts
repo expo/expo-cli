@@ -1,6 +1,6 @@
 import { Project, ProjectSettings } from 'xdl';
 
-import { getOptionalDevClientSchemeAsync } from '../../../schemes';
+import { getOptionalDevClientSchemeAsync } from '../../../utils/schemes';
 import * as TerminalUI from '../../start/TerminalUI';
 import { installExitHooks } from '../../start/installExitHooks';
 

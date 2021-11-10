@@ -31,16 +31,16 @@ import {
 } from 'xdl';
 
 import { AbortCommandError, SilentError } from './CommandError';
-import StatusEventEmitter from './StatusEventEmitter';
 import { loginOrRegisterAsync } from './accounts';
+import StatusEventEmitter from './analytics/StatusEventEmitter';
 import { registerCommands } from './commands';
 import { learnMore } from './commands/utils/TerminalLink';
 import { profileMethod } from './commands/utils/profileMethod';
 import Log from './log';
-import update from './update';
 import urlOpts from './urlOpts';
 import { matchFileNameOrURLFromStackTrace } from './utils/matchFileNameOrURLFromStackTrace';
 import { logNewSection, ora } from './utils/ora';
+import update from './utils/update';
 
 // We use require() to exclude package.json from TypeScript's analysis since it lives outside the
 // src directory and would change the directory structure of the emitted files under the build

@@ -5,10 +5,10 @@ import * as path from 'path';
 import { AppleDevice, SimControl, Simulator, UnifiedAnalytics } from 'xdl';
 
 import CommandError from '../../../CommandError';
-import StatusEventEmitter from '../../../StatusEventEmitter';
+import StatusEventEmitter from '../../../analytics/StatusEventEmitter';
 import getDevClientProperties from '../../../analytics/getDevClientProperties';
 import Log from '../../../log';
-import { getSchemesForIosAsync } from '../../../schemes';
+import { getSchemesForIosAsync } from '../../../utils/schemes';
 import { promptToClearMalformedNativeProjectsAsync } from '../../eject/clearNativeFolder';
 import { EjectAsyncOptions, prebuildAsync } from '../../eject/prebuildAsync';
 import { installCustomExitHook } from '../../start/installExitHooks';

@@ -7,8 +7,8 @@ import resolveFrom from 'resolve-from';
 import {
   hasRequiredAndroidFilesAsync,
   hasRequiredIOSFilesAsync,
-} from './commands/eject/clearNativeFolder';
-import Log from './log';
+} from '../commands/eject/clearNativeFolder';
+import Log from '../log';
 
 export async function getSchemesForIosAsync(projectRoot: string) {
   try {

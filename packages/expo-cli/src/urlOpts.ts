@@ -11,7 +11,7 @@ import {
 
 import CommandError, { AbortCommandError } from './CommandError';
 import Log from './log';
-import { getOptionalDevClientSchemeAsync } from './schemes';
+import { getOptionalDevClientSchemeAsync } from './utils/schemes';
 
 // NOTE: if you update this, you should also update assertValidOptions in UrlUtils.ts
 export type URLOptions = {

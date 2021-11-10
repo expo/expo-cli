@@ -6,10 +6,10 @@ import path from 'path';
 import { Android, UnifiedAnalytics } from 'xdl';
 
 import CommandError from '../../../CommandError';
-import StatusEventEmitter from '../../../StatusEventEmitter';
+import StatusEventEmitter from '../../../analytics/StatusEventEmitter';
 import getDevClientProperties from '../../../analytics/getDevClientProperties';
 import Log from '../../../log';
-import { getSchemesForAndroidAsync } from '../../../schemes';
+import { getSchemesForAndroidAsync } from '../../../utils/schemes';
 import { promptToClearMalformedNativeProjectsAsync } from '../../eject/clearNativeFolder';
 import { prebuildAsync } from '../../eject/prebuildAsync';
 import { installCustomExitHook } from '../../start/installExitHooks';
