@@ -1,7 +1,7 @@
 import { getDefaultTarget } from '@expo/config';
 import envinfo from 'envinfo';
 
-import Log from '../log';
+import Log from '../../log';
 
 const packageJSON = require('../../package.json');
 
@@ -21,6 +21,9 @@ function getEnvironmentInfoAsync(): Promise<string> {
         'react-native-web',
         'react-navigation',
         '@expo/webpack-config',
+        // TODO: @expo/metro-config
+        // TODO: babel-preset-expo
+        // TODO: metro
       ],
       npmGlobalPackages: ['expo-cli'],
     },

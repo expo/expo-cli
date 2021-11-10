@@ -1,6 +1,6 @@
 import type { Command } from 'commander';
 
-import { applyAsyncAction } from './utils/applyAsyncAction';
+import { applyAsyncAction } from '../utils/applyAsyncAction';
 
 export default function (program: Command) {
   applyAsyncAction<string>(

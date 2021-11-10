@@ -5,9 +5,9 @@ import { applyAsyncActionProjectDir } from '../utils/applyAsyncAction';
 export default function (program: Command) {
   applyAsyncActionProjectDir(
     program
-      .command('doctor [path]')
-      .description('Diagnose issues with the project')
+      .command('diagnostics [path]')
+      .description('Log environment info to the console')
       .helpGroup('info'),
-    () => import('./doctorAsync')
+    () => import('./diagnosticsAsync')
   );
 }

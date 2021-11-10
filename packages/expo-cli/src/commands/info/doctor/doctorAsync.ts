@@ -2,9 +2,9 @@ import { getConfig } from '@expo/config';
 import chalk from 'chalk';
 import { Doctor } from 'xdl';
 
-import Log from '../../log';
-import { profileMethod } from '../utils/profileMethod';
-import { validateDependenciesVersionsAsync } from '../utils/validateDependenciesVersions';
+import Log from '../../../log';
+import { profileMethod } from '../../utils/profileMethod';
+import { validateDependenciesVersionsAsync } from '../../utils/validateDependenciesVersions';
 import { warnUponCmdExe } from './windows';
 
 export async function actionAsync(projectRoot: string) {

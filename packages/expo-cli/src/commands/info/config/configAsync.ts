@@ -2,10 +2,10 @@ import { getConfig, ProjectConfig } from '@expo/config';
 import { compileModsAsync } from '@expo/config-plugins/build/plugins/mod-compiler';
 import { getPrebuildConfig } from '@expo/prebuild-config';
 
-import CommandError from '../../CommandError';
-import Log from '../../log';
-import { logConfig } from '../eject/configureProjectAsync';
-import { profileMethod } from '../utils/profileMethod';
+import CommandError from '../../../CommandError';
+import Log from '../../../log';
+import { logConfig } from '../../eject/configureProjectAsync';
+import { profileMethod } from '../../utils/profileMethod';
 
 type Options = {
   type?: string;

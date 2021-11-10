@@ -18,14 +18,14 @@ import semver from 'semver';
 import terminalLink from 'terminal-link';
 import { Project, ProjectSettings, Versions } from 'xdl';
 
-import CommandError from '../CommandError';
-import Log from '../log';
-import { logNewSection } from '../utils/ora';
-import { confirmAsync, selectAsync } from '../utils/prompts';
-import { findProjectRootAsync } from './utils/ProjectUtils';
-import { getBundledNativeModulesAsync } from './utils/bundledNativeModules';
-import { assertProjectHasExpoExtensionFilesAsync } from './utils/deprecatedExtensionWarnings';
-import maybeBailOnGitStatusAsync from './utils/maybeBailOnGitStatusAsync';
+import CommandError from '../../CommandError';
+import Log from '../../log';
+import { logNewSection } from '../../utils/ora';
+import { confirmAsync, selectAsync } from '../../utils/prompts';
+import { findProjectRootAsync } from '../utils/ProjectUtils';
+import { getBundledNativeModulesAsync } from '../utils/bundledNativeModules';
+import { assertProjectHasExpoExtensionFilesAsync } from '../utils/deprecatedExtensionWarnings';
+import maybeBailOnGitStatusAsync from '../utils/maybeBailOnGitStatusAsync';
 
 type DependencyList = Record<string, string>;
 
