@@ -11,7 +11,7 @@ export async function actionAsync() {
   Log.newLine();
   Log.log(
     `${chalk.bold`expo upload:android`} has been moved to ${chalk.bold`eas submit`}. ${chalk.dim(
-      TerminalLink.learnMore('https://expo.fyi/expo-upload-android.md')
+      TerminalLink.learnMore('https://expo.fyi/expo-upload-android')
     )}`
   );
   Log.newLine();
