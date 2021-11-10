@@ -27,6 +27,7 @@ function logMigration(platform: string) {
   Log.newLine();
 }
 
+// TODO: Drop this entire command category in mid to late 2022
 export default function (program: Command) {
   const migrateToEasJsonProperty = (named: string) =>
     `Migrate to ${chalk.bold`eas.json`}'s ${chalk.bold(named)} property`;
@@ -67,9 +68,6 @@ export default function (program: Command) {
       .command('upload:ios [path]')
       .alias('ui')
       .description(`${chalk.yellow('Moved')} to ${chalk.bold('eas submit')} in eas-cli`)
-      .longDescription(
-        'Upload an iOS binary to Apple TestFlight (MacOS only). Uses the latest build by default'
-      )
       // TODO: Move to hidden
       .helpGroup('upload')
       .option('--verbose', migrateToEasCliArg('--verbose'))
