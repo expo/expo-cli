@@ -1,4 +1,4 @@
-import { getConfig } from '@expo/config';
+import { ExpoConfig, getConfig } from '@expo/config';
 import * as PackageManager from '@expo/package-manager';
 import chalk from 'chalk';
 import program from 'commander';
@@ -10,8 +10,7 @@ import CommandError from '../../../CommandError';
 import Log from '../../../log';
 import { confirmAsync } from '../../../prompts';
 import { logNewSection } from '../../../utils/ora';
-import { profileMethod } from '../profileMethod';
-import { collectMissingPackages, queryFirstProjectWebFileAsync } from './resolveWebModules';
+import { collectMissingPackages } from './resolveWebModules';
 
 const WEB_FEATURE_FLAG = 'EXPO_NO_WEB_SETUP';
 
@@ -20,36 +19,33 @@ export const isWebSetupDisabled = boolish(WEB_FEATURE_FLAG, false);
 
 export async function ensureWebSupportSetupAsync(projectRoot: string): Promise<void> {
   if (isWebSetupDisabled) {
-    Log.log(chalk.dim('\u203A Skipping Web verification'));
+    Log.log(chalk.dim('\u203A Skipping web setup'));
     return;
   }
 
-  // Ensure the project is using web support before continuing.
-  const intent = await shouldSetupWebAsync(projectRoot);
-  if (!intent) {
+  const { exp, rootConfig } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
+
+  // Detect if the 'web' string is purposefully missing from the platforms array.
+  const isWebExcluded =
+    Array.isArray(rootConfig.expo?.platforms) &&
+    rootConfig.expo?.platforms.length &&
+    !rootConfig.expo?.platforms.includes('web');
+
+  if (isWebExcluded) {
+    Log.log(
+      chalk.dim(
+        `\u203A Skipping web setup: ${chalk.bold`web`} is not included in the Expo config ${chalk.bold`platforms`} array.`
+      )
+    );
     return;
   }
 
   // Ensure web packages are installed
-  await ensureWebDependenciesInstalledAsync(projectRoot);
+  await ensureWebDependenciesInstalledAsync(projectRoot, { exp });
 }
 
-export async function shouldSetupWebAsync(
-  projectRoot: string
-): Promise<{ isBootstrapping: boolean } | null> {
-  // This is a somewhat heavy check in larger projects.
-  // Test that this is reasonably paced by running expo start in `expo/apps/native-component-list`
-  const webSpecificFile = await profileMethod(queryFirstProjectWebFileAsync)(projectRoot);
-  if (webSpecificFile) {
-    return { isBootstrapping: true };
-  }
-
-  return null;
-}
-
-async function getSDKVersionsAsync(projectRoot: string): Promise<Versions.SDKVersion | null> {
+async function getSDKVersionsAsync(exp: ExpoConfig): Promise<Versions.SDKVersion | null> {
   try {
-    const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
     if (exp.sdkVersion) {
       const sdkVersions = await Versions.releasedSdkVersionsAsync();
       return sdkVersions[exp.sdkVersion] ?? null;
@@ -65,8 +61,14 @@ let hasChecked = false;
 
 export async function ensureWebDependenciesInstalledAsync(
   projectRoot: string,
-  // Don't prompt in CI
-  skipPrompt: boolean = program.nonInteractive
+  {
+    exp = getConfig(projectRoot, { skipSDKVersionRequirement: true }).exp,
+    // Don't prompt in CI
+    skipPrompt = program.nonInteractive,
+  }: {
+    exp?: ExpoConfig;
+    skipPrompt?: boolean;
+  } = {}
 ): Promise<string> {
   if (hasChecked) {
     return '';
@@ -78,7 +80,7 @@ export async function ensureWebDependenciesInstalledAsync(
   }
 
   // Ensure the versions are right for the SDK that the project is currently using.
-  const versions = await getSDKVersionsAsync(projectRoot);
+  const versions = await getSDKVersionsAsync(exp);
   if (versions?.relatedPackages) {
     for (const pkg of missing) {
       if (pkg.pkg in versions.relatedPackages) {
@@ -105,17 +107,18 @@ export async function ensureWebDependenciesInstalledAsync(
         initial: true,
       })
     ) {
+      const packages = missing.map(({ pkg, version }) => {
+        if (version) {
+          return [pkg, version].join('@');
+        }
+        return pkg;
+      });
       await installPackagesAsync(projectRoot, {
         isYarn,
-        devPackages: missing.map(({ pkg, version }) => {
-          if (version) {
-            return [pkg, version].join('@');
-          }
-          return pkg;
-        }),
+        packages,
       });
       // Try again but skip prompting twice.
-      return await ensureWebDependenciesInstalledAsync(projectRoot, true);
+      return await ensureWebDependenciesInstalledAsync(projectRoot, { skipPrompt: true });
     }
 
     // Reset the title so it doesn't print twice in interactive mode.
@@ -124,34 +127,49 @@ export async function ensureWebDependenciesInstalledAsync(
     title += '\n\n';
   }
 
+  const installCommand = createInstallCommand({ isYarn, packages: missing });
+
+  const disableMessage =
+    "If you're not using web, please remove the `web` string from the platforms array in the project Expo config.";
+
+  const solution = `Please install ${chalk.bold(
+    readableMissingPackages
+  )} by running:\n\n  ${chalk.reset.bold(installCommand)}\n\n`;
+
   const col = process.stdout.columns || 80;
 
-  const installCommand =
+  // This prevents users from starting a misconfigured JS or TS project by default.
+  throw new CommandError(wrapAnsi(title + solution + disableMessage + '\n', col));
+}
+
+function createInstallCommand({
+  isYarn,
+  packages,
+}: {
+  isYarn: boolean;
+  packages: {
+    file: string;
+    pkg: string;
+    version?: string | undefined;
+  }[];
+}) {
+  return (
     (isYarn ? 'yarn add --dev' : 'npm install --save-dev') +
     ' ' +
-    missing
+    packages
       .map(({ pkg, version }) => {
         if (version) {
           return [pkg, version].join('@');
         }
         return pkg;
       })
-      .join(' ');
-
-  const disableMessage =
-    "If you're not using web, please remove the `*.web.js` files from your project.";
-
-  const solution = `Please install ${chalk.bold(
-    readableMissingPackages
-  )} by running:\n\n  ${chalk.reset.bold(installCommand)}\n\n`;
-
-  // This prevents users from starting a misconfigured JS or TS project by default.
-  throw new CommandError(wrapAnsi(title + solution + disableMessage + '\n', col));
+      .join(' ')
+  );
 }
 
 async function installPackagesAsync(
   projectRoot: string,
-  { isYarn, devPackages }: { isYarn: boolean; devPackages: string[] }
+  { isYarn, packages }: { isYarn: boolean; packages: string[] }
 ) {
   const packageManager = PackageManager.createForProject(projectRoot, {
     yarn: isYarn,
@@ -159,12 +177,12 @@ async function installPackagesAsync(
     silent: !Log.isDebug,
   });
 
-  const packagesStr = chalk.bold(devPackages.join(', '));
+  const packagesStr = chalk.bold(packages.join(', '));
   Log.newLine();
   const installingPackageStep = logNewSection(`Installing ${packagesStr}`);
   try {
-    await packageManager.addDevAsync(...devPackages);
-  } catch (e) {
+    await packageManager.addAsync(...packages);
+  } catch (e: any) {
     installingPackageStep.fail(`Failed to install ${packagesStr} with error: ${e.message}`);
     throw e;
   }
