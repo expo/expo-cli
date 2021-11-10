@@ -21,6 +21,7 @@ import { selectAsync } from '../../prompts';
 import urlOpts from '../../urlOpts';
 import { learnMore } from '../utils/TerminalLink';
 import { openInEditorAsync } from '../utils/openInEditorAsync';
+import { ensureWebDependenciesInstalledAsync } from '../utils/web/ensureWebSetup';
 
 const CTRL_C = '\u0003';
 const CTRL_D = '\u0004';
@@ -377,6 +378,12 @@ export async function startAsync(projectRoot: string, options: StartOptions) {
         break;
       }
       case 'w': {
+        await ensureWebDependenciesInstalledAsync(projectRoot);
+        if (!platforms.includes('web')) {
+          platforms.push('web');
+          options.platforms?.push('web');
+        }
+
         const isDisabled = !platforms.includes('web');
         if (isDisabled) {
           Log.nestedWarn(
