@@ -76,9 +76,6 @@ export default function (program: Command) {
       .option('--path [path]', migrateToEasCliArg('--path <path>'))
       .option('--url <url>', migrateToEasCliArg('--url <url>'))
       .option('--apple-id <apple-id>', migrateToEasJsonProperty('appleId'))
-      // apple unified App Store Connect and Developer Portal teams, this is temporary solution until fastlane implements those changes
-      // https://github.com/fastlane/fastlane/issues/14229
-      // after updating fastlane this value will be unnecessary
       .option('--itc-team-id <itc-team-id>', migrateToEasJsonProperty('appleTeamId'))
       .option('--app-name <app-name>', migrateToEasJsonProperty('appName'))
       .option('--company-name <company-name>', migrateToEasJsonProperty('companyName'))
