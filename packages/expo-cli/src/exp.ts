@@ -33,8 +33,8 @@ import {
 import { AbortCommandError, SilentError } from './CommandError';
 import StatusEventEmitter from './analytics/StatusEventEmitter';
 import { registerCommands } from './commands';
+import { loginOrRegisterAsync } from './commands/auth/accounts';
 import { learnMore } from './commands/utils/TerminalLink';
-import { loginOrRegisterAsync } from './commands/utils/accounts';
 import { profileMethod } from './commands/utils/profileMethod';
 import urlOpts from './commands/utils/urlOpts';
 import Log from './log';

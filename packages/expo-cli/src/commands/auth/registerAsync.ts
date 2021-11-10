@@ -1,5 +1,5 @@
 import CommandError from '../../CommandError';
-import { openRegistrationInBrowser, REGISTRATION_URL } from '../utils/accounts';
+import { openRegistrationInBrowser, REGISTRATION_URL } from './accounts';
 
 type Options = {
   parent?: {
