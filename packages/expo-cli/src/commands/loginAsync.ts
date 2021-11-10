@@ -1,3 +1,3 @@
-import { login } from '../accounts';
+import { login } from './utils/accounts';
 
 export const actionAsync = login;

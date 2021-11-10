@@ -5,11 +5,11 @@ import openBrowser from 'react-dev-utils/openBrowser';
 import { ApiV2, User, UserManager } from 'xdl';
 import { ApiV2Error } from 'xdl/build/ApiV2';
 
-import CommandError, { SilentError } from './CommandError';
-import Log from './log';
-import { ora } from './utils/ora';
-import promptNew, { confirmAsync, Question as NewQuestion, selectAsync } from './utils/prompts';
-import { nonEmptyInput } from './utils/validators';
+import CommandError, { SilentError } from '../../CommandError';
+import Log from '../../log';
+import { ora } from '../../utils/ora';
+import promptNew, { confirmAsync, Question as NewQuestion, selectAsync } from '../../utils/prompts';
+import { nonEmptyInput } from '../../utils/validators';
 
 UserManager.initialize();
 
