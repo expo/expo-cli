@@ -2,8 +2,8 @@ import chalk from 'chalk';
 import terminalLink from 'terminal-link';
 import { Detach } from 'xdl';
 
-import { SilentError } from '../CommandError';
-import Log from '../log';
+import { SilentError } from '../../CommandError';
+import Log from '../../log';
 
 type Options = {
   dest?: string;
