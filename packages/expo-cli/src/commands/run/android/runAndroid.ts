@@ -9,13 +9,13 @@ import CommandError from '../../../CommandError';
 import StatusEventEmitter from '../../../analytics/StatusEventEmitter';
 import getDevClientProperties from '../../../analytics/getDevClientProperties';
 import Log from '../../../log';
-import { getSchemesForAndroidAsync } from '../../../utils/schemes';
 import { promptToClearMalformedNativeProjectsAsync } from '../../eject/clearNativeFolder';
 import { prebuildAsync } from '../../eject/prebuildAsync';
 import { installCustomExitHook } from '../../start/installExitHooks';
 import { profileMethod } from '../../utils/profileMethod';
 import { setGlobalDevClientSettingsAsync, startBundlerAsync } from '../ios/startBundlerAsync';
 import { resolvePortAsync } from '../utils/resolvePortAsync';
+import { getSchemesForAndroidAsync } from '../utils/schemes';
 import { resolveDeviceAsync } from './resolveDeviceAsync';
 import { assembleAsync, installAsync } from './spawnGradleAsync';
 

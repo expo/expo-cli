@@ -4,11 +4,11 @@ import plist from '@expo/plist';
 import fs from 'fs';
 import resolveFrom from 'resolve-from';
 
+import Log from '../../../log';
 import {
   hasRequiredAndroidFilesAsync,
   hasRequiredIOSFilesAsync,
-} from '../commands/eject/clearNativeFolder';
-import Log from '../log';
+} from '../../eject/clearNativeFolder';
 
 export async function getSchemesForIosAsync(projectRoot: string) {
   try {
