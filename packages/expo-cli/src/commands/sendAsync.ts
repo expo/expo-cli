@@ -2,8 +2,8 @@ import chalk from 'chalk';
 import { UrlUtils, UserSettings } from 'xdl';
 
 import Log from '../log';
-import urlOpts, { URLOptions } from '../urlOpts';
 import * as sendTo from './utils/sendTo';
+import urlOpts, { URLOptions } from './utils/urlOpts';
 
 type Options = Partial<URLOptions & { sendTo?: string }>;
 

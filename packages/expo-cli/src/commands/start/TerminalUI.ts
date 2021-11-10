@@ -17,10 +17,10 @@ import {
 
 import { loginOrRegisterIfLoggedOutAsync } from '../../accounts';
 import Log from '../../log';
-import urlOpts from '../../urlOpts';
 import { selectAsync } from '../../utils/prompts';
 import { learnMore } from '../utils/TerminalLink';
 import { openInEditorAsync } from '../utils/openInEditorAsync';
+import urlOpts from '../utils/urlOpts';
 
 const CTRL_C = '\u0003';
 const CTRL_D = '\u0004';
