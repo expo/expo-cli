@@ -1,14 +1,24 @@
-import Log from '../../log';
-import AndroidSubmitCommand from '../upload/submission-service/android/AndroidSubmitCommand';
-import type { AndroidSubmitCommandOptions } from '../upload/submission-service/android/types';
+import chalk from 'chalk';
 
-export async function actionAsync(projectRoot: string, options: AndroidSubmitCommandOptions) {
-  if (options.useSubmissionService) {
-    Log.warn(
-      '\n`--use-submission-service is now the default and the flag will be deprecated in the future.`'
-    );
-  }
-  const ctx = AndroidSubmitCommand.createContext(projectRoot, options);
-  const command = new AndroidSubmitCommand(ctx);
-  await command.runAsync();
+import Log from '../../log';
+import * as TerminalLink from '../utils/TerminalLink';
+
+export async function actionAsync() {
+  const logItem = (name: string, link: string) => {
+    Log.log(`\u203A ${TerminalLink.linkedText(name, link)}`);
+  };
+
+  Log.newLine();
+  Log.log(
+    `${chalk.bold`expo upload:android`} has been moved to ${chalk.bold`eas submit`}. ${chalk.dim(
+      TerminalLink.learnMore('https://expo.fyi/expo-upload-android.md')
+    )}`
+  );
+  Log.newLine();
+  Log.log('Run the following:');
+  Log.newLine();
+  Log.log('\u203A ' + chalk.cyan.bold('npm install -g eas-cli'));
+  // Log.log('\u203A ' + chalk.cyan.bold('npm install -g eas-cli'));
+  logItem(chalk.cyan.bold('eas submit -p android'), 'https://docs.expo.dev/submit/android');
+  Log.newLine();
 }
