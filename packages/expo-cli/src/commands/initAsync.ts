@@ -14,11 +14,11 @@ import { UserManager, Versions } from 'xdl';
 
 import CommandError, { SilentError } from '../CommandError';
 import Log from '../log';
-import { extractAndPrepareTemplateAppAsync } from '../utils/extractTemplateAppAsync';
 import { logNewSection } from '../utils/ora';
 import prompts, { selectAsync } from '../utils/prompts';
 import * as CreateApp from './utils/CreateApp';
 import { usesOldExpoUpdatesAsync } from './utils/ProjectUtils';
+import { extractAndPrepareTemplateAppAsync } from './utils/extractTemplateAppAsync';
 
 type Options = {
   template?: string;
