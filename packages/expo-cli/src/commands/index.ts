@@ -1,6 +1,10 @@
 import type { Command } from 'commander';
 
 const COMMANDS = [
+  require('./auth/login'),
+  require('./auth/logout'),
+  require('./auth/register'),
+  require('./auth/whoami'),
   require('./build'),
   require('./bundle-assets'),
   require('./client'),
@@ -14,13 +18,10 @@ const COMMANDS = [
   require('./fetch'),
   require('./init'),
   require('./install'),
-  require('./login'),
-  require('./logout'),
   require('./prebuild'),
   require('./prepare-detached-build'),
   require('./publish'),
   require('./push'),
-  require('./register'),
   require('./run'),
   require('./send'),
   require('./start'),
@@ -28,7 +29,6 @@ const COMMANDS = [
   require('./upload'),
   require('./url'),
   require('./webhooks'),
-  require('./whoami'),
 ];
 
 export function registerCommands(program: Command) {

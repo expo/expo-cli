@@ -1,7 +1,7 @@
 import { UserManager } from 'xdl';
 
-import CommandError from '../CommandError';
-import Log from '../log';
+import CommandError from '../../CommandError';
+import Log from '../../log';
 
 export async function actionAsync() {
   const user = await UserManager.getCurrentUserAsync();
