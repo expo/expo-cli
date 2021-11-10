@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import { UserManager } from 'xdl';
 
-import Log from './log';
+import Log from '../../log';
 
 export default async function printRunInstructionsAsync(): Promise<void> {
   const user = await UserManager.getCurrentUserAsync();
