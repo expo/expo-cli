@@ -10,33 +10,31 @@ export default function (program: Command) {
       .alias('ua')
       .description('Upload an Android binary to the Google Play Store')
       .helpGroup('upload')
-      .option('--latest', 'upload the latest build')
-      .option('--id <id>', 'id of the build to upload')
-      .option('--path [path]', 'path to the .apk/.aab file')
-      .option('--url <url>', 'app archive url')
-      .option('--key <key>', 'path to the JSON key used to authenticate with Google Play')
+      .option('--verbose', `Migrate to ${chalk.bold`eas submit --verbose`}`)
+      .option('--latest', `Migrate to ${chalk.bold`eas submit --latest`}`)
+      .option('--id <id>', `Migrate to ${chalk.bold`eas submit --id <id>`}`)
+      .option('--path [path]', `Migrate to ${chalk.bold`eas submit --path <path>`}`)
+      .option('--url <url>', `Migrate to ${chalk.bold`eas submit --url <url>`}`)
       .option(
         '--android-package <android-package>',
-        'Android package name (using expo.android.package from app.json by default)'
+        `Migrate to ${chalk.bold`eas submit`} (android-package is auto inferred)`
       )
-      .option('--type <archive-type>', 'archive type: apk, aab', /^(apk|aab)$/i)
+      .option(
+        '--type <archive-type>',
+        `Migrate to ${chalk.bold`eas submit`} (type is auto inferred)`
+      )
+      .option(
+        '--key <key>',
+        `Migrate to ${chalk.bold`eas.json`}'s ${chalk.bold`serviceAccountKeyPath`} property`
+      )
       .option(
         '--track <track>',
-        'the track of the application to use, choose from: production, beta, alpha, internal, rollout',
-        /^(production|beta|alpha|internal|rollout)$/i,
-        'internal'
+        `Migrate to ${chalk.bold`eas.json`}'s ${chalk.bold`track`} property`
       )
       .option(
         '--release-status <release-status>',
-        'release status (used when uploading new apks/aabs), choose from: completed, draft, halted, inProgress',
-        /^(completed|draft|halted|inProgress)$/i,
-        'completed'
-      )
-      .option(
-        '--use-submission-service',
-        'Experimental: Use Submission Service for uploading your app. The upload process will happen on Expo servers.'
-      )
-      .option('--verbose', 'Always print logs from Submission Service'),
+        `Migrate to ${chalk.bold`eas.json`}'s ${chalk.bold`releaseStatus`} property`
+      ),
     () => import('./upload/uploadAndroidAsync')
   );
 
