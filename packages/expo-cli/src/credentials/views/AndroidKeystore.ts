@@ -9,7 +9,7 @@ import { AndroidCredentials } from 'xdl';
 
 import CommandError from '../../CommandError';
 import Log from '../../log';
-import { confirmAsync } from '../../prompts';
+import { confirmAsync } from '../../utils/prompts';
 import { askForUserProvided } from '../actions/promptForCredentials';
 import { Context, IView } from '../context';
 import { Keystore, keystoreSchema } from '../credentials';

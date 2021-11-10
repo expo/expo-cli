@@ -17,9 +17,9 @@ import { CreateOrReuseProvisioningProfileAdhoc } from '../../credentials/views/I
 import { SetupIosDist } from '../../credentials/views/SetupIosDist';
 import { SetupIosPush } from '../../credentials/views/SetupIosPush';
 import Log from '../../log';
-import { confirmAsync, promptEmailAsync } from '../../prompts';
 import urlOpts from '../../urlOpts';
 import { ora } from '../../utils/ora';
+import { confirmAsync, promptEmailAsync } from '../../utils/prompts';
 import { createClientBuildRequest, getExperienceName, isAllowedToBuild } from './clientBuildApi';
 import generateBundleIdentifier from './generateBundleIdentifier';
 

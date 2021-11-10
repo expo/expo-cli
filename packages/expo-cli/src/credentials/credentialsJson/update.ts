@@ -2,7 +2,7 @@ import fs from 'fs-extra';
 import path from 'path';
 
 import Log from '../../log';
-import { confirmAsync } from '../../prompts';
+import { confirmAsync } from '../../utils/prompts';
 import { Context } from '../context';
 import { gitStatusAsync } from '../utils/git';
 

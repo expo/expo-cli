@@ -7,8 +7,8 @@ import { ApiV2Error } from 'xdl/build/ApiV2';
 
 import CommandError, { SilentError } from './CommandError';
 import Log from './log';
-import promptNew, { confirmAsync, Question as NewQuestion, selectAsync } from './prompts';
 import { ora } from './utils/ora';
+import promptNew, { confirmAsync, Question as NewQuestion, selectAsync } from './utils/prompts';
 import { nonEmptyInput } from './utils/validators';
 
 UserManager.initialize();

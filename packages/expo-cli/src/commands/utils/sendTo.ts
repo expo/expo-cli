@@ -1,8 +1,8 @@
 import { Exp, UserSettings } from 'xdl';
 
 import Log from '../../log';
-import { promptEmailAsync } from '../../prompts';
 import { ora } from '../../utils/ora';
+import { promptEmailAsync } from '../../utils/prompts';
 
 export async function askForSendToAsync(): Promise<string> {
   const cachedValue = await UserSettings.getAsync('sendTo', null);

@@ -1,4 +1,4 @@
-import prompt from '../../../../prompts';
+import prompt from '../../../../utils/prompts';
 import { nonEmptyInput } from '../../../../utils/validators';
 
 enum AndroidPackageSourceType {

@@ -2,7 +2,7 @@ import { Platform } from '@expo/config';
 import { StandaloneBuild, UrlUtils } from 'xdl';
 
 import Log from '../../../../log';
-import prompt from '../../../../prompts';
+import prompt from '../../../../utils/prompts';
 import { existingFile } from '../../../../utils/validators';
 import { isUUID } from '../../../utils/isUUID';
 import { getAppConfig } from '../utils/config';

@@ -20,8 +20,8 @@ import { Project, ProjectSettings, Versions } from 'xdl';
 
 import CommandError from '../CommandError';
 import Log from '../log';
-import { confirmAsync, selectAsync } from '../prompts';
 import { logNewSection } from '../utils/ora';
+import { confirmAsync, selectAsync } from '../utils/prompts';
 import { findProjectRootAsync } from './utils/ProjectUtils';
 import { getBundledNativeModulesAsync } from './utils/bundledNativeModules';
 import { assertProjectHasExpoExtensionFilesAsync } from './utils/deprecatedExtensionWarnings';

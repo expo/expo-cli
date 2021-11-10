@@ -3,7 +3,7 @@ import { Versions } from 'xdl';
 
 import CommandError from '../CommandError';
 import Log from '../log';
-import { confirmAsync } from '../prompts';
+import { confirmAsync } from '../utils/prompts';
 import { ejectAsync } from './eject/ejectAsync';
 import { platformsFromPlatform } from './eject/platformOptions';
 import { EjectAsyncOptions } from './eject/prebuildAsync';

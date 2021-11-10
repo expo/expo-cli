@@ -7,7 +7,7 @@ import { UrlUtils } from 'xdl';
 
 import CommandError from '../CommandError';
 import Log from '../log';
-import prompt from '../prompts';
+import prompt from '../utils/prompts';
 import { platformsFromPlatform } from './eject/platformOptions';
 import { exportAppAsync } from './export/exportAppAsync';
 import { mergeAppDistributions } from './export/mergeAppDistributions';

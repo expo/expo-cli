@@ -2,7 +2,7 @@ import chalk from 'chalk';
 import { Android, Versions } from 'xdl';
 
 import Log from '../../log';
-import { confirmAsync } from '../../prompts';
+import { confirmAsync } from '../../utils/prompts';
 import { resolveDeviceAsync } from '../run/android/resolveDeviceAsync';
 import * as ClientUpgradeUtils from '../utils/ClientUpgradeUtils';
 

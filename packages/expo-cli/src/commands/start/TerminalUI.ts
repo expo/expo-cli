@@ -17,8 +17,8 @@ import {
 
 import { loginOrRegisterIfLoggedOutAsync } from '../../accounts';
 import Log from '../../log';
-import { selectAsync } from '../../prompts';
 import urlOpts from '../../urlOpts';
+import { selectAsync } from '../../utils/prompts';
 import { learnMore } from '../utils/TerminalLink';
 import { openInEditorAsync } from '../utils/openInEditorAsync';
 

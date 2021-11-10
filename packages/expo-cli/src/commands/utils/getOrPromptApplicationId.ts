@@ -3,7 +3,7 @@ import { UserManager } from 'xdl';
 
 import CommandError from '../../CommandError';
 import Log from '../../log';
-import prompt, { confirmAsync } from '../../prompts';
+import prompt, { confirmAsync } from '../../utils/prompts';
 import { learnMore } from './TerminalLink';
 import { attemptModification } from './modifyConfigAsync';
 import {

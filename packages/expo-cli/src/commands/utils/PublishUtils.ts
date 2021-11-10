@@ -3,8 +3,8 @@ import { ApiV2, UserManager } from 'xdl';
 
 import Log from '../../log';
 import { getProjectOwner } from '../../projects';
-import { confirmAsync } from '../../prompts';
 import { ora } from '../../utils/ora';
+import { confirmAsync } from '../../utils/prompts';
 import * as table from './cli-table';
 
 export type HistoryOptions = {

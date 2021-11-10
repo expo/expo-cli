@@ -1,5 +1,5 @@
 import Log from '../../../../log';
-import prompt from '../../../../prompts';
+import prompt from '../../../../utils/prompts';
 import { existingFile } from '../../../../utils/validators';
 import { learnMore } from '../../../utils/TerminalLink';
 

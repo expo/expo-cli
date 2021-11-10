@@ -2,7 +2,7 @@ import chalk from 'chalk';
 import { Simulator, Versions } from 'xdl';
 
 import Log from '../../log';
-import { confirmAsync } from '../../prompts';
+import { confirmAsync } from '../../utils/prompts';
 import * as ClientUpgradeUtils from '../utils/ClientUpgradeUtils';
 
 type Options = {

@@ -1,7 +1,7 @@
 import program from 'commander';
 import prompts, { Options, PromptObject, PromptType } from 'prompts';
 
-import CommandError, { AbortCommandError } from './CommandError';
+import CommandError, { AbortCommandError } from '../CommandError';
 
 // NOTE(brentvatne): we don't use strikethrough anywhere in expo-cli currently,
 // and prompts doesn't give us control over disabled styles (1), so until we
