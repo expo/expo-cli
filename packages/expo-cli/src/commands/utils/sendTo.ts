@@ -1,8 +1,22 @@
 import { Exp, UserSettings } from 'xdl';
 
-import { askForSendToAsync } from './askUser';
-import Log from './log';
-import { ora } from './utils/ora';
+import Log from '../../log';
+import { promptEmailAsync } from '../../prompts';
+import { ora } from '../../utils/ora';
+
+export async function askForSendToAsync(): Promise<string> {
+  const cachedValue = await UserSettings.getAsync('sendTo', null);
+  Log.nested("Enter an email address and we'll send a link");
+  const recipient = await promptEmailAsync(
+    {
+      message: `Email address`,
+      initial: cachedValue ?? undefined,
+    },
+    { nonInteractiveHelp: 'Please specify email address with --send-to.' }
+  );
+  await UserSettings.mergeAsync({ sendTo: recipient });
+  return recipient;
+}
 
 export async function getRecipient(sendTo?: string | boolean): Promise<string> {
   let recipient: string | null = '';

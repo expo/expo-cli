@@ -14,10 +14,10 @@ import { Project, UserManager } from 'xdl';
 import CommandError from '../CommandError';
 import Log from '../log';
 import { getProjectOwner } from '../projects';
-import * as sendTo from '../sendTo';
 import { logNewSection } from '../utils/ora';
 import * as TerminalLink from './utils/TerminalLink';
 import { formatNamedWarning } from './utils/logConfigWarnings';
+import * as sendTo from './utils/sendTo';
 
 type Options = {
   clear?: boolean;

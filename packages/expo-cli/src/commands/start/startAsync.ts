@@ -6,10 +6,10 @@ import { Project, UnifiedAnalytics, UrlUtils, Versions } from 'xdl';
 
 import getDevClientProperties from '../../analytics/getDevClientProperties';
 import Log from '../../log';
-import * as sendTo from '../../sendTo';
 import urlOpts from '../../urlOpts';
 import { assertProjectHasExpoExtensionFilesAsync } from '../utils/deprecatedExtensionWarnings';
 import { profileMethod } from '../utils/profileMethod';
+import * as sendTo from '../utils/sendTo';
 import { ensureTypeScriptSetupAsync } from '../utils/typescript/ensureTypeScriptSetup';
 import { validateDependenciesVersionsAsync } from '../utils/validateDependenciesVersions';
 import * as TerminalUI from './TerminalUI';
