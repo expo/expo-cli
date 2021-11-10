@@ -1,3 +1,6 @@
+import type Metro from 'metro';
+import type MetroConfig from 'metro-config';
+import type { composeSourceMaps } from 'metro-source-map';
 import os from 'os';
 import resolveFrom from 'resolve-from';
 
@@ -26,21 +29,19 @@ function importFromProject(projectRoot: string, moduleId: string) {
 
 export function importMetroSourceMapComposeSourceMapsFromProject(
   projectRoot: string
-): typeof import('metro-source-map').composeSourceMaps {
+): typeof composeSourceMaps {
   return importFromProject(projectRoot, 'metro-source-map/src/composeSourceMaps');
 }
 
-export function importMetroConfigFromProject(projectRoot: string): typeof import('metro-config') {
+export function importMetroConfigFromProject(projectRoot: string): typeof MetroConfig {
   return importFromProject(projectRoot, 'metro-config');
 }
 
-export function importMetroFromProject(projectRoot: string): typeof import('metro') {
+export function importMetroFromProject(projectRoot: string): typeof Metro {
   return importFromProject(projectRoot, 'metro');
 }
 
-export function importMetroServerFromProject(
-  projectRoot: string
-): typeof import('metro/src/Server') {
+export function importMetroServerFromProject(projectRoot: string): typeof Metro.Server {
   return importFromProject(projectRoot, 'metro/src/Server');
 }
 
