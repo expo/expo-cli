@@ -9,7 +9,7 @@ import CommandError, { SilentError } from './CommandError';
 import Log from './log';
 import promptNew, { confirmAsync, Question as NewQuestion, selectAsync } from './prompts';
 import { ora } from './utils/ora';
-import { nonEmptyInput } from './validators';
+import { nonEmptyInput } from './utils/validators';
 
 UserManager.initialize();
 

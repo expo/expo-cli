@@ -1,6 +1,6 @@
 import fs from 'fs-extra';
 
-import Log from './log';
+import Log from '../log';
 
 function nonEmptyInput(val: string) {
   return val !== '';

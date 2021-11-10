@@ -5,7 +5,7 @@ import untildify from 'untildify';
 
 import Log from '../../log';
 import prompts, { Question as PromptQuestion } from '../../prompts';
-import * as validators from '../../validators';
+import * as validators from '../../utils/validators';
 
 export type Question = {
   question: string;

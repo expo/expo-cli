@@ -3,7 +3,7 @@ import { StandaloneBuild, UrlUtils } from 'xdl';
 
 import Log from '../../../../log';
 import prompt from '../../../../prompts';
-import { existingFile } from '../../../../validators';
+import { existingFile } from '../../../../utils/validators';
 import { isUUID } from '../../../utils/isUUID';
 import { getAppConfig } from '../utils/config';
 import {
