@@ -12,7 +12,7 @@ import { addWarningAndroid } from '../utils/warnings';
 import { AndroidManifest } from './Manifest';
 import { getAppBuildGradleFilePath, getProjectFilePath } from './Paths';
 
-const debug = Debug('config-plugins:android:package');
+const debug = Debug('expo:config-plugins:android:package');
 
 export const withPackageManifest = createAndroidManifestPlugin(
   setPackageInAndroidManifest,

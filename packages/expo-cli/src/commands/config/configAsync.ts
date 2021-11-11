@@ -1,6 +1,6 @@
 import { getConfig, ProjectConfig } from '@expo/config';
 import { compileModsAsync } from '@expo/config-plugins/build/plugins/mod-compiler';
-import { getPrebuildConfig } from '@expo/prebuild-config';
+import { getPrebuildConfigAsync } from '@expo/prebuild-config';
 
 import CommandError from '../../CommandError';
 import Log from '../../log';
@@ -16,11 +16,11 @@ export async function actionAsync(projectRoot: string, options: Options) {
   let config: ProjectConfig;
 
   if (options.type === 'prebuild') {
-    config = profileMethod(getPrebuildConfig)(projectRoot, {
+    config = await profileMethod(getPrebuildConfigAsync)(projectRoot, {
       platforms: ['ios', 'android'],
     });
   } else if (options.type === 'introspect') {
-    config = profileMethod(getPrebuildConfig)(projectRoot, {
+    config = await profileMethod(getPrebuildConfigAsync)(projectRoot, {
       platforms: ['ios', 'android'],
     });
 
