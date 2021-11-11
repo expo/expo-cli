@@ -1,8 +1,8 @@
 import chalk from 'chalk';
 import type { Command } from 'commander';
 
-import { learnMore } from './utils/TerminalLink';
-import { applyAsyncActionProjectDir } from './utils/applyAsyncAction';
+import { learnMore } from '../utils/TerminalLink';
+import { applyAsyncActionProjectDir } from '../utils/applyAsyncAction';
 
 export default function (program: Command) {
   applyAsyncActionProjectDir(

@@ -7,7 +7,7 @@ import path from 'path';
 import prompts from 'prompts';
 import resolveFrom from 'resolve-from';
 
-import Log from '../log';
+import Log from '../../log';
 
 type Options = { force: boolean };
 

@@ -1,12 +1,12 @@
 import { ApiV2 } from 'xdl';
 
+import { mockExpoXDL } from '../../../__tests__/mock-utils';
+import { jester } from '../../../credentials/__tests__/fixtures/mocks-constants';
+import Log from '../../../log';
+import prompt, { selectAsync } from '../../../utils/prompts';
 import { _retryUsernamePasswordAuthWithOTPAsync, UserSecondFactorDeviceMethod } from '../accounts';
-import { jester } from '../credentials/__tests__/fixtures/mocks-constants';
-import Log from '../log';
-import prompt, { selectAsync } from '../prompts';
-import { mockExpoXDL } from './mock-utils';
 
-jest.mock('../prompts');
+jest.mock('../../../utils/prompts');
 
 mockExpoXDL({
   UserManager: {

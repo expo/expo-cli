@@ -1,7 +1,7 @@
 import { vol } from 'memfs';
 
-import { mockExpoXDL } from '../../__tests__/mock-utils';
-import Log from '../../log';
+import { mockExpoXDL } from '../../../__tests__/mock-utils';
+import Log from '../../../log';
 import {
   getDependenciesFromBundledNativeModules,
   maybeFormatSdkVersion,
@@ -10,7 +10,7 @@ import {
 
 jest.mock('fs');
 jest.mock('resolve-from');
-jest.mock('../../log');
+jest.mock('../../../log');
 
 describe('maybeFormatSdkVersion', () => {
   it(`returns null`, () => {
