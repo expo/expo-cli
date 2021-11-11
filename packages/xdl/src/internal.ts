@@ -83,6 +83,7 @@ export { delayAsync } from './utils/delayAsync';
 export { choosePortAsync } from './utils/choosePortAsync';
 export { downloadApkAsync } from './utils/downloadApkAsync';
 export { downloadAppAsync } from './utils/downloadAppAsync';
+export { isDevClientPackageInstalled } from './utils/isDevClientPackageInstalled';
 export * as BundleIdentifier from './BundleIdentifier';
 export * as FsCache from './tools/FsCache';
 export * as WebpackEnvironment from './webpack-utils/WebpackEnvironment';
@@ -102,5 +103,6 @@ export {
 export { startAsync, stopAsync, broadcastMessage } from './start/startAsync';
 export * as ManifestHandler from './start/ManifestHandler';
 export * as ExpoUpdatesManifestHandler from './start/ExpoUpdatesManifestHandler';
+export * as LoadingPageHandler from './start/LoadingPageHandler';
 export { getFreePortAsync } from './start/getFreePortAsync';
 export * as Project from './Project';

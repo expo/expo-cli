@@ -20,6 +20,7 @@ export {
   Exp,
   ErrorCode,
   StandaloneBuild,
+  isDevClientPackageInstalled,
   IosCodeSigning,
   Logger,
   ModuleVersion,
