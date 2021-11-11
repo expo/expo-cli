@@ -21,7 +21,7 @@ import { selectAsync } from '../../prompts';
 import urlOpts from '../../urlOpts';
 import { learnMore } from '../utils/TerminalLink';
 import { openInEditorAsync } from '../utils/openInEditorAsync';
-import { ensureWebDependenciesInstalledAsync } from '../utils/web/ensureWebSetup';
+import { ensureWebSupportSetupAsync } from '../utils/web/ensureWebSetup';
 
 const CTRL_C = '\u0003';
 const CTRL_D = '\u0004';
@@ -378,17 +378,21 @@ export async function startAsync(projectRoot: string, options: StartOptions) {
         break;
       }
       case 'w': {
-        await ensureWebDependenciesInstalledAsync(projectRoot);
-        if (!platforms.includes('web')) {
-          platforms.push('web');
-          options.platforms?.push('web');
+        try {
+          if (await ensureWebSupportSetupAsync(projectRoot)) {
+            if (!platforms.includes('web')) {
+              platforms.push('web');
+              options.platforms?.push('web');
+            }
+          }
+        } catch (e: any) {
+          Log.nestedWarn(e.message);
+          break;
         }
 
         const isDisabled = !platforms.includes('web');
         if (isDisabled) {
-          Log.nestedWarn(
-            `Web is disabled, enable it by installing ${chalk.bold`react-native-web`} and adding ${chalk.bold`web`} to the platforms array in your app.json or app.config.js`
-          );
+          // Use warnings from the web support setup.
           break;
         }
 

@@ -12,7 +12,7 @@ import { assertProjectHasExpoExtensionFilesAsync } from '../utils/deprecatedExte
 import { profileMethod } from '../utils/profileMethod';
 import { ensureTypeScriptSetupAsync } from '../utils/typescript/ensureTypeScriptSetup';
 import { validateDependenciesVersionsAsync } from '../utils/validateDependenciesVersions';
-import { ensureWebDependenciesInstalledAsync } from '../utils/web/ensureWebSetup';
+import { ensureWebSupportSetupAsync } from '../utils/web/ensureWebSetup';
 import * as TerminalUI from './TerminalUI';
 import { installCustomExitHook, installExitHooks } from './installExitHooks';
 import { tryOpeningDevToolsAsync } from './openDevTools';
@@ -41,7 +41,7 @@ export async function actionAsync(projectRoot: string, options: NormalizedOption
   });
 
   if (options.web || options.webOnly) {
-    await ensureWebDependenciesInstalledAsync(projectRoot);
+    await ensureWebSupportSetupAsync(projectRoot);
   }
 
   if (options.devClient) {
