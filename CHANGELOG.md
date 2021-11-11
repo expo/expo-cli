@@ -10,6 +10,36 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🧹 Chores
 
+## [Mon, 8 Nov 2021 17:19:54 -0800](https://github.com/expo/expo-cli/commit/61315e0ef950a2d1359dfba33c1ca12e7aa960ee)
+
+### 🎉 New features
+
+- [prebuild-config] Add unversioned expo-system-ui plugin ([#3957](https://github.com/expo/expo-cli/issues/3957))
+- [prebuild-config] Add url support for splash screens ([#3978](https://github.com/expo/expo-cli/issues/3978))
+- [metro-config] Add environment variable for forcing the use of unversioned config plugins ([#3984](https://github.com/expo/expo-cli/issues/3984))
+- [webpack-config] Add support for any main file in Webpack ([#3973](https://github.com/expo/expo-cli/issues/3973))
+
+### 🧹 Chores
+
+- [cli] Change "dev client" to "development build" ([#3946](https://github.com/expo/expo-cli/issues/3946))
+
+### 📦 Packages updated
+
+- @expo/config-plugins@4.0.7
+- @expo/config@6.0.7
+- @expo/dev-server@0.1.94
+- @expo/dev-tools@0.13.129
+- expo-cli@4.13.0
+- expo-optimize@0.1.114
+- install-expo-modules@0.0.6
+- @expo/metro-config@0.3.0
+- @expo/next-adapter@3.1.7
+- @expo/prebuild-config@3.0.7
+- expo-pwa@0.0.102
+- uri-scheme@1.0.103
+- @expo/webpack-config@0.16.7
+- xdl@59.2.13
+
 ## [Thu, 4 Nov 2021 13:01:04 -0700](https://github.com/expo/expo-cli/commit/507c1e8c6973290a649675d292a137fb75306bcd)
 
 ### 🎉 New features

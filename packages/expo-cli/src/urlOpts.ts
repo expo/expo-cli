@@ -1,6 +1,13 @@
 import type { Command } from 'commander';
 import qrcodeTerminal from 'qrcode-terminal';
-import { Android, ConnectionStatus, ProjectSettings, Simulator, Webpack } from 'xdl';
+import {
+  Android,
+  ConnectionStatus,
+  isDevClientPackageInstalled,
+  ProjectSettings,
+  Simulator,
+  Webpack,
+} from 'xdl';
 
 import CommandError, { AbortCommandError } from './CommandError';
 import Log from './log';
@@ -25,7 +32,7 @@ function addOptions(program: Command) {
       '--dev-client',
       'Experimental: Starts the bundler for use with the expo-development-client'
     )
-    .option('--scheme <scheme>', 'Custom URI protocol to use with a dev client')
+    .option('--scheme <scheme>', 'Custom URI protocol to use with a development build')
     .option('-a, --android', 'Opens your app in Expo Go on a connected Android device')
     .option(
       '-i, --ios',
@@ -75,8 +82,10 @@ async function optsAsync(projectRoot: string, options: any) {
   } else if (options.devClient) {
     // Attempt to find the scheme or warn the user how to setup a custom scheme
     opts.scheme = await getOptionalDevClientSchemeAsync(projectRoot);
+  } else if (!options.devClient && isDevClientPackageInstalled(projectRoot)) {
+    opts.scheme = await getOptionalDevClientSchemeAsync(projectRoot);
   } else {
-    // Ensure this is reset when users don't use `--scheme` or `--dev-client`
+    // Ensure this is reset when users don't use `--scheme`, `--dev-client` and don't have the `expo-dev-client` package installed.
     opts.scheme = null;
   }
 

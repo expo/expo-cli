@@ -15,6 +15,16 @@ beforeAll(async () => {
   // });
 });
 
+const originalExotic = process.env.EXPO_USE_EXOTIC;
+
+beforeEach(() => {
+  delete process.env.EXPO_USE_EXOTIC;
+});
+
+afterEach(() => {
+  process.env.EXPO_USE_EXOTIC = originalExotic;
+});
+
 xtest('start --offline', async () => {
   const promise = spawnAsync(EXPO_CLI, ['start', '--offline'], { cwd: projectRoot });
   const cli = promise.child;

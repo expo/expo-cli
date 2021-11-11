@@ -8,8 +8,8 @@ import { actionAsync } from '../../src/commands/ejectAsync';
 import {
   createMinimalProjectAsync,
   EXPO_CLI,
-  minimumAppJson,
-  minimumNativePkgJson,
+  getBasicExpoConfig,
+  getBasicPackageJson,
 } from '../TestUtils';
 
 const tempDir = temporary.directory();
@@ -76,10 +76,10 @@ it(`can eject a minimal project`, async () => {
   // Scripts should be rewritten to use react-native-community/cli
   expect(outputPkgJson.scripts['ios']).toBe('expo run:ios');
   expect(outputPkgJson.scripts['android']).toBe('expo run:android');
-  expect(outputPkgJson.scripts['web']).toBe('expo web');
-  // The react-native fork is replaced with the upstream react-native version
-  expect(outputPkgJson.dependencies['react-native']).not.toBe(
-    minimumNativePkgJson.dependencies['react-native']
+  expect(outputPkgJson.scripts['web']).toBe('expo start --web');
+  // Ensure the react-native version doesn't change
+  expect(outputPkgJson.dependencies['react-native']).toBe(
+    getBasicPackageJson().dependencies['react-native']
   );
 });
 
@@ -92,13 +92,13 @@ it(`warns the user to install modules if the sdkVersion is not defined`, async (
   await fs.ensureDir(projectRoot);
 
   // Create a package.json
-  fs.writeFileSync(path.join(projectRoot, 'package.json'), JSON.stringify(minimumNativePkgJson));
+  fs.writeFileSync(path.join(projectRoot, 'package.json'), JSON.stringify(getBasicPackageJson()));
 
   // TODO(Bacon): We shouldn't need this
   fs.writeFileSync(
     path.join(projectRoot, 'app.json'),
     // Erase the sdkVersion
-    JSON.stringify({ expo: { ...minimumAppJson, sdkVersion: undefined } })
+    JSON.stringify({ expo: { ...getBasicExpoConfig(), sdkVersion: undefined } })
   );
 
   // Run a standard eject command

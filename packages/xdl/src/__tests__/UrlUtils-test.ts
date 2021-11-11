@@ -246,7 +246,7 @@ describe(UrlUtils.constructDevClientUrlAsync, () => {
     ).rejects.toThrowErrorMatchingInlineSnapshot(`"No scheme specified for development client"`);
   });
 
-  it(`creates dev client url if a scheme is provided`, async () => {
+  it(`creates an expo-dev-client compatible url if a scheme is provided`, async () => {
     const result = await UrlUtils.constructDevClientUrlAsync(devClientWithSchemesProjectRoot);
     expect(result).toEqual(
       'custom-scheme://expo-development-client/?url=http%3A%2F%2F100.100.1.100%3A80'

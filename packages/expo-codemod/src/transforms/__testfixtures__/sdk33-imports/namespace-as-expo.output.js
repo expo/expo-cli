@@ -1,3 +1,4 @@
+/* eslint-disable import/namespace */
 /* eslint-disable import/order */
 import React from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
