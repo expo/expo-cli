@@ -39,7 +39,6 @@ export * as Prompts from './Prompts';
 export * as SimControl from './SimControl';
 export * as SimControlLogs from './SimControlLogs';
 export * as Simulator from './Simulator';
-export * as StandaloneBuild from './StandaloneBuild';
 export * as ThirdParty from './ThirdParty';
 export * as UrlUtils from './UrlUtils';
 export {
