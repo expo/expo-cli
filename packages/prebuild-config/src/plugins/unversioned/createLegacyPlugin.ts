@@ -2,13 +2,20 @@ import {
   ConfigPlugin,
   createRunOncePlugin,
   PluginParameters,
-  StaticPlugin,
   withPlugins,
   withStaticPlugin,
 } from '@expo/config-plugins';
 import { ExpoConfig } from '@expo/config-types';
 
-const camelize = (s: string) => s.replace(/-./g, x => x.toUpperCase()[1]);
+const toCamelCase = (s: string) => s.replace(/-./g, x => x.toUpperCase()[1]);
+
+function isModuleExcluded(config: Pick<ExpoConfig, '_internal'>, packageName: string): boolean {
+  // Skip using the versioned plugin when autolinking is enabled
+  // and doesn't link the native module.
+  return (
+    config._internal?.autolinkedModules && !config._internal.autolinkedModules.includes(packageName)
+  );
+}
 
 export function createLegacyPlugin({
   packageName,
@@ -28,10 +35,7 @@ export function createLegacyPlugin({
   const withUnknown: ConfigPlugin = config => {
     // Skip using the versioned plugin when autolinking is enabled
     // and doesn't link the native module.
-    if (
-      config._internal?.autolinkedModules &&
-      !config._internal.autolinkedModules.includes(packageName)
-    ) {
+    if (!isModuleExcluded(config, packageName)) {
       return createRunOncePlugin(withFallback, packageName)(config);
     }
 
@@ -43,7 +47,7 @@ export function createLegacyPlugin({
     });
   };
 
-  const methodName = camelize(`with-${packageName}`);
+  const methodName = toCamelCase(`with-${packageName}`);
 
   if (methodName) {
     Object.defineProperty(withUnknown, 'name', {

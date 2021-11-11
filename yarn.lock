@@ -8163,7 +8163,7 @@ expo-keep-awake@~10.0.0:
   resolved "https://registry.yarnpkg.com/expo-keep-awake/-/expo-keep-awake-10.0.0.tgz#275a3e02f99bc0429790047add126c1dcce60d63"
   integrity sha512-x5zRTjIvSry/EISKvjWpnLERGZj5maCwEouOfiDk0JPa0UTg/zFkT7pmiadAfHT95XUgjjb2DOku+wj6J7el7Q==
 
-expo-modules-autolinking@~0.3.3:
+expo-modules-autolinking@^0.3.3, expo-modules-autolinking@~0.3.3:
   version "0.3.3"
   resolved "https://registry.yarnpkg.com/expo-modules-autolinking/-/expo-modules-autolinking-0.3.3.tgz#95795f2292bd187b388413e36936bfd6fa7a46a9"
   integrity sha512-hMouDBw/Y5POeYU0ZBsykGC+uiOO1WV0JSz5EE8uO87AlXAzR0K5aPkzgQiufONNwwgxsaD2xUV/J+tjwMw2Ug==
@@ -14238,12 +14238,18 @@ pify@^3.0.0:
   integrity sha1-5aSs0sEB/fPZpNB/DbxNtJ3SgXY=
 
 pify@^4.0.1:
+  version "4.0.1"
+  resolved "https://registry.yarnpkg.com/pify/-/pify-4.0.1.tgz#4b2cd25c50d598735c50292224fd8c6df41e3231"
+  integrity sha512-uB80kBFb/tfd68bVleG9T5GGsGPjJrLAUpR5PZIrhBnIaRTQRjqdJSsIKkOP6OAIFbj7GOrcudc5pNjZ+geV2g==
+
+pinkie-promise@^2.0.0:
   version "2.0.1"
   resolved "https://registry.yarnpkg.com/pinkie-promise/-/pinkie-promise-2.0.1.tgz#2135d6dfa7a358c069ac9b178776288228450ffa"
   integrity sha1-ITXW36ejWMBprJsXh3YogihFD/o=
   dependencies:
     pinkie "^2.0.0"
 
+pinkie@^2.0.0:
   version "2.0.4"
   resolved "https://registry.yarnpkg.com/pinkie/-/pinkie-2.0.4.tgz#72556b80cfa0d48a974e80e77248e80ed4f7f870"
   integrity sha1-clVrgM+g1IqXToDnckjoDtT3+HA=
