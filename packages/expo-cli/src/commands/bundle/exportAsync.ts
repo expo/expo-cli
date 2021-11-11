@@ -5,14 +5,14 @@ import fs from 'fs-extra';
 import path from 'path';
 import { UrlUtils } from 'xdl';
 
-import CommandError from '../CommandError';
-import Log from '../log';
-import prompt from '../utils/prompts';
-import { platformsFromPlatform } from './eject/platformOptions';
-import { exportAppAsync } from './export/exportAppAsync';
-import { mergeAppDistributions } from './export/mergeAppDistributions';
-import * as CreateApp from './utils/CreateApp';
-import { downloadAndDecompressAsync } from './utils/Tar';
+import CommandError from '../../CommandError';
+import Log from '../../log';
+import prompt from '../../utils/prompts';
+import { platformsFromPlatform } from '../eject/platformOptions';
+import { exportAppAsync } from '../export/exportAppAsync';
+import { mergeAppDistributions } from '../export/mergeAppDistributions';
+import * as CreateApp from '../utils/CreateApp';
+import { downloadAndDecompressAsync } from '../utils/Tar';
 
 type Options = {
   outputDir: string;

@@ -11,13 +11,13 @@ import { Ora } from 'ora';
 import path from 'path';
 import { Project, UserManager } from 'xdl';
 
-import CommandError from '../CommandError';
-import Log from '../log';
-import { getProjectOwner } from '../projects';
-import { logNewSection } from '../utils/ora';
-import * as TerminalLink from './utils/TerminalLink';
-import { formatNamedWarning } from './utils/logConfigWarnings';
-import * as sendTo from './utils/sendTo';
+import CommandError from '../../CommandError';
+import Log from '../../log';
+import { getProjectOwner } from '../../projects';
+import { logNewSection } from '../../utils/ora';
+import * as TerminalLink from '../utils/TerminalLink';
+import { formatNamedWarning } from '../utils/logConfigWarnings';
+import * as sendTo from '../utils/sendTo';
 
 type Options = {
   clear?: boolean;

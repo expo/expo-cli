@@ -1,6 +1,6 @@
 import { vol } from 'memfs';
 
-import Log from '../../log';
+import Log from '../../../log';
 import {
   isInvalidReleaseChannel,
   logBareWorkflowWarnings,
@@ -9,7 +9,7 @@ import {
 } from '../publishAsync';
 
 jest.mock('fs');
-jest.mock('../../log', () => ({
+jest.mock('../../../log', () => ({
   nestedWarn: jest.fn(),
   chalk: { underline: jest.fn(), dim: jest.fn() },
 }));

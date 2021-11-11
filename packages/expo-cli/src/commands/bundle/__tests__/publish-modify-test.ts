@@ -1,13 +1,13 @@
 import { vol } from 'memfs';
 import { ApiV2 } from 'xdl';
 
-import { mockExpoXDL } from '../../__tests__/mock-utils';
-import { createTestProject } from '../../__tests__/project-utils';
-import { jester } from '../../credentials/__tests__/fixtures/mocks-constants';
+import { mockExpoXDL } from '../../../__tests__/mock-utils';
+import { createTestProject } from '../../../__tests__/project-utils';
+import { jester } from '../../../credentials/__tests__/fixtures/mocks-constants';
 import {
   rollbackPublicationFromChannelAsync,
   setPublishToChannelAsync,
-} from '../utils/PublishUtils';
+} from '../../utils/PublishUtils';
 
 jest.mock('fs');
 jest.mock('resolve-from');

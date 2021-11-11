@@ -1,9 +1,9 @@
 import program from 'commander';
 import { vol } from 'memfs';
 
-import { mockExpoXDL } from '../../__tests__/mock-utils';
-import { jester } from '../../credentials/__tests__/fixtures/mocks-constants';
-import Log from '../../log';
+import { mockExpoXDL } from '../../../__tests__/mock-utils';
+import { jester } from '../../../credentials/__tests__/fixtures/mocks-constants';
+import Log from '../../../log';
 import {
   collectMergeSourceUrlsAsync,
   ensurePublicUrlAsync,
@@ -18,7 +18,7 @@ jest.mock('@expo/image-utils', () => ({
     return { source: fs.readFileSync(src) };
   },
 }));
-jest.mock('../utils/Tar', () => ({
+jest.mock('../../utils/Tar', () => ({
   async downloadAndDecompressAsync(url: string, destination: string): Promise<string> {
     return destination;
   },

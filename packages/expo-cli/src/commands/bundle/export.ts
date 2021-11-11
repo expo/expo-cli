@@ -1,6 +1,6 @@
 import type { Command } from 'commander';
 
-import { applyAsyncActionProjectDir } from './utils/applyAsyncAction';
+import { applyAsyncActionProjectDir } from '../utils/applyAsyncAction';
 
 function collect<T>(val: T, memo: T[]): T[] {
   memo.push(val);
