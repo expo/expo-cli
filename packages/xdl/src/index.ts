@@ -19,7 +19,6 @@ export {
   EmbeddedAssets,
   Exp,
   ErrorCode,
-  StandaloneBuild,
   isDevClientPackageInstalled,
   IosCodeSigning,
   Logger,
