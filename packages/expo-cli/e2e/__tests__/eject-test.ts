@@ -77,8 +77,8 @@ it(`can eject a minimal project`, async () => {
   expect(outputPkgJson.scripts['ios']).toBe('expo run:ios');
   expect(outputPkgJson.scripts['android']).toBe('expo run:android');
   expect(outputPkgJson.scripts['web']).toBe('expo start --web');
-  // The react-native fork is replaced with the upstream react-native version
-  expect(outputPkgJson.dependencies['react-native']).not.toBe(
+  // Ensure the react-native version doesn't change
+  expect(outputPkgJson.dependencies['react-native']).toBe(
     getBasicPackageJson().dependencies['react-native']
   );
 });

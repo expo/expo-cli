@@ -8,6 +8,7 @@ import {
   ConnectionStatus,
   Doctor,
   getFreePortAsync,
+  LoadingPageHandler,
   ManifestHandler,
   ProjectSettings,
   ProjectUtils,
@@ -98,9 +99,12 @@ export async function startExpoServerAsync(projectRoot: string): Promise<void> {
   }
   // Serve the manifest.
   const manifestHandler = ManifestHandler.getManifestHandler(projectRoot);
+  const loadingHandler = LoadingPageHandler.getLoadingPageHandler(projectRoot);
   app.get('/', manifestHandler);
   app.get('/manifest', manifestHandler);
   app.get('/index.exp', manifestHandler);
+  app.get(LoadingPageHandler.LoadingEndpoint, loadingHandler);
+  app.get(LoadingPageHandler.DeepLinkEndpoint, loadingHandler);
   app.post('/logs', async (req, res) => {
     try {
       const deviceId = req.get('Device-Id');

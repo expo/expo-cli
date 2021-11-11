@@ -51,9 +51,9 @@ const div = chalk.dim(`│`);
 export async function shouldOpenDevToolsOnStartupAsync() {
   return UserSettings.getAsync(
     'openDevToolsAtStartup',
-    // Defaults to true for new users.
-    // TODO: switch this to false.
-    true
+    // Defaults to false for new users.
+    // We can swap this back to true when dev tools UI has a code owner again.
+    false
   );
 }
 

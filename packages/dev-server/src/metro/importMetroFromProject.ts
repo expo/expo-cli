@@ -41,14 +41,6 @@ export function importMetroFromProject(projectRoot: string): typeof Metro {
   return importFromProject(projectRoot, 'metro');
 }
 
-export function importMetroHmrServerFromProject(projectRoot: string): any {
-  return importFromProject(projectRoot, 'metro/src/HmrServer');
-}
-
-export function importMetroLibAttachWebsocketServerFromProject(projectRoot: string): any {
-  return importFromProject(projectRoot, 'metro/src/lib/attachWebsocketServer');
-}
-
 export function importMetroServerFromProject(projectRoot: string): typeof Metro.Server {
   return importFromProject(projectRoot, 'metro/src/Server');
 }
