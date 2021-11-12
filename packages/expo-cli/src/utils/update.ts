@@ -1,6 +1,6 @@
 import { ModuleVersion } from 'xdl';
 
-const packageJSON = require('../package.json');
+const packageJSON = require('../../package.json');
 
 const ModuleVersionChecker = ModuleVersion.createModuleVersionChecker(
   packageJSON.name,

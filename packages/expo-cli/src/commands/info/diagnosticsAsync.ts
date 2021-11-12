@@ -3,7 +3,7 @@ import envinfo from 'envinfo';
 
 import Log from '../../log';
 
-const packageJSON = require('../../package.json');
+const packageJSON = require('../../../package.json');
 
 function getEnvironmentInfoAsync(): Promise<string> {
   return envinfo.run(
