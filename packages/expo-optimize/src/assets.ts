@@ -71,13 +71,7 @@ Yes, you should share the ".expo-shared" folder with your collaborators.
 }
 
 // Compress an inputted jpg or png
-async function optimizeImageAsync(
-  projectRoot: string,
-  inputPath: string,
-  quality: number
-): Promise<string> {
-  console.log(`\u203A Checking ${chalk.reset.bold(relative(projectRoot, inputPath))}`);
-
+async function optimizeImageAsync(inputPath: string, quality: number): Promise<string> {
   const outputPath = temporary.directory();
   await sharpAsync({
     input: inputPath,
@@ -227,25 +221,30 @@ export async function optimizeAsync(
 
   const images = include || exclude ? selectedFiles : allFiles;
 
-  pool(images, async image => {
+  // Buffer output so we can display all the output for a single image
+  // at once
+  const poolResult = await pool(images, async image => {
+    const logLines: string[] = [];
     const hash = hashes[image];
     if (assetInfo[hash]) {
-      return;
+      return logLines;
     }
 
     if (!(await isAvailableAsync())) {
-      console.log(
+      logLines.push(
         chalk.bold.red(
           `\u203A Cannot optimize images without sharp-cli.\n\u203A Run this command again after successfully installing sharp with \`${chalk.magenta`npm install -g sharp-cli`}\``
         )
       );
-      return;
+      return logLines;
     }
 
     const { size: prevSize } = statSync(image);
 
     const newName = createNewFilename(image);
-    const optimizedImage = await optimizeImageAsync(projectRoot, image, quality);
+
+    logLines.push(`\u203A Checking ${chalk.reset.bold(relative(projectRoot, image))}`);
+    const optimizedImage = await optimizeImageAsync(image, quality);
 
     const { size: newSize } = statSync(optimizedImage);
     const amountSaved = prevSize - newSize;
@@ -254,14 +253,14 @@ export async function optimizeAsync(
       await move(optimizedImage, image);
     } else {
       assetInfo[hash] = true;
-      console.log(
+      logLines.push(
         chalk.dim(
           amountSaved === 0
             ? ` \u203A Skipping: Original was identical in size.`
             : ` \u203A Skipping: Original was ${prettyBytes(amountSaved * -1)} smaller.`
         )
       );
-      return;
+      return logLines;
     }
     // Recalculate hash since the image has changed
     const newHash = await calculateHash(image);
@@ -269,14 +268,14 @@ export async function optimizeAsync(
 
     if (save) {
       if (hash === newHash) {
-        console.log(
+        logLines.push(
           chalk.gray(
             `\u203A Compressed asset ${image} is identical to the original. Using original instead.`
           )
         );
         unlinkSync(newName);
       } else {
-        console.log(chalk.gray(`\u203A Saving original asset to ${newName}`));
+        logLines.push(chalk.gray(`\u203A Saving original asset to ${newName}`));
         // Save the old hash to prevent reoptimizing
         assetInfo[hash] = true;
       }
@@ -286,11 +285,15 @@ export async function optimizeAsync(
     }
     if (amountSaved) {
       totalSaved += amountSaved;
-      console.log(chalk.magenta(`\u203A Saved ${prettyBytes(amountSaved)}`));
+      logLines.push(chalk.magenta(`\u203A Saved ${prettyBytes(amountSaved)}`));
     } else {
-      console.log(chalk.gray(`\u203A Nothing to compress.`));
+      logLines.push(chalk.gray(`\u203A Nothing to compress.`));
     }
+
+    return logLines;
   });
+
+  poolResult.forEach(logLines => logLines.forEach(line => console.log(line)));
 
   console.log();
   if (totalSaved === 0) {
