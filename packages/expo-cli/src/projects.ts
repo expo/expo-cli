@@ -7,7 +7,7 @@ import CommandError from './CommandError';
  * Get the account and project name using a user and Expo config.
  * This will validate if the owner field is set when using a robot account.
  */
-function getProjectOwner(user: User | RobotUser, exp: ExpoConfig): string {
+export function getProjectOwner(user: User | RobotUser, exp: ExpoConfig): string {
   if (user.kind === 'robot' && !exp.owner) {
     throw new CommandError(
       'ROBOT_OWNER_ERROR',
@@ -17,5 +17,3 @@ function getProjectOwner(user: User | RobotUser, exp: ExpoConfig): string {
 
   return exp.owner || user.username;
 }
-
-export { getProjectOwner };
