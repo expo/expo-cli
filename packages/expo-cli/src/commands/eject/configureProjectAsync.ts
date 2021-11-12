@@ -1,6 +1,6 @@
 import { ExpoConfig, ProjectConfig } from '@expo/config';
 import { compileModsAsync, ModPlatform } from '@expo/config-plugins';
-import { getPrebuildConfig } from '@expo/prebuild-config';
+import { getPrebuildConfigAsync } from '@expo/prebuild-config';
 import util from 'util';
 import { UserManager } from 'xdl';
 
@@ -51,7 +51,7 @@ export default async function configureManagedProjectAsync({
     process.env.EAS_BUILD_USERNAME ||
     (await UserManager.getCurrentUsernameAsync());
 
-  let { exp: config } = getPrebuildConfig(projectRoot, {
+  let { exp: config } = await getPrebuildConfigAsync(projectRoot, {
     platforms,
     packageName,
     bundleIdentifier,

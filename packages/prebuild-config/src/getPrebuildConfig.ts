@@ -9,7 +9,21 @@ import {
   withVersionedExpoSDKPlugins,
 } from './plugins/withDefaultPlugins';
 
-export function getPrebuildConfig(
+export async function getPrebuildConfigAsync(
+  projectRoot: string,
+  props: {
+    bundleIdentifier?: string;
+    packageName?: string;
+    platforms: ModPlatform[];
+    expoUsername?: string | ((config: ExpoConfig) => string | null);
+  }
+): Promise<ReturnType<typeof getConfig>> {
+  return getPrebuildConfig(projectRoot, {
+    ...props,
+  });
+}
+
+function getPrebuildConfig(
   projectRoot: string,
   {
     platforms,
