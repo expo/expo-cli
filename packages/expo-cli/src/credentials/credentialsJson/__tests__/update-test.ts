@@ -264,6 +264,7 @@ describe('update credentials.json', () => {
         './cert.p12': 'somebinarycontent2',
       });
       await credentialsJsonUpdateUtils.updateIosCredentialsAsync(ctx, 'bundleIdentifier');
+      expect(prompts).toBeCalledTimes(1);
       const certP12Exists = await fs.pathExists('./cert.p12');
       const pprofile = await fs.readFile('./pprofile', 'base64');
       const credJson = await fs.readJson('./credentials.json');

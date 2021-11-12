@@ -40,7 +40,7 @@ export default function (program: Command) {
         '-p, --publish-id <publish-id>',
         'The id of the published release to serve from the channel. (Required)'
       ),
-    () => import('../publish/publishSetAsync'),
+    () => import('./publishSetAsync'),
     { checkConfig: true }
   );
 
@@ -54,7 +54,7 @@ export default function (program: Command) {
       .option('-c, --release-channel <name>', 'The channel to rollback from. (Required)')
       .option('-s, --sdk-version <version>', 'The sdk version to rollback. (Required)')
       .option('-p, --platform <android|ios>', 'The platform to rollback.'),
-    () => import('../publish/publishRollbackAsync'),
+    () => import('./publishRollbackAsync'),
     { checkConfig: true }
   );
 
@@ -79,7 +79,7 @@ export default function (program: Command) {
       )
       .option('-s, --sdk-version <version>', 'Filter by SDK version e.g. 35.0.0')
       .option('-r, --raw', 'Produce some raw output.'),
-    () => import('../publish/publishHistoryAsync'),
+    () => import('./publishHistoryAsync'),
     { checkConfig: true }
   );
 
@@ -91,7 +91,7 @@ export default function (program: Command) {
       .helpGroup('publish')
       .option('--publish-id <publish-id>', 'Publication id. (Required)')
       .option('-r, --raw', 'Produce some raw output.'),
-    () => import('../publish/publishDetailsAsync'),
+    () => import('./publishDetailsAsync'),
     { checkConfig: true }
   );
 }
