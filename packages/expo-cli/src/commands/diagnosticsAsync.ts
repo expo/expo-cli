@@ -21,8 +21,11 @@ function getEnvironmentInfoAsync(): Promise<string> {
         'react-native-web',
         'react-navigation',
         '@expo/webpack-config',
+        '@expo/metro-config',
+        'babel-preset-expo',
+        'metro',
       ],
-      npmGlobalPackages: ['expo-cli'],
+      npmGlobalPackages: ['expo-cli', 'eas-cli'],
     },
     {
       yaml: true,
