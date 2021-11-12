@@ -1,6 +1,6 @@
 import type Log from '@expo/bunyan';
 import { ExpoConfig, getConfigFilePaths } from '@expo/config';
-import * as ExpoMetroConfig from '@expo/metro-config';
+import type { LoadOptions } from '@expo/metro-config';
 import chalk from 'chalk';
 import type { Server as ConnectServer } from 'connect';
 import http from 'http';
@@ -12,17 +12,18 @@ import {
   maybeThrowFromInconsistentEngineAsync,
 } from './HermesBundler';
 import LogReporter from './LogReporter';
-import { createDevServerAsync } from './metro/createDevServerAsync';
 import {
+  importExpoMetroConfigFromProject,
   importInspectorProxyServerFromProject,
   importMetroFromProject,
   importMetroServerFromProject,
 } from './metro/importMetroFromProject';
 import { createDevServerMiddleware } from './middleware/devServerMiddleware';
 
-export type MetroDevServerOptions = ExpoMetroConfig.LoadOptions & {
+export type MetroDevServerOptions = LoadOptions & {
   logger: Log;
   quiet?: boolean;
+  unversioned?: boolean;
 };
 export type BundleOptions = {
   entryPoint: string;
@@ -45,6 +46,29 @@ export type MessageSocket = {
   broadcast: (method: string, params?: Record<string, any> | undefined) => void;
 };
 
+function getExpoMetroConfig(
+  projectRoot: string,
+  { logger, unversioned }: Pick<MetroDevServerOptions, 'logger' | 'unversioned'>
+): typeof import('@expo/metro-config') {
+  if (!unversioned) {
+    try {
+      return importExpoMetroConfigFromProject(projectRoot);
+    } catch {
+      // If expo isn't installed, use the unversioned config and warn about installing expo.
+    }
+  }
+
+  const unversionedVersion = require('@expo/metro-config/package.json').version;
+  logger.info(
+    { tag: 'expo' },
+    chalk.gray(
+      `\u203A Unversioned ${chalk.bold`@expo/metro-config@${unversionedVersion}`} is being used. Bundling apps may not work as expected, and is subject to breaking changes. Install ${chalk.bold`expo`} or set the app.json sdkVersion to use a stable version of @expo/metro-config.`
+    )
+  );
+
+  return require('@expo/metro-config');
+}
+
 export async function runMetroDevServerAsync(
   projectRoot: string,
   options: MetroDevServerOptions
@@ -53,7 +77,11 @@ export async function runMetroDevServerAsync(
   middleware: any;
   messageSocket: MessageSocket;
 }> {
+  const Metro = importMetroFromProject(projectRoot);
+
   const reporter = new LogReporter(options.logger);
+
+  const ExpoMetroConfig = getExpoMetroConfig(projectRoot, options);
 
   const metroConfig = await ExpoMetroConfig.loadAsync(projectRoot, { reporter, ...options });
 
@@ -72,10 +100,7 @@ export async function runMetroDevServerAsync(
     return middleware.use(metroMiddleware);
   };
 
-  const { server } = await createDevServerAsync(projectRoot, {
-    config: metroConfig,
-    logger: options.logger,
-  });
+  const server = await Metro.runServer(metroConfig, { hmrEnabled: true });
 
   const { messageSocket, eventsSocket } = attachToServer(server);
   reporter.reportEvent = eventsSocket.reportEvent;
@@ -100,6 +125,8 @@ export async function bundleAsync(
   const Server = importMetroServerFromProject(projectRoot);
 
   const reporter = new LogReporter(options.logger);
+  const ExpoMetroConfig = getExpoMetroConfig(projectRoot, options);
+
   const config = await ExpoMetroConfig.loadAsync(projectRoot, { reporter, ...options });
   const buildID = `bundle_${nextBuildID++}`;
 

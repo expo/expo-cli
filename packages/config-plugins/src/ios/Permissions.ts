@@ -4,7 +4,7 @@ import { ConfigPlugin } from '../Plugin.types';
 import { withInfoPlist } from '../plugins/ios-plugins';
 import { InfoPlist } from './IosConfig.types';
 
-const debug = Debug('config-plugins:ios:permissions');
+const debug = Debug('expo:config-plugins:ios:permissions');
 
 export function applyPermissions<Defaults extends Record<string, string> = Record<string, string>>(
   defaults: Defaults,

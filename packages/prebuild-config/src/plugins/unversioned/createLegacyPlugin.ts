@@ -5,8 +5,14 @@ import {
   withPlugins,
   withStaticPlugin,
 } from '@expo/config-plugins';
+import { ExpoConfig } from '@expo/config-types';
 
-const camelize = (s: string) => s.replace(/-./g, x => x.toUpperCase()[1]);
+const toCamelCase = (s: string) => s.replace(/-./g, x => x.toUpperCase()[1]);
+
+function isModuleExcluded(config: Pick<ExpoConfig, '_internal'>, packageName: string): boolean {
+  // TODO: Autolinking
+  return false;
+}
 
 export function createLegacyPlugin({
   packageName,
@@ -24,6 +30,12 @@ export function createLegacyPlugin({
   }
 
   const withUnknown: ConfigPlugin = config => {
+    // Skip using the versioned plugin when autolinking is enabled
+    // and doesn't link the native module.
+    if (!isModuleExcluded(config, packageName)) {
+      return createRunOncePlugin(withFallback, packageName)(config);
+    }
+
     return withStaticPlugin(config, {
       _isLegacyPlugin: true,
       plugin: packageName,
@@ -32,7 +44,7 @@ export function createLegacyPlugin({
     });
   };
 
-  const methodName = camelize(`with-${packageName}`);
+  const methodName = toCamelCase(`with-${packageName}`);
 
   if (methodName) {
     Object.defineProperty(withUnknown, 'name', {

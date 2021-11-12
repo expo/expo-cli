@@ -267,7 +267,7 @@ export async function startAsync(
   // Create a webpack compiler that is configured with custom messages.
   const compiler = webpack(config);
 
-  // Create the middleware required for interacting with a native runtime (Expo Go, or Expo Dev Client).
+  // Create the middleware required for interacting with a native runtime (Expo Go, or a development build).
   const nativeMiddleware = createNativeDevServerMiddleware(projectRoot, {
     port,
     compiler,

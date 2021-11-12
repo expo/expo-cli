@@ -22,7 +22,7 @@ import { PodfileBasic } from './fixtures/Podfile';
 import rnFixture from './fixtures/react-native-project';
 import { getDirFromFS } from './getDirFromFS';
 
-const { withRootViewBackgroundColor } = IOSConfig.RootViewBackgroundColor;
+const { withOrientation } = IOSConfig.Orientation;
 
 const { readXMLAsync } = XML;
 const fsReal = jest.requireActual('fs') as typeof fs;
@@ -234,7 +234,7 @@ describe('built-in plugins', () => {
 
   // Ensure helpful error messages are thrown
   it(`fails to locate the project name in an invalid project`, async () => {
-    const config = withRootViewBackgroundColor({
+    const config = withOrientation({
       name: 'app',
       slug: '',
       ios: {},
@@ -245,7 +245,7 @@ describe('built-in plugins', () => {
   });
 
   it(`skips platforms`, async () => {
-    const config = withRootViewBackgroundColor({
+    const config = withOrientation({
       name: 'app',
       slug: '',
       ios: {},
@@ -379,9 +379,7 @@ describe('built-in plugins', () => {
     expect(after['android/app/src/main/java/com/bacon/todo/MainApplication.java']).toMatch(
       'package com.bacon.todo;'
     );
-    expect(after['android/app/src/main/java/com/bacon/todo/MainActivity.java']).toMatch(
-      '// Added automatically by Expo Config'
-    );
+
     expect(after['android/app/src/main/res/values/strings.xml']).toMatch(
       '<string name="app_name">my cool app</string>'
     );
