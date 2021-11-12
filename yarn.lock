@@ -3031,11 +3031,6 @@
   dependencies:
     "@sinonjs/commons" "^1.7.0"
 
-"@supercharge/promise-pool@^1.8.0":
-  version "1.8.0"
-  resolved "https://registry.yarnpkg.com/@supercharge/promise-pool/-/promise-pool-1.8.0.tgz#c4de407addce4726b4fd2b4cfc6e63e60c6fe94f"
-  integrity sha512-g0RjxIQbKHp+J/DuCyt4/Sdn4hRWwOlL/DM2xQvnK6bWnG43nGrveBN6YeheQD0X04hBV+4Aj0kjxJ579i6U+A==
-
 "@szmarczak/http-timer@^1.1.2":
   version "1.1.2"
   resolved "https://registry.yarnpkg.com/@szmarczak/http-timer/-/http-timer-1.1.2.tgz#b1665e2c461a2cd92f4c1bbf50d5454de0d4b421"

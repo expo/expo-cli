@@ -36,7 +36,6 @@
     "@expo/config": "6.0.7",
     "@expo/image-utils": "0.3.17",
     "@expo/json-file": "8.2.33",
-    "@supercharge/promise-pool": "^1.8.0",
     "chalk": "^4.0.0",
     "commander": "2.20.0",
     "cross-spawn": "6.0.5",

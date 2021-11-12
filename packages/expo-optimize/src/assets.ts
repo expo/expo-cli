@@ -1,7 +1,6 @@
 import { getConfig, getWebOutputPath } from '@expo/config';
 import { isAvailableAsync, sharpAsync } from '@expo/image-utils';
 import JsonFile from '@expo/json-file';
-import PromisePool from '@supercharge/promise-pool';
 import chalk from 'chalk';
 import crypto from 'crypto';
 import {
@@ -15,6 +14,7 @@ import {
 } from 'fs-extra';
 import { sync as globSync } from 'glob';
 import { cpus } from 'os';
+import pLimit from 'p-limit';
 import { basename, join, parse, relative } from 'path';
 import prettyBytes from 'pretty-bytes';
 import temporary from 'tempy';
@@ -157,13 +157,8 @@ export type OptimizationOptions = {
 
 async function pool<T, R>(items: T[], process: (item: T) => Promise<R>): Promise<R[]> {
   const parallelism = Math.max(1, cpus().length - 1);
-  const result = await PromisePool.for(items).withConcurrency(parallelism).process(process);
-
-  if (result.errors.length) {
-    throw result.errors[0];
-  }
-
-  return result.results;
+  const limit = pLimit(parallelism);
+  return Promise.all(items.map(item => limit(() => process(item))));
 }
 
 // Returns a boolean indicating whether or not there are assets to optimize
