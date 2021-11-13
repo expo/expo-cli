@@ -91,6 +91,8 @@ Object {
     "permissions": Array [
       "CAMERA",
       "com.sec.android.provider.badge.permission.WRITE",
+      "android.permission.ACCESS_COARSE_LOCATION",
+      "android.permission.ACCESS_FINE_LOCATION",
     ],
     "softwareKeyboardLayoutMode": "pan",
     "splash": Object {
@@ -211,7 +213,7 @@ Object {
           },
         },
       },
-      "NSLocationWhenInUseUsageDescription": "",
+      "NSLocationWhenInUseUsageDescription": "Allow $(PRODUCT_NAME) to access your location",
       "RCTRootViewBackgroundColor": 4294901760,
       "SKAdNetworkItems": Array [
         Object {
@@ -768,6 +770,16 @@ Object {
                   "android:name": "com.sec.android.provider.badge.permission.WRITE",
                 },
               },
+              Object {
+                "$": Object {
+                  "android:name": "android.permission.ACCESS_COARSE_LOCATION",
+                },
+              },
+              Object {
+                "$": Object {
+                  "android:name": "android.permission.ACCESS_FINE_LOCATION",
+                },
+              },
             ],
           },
         },
@@ -947,7 +959,7 @@ Object {
               },
             },
           },
-          "NSLocationWhenInUseUsageDescription": "",
+          "NSLocationWhenInUseUsageDescription": "Allow $(PRODUCT_NAME) to access your location",
           "RCTRootViewBackgroundColor": 4294901760,
           "SKAdNetworkItems": Array [
             Object {
@@ -1072,6 +1084,8 @@ Object {
     "permissions": Array [
       "CAMERA",
       "com.sec.android.provider.badge.permission.WRITE",
+      "android.permission.ACCESS_COARSE_LOCATION",
+      "android.permission.ACCESS_FINE_LOCATION",
     ],
     "softwareKeyboardLayoutMode": "pan",
     "splash": Object {
@@ -1192,7 +1206,7 @@ Object {
           },
         },
       },
-      "NSLocationWhenInUseUsageDescription": "",
+      "NSLocationWhenInUseUsageDescription": "Allow $(PRODUCT_NAME) to access your location",
       "RCTRootViewBackgroundColor": 4294901760,
       "SKAdNetworkItems": Array [
         Object {
@@ -1668,6 +1682,16 @@ Object {
                   "android:name": "com.sec.android.provider.badge.permission.WRITE",
                 },
               },
+              Object {
+                "$": Object {
+                  "android:name": "android.permission.ACCESS_COARSE_LOCATION",
+                },
+              },
+              Object {
+                "$": Object {
+                  "android:name": "android.permission.ACCESS_FINE_LOCATION",
+                },
+              },
             ],
           },
         },
@@ -1841,6 +1865,7 @@ Object {
               },
             },
           },
+          "NSLocationWhenInUseUsageDescription": "Allow $(PRODUCT_NAME) to access your location",
           "RCTRootViewBackgroundColor": 4294901760,
           "SKAdNetworkItems": Array [
             Object {
@@ -1966,6 +1991,8 @@ Object {
     "permissions": Array [
       "CAMERA",
       "com.sec.android.provider.badge.permission.WRITE",
+      "android.permission.ACCESS_COARSE_LOCATION",
+      "android.permission.ACCESS_FINE_LOCATION",
     ],
     "softwareKeyboardLayoutMode": "pan",
     "splash": Object {
@@ -2086,6 +2113,7 @@ Object {
           },
         },
       },
+      "NSLocationWhenInUseUsageDescription": "Allow $(PRODUCT_NAME) to access your location",
       "RCTRootViewBackgroundColor": 4294901760,
       "SKAdNetworkItems": Array [
         Object {
