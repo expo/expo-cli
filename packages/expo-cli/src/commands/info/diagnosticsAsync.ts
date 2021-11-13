@@ -2,6 +2,7 @@ import { getDefaultTarget } from '@expo/config';
 import envinfo from 'envinfo';
 
 import Log from '../../log';
+import { ora } from '../../utils/ora';
 
 const packageJSON = require('../../../package.json');
 
@@ -21,11 +22,11 @@ function getEnvironmentInfoAsync(): Promise<string> {
         'react-native-web',
         'react-navigation',
         '@expo/webpack-config',
-        // TODO: @expo/metro-config
-        // TODO: babel-preset-expo
-        // TODO: metro
+        '@expo/metro-config',
+        'babel-preset-expo',
+        'metro',
       ],
-      npmGlobalPackages: ['expo-cli'],
+      npmGlobalPackages: ['expo-cli', 'eas-cli'],
     },
     {
       yaml: true,
@@ -35,10 +36,15 @@ function getEnvironmentInfoAsync(): Promise<string> {
 }
 
 export async function actionAsync(projectRoot: string): Promise<void> {
+  // Process takes a while so we show a spinner
+  const spinner = ora(`🔍 Creating Diagnostics`).start();
   const info = await getEnvironmentInfoAsync();
   const workflow = getDefaultTarget(projectRoot ?? process.cwd());
   const lines = info.split('\n');
   lines.pop();
   lines.push(`    Expo Workflow: ${workflow}`);
+
+  // Stop and hide spinner
+  spinner.stop();
   Log.log(lines.join('\n') + '\n');
 }
