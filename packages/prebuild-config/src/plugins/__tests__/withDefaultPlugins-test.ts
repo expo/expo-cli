@@ -214,8 +214,6 @@ describe('built-in plugins', () => {
     });
     vol.fromJSON(
       {
-        // Required to link expo-notifications
-        './node_modules/expo-notifications/package.json': JSON.stringify({}),
         // Required to link react-native-maps
         './node_modules/react-native-maps/package.json': JSON.stringify({}),
         // App files
@@ -335,7 +333,6 @@ describe('built-in plugins', () => {
     const after = getDirFromFS(vol.toJSON(), projectRoot);
 
     expect(Object.keys(after)).toStrictEqual([
-      'node_modules/expo-notifications/package.json',
       'node_modules/react-native-maps/package.json',
       'ios/ReactNativeProject/Supporting/Expo.plist',
       'ios/ReactNativeProject/Supporting/en.lproj/InfoPlist.strings',
@@ -486,7 +483,6 @@ describe('built-in plugins', () => {
     const after = getDirFromFS(vol.toJSON(), projectRoot);
 
     expect(Object.keys(after)).toStrictEqual([
-      'node_modules/expo-notifications/package.json',
       'node_modules/react-native-maps/package.json',
       'ios/ReactNativeProject/Supporting/Expo.plist',
       'ios/ReactNativeProject/Info.plist',
@@ -547,8 +543,6 @@ describe('built-in plugins', () => {
     vol.reset();
     vol.fromJSON(
       {
-        // Required to link expo-notifications
-        './node_modules/expo-notifications/package.json': JSON.stringify({}),
         // Required to link react-native-maps
         './node_modules/react-native-maps/package.json': JSON.stringify({}),
         // App files
@@ -613,7 +607,6 @@ describe('built-in plugins', () => {
     const after = getDirFromFS(vol.toJSON(), projectRoot);
 
     expect(Object.keys(after)).toStrictEqual([
-      'node_modules/expo-notifications/package.json',
       'node_modules/react-native-maps/package.json',
       'config/GoogleService-Info.plist',
       'config/google-services.json',
