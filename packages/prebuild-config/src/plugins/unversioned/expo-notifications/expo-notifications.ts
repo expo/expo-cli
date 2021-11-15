@@ -4,7 +4,6 @@ import {
   withNotificationIcons,
   withNotificationManifest,
 } from './withAndroidNotifications';
-import { withIosNotificationsEntitlement } from './withIosNotificationsEntitlement';
 
 export default createLegacyPlugin({
   packageName: 'expo-notifications',
@@ -13,7 +12,5 @@ export default createLegacyPlugin({
     withNotificationManifest,
     withNotificationIconColor,
     withNotificationIcons,
-    // iOS
-    [withIosNotificationsEntitlement, 'development'],
   ],
 });
