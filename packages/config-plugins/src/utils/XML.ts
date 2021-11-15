@@ -12,7 +12,7 @@ export interface XMLObject {
 }
 
 export async function writeXMLAsync(options: { path: string; xml: any }): Promise<void> {
-  const xml = new Builder().buildObject(options.xml);
+  const xml = format(options.xml);
   await fs.ensureDir(path.dirname(options.path));
   await fs.writeFile(options.path, xml);
 }

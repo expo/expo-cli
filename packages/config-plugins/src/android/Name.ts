@@ -8,7 +8,8 @@ import { removeStringItem, setStringItem } from './Strings';
 
 /**
  * Sanitize a name, this should be used for files and gradle names.
- * - `[/, \, :, <, >, ", ?, *, |]` are not allowed https://bit.ly/3l6xqKL
+ * - `[/, \, :, <, >, ", ?, *, |]` are not allowed
+ * https://docs.gradle.org/4.2/release-notes.html#path-separator-characters-in-names-are-deprecated
  *
  * @param name
  */
