@@ -36,11 +36,11 @@ it(`can write the escaped name and then read it back in unescaped format`, async
 
   // Test that it's written in escaped form
   // expect(format(stringsJSON)).toBe(true);
-  expect(format(stringsJSON).includes(`\\'E&amp;x&lt;p&gt;o\\\"\\@\\n`)).toBe(true);
+  expect(format(stringsJSON).includes(`\\'E&amp;x&lt;p&gt;o\\"\\@\\n`)).toBe(true);
 
   // And parsed in unescaped form
   expect(stringsJSON.resources.string.filter(e => e.$.name === 'app_name')[0]._).toBe(
-    `\\'E&x<p>o\\\"\\@\\n`
+    `\\'E&x<p>o\\"\\@\\n`
   );
 });
 describe(escapeAndroidString, () => {
