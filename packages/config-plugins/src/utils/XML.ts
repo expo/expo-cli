@@ -44,8 +44,22 @@ export function format(manifest: any, { indentLevel = 2, newline = EOL } = {}): 
   if (typeof manifest === 'string') {
     xmlInput = manifest;
   } else if (manifest.toString) {
-    const builder = new Builder({ headless: true });
+    const builder = new Builder({
+      headless: true,
+    });
+
+    // For strings.xml
+    if (Array.isArray(manifest?.resources?.string)) {
+      for (const string of manifest?.resources?.string) {
+        if (string.$.translatable === 'false' || string.$.translatable === false) {
+          continue;
+        }
+        string._ = escapeAndroidString(string._);
+      }
+    }
+
     xmlInput = builder.buildObject(manifest);
+
     return xmlInput;
   } else {
     throw new Error(`Invalid XML value passed in: ${manifest}`);
@@ -64,8 +78,6 @@ export function format(manifest: any, { indentLevel = 2, newline = EOL } = {}): 
       if (line.match(/.+<\/\w[^>]*>$/)) {
         indent = 0;
       } else if (line.match(/^<\/\w/)) {
-        // Somehow istanbul doesn't see the else case as covered, although it is. Skip it.
-        /* istanbul ignore else  */
         if (pad !== 0) {
           pad -= 1;
         }
@@ -76,9 +88,37 @@ export function format(manifest: any, { indentLevel = 2, newline = EOL } = {}): 
       }
 
       const padding = stringTimesN(pad, indentString);
-      formatted += padding + line + newline; // eslint-disable-line prefer-template
+      formatted += padding + line + newline;
       pad += indent;
     });
 
   return formatted.trim();
+}
+
+/**
+ * Escapes Android string literals, specifically characters `"`, `'`, `\`, `\n`, `\r`, `\t`
+ *
+ * @param value unescaped Android XML string literal.
+ */
+export function escapeAndroidString(value: string): string {
+  value = value.replace(/[\n\r\t'"@]/g, m => {
+    switch (m) {
+      case '"':
+      case "'":
+      case '@':
+        return '\\' + m;
+      case '\n':
+        return '\\n';
+      case '\r':
+        return '\\r';
+      case '\t':
+        return '\\t';
+      default:
+        throw new Error(`Cannot escape unhandled XML character: ${m}`);
+    }
+  });
+  if (value.match(/(^\s|\s$)/)) {
+    value = '"' + value + '"';
+  }
+  return value;
 }
