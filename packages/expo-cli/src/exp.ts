@@ -1,6 +1,5 @@
 import bunyan from '@expo/bunyan';
 import { setCustomConfigPath } from '@expo/config';
-import { AssertionError } from 'assert';
 import boxen from 'boxen';
 import chalk from 'chalk';
 import program, { Command } from 'commander';
