@@ -19,6 +19,7 @@ import { loginOrRegisterIfLoggedOutAsync } from '../../accounts';
 import Log from '../../log';
 import { selectAsync } from '../../prompts';
 import urlOpts from '../../urlOpts';
+import { handleErrorsAsync } from '../../utils/handleErrors';
 import { learnMore } from '../utils/TerminalLink';
 import { openInEditorAsync } from '../utils/openInEditorAsync';
 
@@ -283,6 +284,15 @@ export async function startAsync(projectRoot: string, options: StartOptions) {
   await printServerInfo(projectRoot, options);
 
   async function handleKeypress(key: string) {
+    try {
+      await handleKeypressAsync(key);
+    } catch (err) {
+      await handleErrorsAsync(err, {});
+      process.exit(1);
+    }
+  }
+
+  async function handleKeypressAsync(key: string) {
     const shouldPrompt = !options.nonInteractive && ['I', 'A'].includes(key);
     if (shouldPrompt) {
       Log.clear();
