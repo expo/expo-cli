@@ -1,6 +1,5 @@
 import bunyan from '@expo/bunyan';
 import { setCustomConfigPath } from '@expo/config';
-import { AssertionError } from 'assert';
 import boxen from 'boxen';
 import chalk from 'chalk';
 import program, { Command } from 'commander';
@@ -30,7 +29,6 @@ import {
   UserManager,
 } from 'xdl';
 
-import { AbortCommandError, SilentError } from './CommandError';
 import StatusEventEmitter from './StatusEventEmitter';
 import { loginOrRegisterAsync } from './accounts';
 import { registerCommands } from './commands';
@@ -39,6 +37,7 @@ import { profileMethod } from './commands/utils/profileMethod';
 import Log from './log';
 import update from './update';
 import urlOpts from './urlOpts';
+import { handleErrorsAsync } from './utils/handleErrors';
 import { matchFileNameOrURLFromStackTrace } from './utils/matchFileNameOrURLFromStackTrace';
 import { logNewSection, ora } from './utils/ora';
 
@@ -350,31 +349,7 @@ Command.prototype.asyncAction = function (asyncFn: Action) {
       // This allows node js to exit immediately
       await Promise.all([Analytics.flush(), UnifiedAnalytics.flush()]);
     } catch (err) {
-      // TODO: Find better ways to consolidate error messages
-      if (err instanceof AbortCommandError || err instanceof SilentError) {
-        // Do nothing when a prompt is cancelled or the error is logged in a pretty way.
-      } else if (err.isCommandError || err.isPluginError || err instanceof AssertionError) {
-        Log.error(err.message);
-      } else if (err._isApiError) {
-        Log.error(err.message);
-      } else if (err.isXDLError || err.isConfigError) {
-        Log.error(err.message);
-      } else if (err.isJsonFileError || err.isPackageManagerError) {
-        if (err.code === 'EJSONEMPTY') {
-          // Empty JSON is an easy bug to debug. Often this is thrown for package.json or app.json being empty.
-          Log.error(err.message);
-        } else {
-          Log.addNewLineIfNone();
-          Log.error(err.message);
-          const { formatStackTrace } = await import('./utils/formatStackTrace');
-          const stacktrace = formatStackTrace(err.stack, this.name());
-          Log.error(chalk.gray(stacktrace));
-        }
-      } else {
-        Log.error(err.message);
-        Log.error(chalk.gray(err.stack));
-      }
-
+      await handleErrorsAsync(err, { command: this.name() });
       process.exit(1);
     }
   });
