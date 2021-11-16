@@ -1,15 +1,14 @@
 import { ExpoConfig } from '@expo/config-types';
-import Debug from 'debug';
 import fs from 'fs-extra';
 import path from 'path';
+import resolveFrom from 'resolve-from';
 
 import { ConfigPlugin, InfoPlist } from '../Plugin.types';
 import { createInfoPlistPlugin, withAppDelegate } from '../plugins/ios-plugins';
 import { withDangerousMod } from '../plugins/withDangerousMod';
 import { mergeContents, MergeResults, removeContents } from '../utils/generateCode';
-import { resolvePackageRootFolder } from '../utils/resolvePackageRootFolder';
 
-const debug = Debug('expo:config-plugins:ios:maps');
+const debug = require('debug')('expo:config-plugins:ios:maps') as typeof console.log;
 
 // Match against `UMModuleRegistryAdapter` (unimodules), and React Native without unimodules (Expo Modules).
 export const MATCH_INIT = /(?:(self\.|_)(\w+)\s?=\s?\[\[UMModuleRegistryAdapter alloc\])|(?:RCTBridge\s?\*\s?(\w+)\s?=\s?\[\[RCTBridge alloc\])/g;
@@ -126,7 +125,8 @@ export function removeMapsCocoaPods(src: string): MergeResults {
 }
 
 function isReactNativeMapsInstalled(projectRoot: string): string | null {
-  return resolvePackageRootFolder(projectRoot, 'react-native-maps');
+  const resolved = resolveFrom.silent(projectRoot, 'react-native-maps/package.json');
+  return resolved ? path.dirname(resolved) : null;
 }
 
 function isReactNativeMapsAutolinked(config: Pick<ExpoConfig, '_internal'>): boolean {
