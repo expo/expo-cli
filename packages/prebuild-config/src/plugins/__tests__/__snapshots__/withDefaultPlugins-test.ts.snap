@@ -91,6 +91,8 @@ Object {
     "permissions": Array [
       "CAMERA",
       "com.sec.android.provider.badge.permission.WRITE",
+      "android.permission.ACCESS_COARSE_LOCATION",
+      "android.permission.ACCESS_FINE_LOCATION",
     ],
     "softwareKeyboardLayoutMode": "pan",
     "splash": Object {
@@ -148,7 +150,6 @@ Object {
       "usesNonExemptEncryption": true,
     },
     "entitlements": Object {
-      "aps-environment": "development",
       "com.apple.developer.applesignin": Array [
         "Default",
       ],
@@ -211,7 +212,7 @@ Object {
           },
         },
       },
-      "NSLocationWhenInUseUsageDescription": "",
+      "NSLocationWhenInUseUsageDescription": "Allow $(PRODUCT_NAME) to access your location",
       "RCTRootViewBackgroundColor": 4294901760,
       "SKAdNetworkItems": Array [
         Object {
@@ -768,6 +769,16 @@ Object {
                   "android:name": "com.sec.android.provider.badge.permission.WRITE",
                 },
               },
+              Object {
+                "$": Object {
+                  "android:name": "android.permission.ACCESS_COARSE_LOCATION",
+                },
+              },
+              Object {
+                "$": Object {
+                  "android:name": "android.permission.ACCESS_FINE_LOCATION",
+                },
+              },
             ],
           },
         },
@@ -879,7 +890,6 @@ Object {
       },
       "ios": Object {
         "entitlements": Object {
-          "aps-environment": "development",
           "com.apple.developer.applesignin": Array [
             "Default",
           ],
@@ -947,7 +957,7 @@ Object {
               },
             },
           },
-          "NSLocationWhenInUseUsageDescription": "",
+          "NSLocationWhenInUseUsageDescription": "Allow $(PRODUCT_NAME) to access your location",
           "RCTRootViewBackgroundColor": 4294901760,
           "SKAdNetworkItems": Array [
             Object {
@@ -1072,6 +1082,8 @@ Object {
     "permissions": Array [
       "CAMERA",
       "com.sec.android.provider.badge.permission.WRITE",
+      "android.permission.ACCESS_COARSE_LOCATION",
+      "android.permission.ACCESS_FINE_LOCATION",
     ],
     "softwareKeyboardLayoutMode": "pan",
     "splash": Object {
@@ -1129,7 +1141,6 @@ Object {
       "usesNonExemptEncryption": true,
     },
     "entitlements": Object {
-      "aps-environment": "development",
       "com.apple.developer.applesignin": Array [
         "Default",
       ],
@@ -1192,7 +1203,7 @@ Object {
           },
         },
       },
-      "NSLocationWhenInUseUsageDescription": "",
+      "NSLocationWhenInUseUsageDescription": "Allow $(PRODUCT_NAME) to access your location",
       "RCTRootViewBackgroundColor": 4294901760,
       "SKAdNetworkItems": Array [
         Object {
@@ -1668,6 +1679,16 @@ Object {
                   "android:name": "com.sec.android.provider.badge.permission.WRITE",
                 },
               },
+              Object {
+                "$": Object {
+                  "android:name": "android.permission.ACCESS_COARSE_LOCATION",
+                },
+              },
+              Object {
+                "$": Object {
+                  "android:name": "android.permission.ACCESS_FINE_LOCATION",
+                },
+              },
             ],
           },
         },
@@ -1773,7 +1794,6 @@ Object {
       },
       "ios": Object {
         "entitlements": Object {
-          "aps-environment": "development",
           "com.apple.developer.applesignin": Array [
             "Default",
           ],
@@ -1841,6 +1861,7 @@ Object {
               },
             },
           },
+          "NSLocationWhenInUseUsageDescription": "Allow $(PRODUCT_NAME) to access your location",
           "RCTRootViewBackgroundColor": 4294901760,
           "SKAdNetworkItems": Array [
             Object {
@@ -1966,6 +1987,8 @@ Object {
     "permissions": Array [
       "CAMERA",
       "com.sec.android.provider.badge.permission.WRITE",
+      "android.permission.ACCESS_COARSE_LOCATION",
+      "android.permission.ACCESS_FINE_LOCATION",
     ],
     "softwareKeyboardLayoutMode": "pan",
     "splash": Object {
@@ -2023,7 +2046,6 @@ Object {
       "usesNonExemptEncryption": true,
     },
     "entitlements": Object {
-      "aps-environment": "development",
       "com.apple.developer.applesignin": Array [
         "Default",
       ],
@@ -2086,6 +2108,7 @@ Object {
           },
         },
       },
+      "NSLocationWhenInUseUsageDescription": "Allow $(PRODUCT_NAME) to access your location",
       "RCTRootViewBackgroundColor": 4294901760,
       "SKAdNetworkItems": Array [
         Object {
