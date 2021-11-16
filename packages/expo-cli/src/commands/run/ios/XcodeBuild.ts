@@ -277,8 +277,8 @@ export async function buildAsync({
 function writeBuildLogs(projectRoot: string, buildOutput: string, errorOutput: string) {
   const [logFilePath, errorFilePath] = getErrorLogFilePath(projectRoot);
 
-  fs.writeFileSync(logFilePath, errorOutput);
-  fs.writeFileSync(errorFilePath, buildOutput);
+  fs.writeFileSync(logFilePath, buildOutput);
+  fs.writeFileSync(errorFilePath, errorOutput);
   return logFilePath;
 }
 
