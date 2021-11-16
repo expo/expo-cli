@@ -18,6 +18,7 @@ import {
 import Log from '../../log';
 import { handleErrorsAsync } from '../../utils/handleErrors';
 import { selectAsync } from '../../utils/prompts';
+import { loginOrRegisterIfLoggedOutAsync } from '../auth/accounts';
 import { learnMore } from '../utils/TerminalLink';
 import { openInEditorAsync } from '../utils/openInEditorAsync';
 import urlOpts from '../utils/urlOpts';
