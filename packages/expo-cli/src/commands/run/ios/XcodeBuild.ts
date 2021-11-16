@@ -19,6 +19,8 @@ export type BuildProps = {
   configuration: XcodeConfiguration;
   shouldSkipInitialBundling: boolean;
   shouldStartBundler: boolean;
+  /** Should use derived data for builds. */
+  buildCache: boolean;
   terminal?: string;
   port: number;
   scheme: string;
@@ -172,6 +174,7 @@ export async function buildAsync({
   shouldSkipInitialBundling,
   terminal,
   port,
+  buildCache,
 }: BuildProps): Promise<string> {
   const args = [
     xcodeProject.isWorkspace ? '-workspace' : '-project',
@@ -195,8 +198,20 @@ export async function buildAsync({
     }
   }
 
-  logPrettyItem(chalk.bold`Planning build`);
+  // Add last
+  if (buildCache === false) {
+    args.push(
+      // Will first clean the derived data folder.
+      'clean',
+      // Then build step must be added otherwise the process will simply clean and exit.
+      'build'
+    );
+  }
+
   Log.debug(`  xcodebuild ${args.join(' ')}`);
+
+  logPrettyItem(chalk.bold`Planning build`);
+
   const formatter = ExpoRunFormatter.create(projectRoot, {
     xcodeProject,
     isDebug: Log.isDebug,
