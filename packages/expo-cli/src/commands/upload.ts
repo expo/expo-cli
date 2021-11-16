@@ -38,8 +38,7 @@ export default function (program: Command) {
       .command('upload:android [path]')
       .alias('ua')
       .description(`${chalk.yellow('Moved')} to ${chalk.bold('eas submit')} in eas-cli`)
-      // TODO: Move to hidden
-      .helpGroup('upload')
+      .helpGroup('deprecated')
       .option('--verbose', migrateToEasCliArg('--verbose'))
       .option('--latest', migrateToEasCliArg('--latest'))
       .option('--id <id>', migrateToEasCliArg('--id <id>'))
@@ -68,8 +67,7 @@ export default function (program: Command) {
       .command('upload:ios [path]')
       .alias('ui')
       .description(`${chalk.yellow('Moved')} to ${chalk.bold('eas submit')} in eas-cli`)
-      // TODO: Move to hidden
-      .helpGroup('upload')
+      .helpGroup('deprecated')
       .option('--verbose', migrateToEasCliArg('--verbose'))
       .option('--latest', migrateToEasCliArg('--latest'))
       .option('--id <id>', migrateToEasCliArg('--id <id>'))

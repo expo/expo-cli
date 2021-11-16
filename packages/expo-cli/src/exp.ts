@@ -200,6 +200,7 @@ export const helpGroupOrder = [
   'auth',
   'client',
   'info',
+  'eject',
   'publish',
   'build',
   'credentials',
@@ -207,9 +208,8 @@ export const helpGroupOrder = [
   'url',
   'webhooks',
   'upload',
-  'eject',
-  'experimental',
   'internal',
+  'deprecated',
 ];
 
 function sortHelpGroups(helpGroups: Record<string, string[][]>): Record<string, string[][]> {

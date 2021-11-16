@@ -10,7 +10,7 @@ export default function (program: Command) {
       .helpGroup('core')
       .option('--npm', 'Use npm to install dependencies. (default when package-lock.json exists)')
       .option('--yarn', 'Use Yarn to install dependencies. (default when yarn.lock exists)')
-      .description('Install a unimodule or other package to a project'),
+      .description('Install a module or other package to a project'),
     () => import('./installAsync')
   );
 }
