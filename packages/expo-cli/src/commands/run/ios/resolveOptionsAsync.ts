@@ -7,6 +7,7 @@ import * as path from 'path';
 import CommandError from '../../../CommandError';
 import Log from '../../../log';
 import { selectAsync } from '../../../prompts';
+import { profileMethod } from '../../utils/profileMethod';
 import { resolvePortAsync } from '../utils/resolvePortAsync';
 import * as XcodeBuild from './XcodeBuild';
 import { resolveDeviceAsync } from './resolveDeviceAsync';
@@ -19,6 +20,7 @@ export type Options = {
   scheme?: string;
   configuration?: XcodeConfiguration;
   bundler?: boolean;
+  install?: boolean;
 };
 
 export type ProjectInfo = {
@@ -26,7 +28,7 @@ export type ProjectInfo = {
   name: string;
 };
 
-const ignoredPaths = ['**/@(Carthage|Pods|node_modules)/**'];
+const ignoredPaths = ['**/@(Carthage|Pods|vendor|node_modules)/**'];
 
 function findXcodeProjectPaths(
   projectRoot: string,
@@ -73,10 +75,60 @@ function getDefaultUserTerminal(): string | undefined {
   return TERM;
 }
 
+async function resolveNativeSchemeAsync(
+  projectRoot: string,
+  { scheme, configuration }: { scheme?: string | true; configuration?: XcodeConfiguration }
+): Promise<{ name: string; osType?: string } | null> {
+  let resolvedScheme: { name: string; osType?: string } | null = null;
+  // @ts-ignore
+  if (scheme === true) {
+    const schemes = IOSConfig.BuildScheme.getRunnableSchemesFromXcodeproj(projectRoot, {
+      configuration,
+    });
+    if (!schemes.length) {
+      throw new CommandError('No native iOS build schemes found');
+    }
+    resolvedScheme = schemes[0];
+    if (schemes.length > 1) {
+      const resolvedSchemeName = await selectAsync(
+        {
+          message: 'Select a scheme',
+          choices: schemes.map(value => {
+            const isApp =
+              value.type === IOSConfig.Target.TargetType.APPLICATION && value.osType === 'iOS';
+            return {
+              value: value.name,
+              title: isApp ? chalk.bold(value.name) + chalk.gray(' (app)') : value.name,
+            };
+          }),
+        },
+        {
+          nonInteractiveHelp: `--scheme: argument must be provided with a string in non-interactive mode. Valid choices are: ${schemes.join(
+            ', '
+          )}`,
+        }
+      );
+      resolvedScheme = schemes.find(({ name }) => resolvedSchemeName === name) ?? null;
+    } else {
+      Log.log(`Auto selecting only available scheme: ${resolvedScheme.name}`);
+    }
+  } else if (scheme) {
+    // Attempt to match the schemes up so we can open the correct simulator
+    const schemes = IOSConfig.BuildScheme.getRunnableSchemesFromXcodeproj(projectRoot, {
+      configuration,
+    });
+    resolvedScheme = schemes.find(({ name }) => name === scheme) || { name: scheme };
+  }
+
+  return resolvedScheme;
+}
+
 export async function resolveOptionsAsync(
   projectRoot: string,
   options: Options
 ): Promise<XcodeBuild.BuildProps> {
+  const xcodeProject = resolveXcodeProject(projectRoot);
+
   const configuration = options.configuration || 'Debug';
   const prebundle = boolish('EXPO_PREBUNDLE', false) && configuration === 'Release';
 
@@ -84,11 +136,6 @@ export async function resolveOptionsAsync(
   if (prebundle) {
     options.bundler = false;
   }
-
-  const xcodeProject = resolveXcodeProject(projectRoot);
-  const device = await resolveDeviceAsync(options.device);
-
-  const isSimulator = !('deviceType' in device);
 
   let port = options.bundler
     ? await resolvePortAsync(projectRoot, { reuseExistingPort: true, defaultPort: options.port })
@@ -100,35 +147,18 @@ export async function resolveOptionsAsync(
     port = 8081;
   }
 
-  // @ts-ignore
-  if (options.scheme === true) {
-    const schemes = IOSConfig.BuildScheme.getRunnableSchemesFromXcodeproj(projectRoot);
-    if (!schemes.length) {
-      throw new CommandError('No native iOS build schemes found');
-    }
-    options.scheme = schemes[0].name;
-    if (schemes.length > 1) {
-      options.scheme = await selectAsync(
-        {
-          message: 'Select a scheme',
-          choices: schemes.map(value => {
-            const isApp = value.type === IOSConfig.Target.TargetType.APPLICATION;
-            return {
-              value: value.name,
-              title: isApp ? chalk.bold(value.name) + chalk.gray(' (default)') : value.name,
-            };
-          }),
-        },
-        {
-          nonInteractiveHelp: `--scheme: argument must be provided with a string in non-interactive mode. Valid choices are: ${schemes.join(
-            ', '
-          )}`,
-        }
-      );
-    } else {
-      Log.log(`Auto selecting only available scheme: ${options.scheme}`);
-    }
-  }
+  const resolvedScheme = (await resolveNativeSchemeAsync(projectRoot, options)) ??
+    profileMethod(IOSConfig.BuildScheme.getRunnableSchemesFromXcodeproj)(projectRoot, {
+      configuration: options.configuration,
+    })[0] ?? {
+      name: path.basename(xcodeProject.name, path.extname(xcodeProject.name)),
+    };
+
+  const device = await resolveDeviceAsync(options.device, { osType: resolvedScheme.osType });
+
+  const isSimulator =
+    !('deviceType' in device) ||
+    device.deviceType.startsWith('com.apple.CoreSimulator.SimDeviceType.');
 
   // This optimization skips resetting the Metro cache needlessly.
   // The cache is reset in `../node_modules/react-native/scripts/react-native-xcode.sh` when the
@@ -146,6 +176,6 @@ export async function resolveOptionsAsync(
     shouldSkipInitialBundling,
     port,
     terminal: getDefaultUserTerminal(),
-    scheme: options.scheme ?? path.basename(xcodeProject.name, path.extname(xcodeProject.name)),
+    scheme: resolvedScheme.name,
   };
 }

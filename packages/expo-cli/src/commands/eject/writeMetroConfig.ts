@@ -50,7 +50,7 @@ export function writeMetroConfig({
     }
 
     fs.copySync(sourceConfigPath, targetConfigPath);
-    updatingMetroConfigStep.succeed('Added Metro config.');
+    updatingMetroConfigStep.succeed('Added Metro config');
   } catch (e) {
     updatingMetroConfigStep.stopAndPersist({
       symbol: '⚠️ ',
@@ -61,7 +61,7 @@ export function writeMetroConfig({
       `\u203A You will need to extend the default ${chalk.bold(
         '@expo/metro-config'
       )} in your Metro config.\n  ${Log.chalk.dim(
-        learnMore('https://docs.expo.io/guides/customizing-metro')
+        learnMore('https://docs.expo.dev/guides/customizing-metro')
       )}`
     );
     Log.newLine();

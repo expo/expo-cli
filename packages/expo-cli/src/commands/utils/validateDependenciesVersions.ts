@@ -65,10 +65,10 @@ export async function validateDependenciesVersionsAsync(
 }
 
 function getPackagesToCheck(
-  dependencies: Record<string, string>,
+  dependencies: Record<string, string> | null | undefined,
   bundledNativeModules: BundledNativeModules
 ): string[] {
-  const dependencyNames = Object.keys(dependencies || {});
+  const dependencyNames = Object.keys(dependencies ?? {});
   const result: string[] = [];
   for (const dependencyName of dependencyNames) {
     if (dependencyName in bundledNativeModules) {
@@ -92,7 +92,16 @@ async function resolvePackageVersionsAsync(
 }
 
 async function getPackageVersionAsync(projectRoot: string, packageName: string): Promise<string> {
-  const packageJsonPath = resolveFrom.silent(projectRoot, `${packageName}/package.json`);
+  let packageJsonPath: string | undefined;
+  try {
+    packageJsonPath = resolveFrom(projectRoot, `${packageName}/package.json`);
+  } catch (error: any) {
+    // This is a workaround for packages using `exports`. If this doesn't
+    // include `package.json`, we have to use the error message to get the location.
+    if (error.code === 'ERR_PACKAGE_PATH_NOT_EXPORTED') {
+      packageJsonPath = error.message.match(/("exports"|defined) in (.*)$/i)?.[2];
+    }
+  }
   if (!packageJsonPath) {
     throw new CommandError(
       `"${packageName}" is added as a dependency in your project's package.json but it doesn't seem to be installed. Please run "yarn" or "npm install" to fix this issue.`

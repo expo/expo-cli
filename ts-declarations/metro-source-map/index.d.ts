@@ -9,7 +9,7 @@ declare module 'metro-source-map' {
 
   type FBSourcesArray = Readonly<Array<FBSourceMetadata | null>>;
   type FBSourceMetadata = [FBSourceFunctionMap | null];
-  type FBSourceFunctionMap = {
+  export type FBSourceFunctionMap = {
     names: Readonly<Array<string>>;
     mappings: string;
   };
@@ -58,6 +58,24 @@ declare module 'metro-source-map' {
   //#region metro-source-map/src/composeSourceMaps.js.flow
 
   export function composeSourceMaps(maps: Readonly<Array<MixedSourceMap>>): MixedSourceMap;
+
+  //#endregion
+
+  //#region metro-source-map/src/composeSourceMaps.js.flow
+
+  import type { Ast } from '@babel/core';
+
+  type Context = { filename?: string };
+
+  /**
+   * Generate a map of source positions to function names. The names are meant to
+   * describe the stack frame in an error trace and may contain more contextual
+   * information than just the actual name of the function.
+   *
+   * The output is encoded for use in a source map. For details about the format,
+   * see MappingEncoder below.
+   */
+  export function generateFunctionMap(ast: Ast, context?: Context): FBSourceFunctionMap;
 
   //#endregion
 }

@@ -18,7 +18,7 @@ export async function ejectAsync(
   assertPlatforms(platforms);
 
   if (await maybeBailOnGitStatusAsync()) return;
-  await promptToClearMalformedNativeProjectsAsync(projectRoot);
+  await promptToClearMalformedNativeProjectsAsync(projectRoot, platforms);
 
   const results = await prebuildAsync(projectRoot, { platforms, ...options });
   logNextSteps(results);

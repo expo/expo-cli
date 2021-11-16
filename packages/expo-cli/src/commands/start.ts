@@ -9,12 +9,13 @@ export default (program: any) => {
     .option('-s, --send-to [dest]', 'An email address to send a link to')
     .option('-c, --clear', 'Clear the Metro bundler cache')
     // TODO(anp) set a default for this dynamically based on whether we're inside a container?
-    .option('--max-workers [num]', 'Maximum number of tasks to allow Metro to spawn.')
+    .option('--max-workers <num>', 'Maximum number of tasks to allow Metro to spawn.')
     .option('--dev', 'Turn development mode on')
     .option('--no-dev', 'Turn development mode off')
     .option('--minify', 'Minify code')
     .option('--no-minify', 'Do not minify code')
     .option('--https', 'To start webpack with https protocol')
+    .option('--force-manifest-type <manifest-type>', 'Override auto detection of manifest type')
     .option(
       '-p, --port <port>',
       'Port to start the native Metro bundler on (does not apply to web or tunnel). Default: 19000'
@@ -42,6 +43,7 @@ export default (program: any) => {
     .option('--no-minify', 'Do not minify code')
     .option('--https', 'To start webpack with https protocol')
     .option('--no-https', 'To start webpack with http protocol')
+    .option('--force-manifest-type <manifest-type>', 'Override auto detection of manifest type')
     .option('-p, --port <port>', 'Port to start the Webpack bundler on. Default: 19006')
     .option('-s, --send-to [dest]', 'An email address to send a link to')
     .urlOpts()

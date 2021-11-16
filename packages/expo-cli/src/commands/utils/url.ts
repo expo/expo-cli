@@ -2,11 +2,11 @@ import dns from 'dns';
 
 export function getExpoDomainUrl(): string {
   if (process.env.EXPO_STAGING) {
-    return `https://staging.expo.io`;
+    return `https://staging.expo.dev`;
   } else if (process.env.EXPO_LOCAL) {
     return `http://expo.test`;
   } else {
-    return `https://expo.io`;
+    return `https://expo.dev`;
   }
 }
 

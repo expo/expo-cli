@@ -3,7 +3,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import temporary from 'tempy';
 
-import { EXPO_CLI } from '../TestUtils';
+import { EXPO_CLI, getBasicPackageJson } from '../TestUtils';
 
 const projectRoot = temporary.directory();
 
@@ -18,26 +18,6 @@ beforeAll(async () => {
   jest.setTimeout(extendedTimeout);
   await fs.mkdirp(projectRoot);
 });
-
-const minimumNativePkgJson = {
-  dependencies: {
-    expo: '37.0.11',
-    react: '16.9.0',
-    // speed up test by using the unstable branch
-    'react-native': 'https://github.com/expo/react-native/archive/unstable/sdk-37.tar.gz',
-  },
-  devDependencies: {
-    '@babel/core': '7.9.0',
-  },
-  scripts: {
-    start: 'expo start',
-    android: 'expo start --android',
-    ios: 'expo start --ios',
-    web: 'expo web',
-    eject: 'expo eject',
-  },
-  private: true,
-};
 
 it(`exits with warning when a package.json is not found in a project`, async () => {
   const projectName = 'empty-folder';
@@ -88,7 +68,7 @@ it(`works as expected`, async () => {
     path.join(projectRoot, 'app.config.json'),
     JSON.stringify({ sdkVersion: '33.0.0' })
   );
-  fs.writeFileSync(path.join(projectRoot, 'package.json'), JSON.stringify(minimumNativePkgJson));
+  fs.writeFileSync(path.join(projectRoot, 'package.json'), JSON.stringify(getBasicPackageJson()));
 
   await spawnAsync(EXPO_CLI, ['install', 'expo-camera'], { stdio: 'inherit', cwd: projectRoot });
 });

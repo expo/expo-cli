@@ -1,6 +1,6 @@
 {
   "name": "expo-pwa",
-  "version": "0.0.90",
+  "version": "0.0.102",
   "main": "build",
   "preferGlobal": true,
   "keywords": [
@@ -15,7 +15,7 @@
     "url": "https://github.com/expo/expo-cli.git",
     "directory": "packages/pwa"
   },
-  "author": "Expo <support@expo.io>",
+  "author": "Expo <support@expo.dev>",
   "license": "MIT",
   "bin": {
     "expo-pwa": "./build/cli.js"
@@ -32,8 +32,8 @@
     "clean": "rimraf build ./tsconfig.tsbuildinfo"
   },
   "dependencies": {
-    "@expo/config": "5.0.5",
-    "@expo/image-utils": "0.3.15",
+    "@expo/config": "6.0.7",
+    "@expo/image-utils": "0.3.17",
     "chalk": "^4.0.0",
     "commander": "2.20.0",
     "update-check": "1.5.3"

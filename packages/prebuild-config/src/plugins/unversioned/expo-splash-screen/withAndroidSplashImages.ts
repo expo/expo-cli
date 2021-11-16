@@ -1,5 +1,6 @@
 import { ConfigPlugin, withDangerousMod } from '@expo/config-plugins';
 import { ExpoConfig } from '@expo/config-types';
+import { generateImageAsync } from '@expo/image-utils';
 import fs from 'fs-extra';
 import path from 'path';
 
@@ -9,11 +10,11 @@ import {
   SplashScreenConfig,
 } from './getAndroidSplashConfig';
 
-const SPLASH_SCREEN_FILENAME = 'splashscreen_image.png';
-
 type DRAWABLE_SIZE = 'default' | 'mdpi' | 'hdpi' | 'xhdpi' | 'xxhdpi' | 'xxxhdpi';
 type THEME = 'light' | 'dark';
 
+const IMAGE_CACHE_NAME = 'splash-android';
+const SPLASH_SCREEN_FILENAME = 'splashscreen_image.png';
 const DRAWABLES_CONFIGS: {
   [key in DRAWABLE_SIZE]: {
     modes: {
@@ -153,29 +154,25 @@ export async function setSplashImageDrawablesForThemeAsync(
       // @ts-ignore
       const image = config[imageKey];
       if (image) {
-        return copyDrawableFileAsync(
-          path.join(projectRoot, image),
-          path.join(
-            androidMainPath,
-            // @ts-ignore
-            DRAWABLES_CONFIGS[imageKey].modes[theme].path
-          )
+        // Using this method will cache the images in `.expo` based on the properties used to generate them.
+        // this method also supports remote URLs and using the global sharp instance.
+        const { source } = await generateImageAsync({ projectRoot, cacheType: IMAGE_CACHE_NAME }, {
+          src: image,
+        } as any);
+
+        // Get output path for drawable.
+        const outputPath = path.join(
+          androidMainPath,
+          // @ts-ignore
+          DRAWABLES_CONFIGS[imageKey].modes[theme].path
         );
+        // Ensure directory exists.
+        const folder = path.dirname(outputPath);
+        await fs.ensureDir(folder);
+        // Write image buffer to the file system.
+        await fs.writeFile(outputPath, source);
       }
       return null;
     })
   );
-}
-
-/**
- * @param srcPath Absolute path
- * @param dstPath Absolute path
- */
-async function copyDrawableFileAsync(srcPath: string | undefined, dstPath: string) {
-  if (!srcPath) {
-    return;
-  }
-  const folder = path.dirname(dstPath);
-  await fs.ensureDir(folder);
-  await fs.copyFile(srcPath, path.resolve(dstPath));
 }

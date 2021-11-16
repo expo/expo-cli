@@ -24,29 +24,29 @@ type PackagerOptions = {
   minify: boolean;
 };
 
-export function printBundleSizes(bundles: { android: BundleOutput; ios: BundleOutput }) {
+export function printBundleSizes(bundles: { android?: BundleOutput; ios?: BundleOutput }) {
   const files: [string, string | Uint8Array][] = [];
 
-  if (bundles.ios.hermesBytecodeBundle) {
+  if (bundles.ios?.hermesBytecodeBundle) {
     files.push(['index.ios.js (Hermes)', bundles.ios.hermesBytecodeBundle]);
-  } else {
+  } else if (bundles.ios?.code) {
     files.push(['index.ios.js', bundles.ios.code]);
   }
-  if (bundles.android.hermesBytecodeBundle) {
+  if (bundles.android?.hermesBytecodeBundle) {
     files.push(['index.android.js (Hermes)', bundles.android.hermesBytecodeBundle]);
-  } else {
+  } else if (bundles.android?.code) {
     files.push(['index.android.js', bundles.android.code]);
   }
 
   // Account for inline source maps
-  if (bundles.ios.hermesSourcemap) {
+  if (bundles.ios?.hermesSourcemap) {
     files.push([chalk.dim('index.ios.js.map (Hermes)'), bundles.ios.hermesSourcemap]);
-  } else if (bundles.ios.map) {
+  } else if (bundles.ios?.map) {
     files.push([chalk.dim('index.ios.js.map'), bundles.ios.map]);
   }
-  if (bundles.android.hermesSourcemap) {
+  if (bundles.android?.hermesSourcemap) {
     files.push([chalk.dim('index.android.js.map (Hermes)'), bundles.android.hermesSourcemap]);
-  } else if (bundles.android.map) {
+  } else if (bundles.android?.map) {
     files.push([chalk.dim('index.android.js.map'), bundles.android.map]);
   }
 
@@ -64,9 +64,20 @@ export function printBundleSizes(bundles: { android: BundleOutput; ios: BundleOu
 export async function createBundlesAsync(
   projectRoot: string,
   publishOptions: PublishOptions = {},
-  bundleOptions: { dev?: boolean; useDevServer: boolean }
-): Promise<{ android: BundleOutput; ios: BundleOutput }> {
+  bundleOptions: { platforms: Platform[]; dev?: boolean; useDevServer: boolean }
+): Promise<Partial<Record<Platform, BundleOutput>>> {
   if (!bundleOptions.useDevServer) {
+    // The old approach is so unstable / untested that we should warn users going forward to upgrade their projects.
+    logger.global.warn(
+      'Using legacy Metro server to bundle your JavaScript code, you may encounter unexpected behavior if your project uses a custom metro.config.js file.'
+    );
+    // Dev server is aggressively enabled, so we can have a specific warning message:
+    // - If the SDK version is UNVERSIONED or undefined, it'll be enabled.
+    // - If EXPO_USE_DEV_SERVER is 0, or unset, it'll be enabled.
+    logger.global.warn(
+      `Please upgrade your project to Expo SDK 40+. If you experience CLI issues after upgrading, try using the env var EXPO_USE_DEV_SERVER=1.`
+    );
+
     try {
       await startReactNativeServerAsync({
         projectRoot,
@@ -86,8 +97,7 @@ export async function createBundlesAsync(
 
   const config = getConfig(projectRoot, { skipSDKVersionRequirement: true });
   const isLegacy = isLegacyImportsEnabled(config.exp);
-  const platforms: Platform[] = ['android', 'ios'];
-  const [android, ios] = await bundleAsync(
+  const bundles = await bundleAsync(
     projectRoot,
     config.exp,
     {
@@ -96,18 +106,25 @@ export async function createBundlesAsync(
       resetCache: publishOptions.resetCache,
       logger: ProjectUtils.getLogger(projectRoot),
       quiet: publishOptions.quiet,
+      unversioned: !config.exp.sdkVersion || config.exp.sdkVersion === 'UNVERSIONED',
     },
-    platforms.map((platform: Platform) => ({
+    bundleOptions.platforms.map((platform: Platform) => ({
       platform,
       entryPoint: resolveEntryPoint(projectRoot, platform),
       dev: bundleOptions.dev,
     }))
   );
 
-  return {
-    android,
-    ios,
-  };
+  // { ios: bundle, android: bundle }
+  const results: Record<string, BundleOutput> = {};
+
+  for (let index = 0; index < bundleOptions.platforms.length; index++) {
+    const platform = bundleOptions.platforms[index];
+    const bundle = bundles[index];
+    results[platform] = bundle;
+  }
+
+  return results;
 }
 
 // Fetch iOS and Android bundles for publishing

@@ -6,10 +6,10 @@ import { getHackyProjectName } from '../ios/utils/Xcodeproj';
 import { PluginError } from '../utils/errors';
 import * as Warnings from '../utils/warnings';
 import { assertModResults, ForwardedBaseModOptions } from './createBaseMod';
-import { getAndroidIntrospectModFileProviders, withAndroidBaseMods } from './withAndroidBaseMods';
-import { getIosIntrospectModFileProviders, withIosBaseMods } from './withIosBaseMods';
+import { withAndroidBaseMods } from './withAndroidBaseMods';
+import { withIosBaseMods } from './withIosBaseMods';
 
-const debug = Debug('config-plugins:mod-compiler');
+const debug = Debug('expo:config-plugins:mod-compiler');
 
 export function withDefaultBaseMods(
   config: ExportedConfig,
@@ -29,10 +29,7 @@ export function withIntrospectionBaseMods(
   config: ExportedConfig,
   props: ForwardedBaseModOptions = {}
 ): ExportedConfig {
-  const iosProviders = getIosIntrospectModFileProviders();
-  const androidProviders = getAndroidIntrospectModFileProviders();
   config = withIosBaseMods(config, {
-    providers: iosProviders,
     saveToInternal: true,
     // This writing optimization can be skipped since we never write in introspection mode.
     // Including empty mods will ensure that all mods get introspected.
@@ -40,28 +37,21 @@ export function withIntrospectionBaseMods(
     ...props,
   });
   config = withAndroidBaseMods(config, {
-    providers: androidProviders,
     saveToInternal: true,
     skipEmptyMod: false,
     ...props,
   });
 
-  const preserve = {
-    ios: Object.keys(iosProviders),
-    android: Object.keys(androidProviders),
-  };
-
   if (config.mods) {
     // Remove all mods that don't have an introspection base mod, for instance `dangerous` mods.
     for (const platform of Object.keys(config.mods) as ModPlatform[]) {
-      if (!(platform in preserve)) {
-        delete config.mods[platform];
-      }
-      const platformPreserve = preserve[platform];
+      // const platformPreserve = preserve[platform];
       for (const key of Object.keys(config.mods[platform] || {})) {
-        if (!platformPreserve?.includes(key)) {
+        // @ts-ignore
+        if (!config.mods[platform]?.[key]?.isIntrospective) {
+          debug(`removing non-idempotent mod: ${platform}.${key}`);
           // @ts-ignore
-          delete config.mods[platform][key];
+          delete config.mods[platform]?.[key];
         }
       }
     }

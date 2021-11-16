@@ -1,5 +1,5 @@
 import { ExpoConfig, getConfig } from '@expo/config';
-import { MessageSocket } from '@expo/dev-server';
+import { closeJsInspector, MessageSocket } from '@expo/dev-server';
 import { Server } from 'http';
 
 import {
@@ -46,7 +46,7 @@ export function broadcastMessage(
 export async function startAsync(
   projectRoot: string,
   {
-    exp = getConfig(projectRoot).exp,
+    exp = getConfig(projectRoot, { skipSDKVersionRequirement: true }).exp,
     ...options
   }: StartDevServerOptions & { exp?: ExpoConfig } = {},
   verbose: boolean = true
@@ -62,11 +62,13 @@ export async function startAsync(
   watchBabelConfigForProject(projectRoot);
 
   if (options.webOnly) {
-    await Webpack.restartAsync(projectRoot, {
+    await Webpack.startAsync(projectRoot, {
       ...options,
       port: options.webpackPort,
     });
-    DevSession.startSession(projectRoot, exp, 'web');
+
+    // This is used to make Expo Go open the project in either Expo Go, or the web browser.
+    DevSession.startSession(projectRoot, exp, Webpack.isTargetingNative() ? 'native' : 'web');
     return exp;
   } else if (Env.shouldUseDevServer(exp) || options.devClient) {
     [serverInstance, , messageSocket] = await startDevServerAsync(projectRoot, options);
@@ -89,22 +91,27 @@ export async function startAsync(
   return exp;
 }
 
+async function stopDevServerAsync() {
+  return new Promise<void>((resolve, reject) => {
+    if (serverInstance) {
+      closeJsInspector();
+      serverInstance.close(error => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve();
+        }
+      });
+    }
+  });
+}
+
 async function stopInternalAsync(projectRoot: string): Promise<void> {
   DevSession.stopSession();
 
   await Promise.all([
     Webpack.stopAsync(projectRoot),
-    new Promise<void>((resolve, reject) => {
-      if (serverInstance) {
-        serverInstance.close(error => {
-          if (error) {
-            reject(error);
-          } else {
-            resolve();
-          }
-        });
-      }
-    }),
+    stopDevServerAsync(),
     stopExpoServerAsync(projectRoot),
     stopReactNativeServerAsync(projectRoot),
     async () => {

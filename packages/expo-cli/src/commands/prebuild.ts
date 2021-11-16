@@ -10,7 +10,7 @@ export default function (program: Command) {
       .command('prebuild [path]')
       .description(
         `Experimental: Create native iOS and Android project files before building natively. ${chalk.dim(
-          learnMore('https://docs.expo.io/workflow/customizing/')
+          learnMore('https://docs.expo.dev/workflow/customizing/')
         )}`
       )
       .longDescription(
@@ -24,7 +24,10 @@ export default function (program: Command) {
         '--template <template>',
         'Project template to clone from. File path pointing to a local tar file or a github repo'
       )
-      .option('-p, --platform [platform]', 'Platforms to sync: ios, android, all. Default: all')
+      .option(
+        '-p, --platform <all|android|ios>',
+        'Platforms to sync: ios, android, all. Default: all'
+      )
       .option(
         '--skip-dependency-update <dependencies>',
         'Preserves versions of listed packages in package.json (comma separated list)'

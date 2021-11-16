@@ -1,16 +1,32 @@
 import type { ExpoConfig, Platform } from '@expo/config';
 import spawnAsync from '@expo/spawn-async';
 import fs from 'fs-extra';
-import type { composeSourceMaps } from 'metro-source-map';
 import os from 'os';
 import path from 'path';
 import process from 'process';
-import resolveFrom from 'resolve-from';
+import semver from 'semver';
+
+import {
+  importHermesCommandFromProject,
+  importMetroSourceMapComposeSourceMapsFromProject,
+} from './metro/importMetroFromProject';
 
 export function isEnableHermesManaged(expoConfig: ExpoConfig, platform: Platform): boolean {
   switch (platform) {
-    case 'android':
-      return expoConfig.android?.jsEngine === 'hermes';
+    case 'android': {
+      if (!gteSdkVersion(expoConfig, '42.0.0')) {
+        // Hermes on Android is supported after SDK 42.
+        return false;
+      }
+      return (expoConfig.android?.jsEngine ?? expoConfig.jsEngine) === 'hermes';
+    }
+    case 'ios': {
+      if (!gteSdkVersion(expoConfig, '43.0.0')) {
+        // Hermes on iOS is supported after SDK 43.
+        return false;
+      }
+      return (expoConfig.ios?.jsEngine ?? expoConfig.jsEngine) === 'hermes';
+    }
     default:
       return false;
   }
@@ -35,7 +51,7 @@ export async function buildHermesBundleAsync(
     await fs.writeFile(tempSourcemapFile, map);
 
     const tempHbcFile = path.join(tempDir, 'index.hbc');
-    const hermesCommand = getHermesCommand(projectRoot);
+    const hermesCommand = importHermesCommandFromProject(projectRoot);
     const args = ['-emit-binary', '-out', tempHbcFile, tempBundleFile, '-output-source-map'];
     if (optimize) {
       args.push('-O');
@@ -60,37 +76,10 @@ export async function createHermesSourcemapAsync(
   sourcemap: string,
   hermesMapFile: string
 ): Promise<string> {
-  const composeSourceMaps = importMetroSourceMapFromProject(projectRoot);
+  const composeSourceMaps = importMetroSourceMapComposeSourceMapsFromProject(projectRoot);
   const bundlerSourcemap = JSON.parse(sourcemap);
   const hermesSourcemap = await fs.readJSON(hermesMapFile);
   return JSON.stringify(composeSourceMaps([bundlerSourcemap, hermesSourcemap]));
-}
-
-function getHermesCommand(projectRoot: string): string {
-  const platformExecutable = getHermesCommandPlatform();
-  const resolvedPath = resolveFrom.silent(projectRoot, `hermes-engine/${platformExecutable}`);
-  if (!resolvedPath) {
-    throw new Error(
-      `Missing module "hermes-engine/${platformExecutable}" in the project.` +
-        'This usually means hermes-engine is not installed. ' +
-        'Please verify that dependencies in package.json include "react-native" ' +
-        'and run `yarn` or `npm install`.'
-    );
-  }
-  return resolvedPath;
-}
-
-function getHermesCommandPlatform(): string {
-  switch (os.platform()) {
-    case 'darwin':
-      return 'osx-bin/hermesc';
-    case 'linux':
-      return 'linux64-bin/hermesc';
-    case 'win32':
-      return 'win64-bin/hermesc.exe';
-    default:
-      throw new Error(`Unsupported host platform for Hermes compiler: ${os.platform()}`);
-  }
 }
 
 export function parseGradleProperties(content: string): Record<string, string> {
@@ -109,20 +98,44 @@ export function parseGradleProperties(content: string): Record<string, string> {
   return result;
 }
 
-export async function maybeInconsistentEngineAsync(
+export async function maybeThrowFromInconsistentEngineAsync(
   projectRoot: string,
+  configFilePath: string,
   platform: string,
   isHermesManaged: boolean
-): Promise<boolean> {
-  switch (platform) {
-    case 'android':
-      return maybeInconsistentEngineAndroidAsync(projectRoot, isHermesManaged);
-    default:
-      return false;
+): Promise<void> {
+  const configFileName = path.basename(configFilePath);
+  if (
+    platform === 'android' &&
+    (await maybeInconsistentEngineAndroidAsync(projectRoot, isHermesManaged))
+  ) {
+    throw new Error(
+      `JavaScript engine configuration is inconsistent between ${configFileName} and Android native project.\n` +
+        `In ${configFileName}: Hermes is ${isHermesManaged ? 'enabled' : 'not enabled'}\n` +
+        `In Android native project: Hermes is ${isHermesManaged ? 'not enabled' : 'enabled'}\n` +
+        `Please check the following files for inconsistencies:\n` +
+        `  - ${configFilePath}\n` +
+        `  - ${path.join(projectRoot, 'android', 'gradle.properties')}\n` +
+        `  - ${path.join(projectRoot, 'android', 'app', 'build.gradle')}\n` +
+        'Learn more: https://expo.fyi/hermes-android-config'
+    );
+  }
+
+  if (platform === 'ios' && (await maybeInconsistentEngineIosAsync(projectRoot, isHermesManaged))) {
+    throw new Error(
+      `JavaScript engine configuration is inconsistent between ${configFileName} and iOS native project.\n` +
+        `In ${configFileName}: Hermes is ${isHermesManaged ? 'enabled' : 'not enabled'}\n` +
+        `In iOS native project: Hermes is ${isHermesManaged ? 'not enabled' : 'enabled'}\n` +
+        `Please check the following files for inconsistencies:\n` +
+        `  - ${configFilePath}\n` +
+        `  - ${path.join(projectRoot, 'ios', 'Podfile')}\n` +
+        `  - ${path.join(projectRoot, 'ios', 'Podfile.properties.json')}\n` +
+        'Learn more: https://expo.fyi/hermes-ios-config'
+    );
   }
 }
 
-async function maybeInconsistentEngineAndroidAsync(
+export async function maybeInconsistentEngineAndroidAsync(
   projectRoot: string,
   isHermesManaged: boolean
 ): Promise<boolean> {
@@ -155,17 +168,37 @@ async function maybeInconsistentEngineAndroidAsync(
   return false;
 }
 
-function importMetroSourceMapFromProject(projectRoot: string): typeof composeSourceMaps {
-  const resolvedPath = resolveFrom.silent(projectRoot, 'metro-source-map/src/composeSourceMaps');
-  if (!resolvedPath) {
-    throw new Error(
-      'Missing module "metro-source-map/src/composeSourceMaps" in the project. ' +
-        'This usually means React Native is not installed. ' +
-        'Please verify that dependencies in package.json include "react-native" ' +
-        'and run `yarn` or `npm install`.'
-    );
+export async function maybeInconsistentEngineIosAsync(
+  projectRoot: string,
+  isHermesManaged: boolean
+): Promise<boolean> {
+  // Trying best to check ios native project if by chance to be consistent between app config
+
+  // Check ios/Podfile for ":hermes_enabled => true"
+  const podfilePath = path.join(projectRoot, 'ios', 'Podfile');
+  if (fs.existsSync(podfilePath)) {
+    const content = await fs.readFile(podfilePath, 'utf8');
+    const isPropsReference =
+      content.search(
+        /^\s*:hermes_enabled\s*=>\s*podfile_properties\['expo.jsEngine'\] == 'hermes',?\s+/m
+      ) >= 0;
+    const isHermesBare = content.search(/^\s*:hermes_enabled\s*=>\s*true,?\s+/m) >= 0;
+    if (!isPropsReference && isHermesManaged !== isHermesBare) {
+      return true;
+    }
   }
-  return require(resolvedPath);
+
+  // Check Podfile.properties.json from prebuild template
+  const podfilePropertiesPath = path.join(projectRoot, 'ios', 'Podfile.properties.json');
+  if (fs.existsSync(podfilePropertiesPath)) {
+    const props = await parsePodfilePropertiesAsync(podfilePropertiesPath);
+    const isHermesBare = props['expo.jsEngine'] === 'hermes';
+    if (isHermesManaged !== isHermesBare) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 // https://github.com/facebook/hermes/blob/release-v0.5/include/hermes/BCGen/HBC/BytecodeFileFormat.h#L24-L25
@@ -190,4 +223,31 @@ async function readHermesHeaderAsync(file: string): Promise<Buffer> {
   await fs.read(fd, buffer, 0, 12, null);
   await fs.close(fd);
   return buffer;
+}
+
+// Cloned from xdl/src/Versions.ts, we cannot use that because of circular dependency
+function gteSdkVersion(expJson: Pick<ExpoConfig, 'sdkVersion'>, sdkVersion: string): boolean {
+  if (!expJson.sdkVersion) {
+    return false;
+  }
+
+  if (expJson.sdkVersion === 'UNVERSIONED') {
+    return true;
+  }
+
+  try {
+    return semver.gte(expJson.sdkVersion, sdkVersion);
+  } catch (e) {
+    throw new Error(`${expJson.sdkVersion} is not a valid version. Must be in the form of x.y.z`);
+  }
+}
+
+async function parsePodfilePropertiesAsync(
+  podfilePropertiesPath: string
+): Promise<Record<string, string>> {
+  try {
+    return JSON.parse(await fs.readFile(podfilePropertiesPath, 'utf8'));
+  } catch (e) {
+    return {};
+  }
 }

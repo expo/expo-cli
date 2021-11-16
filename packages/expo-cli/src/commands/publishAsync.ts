@@ -39,7 +39,12 @@ export async function actionAsync(
   const { exp, pkg } = getConfig(projectRoot, {
     skipSDKVersionRequirement: true,
   });
-  const { sdkVersion } = exp;
+  const { sdkVersion, runtimeVersion } = exp;
+
+  // TODO(@jkhales): remove this check when runtimeVersion policies are supported, if they are ever supported
+  if (typeof runtimeVersion !== 'undefined' && typeof runtimeVersion !== 'string') {
+    throw new CommandError(`Runtime version policies are not supported by the publish command.`);
+  }
 
   const target = options.target ?? getDefaultTarget(projectRoot);
 
@@ -51,9 +56,10 @@ export async function actionAsync(
 
   // Log building info before building.
   // This gives the user sometime to bail out if the info is unexpected.
-
-  if (sdkVersion) {
-    Log.log(`\u203A Expo SDK: ${Log.chalk.bold(exp.sdkVersion)}`);
+  if (runtimeVersion) {
+    Log.log(`\u203A Runtime version: ${Log.chalk.bold(runtimeVersion)}`);
+  } else if (sdkVersion) {
+    Log.log(`\u203A Expo SDK: ${Log.chalk.bold(sdkVersion)}`);
   }
   Log.log(`\u203A Release channel: ${Log.chalk.bold(options.releaseChannel)}`);
   Log.log(`\u203A Workflow: ${Log.chalk.bold(target.replace(/\b\w/g, l => l.toUpperCase()))}`);
@@ -101,7 +107,7 @@ export async function actionAsync(
   Log.log('Publish complete');
   Log.newLine();
 
-  logManifestUrl({ url, sdkVersion: exp.sdkVersion });
+  logManifestUrl({ url, sdkVersion, runtimeVersion });
 
   if (target === 'managed' && projectPageUrl) {
     // note(brentvatne): disable copy to clipboard functionality for now, need to think more about
@@ -142,8 +148,16 @@ function assertValidReleaseChannel(releaseChannel?: string): void {
  * @example 📝  Manifest: https://exp.host/@bacon/my-app/index.exp?sdkVersion=38.0.0 Learn more: https://expo.fyi/manifest-url
  * @param options
  */
-function logManifestUrl({ url, sdkVersion }: { url: string; sdkVersion?: string }) {
-  const manifestUrl = getExampleManifestUrl(url, sdkVersion) ?? url;
+function logManifestUrl({
+  url,
+  sdkVersion,
+  runtimeVersion,
+}: {
+  url: string;
+  sdkVersion?: string;
+  runtimeVersion?: string;
+}) {
+  const manifestUrl = getExampleManifestUrl(url, { sdkVersion, runtimeVersion }) ?? url;
   Log.log(
     `📝  Manifest: ${Log.chalk.bold(TerminalLink.fallbackToUrl(url, manifestUrl))} ${Log.chalk.dim(
       TerminalLink.learnMore('https://expo.fyi/manifest-url')
@@ -153,7 +167,7 @@ function logManifestUrl({ url, sdkVersion }: { url: string; sdkVersion?: string 
 
 /**
  *
- * @example ⚙️   Project page: https://expo.io/@bacon/projects/my-app [copied to clipboard] Learn more: https://expo.fyi/project-page
+ * @example ⚙️   Project page: https://expo.dev/@bacon/projects/my-app [copied to clipboard] Learn more: https://expo.fyi/project-page
  * @param options
  */
 function logProjectPageUrl({
@@ -175,22 +189,28 @@ function logProjectPageUrl({
   Log.log(productionMessage);
 }
 
-function getExampleManifestUrl(url: string, sdkVersion: string | undefined): string | null {
-  if (!sdkVersion) {
+function getExampleManifestUrl(
+  url: string,
+  { sdkVersion, runtimeVersion }: { sdkVersion?: string; runtimeVersion?: string }
+): string | null {
+  if (!(sdkVersion || runtimeVersion)) {
     return null;
   }
 
   if (url.includes('release-channel') && url.includes('?release-channel')) {
-    return (
-      url.replace('?release-channel', '/index.exp?release-channel') + `&sdkVersion=${sdkVersion}`
-    );
+    const urlWithIndexSuffix = url.replace('?release-channel', '/index.exp?release-channel');
+    return runtimeVersion
+      ? urlWithIndexSuffix + `&runtimeVersion=${runtimeVersion}`
+      : urlWithIndexSuffix + `&sdkVersion=${sdkVersion}`;
   } else if (url.includes('?') && !url.includes('release-channel')) {
     // This is the only relevant url query param we are aware of at the time of
     // writing this code, so if there is some other param included we don't know
     // how to deal with it and log nothing.
     return null;
   } else {
-    return `${url}/index.exp?sdkVersion=${sdkVersion}`;
+    return runtimeVersion
+      ? `${url}/index.exp?runtimeVersion=${runtimeVersion}`
+      : `${url}/index.exp?sdkVersion=${sdkVersion}`;
   }
 }
 
@@ -227,7 +247,7 @@ export function logOptimizeWarnings({ projectRoot }: { projectRoot: string }): v
       `Project may contain uncompressed images. Optimizing image assets can improve app size and performance.\n  To fix this, run ${chalk.bold(
         `npx expo-optimize`
       )}`,
-      'https://docs.expo.io/distribution/optimizing-updates/#optimize-images'
+      'https://docs.expo.dev/distribution/optimizing-updates/#optimize-images'
     )
   );
 }

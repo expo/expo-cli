@@ -30,7 +30,7 @@ export async function getBundledNativeModulesAsync(
       return await getBundledNativeModulesFromApiAsync(sdkVersion);
     } catch {
       Log.warn(
-        `There seem to be a transient problem with Expo servers, using the cached dependency map (${Log.chalk.bold(
+        `Unable to reach Expo servers. Falling back to using the cached dependency map (${Log.chalk.bold(
           'bundledNativeModules.json'
         )}) from the package "${Log.chalk.bold`expo`}" installed in your project.`
       );

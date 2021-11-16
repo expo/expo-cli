@@ -107,7 +107,7 @@ The Expo source code is made available under the [MIT license](LICENSE). Some of
 ---
 
 <p>
-    <a aria-label="sponsored by expo" href="http://expo.io">
+    <a aria-label="sponsored by expo" href="http://expo.dev">
         <img src="https://img.shields.io/badge/Sponsored_by-Expo-4630EB.svg?style=for-the-badge&logo=EXPO&labelColor=000&logoColor=fff" target="_blank" />
     </a>
     <a aria-label="expo pwa is free to use" href="/LICENSE" target="_blank">
@@ -115,4 +115,4 @@ The Expo source code is made available under the [MIT license](LICENSE). Some of
     </a>
 </p>
 
-[abp]: https://docs.expo.io/workflow/configuration/#assetbundlepatterns
+[abp]: https://docs.expo.dev/workflow/configuration/#assetbundlepatterns

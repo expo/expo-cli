@@ -1,6 +1,6 @@
 {
   "name": "@expo/osascript",
-  "version": "2.0.29",
+  "version": "2.0.30",
   "description": "Tools for running an osascripts in Node",
   "main": "build/index.js",
   "scripts": {

@@ -5,7 +5,7 @@ import { resolve } from 'path';
 import { ConfigPlugin } from '../Plugin.types';
 import { withAppBuildGradle, withProjectBuildGradle } from '../plugins/android-plugins';
 import { withDangerousMod } from '../plugins/withDangerousMod';
-import * as WarningAggregator from '../utils/warnings';
+import { addWarningAndroid } from '../utils/warnings';
 
 const DEFAULT_TARGET_PATH = './android/app/google-services.json';
 
@@ -20,8 +20,8 @@ export const withClassPath: ConfigPlugin = config => {
     if (config.modResults.language === 'groovy') {
       config.modResults.contents = setClassPath(config, config.modResults.contents);
     } else {
-      WarningAggregator.addWarningAndroid(
-        'android-google-services',
+      addWarningAndroid(
+        'android.googleServicesFile',
         `Cannot automatically configure project build.gradle if it's not groovy`
       );
     }
@@ -34,8 +34,8 @@ export const withApplyPlugin: ConfigPlugin = config => {
     if (config.modResults.language === 'groovy') {
       config.modResults.contents = applyPlugin(config, config.modResults.contents);
     } else {
-      WarningAggregator.addWarningAndroid(
-        'android-google-services',
+      addWarningAndroid(
+        'android.googleServicesFile',
         `Cannot automatically configure app build.gradle if it's not groovy`
       );
     }

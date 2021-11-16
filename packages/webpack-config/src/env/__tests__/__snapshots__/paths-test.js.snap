@@ -13,9 +13,7 @@ Object {
     "get": [Function],
     "indexHtml": "e2e/basic/web-build/index.html",
     "manifest": "e2e/basic/web-build/manifest.json",
-    "registerServiceWorker": "e2e/basic/web-build/register-service-worker.js",
     "serveJson": "e2e/basic/web-build/serve.json",
-    "serviceWorker": "e2e/basic/web-build/expo-service-worker.js",
   },
   "root": "e2e/basic",
   "servedPath": "/",
@@ -25,9 +23,7 @@ Object {
     "get": [Function],
     "indexHtml": "web-default/index.html",
     "manifest": "web-default/manifest.json",
-    "registerServiceWorker": "web-default/register-service-worker.js",
     "serveJson": "web-default/serve.json",
-    "serviceWorker": "web-default/expo-service-worker.js",
   },
 }
 `;
@@ -47,9 +43,7 @@ Object {
     "get": [Function],
     "indexHtml": "e2e/minimum/web-build/index.html",
     "manifest": "e2e/minimum/web-build/manifest.json",
-    "registerServiceWorker": "e2e/minimum/web-build/register-service-worker.js",
     "serveJson": "e2e/minimum/web-build/serve.json",
-    "serviceWorker": "e2e/minimum/web-build/expo-service-worker.js",
   },
   "root": "e2e/minimum",
   "servedPath": "/",
@@ -59,9 +53,7 @@ Object {
     "get": [Function],
     "indexHtml": "web-default/index.html",
     "manifest": "web-default/manifest.json",
-    "registerServiceWorker": "web-default/register-service-worker.js",
     "serveJson": "web-default/serve.json",
-    "serviceWorker": "web-default/expo-service-worker.js",
   },
 }
 `;

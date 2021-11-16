@@ -36,6 +36,7 @@ export default function (program: Command) {
     program
       .command('client:install:android')
       .description('Install Expo Go for Android on a connected device or emulator')
+      .option('-d, --device [device]', 'Device name to install the client on')
       .option(
         '--latest',
         `Install the latest version of Expo Go, ignore the current project version.`

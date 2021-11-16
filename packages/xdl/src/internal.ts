@@ -11,6 +11,8 @@
 */
 export { Semaphore } from './utils/Semaphore';
 export * as Env from './Env';
+export * as CoreSimulator from './apple/CoreSimulator';
+export * as AppleDevice from './apple/AppleDevice';
 export { default as Config } from './Config';
 export * as Xcode from './Xcode';
 export * as ConnectionStatus from './ConnectionStatus';
@@ -37,7 +39,6 @@ export * as Prompts from './Prompts';
 export * as SimControl from './SimControl';
 export * as SimControlLogs from './SimControlLogs';
 export * as Simulator from './Simulator';
-export * as StandaloneBuild from './StandaloneBuild';
 export * as ThirdParty from './ThirdParty';
 export * as UrlUtils from './UrlUtils';
 export {
@@ -81,10 +82,10 @@ export { delayAsync } from './utils/delayAsync';
 export { choosePortAsync } from './utils/choosePortAsync';
 export { downloadApkAsync } from './utils/downloadApkAsync';
 export { downloadAppAsync } from './utils/downloadAppAsync';
+export { isDevClientPackageInstalled } from './utils/isDevClientPackageInstalled';
 export * as BundleIdentifier from './BundleIdentifier';
 export * as FsCache from './tools/FsCache';
 export * as WebpackEnvironment from './webpack-utils/WebpackEnvironment';
-export * as WebpackCompiler from './webpack-utils/WebpackCompiler';
 export { default as LoggerDetach, pipeOutputToLogger } from './detach/Logger';
 export { default as StandaloneBuildFlags } from './detach/StandaloneBuildFlags';
 export * as AssetBundle from './detach/AssetBundle';
@@ -101,5 +102,6 @@ export {
 export { startAsync, stopAsync, broadcastMessage } from './start/startAsync';
 export * as ManifestHandler from './start/ManifestHandler';
 export * as ExpoUpdatesManifestHandler from './start/ExpoUpdatesManifestHandler';
+export * as LoadingPageHandler from './start/LoadingPageHandler';
 export { getFreePortAsync } from './start/getFreePortAsync';
 export * as Project from './Project';

@@ -22,7 +22,7 @@ import { PodfileBasic } from './fixtures/Podfile';
 import rnFixture from './fixtures/react-native-project';
 import { getDirFromFS } from './getDirFromFS';
 
-const { withBranch } = IOSConfig.Branch;
+const { withOrientation } = IOSConfig.Orientation;
 
 const { readXMLAsync } = XML;
 const fsReal = jest.requireActual('fs') as typeof fs;
@@ -166,7 +166,7 @@ function getLargeConfig(): ExportedConfig {
           action: 'VIEW',
           data: {
             scheme: 'https',
-            host: '*.expo.io',
+            host: '*.expo.dev',
           },
           category: ['BROWSABLE', 'DEFAULT'],
         },
@@ -214,6 +214,9 @@ describe('built-in plugins', () => {
     });
     vol.fromJSON(
       {
+        // Required to link react-native-maps
+        './node_modules/react-native-maps/package.json': JSON.stringify({}),
+        // App files
         ...rnFixture,
         'ios/Podfile': PodfileBasic,
         'config/GoogleService-Info.plist': 'noop',
@@ -234,7 +237,7 @@ describe('built-in plugins', () => {
 
   // Ensure helpful error messages are thrown
   it(`fails to locate the project name in an invalid project`, async () => {
-    const config = withBranch({
+    const config = withOrientation({
       name: 'app',
       slug: '',
       ios: {},
@@ -245,11 +248,12 @@ describe('built-in plugins', () => {
   });
 
   it(`skips platforms`, async () => {
-    const config = withBranch({
+    const config = withOrientation({
       name: 'app',
       slug: '',
       ios: {},
     });
+
     // should throw if the platform isn't skipped
     await compileModsAsync(config, { projectRoot: '/invalid', platforms: ['android'] });
   });
@@ -329,6 +333,7 @@ describe('built-in plugins', () => {
     const after = getDirFromFS(vol.toJSON(), projectRoot);
 
     expect(Object.keys(after)).toStrictEqual([
+      'node_modules/react-native-maps/package.json',
       'ios/ReactNativeProject/Supporting/Expo.plist',
       'ios/ReactNativeProject/Supporting/en.lproj/InfoPlist.strings',
       'ios/ReactNativeProject/Supporting/es.lproj/InfoPlist.strings',
@@ -345,6 +350,7 @@ describe('built-in plugins', () => {
       'ios/ReactNativeProject/SplashScreen.storyboard',
       'ios/ReactNativeProject/ReactNativeProject.entitlements',
       'ios/ReactNativeProject.xcodeproj/project.pbxproj',
+      'ios/Podfile.properties.json',
       'ios/Podfile',
       'android/app/src/main/java/com/bacon/todo/MainActivity.java',
       'android/app/src/main/java/com/bacon/todo/MainApplication.java',
@@ -377,9 +383,7 @@ describe('built-in plugins', () => {
     expect(after['android/app/src/main/java/com/bacon/todo/MainApplication.java']).toMatch(
       'package com.bacon.todo;'
     );
-    expect(after['android/app/src/main/java/com/bacon/todo/MainActivity.java']).toMatch(
-      '// Added automatically by Expo Config'
-    );
+
     expect(after['android/app/src/main/res/values/strings.xml']).toMatch(
       '<string name="app_name">my cool app</string>'
     );
@@ -479,6 +483,7 @@ describe('built-in plugins', () => {
     const after = getDirFromFS(vol.toJSON(), projectRoot);
 
     expect(Object.keys(after)).toStrictEqual([
+      'node_modules/react-native-maps/package.json',
       'ios/ReactNativeProject/Supporting/Expo.plist',
       'ios/ReactNativeProject/Info.plist',
       'ios/ReactNativeProject/AppDelegate.m',
@@ -487,6 +492,7 @@ describe('built-in plugins', () => {
       'ios/ReactNativeProject/Images.xcassets/Contents.json',
       'ios/ReactNativeProject/ReactNativeProject.entitlements',
       'ios/ReactNativeProject.xcodeproj/project.pbxproj',
+      'ios/Podfile.properties.json',
       'ios/Podfile',
       'android/app/src/main/java/com/reactnativeproject/MainActivity.java',
       'android/app/src/main/java/com/reactnativeproject/MainApplication.java',
@@ -537,6 +543,9 @@ describe('built-in plugins', () => {
     vol.reset();
     vol.fromJSON(
       {
+        // Required to link react-native-maps
+        './node_modules/react-native-maps/package.json': JSON.stringify({}),
+        // App files
         'config/GoogleService-Info.plist': 'noop',
         'config/google-services.json': '{}',
         'icons/foreground.png': icon,
@@ -598,10 +607,26 @@ describe('built-in plugins', () => {
     const after = getDirFromFS(vol.toJSON(), projectRoot);
 
     expect(Object.keys(after)).toStrictEqual([
+      'node_modules/react-native-maps/package.json',
       'config/GoogleService-Info.plist',
       'config/google-services.json',
       'locales/en-US.json',
     ]);
+  });
+
+  it('create Podfile.properties.json file for backward compatible', async () => {
+    const { '/app/ios/Podfile.properties.json': _, ...volWithoutPodfileProperties } = vol.toJSON();
+    vol.reset();
+    vol.fromJSON(volWithoutPodfileProperties);
+
+    let config = getPrebuildConfig();
+    // change jsEngine to hermes
+    config.jsEngine = 'hermes';
+
+    config = await compileModsAsync(config, { projectRoot: '/app' });
+
+    const result = await JsonFile.readAsync('/app/ios/Podfile.properties.json');
+    expect(result).toMatchObject({ 'expo.jsEngine': 'hermes' });
   });
 });
 

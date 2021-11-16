@@ -11,12 +11,6 @@ applyNativeModulesSettingsGradle(settings)
 include ':app'
 `;
 
-export const sampleStringsXML = `
-<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<resources>
-  <string name="app_name">expo &amp;bo&lt;y&gt;'</string>
-</resources>`;
-
 const badName = `😃/\\:<>"?*|$F0g.`;
 const badNameCleaned = `😃$F0g.`;
 
@@ -38,5 +32,9 @@ describe(applyNameSettingsGradle, () => {
     );
     // Replaces with expected linting
     expect(modified).toBe(`rootProject.name = '${badNameCleaned}'`);
+  });
+  it('escapes single quotes in name', () => {
+    const modified = applyNameSettingsGradle({ name: "Nora's" }, `rootProject.name="Replace me"`);
+    expect(modified).toBe(`rootProject.name = 'Nora\\'s'`);
   });
 });

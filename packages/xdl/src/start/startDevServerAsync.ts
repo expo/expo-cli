@@ -1,11 +1,17 @@
-import { ProjectTarget } from '@expo/config';
-import { MessageSocket, MetroDevServerOptions, runMetroDevServerAsync } from '@expo/dev-server';
+import { ExpoConfig, getConfig, ProjectTarget } from '@expo/config';
+import {
+  MessageSocket,
+  MetroDevServerOptions,
+  prependMiddleware,
+  runMetroDevServerAsync,
+} from '@expo/dev-server';
 import http from 'http';
 
 import {
   assertValidProjectRoot,
   ExpoUpdatesManifestHandler,
   getFreePortAsync,
+  LoadingPageHandler,
   ManifestHandler,
   ProjectSettings,
   ProjectUtils,
@@ -23,6 +29,8 @@ export type StartOptions = {
   maxWorkers?: number;
   webOnly?: boolean;
   target?: ProjectTarget;
+  platforms?: ExpoConfig['platforms'];
+  forceManifestType?: 'expo-updates' | 'classic';
 };
 
 export async function startDevServerAsync(
@@ -59,9 +67,19 @@ export async function startDevServerAsync(
     options.maxWorkers = startOptions.maxWorkers;
   }
 
+  // TODO: reduce getConfig calls
+  const projectConfig = getConfig(projectRoot, { skipSDKVersionRequirement: true });
+
+  // Use the unversioned metro config.
+  options.unversioned =
+    !projectConfig.exp.sdkVersion || projectConfig.exp.sdkVersion === 'UNVERSIONED';
+
   const { server, middleware, messageSocket } = await runMetroDevServerAsync(projectRoot, options);
-  middleware.use(ManifestHandler.getManifestHandler(projectRoot));
-  middleware.use(ExpoUpdatesManifestHandler.getManifestHandler(projectRoot));
+
+  const easProjectId = projectConfig.exp.extra?.eas?.projectId;
+  const useExpoUpdatesManifest =
+    startOptions.forceManifestType === 'expo-updates' ||
+    (startOptions.forceManifestType !== 'classic' && easProjectId);
 
   // We need the manifest handler to be the first middleware to run so our
   // routes take precedence over static files. For example, the manifest is
@@ -69,7 +87,14 @@ export async function startDevServerAsync(
   // then the manifest handler will never run, the static middleware will run
   // and serve index.html instead of the manifest.
   // https://github.com/expo/expo/issues/13114
-  middleware.stack.unshift(middleware.stack.pop());
+  prependMiddleware(
+    middleware,
+    useExpoUpdatesManifest
+      ? ExpoUpdatesManifestHandler.getManifestHandler(projectRoot)
+      : ManifestHandler.getManifestHandler(projectRoot)
+  );
+
+  middleware.use(LoadingPageHandler.getLoadingPageHandler(projectRoot));
 
   return [server, middleware, messageSocket];
 }

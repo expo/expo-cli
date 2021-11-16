@@ -8,7 +8,7 @@ import semver from 'semver';
 
 import { delayAsync, Logger, Prompts } from '../internal';
 
-const NGROK_REQUIRED_VERSION = '^2.4.3';
+const NGROK_REQUIRED_VERSION = '^4.1.0';
 const EXPO_DEBUG = getenv.boolish('EXPO_DEBUG', false);
 let _ngrokInstance: any | null = null;
 

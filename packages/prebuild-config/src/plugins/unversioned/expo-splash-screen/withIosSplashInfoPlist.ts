@@ -33,14 +33,16 @@ export function setSplashInfoPlist(
     // Add a warning to prevent the dark mode splash screen from not being shown -- this was learned the hard way.
     if (existing && existing !== 'automatic') {
       WarningAggregator.addWarningIOS(
-        'splash',
+        'userInterfaceStyle',
         'The existing `userInterfaceStyle` property is preventing splash screen from working properly. Please remove it or disable dark mode splash screens.'
       );
     }
     // assigning it to auto anyways, but this is fragile because the order of operations matter now
     infoPlist.UIUserInterfaceStyle = 'Automatic';
   } else {
-    delete infoPlist.UIUserInterfaceStyle;
+    // NOTE(brentvatne): Commented out this line because it causes https://github.com/expo/expo-cli/issues/3935
+    // We should revisit this approach.
+    // delete infoPlist.UIUserInterfaceStyle;
   }
 
   if (splash) {

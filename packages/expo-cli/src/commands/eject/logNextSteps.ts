@@ -1,4 +1,3 @@
-import { WarningAggregator } from '@expo/config-plugins';
 import chalk from 'chalk';
 import terminalLink from 'terminal-link';
 
@@ -17,12 +16,6 @@ export function logNextSteps({
 }: PrebuildResults) {
   Log.newLine();
   Log.nested(`➡️  ${chalk.bold('Next steps')}`);
-
-  if (WarningAggregator.hasWarningsIOS() || WarningAggregator.hasWarningsAndroid()) {
-    Log.nested(
-      `\u203A 👆 Review the logs above and look for any warnings (⚠️ ) that might need follow-up.`
-    );
-  }
 
   // Log a warning about needing to install node modules
   if (nodeInstall) {
@@ -52,7 +45,7 @@ export function logNextSteps({
       `\u203A 📁 The property ${chalk.bold(
         `assetBundlePatterns`
       )} does not have the same effect in the bare workflow.\n  ${Log.chalk.dim(
-        learnMore('https://docs.expo.io/bare/updating-your-app/#embedding-assets')
+        learnMore('https://docs.expo.dev/bare/updating-your-app/#embedding-assets')
       )}`
     );
   }

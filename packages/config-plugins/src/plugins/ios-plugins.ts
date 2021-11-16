@@ -1,10 +1,10 @@
-import { ExpoConfig } from '@expo/config-types';
-import { JSONObject } from '@expo/json-file';
-import { XcodeProject } from 'xcode';
+import type { ExpoConfig } from '@expo/config-types';
+import type { JSONObject } from '@expo/json-file';
+import type { XcodeProject } from 'xcode';
 
-import { ConfigPlugin, Mod } from '../Plugin.types';
-import { ExpoPlist, InfoPlist } from '../ios/IosConfig.types';
-import { AppDelegateProjectFile } from '../ios/Paths';
+import type { ConfigPlugin, Mod } from '../Plugin.types';
+import type { ExpoPlist, InfoPlist } from '../ios/IosConfig.types';
+import type { AppDelegateProjectFile } from '../ios/Paths';
 import { withMod } from './withMod';
 
 type MutateInfoPlistAction = (expo: ExpoConfig, infoPlist: InfoPlist) => InfoPlist;
@@ -134,6 +134,23 @@ export const withXcodeProject: ConfigPlugin<Mod<XcodeProject>> = (config, action
   return withMod(config, {
     platform: 'ios',
     mod: 'xcodeproj',
+    action,
+  });
+};
+
+/**
+ * Provides the Podfile.properties.json for modification.
+ *
+ * @param config
+ * @param action
+ */
+export const withPodfileProperties: ConfigPlugin<Mod<Record<string, string>>> = (
+  config,
+  action
+) => {
+  return withMod(config, {
+    platform: 'ios',
+    mod: 'podfileProperties',
     action,
   });
 };

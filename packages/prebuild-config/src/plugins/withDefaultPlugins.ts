@@ -15,12 +15,14 @@ import { withAndroidIcons } from './icons/withAndroidIcons';
 import { withIosIcons } from './icons/withIosIcons';
 import withAdMob from './unversioned/expo-ads-admob/expo-ads-admob';
 import withAppleAuthentication from './unversioned/expo-apple-authentication';
-import withBranch from './unversioned/expo-branch';
+import withBranch from './unversioned/expo-branch/expo-branch';
 import withContacts from './unversioned/expo-contacts';
 import withDocumentPicker from './unversioned/expo-document-picker';
-import withFacebook from './unversioned/expo-facebook';
+import withFacebook from './unversioned/expo-facebook/expo-facebook';
+import withNavigationBar from './unversioned/expo-navigation-bar/expo-navigation-bar';
 import withNotifications from './unversioned/expo-notifications/expo-notifications';
 import withSplashScreen from './unversioned/expo-splash-screen/expo-splash-screen';
+import withSystemUI from './unversioned/expo-system-ui/expo-system-ui';
 import withUpdates from './unversioned/expo-updates';
 import withMaps from './unversioned/react-native-maps';
 
@@ -43,17 +45,17 @@ export const withIosExpoPlugins: ConfigPlugin<{
     IOSConfig.Name.withDisplayName,
     IOSConfig.Orientation.withOrientation,
     IOSConfig.RequiresFullScreen.withRequiresFullScreen,
-    IOSConfig.RootViewBackgroundColor.withRootViewBackgroundColor,
     IOSConfig.Scheme.withScheme,
-    IOSConfig.UserInterfaceStyle.withUserInterfaceStyle,
     IOSConfig.UsesNonExemptEncryption.withUsesNonExemptEncryption,
     IOSConfig.Version.withBuildNumber,
     IOSConfig.Version.withVersion,
     IOSConfig.Google.withGoogleServicesFile,
+    IOSConfig.JsEngine.withJsEnginePodfileProps,
     // Entitlements
     IOSConfig.Entitlements.withAssociatedDomains,
     // XcodeProject
     IOSConfig.DeviceFamily.withDeviceFamily,
+    IOSConfig.Bitcode.withBitcode,
     IOSConfig.Locales.withLocales,
     // Dangerous
     withIosIcons,
@@ -89,16 +91,13 @@ export const withAndroidExpoPlugins: ConfigPlugin<{
     // AndroidManifest.xml
     AndroidConfig.Package.withPackageManifest,
     AndroidConfig.AllowBackup.withAllowBackup,
+    AndroidConfig.WindowSoftInputMode.withWindowSoftInputMode,
     // Note: The withAndroidIntentFilters plugin must appear before the withScheme
     // plugin or withScheme will override the output of withAndroidIntentFilters.
     AndroidConfig.IntentFilters.withAndroidIntentFilters,
     AndroidConfig.Scheme.withScheme,
     AndroidConfig.Orientation.withOrientation,
     AndroidConfig.Permissions.withPermissions,
-    AndroidConfig.UserInterfaceStyle.withUiModeManifest,
-
-    // MainActivity.*
-    AndroidConfig.UserInterfaceStyle.withUiModeMainActivity,
 
     // strings.xml
     AndroidConfig.Name.withName,
@@ -107,12 +106,10 @@ export const withAndroidExpoPlugins: ConfigPlugin<{
     AndroidConfig.GoogleServices.withGoogleServicesFile,
 
     // Modify colors.xml and styles.xml
-    AndroidConfig.RootViewBackgroundColor.withRootViewBackgroundColor,
-    AndroidConfig.NavigationBar.withNavigationBar,
     AndroidConfig.StatusBar.withStatusBar,
     AndroidConfig.PrimaryColor.withPrimaryColor,
 
-    c => withAndroidIcons(c),
+    withAndroidIcons,
     // If we renamed the package, we should also move it around and rename it in source files
     // Added last to ensure this plugin runs first. Out of tree solutions will mistakenly resolve the package incorrectly otherwise.
     AndroidConfig.Package.withPackageRefactor,
@@ -128,9 +125,11 @@ const versionedExpoSDKPackages: string[] = [
   'expo-notifications',
   'expo-updates',
   'expo-branch',
+  'expo-navigation-bar',
   'expo-document-picker',
   'expo-facebook',
   'expo-splash-screen',
+  'expo-system-ui',
 ];
 
 export const withVersionedExpoSDKPlugins: ConfigPlugin<{ expoUsername: string | null }> = (
@@ -147,7 +146,11 @@ export const withVersionedExpoSDKPlugins: ConfigPlugin<{ expoUsername: string | 
     withBranch,
     withDocumentPicker,
     withFacebook,
+    // System UI must come before splash screen as they overlap
+    // and splash screen will warn about conflicting rules.
+    withSystemUI,
     withSplashScreen,
+    withNavigationBar,
   ]);
 };
 

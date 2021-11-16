@@ -8,7 +8,7 @@ import {
 } from '../Plugin.types';
 import { BaseModOptions, withBaseMod } from './withMod';
 
-const debug = Debug('config-plugins:base-mods');
+const debug = Debug('expo:config-plugins:base-mods');
 
 export type ForwardedBaseModOptions = Partial<
   Pick<BaseModOptions, 'saveToInternal' | 'skipEmptyMod'>
@@ -29,6 +29,13 @@ export type BaseModProviderMethods<
     config: ExportedConfigWithProps<ModType>,
     props: Props
   ) => Promise<void> | void;
+  /**
+   * If the mod supports introspection, and avoids making any filesystem modifications during compilation.
+   * By enabling, this mod, and all of its descendants will be run in introspection mode.
+   * This should only be used for static files like JSON or XML, and not for application files that require regexes,
+   * or complex static files that require other files to be generated like Xcode `.pbxproj`.
+   */
+  isIntrospective?: boolean;
 };
 
 export type CreateBaseModProps<
@@ -50,6 +57,7 @@ export function createBaseMod<
   getFilePath,
   read,
   write,
+  isIntrospective,
 }: CreateBaseModProps<ModType, Props>): ConfigPlugin<Props | void> {
   const withUnknown: ConfigPlugin<Props | void> = (config, _props) => {
     const props = _props || ({} as Props);
@@ -59,6 +67,7 @@ export function createBaseMod<
       skipEmptyMod: props.skipEmptyMod ?? true,
       saveToInternal: props.saveToInternal ?? false,
       isProvider: true,
+      isIntrospective,
       async action({ modRequest: { nextMod, ...modRequest }, ...config }) {
         try {
           let results: ExportedConfigWithProps<ModType> = {
@@ -80,7 +89,7 @@ export function createBaseMod<
 
           await write(filePath, results, props);
           return results;
-        } catch (error) {
+        } catch (error: any) {
           error.message = `[${platform}.${modName}]: ${methodName}: ${error.message}`;
           throw error;
         }
@@ -130,12 +139,14 @@ export function createPlatformBaseMod<
   });
 }
 
+/** A TS wrapper for creating provides */
 export function provider<ModType, Props extends ForwardedBaseModOptions = ForwardedBaseModOptions>(
   props: BaseModProviderMethods<ModType, Props>
 ) {
   return props;
 }
 
+/** Plugin to create and append base mods from file providers */
 export function withGeneratedBaseMods<ModName extends string>(
   config: ExportedConfig,
   {

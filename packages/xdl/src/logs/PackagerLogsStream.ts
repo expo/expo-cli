@@ -50,7 +50,7 @@ type MetroError =
   | ({
       originModulePath: string;
       message: string;
-      errors: object[];
+      errors: { description: string; filename: string; lineNumber: number }[];
     } & ErrorObject)
   | ({
       type: 'TransformError';
@@ -58,7 +58,7 @@ type MetroError =
       lineNumber: number;
       column: number;
       filename: string;
-      errors: object[];
+      errors: { description: string; filename: string; lineNumber: number }[];
     } & ErrorObject)
   | ErrorObject;
 
@@ -108,6 +108,11 @@ type ReportableEvent =
       type: 'bundling_error';
     }
   | {
+      // Currently only sent from Webpack
+      warning: string;
+      type: 'bundling_warning';
+    }
+  | {
       type: 'dep_graph_loading';
     }
   | {
@@ -118,6 +123,9 @@ type ReportableEvent =
       type: 'bundle_transform_progressed';
       transformedFileCount: number;
       totalFileCount: number;
+
+      // A special property added for webpack support
+      percentage?: number;
     }
   | {
       type: 'global_cache_error';
@@ -143,14 +151,23 @@ type ReportableEvent =
       error: MetroError;
     };
 
-type StartBuildBundleCallback = (chunk: LogRecord) => void;
-type ProgressBuildBundleCallback = (progress: number, start: Date | null, chunk: any) => void;
-type FinishBuildBundleCallback = (
-  error: string | null,
-  start: Date,
-  end: Date,
-  chunk: MetroLogRecord
-) => void;
+type StartBuildBundleCallback = (props: {
+  chunk: LogRecord;
+  bundleDetails: BundleDetails | null;
+}) => void;
+type ProgressBuildBundleCallback = (props: {
+  progress: number;
+  start: Date | null;
+  chunk: any;
+  bundleDetails: BundleDetails | null;
+}) => void;
+type FinishBuildBundleCallback = (props: {
+  error: string | null;
+  start: Date;
+  end: Date;
+  chunk: MetroLogRecord;
+  bundleDetails: BundleDetails | null;
+}) => void;
 
 export default class PackagerLogsStream {
   _projectRoot: string;
@@ -198,35 +215,35 @@ export default class PackagerLogsStream {
     this._attachLoggerStream();
   }
 
+  projectId?: number;
+
   _attachLoggerStream() {
-    const projectId = this._getCurrentOpenProjectId();
+    this.projectId = this._getCurrentOpenProjectId();
 
     ProjectUtils.attachLoggerStream(this._projectRoot, {
       stream: {
-        write: (chunk: LogRecord) => {
-          if (chunk.tag !== 'metro' && chunk.tag !== 'expo') {
-            return;
-          } else if (this._getCurrentOpenProjectId() !== projectId) {
-            // TODO: We should be confident that we are properly unsubscribing
-            // from the stream rather than doing a defensive check like this.
-            return;
-          }
-
-          chunk = this._maybeParseMsgJSON(chunk);
-          chunk = this._cleanUpNodeErrors(chunk);
-          if (chunk.tag === 'metro') {
-            this._handleMetroEvent(chunk);
-          } else if (
-            typeof chunk.msg === 'string' &&
-            chunk.msg.match(/\w/) &&
-            chunk.msg[0] !== '{'
-          ) {
-            this._enqueueAppendLogChunk(chunk);
-          }
-        },
+        write: this._handleChunk.bind(this),
       },
       type: 'raw',
     });
+  }
+
+  _handleChunk(chunk: LogRecord) {
+    if (chunk.tag !== 'metro' && chunk.tag !== 'expo') {
+      return;
+    } else if (this._getCurrentOpenProjectId() !== this.projectId) {
+      // TODO: We should be confident that we are properly unsubscribing
+      // from the stream rather than doing a defensive check like this.
+      return;
+    }
+
+    chunk = this._maybeParseMsgJSON(chunk);
+    chunk = this._cleanUpNodeErrors(chunk);
+    if (chunk.tag === 'metro') {
+      this._handleMetroEvent(chunk);
+    } else if (typeof chunk.msg === 'string' && chunk.msg.match(/\w/) && chunk.msg[0] !== '{') {
+      this._enqueueAppendLogChunk(chunk);
+    }
   }
 
   _handleMetroEvent(originalChunk: MetroLogRecord) {
@@ -275,6 +292,10 @@ export default class PackagerLogsStream {
           msg;
         chunk.level = Logger.ERROR;
         break;
+      case 'bundling_warning':
+        chunk.msg = msg.warning;
+        chunk.level = Logger.WARN;
+        break;
       case 'transform_cache_reset':
         chunk.msg =
           'Your JavaScript transform cache is empty, rebuilding (this may take a minute).';
@@ -311,47 +332,72 @@ export default class PackagerLogsStream {
     this._enqueueAppendLogChunk(chunk);
   }
 
+  // A cache of { [buildID]: BundleDetails } which can be used to
+  // add more contextual logs. BundleDetails is currently only sent with `bundle_build_started`
+  // so we need to cache the details in order to print the platform info with other event types.
+  bundleDetailsCache: Record<string, BundleDetails> = {};
+
   // Any event related to bundle building is handled here
   _handleBundleTransformEvent = (chunk: MetroLogRecord) => {
     const msg = chunk.msg as ReportableEvent;
 
+    const bundleDetails = 'buildID' in msg ? this.bundleDetailsCache[msg.buildID] || null : null;
+
     if (msg.type === 'bundle_build_started') {
+      // Cache bundle details for later.
+      this.bundleDetailsCache[String(msg.buildID)] = msg.bundleDetails;
       chunk._metroEventType = 'BUILD_STARTED';
-      this._handleNewBundleTransformStarted(chunk);
+      this._handleNewBundleTransformStarted(chunk, msg.bundleDetails);
     } else if (msg.type === 'bundle_transform_progressed' && this._bundleBuildChunkID) {
       chunk._metroEventType = 'BUILD_PROGRESS';
-      this._handleUpdateBundleTransformProgress(chunk);
+      this._handleUpdateBundleTransformProgress(chunk, bundleDetails);
     } else if (msg.type === 'bundle_build_failed' && this._bundleBuildChunkID) {
       chunk._metroEventType = 'BUILD_FAILED';
-      this._handleUpdateBundleTransformProgress(chunk);
+      this._handleUpdateBundleTransformProgress(chunk, bundleDetails);
     } else if (msg.type === 'bundle_build_done' && this._bundleBuildChunkID) {
       chunk._metroEventType = 'BUILD_DONE';
-      this._handleUpdateBundleTransformProgress(chunk);
+      this._handleUpdateBundleTransformProgress(chunk, bundleDetails);
     }
   };
 
-  _handleNewBundleTransformStarted(chunk: MetroLogRecord) {
+  static getPlatformTagForBuildDetails(bundleDetails?: BundleDetails | null) {
+    const platform = bundleDetails?.platform ?? null;
+    if (platform) {
+      const formatted = { ios: 'iOS', android: 'Android', web: 'Web' }[platform] || platform;
+      return `${chalk.bold(formatted)} `;
+    }
+
+    return '';
+  }
+
+  private _handleNewBundleTransformStarted(
+    chunk: MetroLogRecord,
+    bundleDetails: BundleDetails | null
+  ) {
     if (this._bundleBuildChunkID) {
       return;
     }
 
     this._bundleBuildChunkID = chunk.id;
     this._bundleBuildStart = new Date();
+
     chunk.msg = 'Building JavaScript bundle';
 
     if (this._onStartBuildBundle) {
-      this._onStartBuildBundle(chunk);
+      this._onStartBuildBundle({ chunk, bundleDetails });
     } else {
       this._enqueueAppendLogChunk(chunk);
     }
   }
 
-  _handleUpdateBundleTransformProgress(progressChunk: MetroLogRecord) {
+  private _handleUpdateBundleTransformProgress(
+    progressChunk: MetroLogRecord,
+    bundleDetails: BundleDetails | null
+  ) {
     const msg = progressChunk.msg as ReportableEvent;
 
     let percentProgress;
     let bundleComplete = false;
-
     if (msg.type === 'bundle_build_done') {
       percentProgress = 100;
       bundleComplete = true;
@@ -367,8 +413,14 @@ export default class PackagerLogsStream {
       progressChunk.msg = `Building JavaScript bundle: error`;
       progressChunk.level = Logger.ERROR;
     } else if (msg.type === 'bundle_transform_progressed') {
-      percentProgress = Math.floor((msg.transformedFileCount / msg.totalFileCount) * 100);
-      progressChunk.msg = `Building JavaScript bundle: ${percentProgress}%`;
+      if (msg.percentage) {
+        percentProgress = msg.percentage * 100;
+      } else {
+        percentProgress = (msg.transformedFileCount / msg.totalFileCount) * 100;
+        // percentProgress = Math.floor((msg.transformedFileCount / msg.totalFileCount) * 100);
+      }
+      const roundedPercentProgress = Math.floor(100 * percentProgress) / 100;
+      progressChunk.msg = `Building JavaScript bundle: ${roundedPercentProgress}%`;
     } else {
       return;
     }
@@ -378,12 +430,23 @@ export default class PackagerLogsStream {
     }
 
     if (this._onProgressBuildBundle) {
-      this._onProgressBuildBundle(percentProgress, this._bundleBuildStart, progressChunk);
+      this._onProgressBuildBundle({
+        progress: percentProgress,
+        start: this._bundleBuildStart,
+        chunk: progressChunk,
+        bundleDetails,
+      });
 
       if (bundleComplete) {
         if (this._onFinishBuildBundle && this._bundleBuildStart) {
           const error = msg.type === 'bundle_build_failed' ? 'Build failed' : null;
-          this._onFinishBuildBundle(error, this._bundleBuildStart, new Date(), progressChunk);
+          this._onFinishBuildBundle({
+            error,
+            start: this._bundleBuildStart,
+            end: new Date(),
+            chunk: progressChunk,
+            bundleDetails,
+          });
         }
         this._bundleBuildStart = null;
         this._bundleBuildChunkID = null;
@@ -422,7 +485,7 @@ export default class PackagerLogsStream {
     const relativePath = path.relative(this._projectRoot, originModulePath);
 
     const DOCS_PAGE_URL =
-      'https://docs.expo.io/workflow/using-libraries/#using-third-party-libraries';
+      'https://docs.expo.dev/workflow/using-libraries/#using-third-party-libraries';
 
     if (NODE_STDLIB_MODULES.includes(moduleName)) {
       if (originModulePath.includes('node_modules')) {
@@ -449,15 +512,27 @@ export default class PackagerLogsStream {
     if (snippet) {
       message += `\n${snippet}`;
     }
+
+    // Import errors are already pretty useful and don't need extra info added to them.
+    const isAmbiguousError = !error.name || ['SyntaxError'].includes(error.name);
+    // When you have a basic syntax error in application code it will tell you the file
+    // and usually also provide a well informed error.
+    const isComprehensiveTransformError = error.type === 'TransformError' && error.filename;
+
+    // console.log(require('util').inspect(error, { depth: 4 }));
+    if (error.stack && isAmbiguousError && !isComprehensiveTransformError) {
+      message += `\n${chalk.gray(error.stack)}`;
+    }
     return message;
   }
 
   _formatWorkerChunk(origin: 'stdout' | 'stderr', chunk: string) {
-    const lines = chunk.split('\n');
-    if (lines.length >= 1 && lines[lines.length - 1] === '') {
-      lines.splice(lines.length - 1, 1);
-    }
-    return lines.map(line => `transform[${origin}]: ${line}`).join('\n');
+    return chunk;
+    // const lines = chunk.split('\n');
+    // if (lines.length >= 1 && lines[lines.length - 1] === '') {
+    //   lines.splice(lines.length - 1, 1);
+    // }
+    // return lines.map(line => `transform[${origin}]: ${line}`).join('\n');
   }
 
   _enqueueAppendLogChunk(chunk: LogRecord) {

@@ -2,7 +2,7 @@ import { ExpoConfig } from '@expo/config-types';
 
 import { ConfigPlugin } from '../Plugin.types';
 import { withAppBuildGradle } from '../plugins/android-plugins';
-import * as WarningAggregator from '../utils/warnings';
+import { addWarningAndroid } from '../utils/warnings';
 
 export const withVersion: ConfigPlugin = config => {
   return withAppBuildGradle(config, config => {
@@ -10,8 +10,8 @@ export const withVersion: ConfigPlugin = config => {
       config.modResults.contents = setVersionCode(config, config.modResults.contents);
       config.modResults.contents = setVersionName(config, config.modResults.contents);
     } else {
-      WarningAggregator.addWarningAndroid(
-        'android-version',
+      addWarningAndroid(
+        'android.versionCode',
         `Cannot automatically configure app build.gradle if it's not groovy`
       );
     }
@@ -34,7 +34,7 @@ export function setVersionName(config: Pick<ExpoConfig, 'version'>, buildGradle:
 }
 
 export function getVersionCode(config: Pick<ExpoConfig, 'android'>) {
-  return config.android?.versionCode ?? null;
+  return config.android?.versionCode ?? 1;
 }
 
 export function setVersionCode(config: Pick<ExpoConfig, 'android'>, buildGradle: string) {
