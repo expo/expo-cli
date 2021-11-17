@@ -1,6 +1,5 @@
 import { ExpoConfig } from '@expo/config-types';
 import { openJsInspector, queryAllInspectorAppsAsync } from '@expo/dev-server';
-// @ts-ignore
 import openBrowserAsync from 'better-opn';
 import chalk from 'chalk';
 import wrapAnsi from 'wrap-ansi';

@@ -1,5 +1,4 @@
 import { graphiqlExpress } from 'apollo-server-express';
-// @ts-ignore
 import openBrowserAsync from 'better-opn';
 import express from 'express';
 import http from 'http';

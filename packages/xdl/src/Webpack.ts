@@ -8,7 +8,6 @@ import {
 } from '@expo/dev-server';
 import { createSymbolicateMiddleware } from '@expo/dev-server/build/webpack/symbolicateMiddleware';
 import * as devcert from '@expo/devcert';
-// @ts-ignore
 import openBrowserAsync from 'better-opn';
 import chalk from 'chalk';
 import fs from 'fs-extra';

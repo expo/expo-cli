@@ -1,5 +1,4 @@
 import assert from 'assert';
-// @ts-ignore
 import openBrowserAsync from 'better-opn';
 import chalk from 'chalk';
 import program from 'commander';
