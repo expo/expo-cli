@@ -1,6 +1,6 @@
 import CommandError from '../../CommandError';
 import Log from '../../log';
-import { confirmAsync } from '../../prompts';
+import { confirmAsync } from '../../utils/prompts';
 import { AppLookupParams } from '../api/IosApi';
 import { Context, IView } from '../context';
 import * as iosPushView from './IosPushCredentials';

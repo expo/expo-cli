@@ -14,8 +14,8 @@ import { Prompts } from 'xdl';
 
 import CommandError from '../../../CommandError';
 import Log from '../../../log';
-import { confirmAsync } from '../../../prompts';
 import { logNewSection } from '../../../utils/ora';
+import { confirmAsync } from '../../../utils/prompts';
 import { getMissingPackagesAsync } from './getMissingPackages';
 
 const WEB_FEATURE_FLAG = 'EXPO_NO_WEB_SETUP';

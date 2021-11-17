@@ -12,7 +12,7 @@ import {
   createEntryResolver,
   createFileTransform,
   extractTemplateAppFolderAsync,
-} from '../../utils/extractTemplateAppAsync';
+} from '../utils/extractTemplateAppAsync';
 
 // @ts-ignore
 const pipeline = promisify(Stream.pipeline);

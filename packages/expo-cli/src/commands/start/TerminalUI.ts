@@ -15,13 +15,13 @@ import {
   Webpack,
 } from 'xdl';
 
-import { loginOrRegisterIfLoggedOutAsync } from '../../accounts';
 import Log from '../../log';
-import { selectAsync } from '../../prompts';
-import urlOpts from '../../urlOpts';
 import { handleErrorsAsync } from '../../utils/handleErrors';
+import { selectAsync } from '../../utils/prompts';
+import { loginOrRegisterIfLoggedOutAsync } from '../auth/accounts';
 import { learnMore } from '../utils/TerminalLink';
 import { openInEditorAsync } from '../utils/openInEditorAsync';
+import urlOpts from '../utils/urlOpts';
 import { ensureWebSupportSetupAsync } from '../utils/web/ensureWebSetup';
 
 const CTRL_C = '\u0003';

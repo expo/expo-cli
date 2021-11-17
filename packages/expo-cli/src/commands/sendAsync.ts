@@ -1,10 +1,9 @@
 import chalk from 'chalk';
 import { UrlUtils, UserSettings } from 'xdl';
 
-import { askForSendToAsync } from '../askUser';
 import Log from '../log';
-import * as sendTo from '../sendTo';
-import urlOpts, { URLOptions } from '../urlOpts';
+import * as sendTo from './utils/sendTo';
+import urlOpts, { URLOptions } from './utils/urlOpts';
 
 type Options = Partial<URLOptions & { sendTo?: string }>;
 
@@ -25,7 +24,7 @@ export async function actionAsync(projectRoot: string, options: Options) {
       : await UserSettings.getAsync('sendTo', null);
 
   if (!recipient) {
-    recipient = await askForSendToAsync();
+    recipient = await sendTo.askForSendToAsync();
   }
 
   await sendTo.sendUrlAsync(url, recipient);

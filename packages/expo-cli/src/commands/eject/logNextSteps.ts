@@ -3,7 +3,7 @@ import terminalLink from 'terminal-link';
 
 import Log from '../../log';
 import { learnMore } from '../utils/TerminalLink';
-import { PrebuildResults } from './prebuildAsync';
+import { PrebuildResults } from './prebuildAppAsync';
 
 export function logNextSteps({
   hasAssetBundlePatterns,

@@ -6,7 +6,7 @@ import wrapAnsi from 'wrap-ansi';
 import CommandError from '../CommandError';
 import { learnMore } from '../commands/utils/TerminalLink';
 import Log from '../log';
-import promptAsync from '../prompts';
+import promptAsync from '../utils/prompts';
 import * as Keychain from './keychain';
 
 /**

@@ -1,6 +1,6 @@
 import assert from 'assert';
 
-import prompts, { confirmAsync } from '../../prompts';
+import prompts, { confirmAsync } from '../../utils/prompts';
 import { displayAndroidCredentials, displayIosCredentials } from '../actions/list';
 import { AppLookupParams } from '../api/IosApi';
 import { Context, IView } from '../context';

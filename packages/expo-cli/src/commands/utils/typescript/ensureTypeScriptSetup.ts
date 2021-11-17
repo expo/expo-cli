@@ -9,8 +9,8 @@ import { Versions } from 'xdl';
 
 import CommandError from '../../../CommandError';
 import Log from '../../../log';
-import { confirmAsync } from '../../../prompts';
 import { logNewSection } from '../../../utils/ora';
+import { confirmAsync } from '../../../utils/prompts';
 import { profileMethod } from '../profileMethod';
 import {
   collectMissingPackages,

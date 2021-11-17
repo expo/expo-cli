@@ -2,7 +2,7 @@ import chalk from 'chalk';
 
 import CommandError from '../../CommandError';
 import Log from '../../log';
-import prompt from '../../prompts';
+import prompt from '../../utils/prompts';
 import { Context, IView } from '../context';
 
 export class UpdateFcmKey implements IView {

@@ -4,7 +4,7 @@ import { Ora } from 'ora';
 
 import CommandError from '../CommandError';
 import Log from '../log';
-import { convertHTMLToASCII } from '../utils/convertHTMLToASCII';
+import { convertHTMLToASCII } from './convertHTMLToASCII';
 
 async function getContractStatusAsync(
   context: RequestContext
