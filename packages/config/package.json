@@ -32,7 +32,7 @@
     "paths"
   ],
   "dependencies": {
-    "@babel/code-frame": "~7.10.4",
+    "@babel/code-frame": "^7.16.0",
     "@expo/config-plugins": "4.0.7",
     "@expo/config-types": "^43.0.1",
     "@expo/json-file": "8.2.33",

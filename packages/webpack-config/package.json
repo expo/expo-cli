@@ -40,7 +40,7 @@
     "url": "https://github.com/expo/expo-cli/issues"
   },
   "dependencies": {
-    "@babel/core": "7.9.0",
+    "@babel/core": "^7.16.0",
     "@expo/config": "6.0.7",
     "babel-loader": "8.1.0",
     "chalk": "^4.0.0",

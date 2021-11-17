@@ -43,6 +43,7 @@
     "document.d.ts"
   ],
   "devDependencies": {
+    "@babel/core": "^7.16.0",
     "@types/fs-extra": "^9.0.1",
     "@types/node-fetch": "^2.5.8",
     "@types/prompts": "^2.0.6"

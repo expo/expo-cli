@@ -42,7 +42,7 @@
     "node": ">=12"
   },
   "devDependencies": {
-    "@babel/core": "^7.9.0",
+    "@babel/core": "^7.16.0",
     "@types/command-exists": "^1.2.0",
     "@types/dateformat": "^3.0.0",
     "@types/fs-extra": "^9.0.1",
@@ -63,7 +63,7 @@
     "string-replace-all-ponyfill": "^1.0.1"
   },
   "dependencies": {
-    "@babel/runtime": "7.9.0",
+    "@babel/runtime": "^7.16.3",
     "@expo/apple-utils": "0.0.0-alpha.26",
     "@expo/bunyan": "4.0.0",
     "@expo/config": "6.0.7",

@@ -43,7 +43,7 @@
     "sucrase": "^3.20.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.15.5",
+    "@babel/core": "^7.16.0",
     "expo": "43",
     "metro": "~0.64.0",
     "metro-babel-transformer": "~0.64.0",
