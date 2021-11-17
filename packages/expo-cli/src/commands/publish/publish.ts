@@ -8,7 +8,7 @@ export default function (program: Command) {
       .command('publish [path]')
       .alias('p')
       .description('Deploy a project to Expo hosting')
-      .helpGroup('core')
+      .helpGroup('publish')
       .option('-q, --quiet', 'Suppress verbose output from the Metro bundler.')
       .option('-s, --send-to [dest]', 'A phone number or email address to send a link to')
       .option('-c, --clear', 'Clear the Metro bundler cache')
