@@ -97,9 +97,8 @@ export async function actionAsync(
   let othersCount = 0;
 
   const versionedPackages = packages.map(arg => {
-    const spec = npmPackageArg(arg);
-    const { name } = spec;
-    if (['tag', 'version', 'range'].includes(spec.type) && name && bundledNativeModules[name]) {
+    const { name, type, raw } = npmPackageArg(arg);
+    if (['tag', 'version', 'range'].includes(type) && name && bundledNativeModules[name]) {
       // Unimodule packages from npm registry are modified to use the bundled version.
       nativeModulesCount++;
       return `${name}@${bundledNativeModules[name]}`;
@@ -110,7 +109,7 @@ export async function actionAsync(
     } else {
       // Other packages are passed through unmodified.
       othersCount++;
-      return spec.raw;
+      return raw;
     }
   });
 
