@@ -90,35 +90,39 @@ export async function actionAsync(
   }
 
   const bundledNativeModules = await getBundledNativeModulesAsync(projectRoot, exp.sdkVersion);
-  const nativeModules = [];
-  const others = [];
+  const remoteVersions = await Versions.versionsAsync({ skipCache: true });
+  const remoteVersionsForSDK = remoteVersions.sdkVersions[exp.sdkVersion]?.relatedPackages;
+
+  let nativeModulesCount = 0;
+  let othersCount = 0;
+
   const versionedPackages = packages.map(arg => {
     const spec = npmPackageArg(arg);
     const { name } = spec;
     if (['tag', 'version', 'range'].includes(spec.type) && name && bundledNativeModules[name]) {
       // Unimodule packages from npm registry are modified to use the bundled version.
-      const version = bundledNativeModules[name];
-      const modifiedSpec = `${name}@${version}`;
-      nativeModules.push(modifiedSpec);
-      return modifiedSpec;
+      nativeModulesCount++;
+      return `${name}@${bundledNativeModules[name]}`;
+    } else if (remoteVersionsForSDK && name && remoteVersionsForSDK[name]) {
+      // Some packages have the recommended version listed in https://exp.host/--/api/v2/versions.
+      othersCount++;
+      return `${name}@${remoteVersionsForSDK[name]}`;
     } else {
       // Other packages are passed through unmodified.
-      others.push(spec.raw);
+      othersCount++;
       return spec.raw;
     }
   });
-  const messages = [];
-  if (nativeModules.length > 0) {
-    messages.push(
-      `${nativeModules.length} SDK ${exp.sdkVersion} compatible native ${
-        nativeModules.length === 1 ? 'module' : 'modules'
-      }`
-    );
-  }
-  if (others.length > 0) {
-    messages.push(`${others.length} other ${others.length === 1 ? 'package' : 'packages'}`);
-  }
+
+  const messages = [
+    nativeModulesCount &&
+      `${nativeModulesCount} SDK ${exp.sdkVersion} compatible native ${
+        nativeModulesCount === 1 ? 'module' : 'modules'
+      }`,
+    othersCount && `${othersCount} other ${othersCount === 1 ? 'package' : 'packages'}`,
+  ].filter(String);
   Log.log(`Installing ${messages.join(' and ')} using ${packageManager.name}.`);
+
   await packageManager.addAsync(...versionedPackages);
 
   try {
