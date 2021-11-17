@@ -90,8 +90,15 @@ export async function actionAsync(
   }
 
   const bundledNativeModules = await getBundledNativeModulesAsync(projectRoot, exp.sdkVersion);
-  const remoteVersions = await Versions.versionsAsync({ skipCache: true });
-  const remoteVersionsForSDK = remoteVersions.sdkVersions[exp.sdkVersion]?.relatedPackages;
+  const { sdkVersions } = await Versions.versionsAsync({ skipCache: true });
+  const { relatedPackages, facebookReactVersion, facebookReactNativeVersion } = sdkVersions[
+    exp.sdkVersion
+  ];
+  const versionsForSdk: Record<string, string | undefined> = {
+    ...relatedPackages,
+    react: facebookReactVersion,
+    'react-native': facebookReactNativeVersion,
+  };
 
   let nativeModulesCount = 0;
   let othersCount = 0;
@@ -102,10 +109,10 @@ export async function actionAsync(
       // Unimodule packages from npm registry are modified to use the bundled version.
       nativeModulesCount++;
       return `${name}@${bundledNativeModules[name]}`;
-    } else if (remoteVersionsForSDK && name && remoteVersionsForSDK[name]) {
+    } else if (versionsForSdk && name && versionsForSdk[name]) {
       // Some packages have the recommended version listed in https://exp.host/--/api/v2/versions.
       othersCount++;
-      return `${name}@${remoteVersionsForSDK[name]}`;
+      return `${name}@${versionsForSdk[name]}`;
     } else {
       // Other packages are passed through unmodified.
       othersCount++;
