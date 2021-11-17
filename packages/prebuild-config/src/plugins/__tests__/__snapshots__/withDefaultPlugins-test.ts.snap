@@ -213,7 +213,6 @@ Object {
         },
       },
       "NSLocationWhenInUseUsageDescription": "Allow $(PRODUCT_NAME) to access your location",
-      "RCTRootViewBackgroundColor": 4294901760,
       "SKAdNetworkItems": Array [
         Object {
           "SKAdNetworkIdentifier": "v9wttpbfk9.skadnetwork",
@@ -958,7 +957,6 @@ Object {
             },
           },
           "NSLocationWhenInUseUsageDescription": "Allow $(PRODUCT_NAME) to access your location",
-          "RCTRootViewBackgroundColor": 4294901760,
           "SKAdNetworkItems": Array [
             Object {
               "SKAdNetworkIdentifier": "v9wttpbfk9.skadnetwork",
@@ -1204,7 +1202,6 @@ Object {
         },
       },
       "NSLocationWhenInUseUsageDescription": "Allow $(PRODUCT_NAME) to access your location",
-      "RCTRootViewBackgroundColor": 4294901760,
       "SKAdNetworkItems": Array [
         Object {
           "SKAdNetworkIdentifier": "v9wttpbfk9.skadnetwork",
@@ -1862,7 +1859,6 @@ Object {
             },
           },
           "NSLocationWhenInUseUsageDescription": "Allow $(PRODUCT_NAME) to access your location",
-          "RCTRootViewBackgroundColor": 4294901760,
           "SKAdNetworkItems": Array [
             Object {
               "SKAdNetworkIdentifier": "v9wttpbfk9.skadnetwork",
@@ -2109,7 +2105,6 @@ Object {
         },
       },
       "NSLocationWhenInUseUsageDescription": "Allow $(PRODUCT_NAME) to access your location",
-      "RCTRootViewBackgroundColor": 4294901760,
       "SKAdNetworkItems": Array [
         Object {
           "SKAdNetworkIdentifier": "v9wttpbfk9.skadnetwork",
