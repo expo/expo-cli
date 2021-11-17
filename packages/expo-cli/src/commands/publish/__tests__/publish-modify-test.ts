@@ -20,6 +20,7 @@ jest.mock('@expo/image-utils', () => ({
 
 mockExpoXDL({
   UserManager: {
+    getProjectOwner: jest.fn(jest.requireActual('xdl').UserManager.getProjectOwner),
     ensureLoggedInAsync: jest.fn(() => jester),
     getCurrentUserAsync: jest.fn(() => jester),
   },
