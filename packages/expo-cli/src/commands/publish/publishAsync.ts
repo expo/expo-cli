@@ -13,7 +13,6 @@ import { Project, UserManager } from 'xdl';
 
 import CommandError from '../../CommandError';
 import Log from '../../log';
-import { getProjectOwner } from '../../projects';
 import { logNewSection } from '../../utils/ora';
 import * as TerminalLink from '../utils/TerminalLink';
 import { formatNamedWarning } from '../utils/logConfigWarnings';
@@ -50,7 +49,7 @@ export async function actionAsync(
 
   // note: this validates the exp.owner when the user is a robot
   const user = await UserManager.ensureLoggedInAsync();
-  const owner = getProjectOwner(user, exp);
+  const owner = UserManager.getProjectOwner(user, exp);
 
   Log.addNewLineIfNone();
 
