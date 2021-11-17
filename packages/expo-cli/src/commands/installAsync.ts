@@ -115,12 +115,12 @@ export async function actionAsync(
   });
 
   const messages = [
-    nativeModulesCount &&
+    nativeModulesCount > 0 &&
       `${nativeModulesCount} SDK ${exp.sdkVersion} compatible native ${
         nativeModulesCount === 1 ? 'module' : 'modules'
       }`,
-    othersCount && `${othersCount} other ${othersCount === 1 ? 'package' : 'packages'}`,
-  ].filter(String);
+    othersCount > 0 && `${othersCount} other ${othersCount === 1 ? 'package' : 'packages'}`,
+  ].filter(Boolean);
   Log.log(`Installing ${messages.join(' and ')} using ${packageManager.name}.`);
 
   await packageManager.addAsync(...versionedPackages);
