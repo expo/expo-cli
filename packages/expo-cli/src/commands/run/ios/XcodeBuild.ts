@@ -3,6 +3,7 @@ import { ExpoRunFormatter } from '@expo/xcpretty';
 import chalk from 'chalk';
 import { spawn, SpawnOptionsWithoutStdio } from 'child_process';
 import * as fs from 'fs-extra';
+import os from 'os';
 import * as path from 'path';
 import { SimControl } from 'xdl';
 
@@ -211,13 +212,33 @@ export async function buildAsync({
     let buildOutput = '';
     let errorOutput = '';
 
+    let currentBuffer = '';
+
+    // Data can be sent in chunks that would have no relevance to our regex
+    // this can cause massive slowdowns, so we need to ensure the data is complete before attempting to parse it.
+    function flushBuffer() {
+      if (!currentBuffer) {
+        return;
+      }
+
+      const data = currentBuffer;
+      // Reset buffer.
+      currentBuffer = '';
+      // Process data.
+      const lines = formatter.pipe(data);
+      for (const line of lines) {
+        // Log parsed results.
+        Log.log(line);
+      }
+    }
+
     buildProcess.stdout.on('data', (data: Buffer) => {
       const stringData = data.toString();
       buildOutput += stringData;
-
-      const lines = formatter.pipe(stringData);
-      for (const line of lines) {
-        Log.log(line);
+      currentBuffer += stringData;
+      // Only flush the data if we have a full line.
+      if (currentBuffer.endsWith(os.EOL)) {
+        flushBuffer();
       }
     });
 
@@ -227,6 +248,8 @@ export async function buildAsync({
     });
 
     buildProcess.on('close', (code: number) => {
+      // Flush log data at the end just in case we missed something.
+      flushBuffer();
       Log.debug(`Exited with code: ${code}`);
 
       if (
