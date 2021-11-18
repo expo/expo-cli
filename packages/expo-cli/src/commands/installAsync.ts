@@ -6,6 +6,7 @@ import { Versions } from 'xdl';
 
 import CommandError, { SilentError } from '../CommandError';
 import Log from '../log';
+import { getRemoteVersionsForSdk } from '../utils/fetchers';
 import { findProjectRootAsync } from './utils/ProjectUtils';
 import { autoAddConfigPluginsAsync } from './utils/autoAddConfigPluginsAsync';
 import { getBundledNativeModulesAsync } from './utils/bundledNativeModules';
@@ -90,15 +91,7 @@ export async function actionAsync(
   }
 
   const bundledNativeModules = await getBundledNativeModulesAsync(projectRoot, exp.sdkVersion);
-  const { sdkVersions } = await Versions.versionsAsync({ skipCache: true });
-  const { relatedPackages, facebookReactVersion, facebookReactNativeVersion } = sdkVersions[
-    exp.sdkVersion
-  ];
-  const versionsForSdk: Record<string, string | undefined> = {
-    ...relatedPackages,
-    react: facebookReactVersion,
-    'react-native': facebookReactNativeVersion,
-  };
+  const versionsForSdk = await getRemoteVersionsForSdk(exp.sdkVersion);
 
   let nativeModulesCount = 0;
   let othersCount = 0;
@@ -109,7 +102,7 @@ export async function actionAsync(
       // Unimodule packages from npm registry are modified to use the bundled version.
       nativeModulesCount++;
       return `${name}@${bundledNativeModules[name]}`;
-    } else if (versionsForSdk && name && versionsForSdk[name]) {
+    } else if (name && versionsForSdk[name]) {
       // Some packages have the recommended version listed in https://exp.host/--/api/v2/versions.
       othersCount++;
       return `${name}@${versionsForSdk[name]}`;
