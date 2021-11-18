@@ -1,3 +1,4 @@
+import { ExpoConfig } from '@expo/config-types';
 import camelCase from 'lodash/camelCase';
 import isEmpty from 'lodash/isEmpty';
 import snakeCase from 'lodash/snakeCase';
@@ -95,6 +96,21 @@ export class UserManagerInstance {
   initialize() {
     this._currentUser = null;
     this._getSessionLock = new Semaphore();
+  }
+
+  /**
+   * Get the account and project name using a user and Expo config.
+   * This will validate if the owner field is set when using a robot account.
+   */
+  getProjectOwner(user: User | RobotUser, exp: ExpoConfig): string {
+    if (user.kind === 'robot' && !exp.owner) {
+      throw new XDLError(
+        'ROBOT_OWNER_ERROR',
+        'The "owner" manifest property is required when using robot users. See: https://docs.expo.dev/versions/latest/config/app/#owner'
+      );
+    }
+
+    return exp.owner || user.username;
   }
 
   /**
