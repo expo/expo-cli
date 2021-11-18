@@ -72,3 +72,32 @@ it(`works as expected`, async () => {
 
   await spawnAsync(EXPO_CLI, ['install', 'expo-camera'], { stdio: 'inherit', cwd: projectRoot });
 });
+
+it(`installs recommended versions of packages`, async () => {
+  // Create a minimal project
+  const projectRoot = getRoot('install-recommended');
+  // Create the project root aot
+  await fs.ensureDir(projectRoot);
+
+  fs.writeFileSync(
+    path.join(projectRoot, 'app.config.json'),
+    JSON.stringify({ sdkVersion: '43.0.0' })
+  );
+  fs.writeFileSync(path.join(projectRoot, 'package.json'), JSON.stringify(getBasicPackageJson()));
+
+  const { status } = await spawnAsync(
+    EXPO_CLI,
+    ['install', 'react', 'typescript', '@types/react'],
+    { stdio: 'inherit', cwd: projectRoot }
+  );
+
+  expect(status).toBe(0);
+
+  const { dependencies } = fs.readJSONSync(path.join(projectRoot, 'package.json'));
+
+  expect(dependencies).toBeDefined();
+  expect(Object.keys(dependencies).length).toBe(5);
+  expect(dependencies['@types/react']).toBe('~17.0.21');
+  expect(dependencies.react).toBe('17.0.1');
+  expect(dependencies.typescript).toBe('~4.3.5');
+});
