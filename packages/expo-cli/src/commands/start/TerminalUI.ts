@@ -1,4 +1,5 @@
 import { ExpoConfig } from '@expo/config-types';
+import { openJsInspector, queryAllInspectorAppsAsync } from '@expo/dev-server';
 import chalk from 'chalk';
 import openBrowser from 'react-dev-utils/openBrowser';
 import wrapAnsi from 'wrap-ansi';
@@ -14,11 +15,14 @@ import {
   Webpack,
 } from 'xdl';
 
-import { loginOrRegisterIfLoggedOutAsync } from '../../accounts';
 import Log from '../../log';
-import { selectAsync } from '../../prompts';
-import urlOpts from '../../urlOpts';
+import { handleErrorsAsync } from '../../utils/handleErrors';
+import { selectAsync } from '../../utils/prompts';
+import { loginOrRegisterIfLoggedOutAsync } from '../auth/accounts';
+import { learnMore } from '../utils/TerminalLink';
 import { openInEditorAsync } from '../utils/openInEditorAsync';
+import urlOpts from '../utils/urlOpts';
+import { ensureWebSupportSetupAsync } from '../utils/web/ensureWebSetup';
 
 const CTRL_C = '\u0003';
 const CTRL_D = '\u0004';
@@ -48,9 +52,9 @@ const div = chalk.dim(`│`);
 export async function shouldOpenDevToolsOnStartupAsync() {
   return UserSettings.getAsync(
     'openDevToolsAtStartup',
-    // Defaults to true for new users.
-    // TODO: switch this to false.
-    true
+    // Defaults to false for new users.
+    // We can swap this back to true when dev tools UI has a code owner again.
+    false
   );
 }
 
@@ -85,6 +89,7 @@ const printUsageAsync = async (
     !!options.isRemoteReloadingEnabled && { key: 'r', msg: `reload app` },
     !!options.isWebSocketsEnabled && { key: 'm', msg: `toggle menu` },
     !!options.isWebSocketsEnabled && { key: 'shift+m', msg: `more tools` },
+    !!options.isWebSocketsEnabled && { key: 'j', msg: `open JavaScript inspector for Hermes` },
     { key: 'o', msg: `open project code in your editor` },
     { key: 'c', msg: `show project QR` },
     { key: 'p', msg: `toggle build mode`, status: devMode },
@@ -178,10 +183,10 @@ const printServerInfo = async (
       urlOpts.printQRCode(url);
       Log.nested(item(`Metro waiting on ${u(url)}`));
       // Log.newLine();
-      // TODO: if dev client, change this message!
+      // TODO: if development build, change this message!
       Log.nested(item(`Scan the QR code above with Expo Go (Android) or the Camera app (iOS)`));
     } catch (error) {
-      // @ts-ignore: If there is no dev client scheme, then skip the QR code.
+      // @ts-ignore: If there is no development build scheme, then skip the QR code.
       if (error.code !== 'NO_DEV_CLIENT_SCHEME') {
         throw error;
       } else {
@@ -210,6 +215,24 @@ export function openDeveloperTools(url: string) {
   Log.log(`Opening developer tools in the browser...`);
   if (!openBrowser(url)) {
     Log.warn(`Unable to open developer tools in the browser`);
+  }
+}
+
+async function openJsInsectorAsync(projectRoot: string) {
+  Log.log(`Opening JavaScript inspector in the browser...`);
+  const { packagerPort } = await ProjectSettings.readPackagerInfoAsync(projectRoot);
+  const metroServerOrigin = `http://localhost:${packagerPort}`;
+  const apps = await queryAllInspectorAppsAsync(metroServerOrigin);
+  if (apps.length === 0) {
+    Log.warn(
+      `No compatible apps connected. This feature is only available for apps using the Hermes runtime. ${learnMore(
+        'https://docs.expo.dev/guides/using-hermes/'
+      )}`
+    );
+    return;
+  }
+  for (const app of apps) {
+    openJsInspector(app);
   }
 }
 
@@ -262,6 +285,15 @@ export async function startAsync(projectRoot: string, options: StartOptions) {
   await printServerInfo(projectRoot, options);
 
   async function handleKeypress(key: string) {
+    try {
+      await handleKeypressAsync(key);
+    } catch (err) {
+      await handleErrorsAsync(err, {});
+      process.exit(1);
+    }
+  }
+
+  async function handleKeypressAsync(key: string) {
     const shouldPrompt = !options.nonInteractive && ['I', 'A'].includes(key);
     if (shouldPrompt) {
       Log.clear();
@@ -356,11 +388,21 @@ export async function startAsync(projectRoot: string, options: StartOptions) {
         break;
       }
       case 'w': {
+        try {
+          if (await ensureWebSupportSetupAsync(projectRoot)) {
+            if (!platforms.includes('web')) {
+              platforms.push('web');
+              options.platforms?.push('web');
+            }
+          }
+        } catch (e: any) {
+          Log.nestedWarn(e.message);
+          break;
+        }
+
         const isDisabled = !platforms.includes('web');
         if (isDisabled) {
-          Log.nestedWarn(
-            `Web is disabled, enable it by installing ${chalk.bold`react-native-web`} and adding ${chalk.bold`web`} to the platforms array in your app.json or app.config.js`
-          );
+          // Use warnings from the web support setup.
           break;
         }
 
@@ -395,6 +437,10 @@ export async function startAsync(projectRoot: string, options: StartOptions) {
         const currentToggle = enabled ? 'enabled' : 'disabled';
         Log.log(`Auto opening developer tools on startup: ${chalk.bold(currentToggle)}`);
         logCommandsTable([{ key: 'd', msg: `show developer tools now` }]);
+        break;
+      }
+      case 'j': {
+        await openJsInsectorAsync(projectRoot);
         break;
       }
       case 'm': {
@@ -471,7 +517,7 @@ Please reload the project in Expo Go for the change to take effect.`
         break;
       case 'o':
         Log.log(`${BLT} Opening the editor...`);
-        await openInEditorAsync(projectRoot);
+        await openInEditorAsync(projectRoot, { editor: process.env.EXPO_EDITOR });
     }
   }
 }

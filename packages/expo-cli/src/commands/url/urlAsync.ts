@@ -4,8 +4,8 @@ import { ProjectSettings, UrlUtils } from 'xdl';
 
 import CommandError from '../../CommandError';
 import Log from '../../log';
-import printRunInstructionsAsync from '../../printRunInstructionsAsync';
-import urlOpts, { URLOptions } from '../../urlOpts';
+import urlOpts, { URLOptions } from '../utils/urlOpts';
+import printRunInstructionsAsync from './printRunInstructionsAsync';
 
 type ProjectUrlOptions = Command & {
   web?: boolean;

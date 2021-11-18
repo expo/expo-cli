@@ -1,13 +1,13 @@
 import fs from 'fs-extra';
 
 import { mockExpoXDL } from '../../../__tests__/mock-utils';
-import { confirmAsync } from '../../../prompts';
+import { confirmAsync } from '../../../utils/prompts';
 import { testExperienceName } from '../../__tests__/fixtures/mocks-constants';
 import { getCtxMock } from '../../__tests__/fixtures/mocks-context';
 import { RemoveKeystore } from '../AndroidKeystore';
 
 jest.mock('../../actions/list');
-jest.mock('../../../prompts');
+jest.mock('../../../utils/prompts');
 jest.mock('fs-extra');
 mockExpoXDL({
   AndroidCredentials: {

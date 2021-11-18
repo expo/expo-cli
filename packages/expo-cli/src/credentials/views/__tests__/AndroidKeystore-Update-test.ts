@@ -1,11 +1,11 @@
 import { mockExpoXDL } from '../../../__tests__/mock-utils';
-import prompts from '../../../prompts';
+import prompts from '../../../utils/prompts';
 import { testExperienceName } from '../../__tests__/fixtures/mocks-constants';
 import { getCtxMock } from '../../__tests__/fixtures/mocks-context';
 import { UpdateKeystore } from '../AndroidKeystore';
 
 jest.mock('../../actions/list');
-jest.mock('../../../prompts');
+jest.mock('../../../utils/prompts');
 jest.mock('../../utils/validateKeystore');
 jest.mock('fs-extra');
 mockExpoXDL({

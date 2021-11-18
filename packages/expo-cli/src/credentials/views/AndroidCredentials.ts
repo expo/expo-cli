@@ -1,7 +1,7 @@
 import isEmpty from 'lodash/isEmpty';
 
 import Log from '../../log';
-import prompt from '../../prompts';
+import prompt from '../../utils/prompts';
 import { displayAndroidAppCredentials } from '../actions/list';
 import { Context, IView } from '../context';
 import { DownloadKeystore, RemoveKeystore, UpdateKeystore } from './AndroidKeystore';

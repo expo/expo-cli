@@ -3,8 +3,8 @@ import { AppleDevice, SimControl, Simulator } from 'xdl';
 
 import CommandError from '../../../CommandError';
 import Log from '../../../log';
-import prompt from '../../../prompts';
 import { ora } from '../../../utils/ora';
+import prompt from '../../../utils/prompts';
 import { profileMethod } from '../../utils/profileMethod';
 
 async function getBuildDestinationsAsync({ osType }: { osType?: string } = {}) {

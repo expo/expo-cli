@@ -9,7 +9,7 @@ import { assertModResults, ForwardedBaseModOptions } from './createBaseMod';
 import { withAndroidBaseMods } from './withAndroidBaseMods';
 import { withIosBaseMods } from './withIosBaseMods';
 
-const debug = Debug('config-plugins:mod-compiler');
+const debug = Debug('expo:config-plugins:mod-compiler');
 
 export function withDefaultBaseMods(
   config: ExportedConfig,

@@ -3,7 +3,7 @@ import { ExpoConfig } from '@expo/config-types';
 import chalk from 'chalk';
 import { Versions } from 'xdl';
 
-import prompt from '../../prompts';
+import prompt from '../../utils/prompts';
 import { findProjectRootAsync } from './ProjectUtils';
 
 export async function getExpoSdkConfig(path: string) {

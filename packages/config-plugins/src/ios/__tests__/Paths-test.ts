@@ -4,12 +4,36 @@ import * as path from 'path';
 
 import { UnexpectedError } from '../../utils/errors';
 import * as WarningAggregator from '../../utils/warnings';
-import { getAllInfoPlistPaths, getAppDelegate, getXcodeProjectPath } from '../Paths';
+import {
+  findSchemeNames,
+  getAllInfoPlistPaths,
+  getAppDelegate,
+  getXcodeProjectPath,
+} from '../Paths';
 
 const fsReal = jest.requireActual('fs') as typeof fs;
 
 jest.mock('fs');
 jest.mock('../../utils/warnings');
+
+describe(findSchemeNames, () => {
+  afterEach(() => {
+    vol.reset();
+  });
+
+  it(`returns project path`, () => {
+    vol.fromJSON(
+      {
+        'ios/my-app.xcodeproj/xcshareddata/xcschemes/my-app.xcscheme': '',
+        'ios/my_app.xcodeproj/xcshareddata/xcschemes/my_app.xcscheme': '',
+        'ios/clientTests.xcodeproj/xcshareddata/xcschemes/client.beta.xcscheme': '',
+      },
+      '/'
+    );
+
+    expect(findSchemeNames('/')).toStrictEqual(['client.beta', 'my_app', 'my-app']);
+  });
+});
 
 describe(getXcodeProjectPath, () => {
   beforeAll(async () => {

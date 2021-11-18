@@ -99,8 +99,12 @@ async function clearWebCacheAsync(projectRoot: string, mode: string): Promise<vo
 }
 
 // Temporary hack while we implement multi-bundler dev server proxy.
+const _isTargetingNative: boolean = ['ios', 'android'].includes(
+  process.env.EXPO_WEBPACK_PLATFORM || ''
+);
+
 export function isTargetingNative() {
-  return ['ios', 'android'].includes(process.env.EXPO_WEBPACK_PLATFORM || '');
+  return _isTargetingNative;
 }
 
 export type WebpackDevServerResults = {
@@ -155,7 +159,7 @@ function createNativeDevServerMiddleware(
   // TODO: Move this in to expo/dev-server.
 
   const projectConfig = getConfig(projectRoot);
-  const easProjectId = projectConfig.exp.extra?.eas.projectId;
+  const easProjectId = projectConfig.exp.extra?.eas?.projectId;
   const useExpoUpdatesManifest =
     forceManifestType === 'expo-updates' || (forceManifestType !== 'classic' && easProjectId);
 
@@ -263,7 +267,7 @@ export async function startAsync(
   // Create a webpack compiler that is configured with custom messages.
   const compiler = webpack(config);
 
-  // Create the middleware required for interacting with a native runtime (Expo Go, or Expo Dev Client).
+  // Create the middleware required for interacting with a native runtime (Expo Go, or a development build).
   const nativeMiddleware = createNativeDevServerMiddleware(projectRoot, {
     port,
     compiler,

@@ -348,6 +348,10 @@ export interface IOS {
    */
   appStoreUrl?: string;
   /**
+   * Enable iOS Bitcode optimizations in the native build. Accepts the name of an iOS build configuration to enable for a single configuration and disable for all others, e.g. Debug, Release. Not available in the classic 'expo build:ios' or Expo Go. Defaults to `undefined` which uses the template's predefined settings.
+   */
+  bitcode?: boolean | string;
+  /**
    * Note: This property key is not included in the production manifest and will evaluate to `undefined`. It is used internally only in the build process, because it contains API keys that some may want to keep private.
    */
   config?: {

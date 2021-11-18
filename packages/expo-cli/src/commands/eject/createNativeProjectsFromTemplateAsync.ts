@@ -10,9 +10,9 @@ import semver from 'semver';
 
 import { AbortCommandError, SilentError } from '../../CommandError';
 import Log from '../../log';
-import { extractTemplateAppAsync } from '../../utils/extractTemplateAppAsync';
 import { logNewSection } from '../../utils/ora';
 import * as GitIgnore from '../utils/GitIgnore';
+import { extractTemplateAppAsync } from '../utils/extractTemplateAppAsync';
 import { resolveTemplateArgAsync } from './Github';
 import {
   DependenciesModificationResults,

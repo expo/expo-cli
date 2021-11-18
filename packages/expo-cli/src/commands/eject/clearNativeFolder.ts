@@ -5,8 +5,8 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 
 import Log from '../../log';
-import { confirmAsync } from '../../prompts';
 import { logNewSection } from '../../utils/ora';
+import { confirmAsync } from '../../utils/prompts';
 
 export async function directoryExistsAsync(file: string): Promise<boolean> {
   return (await fs.stat(file).catch(() => null))?.isDirectory() ?? false;

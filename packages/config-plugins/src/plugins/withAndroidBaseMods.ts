@@ -30,6 +30,16 @@ function getAndroidManifestTemplate(config: ExportedConfig) {
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
     <!-- END OPTIONAL PERMISSIONS -->
+
+    <queries>
+      <!-- Support checking for http(s) links via the Linking API -->
+      <intent>
+        <action android:name="android.intent.action.VIEW" />
+        <category android:name="android.intent.category.BROWSABLE" />
+        <data android:scheme="https" />
+      </intent>
+    </queries>
+
     <application
       android:name=".MainApplication"
       android:label="@string/app_name"
@@ -322,6 +332,18 @@ const defaultProviders = {
   mainActivity: provider<Paths.ApplicationProjectFile>({
     getFilePath({ modRequest: { projectRoot } }) {
       return Paths.getProjectFilePath(projectRoot, 'MainActivity');
+    },
+    async read(filePath) {
+      return Paths.getFileInfo(filePath);
+    },
+    async write(filePath, { modResults: { contents } }) {
+      await writeFile(filePath, contents);
+    },
+  }),
+
+  mainApplication: provider<Paths.ApplicationProjectFile>({
+    getFilePath({ modRequest: { projectRoot } }) {
+      return Paths.getProjectFilePath(projectRoot, 'MainApplication');
     },
     async read(filePath) {
       return Paths.getFileInfo(filePath);

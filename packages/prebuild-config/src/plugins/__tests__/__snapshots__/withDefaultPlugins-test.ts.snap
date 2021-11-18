@@ -28,12 +28,20 @@ Object {
         "name": "expo-facebook",
         "version": "UNVERSIONED",
       },
+      "expo-navigation-bar": Object {
+        "name": "expo-navigation-bar",
+        "version": "UNVERSIONED",
+      },
       "expo-notifications": Object {
         "name": "expo-notifications",
         "version": "UNVERSIONED",
       },
       "expo-splash-screen": Object {
         "name": "expo-splash-screen",
+        "version": "UNVERSIONED",
+      },
+      "expo-system-ui": Object {
+        "name": "expo-system-ui",
         "version": "UNVERSIONED",
       },
       "expo-updates": Object {
@@ -83,6 +91,8 @@ Object {
     "permissions": Array [
       "CAMERA",
       "com.sec.android.provider.badge.permission.WRITE",
+      "android.permission.ACCESS_COARSE_LOCATION",
+      "android.permission.ACCESS_FINE_LOCATION",
     ],
     "softwareKeyboardLayoutMode": "pan",
     "splash": Object {
@@ -140,7 +150,6 @@ Object {
       "usesNonExemptEncryption": true,
     },
     "entitlements": Object {
-      "aps-environment": "development",
       "com.apple.developer.applesignin": Array [
         "Default",
       ],
@@ -203,8 +212,15 @@ Object {
           },
         },
       },
-      "NSLocationWhenInUseUsageDescription": "",
-      "RCTRootViewBackgroundColor": 4294901760,
+      "NSLocationWhenInUseUsageDescription": "Allow $(PRODUCT_NAME) to access your location",
+      "SKAdNetworkItems": Array [
+        Object {
+          "SKAdNetworkIdentifier": "v9wttpbfk9.skadnetwork",
+        },
+        Object {
+          "SKAdNetworkIdentifier": "n38lu8286q.skadnetwork",
+        },
+      ],
       "UILaunchStoryboardName": "SplashScreen",
       "UIRequiredDeviceCapabilities": Array [
         "armv7",
@@ -216,6 +232,7 @@ Object {
         "UIInterfaceOrientationLandscapeLeft",
         "UIInterfaceOrientationLandscapeRight",
       ],
+      "UIUserInterfaceStyle": "Automatic",
       "UIViewControllerBasedStatusBarAppearance": false,
       "bar": Object {
         "val": Array [
@@ -301,15 +318,15 @@ Object {
               },
               Object {
                 "$": Object {
-                  "name": "activityBackground",
-                },
-                "_": "#ff0000",
-              },
-              Object {
-                "$": Object {
                   "name": "splashscreen_background",
                 },
                 "_": "#ff00ff",
+              },
+              Object {
+                "$": Object {
+                  "name": "activityBackground",
+                },
+                "_": "#ff0000",
               },
               Object {
                 "$": Object {
@@ -706,6 +723,35 @@ Object {
                 ],
               },
             ],
+            "queries": Array [
+              Object {
+                "intent": Array [
+                  Object {
+                    "action": Array [
+                      Object {
+                        "$": Object {
+                          "android:name": "android.intent.action.VIEW",
+                        },
+                      },
+                    ],
+                    "category": Array [
+                      Object {
+                        "$": Object {
+                          "android:name": "android.intent.category.BROWSABLE",
+                        },
+                      },
+                    ],
+                    "data": Array [
+                      Object {
+                        "$": Object {
+                          "android:scheme": "https",
+                        },
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
             "uses-permission": Array [
               Object {
                 "$": Object {
@@ -720,6 +766,16 @@ Object {
               Object {
                 "$": Object {
                   "android:name": "com.sec.android.provider.badge.permission.WRITE",
+                },
+              },
+              Object {
+                "$": Object {
+                  "android:name": "android.permission.ACCESS_COARSE_LOCATION",
+                },
+              },
+              Object {
+                "$": Object {
+                  "android:name": "android.permission.ACCESS_FINE_LOCATION",
                 },
               },
             ],
@@ -795,15 +851,15 @@ Object {
                   },
                   Object {
                     "$": Object {
-                      "name": "android:navigationBarColor",
-                    },
-                    "_": "@color/navigationBarColor",
-                  },
-                  Object {
-                    "$": Object {
                       "name": "android:windowLightNavigationBar",
                     },
                     "_": "true",
+                  },
+                  Object {
+                    "$": Object {
+                      "name": "android:navigationBarColor",
+                    },
+                    "_": "@color/navigationBarColor",
                   },
                   Object {
                     "$": Object {
@@ -833,7 +889,6 @@ Object {
       },
       "ios": Object {
         "entitlements": Object {
-          "aps-environment": "development",
           "com.apple.developer.applesignin": Array [
             "Default",
           ],
@@ -901,8 +956,15 @@ Object {
               },
             },
           },
-          "NSLocationWhenInUseUsageDescription": "",
-          "RCTRootViewBackgroundColor": 4294901760,
+          "NSLocationWhenInUseUsageDescription": "Allow $(PRODUCT_NAME) to access your location",
+          "SKAdNetworkItems": Array [
+            Object {
+              "SKAdNetworkIdentifier": "v9wttpbfk9.skadnetwork",
+            },
+            Object {
+              "SKAdNetworkIdentifier": "n38lu8286q.skadnetwork",
+            },
+          ],
           "UILaunchStoryboardName": "SplashScreen",
           "UIRequiredDeviceCapabilities": Array [
             "armv7",
@@ -914,6 +976,7 @@ Object {
             "UIInterfaceOrientationLandscapeLeft",
             "UIInterfaceOrientationLandscapeRight",
           ],
+          "UIUserInterfaceStyle": "Automatic",
           "UIViewControllerBasedStatusBarAppearance": false,
           "bar": Object {
             "val": Array [
@@ -954,12 +1017,20 @@ Object {
         "name": "expo-facebook",
         "version": "UNVERSIONED",
       },
+      "expo-navigation-bar": Object {
+        "name": "expo-navigation-bar",
+        "version": "UNVERSIONED",
+      },
       "expo-notifications": Object {
         "name": "expo-notifications",
         "version": "UNVERSIONED",
       },
       "expo-splash-screen": Object {
         "name": "expo-splash-screen",
+        "version": "UNVERSIONED",
+      },
+      "expo-system-ui": Object {
+        "name": "expo-system-ui",
         "version": "UNVERSIONED",
       },
       "expo-updates": Object {
@@ -1009,6 +1080,8 @@ Object {
     "permissions": Array [
       "CAMERA",
       "com.sec.android.provider.badge.permission.WRITE",
+      "android.permission.ACCESS_COARSE_LOCATION",
+      "android.permission.ACCESS_FINE_LOCATION",
     ],
     "softwareKeyboardLayoutMode": "pan",
     "splash": Object {
@@ -1066,7 +1139,6 @@ Object {
       "usesNonExemptEncryption": true,
     },
     "entitlements": Object {
-      "aps-environment": "development",
       "com.apple.developer.applesignin": Array [
         "Default",
       ],
@@ -1129,8 +1201,15 @@ Object {
           },
         },
       },
-      "NSLocationWhenInUseUsageDescription": "",
-      "RCTRootViewBackgroundColor": 4294901760,
+      "NSLocationWhenInUseUsageDescription": "Allow $(PRODUCT_NAME) to access your location",
+      "SKAdNetworkItems": Array [
+        Object {
+          "SKAdNetworkIdentifier": "v9wttpbfk9.skadnetwork",
+        },
+        Object {
+          "SKAdNetworkIdentifier": "n38lu8286q.skadnetwork",
+        },
+      ],
       "UILaunchStoryboardName": "SplashScreen",
       "UIRequiredDeviceCapabilities": Array [
         "armv7",
@@ -1142,6 +1221,7 @@ Object {
         "UIInterfaceOrientationLandscapeLeft",
         "UIInterfaceOrientationLandscapeRight",
       ],
+      "UIUserInterfaceStyle": "Automatic",
       "UIViewControllerBasedStatusBarAppearance": false,
       "bar": Object {
         "val": Array [
@@ -1227,15 +1307,15 @@ Object {
               },
               Object {
                 "$": Object {
-                  "name": "activityBackground",
-                },
-                "_": "#ff0000",
-              },
-              Object {
-                "$": Object {
                   "name": "splashscreen_background",
                 },
                 "_": "#ff00ff",
+              },
+              Object {
+                "$": Object {
+                  "name": "activityBackground",
+                },
+                "_": "#ff0000",
               },
               Object {
                 "$": Object {
@@ -1521,6 +1601,35 @@ Object {
                 ],
               },
             ],
+            "queries": Array [
+              Object {
+                "intent": Array [
+                  Object {
+                    "action": Array [
+                      Object {
+                        "$": Object {
+                          "android:name": "android.intent.action.VIEW",
+                        },
+                      },
+                    ],
+                    "category": Array [
+                      Object {
+                        "$": Object {
+                          "android:name": "android.intent.category.BROWSABLE",
+                        },
+                      },
+                    ],
+                    "data": Array [
+                      Object {
+                        "$": Object {
+                          "android:scheme": "https",
+                        },
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
             "uses-permission": Array [
               Object {
                 "$": Object {
@@ -1565,6 +1674,16 @@ Object {
               Object {
                 "$": Object {
                   "android:name": "com.sec.android.provider.badge.permission.WRITE",
+                },
+              },
+              Object {
+                "$": Object {
+                  "android:name": "android.permission.ACCESS_COARSE_LOCATION",
+                },
+              },
+              Object {
+                "$": Object {
+                  "android:name": "android.permission.ACCESS_FINE_LOCATION",
                 },
               },
             ],
@@ -1634,15 +1753,15 @@ Object {
                   },
                   Object {
                     "$": Object {
-                      "name": "android:navigationBarColor",
-                    },
-                    "_": "@color/navigationBarColor",
-                  },
-                  Object {
-                    "$": Object {
                       "name": "android:windowLightNavigationBar",
                     },
                     "_": "true",
+                  },
+                  Object {
+                    "$": Object {
+                      "name": "android:navigationBarColor",
+                    },
+                    "_": "@color/navigationBarColor",
                   },
                   Object {
                     "$": Object {
@@ -1672,7 +1791,6 @@ Object {
       },
       "ios": Object {
         "entitlements": Object {
-          "aps-environment": "development",
           "com.apple.developer.applesignin": Array [
             "Default",
           ],
@@ -1740,7 +1858,15 @@ Object {
               },
             },
           },
-          "RCTRootViewBackgroundColor": 4294901760,
+          "NSLocationWhenInUseUsageDescription": "Allow $(PRODUCT_NAME) to access your location",
+          "SKAdNetworkItems": Array [
+            Object {
+              "SKAdNetworkIdentifier": "v9wttpbfk9.skadnetwork",
+            },
+            Object {
+              "SKAdNetworkIdentifier": "n38lu8286q.skadnetwork",
+            },
+          ],
           "UILaunchStoryboardName": "SplashScreen",
           "UIRequiredDeviceCapabilities": Array [
             "armv7",
@@ -1753,6 +1879,7 @@ Object {
             "UIInterfaceOrientationLandscapeLeft",
             "UIInterfaceOrientationLandscapeRight",
           ],
+          "UIUserInterfaceStyle": "Automatic",
           "UIViewControllerBasedStatusBarAppearance": false,
           "bar": Object {
             "val": Array [
@@ -1793,12 +1920,20 @@ Object {
         "name": "expo-facebook",
         "version": "UNVERSIONED",
       },
+      "expo-navigation-bar": Object {
+        "name": "expo-navigation-bar",
+        "version": "UNVERSIONED",
+      },
       "expo-notifications": Object {
         "name": "expo-notifications",
         "version": "UNVERSIONED",
       },
       "expo-splash-screen": Object {
         "name": "expo-splash-screen",
+        "version": "UNVERSIONED",
+      },
+      "expo-system-ui": Object {
+        "name": "expo-system-ui",
         "version": "UNVERSIONED",
       },
       "expo-updates": Object {
@@ -1848,6 +1983,8 @@ Object {
     "permissions": Array [
       "CAMERA",
       "com.sec.android.provider.badge.permission.WRITE",
+      "android.permission.ACCESS_COARSE_LOCATION",
+      "android.permission.ACCESS_FINE_LOCATION",
     ],
     "softwareKeyboardLayoutMode": "pan",
     "splash": Object {
@@ -1905,7 +2042,6 @@ Object {
       "usesNonExemptEncryption": true,
     },
     "entitlements": Object {
-      "aps-environment": "development",
       "com.apple.developer.applesignin": Array [
         "Default",
       ],
@@ -1968,7 +2104,15 @@ Object {
           },
         },
       },
-      "RCTRootViewBackgroundColor": 4294901760,
+      "NSLocationWhenInUseUsageDescription": "Allow $(PRODUCT_NAME) to access your location",
+      "SKAdNetworkItems": Array [
+        Object {
+          "SKAdNetworkIdentifier": "v9wttpbfk9.skadnetwork",
+        },
+        Object {
+          "SKAdNetworkIdentifier": "n38lu8286q.skadnetwork",
+        },
+      ],
       "UILaunchStoryboardName": "SplashScreen",
       "UIRequiredDeviceCapabilities": Array [
         "armv7",
@@ -1981,6 +2125,7 @@ Object {
         "UIInterfaceOrientationLandscapeLeft",
         "UIInterfaceOrientationLandscapeRight",
       ],
+      "UIUserInterfaceStyle": "Automatic",
       "UIViewControllerBasedStatusBarAppearance": false,
       "bar": Object {
         "val": Array [

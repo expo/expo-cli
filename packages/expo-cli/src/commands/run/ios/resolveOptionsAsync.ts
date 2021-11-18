@@ -5,7 +5,7 @@ import * as path from 'path';
 
 import CommandError from '../../../CommandError';
 import Log from '../../../log';
-import { selectAsync } from '../../../prompts';
+import { selectAsync } from '../../../utils/prompts';
 import { profileMethod } from '../../utils/profileMethod';
 import { resolvePortAsync } from '../utils/resolvePortAsync';
 import * as XcodeBuild from './XcodeBuild';

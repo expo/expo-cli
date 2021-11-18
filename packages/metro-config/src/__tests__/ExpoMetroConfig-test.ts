@@ -8,17 +8,37 @@ const consoleError = console.error;
 
 beforeEach(() => {
   delete process.env.EXPO_TARGET;
+  delete process.env.EXPO_USE_EXOTIC;
 });
 describe('getDefaultConfig', () => {
   afterAll(() => {
     console.error = consoleError;
   });
+
   it('loads default configuration', () => {
     expect(getDefaultConfig(projectRoot)).toEqual(
       expect.objectContaining({
         projectRoot,
         resolver: expect.objectContaining({
-          sourceExts: expect.arrayContaining(['expo.ts', 'expo.tsx', 'expo.js', 'expo.jsx', 'jsx']),
+          resolverMainFields: expect.arrayContaining(['react-native', 'browser', 'main']),
+          sourceExts: expect.not.arrayContaining([
+            'expo.ts',
+            'expo.tsx',
+            'expo.js',
+            'expo.jsx',
+            'jsx',
+          ]),
+        }),
+      })
+    );
+  });
+  it('loads exotic configuration', () => {
+    expect(getDefaultConfig(projectRoot, { mode: 'exotic' })).toEqual(
+      expect.objectContaining({
+        projectRoot,
+        resolver: expect.objectContaining({
+          resolverMainFields: ['browser', 'main'],
+          sourceExts: expect.arrayContaining(['cjs']),
         }),
       })
     );
@@ -32,10 +52,11 @@ describe('getDefaultConfig', () => {
 
   it('complains about an invalid target setting', () => {
     process.env.EXPO_TARGET = 'bare';
+    // Only throws in v40-
     expect(() =>
       // @ts-ignore incorrect `target` value passed on purpose
       getDefaultConfig(projectRoot, { target: 'blooper' })
-    ).toThrowErrorMatchingSnapshot();
+    ).not.toThrow();
   });
   it('logs an error if the environment variable is used', () => {
     console.error = jest.fn();

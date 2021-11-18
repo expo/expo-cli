@@ -1,8 +1,8 @@
 import { Project, ProjectSettings } from 'xdl';
 
-import { getOptionalDevClientSchemeAsync } from '../../../schemes';
 import * as TerminalUI from '../../start/TerminalUI';
 import { installExitHooks } from '../../start/installExitHooks';
+import { getOptionalDevClientSchemeAsync } from '../utils/schemes';
 
 export async function setGlobalDevClientSettingsAsync(projectRoot: string) {
   const devClient = true;

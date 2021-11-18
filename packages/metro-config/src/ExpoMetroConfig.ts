@@ -9,10 +9,12 @@ import type MetroConfig from 'metro-config';
 import path from 'path';
 import resolveFrom from 'resolve-from';
 
+import { getModulesPaths } from './getModulesPaths';
+import { getWatchFolders } from './getWatchFolders';
 import { importMetroConfigFromProject } from './importMetroFromProject';
 
 export const EXPO_DEBUG = boolish('EXPO_DEBUG', false);
-export const EXPO_USE_EXOTIC = boolish('EXPO_USE_EXOTIC', false);
+const EXPO_USE_EXOTIC = boolish('EXPO_USE_EXOTIC', false);
 
 // Import only the types here, the values will be imported from the project, at runtime.
 export const INTERNAL_CALLSITES_REGEX = new RegExp(
@@ -54,6 +56,7 @@ export const INTERNAL_CALLSITES_REGEX = new RegExp(
 
 export interface DefaultConfigOptions {
   target?: ProjectTarget;
+  mode?: 'exotic';
 }
 
 function readIsLegacyImportsEnabled(projectRoot: string): boolean {
@@ -69,13 +72,35 @@ function getProjectBabelConfigFile(projectRoot: string): string | undefined {
   );
 }
 
+function getAssetPlugins(projectRoot: string): string[] {
+  const assetPlugins: string[] = [];
+
+  let hashAssetFilesPath;
+  try {
+    hashAssetFilesPath = resolveFrom(projectRoot, 'expo-asset/tools/hashAssetFiles');
+  } catch {
+    // TODO: we should warn/throw an error if the user has expo-updates installed but does not
+    // have hashAssetFiles available, or if the user is in managed workflow and does not have
+    // hashAssetFiles available. but in a bare app w/o expo-updates, just using dev-client,
+    // it is not needed
+  }
+
+  if (hashAssetFilesPath) {
+    assetPlugins.push(hashAssetFilesPath);
+  }
+
+  return assetPlugins;
+}
+
 let hasWarnedAboutExotic = false;
 
 export function getDefaultConfig(
   projectRoot: string,
   options: DefaultConfigOptions = {}
 ): MetroConfig.InputConfigT {
-  if (EXPO_USE_EXOTIC && !hasWarnedAboutExotic) {
+  const isExotic = options.mode === 'exotic' || EXPO_USE_EXOTIC;
+
+  if (isExotic && !hasWarnedAboutExotic) {
     hasWarnedAboutExotic = true;
     console.log(
       chalk.gray(
@@ -95,16 +120,6 @@ export function getDefaultConfig(
     process.env.EXPO_METRO_CACHE_KEY_VERSION = String(require(babelPresetFbjsPath).version);
   } catch {
     // noop -- falls back to a hardcoded value.
-  }
-
-  let hashAssetFilesPath;
-  try {
-    hashAssetFilesPath = resolveFrom(projectRoot, 'expo-asset/tools/hashAssetFiles');
-  } catch {
-    // TODO: we should warn/throw an error if the user has expo-updates installed but does not
-    // have hashAssetFiles available, or if the user is in managed workflow and does not have
-    // hashAssetFiles available. but in a bare app w/o expo-updates, just using dev-client,
-    // it is not needed
   }
 
   const isLegacy = readIsLegacyImportsEnabled(projectRoot);
@@ -158,7 +173,7 @@ export function getDefaultConfig(
       ? getBareExtensions([], sourceExtsConfig)
       : getManagedExtensions([], sourceExtsConfig);
 
-  if (EXPO_USE_EXOTIC) {
+  if (isExotic) {
     // Add support for cjs (without platform extensions).
     sourceExts.push('cjs');
   }
@@ -170,21 +185,29 @@ export function getDefaultConfig(
 
   // Disable `react-native` in exotic mode, since library authors
   // use it to ship raw application code to the project.
-  if (!EXPO_USE_EXOTIC) {
+  if (!isExotic) {
     resolverMainFields.push('react-native');
   }
   resolverMainFields.push('browser', 'main');
 
+  const watchFolders = getWatchFolders(projectRoot);
+  // TODO: nodeModulesPaths does not work with the new Node.js package.json exports API, this causes packages like uuid to fail. Disabling for now.
+  const nodeModulesPaths = getModulesPaths(projectRoot);
   if (EXPO_DEBUG) {
     console.log();
     console.log(`Expo Metro config:`);
+    try {
+      console.log(`- Version: ${require('../package.json').version}`);
+    } catch {}
     console.log(`- Bundler target: ${target}`);
     console.log(`- Legacy: ${isLegacy}`);
     console.log(`- Extensions: ${sourceExts.join(', ')}`);
     console.log(`- React Native: ${reactNativePath}`);
     console.log(`- Babel config: ${babelConfigPath || 'babel-preset-expo (default)'}`);
     console.log(`- Resolver Fields: ${resolverMainFields.join(', ')}`);
-    console.log(`- Exotic: ${EXPO_USE_EXOTIC}`);
+    console.log(`- Watch Folders: ${watchFolders.join(', ')}`);
+    console.log(`- Node Module Paths: ${nodeModulesPaths.join(', ')}`);
+    console.log(`- Exotic: ${isExotic}`);
     console.log();
   }
   const {
@@ -197,10 +220,12 @@ export function getDefaultConfig(
   // Merge in the default config from Metro here, even though loadConfig uses it as defaults.
   // This is a convenience for getDefaultConfig use in metro.config.js, e.g. to modify assetExts.
   return MetroConfig.mergeConfig(metroDefaultValues, {
+    watchFolders,
     resolver: {
       resolverMainFields,
       platforms: ['ios', 'android', 'native'],
       sourceExts,
+      nodeModulesPaths,
     },
     serializer: {
       getModulesRunBeforeMainModule: () => [
@@ -234,7 +259,7 @@ export function getDefaultConfig(
     },
     transformer: {
       allowOptionalDependencies: true,
-      babelTransformerPath: EXPO_USE_EXOTIC
+      babelTransformerPath: isExotic
         ? require.resolve('./transformer/metro-expo-exotic-babel-transformer')
         : isCustomBabelConfigDefined
         ? // If the user defined a babel config file in their project,
@@ -244,7 +269,7 @@ export function getDefaultConfig(
         : // Otherwise, use a custom transformer that uses `babel-preset-expo` by default for projects.
           require.resolve('./transformer/metro-expo-babel-transformer'),
       assetRegistryPath: 'react-native/Libraries/Image/AssetRegistry',
-      assetPlugins: hashAssetFilesPath ? [hashAssetFilesPath] : undefined,
+      assetPlugins: getAssetPlugins(projectRoot),
     },
   });
 }

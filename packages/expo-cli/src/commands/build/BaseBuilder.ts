@@ -5,8 +5,7 @@ import semver from 'semver';
 import { RobotUser, User, UserManager, Versions } from 'xdl';
 
 import Log from '../../log';
-import { getProjectOwner } from '../../projects';
-import { actionAsync as publishAction } from '../publishAsync';
+import { actionAsync as publishAction } from '../publish/publishAsync';
 import { sleep } from '../utils/promise';
 import * as UrlUtils from '../utils/url';
 import { BuilderOptions } from './BaseBuilder.types';
@@ -73,7 +72,7 @@ export default class BaseBuilder {
     await this.checkProjectConfig();
     // note: this validates if a robot user is used without "owner" in the manifest
     // without this check, build/status returns "robots not allowed".
-    getProjectOwner(
+    UserManager.getProjectOwner(
       // TODO: Move this since it can add delay
       await this.getUserAsync(),
       this.projectConfig.exp

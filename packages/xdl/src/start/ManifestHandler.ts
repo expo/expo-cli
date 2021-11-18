@@ -4,7 +4,7 @@ import chalk from 'chalk';
 import express from 'express';
 import http from 'http';
 import os from 'os';
-import { parse, URL } from 'url';
+import { parse, resolve, URL } from 'url';
 
 import {
   Analytics,
@@ -22,6 +22,7 @@ import {
   UserManager,
   UserSettings,
   Versions,
+  Webpack,
 } from '../internal';
 
 interface HostInfo {
@@ -243,7 +244,14 @@ export async function getManifestResponseAsync({
   const hostname = stripPort(host);
 
   // Get project entry point and initial module
-  const entryPoint = resolveEntryPoint(projectRoot, platform, projectConfig);
+  let entryPoint = resolveEntryPoint(projectRoot, platform, projectConfig);
+
+  // NOTE(Bacon): Webpack is currently hardcoded to index.bundle on native
+  // in the future (TODO) we should move this logic into a Webpack plugin and use
+  // a generated file name like we do on web.
+  if (Webpack.isTargetingNative()) {
+    entryPoint = 'index.js';
+  }
   const mainModuleName = UrlUtils.stripJSExtension(entryPoint);
   // Gather packager and host info
   const hostInfo = await createHostInfoAsync();
@@ -282,6 +290,11 @@ export async function getManifestResponseAsync({
     projectRoot,
     manifest,
     async resolver(path) {
+      if (Webpack.isTargetingNative()) {
+        // When using our custom dev server, just do assets normally
+        // without the `assets/` subpath redirect.
+        return resolve(manifest.bundleUrl!.match(/^https?:\/\/.*?\//)![0], path);
+      }
       return manifest.bundleUrl!.match(/^https?:\/\/.*?\//)![0] + 'assets/' + path;
     },
   });
