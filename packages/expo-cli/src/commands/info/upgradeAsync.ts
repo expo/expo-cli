@@ -21,14 +21,13 @@ import { SDKVersion } from 'xdl/build/Versions';
 
 import CommandError from '../../CommandError';
 import Log from '../../log';
+import { DependencyList } from '../../utils/fetchers';
 import { logNewSection } from '../../utils/ora';
 import { confirmAsync, selectAsync } from '../../utils/prompts';
 import { findProjectRootAsync } from '../utils/ProjectUtils';
 import { getBundledNativeModulesAsync } from '../utils/bundledNativeModules';
 import { assertProjectHasExpoExtensionFilesAsync } from '../utils/deprecatedExtensionWarnings';
 import maybeBailOnGitStatusAsync from '../utils/maybeBailOnGitStatusAsync';
-
-type DependencyList = Record<string, string>;
 
 type Options = {
   npm?: boolean;
