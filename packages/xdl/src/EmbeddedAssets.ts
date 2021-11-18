@@ -15,7 +15,7 @@ import {
 } from './internal';
 
 const PLACEHOLDER_URL = 'YOUR-APP-URL-HERE';
-const FYI_URL = 'https://expo.fyi/expo-updates-config.md';
+const FYI_URL = 'https://expo.fyi/expo-updates-config';
 
 export type EmbeddedAssetsConfiguration = {
   projectRoot: string;
