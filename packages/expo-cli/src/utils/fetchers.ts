@@ -3,8 +3,8 @@ import { Versions } from 'xdl';
 export type DependencyList = Record<string, string>;
 
 export const getRemoteVersionsForSdk = async (sdkVersion?: string): Promise<DependencyList> => {
-  if (sdkVersion) {
-    const { sdkVersions } = await Versions.versionsAsync({ skipCache: true });
+  const { sdkVersions } = await Versions.versionsAsync({ skipCache: true });
+  if (sdkVersion && sdkVersions[sdkVersion]) {
     const { relatedPackages, facebookReactVersion, facebookReactNativeVersion } = sdkVersions[
       sdkVersion
     ];
