@@ -838,7 +838,7 @@ async function constructDeepLinkAsync(
     !devClient &&
     isDevClientPackageInstalled(projectRoot)
   ) {
-    return UrlUtils.constructLoadingUrlAsync(projectRoot);
+    return UrlUtils.constructLoadingUrlAsync(projectRoot, 'android');
   } else {
     return await UrlUtils.constructDeepLinkAsync(projectRoot, {
       scheme,

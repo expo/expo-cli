@@ -2,8 +2,9 @@ import { ConfigError, ExpoConfig, getConfig, isLegacyImportsEnabled } from '@exp
 import chalk from 'chalk';
 import path from 'path';
 import resolveFrom from 'resolve-from';
-import { Project, UnifiedAnalytics, UrlUtils, Versions } from 'xdl';
+import { LoadingPageHandler, Project, UnifiedAnalytics, UrlUtils, Versions } from 'xdl';
 
+import StatusEventEmitter from '../../analytics/StatusEventEmitter';
 import getDevClientProperties from '../../analytics/getDevClientProperties';
 import Log from '../../log';
 import { assertProjectHasExpoExtensionFilesAsync } from '../utils/deprecatedExtensionWarnings';
@@ -77,7 +78,29 @@ export async function actionAsync(projectRoot: string, options: NormalizedOption
   }
 
   const startOptions = profileMethod(parseStartOptions)(options, exp);
+  LoadingPageHandler.setOnDeepLink(
+    async (projectRoot: string, isDevClient: boolean, platform: string | null) => {
+      if (!isDevClient) {
+        return;
+      }
 
+      const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
+      StatusEventEmitter.once('deviceLogReceive', () => {
+        // Send the 'ready' event once the app is running in a device.
+        UnifiedAnalytics.logEvent('dev client interstitial page', {
+          status: 'ready',
+          platform,
+          ...getDevClientProperties(projectRoot, exp),
+        });
+      });
+
+      UnifiedAnalytics.logEvent('dev client interstitial page', {
+        status: 'started',
+        platform,
+        ...getDevClientProperties(projectRoot, exp),
+      });
+    }
+  );
   await profileMethod(Project.startAsync)(rootPath, { ...startOptions, exp });
 
   // Send to option...

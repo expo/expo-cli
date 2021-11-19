@@ -26,6 +26,7 @@ export {
   NotificationCode,
   printBundleSizes,
   PackagerLogsStream,
+  LoadingPageHandler,
   LogRecord,
   LogUpdater,
   PKCS12Utils,
