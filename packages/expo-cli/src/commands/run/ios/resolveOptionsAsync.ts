@@ -20,6 +20,8 @@ export type Options = {
   configuration?: XcodeConfiguration;
   bundler?: boolean;
   install?: boolean;
+  /** Should use derived data for builds. */
+  buildCache: boolean;
 };
 
 export type ProjectInfo = {
@@ -166,6 +168,7 @@ export async function resolveOptionsAsync(
     shouldStartBundler: options.bundler ?? false,
     shouldSkipInitialBundling,
     port,
+    buildCache: options.buildCache,
     terminal: getDefaultUserTerminal(),
     scheme: resolvedScheme.name,
   };
