@@ -1,7 +1,7 @@
 import assert from 'assert';
+import openBrowserAsync from 'better-opn';
 import chalk from 'chalk';
 import program from 'commander';
-import openBrowser from 'react-dev-utils/openBrowser';
 import { ApiV2, User, UserManager } from 'xdl';
 import { ApiV2Error } from 'xdl/build/ApiV2';
 
@@ -345,7 +345,7 @@ export const REGISTRATION_URL = `https://expo.dev/signup`;
 
 export function openRegistrationInBrowser() {
   const spinner = ora(`Opening ${REGISTRATION_URL}...`).start();
-  const opened = openBrowser(REGISTRATION_URL);
+  const opened = openBrowserAsync(REGISTRATION_URL);
 
   if (opened) {
     spinner.succeed(`Opened ${REGISTRATION_URL} in your web browser.`);

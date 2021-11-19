@@ -1,7 +1,7 @@
 import { ExpoConfig } from '@expo/config-types';
 import { openJsInspector, queryAllInspectorAppsAsync } from '@expo/dev-server';
+import openBrowserAsync from 'better-opn';
 import chalk from 'chalk';
-import openBrowser from 'react-dev-utils/openBrowser';
 import wrapAnsi from 'wrap-ansi';
 import {
   Android,
@@ -211,9 +211,9 @@ const printServerInfo = async (
   Log.addNewLineIfNone();
 };
 
-export function openDeveloperTools(url: string) {
+export async function openDeveloperTools(url: string) {
   Log.log(`Opening developer tools in the browser...`);
-  if (!openBrowser(url)) {
+  if (!(await openBrowserAsync(url))) {
     Log.warn(`Unable to open developer tools in the browser`);
   }
 }

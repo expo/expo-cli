@@ -5062,6 +5062,13 @@ before-after-hook@^2.0.0:
   resolved "https://registry.yarnpkg.com/before-after-hook/-/before-after-hook-2.1.0.tgz#b6c03487f44e24200dd30ca5e6a1979c5d2fb635"
   integrity sha512-IWIbu7pMqyw3EAJHzzHbWa85b6oud/yfKYg5rqB5hNE8CeMi3nX+2C2sj0HswfblST86hpVEOAb9x34NZd6P7A==
 
+better-opn@^3.0.1:
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/better-opn/-/better-opn-3.0.1.tgz#01d4dd3bde34d959a0645281fb6b2e35ef91b6f7"
+  integrity sha512-u7pU4QnwLQ+wCDLHdvtWbI/41pSRayJ+UHyAqpb5sr42FGnqzBlEyWdCklfaSzXqbmnXDBzCvWcaZmL3qp0xGA==
+  dependencies:
+    open "^8.0.4"
+
 big-integer@1.6.x, big-integer@^1.6.44:
   version "1.6.48"
   resolved "https://registry.yarnpkg.com/big-integer/-/big-integer-1.6.48.tgz#8fd88bd1632cba4a1c8c3e3d7159f08bb95b4b9e"
@@ -13611,6 +13618,15 @@ open@^7.0.2:
   dependencies:
     is-docker "^2.0.0"
     is-wsl "^2.1.1"
+
+open@^8.0.4:
+  version "8.4.0"
+  resolved "https://registry.yarnpkg.com/open/-/open-8.4.0.tgz#345321ae18f8138f82565a910fdc6b39e8c244f8"
+  integrity sha512-XgFPPM+B28FtCCgSb9I+s9szOC1vZRSwgWsRUA5ylIxRTgKozqjOCrVOqGsYABPYK5qnfqClxZTFBa8PKt2v6Q==
+  dependencies:
+    define-lazy-prop "^2.0.0"
+    is-docker "^2.1.1"
+    is-wsl "^2.2.0"
 
 open@^8.3.0:
   version "8.3.0"
