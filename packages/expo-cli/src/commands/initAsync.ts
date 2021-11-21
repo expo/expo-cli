@@ -64,8 +64,8 @@ function assertValidName(folderName: string) {
       `Cannot create an app named ${chalk.red(`"${folderName}"`)}. ${validation}`
     );
   }
-  const isFolderNameBlacklisted = CreateApp.isFolderNameBlacklisted(folderName);
-  if (isFolderNameBlacklisted) {
+  const isFolderNameForbidden = CreateApp.isFolderNameForbidden(folderName);
+  if (isFolderNameForbidden) {
     throw new CommandError(`Cannot create an app named ${chalk.red(`"${folderName}"`)}.`);
   }
 }
