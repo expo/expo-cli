@@ -20,6 +20,10 @@ for (const platform of ['android', 'ios']) {
       slug: '',
       [platform]: { config: { branch: { apiKey: 'xxx' } } },
     });
-    expect(WarningAggregator.addWarningForPlatform).toHaveBeenCalledTimes(1);
+    expect(WarningAggregator.addWarningForPlatform).toHaveBeenLastCalledWith(
+      platform,
+      platform + '.config.branch.apiKey',
+      'expo-branch has been deprecated in favor of react-native-branch. Please install react-native-branch in your project and setup the Expo config plugin.'
+    );
   });
 }
