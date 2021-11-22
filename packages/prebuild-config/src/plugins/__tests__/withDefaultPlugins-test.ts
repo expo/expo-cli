@@ -318,8 +318,6 @@ describe('built-in plugins', () => {
         CFBundleURLSchemes.includes('GOOGLE_SIGN_IN_CLIENT_ID')
       )
     ).toBeDefined();
-    // Branch
-    expect(config.ios?.infoPlist?.branch_key?.live).toBe('MY_BRANCH_KEY');
 
     // Mods should all be functions
     expect(Object.values(config.mods.ios).every(value => typeof value === 'function')).toBe(true);
@@ -449,8 +447,6 @@ describe('built-in plugins', () => {
         CFBundleURLSchemes.includes('GOOGLE_SIGN_IN_CLIENT_ID')
       )
     ).toBeDefined();
-    // Branch
-    expect(config.ios?.infoPlist?.branch_key?.live).toBe('MY_BRANCH_KEY');
 
     // Mods should all be functions
     expect(Object.values(config.mods.ios).every(value => typeof value === 'function')).toBe(true);
@@ -573,8 +569,6 @@ describe('built-in plugins', () => {
         CFBundleURLSchemes.includes('GOOGLE_SIGN_IN_CLIENT_ID')
       )
     ).toBeDefined();
-    // Branch
-    expect(config.ios?.infoPlist?.branch_key?.live).toBe('MY_BRANCH_KEY');
 
     // Mods should all be functions
     expect(Object.values(config.mods.ios).every(value => typeof value === 'function')).toBe(true);

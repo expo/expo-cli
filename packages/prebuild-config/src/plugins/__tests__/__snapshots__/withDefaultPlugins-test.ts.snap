@@ -239,9 +239,6 @@ Object {
           "foo",
         ],
       },
-      "branch_key": Object {
-        "live": "MY_BRANCH_KEY",
-      },
     },
     "isTabletOnly": false,
     "merchantId": "TEST_MERCHANT_ID",
@@ -654,12 +651,6 @@ Object {
                   },
                   Object {
                     "$": Object {
-                      "android:name": "io.branch.sdk.BranchKey",
-                      "android:value": "MY_BRANCH_ANDROID_KEY",
-                    },
-                  },
-                  Object {
-                    "$": Object {
                       "android:name": "expo.modules.updates.ENABLED",
                       "android:value": "true",
                     },
@@ -983,9 +974,6 @@ Object {
               "foo",
             ],
           },
-          "branch_key": Object {
-            "live": "MY_BRANCH_KEY",
-          },
         },
         "podfileProperties": Object {
           "expo.jsEngine": "jsc",
@@ -1227,9 +1215,6 @@ Object {
         "val": Array [
           "foo",
         ],
-      },
-      "branch_key": Object {
-        "live": "MY_BRANCH_KEY",
       },
     },
     "isTabletOnly": false,
@@ -1534,12 +1519,6 @@ Object {
                     "$": Object {
                       "android:name": "com.facebook.sdk.AdvertiserIDCollectionEnabled",
                       "android:value": "true",
-                    },
-                  },
-                  Object {
-                    "$": Object {
-                      "android:name": "io.branch.sdk.BranchKey",
-                      "android:value": "MY_BRANCH_ANDROID_KEY",
                     },
                   },
                   Object {
@@ -1886,9 +1865,6 @@ Object {
               "foo",
             ],
           },
-          "branch_key": Object {
-            "live": "MY_BRANCH_KEY",
-          },
         },
         "podfileProperties": Object {
           "expo.jsEngine": "jsc",
@@ -2131,9 +2107,6 @@ Object {
         "val": Array [
           "foo",
         ],
-      },
-      "branch_key": Object {
-        "live": "MY_BRANCH_KEY",
       },
     },
     "isTabletOnly": false,
