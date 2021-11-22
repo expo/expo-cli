@@ -1741,10 +1741,10 @@
     lodash.pick "^4.4.0"
     lodash.template "^4.5.0"
 
-"@expo/xcpretty@^4.0.0":
-  version "4.0.0"
-  resolved "https://registry.yarnpkg.com/@expo/xcpretty/-/xcpretty-4.0.0.tgz#7e5f3be24c86f1e90c042d3571946272afc6091a"
-  integrity sha512-0yx68FKGm/spdmYgSFrx6p0NePzcXBPjX+VlBHssTPGEyhxnBGKNepyW+YP/tCVlb9++ApXe2u5wIdTK72h/1w==
+"@expo/xcpretty@^4.1.0":
+  version "4.1.0"
+  resolved "https://registry.yarnpkg.com/@expo/xcpretty/-/xcpretty-4.1.0.tgz#63a1b54635f1e67250bfe74d58f25d2b52c5818a"
+  integrity sha512-Q2FCVFpMEeWk2oxEx3nFg2AAwyzPdSAOVWa25f734+qCL9szL7sj20a53q4QH1T52BaGvdLoBaq/cNNCA5SzRg==
   dependencies:
     "@babel/code-frame" "7.10.4"
     chalk "^4.1.0"
@@ -13619,19 +13619,10 @@ open@^7.0.2:
     is-docker "^2.0.0"
     is-wsl "^2.1.1"
 
-open@^8.0.4:
+open@^8.0.4, open@^8.3.0:
   version "8.4.0"
   resolved "https://registry.yarnpkg.com/open/-/open-8.4.0.tgz#345321ae18f8138f82565a910fdc6b39e8c244f8"
   integrity sha512-XgFPPM+B28FtCCgSb9I+s9szOC1vZRSwgWsRUA5ylIxRTgKozqjOCrVOqGsYABPYK5qnfqClxZTFBa8PKt2v6Q==
-  dependencies:
-    define-lazy-prop "^2.0.0"
-    is-docker "^2.1.1"
-    is-wsl "^2.2.0"
-
-open@^8.3.0:
-  version "8.3.0"
-  resolved "https://registry.yarnpkg.com/open/-/open-8.3.0.tgz#fdef1cdfe405e60dec8ebd18889e7e812f39c59f"
-  integrity sha512-7INcPWb1UcOwSQxAXTnBJ+FxVV4MPs/X++FWWBtgY69/J5lc+tCteMt/oFK1MnkyHC4VILLa9ntmwKTwDR4Q9w==
   dependencies:
     define-lazy-prop "^2.0.0"
     is-docker "^2.1.1"
