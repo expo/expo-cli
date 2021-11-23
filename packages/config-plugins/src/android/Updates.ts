@@ -103,6 +103,10 @@ export function setVersionsConfig(
     removeMetaDataItemFromMainApplication(mainApplication, Config.SDK_VERSION);
     addMetaDataItemToMainApplication(mainApplication, Config.RUNTIME_VERSION, runtimeVersion);
   } else if (sdkVersion) {
+    /**
+     * runtime version maybe null in projects using classic updates. In that
+     * case we use SDK version
+     */
     removeMetaDataItemFromMainApplication(mainApplication, Config.RUNTIME_VERSION);
     addMetaDataItemToMainApplication(mainApplication, Config.SDK_VERSION, sdkVersion);
   } else {

@@ -84,6 +84,10 @@ export function setVersionsConfig(config: ExpoConfigUpdates, expoPlist: ExpoPlis
     delete newExpoPlist[Config.SDK_VERSION];
     newExpoPlist[Config.RUNTIME_VERSION] = runtimeVersion;
   } else if (sdkVersion) {
+    /**
+     * runtime version maybe null in projects using classic updates. In that
+     * case we use SDK version
+     */
     delete newExpoPlist[Config.RUNTIME_VERSION];
     newExpoPlist[Config.SDK_VERSION] = sdkVersion;
   } else {
