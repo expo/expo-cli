@@ -7,7 +7,7 @@ const withAppleSignInWarning: ConfigPlugin = config => {
     if (config.ios?.usesAppleSignIn) {
       WarningAggregator.addWarningIOS(
         'ios.usesAppleSignIn',
-        'Install expo-apple-authentication to enable the ios.usesAppleSignIn feature',
+        'Install expo-apple-authentication to enable this feature',
         'https://docs.expo.dev/versions/latest/sdk/apple-authentication/#eas-build'
       );
     }
