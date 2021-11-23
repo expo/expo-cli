@@ -69,6 +69,20 @@ export const withRuntimeVersion: (config: ExpoConfig) => ExpoConfig = config => 
   return config;
 };
 
+export function getRuntimeVersionNullable(
+  config: Pick<ExpoConfig, 'version' | 'runtimeVersion' | 'sdkVersion'> & {
+    android?: Pick<Android, 'versionCode' | 'runtimeVersion'>;
+    ios?: Pick<IOS, 'buildNumber' | 'runtimeVersion'>;
+  },
+  platform: 'android' | 'ios'
+): string | null {
+  try {
+    return getRuntimeVersion(config, platform);
+  } catch (e) {
+    return null;
+  }
+}
+
 export function getRuntimeVersion(
   config: Pick<ExpoConfig, 'version' | 'runtimeVersion' | 'sdkVersion'> & {
     android?: Pick<Android, 'versionCode' | 'runtimeVersion'>;
