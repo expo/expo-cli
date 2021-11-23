@@ -10,7 +10,7 @@ import chalk from 'chalk';
 
 import { AbortCommandError } from '../CommandError';
 import Log from '../log';
-import { toggleConfirmAsync } from '../prompts';
+import { toggleConfirmAsync } from '../utils/prompts';
 import {
   deletePasswordAsync,
   promptPasswordAsync,

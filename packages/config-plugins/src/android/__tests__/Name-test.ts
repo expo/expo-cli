@@ -11,12 +11,6 @@ applyNativeModulesSettingsGradle(settings)
 include ':app'
 `;
 
-export const sampleStringsXML = `
-<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<resources>
-  <string name="app_name">expo &amp;bo&lt;y&gt;'</string>
-</resources>`;
-
 const badName = `😃/\\:<>"?*|$F0g.`;
 const badNameCleaned = `😃$F0g.`;
 

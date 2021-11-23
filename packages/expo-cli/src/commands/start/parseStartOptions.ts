@@ -4,8 +4,8 @@ import * as WebpackEnvironment from 'xdl/build/webpack-utils/WebpackEnvironment'
 
 import { AbortCommandError } from '../../CommandError';
 import Log from '../../log';
-import { URLOptions } from '../../urlOpts';
 import { resolvePortAsync } from '../run/utils/resolvePortAsync';
+import { URLOptions } from '../utils/urlOpts';
 
 export type NormalizedOptions = URLOptions & {
   webOnly?: boolean;

@@ -1,8 +1,8 @@
 import { graphiqlExpress } from 'apollo-server-express';
+import openBrowserAsync from 'better-opn';
 import express from 'express';
 import http from 'http';
 import next from 'next';
-import openBrowser from 'react-dev-utils/openBrowser';
 import { Project } from 'xdl';
 
 import { createAuthenticationContextAsync, startGraphQLServer } from './DevToolsServer';
@@ -44,7 +44,7 @@ async function run(): Promise<void> {
     await Project.startAsync(projectRoot);
     const url = `http://localhost:${PORT}`;
     console.log(`Development server running at ${url}`);
-    openBrowser(url);
+    openBrowserAsync(url);
   } catch (error) {
     console.error(error);
     process.exit(1);

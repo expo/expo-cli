@@ -13,8 +13,8 @@ import {
   ProvisioningProfileManager,
 } from '../../appleApi';
 import Log from '../../log';
-import prompt, { confirmAsync, Question } from '../../prompts';
 import { ora } from '../../utils/ora';
+import prompt, { confirmAsync, Question } from '../../utils/prompts';
 import { displayIosAppCredentials } from '../actions/list';
 import { askForUserProvided } from '../actions/promptForCredentials';
 import { AppLookupParams, getAppLookupParams } from '../api/IosApi';

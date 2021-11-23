@@ -7,12 +7,14 @@ import {
   ensureDirSync,
   existsSync,
   move,
-  readFileSync,
+  readFile,
   statSync,
   unlinkSync,
   writeFileSync,
 } from 'fs-extra';
 import { sync as globSync } from 'glob';
+import { cpus } from 'os';
+import pLimit from 'p-limit';
 import { basename, join, parse, relative } from 'path';
 import prettyBytes from 'pretty-bytes';
 import temporary from 'tempy';
@@ -69,13 +71,7 @@ Yes, you should share the ".expo-shared" folder with your collaborators.
 }
 
 // Compress an inputted jpg or png
-async function optimizeImageAsync(
-  projectRoot: string,
-  inputPath: string,
-  quality: number
-): Promise<string> {
-  console.log(`\u203A Checking ${chalk.reset.bold(relative(projectRoot, inputPath))}`);
-
+async function optimizeImageAsync(inputPath: string, quality: number): Promise<string> {
   const outputPath = temporary.directory();
   await sharpAsync({
     input: inputPath,
@@ -140,17 +136,30 @@ function filterImages(files: string[], projectRoot: string) {
 }
 
 // Calculate SHA256 Checksum value of a file based on its contents
-function calculateHash(filePath: string): string {
-  const contents = readFileSync(filePath);
+async function calculateHash(filePath: string): Promise<string> {
+  const contents = await new Promise<Buffer>((resolve, reject) =>
+    readFile(filePath, (err, data) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(data);
+    })
+  );
+
   return crypto.createHash('sha256').update(contents).digest('hex');
 }
-
 export type OptimizationOptions = {
   quality?: number;
   include?: string;
   exclude?: string;
   save?: boolean;
 };
+
+async function pool<T, R>(items: T[], process: (item: T) => Promise<R>): Promise<R[]> {
+  const parallelism = Math.max(1, cpus().length - 1);
+  const limit = pLimit(parallelism);
+  return Promise.all(items.map(item => limit(() => process(item))));
+}
 
 // Returns a boolean indicating whether or not there are assets to optimize
 export async function isProjectOptimized(
@@ -162,15 +171,14 @@ export async function isProjectOptimized(
   }
   const { selectedFiles } = await getAssetFilesAsync(projectRoot, options);
   const { assetInfo } = await readAssetJsonAsync(projectRoot);
+  let optimized = true;
+  const result = await pool(selectedFiles, async file => {
+    // no need to keep hashing once we've found out we're unoptimized
+    optimized &&= assetInfo[await calculateHash(file)];
+    return optimized;
+  });
 
-  for (const file of selectedFiles) {
-    const hash = calculateHash(file);
-    if (!assetInfo[hash]) {
-      return false;
-    }
-  }
-
-  return true;
+  return result.every(Boolean);
 }
 
 export async function optimizeAsync(
@@ -187,15 +195,18 @@ export async function optimizeAsync(
 
   let totalSaved = 0;
   const { allFiles, selectedFiles } = await getAssetFilesAsync(projectRoot, options);
-  const hashes: { [filePath: string]: string } = {};
-  // Remove assets that have been deleted/modified from assets.json
-  allFiles.forEach(filePath => {
-    const hash = calculateHash(filePath);
-    if (assetInfo[hash]) {
-      outdated.delete(hash);
-    }
-    hashes[filePath] = hash;
-  });
+
+  const hashes: { [filePath: string]: string } = Object.fromEntries(
+    await pool(allFiles, async filePath => {
+      const hash = await calculateHash(filePath);
+      if (assetInfo[hash]) {
+        // Remove assets that have been deleted/modified from assets.json
+        outdated.delete(hash);
+      }
+      return [filePath, hash];
+    })
+  );
+
   outdated.forEach(outdatedHash => {
     delete assetInfo[outdatedHash];
   });
@@ -205,25 +216,30 @@ export async function optimizeAsync(
 
   const images = include || exclude ? selectedFiles : allFiles;
 
-  for (const image of images) {
+  // Buffer output so we can display all the output for a single image
+  // at once
+  const poolResult = await pool(images, async image => {
+    const logLines: string[] = [];
     const hash = hashes[image];
     if (assetInfo[hash]) {
-      continue;
+      return logLines;
     }
 
     if (!(await isAvailableAsync())) {
-      console.log(
+      logLines.push(
         chalk.bold.red(
           `\u203A Cannot optimize images without sharp-cli.\n\u203A Run this command again after successfully installing sharp with \`${chalk.magenta`npm install -g sharp-cli`}\``
         )
       );
-      return;
+      return logLines;
     }
 
     const { size: prevSize } = statSync(image);
 
     const newName = createNewFilename(image);
-    const optimizedImage = await optimizeImageAsync(projectRoot, image, quality);
+
+    logLines.push(`\u203A Checking ${chalk.reset.bold(relative(projectRoot, image))}`);
+    const optimizedImage = await optimizeImageAsync(image, quality);
 
     const { size: newSize } = statSync(optimizedImage);
     const amountSaved = prevSize - newSize;
@@ -232,29 +248,29 @@ export async function optimizeAsync(
       await move(optimizedImage, image);
     } else {
       assetInfo[hash] = true;
-      console.log(
+      logLines.push(
         chalk.dim(
           amountSaved === 0
             ? ` \u203A Skipping: Original was identical in size.`
             : ` \u203A Skipping: Original was ${prettyBytes(amountSaved * -1)} smaller.`
         )
       );
-      continue;
+      return logLines;
     }
     // Recalculate hash since the image has changed
-    const newHash = calculateHash(image);
+    const newHash = await calculateHash(image);
     assetInfo[newHash] = true;
 
     if (save) {
       if (hash === newHash) {
-        console.log(
+        logLines.push(
           chalk.gray(
             `\u203A Compressed asset ${image} is identical to the original. Using original instead.`
           )
         );
         unlinkSync(newName);
       } else {
-        console.log(chalk.gray(`\u203A Saving original asset to ${newName}`));
+        logLines.push(chalk.gray(`\u203A Saving original asset to ${newName}`));
         // Save the old hash to prevent reoptimizing
         assetInfo[hash] = true;
       }
@@ -264,11 +280,16 @@ export async function optimizeAsync(
     }
     if (amountSaved) {
       totalSaved += amountSaved;
-      console.log(chalk.magenta(`\u203A Saved ${prettyBytes(amountSaved)}`));
+      logLines.push(chalk.magenta(`\u203A Saved ${prettyBytes(amountSaved)}`));
     } else {
-      console.log(chalk.gray(`\u203A Nothing to compress.`));
+      logLines.push(chalk.gray(`\u203A Nothing to compress.`));
     }
-  }
+
+    return logLines;
+  });
+
+  poolResult.forEach(logLines => logLines.forEach(line => console.log(line)));
+
   console.log();
   if (totalSaved === 0) {
     console.log(chalk.yellow`\u203A All assets were fully optimized already.`);

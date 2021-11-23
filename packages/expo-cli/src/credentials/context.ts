@@ -4,7 +4,6 @@ import { ApiV2, RobotUser, User, UserManager } from 'xdl';
 
 import { AppleCtx, authenticateAsync } from '../appleApi';
 import Log from '../log';
-import { getProjectOwner } from '../projects';
 import AndroidApi from './api/AndroidApi';
 import IosApi from './api/IosApi';
 
@@ -49,7 +48,7 @@ export class Context {
     return this._projectDir as string;
   }
   get projectOwner(): string {
-    return getProjectOwner(this.user, this.manifest);
+    return UserManager.getProjectOwner(this.user, this.manifest);
   }
   get manifest(): ExpoConfig {
     if (!this._manifest) {

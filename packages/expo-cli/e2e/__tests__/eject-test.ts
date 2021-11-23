@@ -4,7 +4,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import temporary from 'tempy';
 
-import { actionAsync } from '../../src/commands/ejectAsync';
+import { actionAsync } from '../../src/commands/eject/ejectAsync';
 import {
   createMinimalProjectAsync,
   EXPO_CLI,

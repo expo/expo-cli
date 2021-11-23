@@ -28,7 +28,7 @@ import { SetupIosDist } from '../../../credentials/views/SetupIosDist';
 import { SetupIosProvisioningProfile } from '../../../credentials/views/SetupIosProvisioningProfile';
 import { SetupIosPush } from '../../../credentials/views/SetupIosPush';
 import Log from '../../../log';
-import { confirmAsync } from '../../../prompts';
+import { confirmAsync } from '../../../utils/prompts';
 import * as TerminalLink from '../../utils/TerminalLink';
 import { getOrPromptForBundleIdentifier } from '../../utils/getOrPromptApplicationId';
 import BaseBuilder from '../BaseBuilder';

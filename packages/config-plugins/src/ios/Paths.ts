@@ -130,7 +130,7 @@ export function findSchemePaths(projectRoot: string): string[] {
 
 export function findSchemeNames(projectRoot: string): string[] {
   const schemePaths = findSchemePaths(projectRoot);
-  return schemePaths.map(schemePath => path.basename(schemePath).split('.')[0]);
+  return schemePaths.map(schemePath => path.parse(schemePath).name);
 }
 
 export function getAllXcodeProjectPaths(projectRoot: string): string[] {

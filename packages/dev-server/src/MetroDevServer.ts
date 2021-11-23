@@ -12,7 +12,6 @@ import {
   maybeThrowFromInconsistentEngineAsync,
 } from './HermesBundler';
 import LogReporter from './LogReporter';
-import { createDevServerAsync } from './metro/createDevServerAsync';
 import {
   importExpoMetroConfigFromProject,
   importInspectorProxyServerFromProject,
@@ -78,6 +77,8 @@ export async function runMetroDevServerAsync(
   middleware: any;
   messageSocket: MessageSocket;
 }> {
+  const Metro = importMetroFromProject(projectRoot);
+
   const reporter = new LogReporter(options.logger);
 
   const ExpoMetroConfig = getExpoMetroConfig(projectRoot, options);
@@ -99,10 +100,7 @@ export async function runMetroDevServerAsync(
     return middleware.use(metroMiddleware);
   };
 
-  const { server } = await createDevServerAsync(projectRoot, {
-    config: metroConfig,
-    logger: options.logger,
-  });
+  const server = await Metro.runServer(metroConfig, { hmrEnabled: true });
 
   const { messageSocket, eventsSocket } = attachToServer(server);
   reporter.reportEvent = eventsSocket.reportEvent;

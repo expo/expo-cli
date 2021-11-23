@@ -6,7 +6,7 @@ import { UserSettings } from 'xdl';
 
 import CommandError from '../../../CommandError';
 import Log from '../../../log';
-import { selectAsync } from '../../../prompts';
+import { selectAsync } from '../../../utils/prompts';
 import { learnMore } from '../../utils/TerminalLink';
 import * as Security from '../utils/Security';
 

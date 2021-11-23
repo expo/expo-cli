@@ -3,6 +3,7 @@ import { ExpoRunFormatter } from '@expo/xcpretty';
 import chalk from 'chalk';
 import { spawn, SpawnOptionsWithoutStdio } from 'child_process';
 import * as fs from 'fs-extra';
+import os from 'os';
 import * as path from 'path';
 import { SimControl } from 'xdl';
 
@@ -19,6 +20,8 @@ export type BuildProps = {
   configuration: XcodeConfiguration;
   shouldSkipInitialBundling: boolean;
   shouldStartBundler: boolean;
+  /** Should use derived data for builds. */
+  buildCache: boolean;
   terminal?: string;
   port: number;
   scheme: string;
@@ -172,6 +175,7 @@ export async function buildAsync({
   shouldSkipInitialBundling,
   terminal,
   port,
+  buildCache,
 }: BuildProps): Promise<string> {
   const args = [
     xcodeProject.isWorkspace ? '-workspace' : '-project',
@@ -195,8 +199,20 @@ export async function buildAsync({
     }
   }
 
-  logPrettyItem(chalk.bold`Planning build`);
+  // Add last
+  if (buildCache === false) {
+    args.push(
+      // Will first clean the derived data folder.
+      'clean',
+      // Then build step must be added otherwise the process will simply clean and exit.
+      'build'
+    );
+  }
+
   Log.debug(`  xcodebuild ${args.join(' ')}`);
+
+  logPrettyItem(chalk.bold`Planning build`);
+
   const formatter = ExpoRunFormatter.create(projectRoot, {
     xcodeProject,
     isDebug: Log.isDebug,
@@ -211,13 +227,33 @@ export async function buildAsync({
     let buildOutput = '';
     let errorOutput = '';
 
+    let currentBuffer = '';
+
+    // Data can be sent in chunks that would have no relevance to our regex
+    // this can cause massive slowdowns, so we need to ensure the data is complete before attempting to parse it.
+    function flushBuffer() {
+      if (!currentBuffer) {
+        return;
+      }
+
+      const data = currentBuffer;
+      // Reset buffer.
+      currentBuffer = '';
+      // Process data.
+      const lines = formatter.pipe(data);
+      for (const line of lines) {
+        // Log parsed results.
+        Log.log(line);
+      }
+    }
+
     buildProcess.stdout.on('data', (data: Buffer) => {
       const stringData = data.toString();
       buildOutput += stringData;
-
-      const lines = formatter.pipe(stringData);
-      for (const line of lines) {
-        Log.log(line);
+      currentBuffer += stringData;
+      // Only flush the data if we have a full line.
+      if (currentBuffer.endsWith(os.EOL)) {
+        flushBuffer();
       }
     });
 
@@ -227,6 +263,8 @@ export async function buildAsync({
     });
 
     buildProcess.on('close', (code: number) => {
+      // Flush log data at the end just in case we missed something.
+      flushBuffer();
       Log.debug(`Exited with code: ${code}`);
 
       if (
@@ -275,22 +313,15 @@ export async function buildAsync({
 }
 
 function writeBuildLogs(projectRoot: string, buildOutput: string, errorOutput: string) {
-  const output =
-    '# Build output\n\n```log\n' +
-    buildOutput +
-    '\n```\n\n# Error output\n\n```log\n' +
-    errorOutput +
-    '\n```\n';
-  const [mdFilePath, logFilePath] = getErrorLogFilePath(projectRoot);
+  const [logFilePath, errorFilePath] = getErrorLogFilePath(projectRoot);
 
-  fs.writeFileSync(mdFilePath, output);
   fs.writeFileSync(logFilePath, buildOutput);
-  return mdFilePath;
+  fs.writeFileSync(errorFilePath, errorOutput);
+  return logFilePath;
 }
 
 function getErrorLogFilePath(projectRoot: string): [string, string] {
-  const filename = 'xcodebuild.md';
   const folder = path.join(projectRoot, '.expo');
   fs.ensureDirSync(folder);
-  return [path.join(folder, filename), path.join(folder, 'xcodebuild-output.log')];
+  return [path.join(folder, 'xcodebuild.log'), path.join(folder, 'xcodebuild-error.log')];
 }

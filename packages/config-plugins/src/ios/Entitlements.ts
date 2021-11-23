@@ -84,7 +84,7 @@ export function getEntitlementsPath(projectRoot: string): string {
       .filter(isBuildConfig)
       .filter(isNotTestHost)
       .forEach(({ 1: { buildSettings } }: any) => {
-        buildSettings.CODE_SIGN_ENTITLEMENTS = entitlementsRelativePath;
+        buildSettings.CODE_SIGN_ENTITLEMENTS = `"${entitlementsRelativePath}"`;
       });
     fs.writeFileSync(project.filepath, project.writeSync());
   }

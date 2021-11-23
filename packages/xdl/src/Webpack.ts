@@ -8,13 +8,13 @@ import {
 } from '@expo/dev-server';
 import { createSymbolicateMiddleware } from '@expo/dev-server/build/webpack/symbolicateMiddleware';
 import * as devcert from '@expo/devcert';
+import openBrowserAsync from 'better-opn';
 import chalk from 'chalk';
 import fs from 'fs-extra';
 import getenv from 'getenv';
 import http from 'http';
 import * as path from 'path';
 import formatWebpackMessages from 'react-dev-utils/formatWebpackMessages';
-import openBrowser from 'react-dev-utils/openBrowser';
 import webpack from 'webpack';
 import WebpackDevServer from 'webpack-dev-server';
 
@@ -675,7 +675,7 @@ async function openProjectAsync(
     if (!url) {
       throw new Error('Webpack Dev Server is not running');
     }
-    openBrowser(url);
+    openBrowserAsync(url);
     return { success: true, url };
   } catch (e) {
     Logger.global.error(`Couldn't start project on web: ${e.message}`);
