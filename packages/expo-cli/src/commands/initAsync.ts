@@ -66,7 +66,11 @@ function assertValidName(folderName: string) {
   }
   const isFolderNameForbidden = CreateApp.isFolderNameForbidden(folderName);
   if (isFolderNameForbidden) {
-    throw new CommandError(`Cannot create an app named ${chalk.red(`"${folderName}"`)}.`);
+    throw new CommandError(
+      `Cannot create an app named ${chalk.red(
+        `"${folderName}"`
+      )} because it would conflict with a dependency of the same name.`
+    );
   }
 }
 
