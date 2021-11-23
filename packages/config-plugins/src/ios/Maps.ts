@@ -8,11 +8,7 @@ import { createInfoPlistPlugin, withAppDelegate } from '../plugins/ios-plugins';
 import { withDangerousMod } from '../plugins/withDangerousMod';
 import { mergeContents, MergeResults, removeContents } from '../utils/generateCode';
 
-import Debug from 'debug';
-
 const debug = require('debug')('expo:config-plugins:ios:maps') as typeof console.log;
-
-const debug = Debug('expo:config-plugins:ios:maps');
 
 // Match against `UMModuleRegistryAdapter` (unimodules), and React Native without unimodules (Expo Modules).
 export const MATCH_INIT = /(?:(self\.|_)(\w+)\s?=\s?\[\[UMModuleRegistryAdapter alloc\])|(?:RCTBridge\s?\*\s?(\w+)\s?=\s?\[\[RCTBridge alloc\])/g;
