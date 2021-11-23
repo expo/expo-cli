@@ -133,10 +133,6 @@ function isReactNativeMapsInstalled(projectRoot: string): string | null {
   return resolved ? path.dirname(resolved) : null;
 }
 
-function isReactNativeMapsAutolinked(config: Pick<ExpoConfig, '_internal'>): boolean {
-  // TODO: Detect autolinking
-  return true;
-}
 function isReactNativeMapsAutolinked(config: Pick<ExpoConfig, '_internal'>): string | null {
   // Only add the native code changes if we know that the package is going to be linked natively.
   // This is specifically for monorepo support where one app might have react-native-maps (adding it to the node_modules)
