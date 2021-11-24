@@ -1,6 +1,6 @@
 {
   "name": "expo-cli",
-  "version": "4.13.0",
+  "version": "4.13.1-5.0.0-rc.0.0",
   "description": "The command-line tool for creating and publishing Expo apps",
   "preferGlobal": true,
   "main": "build/exp.js",
@@ -66,15 +66,15 @@
     "@babel/runtime": "7.9.0",
     "@expo/apple-utils": "0.0.0-alpha.26",
     "@expo/bunyan": "4.0.0",
-    "@expo/config": "6.0.7",
-    "@expo/config-plugins": "4.0.7",
-    "@expo/dev-server": "0.1.94",
-    "@expo/dev-tools": "0.13.129",
-    "@expo/json-file": "8.2.33",
-    "@expo/osascript": "2.0.30",
-    "@expo/package-manager": "0.0.47",
-    "@expo/plist": "0.0.15",
-    "@expo/prebuild-config": "3.0.7",
+    "@expo/config": "6.0.8",
+    "@expo/config-plugins": "4.0.8",
+    "@expo/dev-server": "0.1.95",
+    "@expo/dev-tools": "0.13.130",
+    "@expo/json-file": "8.2.34",
+    "@expo/osascript": "2.0.31",
+    "@expo/package-manager": "0.0.48",
+    "@expo/plist": "0.0.16",
+    "@expo/prebuild-config": "3.0.8",
     "@expo/spawn-async": "1.5.0",
     "@expo/xcpretty": "^4.1.0",
     "better-opn": "^3.0.1",
@@ -120,7 +120,7 @@
     "url-join": "4.0.0",
     "uuid": "^8.0.0",
     "wrap-ansi": "^7.0.0",
-    "xdl": "59.2.13"
+    "xdl": "59.2.14"
   },
   "resolutions": {
     "hermes-engine": "0.0.0"
