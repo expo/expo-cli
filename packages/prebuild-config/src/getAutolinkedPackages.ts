@@ -23,6 +23,7 @@ export async function getAutolinkedPackagesAsync(
       findModulesAsync({
         platform,
         searchPaths,
+        silent: true,
       })
     )
   );
