@@ -13,7 +13,7 @@
     "type": "git",
     "url": "https://github.com/expo/expo-cli.git"
   },
-  "homepage": "https://github.com/expo/expo-cli/tree/master/packages/pod-install",
+  "homepage": "https://github.com/expo/expo-cli/tree/main/packages/pod-install",
   "author": "Expo <support@expo.dev>",
   "license": "MIT",
   "bin": {

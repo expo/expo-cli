@@ -29,7 +29,7 @@
   "bugs": {
     "url": "https://github.com/expo/expo-cli/issues"
   },
-  "homepage": "https://github.com/expo/expo-cli/tree/master/packages/xdl#readme",
+  "homepage": "https://github.com/expo/expo-cli/tree/main/packages/xdl#readme",
   "dependencies": {
     "@expo/bunyan": "4.0.0",
     "@expo/config": "6.0.7",

@@ -26,7 +26,7 @@
   "bugs": {
     "url": "https://github.com/expo/expo-cli/issues"
   },
-  "homepage": "https://github.com/expo/expo-cli/tree/master/packages/prebuild-config#readme",
+  "homepage": "https://github.com/expo/expo-cli/tree/main/packages/prebuild-config#readme",
   "files": [
     "build"
   ],

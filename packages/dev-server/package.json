@@ -29,7 +29,7 @@
   "bugs": {
     "url": "https://github.com/expo/expo-cli/issues"
   },
-  "homepage": "https://github.com/expo/expo-cli/tree/master/packages/dev-server#readme",
+  "homepage": "https://github.com/expo/expo-cli/tree/main/packages/dev-server#readme",
   "files": [
     "build",
     "!*/__tests__/*"

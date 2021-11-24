@@ -37,7 +37,7 @@
   "bugs": {
     "url": "https://github.com/expo/expo-cli/issues"
   },
-  "homepage": "https://github.com/expo/expo-cli/tree/master/packages/expo-cli#readme",
+  "homepage": "https://github.com/expo/expo-cli/tree/main/packages/expo-cli#readme",
   "engines": {
     "node": ">=12"
   },

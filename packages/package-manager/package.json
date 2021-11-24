@@ -28,7 +28,7 @@
   "bugs": {
     "url": "https://github.com/expo/expo-cli/issues"
   },
-  "homepage": "https://github.com/expo/expo-cli/tree/master/packages/package-manager#readme",
+  "homepage": "https://github.com/expo/expo-cli/tree/main/packages/package-manager#readme",
   "files": [
     "build"
   ],

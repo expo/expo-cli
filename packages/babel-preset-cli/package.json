@@ -19,7 +19,7 @@
   "bugs": {
     "url": "https://github.com/expo/expo-cli/issues"
   },
-  "homepage": "https://github.com/expo/expo-cli/tree/master/packages/babel-preset-cli#readme",
+  "homepage": "https://github.com/expo/expo-cli/tree/main/packages/babel-preset-cli#readme",
   "dependencies": {
     "@babel/core": "^7.4.5",
     "@babel/plugin-proposal-class-properties": "^7.4.4",

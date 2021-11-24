@@ -2,7 +2,7 @@
 
 This is the log of notable changes to Expo CLI and related packages.
 
-## master
+## main
 
 ### 🛠 Breaking changes
 
