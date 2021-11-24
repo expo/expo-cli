@@ -11,7 +11,7 @@ import { Ora } from 'ora';
 import path from 'path';
 import { Project, UserManager } from 'xdl';
 
-import CommandError from '../../CommandError';
+import CommandError, { ErrorCodes } from '../../CommandError';
 import Log from '../../log';
 import { logNewSection } from '../../utils/ora';
 import * as TerminalLink from '../utils/TerminalLink';
@@ -42,7 +42,10 @@ export async function actionAsync(
 
   // TODO(@jkhales): remove this check when runtimeVersion policies are supported, if they are ever supported
   if (typeof runtimeVersion !== 'undefined' && typeof runtimeVersion !== 'string') {
-    throw new CommandError(`Runtime version policies are not supported by the publish command.`);
+    throw new CommandError(
+      ErrorCodes.INVALID_RUNTIME_VERSION,
+      `Runtime version policies are not supported by the publish command.`
+    );
   }
 
   const target = options.target ?? getDefaultTarget(projectRoot);
