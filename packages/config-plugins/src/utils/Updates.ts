@@ -1,5 +1,6 @@
 import { Android, ExpoConfig, IOS } from '@expo/config-types';
 import { getRuntimeVersionForSDKVersion } from '@expo/sdk-runtime-versions';
+import { boolish } from 'getenv';
 
 import { AndroidConfig, IOSConfig } from '..';
 
@@ -68,6 +69,19 @@ export const withRuntimeVersion: (config: ExpoConfig) => ExpoConfig = config => 
   delete config.runtimeVersion;
   return config;
 };
+
+export function getRuntimeVersionNullable(
+  ...[config, platform]: Parameters<typeof getRuntimeVersion>
+): string | null {
+  try {
+    return getRuntimeVersion(config, platform);
+  } catch (e) {
+    if (boolish('EXPO_DEBUG', false)) {
+      console.log(e);
+    }
+    return null;
+  }
+}
 
 export function getRuntimeVersion(
   config: Pick<ExpoConfig, 'version' | 'runtimeVersion' | 'sdkVersion'> & {
