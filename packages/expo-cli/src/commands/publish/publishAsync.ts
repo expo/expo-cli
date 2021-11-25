@@ -1,4 +1,5 @@
 import {
+  ExpoConfig,
   getConfig,
   getDefaultTarget,
   isLegacyImportsEnabled,
@@ -17,6 +18,8 @@ import { logNewSection } from '../../utils/ora';
 import * as TerminalLink from '../utils/TerminalLink';
 import { formatNamedWarning } from '../utils/logConfigWarnings';
 import * as sendTo from '../utils/sendTo';
+
+const EAS_UPDATE_URL = 'https://u.expo.dev';
 
 type Options = {
   clear?: boolean;
@@ -38,6 +41,7 @@ export async function actionAsync(
   const { exp, pkg } = getConfig(projectRoot, {
     skipSDKVersionRequirement: true,
   });
+  assertUpdateURLCorrectlyConfigured(exp);
   const { sdkVersion, runtimeVersion } = exp;
 
   // TODO(@jkhales): remove this check when runtimeVersion policies are supported, if they are ever supported
@@ -142,6 +146,24 @@ function assertValidReleaseChannel(releaseChannel?: string): void {
   if (isInvalidReleaseChannel(releaseChannel)) {
     throw new CommandError(
       'Release channel name can only contain lowercase letters, numbers and special characters . _ and -'
+    );
+  }
+}
+
+function isMaybeAnEASUrl(url: string): boolean {
+  return url.includes(EAS_UPDATE_URL);
+}
+
+function assertUpdateURLCorrectlyConfigured(exp: ExpoConfig): void {
+  const configuredURL = exp.updates?.url;
+  if (!configuredURL) {
+    // If no URL is configured, we generate a classic updates URL in the expo-updates config-plugin.
+    return;
+  }
+  if (isMaybeAnEASUrl(configuredURL)) {
+    throw new CommandError(
+      ErrorCodes.INVALID_UPDATE_URL,
+      `It seems like your project is configured for EAS Update. Please use 'eas branch:publish' instead.`
     );
   }
 }
