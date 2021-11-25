@@ -68,7 +68,8 @@
     "terser-webpack-plugin": "^3.0.6",
     "url-loader": "~4.1.0",
     "webpack": "4.43.0",
-    "webpack-manifest-plugin": "~2.2.0"
+    "webpack-manifest-plugin": "~2.2.0",
+    "webpack-virtual-modules": "^0.4.3"
   },
   "devDependencies": {
     "@types/copy-webpack-plugin": "~6.0.0",

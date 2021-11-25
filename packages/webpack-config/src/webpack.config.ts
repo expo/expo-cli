@@ -53,6 +53,7 @@ import {
 } from './plugins';
 import ExpoAppManifestWebpackPlugin from './plugins/ExpoAppManifestWebpackPlugin';
 import { HTMLLinkNode } from './plugins/ModifyHtmlWebpackPlugin';
+import { VirtualNavigationPlugin } from './plugins/VirtualNavigationPlugin';
 import { Arguments, DevConfiguration, Environment, FilePaths, Mode } from './types';
 
 // Source maps are resource heavy and can cause out of memory issue for large source files.
@@ -354,6 +355,11 @@ export default async function (
         ExpoInterpolateHtmlPlugin.fromEnv(env, ExpoHtmlWebpackPlugin),
 
       isNative &&
+        new VirtualNavigationPlugin({
+          projectRoot: env.projectRoot ?? __dirname,
+        }),
+
+      isNative &&
         new NativeAssetsPlugin({
           platforms: [env.platform, 'native'],
           persist: isProd,
@@ -598,6 +604,10 @@ export default async function (
 
   if (!isNative) {
     webpackConfig = withNodeMocks(withAlias(webpackConfig, getAliases(env.projectRoot)));
+  } else {
+    webpackConfig = withAlias(webpackConfig, {
+      '@expo/auto-nav': resolveFrom(env.projectRoot, './lib/index.ts'),
+    });
   }
 
   return webpackConfig;
