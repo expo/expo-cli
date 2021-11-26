@@ -10,6 +10,36 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🧹 Chores
 
+## [Fri, 26 Nov 2021 13:30:44 -0800](https://github.com/expo/expo-cli/commit/a43843a619d58b165eb7fcb4bcfd3ee7aaac65fd)
+
+### 🧹 Chores
+
+- [expo-cli] check update URL is not pointing at EAS ([#4032](https://github.com/expo/expo-cli/issues/4032))
+- [prebuild-config] Drop unversioned apple authentication support ([#4031](https://github.com/expo/expo-cli/issues/4031))
+- [prebuild-config] Revert "Skip APNS entitlement by default unless expo-notifications is installed ([#4001](https://github.com/expo/expo-cli/issues/4001))"
+
+### 🐛 Bug fixes
+
+- [webpack-config] Fix native asset loading ([#4034](https://github.com/expo/expo-cli/issues/4034))
+- [expo-cli] fix runtime version validation error ([#4033](https://github.com/expo/expo-cli/issues/4033))
+
+### 📦 Packages updated
+
+- @expo/config-plugins@4.0.9
+- @expo/config@6.0.9
+- @expo/dev-server@0.1.96
+- @expo/dev-tools@0.13.131
+- expo-cli@5.0.0-rc.1
+- expo-optimize@0.2.1
+- install-expo-modules@0.1.1
+- @expo/metro-config@0.3.2
+- @expo/next-adapter@3.1.9
+- @expo/prebuild-config@3.0.9
+- expo-pwa@0.0.104
+- uri-scheme@1.0.105
+- @expo/webpack-config@0.16.9
+- xdl@59.2.15
+
 ## [Wed, 24 Nov 2021 14:52:26 -0800](https://github.com/expo/expo-cli/commit/8ca2a96f4cc092b602ec37c3754302943ae81f2e)
 
 ### 🛠 Breaking changes
