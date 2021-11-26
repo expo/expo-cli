@@ -87,14 +87,14 @@ export async function actionAsync(projectRoot: string, options: NormalizedOption
       const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
       StatusEventEmitter.once('deviceLogReceive', () => {
         // Send the 'ready' event once the app is running in a device.
-        UnifiedAnalytics.logEvent('dev client interstitial page', {
+        UnifiedAnalytics.logEvent('dev client start command', {
           status: 'ready',
           platform,
           ...getDevClientProperties(projectRoot, exp),
         });
       });
 
-      UnifiedAnalytics.logEvent('dev client interstitial page', {
+      UnifiedAnalytics.logEvent('dev client start command', {
         status: 'started',
         platform,
         ...getDevClientProperties(projectRoot, exp),
