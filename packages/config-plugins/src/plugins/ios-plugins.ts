@@ -1,5 +1,5 @@
 import type { ExpoConfig } from '@expo/config-types';
-import type { JSONObject } from '@expo/json-file';
+import type { JSONObject, JSONValue } from '@expo/json-file';
 import type { XcodeProject } from 'xcode';
 
 import type { ConfigPlugin, Mod } from '../Plugin.types';
@@ -144,7 +144,7 @@ export const withXcodeProject: ConfigPlugin<Mod<XcodeProject>> = (config, action
  * @param config
  * @param action
  */
-export const withPodfileProperties: ConfigPlugin<Mod<Record<string, string>>> = (
+export const withPodfileProperties: ConfigPlugin<Mod<Record<string, JSONValue>>> = (
   config,
   action
 ) => {
