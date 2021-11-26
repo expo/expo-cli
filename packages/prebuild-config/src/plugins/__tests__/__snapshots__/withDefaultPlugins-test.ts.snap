@@ -91,8 +91,6 @@ Object {
     "permissions": Array [
       "CAMERA",
       "com.sec.android.provider.badge.permission.WRITE",
-      "android.permission.ACCESS_COARSE_LOCATION",
-      "android.permission.ACCESS_FINE_LOCATION",
     ],
     "softwareKeyboardLayoutMode": "pan",
     "splash": Object {
@@ -150,6 +148,7 @@ Object {
       "usesNonExemptEncryption": true,
     },
     "entitlements": Object {
+      "aps-environment": "development",
       "com.apple.developer.associated-domains": Array [
         "applinks:https://pillarvalley.netlify.app",
       ],
@@ -209,7 +208,7 @@ Object {
           },
         },
       },
-      "NSLocationWhenInUseUsageDescription": "Allow $(PRODUCT_NAME) to access your location",
+      "NSLocationWhenInUseUsageDescription": "",
       "SKAdNetworkItems": Array [
         Object {
           "SKAdNetworkIdentifier": "v9wttpbfk9.skadnetwork",
@@ -765,16 +764,6 @@ Object {
                   "android:name": "com.sec.android.provider.badge.permission.WRITE",
                 },
               },
-              Object {
-                "$": Object {
-                  "android:name": "android.permission.ACCESS_COARSE_LOCATION",
-                },
-              },
-              Object {
-                "$": Object {
-                  "android:name": "android.permission.ACCESS_FINE_LOCATION",
-                },
-              },
             ],
           },
         },
@@ -886,6 +875,7 @@ Object {
       },
       "ios": Object {
         "entitlements": Object {
+          "aps-environment": "development",
           "com.apple.developer.associated-domains": Array [
             "applinks:https://pillarvalley.netlify.app",
           ],
@@ -950,7 +940,7 @@ Object {
               },
             },
           },
-          "NSLocationWhenInUseUsageDescription": "Allow $(PRODUCT_NAME) to access your location",
+          "NSLocationWhenInUseUsageDescription": "",
           "SKAdNetworkItems": Array [
             Object {
               "SKAdNetworkIdentifier": "v9wttpbfk9.skadnetwork",
@@ -1074,8 +1064,6 @@ Object {
     "permissions": Array [
       "CAMERA",
       "com.sec.android.provider.badge.permission.WRITE",
-      "android.permission.ACCESS_COARSE_LOCATION",
-      "android.permission.ACCESS_FINE_LOCATION",
     ],
     "softwareKeyboardLayoutMode": "pan",
     "splash": Object {
@@ -1133,6 +1121,7 @@ Object {
       "usesNonExemptEncryption": true,
     },
     "entitlements": Object {
+      "aps-environment": "development",
       "com.apple.developer.associated-domains": Array [
         "applinks:https://pillarvalley.netlify.app",
       ],
@@ -1192,7 +1181,7 @@ Object {
           },
         },
       },
-      "NSLocationWhenInUseUsageDescription": "Allow $(PRODUCT_NAME) to access your location",
+      "NSLocationWhenInUseUsageDescription": "",
       "SKAdNetworkItems": Array [
         Object {
           "SKAdNetworkIdentifier": "v9wttpbfk9.skadnetwork",
@@ -1667,16 +1656,6 @@ Object {
                   "android:name": "com.sec.android.provider.badge.permission.WRITE",
                 },
               },
-              Object {
-                "$": Object {
-                  "android:name": "android.permission.ACCESS_COARSE_LOCATION",
-                },
-              },
-              Object {
-                "$": Object {
-                  "android:name": "android.permission.ACCESS_FINE_LOCATION",
-                },
-              },
             ],
           },
         },
@@ -1782,6 +1761,7 @@ Object {
       },
       "ios": Object {
         "entitlements": Object {
+          "aps-environment": "development",
           "com.apple.developer.associated-domains": Array [
             "applinks:https://pillarvalley.netlify.app",
           ],
@@ -1846,7 +1826,6 @@ Object {
               },
             },
           },
-          "NSLocationWhenInUseUsageDescription": "Allow $(PRODUCT_NAME) to access your location",
           "SKAdNetworkItems": Array [
             Object {
               "SKAdNetworkIdentifier": "v9wttpbfk9.skadnetwork",
@@ -1971,8 +1950,6 @@ Object {
     "permissions": Array [
       "CAMERA",
       "com.sec.android.provider.badge.permission.WRITE",
-      "android.permission.ACCESS_COARSE_LOCATION",
-      "android.permission.ACCESS_FINE_LOCATION",
     ],
     "softwareKeyboardLayoutMode": "pan",
     "splash": Object {
@@ -2030,6 +2007,7 @@ Object {
       "usesNonExemptEncryption": true,
     },
     "entitlements": Object {
+      "aps-environment": "development",
       "com.apple.developer.associated-domains": Array [
         "applinks:https://pillarvalley.netlify.app",
       ],
@@ -2089,7 +2067,6 @@ Object {
           },
         },
       },
-      "NSLocationWhenInUseUsageDescription": "Allow $(PRODUCT_NAME) to access your location",
       "SKAdNetworkItems": Array [
         Object {
           "SKAdNetworkIdentifier": "v9wttpbfk9.skadnetwork",
