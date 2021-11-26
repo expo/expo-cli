@@ -150,9 +150,6 @@ Object {
       "usesNonExemptEncryption": true,
     },
     "entitlements": Object {
-      "com.apple.developer.applesignin": Array [
-        "Default",
-      ],
       "com.apple.developer.associated-domains": Array [
         "applinks:https://pillarvalley.netlify.app",
       ],
@@ -889,9 +886,6 @@ Object {
       },
       "ios": Object {
         "entitlements": Object {
-          "com.apple.developer.applesignin": Array [
-            "Default",
-          ],
           "com.apple.developer.associated-domains": Array [
             "applinks:https://pillarvalley.netlify.app",
           ],
@@ -1139,9 +1133,6 @@ Object {
       "usesNonExemptEncryption": true,
     },
     "entitlements": Object {
-      "com.apple.developer.applesignin": Array [
-        "Default",
-      ],
       "com.apple.developer.associated-domains": Array [
         "applinks:https://pillarvalley.netlify.app",
       ],
@@ -1791,9 +1782,6 @@ Object {
       },
       "ios": Object {
         "entitlements": Object {
-          "com.apple.developer.applesignin": Array [
-            "Default",
-          ],
           "com.apple.developer.associated-domains": Array [
             "applinks:https://pillarvalley.netlify.app",
           ],
@@ -2042,9 +2030,6 @@ Object {
       "usesNonExemptEncryption": true,
     },
     "entitlements": Object {
-      "com.apple.developer.applesignin": Array [
-        "Default",
-      ],
       "com.apple.developer.associated-domains": Array [
         "applinks:https://pillarvalley.netlify.app",
       ],
