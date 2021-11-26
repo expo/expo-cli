@@ -50,6 +50,7 @@ export class VirtualNavigationPlugin implements Plugin {
         plugin.writeModule(join(at, '_nav.js'), defaultModule);
       };
 
+      // TODO: Delete old screens
       getSubDirectoriesRecursive(screensPath).forEach(addScreen);
     });
   }
