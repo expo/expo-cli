@@ -20,6 +20,12 @@ export function validateName(name?: string): string | true {
   return true;
 }
 
+const FORBIDDEN_NAMES = ['react-native', 'react', 'react-dom', 'react-native-web', 'expo'];
+
+export function isFolderNameForbidden(folderName: string): boolean {
+  return FORBIDDEN_NAMES.includes(folderName);
+}
+
 // Any of these files are allowed to exist in the projectRoot
 const TOLERABLE_FILES = [
   // System

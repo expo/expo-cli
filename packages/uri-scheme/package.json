@@ -1,6 +1,6 @@
 {
   "name": "uri-scheme",
-  "version": "1.0.103",
+  "version": "1.0.105",
   "main": "build",
   "preferGlobal": true,
   "keywords": [
@@ -34,8 +34,8 @@
     "clean": "rimraf ./build/"
   },
   "devDependencies": {
-    "@expo/config-plugins": "4.0.7",
-    "@expo/plist": "0.0.15",
+    "@expo/config-plugins": "4.0.9",
+    "@expo/plist": "0.0.16",
     "@expo/spawn-async": "1.5.0",
     "@types/prompts": "^2.0.6",
     "chalk": "^4.0.0",

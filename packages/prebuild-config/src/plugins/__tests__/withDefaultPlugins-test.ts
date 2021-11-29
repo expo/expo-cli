@@ -214,9 +214,6 @@ describe('built-in plugins', () => {
     });
     vol.fromJSON(
       {
-        // Required to link react-native-maps
-        './node_modules/react-native-maps/package.json': JSON.stringify({}),
-        // App files
         ...rnFixture,
         'ios/Podfile': PodfileBasic,
         'config/GoogleService-Info.plist': 'noop',
@@ -333,7 +330,6 @@ describe('built-in plugins', () => {
     const after = getDirFromFS(vol.toJSON(), projectRoot);
 
     expect(Object.keys(after)).toStrictEqual([
-      'node_modules/react-native-maps/package.json',
       'ios/ReactNativeProject/Supporting/Expo.plist',
       'ios/ReactNativeProject/Supporting/en.lproj/InfoPlist.strings',
       'ios/ReactNativeProject/Supporting/es.lproj/InfoPlist.strings',
@@ -483,7 +479,6 @@ describe('built-in plugins', () => {
     const after = getDirFromFS(vol.toJSON(), projectRoot);
 
     expect(Object.keys(after)).toStrictEqual([
-      'node_modules/react-native-maps/package.json',
       'ios/ReactNativeProject/Supporting/Expo.plist',
       'ios/ReactNativeProject/Info.plist',
       'ios/ReactNativeProject/AppDelegate.m',
@@ -543,9 +538,6 @@ describe('built-in plugins', () => {
     vol.reset();
     vol.fromJSON(
       {
-        // Required to link react-native-maps
-        './node_modules/react-native-maps/package.json': JSON.stringify({}),
-        // App files
         'config/GoogleService-Info.plist': 'noop',
         'config/google-services.json': '{}',
         'icons/foreground.png': icon,
@@ -607,7 +599,6 @@ describe('built-in plugins', () => {
     const after = getDirFromFS(vol.toJSON(), projectRoot);
 
     expect(Object.keys(after)).toStrictEqual([
-      'node_modules/react-native-maps/package.json',
       'config/GoogleService-Info.plist',
       'config/google-services.json',
       'locales/en-US.json',

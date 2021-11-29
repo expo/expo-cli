@@ -26,12 +26,12 @@ The [Expo CLI GitHub repository](https://github.com/expo/expo-cli) contains the 
 
 ### Branches
 
-The `master` branch of the repository should be kept releasable at any time. This way we can continuously deploy fixes and improvements without costly managing of different branches and issues will be noticed and fixed quickly. This also ensures other contributors can check out the latest version from GitHub and work on it with minimal disruption from other features in progress.
+The `main` branch of the repository should be kept releasable at any time. This way we can continuously deploy fixes and improvements without costly managing of different branches and issues will be noticed and fixed quickly. This also ensures other contributors can check out the latest version from GitHub and work on it with minimal disruption from other features in progress.
 
-Keeping the `master` releasable means that changes merged to it need to be:
+Keeping the `main` releasable means that changes merged to it need to be:
 
 - **Backwards compatible**: Expo CLI should work with _every currently supported Expo SDK version_. If the code you're adding depends on a feature only present in newer or unreleased SDK versions, it needs to check which SDK version is being used and not assume the latest version is being used.
-- **Non-breaking**: If code that is unreleasable or fails the test suite ends up in `master`, it should be reverted.
+- **Non-breaking**: If code that is unreleasable or fails the test suite ends up in `main`, it should be reverted.
 - **Tested**: Always include a test plan in pull requests. Do not merge code that doesn't pass all automated tests.
 
 ## Setting up the repository for development

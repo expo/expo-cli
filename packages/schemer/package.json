@@ -1,6 +1,6 @@
 {
   "name": "@expo/schemer",
-  "version": "1.3.31",
+  "version": "1.3.32",
   "description": "Centralized scheme validation library for Expo",
   "main": "./build/index.js",
   "scripts": {
@@ -19,7 +19,7 @@
   "bugs": {
     "url": "https://github.com/expo/expo-cli/issues"
   },
-  "homepage": "https://github.com/expo/expo-cli/tree/master/packages/schemer#readme",
+  "homepage": "https://github.com/expo/expo-cli/tree/main/packages/schemer#readme",
   "files": [
     "build"
   ],

@@ -1,6 +1,6 @@
 {
   "name": "@expo/pkcs12",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "PKCS#12 Utilities for Node.js",
   "main": "build/index.js",
   "scripts": {
@@ -22,7 +22,7 @@
   "bugs": {
     "url": "https://github.com/expo/expo-cli/issues"
   },
-  "homepage": "https://github.com/expo/expo-cli/tree/master/packages/pkcs12#readme",
+  "homepage": "https://github.com/expo/expo-cli/tree/main/packages/pkcs12#readme",
   "files": [
     "build"
   ],
