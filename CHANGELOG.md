@@ -10,6 +10,33 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🧹 Chores
 
+## [Mon, 29 Nov 2021 13:33:11 -0800](https://github.com/expo/expo-cli/commit/3917a2784f64517caa92b058e755efcc76cd9bfb)
+
+### 🎉 New features
+
+- [config-plugins] Export withPodfileProperties ([#4036](https://github.com/expo/expo-cli/issues/4036))
+
+### 🐛 Bug fixes
+
+- [prebuild-config] Fix autolinking issue ([#4039](https://github.com/expo/expo-cli/issues/4039))
+
+### 📦 Packages updated
+
+- @expo/config-plugins@4.0.10
+- @expo/config@6.0.10
+- @expo/dev-server@0.1.97
+- @expo/dev-tools@0.13.132
+- expo-cli@5.0.0-rc.2
+- expo-optimize@0.2.2
+- install-expo-modules@0.1.2
+- @expo/metro-config@0.3.3
+- @expo/next-adapter@3.1.10
+- @expo/prebuild-config@3.0.10
+- expo-pwa@0.0.105
+- uri-scheme@1.0.106
+- @expo/webpack-config@0.16.10
+- xdl@59.2.16
+
 ## [Fri, 26 Nov 2021 13:30:44 -0800](https://github.com/expo/expo-cli/commit/a43843a619d58b165eb7fcb4bcfd3ee7aaac65fd)
 
 ### 🧹 Chores
