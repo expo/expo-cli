@@ -45,12 +45,9 @@ export function createLegacyPlugin({
   };
 
   const methodName = toCamelCase(`with-${packageName}`);
-
-  if (methodName) {
-    Object.defineProperty(withUnknown, 'name', {
-      value: methodName,
-    });
-  }
+  Object.defineProperty(withUnknown, 'name', {
+    value: methodName,
+  });
 
   return withUnknown;
 }
