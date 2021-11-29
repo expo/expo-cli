@@ -10,6 +10,8 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🧹 Chores
 
+### 🐛 Bug fixes
+
 ## [Mon, 29 Nov 2021 13:33:11 -0800](https://github.com/expo/expo-cli/commit/3917a2784f64517caa92b058e755efcc76cd9bfb)
 
 ### 🎉 New features
@@ -19,6 +21,7 @@ This is the log of notable changes to Expo CLI and related packages.
 ### 🐛 Bug fixes
 
 - [prebuild-config] Fix autolinking issue ([#4039](https://github.com/expo/expo-cli/issues/4039))
+- Update CHANGELOG
 
 ### 📦 Packages updated
 
