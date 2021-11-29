@@ -39,8 +39,8 @@ describe(createLegacyPlugin, () => {
       packageName: 'expo-foobar',
       fallback,
     });
-    let config: ExpoConfig = { slug: '', name: '', _internal: { projectRoot: '/' } };
-    config = withPlugin(config);
+    const config: ExpoConfig = { slug: '', name: '', _internal: { projectRoot: '/' } };
+    withPlugin(config);
     expect(ConfigPlugins.withStaticPlugin).toBeCalledTimes(1);
     expect(fallback).toBeCalledTimes(0);
   });
