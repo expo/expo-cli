@@ -41,5 +41,16 @@ test('init', async () => {
     cwd: projectRoot,
     stdio: ['pipe', 'pipe', 'inherit'],
   });
-  expect(gitBranch).toBe('On branch master\nnothing to commit, working tree clean\n');
+  expect(gitBranch).toMatch(/On branch (master|main)\nnothing to commit, working tree clean\n/);
+  // expect(gitBranch).toBe('On branch master\nnothing to commit, working tree clean\n');
+});
+
+test('init react-native should exit', async () => {
+  const cwd = temporary.directory();
+  const { stdout } = await tryRunAsync(
+    ['init', 'react-native', '--template', 'blank', '--name', 'react-native', '--no-install'],
+    { cwd, env: { ...process.env, YARN_CACHE_FOLDER: path.join(cwd, 'yarn-cache') } }
+  );
+
+  expect(stdout).toBe('');
 });

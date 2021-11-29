@@ -14,11 +14,11 @@ import { UserManager, Versions } from 'xdl';
 
 import CommandError, { SilentError } from '../CommandError';
 import Log from '../log';
-import prompts, { selectAsync } from '../prompts';
-import { extractAndPrepareTemplateAppAsync } from '../utils/extractTemplateAppAsync';
 import { logNewSection } from '../utils/ora';
+import prompts, { selectAsync } from '../utils/prompts';
 import * as CreateApp from './utils/CreateApp';
 import { usesOldExpoUpdatesAsync } from './utils/ProjectUtils';
+import { extractAndPrepareTemplateAppAsync } from './utils/extractTemplateAppAsync';
 
 type Options = {
   template?: string;
@@ -62,6 +62,14 @@ function assertValidName(folderName: string) {
   if (typeof validation === 'string') {
     throw new CommandError(
       `Cannot create an app named ${chalk.red(`"${folderName}"`)}. ${validation}`
+    );
+  }
+  const isFolderNameForbidden = CreateApp.isFolderNameForbidden(folderName);
+  if (isFolderNameForbidden) {
+    throw new CommandError(
+      `Cannot create an app named ${chalk.red(
+        `"${folderName}"`
+      )} because it would conflict with a dependency of the same name.`
     );
   }
 }

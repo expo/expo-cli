@@ -3,28 +3,15 @@
 import { getConfig, getDefaultTarget, isLegacyImportsEnabled, ProjectTarget } from '@expo/config';
 import { getBareExtensions, getManagedExtensions } from '@expo/config/paths';
 import chalk from 'chalk';
-import findWorkspaceRoot from 'find-yarn-workspace-root';
 import { boolish } from 'getenv';
-import type { IncomingMessage, ServerResponse } from 'http';
 import { Reporter } from 'metro';
 import type MetroConfig from 'metro-config';
 import path from 'path';
 import resolveFrom from 'resolve-from';
 
+import { getModulesPaths } from './getModulesPaths';
 import { getWatchFolders } from './getWatchFolders';
 import { importMetroConfigFromProject } from './importMetroFromProject';
-
-export function getModulesPaths(projectRoot: string): string[] {
-  const paths: string[] = [];
-  paths.push(path.resolve(projectRoot, 'node_modules'));
-
-  const workspaceRoot = findWorkspaceRoot(path.resolve(projectRoot)); // Absolute path or null
-  if (workspaceRoot) {
-    paths.push(path.resolve(workspaceRoot, 'node_modules'));
-  }
-
-  return paths;
-}
 
 export const EXPO_DEBUG = boolish('EXPO_DEBUG', false);
 const EXPO_USE_EXOTIC = boolish('EXPO_USE_EXOTIC', false);
@@ -87,8 +74,6 @@ function getProjectBabelConfigFile(projectRoot: string): string | undefined {
 
 function getAssetPlugins(projectRoot: string): string[] {
   const assetPlugins: string[] = [];
-
-  assetPlugins.push(require.resolve('./monorepoAssetsPlugin'));
 
   let hashAssetFilesPath;
   try {
@@ -206,10 +191,14 @@ export function getDefaultConfig(
   resolverMainFields.push('browser', 'main');
 
   const watchFolders = getWatchFolders(projectRoot);
+  // TODO: nodeModulesPaths does not work with the new Node.js package.json exports API, this causes packages like uuid to fail. Disabling for now.
   const nodeModulesPaths = getModulesPaths(projectRoot);
   if (EXPO_DEBUG) {
     console.log();
     console.log(`Expo Metro config:`);
+    try {
+      console.log(`- Version: ${require('../package.json').version}`);
+    } catch {}
     console.log(`- Bundler target: ${target}`);
     console.log(`- Legacy: ${isLegacy}`);
     console.log(`- Extensions: ${sourceExts.join(', ')}`);
@@ -227,29 +216,6 @@ export function getDefaultConfig(
     reporter,
     ...metroDefaultValues
   } = MetroConfig.getDefaultConfig.getDefaultValues(projectRoot);
-
-  const customEnhanceMiddleware = metroDefaultValues.server?.enhanceMiddleware;
-
-  // @ts-ignore can't mutate readonly config
-  const enhanceMiddleware = (metroMiddleware: any, server: Metro.Server) => {
-    if (customEnhanceMiddleware) {
-      metroMiddleware = customEnhanceMiddleware(metroMiddleware, server);
-    }
-
-    const debug = require('debug')('expo:metro-config:middleware');
-
-    // Add extra middleware to redirect assets in a monorepo.
-    return (req: IncomingMessage, res: ServerResponse, next: (err?: Error) => void) => {
-      const { url } = req;
-      if (url && url.startsWith('/assets/')) {
-        // Added by the assetPlugins
-        req.url = url.replace(/@@\//g, '../');
-        debug('Redirect asset:', url, '->', req.url);
-      }
-
-      return metroMiddleware(req, res, next);
-    };
-  };
 
   // Merge in the default config from Metro here, even though loadConfig uses it as defaults.
   // This is a convenience for getDefaultConfig use in metro.config.js, e.g. to modify assetExts.
@@ -270,7 +236,6 @@ export function getDefaultConfig(
     },
     server: {
       port: Number(process.env.RCT_METRO_PORT) || 8081,
-      enhanceMiddleware,
     },
     symbolicator: {
       customizeFrame: frame => {

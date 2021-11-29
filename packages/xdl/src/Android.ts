@@ -15,6 +15,7 @@ import {
   downloadApkAsync,
   Env,
   ImageUtils,
+  isDevClientPackageInstalled,
   learnMore,
   Logger,
   NotificationCode,
@@ -827,6 +828,29 @@ export async function resolveApplicationIdAsync(projectRoot: string): Promise<st
   return exp.android?.package ?? null;
 }
 
+async function constructDeepLinkAsync(
+  projectRoot: string,
+  scheme?: string,
+  devClient?: boolean
+): Promise<string | null> {
+  if (
+    process.env['EXPO_ENABLE_INTERSTITIAL_PAGE'] &&
+    !devClient &&
+    isDevClientPackageInstalled(projectRoot)
+  ) {
+    return UrlUtils.constructLoadingUrlAsync(projectRoot);
+  } else {
+    return await UrlUtils.constructDeepLinkAsync(projectRoot, {
+      scheme,
+    }).catch(e => {
+      if (devClient) {
+        return null;
+      }
+      throw e;
+    });
+  }
+}
+
 export async function openProjectAsync({
   projectRoot,
   shouldPrompt,
@@ -846,12 +870,7 @@ export async function openProjectAsync({
 }): Promise<{ success: true; url: string } | { success: false; error: Error | string }> {
   await startAdbReverseAsync(projectRoot);
 
-  const projectUrl = await UrlUtils.constructDeepLinkAsync(projectRoot, { scheme }).catch(e => {
-    if (devClient) {
-      return null;
-    }
-    throw e;
-  });
+  const projectUrl = await constructDeepLinkAsync(projectRoot, scheme, devClient);
 
   const { exp } = getConfig(projectRoot, {
     skipSDKVersionRequirement: true,

@@ -2,7 +2,6 @@ import { Profile, ProfileType, RequestContext } from '@expo/apple-utils';
 
 import CommandError from '../CommandError';
 import { ora } from '../utils/ora';
-import { findP12CertSerialNumber } from '../utils/p12Certificate';
 import { AppleCtx, getRequestContext } from './authenticate';
 import { getBundleIdForIdentifierAsync, getProfilesForBundleIdAsync } from './bundleId';
 import {
@@ -11,6 +10,7 @@ import {
   getCertificateBySerialNumberAsync,
   transformCertificate,
 } from './distributionCert';
+import { findP12CertSerialNumber } from './p12Certificate';
 
 export type ProvisioningProfileInfo = {
   name: string;

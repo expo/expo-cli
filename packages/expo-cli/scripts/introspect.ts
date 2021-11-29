@@ -186,7 +186,7 @@ if (['markdown', 'md'].includes(process.argv[2])) {
 
   // Add comments so users hopefully don't open PRs directly into expo/expo
   contents =
-    `\n<!-- BEGIN GENERATED BLOCK. DO NOT MODIFY MANUALLY. https://github.com/expo/expo-cli/blob/master/packages/expo-cli/scripts/introspect.ts -->\n\n` +
+    `\n<!-- BEGIN GENERATED BLOCK. DO NOT MODIFY MANUALLY. https://github.com/expo/expo-cli/blob/main/packages/expo-cli/scripts/introspect.ts -->\n\n` +
     `> Based on \`expo-cli\` v${require('../package.json').version}\n\n` +
     contents +
     `\n<!-- END GENERATED BLOCK. DO NOT MODIFY MANUALLY. -->`;
@@ -194,7 +194,7 @@ if (['markdown', 'md'].includes(process.argv[2])) {
   pbcopy(contents);
 } else if (['fig'].includes(process.argv[2])) {
   const runFig = () => {
-    const branch = 'master';
+    const branch = 'main';
     const ICON = {
       npm: 'fig://icon?type=npm',
       yarn: 'fig://icon?type=yarn',

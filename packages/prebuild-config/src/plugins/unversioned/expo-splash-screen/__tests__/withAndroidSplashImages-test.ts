@@ -13,7 +13,7 @@ describe(setSplashImageDrawablesAsync, () => {
         'assets/splash.png': '...',
         'assets/splash-dark.png': '...',
       },
-      '/'
+      './'
     );
   });
 

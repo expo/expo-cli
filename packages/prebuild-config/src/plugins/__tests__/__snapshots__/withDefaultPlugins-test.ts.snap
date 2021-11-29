@@ -40,6 +40,10 @@ Object {
         "name": "expo-splash-screen",
         "version": "UNVERSIONED",
       },
+      "expo-system-ui": Object {
+        "name": "expo-system-ui",
+        "version": "UNVERSIONED",
+      },
       "expo-updates": Object {
         "name": "expo-updates",
         "version": "UNVERSIONED",
@@ -145,9 +149,6 @@ Object {
     },
     "entitlements": Object {
       "aps-environment": "development",
-      "com.apple.developer.applesignin": Array [
-        "Default",
-      ],
       "com.apple.developer.associated-domains": Array [
         "applinks:https://pillarvalley.netlify.app",
       ],
@@ -208,7 +209,6 @@ Object {
         },
       },
       "NSLocationWhenInUseUsageDescription": "",
-      "RCTRootViewBackgroundColor": 4294901760,
       "SKAdNetworkItems": Array [
         Object {
           "SKAdNetworkIdentifier": "v9wttpbfk9.skadnetwork",
@@ -308,12 +308,6 @@ Object {
               },
               Object {
                 "$": Object {
-                  "name": "activityBackground",
-                },
-                "_": "#ff0000",
-              },
-              Object {
-                "$": Object {
                   "name": "navigationBarColor",
                 },
                 "_": "#ff0000",
@@ -323,6 +317,12 @@ Object {
                   "name": "splashscreen_background",
                 },
                 "_": "#ff00ff",
+              },
+              Object {
+                "$": Object {
+                  "name": "activityBackground",
+                },
+                "_": "#ff0000",
               },
               Object {
                 "$": Object {
@@ -837,12 +837,6 @@ Object {
                   },
                   Object {
                     "$": Object {
-                      "name": "android:windowBackground",
-                    },
-                    "_": "@color/activityBackground",
-                  },
-                  Object {
-                    "$": Object {
                       "name": "android:windowLightNavigationBar",
                     },
                     "_": "true",
@@ -852,6 +846,12 @@ Object {
                       "name": "android:navigationBarColor",
                     },
                     "_": "@color/navigationBarColor",
+                  },
+                  Object {
+                    "$": Object {
+                      "name": "android:windowBackground",
+                    },
+                    "_": "@color/activityBackground",
                   },
                 ],
               },
@@ -876,9 +876,6 @@ Object {
       "ios": Object {
         "entitlements": Object {
           "aps-environment": "development",
-          "com.apple.developer.applesignin": Array [
-            "Default",
-          ],
           "com.apple.developer.associated-domains": Array [
             "applinks:https://pillarvalley.netlify.app",
           ],
@@ -944,7 +941,6 @@ Object {
             },
           },
           "NSLocationWhenInUseUsageDescription": "",
-          "RCTRootViewBackgroundColor": 4294901760,
           "SKAdNetworkItems": Array [
             Object {
               "SKAdNetworkIdentifier": "v9wttpbfk9.skadnetwork",
@@ -1015,6 +1011,10 @@ Object {
       },
       "expo-splash-screen": Object {
         "name": "expo-splash-screen",
+        "version": "UNVERSIONED",
+      },
+      "expo-system-ui": Object {
+        "name": "expo-system-ui",
         "version": "UNVERSIONED",
       },
       "expo-updates": Object {
@@ -1122,9 +1122,6 @@ Object {
     },
     "entitlements": Object {
       "aps-environment": "development",
-      "com.apple.developer.applesignin": Array [
-        "Default",
-      ],
       "com.apple.developer.associated-domains": Array [
         "applinks:https://pillarvalley.netlify.app",
       ],
@@ -1185,7 +1182,6 @@ Object {
         },
       },
       "NSLocationWhenInUseUsageDescription": "",
-      "RCTRootViewBackgroundColor": 4294901760,
       "SKAdNetworkItems": Array [
         Object {
           "SKAdNetworkIdentifier": "v9wttpbfk9.skadnetwork",
@@ -1285,12 +1281,6 @@ Object {
               },
               Object {
                 "$": Object {
-                  "name": "activityBackground",
-                },
-                "_": "#ff0000",
-              },
-              Object {
-                "$": Object {
                   "name": "navigationBarColor",
                 },
                 "_": "#ff0000",
@@ -1300,6 +1290,12 @@ Object {
                   "name": "splashscreen_background",
                 },
                 "_": "#ff00ff",
+              },
+              Object {
+                "$": Object {
+                  "name": "activityBackground",
+                },
+                "_": "#ff0000",
               },
               Object {
                 "$": Object {
@@ -1727,12 +1723,6 @@ Object {
                   },
                   Object {
                     "$": Object {
-                      "name": "android:windowBackground",
-                    },
-                    "_": "@color/activityBackground",
-                  },
-                  Object {
-                    "$": Object {
                       "name": "android:windowLightNavigationBar",
                     },
                     "_": "true",
@@ -1742,6 +1732,12 @@ Object {
                       "name": "android:navigationBarColor",
                     },
                     "_": "@color/navigationBarColor",
+                  },
+                  Object {
+                    "$": Object {
+                      "name": "android:windowBackground",
+                    },
+                    "_": "@color/activityBackground",
                   },
                 ],
               },
@@ -1766,9 +1762,6 @@ Object {
       "ios": Object {
         "entitlements": Object {
           "aps-environment": "development",
-          "com.apple.developer.applesignin": Array [
-            "Default",
-          ],
           "com.apple.developer.associated-domains": Array [
             "applinks:https://pillarvalley.netlify.app",
           ],
@@ -1833,7 +1826,6 @@ Object {
               },
             },
           },
-          "RCTRootViewBackgroundColor": 4294901760,
           "SKAdNetworkItems": Array [
             Object {
               "SKAdNetworkIdentifier": "v9wttpbfk9.skadnetwork",
@@ -1905,6 +1897,10 @@ Object {
       },
       "expo-splash-screen": Object {
         "name": "expo-splash-screen",
+        "version": "UNVERSIONED",
+      },
+      "expo-system-ui": Object {
+        "name": "expo-system-ui",
         "version": "UNVERSIONED",
       },
       "expo-updates": Object {
@@ -2012,9 +2008,6 @@ Object {
     },
     "entitlements": Object {
       "aps-environment": "development",
-      "com.apple.developer.applesignin": Array [
-        "Default",
-      ],
       "com.apple.developer.associated-domains": Array [
         "applinks:https://pillarvalley.netlify.app",
       ],
@@ -2074,7 +2067,6 @@ Object {
           },
         },
       },
-      "RCTRootViewBackgroundColor": 4294901760,
       "SKAdNetworkItems": Array [
         Object {
           "SKAdNetworkIdentifier": "v9wttpbfk9.skadnetwork",

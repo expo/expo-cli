@@ -36,6 +36,7 @@ export {
   withEntitlementsPlist,
   withExpoPlist,
   withXcodeProject,
+  withPodfileProperties,
 } from './plugins/ios-plugins';
 
 export {

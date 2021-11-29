@@ -6,12 +6,13 @@ import { Project, UnifiedAnalytics, UrlUtils, Versions } from 'xdl';
 
 import getDevClientProperties from '../../analytics/getDevClientProperties';
 import Log from '../../log';
-import * as sendTo from '../../sendTo';
-import urlOpts from '../../urlOpts';
 import { assertProjectHasExpoExtensionFilesAsync } from '../utils/deprecatedExtensionWarnings';
 import { profileMethod } from '../utils/profileMethod';
+import * as sendTo from '../utils/sendTo';
 import { ensureTypeScriptSetupAsync } from '../utils/typescript/ensureTypeScriptSetup';
+import urlOpts from '../utils/urlOpts';
 import { validateDependenciesVersionsAsync } from '../utils/validateDependenciesVersions';
+import { ensureWebSupportSetupAsync } from '../utils/web/ensureWebSetup';
 import * as TerminalUI from './TerminalUI';
 import { installCustomExitHook, installExitHooks } from './installExitHooks';
 import { tryOpeningDevToolsAsync } from './openDevTools';
@@ -38,6 +39,10 @@ export async function actionAsync(projectRoot: string, options: NormalizedOption
   const { exp, pkg } = profileMethod(getConfig)(projectRoot, {
     skipSDKVersionRequirement: options.webOnly || options.devClient,
   });
+
+  if (options.web || options.webOnly) {
+    await ensureWebSupportSetupAsync(projectRoot);
+  }
 
   if (options.devClient) {
     track(projectRoot, exp);

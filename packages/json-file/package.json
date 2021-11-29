@@ -1,6 +1,6 @@
 {
   "name": "@expo/json-file",
-  "version": "8.2.33",
+  "version": "8.2.34",
   "description": "A module for reading, writing, and manipulating JSON files",
   "main": "build/JsonFile.js",
   "scripts": {
@@ -23,7 +23,7 @@
   "bugs": {
     "url": "https://github.com/expo/expo-cli/issues"
   },
-  "homepage": "https://github.com/expo/expo-cli/tree/master/packages/json-file#readme",
+  "homepage": "https://github.com/expo/expo-cli/tree/main/packages/json-file#readme",
   "files": [
     "build"
   ],

@@ -2,7 +2,7 @@ import program from 'commander';
 import { boolish } from 'getenv';
 
 import Log from '../../log';
-import { confirmAsync } from '../../prompts';
+import { confirmAsync } from '../../utils/prompts';
 import { validateGitStatusAsync } from './ProjectUtils';
 
 const EXPO_NO_GIT_STATUS = boolish('EXPO_NO_GIT_STATUS', false);

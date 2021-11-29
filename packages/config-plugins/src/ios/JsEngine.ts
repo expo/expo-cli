@@ -1,4 +1,5 @@
 import type { ExpoConfig } from '@expo/config-types';
+import { JSONValue } from '@expo/json-file';
 
 import type { ConfigPlugin } from '../Plugin.types';
 import { withPodfileProperties } from '../plugins/ios-plugins';
@@ -19,8 +20,8 @@ export function getJsEngine(config: Pick<ExpoConfig, 'ios' | 'jsEngine'>) {
 
 export function setJsEngine(
   config: Pick<ExpoConfig, 'ios' | 'jsEngine'>,
-  podfileProperties: Record<string, string>
-): Record<string, string> {
+  podfileProperties: Record<string, JSONValue>
+): Record<string, JSONValue> {
   podfileProperties[JS_ENGINE_PROP_KEY] =
     config.ios?.jsEngine ?? config.jsEngine ?? DEFAULT_JS_ENGINE;
   return podfileProperties;

@@ -1,6 +1,6 @@
 {
   "name": "@expo/image-utils",
-  "version": "0.3.17",
+  "version": "0.3.18",
   "description": "A package used by Expo CLI for processing images",
   "main": "build/index.js",
   "scripts": {
@@ -22,7 +22,7 @@
   "bugs": {
     "url": "https://github.com/expo/expo-cli/issues"
   },
-  "homepage": "https://github.com/expo/expo-cli/tree/master/packages/image-utils#readme",
+  "homepage": "https://github.com/expo/expo-cli/tree/main/packages/image-utils#readme",
   "files": [
     "build"
   ],

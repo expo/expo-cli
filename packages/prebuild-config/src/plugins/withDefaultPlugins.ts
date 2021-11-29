@@ -22,6 +22,7 @@ import withFacebook from './unversioned/expo-facebook/expo-facebook';
 import withNavigationBar from './unversioned/expo-navigation-bar/expo-navigation-bar';
 import withNotifications from './unversioned/expo-notifications/expo-notifications';
 import withSplashScreen from './unversioned/expo-splash-screen/expo-splash-screen';
+import withSystemUI from './unversioned/expo-system-ui/expo-system-ui';
 import withUpdates from './unversioned/expo-updates';
 import withMaps from './unversioned/react-native-maps';
 
@@ -44,9 +45,7 @@ export const withIosExpoPlugins: ConfigPlugin<{
     IOSConfig.Name.withDisplayName,
     IOSConfig.Orientation.withOrientation,
     IOSConfig.RequiresFullScreen.withRequiresFullScreen,
-    IOSConfig.RootViewBackgroundColor.withRootViewBackgroundColor,
     IOSConfig.Scheme.withScheme,
-    IOSConfig.UserInterfaceStyle.withUserInterfaceStyle,
     IOSConfig.UsesNonExemptEncryption.withUsesNonExemptEncryption,
     IOSConfig.Version.withBuildNumber,
     IOSConfig.Version.withVersion,
@@ -99,10 +98,6 @@ export const withAndroidExpoPlugins: ConfigPlugin<{
     AndroidConfig.Scheme.withScheme,
     AndroidConfig.Orientation.withOrientation,
     AndroidConfig.Permissions.withPermissions,
-    AndroidConfig.UserInterfaceStyle.withUiModeManifest,
-
-    // MainActivity.*
-    AndroidConfig.UserInterfaceStyle.withUiModeMainActivity,
 
     // strings.xml
     AndroidConfig.Name.withName,
@@ -111,11 +106,10 @@ export const withAndroidExpoPlugins: ConfigPlugin<{
     AndroidConfig.GoogleServices.withGoogleServicesFile,
 
     // Modify colors.xml and styles.xml
-    AndroidConfig.RootViewBackgroundColor.withRootViewBackgroundColor,
     AndroidConfig.StatusBar.withStatusBar,
     AndroidConfig.PrimaryColor.withPrimaryColor,
 
-    c => withAndroidIcons(c),
+    withAndroidIcons,
     // If we renamed the package, we should also move it around and rename it in source files
     // Added last to ensure this plugin runs first. Out of tree solutions will mistakenly resolve the package incorrectly otherwise.
     AndroidConfig.Package.withPackageRefactor,
@@ -135,6 +129,7 @@ const versionedExpoSDKPackages: string[] = [
   'expo-document-picker',
   'expo-facebook',
   'expo-splash-screen',
+  'expo-system-ui',
 ];
 
 export const withVersionedExpoSDKPlugins: ConfigPlugin<{ expoUsername: string | null }> = (
@@ -151,6 +146,9 @@ export const withVersionedExpoSDKPlugins: ConfigPlugin<{ expoUsername: string | 
     withBranch,
     withDocumentPicker,
     withFacebook,
+    // System UI must come before splash screen as they overlap
+    // and splash screen will warn about conflicting rules.
+    withSystemUI,
     withSplashScreen,
     withNavigationBar,
   ]);

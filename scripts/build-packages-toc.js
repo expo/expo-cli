@@ -56,8 +56,8 @@ async function run() {
 
       const repoLink = `./packages/${pkg}`;
 
-      // const codecovLink = `https://codecov.io/gh/expo/expo-cli/tree/master/packages/${pkg}/src`;
-      // const codecovIcon = `https://codecov.io/gh/expo/expo-cli/branch/master/graph/badge.svg?flag=${toCamel(
+      // const codecovLink = `https://codecov.io/gh/expo/expo-cli/tree/main/packages/${pkg}/src`;
+      // const codecovIcon = `https://codecov.io/gh/expo/expo-cli/branch/main/graph/badge.svg?flag=${toCamel(
       //   pkg
       // )}`;
 

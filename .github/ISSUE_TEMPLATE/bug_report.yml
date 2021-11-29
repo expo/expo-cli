@@ -49,4 +49,4 @@ body:
       value: Please make sure contributors can follow the steps your provided in order to reproduce the bug.
   - type: markdown
     attributes:
-      value: "**Realize that it is up to you to debug your code and be as certain as possible that the bug is with Expo, not with your own app.** [Here's an excellent guide to debugging you can follow](https://github.com/expo/fyi/blob/master/manual-debugging.md#how-to-narrow-down-the-source-of-an-error-a-step-by-step-guide-to-good-old-fashioned-manual-debugging)."
+      value: "**Realize that it is up to you to debug your code and be as certain as possible that the bug is with Expo, not with your own app.** [Here's an excellent guide to debugging you can follow](https://github.com/expo/fyi/blob/main/manual-debugging.md#how-to-narrow-down-the-source-of-an-error-a-step-by-step-guide-to-good-old-fashioned-manual-debugging)."

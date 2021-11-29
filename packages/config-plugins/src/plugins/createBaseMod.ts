@@ -8,7 +8,7 @@ import {
 } from '../Plugin.types';
 import { BaseModOptions, withBaseMod } from './withMod';
 
-const debug = Debug('config-plugins:base-mods');
+const debug = Debug('expo:config-plugins:base-mods');
 
 export type ForwardedBaseModOptions = Partial<
   Pick<BaseModOptions, 'saveToInternal' | 'skipEmptyMod'>
