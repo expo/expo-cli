@@ -32,7 +32,7 @@ export function createLegacyPlugin({
   const withUnknown: ConfigPlugin = config => {
     // Skip using the versioned plugin when autolinking is enabled
     // and doesn't link the native module.
-    if (!isModuleExcluded(config, packageName)) {
+    if (isModuleExcluded(config, packageName)) {
       return createRunOncePlugin(withFallback, packageName)(config);
     }
 
