@@ -43,6 +43,7 @@ export const withIosExpoPlugins: ConfigPlugin<{
     IOSConfig.Swift.withNoopSwiftFile,
     IOSConfig.Google.withGoogle,
     IOSConfig.Name.withDisplayName,
+    IOSConfig.Name.withProductName,
     IOSConfig.Orientation.withOrientation,
     IOSConfig.RequiresFullScreen.withRequiresFullScreen,
     IOSConfig.Scheme.withScheme,
