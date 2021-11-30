@@ -41,7 +41,7 @@ type ManifestReceiver = {
 };
 
 export type ManifestIntentFilter = {
-  $: {
+  $?: {
     'android:autoVerify'?: StringBoolean;
     'data-generated'?: StringBoolean;
   };
