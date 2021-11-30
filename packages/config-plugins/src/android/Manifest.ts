@@ -40,7 +40,11 @@ type ManifestReceiver = {
   'intent-filter'?: ManifestIntentFilter[];
 };
 
-type ManifestIntentFilter = {
+export type ManifestIntentFilter = {
+  $: {
+    'android:autoVerify'?: StringBoolean;
+    'data-generated'?: StringBoolean;
+  };
   action?: ManifestAction[];
   data?: ManifestData[];
   category?: ManifestCategory[];
