@@ -1,13 +1,29 @@
 import { Android, ExpoConfig, IOS } from '@expo/config-types';
 import { getRuntimeVersionForSDKVersion } from '@expo/sdk-runtime-versions';
+import fs from 'fs';
 import { boolish } from 'getenv';
+import path from 'path';
 
 import { AndroidConfig, IOSConfig } from '..';
+import { resolvePackageRootFolder } from './resolvePackageRootFolder';
 
 export type ExpoConfigUpdates = Pick<
   ExpoConfig,
   'sdkVersion' | 'owner' | 'runtimeVersion' | 'updates' | 'slug'
 >;
+
+export function getExpoUpdatesPackageVersion(projectRoot: string): string | null {
+  const expoUpdatesRootFolder = resolvePackageRootFolder(projectRoot, 'expo-updates');
+  if (!expoUpdatesRootFolder) {
+    return null;
+  }
+  const packageJsonPath = path.join(expoUpdatesRootFolder, 'package.json');
+  if (!fs.existsSync(packageJsonPath)) {
+    return null;
+  }
+  const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+  return packageJson.version;
+}
 
 export function getUpdateUrl(
   config: Pick<ExpoConfigUpdates, 'owner' | 'slug' | 'updates'>,
