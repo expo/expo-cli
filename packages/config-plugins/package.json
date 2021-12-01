@@ -35,6 +35,7 @@
     "@expo/config-types": "^43.0.1",
     "@expo/json-file": "8.2.34",
     "@expo/plist": "0.0.16",
+    "@expo/sdk-runtime-versions": "^1.0.0",
     "@react-native/normalize-color": "^2.0.0",
     "chalk": "^4.1.2",
     "debug": "^4.3.1",
