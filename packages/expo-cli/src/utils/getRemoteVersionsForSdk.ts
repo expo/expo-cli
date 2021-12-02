@@ -4,7 +4,7 @@ export type DependencyList = Record<string, string>;
 
 export const getRemoteVersionsForSdk = async (sdkVersion?: string): Promise<DependencyList> => {
   const { sdkVersions } = await Versions.versionsAsync({ skipCache: true });
-  if (sdkVersion && sdkVersions[sdkVersion]) {
+  if (sdkVersion && sdkVersion in sdkVersions) {
     const { relatedPackages, facebookReactVersion, facebookReactNativeVersion } = sdkVersions[
       sdkVersion
     ];

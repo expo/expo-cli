@@ -1,4 +1,4 @@
-import { getRemoteVersionsForSdk } from '../fetchers';
+import { getRemoteVersionsForSdk } from '../getRemoteVersionsForSdk';
 
 describe(getRemoteVersionsForSdk, () => {
   it(`returns results for a valid SDK version`, async () => {

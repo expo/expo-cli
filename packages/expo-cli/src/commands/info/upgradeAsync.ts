@@ -21,7 +21,7 @@ import { SDKVersion } from 'xdl/build/Versions';
 
 import CommandError from '../../CommandError';
 import Log from '../../log';
-import { DependencyList } from '../../utils/fetchers';
+import { DependencyList } from '../../utils/getRemoteVersionsForSdk';
 import { logNewSection } from '../../utils/ora';
 import { confirmAsync, selectAsync } from '../../utils/prompts';
 import { findProjectRootAsync } from '../utils/ProjectUtils';

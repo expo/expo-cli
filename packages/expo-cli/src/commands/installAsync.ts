@@ -6,7 +6,7 @@ import { Versions } from 'xdl';
 
 import CommandError, { SilentError } from '../CommandError';
 import Log from '../log';
-import { getRemoteVersionsForSdk } from '../utils/fetchers';
+import { getRemoteVersionsForSdk } from '../utils/getRemoteVersionsForSdk';
 import { findProjectRootAsync } from './utils/ProjectUtils';
 import { autoAddConfigPluginsAsync } from './utils/autoAddConfigPluginsAsync';
 import { getBundledNativeModulesAsync } from './utils/bundledNativeModules';
