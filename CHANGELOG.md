@@ -16,7 +16,7 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🎉 New features
 
-- [cli][install] install: use recommended versions from remote ([#4014](https://github.com/expo/expo-cli/issues/4014))
+- [cli][install] use recommended versions from remote ([#4014](https://github.com/expo/expo-cli/issues/4014))
 - [config-plugins] use new error recovery setting in config plugin for updates 0.11.x ([#4043](https://github.com/expo/expo-cli/issues/4043))
 - [config-plugins] Automatically remove auto generated intent filters ([#4042](https://github.com/expo/expo-cli/issues/4042))
 - [config-plugins] Added buildscript.ext version plugin ([#4038](https://github.com/expo/expo-cli/issues/4038))
