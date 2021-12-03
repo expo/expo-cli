@@ -14,8 +14,6 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ## [Fri, 3 Dec 2021 10:48:28 -0800](https://github.com/expo/expo-cli/commit/ce6fd8710d895074becf48b0fac3907cf87c6192)
 
-### 🛠 Breaking changes
-
 ### 🎉 New features
 
 - [cli][install] install: use recommended versions from remote ([#4014](https://github.com/expo/expo-cli/issues/4014))
