@@ -544,6 +544,7 @@ Object {
                       Object {
                         "$": Object {
                           "android:autoVerify": "true",
+                          "data-generated": "true",
                         },
                         "action": Array [
                           Object {
@@ -1406,6 +1407,7 @@ Object {
                       Object {
                         "$": Object {
                           "android:autoVerify": "true",
+                          "data-generated": "true",
                         },
                         "action": Array [
                           Object {
