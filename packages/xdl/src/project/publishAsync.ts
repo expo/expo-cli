@@ -68,7 +68,6 @@ export async function publishAsync(
   }
 
   Analytics.logEvent('Publish', {
-    projectRoot,
     developerTool: Config.developerTool,
   });
 

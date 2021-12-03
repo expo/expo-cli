@@ -161,7 +161,6 @@ export function getManifestHandler(projectRoot: string) {
 
       // Log analytics
       Analytics.logEvent('Serve Manifest', {
-        projectRoot,
         developerTool: Config.developerTool,
         sdkVersion,
       });
