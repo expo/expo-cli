@@ -12,6 +12,44 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+## [Fri, 3 Dec 2021 10:48:28 -0800](https://github.com/expo/expo-cli/commit/ce6fd8710d895074becf48b0fac3907cf87c6192)
+
+### 🛠 Breaking changes
+
+### 🎉 New features
+
+- [cli][install] install: use recommended versions from remote ([#4014](https://github.com/expo/expo-cli/issues/4014))
+- [config-plugins] use new error recovery setting in config plugin for updates 0.11.x ([#4043](https://github.com/expo/expo-cli/issues/4043))
+- [config-plugins] Automatically remove auto generated intent filters ([#4042](https://github.com/expo/expo-cli/issues/4042))
+- [config-plugins] Added buildscript.ext version plugin ([#4038](https://github.com/expo/expo-cli/issues/4038))
+
+### 🧹 Chores
+
+- [config-plugins] Added maps resolution back ([#4047](https://github.com/expo/expo-cli/issues/4047))
+
+### 🐛 Bug fixes
+
+- [config-plugins] fix reading target dependencies ([#4048](https://github.com/expo/expo-cli/issues/4048))
+- [config-plugins] add missing sdk-runtime-versions dep ([#4045](https://github.com/expo/expo-cli/issues/4045))
+- [config-plugins] Ensure TeamID has quotes around it ([#4040](https://github.com/expo/expo-cli/issues/4040))
+
+### 📦 Packages updated
+
+- @expo/config-plugins@4.0.11
+- @expo/config@6.0.11
+- @expo/dev-server@0.1.98
+- @expo/dev-tools@0.13.133
+- expo-cli@5.0.0-rc.3
+- expo-optimize@0.2.3
+- install-expo-modules@0.1.3
+- @expo/metro-config@0.3.4
+- @expo/next-adapter@3.1.11
+- @expo/prebuild-config@3.0.11
+- expo-pwa@0.0.106
+- uri-scheme@1.0.107
+- @expo/webpack-config@0.16.11
+- xdl@59.2.17
+
 ## [Mon, 29 Nov 2021 13:33:11 -0800](https://github.com/expo/expo-cli/commit/3917a2784f64517caa92b058e755efcc76cd9bfb)
 
 ### 🎉 New features
