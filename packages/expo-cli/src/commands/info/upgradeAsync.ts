@@ -17,9 +17,11 @@ import resolveFrom from 'resolve-from';
 import semver from 'semver';
 import terminalLink from 'terminal-link';
 import { Project, ProjectSettings, Versions } from 'xdl';
+import { SDKVersion } from 'xdl/build/Versions';
 
 import CommandError from '../../CommandError';
 import Log from '../../log';
+import { DependencyList } from '../../utils/getRemoteVersionsForSdk';
 import { logNewSection } from '../../utils/ora';
 import { confirmAsync, selectAsync } from '../../utils/prompts';
 import { findProjectRootAsync } from '../utils/ProjectUtils';
@@ -27,27 +29,12 @@ import { getBundledNativeModulesAsync } from '../utils/bundledNativeModules';
 import { assertProjectHasExpoExtensionFilesAsync } from '../utils/deprecatedExtensionWarnings';
 import maybeBailOnGitStatusAsync from '../utils/maybeBailOnGitStatusAsync';
 
-type DependencyList = Record<string, string>;
-
 type Options = {
   npm?: boolean;
   yarn?: boolean;
 };
 
 export type ExpoWorkflow = 'managed' | 'bare';
-
-export type TargetSDKVersion = Pick<
-  Versions.SDKVersion,
-  | 'expoReactNativeTag'
-  | 'facebookReactVersion'
-  | 'facebookReactNativeVersion'
-  | 'relatedPackages'
-  | 'iosClientVersion'
-  | 'iosClientUrl'
-  | 'androidClientVersion'
-  | 'androidClientUrl'
-  | 'beta'
->;
 
 export async function actionAsync(requestedSdkVersion: string | null, options: Options) {
   const { projectRoot, workflow } = await findProjectRootAsync(process.cwd());
@@ -91,7 +78,7 @@ async function getExactInstalledModuleVersionAsync(moduleName: string, projectRo
 export async function getUpdatedDependenciesAsync(
   projectRoot: string,
   workflow: ExpoWorkflow,
-  targetSdkVersion: TargetSDKVersion | null,
+  targetSdkVersion: SDKVersion | null,
   targetSdkVersionString: string
 ): Promise<{ dependencies: DependencyList; removed: string[] }> {
   // Get the updated version for any bundled modules
@@ -145,7 +132,7 @@ export type UpgradeDependenciesOptions = {
   bundledNativeModules: DependencyList;
   sdkVersion?: string;
   workflow: ExpoWorkflow;
-  targetSdkVersion: TargetSDKVersion | null;
+  targetSdkVersion: SDKVersion | null;
   targetSdkVersionString: string | null;
 };
 
@@ -194,9 +181,9 @@ export function getDependenciesFromBundledNativeModules({
       targetSdkVersionString &&
       semver.lt(targetSdkVersionString, '43.0.0'));
   if (shouldUseExpoReactNativeFork) {
-    result[
-      'react-native'
-    ] = `https://github.com/expo/react-native/archive/${targetSdkVersion.expoReactNativeTag}.tar.gz`;
+    result['react-native'] =
+      targetSdkVersion.packagesToInstallWhenEjecting?.['react-native'] ||
+      `https://github.com/expo/react-native/archive/${targetSdkVersion.expoReactNativeTag}.tar.gz`;
   } else {
     result['react-native'] = targetSdkVersion.facebookReactNativeVersion;
   }
