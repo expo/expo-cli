@@ -24,6 +24,18 @@ describe('iOS Updates config', () => {
     expect(
       Updates.getUpdatesCheckOnLaunch({ updates: { checkAutomatically: 'ON_ERROR_RECOVERY' } })
     ).toBe('NEVER');
+    expect(
+      Updates.getUpdatesCheckOnLaunch(
+        { updates: { checkAutomatically: 'ON_ERROR_RECOVERY' } },
+        '0.11.0'
+      )
+    ).toBe('ERROR_RECOVERY_ONLY');
+    expect(
+      Updates.getUpdatesCheckOnLaunch(
+        { updates: { checkAutomatically: 'ON_ERROR_RECOVERY' } },
+        '0.10.15'
+      )
+    ).toBe('NEVER');
     expect(Updates.getUpdatesCheckOnLaunch({ updates: { checkAutomatically: 'ON_LOAD' } })).toBe(
       'ALWAYS'
     );
@@ -45,7 +57,31 @@ describe('iOS Updates config', () => {
           },
         },
         {},
-        'user'
+        'user',
+        '0.11.0'
+      )
+    ).toMatchObject({
+      EXUpdatesEnabled: false,
+      EXUpdatesURL: 'https://exp.host/@owner/my-app',
+      EXUpdatesCheckOnLaunch: 'ERROR_RECOVERY_ONLY',
+      EXUpdatesLaunchWaitMs: 2000,
+      EXUpdatesSDKVersion: '37.0.0',
+    });
+    expect(
+      Updates.setUpdatesConfig(
+        {
+          sdkVersion: '37.0.0',
+          slug: 'my-app',
+          owner: 'owner',
+          updates: {
+            enabled: false,
+            fallbackToCacheTimeout: 2000,
+            checkAutomatically: 'ON_ERROR_RECOVERY',
+          },
+        },
+        {},
+        'user',
+        '0.10.15'
       )
     ).toMatchObject({
       EXUpdatesEnabled: false,
