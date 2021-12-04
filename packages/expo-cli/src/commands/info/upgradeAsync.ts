@@ -478,10 +478,16 @@ export async function upgradeAsync(
     ? `expo@next`
     : `expo@^${targetSdkVersionString}`;
 
+  const exactExpoPackageVersion = await getExactInstalledModuleVersionAsync('expo', projectRoot);
+  const isExpoPackageVersionPrerelease =
+    exactExpoPackageVersion && semver.prerelease(exactExpoPackageVersion) !== null;
+
   // Skip installing the Expo package again if it's already installed. @satya164
   // wanted this in order to work around an issue with yarn workspaces on
   // react-navigation.
-  if (targetSdkVersionString !== currentSdkVersionString) {
+  // Note, if the installed Expo SDK is a prerelease, it will always reinstall.
+  // TODO(cedric): check if we can fully remove this check
+  if (isExpoPackageVersionPrerelease || targetSdkVersionString !== currentSdkVersionString) {
     const installingPackageStep = logNewSection(
       `Installing the ${expoPackageToInstall} package...`
     );
