@@ -1,5 +1,4 @@
 import type Log from '@expo/bunyan';
-import { getConfig } from '@expo/config';
 import {
   attachInspectorProxy,
   createDevServerMiddleware,
