@@ -1,10 +1,16 @@
 import * as path from 'path';
 import resolveFrom from 'resolve-from';
+import semver from 'semver';
 import xcode from 'xcode';
 
 import { ConfigPlugin } from '../Plugin.types';
 import { withExpoPlist } from '../plugins/ios-plugins';
-import { ExpoConfigUpdates, getRuntimeVersionNullable, getUpdateUrl } from '../utils/Updates';
+import {
+  ExpoConfigUpdates,
+  getExpoUpdatesPackageVersion,
+  getRuntimeVersionNullable,
+  getUpdateUrl,
+} from '../utils/Updates';
 import { ExpoPlist } from './IosConfig.types';
 
 const CREATE_MANIFEST_IOS_PATH = 'expo-updates/scripts/create-manifest-ios.sh';
@@ -33,9 +39,14 @@ export function getUpdatesTimeout(config: Pick<ExpoConfigUpdates, 'updates'>) {
 }
 
 export function getUpdatesCheckOnLaunch(
-  config: Pick<ExpoConfigUpdates, 'updates'>
-): 'NEVER' | 'ALWAYS' {
+  config: Pick<ExpoConfigUpdates, 'updates'>,
+  expoUpdatesPackageVersion?: string | null
+): 'NEVER' | 'ERROR_RECOVERY_ONLY' | 'ALWAYS' {
   if (config.updates?.checkAutomatically === 'ON_ERROR_RECOVERY') {
+    // native 'ERROR_RECOVERY_ONLY' option was only introduced in 0.11.x
+    if (expoUpdatesPackageVersion && semver.gte(expoUpdatesPackageVersion, '0.11.0')) {
+      return 'ERROR_RECOVERY_ONLY';
+    }
     return 'NEVER';
   } else if (config.updates?.checkAutomatically === 'ON_LOAD') {
     return 'ALWAYS';
@@ -48,7 +59,13 @@ export const withUpdates: ConfigPlugin<{ expoUsername: string | null }> = (
   { expoUsername }
 ) => {
   return withExpoPlist(config, config => {
-    config.modResults = setUpdatesConfig(config, config.modResults, expoUsername);
+    const expoUpdatesPackageVersion = getExpoUpdatesPackageVersion(config.modRequest.projectRoot);
+    config.modResults = setUpdatesConfig(
+      config,
+      config.modResults,
+      expoUsername,
+      expoUpdatesPackageVersion
+    );
     return config;
   });
 };
@@ -56,12 +73,13 @@ export const withUpdates: ConfigPlugin<{ expoUsername: string | null }> = (
 export function setUpdatesConfig(
   config: ExpoConfigUpdates,
   expoPlist: ExpoPlist,
-  username: string | null
+  username: string | null,
+  expoUpdatesPackageVersion?: string | null
 ): ExpoPlist {
   const newExpoPlist = {
     ...expoPlist,
     [Config.ENABLED]: getUpdatesEnabled(config),
-    [Config.CHECK_ON_LAUNCH]: getUpdatesCheckOnLaunch(config),
+    [Config.CHECK_ON_LAUNCH]: getUpdatesCheckOnLaunch(config, expoUpdatesPackageVersion),
     [Config.LAUNCH_WAIT_MS]: getUpdatesTimeout(config),
   };
 

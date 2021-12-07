@@ -36,6 +36,18 @@ describe('Android Updates config', () => {
     expect(
       Updates.getUpdatesCheckOnLaunch({ updates: { checkAutomatically: 'ON_ERROR_RECOVERY' } })
     ).toBe('NEVER');
+    expect(
+      Updates.getUpdatesCheckOnLaunch(
+        { updates: { checkAutomatically: 'ON_ERROR_RECOVERY' } },
+        '0.11.0'
+      )
+    ).toBe('ERROR_RECOVERY_ONLY');
+    expect(
+      Updates.getUpdatesCheckOnLaunch(
+        { updates: { checkAutomatically: 'ON_ERROR_RECOVERY' } },
+        '0.10.15'
+      )
+    ).toBe('NEVER');
     expect(Updates.getUpdatesCheckOnLaunch({ updates: { checkAutomatically: 'ON_LOAD' } })).toBe(
       'ALWAYS'
     );
@@ -62,7 +74,7 @@ describe('Android Updates config', () => {
         checkAutomatically: 'ON_ERROR_RECOVERY',
       },
     };
-    androidManifestJson = Updates.setUpdatesConfig(config, androidManifestJson, 'user');
+    androidManifestJson = Updates.setUpdatesConfig(config, androidManifestJson, 'user', '0.11.0');
     const mainApplication = getMainApplication(androidManifestJson);
 
     const updateUrl = mainApplication['meta-data'].filter(
@@ -87,7 +99,7 @@ describe('Android Updates config', () => {
       e => e.$['android:name'] === 'expo.modules.updates.EXPO_UPDATES_CHECK_ON_LAUNCH'
     );
     expect(checkOnLaunch).toHaveLength(1);
-    expect(checkOnLaunch[0].$['android:value']).toMatch('NEVER');
+    expect(checkOnLaunch[0].$['android:value']).toMatch('ERROR_RECOVERY_ONLY');
 
     const timeout = mainApplication['meta-data'].filter(
       e => e.$['android:name'] === 'expo.modules.updates.EXPO_UPDATES_LAUNCH_WAIT_MS'

@@ -10,8 +10,11 @@ import { ExpoConfig } from '@expo/config-types';
 const toCamelCase = (s: string) => s.replace(/-./g, x => x.toUpperCase()[1]);
 
 function isModuleExcluded(config: Pick<ExpoConfig, '_internal'>, packageName: string): boolean {
-  // TODO: Autolinking
-  return false;
+  // Skip using the versioned plugin when autolinking is enabled
+  // and doesn't link the native module.
+  return (
+    config._internal?.autolinkedModules && !config._internal.autolinkedModules.includes(packageName)
+  );
 }
 
 export function createLegacyPlugin({

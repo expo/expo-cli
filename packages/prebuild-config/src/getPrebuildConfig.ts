@@ -2,6 +2,7 @@ import { getAccountUsername, getConfig } from '@expo/config';
 import { ModPlatform } from '@expo/config-plugins';
 import { ExpoConfig } from '@expo/config-types';
 
+import { getAutolinkedPackagesAsync } from './getAutolinkedPackages';
 import {
   withAndroidExpoPlugins,
   withIosExpoPlugins,
@@ -18,8 +19,11 @@ export async function getPrebuildConfigAsync(
     expoUsername?: string | ((config: ExpoConfig) => string | null);
   }
 ): Promise<ReturnType<typeof getConfig>> {
+  const autolinkedModules = await getAutolinkedPackagesAsync(projectRoot, props.platforms);
+
   return getPrebuildConfig(projectRoot, {
     ...props,
+    autolinkedModules,
   });
 }
 
@@ -29,11 +33,13 @@ function getPrebuildConfig(
     platforms,
     bundleIdentifier,
     packageName,
+    autolinkedModules,
     expoUsername,
   }: {
     bundleIdentifier?: string;
     packageName?: string;
     platforms: ModPlatform[];
+    autolinkedModules?: string[];
     expoUsername?: string | ((config: ExpoConfig) => string | null);
   }
 ) {
@@ -42,6 +48,13 @@ function getPrebuildConfig(
     skipSDKVersionRequirement: true,
     isModdedConfig: true,
   });
+
+  if (autolinkedModules) {
+    if (!config._internal) {
+      config._internal = {};
+    }
+    config._internal.autolinkedModules = autolinkedModules;
+  }
 
   const resolvedExpoUsername =
     typeof expoUsername === 'function'

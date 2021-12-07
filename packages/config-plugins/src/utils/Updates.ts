@@ -1,6 +1,8 @@
 import { Android, ExpoConfig, IOS } from '@expo/config-types';
 import { getRuntimeVersionForSDKVersion } from '@expo/sdk-runtime-versions';
+import fs from 'fs';
 import { boolish } from 'getenv';
+import resolveFrom from 'resolve-from';
 
 import { AndroidConfig, IOSConfig } from '..';
 
@@ -8,6 +10,15 @@ export type ExpoConfigUpdates = Pick<
   ExpoConfig,
   'sdkVersion' | 'owner' | 'runtimeVersion' | 'updates' | 'slug'
 >;
+
+export function getExpoUpdatesPackageVersion(projectRoot: string): string | null {
+  const expoUpdatesPackageJsonPath = resolveFrom.silent(projectRoot, 'expo-updates/package.json');
+  if (!expoUpdatesPackageJsonPath || !fs.existsSync(expoUpdatesPackageJsonPath)) {
+    return null;
+  }
+  const packageJson = JSON.parse(fs.readFileSync(expoUpdatesPackageJsonPath, 'utf8'));
+  return packageJson.version;
+}
 
 export function getUpdateUrl(
   config: Pick<ExpoConfigUpdates, 'owner' | 'slug' | 'updates'>,

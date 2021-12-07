@@ -6,6 +6,7 @@ import { Versions } from 'xdl';
 
 import CommandError, { SilentError } from '../CommandError';
 import Log from '../log';
+import { getRemoteVersionsForSdk } from '../utils/getRemoteVersionsForSdk';
 import { findProjectRootAsync } from './utils/ProjectUtils';
 import { autoAddConfigPluginsAsync } from './utils/autoAddConfigPluginsAsync';
 import { getBundledNativeModulesAsync } from './utils/bundledNativeModules';
@@ -90,35 +91,37 @@ export async function actionAsync(
   }
 
   const bundledNativeModules = await getBundledNativeModulesAsync(projectRoot, exp.sdkVersion);
-  const nativeModules = [];
-  const others = [];
+  const versionsForSdk = await getRemoteVersionsForSdk(exp.sdkVersion);
+
+  let nativeModulesCount = 0;
+  let othersCount = 0;
+
   const versionedPackages = packages.map(arg => {
-    const spec = npmPackageArg(arg);
-    const { name } = spec;
-    if (['tag', 'version', 'range'].includes(spec.type) && name && bundledNativeModules[name]) {
+    const { name, type, raw } = npmPackageArg(arg);
+    if (['tag', 'version', 'range'].includes(type) && name && bundledNativeModules[name]) {
       // Unimodule packages from npm registry are modified to use the bundled version.
-      const version = bundledNativeModules[name];
-      const modifiedSpec = `${name}@${version}`;
-      nativeModules.push(modifiedSpec);
-      return modifiedSpec;
+      nativeModulesCount++;
+      return `${name}@${bundledNativeModules[name]}`;
+    } else if (name && versionsForSdk[name]) {
+      // Some packages have the recommended version listed in https://exp.host/--/api/v2/versions.
+      othersCount++;
+      return `${name}@${versionsForSdk[name]}`;
     } else {
       // Other packages are passed through unmodified.
-      others.push(spec.raw);
-      return spec.raw;
+      othersCount++;
+      return raw;
     }
   });
-  const messages = [];
-  if (nativeModules.length > 0) {
-    messages.push(
-      `${nativeModules.length} SDK ${exp.sdkVersion} compatible native ${
-        nativeModules.length === 1 ? 'module' : 'modules'
-      }`
-    );
-  }
-  if (others.length > 0) {
-    messages.push(`${others.length} other ${others.length === 1 ? 'package' : 'packages'}`);
-  }
+
+  const messages = [
+    nativeModulesCount > 0 &&
+      `${nativeModulesCount} SDK ${exp.sdkVersion} compatible native ${
+        nativeModulesCount === 1 ? 'module' : 'modules'
+      }`,
+    othersCount > 0 && `${othersCount} other ${othersCount === 1 ? 'package' : 'packages'}`,
+  ].filter(Boolean);
   Log.log(`Installing ${messages.join(' and ')} using ${packageManager.name}.`);
+
   await packageManager.addAsync(...versionedPackages);
 
   try {

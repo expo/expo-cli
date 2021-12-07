@@ -8,8 +8,9 @@ const LOCATION_USAGE = 'Allow $(PRODUCT_NAME) to access your location';
 // Copied from expo-location package, this gets used when the
 // user has react-native-maps installed but not expo-location.
 const withDefaultLocationPermissions: ConfigPlugin = config => {
-  // TODO: Autolinking
-  const isLinked = true;
+  const isLinked =
+    !config._internal?.autolinkedModules ||
+    config._internal.autolinkedModules.includes('react-native-maps');
   // Only add location permissions if react-native-maps is installed.
   if (
     config._internal?.projectRoot &&
