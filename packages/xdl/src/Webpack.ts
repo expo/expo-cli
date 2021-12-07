@@ -158,10 +158,7 @@ function createNativeDevServerMiddleware(
   // Add manifest middleware to the other middleware.
   // TODO: Move this in to expo/dev-server.
 
-  const projectConfig = getConfig(projectRoot);
-  const easProjectId = projectConfig.exp.extra?.eas?.projectId;
-  const useExpoUpdatesManifest =
-    forceManifestType === 'expo-updates' || (forceManifestType !== 'classic' && easProjectId);
+  const useExpoUpdatesManifest = forceManifestType === 'expo-updates';
 
   const middleware = useExpoUpdatesManifest
     ? ExpoUpdatesManifestHandler.getManifestHandler(projectRoot)
