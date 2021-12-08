@@ -779,7 +779,7 @@ async function constructDeepLinkAsync(
     !devClient &&
     isDevClientPackageInstalled(projectRoot)
   ) {
-    return UrlUtils.constructLoadingUrlAsync(projectRoot, 'localhost');
+    return UrlUtils.constructLoadingUrlAsync(projectRoot, 'ios', 'localhost');
   } else {
     try {
       return await UrlUtils.constructDeepLinkAsync(projectRoot, {

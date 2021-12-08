@@ -101,10 +101,11 @@ export async function constructLogUrlAsync(
 
 export async function constructLoadingUrlAsync(
   projectRoot: string,
+  platform: 'ios' | 'android',
   requestHostname?: string
 ): Promise<string> {
   const baseUrl = await constructUrlAsync(projectRoot, { urlType: 'http' }, false, requestHostname);
-  return `${baseUrl}/_expo/loading`;
+  return `${baseUrl}/_expo/loading?platform=${platform}`;
 }
 
 export async function constructUrlWithExtensionAsync(
