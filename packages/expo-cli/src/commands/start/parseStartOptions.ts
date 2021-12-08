@@ -184,8 +184,8 @@ export function parseStartOptions(
         : undefined;
   } else {
     const easUpdatesUrlRegex = /^https:\/\/(staging-)?u\.expo\.dev/;
-    const updatesUrl = exp.updates?.url ?? '';
-    const isEasUpdatesUrl = easUpdatesUrlRegex.test(updatesUrl);
+    const updatesUrl = exp.updates?.url;
+    const isEasUpdatesUrl = updatesUrl && easUpdatesUrlRegex.test(updatesUrl);
 
     startOpts.forceManifestType = isEasUpdatesUrl ? 'expo-updates' : 'classic';
   }
