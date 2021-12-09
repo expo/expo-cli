@@ -1,11 +1,11 @@
 import { Android, AndroidIntentFiltersData, ExpoConfig } from '@expo/config-types';
-import { Parser } from 'xml2js';
 
 import { createAndroidManifestPlugin } from '../plugins/android-plugins';
-import { AndroidManifest, getMainActivityOrThrow } from './Manifest';
+import { AndroidManifest, getMainActivityOrThrow, ManifestIntentFilter } from './Manifest';
 
 type AndroidIntentFilters = NonNullable<Android['intentFilters']>;
-// TODO: make it so intent filters aren't written again if you run the command again
+
+const GENERATED_TAG = 'data-generated';
 
 export const withAndroidIntentFilters = createAndroidManifestPlugin(
   setAndroidIntentFilters,
@@ -16,73 +16,71 @@ export function getIntentFilters(config: Pick<ExpoConfig, 'android'>): AndroidIn
   return config.android?.intentFilters ?? [];
 }
 
-export async function setAndroidIntentFilters(
+export function setAndroidIntentFilters(
   config: Pick<ExpoConfig, 'android'>,
   androidManifest: AndroidManifest
-): Promise<AndroidManifest> {
+): AndroidManifest {
+  // Always ensure old tags are removed.
+  const mainActivity = getMainActivityOrThrow(androidManifest);
+  // Remove all generated tags from previous runs...
+  if (mainActivity['intent-filter']?.length) {
+    mainActivity['intent-filter'] = mainActivity['intent-filter'].filter(
+      value => value.$?.[GENERATED_TAG] !== 'true'
+    );
+  }
+
   const intentFilters = getIntentFilters(config);
   if (!intentFilters.length) {
     return androidManifest;
   }
 
-  const intentFiltersXML = renderIntentFilters(intentFilters).join('');
-  const parser = new Parser();
-  const intentFiltersJSON = await parser.parseStringPromise(intentFiltersXML);
-
-  const mainActivity = getMainActivityOrThrow(androidManifest);
-
   mainActivity['intent-filter'] = mainActivity['intent-filter']?.concat(
-    intentFiltersJSON['intent-filter']
+    renderIntentFilters(intentFilters)
   );
 
   return androidManifest;
 }
 
-export default function renderIntentFilters(intentFilters: AndroidIntentFilters): string[] {
-  // returns an array of <intent-filter> tags:
-  // [
-  //   `<intent-filter>
-  //     <data android:scheme="exp"/>
-  //     <data android:scheme="exps"/>
-  //
-  //     <action android:name="android.intent.action.VIEW"/>
-  //
-  //     <category android:name="android.intent.category.DEFAULT"/>
-  //     <category android:name="android.intent.category.BROWSABLE"/>
-  //   </intent-filter>`,
-  //   ...
-  // ]
+export default function renderIntentFilters(
+  intentFilters: AndroidIntentFilters
+): ManifestIntentFilter[] {
   return intentFilters.map(intentFilter => {
-    const autoVerify = intentFilter.autoVerify ? ' android:autoVerify="true"' : '';
-
-    return `<intent-filter${autoVerify}>
-      ${renderIntentFilterData(intentFilter.data)}
-      <action android:name="android.intent.action.${intentFilter.action}"/>
-      ${renderIntentFilterCategory(intentFilter.category)}
-    </intent-filter>`;
+    // <intent-filter>
+    return {
+      $: {
+        'android:autoVerify': intentFilter.autoVerify ? 'true' : undefined,
+        // Add a custom "generated" tag that we can query later to remove.
+        [GENERATED_TAG]: 'true',
+      },
+      action: [
+        // <action android:name="android.intent.action.VIEW"/>
+        {
+          $: {
+            'android:name': `android.intent.action.${intentFilter.action}`,
+          },
+        },
+      ],
+      data: renderIntentFilterData(intentFilter.data),
+      category: renderIntentFilterCategory(intentFilter.category),
+    };
   });
 }
 
-function renderIntentFilterDatumEntries(datum: AndroidIntentFiltersData = {}): string {
-  const entries: string[] = [];
-  for (const [key, value] of Object.entries(datum)) {
-    entries.push(`android:${key}="${value}"`);
-  }
-  return entries.join(' ');
+/** Like `<data android:scheme="exp"/>` */
+function renderIntentFilterData(data?: AndroidIntentFiltersData | AndroidIntentFiltersData[]) {
+  return (Array.isArray(data) ? data : [data]).filter(Boolean).map(datum => ({
+    $: Object.entries(datum ?? {}).reduce(
+      (prev, [key, value]) => ({ ...prev, [`android:${key}`]: value }),
+      {}
+    ),
+  }));
 }
 
-function renderIntentFilterData(
-  data?: AndroidIntentFiltersData | AndroidIntentFiltersData[]
-): string {
-  return (Array.isArray(data) ? data : [data])
-    .filter(Boolean)
-    .map(datum => `<data ${renderIntentFilterDatumEntries(datum)}/>`)
-    .join('\n');
-}
-
-function renderIntentFilterCategory(category?: string | string[]): string {
-  return (Array.isArray(category) ? category : [category])
-    .filter(Boolean)
-    .map(cat => `<category android:name="android.intent.category.${cat}"/>`)
-    .join('\n');
+/** Like `<category android:name="android.intent.category.DEFAULT"/>` */
+function renderIntentFilterCategory(category?: string | string[]) {
+  return (Array.isArray(category) ? category : [category]).filter(Boolean).map(cat => ({
+    $: {
+      'android:name': `android.intent.category.${cat}`,
+    },
+  }));
 }

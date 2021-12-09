@@ -183,7 +183,11 @@ export function parseStartOptions(
         ? 'expo-updates'
         : undefined;
   } else {
-    startOpts.forceManifestType = 'classic';
+    const easUpdatesUrlRegex = /^https:\/\/(staging-)?u\.expo\.dev/;
+    const updatesUrl = exp.updates?.url;
+    const isEasUpdatesUrl = updatesUrl && easUpdatesUrlRegex.test(updatesUrl);
+
+    startOpts.forceManifestType = isEasUpdatesUrl ? 'expo-updates' : 'classic';
   }
 
   if (isLegacyImportsEnabled(exp)) {

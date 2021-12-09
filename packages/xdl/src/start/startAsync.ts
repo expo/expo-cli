@@ -54,7 +54,6 @@ export async function startAsync(
   assertValidProjectRoot(projectRoot);
 
   Analytics.logEvent('Start Project', {
-    projectRoot,
     developerTool: Config.developerTool,
     sdkVersion: exp.sdkVersion ?? null,
   });

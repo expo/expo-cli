@@ -403,7 +403,6 @@ export class UserManagerInstance {
     if (this._currentUser && !this._currentUser?.accessToken) {
       Analytics.logEvent('Logout', {
         userId: this._currentUser.userId,
-        username: this._currentUser.username,
         currentConnection: this._currentUser.currentConnection,
       });
     }
@@ -495,7 +494,6 @@ export class UserManagerInstance {
         Analytics.logEvent('Login', {
           userId: user.userId,
           currentConnection: user.currentConnection,
-          username: user.username,
         });
       }
 

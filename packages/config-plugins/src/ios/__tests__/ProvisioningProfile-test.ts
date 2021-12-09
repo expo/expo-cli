@@ -36,6 +36,14 @@ describe('ProvisioningProfile module', () => {
       const pbxprojContents = fs.readFileSync(path.join(projectRoot, pbxProjPath), 'utf-8');
       expect(pbxprojContents).toMatchSnapshot();
     });
+    it('configures the project.pbxproj file with the profile name and apple team id', () => {
+      setProvisioningProfileForPbxproj(projectRoot, {
+        profileName: '*[expo] com.swmansion.dominik.abcd.v2 AppStore 2020-07-24T07:56:22.983Z',
+        appleTeamId: 'Something Spaced',
+      });
+      const pbxprojContents = fs.readFileSync(path.join(projectRoot, pbxProjPath), 'utf-8');
+      expect(pbxprojContents).toMatch(/DevelopmentTeam = "Something Spaced";/);
+    });
     it('throws descriptive error when target name does not exist', () => {
       expect(() =>
         setProvisioningProfileForPbxproj(projectRoot, {

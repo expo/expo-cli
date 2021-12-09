@@ -18,7 +18,7 @@ import { validate as validateSchema } from 'schema-utils';
 import { promisify } from 'util';
 
 import { escapeStringRegexp } from '../../utils/escapeStringRegexp';
-import { CollectedScales, NativeAssetResolver } from './NativeAssetResolver';
+import { NativeAssetResolver } from './NativeAssetResolver';
 
 interface Options {
   platforms: string[];
@@ -215,22 +215,32 @@ export default async function nativeAssetsLoader(this: any) {
       publicPath = path.join(options.publicPath, publicPath);
     }
 
+    // Emulate how metro creates a hash of all assets together
+    const hasher = crypto.createHash('md5');
+    assets.map(asset => hasher.update(asset.content ?? ''));
+    const hash = hasher.digest('hex');
+
+    // Then emulate the individual hashes that Expo adds for sand boxing.
     const hashes = assets.map(asset =>
       crypto
         .createHash('md5')
-        .update(asset.content?.toString() ?? asset.destination, 'utf8')
+        .update(asset.content ?? '')
         .digest('hex')
     );
 
-    let info: ISizeCalculationResult | undefined;
+    // Redefine scales as an array of scale numbers.
+    const processedScales = Object.keys(scales)
+      // Strip `@` and `x` from string and parse as number.
+      .map(scaleString => Number(scaleString.substring(1, scaleString.length - 1)))
+      .filter(Boolean) as number[];
 
+    let info: ISizeCalculationResult | undefined;
     try {
       info = imageSize(this.resourcePath);
 
       const match = path
         .basename(this.resourcePath)
         .match(new RegExp(`^${escapeStringRegexp(filename)}${suffix}`));
-
       if (match?.[1]) {
         const scale = Number(match[1].replace(/[^\d.]/g, ''));
 
@@ -251,8 +261,10 @@ export default async function nativeAssetsLoader(this: any) {
       type,
       assetsPath,
       filename,
+      hash,
+      hashes,
       normalizedName,
-      scales,
+      scales: processedScales,
       assets: assets.map(asset => asset.destination),
       publicPath,
       width: info?.width,
@@ -263,9 +275,10 @@ export default async function nativeAssetsLoader(this: any) {
       null,
       createAssetCodeBlock({
         persist: !!options.persist,
-        scales,
+        scales: processedScales,
         filename,
         type,
+        hash,
         hashes,
         httpServerLocation: publicPath,
         fileSystemLocation: dirname,
@@ -282,6 +295,7 @@ function createAssetCodeBlock({
   scales,
   filename,
   type,
+  hash,
   hashes,
   httpServerLocation,
   height,
@@ -289,9 +303,10 @@ function createAssetCodeBlock({
   fileSystemLocation,
 }: {
   persist: boolean;
-  scales: CollectedScales;
+  scales: number[];
   filename: string;
   type: string;
+  hash: string;
   hashes: string[];
   httpServerLocation: string;
   height?: number;
@@ -299,15 +314,18 @@ function createAssetCodeBlock({
   fileSystemLocation: string;
 }) {
   return [
-    `var AssetRegistry = require('react-native/Libraries/Image/AssetRegistry');`,
-    `module.exports = AssetRegistry.registerAsset({`,
+    `module.exports = require('react-native/Libraries/Image/AssetRegistry').registerAsset({`,
     `  __packager_asset: true,`,
+    // MUST be array of numbers otherwise the client will request the asset incorrectly.
     `  scales: ${JSON.stringify(scales)},`,
     `  name: ${JSON.stringify(filename)},`,
     `  type: ${JSON.stringify(type)},`,
-    `  hash: ${JSON.stringify(hashes.join())},`,
+    `  hash: ${JSON.stringify(hash)},`,
+    // Added by `expo/tools/hashAssetFiles.js`
+    `  fileHashes: ${JSON.stringify(hashes)},`,
     `  httpServerLocation: ${JSON.stringify(httpServerLocation)},`,
-    `  ${persist ? '' : `fileSystemLocation: ${JSON.stringify(fileSystemLocation)},`}`,
+    // Only add in production apps
+    `  ${persist ? `fileSystemLocation: ${JSON.stringify(fileSystemLocation)},` : ''}`,
     `  ${height != null ? `height: ${height},` : ''}`,
     `  ${width != null ? `width: ${width},` : ''}`,
     `});`,
