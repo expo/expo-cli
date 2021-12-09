@@ -1,11 +1,8 @@
-import fill from 'lodash/fill';
-import flatten from 'lodash/flatten';
 import get from 'lodash/get';
 import zip from 'lodash/zip';
 
 export const fieldPathToSchemaPath = (fieldPath: string) => {
-  const newPath = zip(fill(fieldPath.split('.'), 'properties'), fieldPath.split('.'));
-  return flatten(newPath).join('.');
+  return zip(fieldPath.split('.').fill('properties'), fieldPath.split('.')).flat().join('.');
 };
 // Assumption: used only for jsonPointer returned from traverse
 export const schemaPointerToFieldPath = (jsonPointer: string) => {
