@@ -34,6 +34,7 @@ export type ErrorCode =
   | 'WEBPACK_DEPRECATED'
   | 'WEBPACK_INVALID_OPTION'
   | 'NETWORK_REQUIRED'
+  | 'ROBOT_OWNER_ERROR'
   // Shell Apps
   | 'CREDENTIAL_ERROR'
   // Development build

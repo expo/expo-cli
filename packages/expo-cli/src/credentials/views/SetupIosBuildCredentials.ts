@@ -3,7 +3,7 @@ import chalk from 'chalk';
 import CommandError from '../../CommandError';
 import * as appleApi from '../../appleApi';
 import Log from '../../log';
-import prompts, { confirmAsync } from '../../prompts';
+import prompts, { confirmAsync } from '../../utils/prompts';
 import { AppLookupParams } from '../api/IosApi';
 import { Context, IView } from '../context';
 import * as credentialsJsonReader from '../credentialsJson/read';

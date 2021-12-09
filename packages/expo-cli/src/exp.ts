@@ -29,17 +29,17 @@ import {
   UserManager,
 } from 'xdl';
 
-import StatusEventEmitter from './StatusEventEmitter';
-import { loginOrRegisterAsync } from './accounts';
+import StatusEventEmitter from './analytics/StatusEventEmitter';
 import { registerCommands } from './commands';
+import { loginOrRegisterAsync } from './commands/auth/accounts';
 import { learnMore } from './commands/utils/TerminalLink';
 import { profileMethod } from './commands/utils/profileMethod';
+import urlOpts from './commands/utils/urlOpts';
 import Log from './log';
-import update from './update';
-import urlOpts from './urlOpts';
 import { handleErrorsAsync } from './utils/handleErrors';
 import { matchFileNameOrURLFromStackTrace } from './utils/matchFileNameOrURLFromStackTrace';
 import { logNewSection, ora } from './utils/ora';
+import update from './utils/update';
 
 // We use require() to exclude package.json from TypeScript's analysis since it lives outside the
 // src directory and would change the directory structure of the emitted files under the build
@@ -199,6 +199,7 @@ export const helpGroupOrder = [
   'auth',
   'client',
   'info',
+  'eject',
   'publish',
   'build',
   'credentials',
@@ -206,9 +207,8 @@ export const helpGroupOrder = [
   'url',
   'webhooks',
   'upload',
-  'eject',
-  'experimental',
   'internal',
+  'deprecated',
 ];
 
 function sortHelpGroups(helpGroups: Record<string, string[][]>): Record<string, string[][]> {

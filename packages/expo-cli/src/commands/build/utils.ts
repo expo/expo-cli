@@ -4,7 +4,7 @@ import { UrlUtils, Versions } from 'xdl';
 
 import CommandError from '../../CommandError';
 import Log from '../../log';
-import prompts, { confirmAsync } from '../../prompts';
+import prompts, { confirmAsync } from '../../utils/prompts';
 import * as ProjectUtils from '../utils/ProjectUtils';
 
 export async function maybeBailOnWorkflowWarning({

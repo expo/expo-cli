@@ -4,8 +4,8 @@ import findWorkspaceRoot from 'find-yarn-workspace-root';
 
 import { SilentError } from '../../CommandError';
 import Log from '../../log';
-import { confirmAsync } from '../../prompts';
 import { ora } from '../../utils/ora';
+import { confirmAsync } from '../../utils/prompts';
 import { everyMatchAsync, wrapGlobWithTimeout } from './glob';
 
 async function queryExpoExtensionFilesAsync(

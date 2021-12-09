@@ -87,6 +87,7 @@ function mockBuildApis() {
 
 const mockedXDLModules = {
   UserManager: {
+    getProjectOwner: jest.fn(jest.requireActual('xdl').UserManager.getProjectOwner),
     ensureLoggedInAsync: jest.fn(() => jester),
     getCurrentUserAsync: jest.fn(() => jester),
     getCurrentUsernameAsync: jest.fn(() => jester.username),

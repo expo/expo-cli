@@ -37,7 +37,7 @@
   "bugs": {
     "url": "https://github.com/expo/expo-cli/issues"
   },
-  "homepage": "https://github.com/expo/expo-cli/tree/master/packages/expo-cli#readme",
+  "homepage": "https://github.com/expo/expo-cli/tree/main/packages/expo-cli#readme",
   "engines": {
     "node": ">=12"
   },
@@ -76,8 +76,8 @@
     "@expo/plist": "0.0.15",
     "@expo/prebuild-config": "3.0.7",
     "@expo/spawn-async": "1.5.0",
-    "@expo/xcpretty": "^4.0.0",
-    "base32.js": "0.1.0",
+    "@expo/xcpretty": "^4.1.0",
+    "better-opn": "^3.0.1",
     "boxen": "^5.0.1",
     "bplist-parser": "0.2.0",
     "chalk": "^4.0.0",
@@ -107,7 +107,6 @@
     "progress": "2.0.3",
     "prompts": "^2.3.2",
     "qrcode-terminal": "0.11.0",
-    "react-dev-utils": "~11.0.1",
     "read-last-lines": "1.6.0",
     "resolve-from": "^5.0.0",
     "semver": "7.3.2",

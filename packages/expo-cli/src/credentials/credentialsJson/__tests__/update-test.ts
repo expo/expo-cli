@@ -1,7 +1,7 @@
 import fs from 'fs-extra';
 import { vol } from 'memfs';
 
-import prompts from '../../../prompts';
+import prompts from '../../../utils/prompts';
 import { testKeystore } from '../../__tests__/fixtures/mocks-android';
 import { testExperienceName } from '../../__tests__/fixtures/mocks-constants';
 import { getCtxMock } from '../../__tests__/fixtures/mocks-context';
@@ -9,7 +9,7 @@ import { testAllCredentialsForApp } from '../../__tests__/fixtures/mocks-ios';
 import * as credentialsJsonUpdateUtils from '../update';
 
 jest.mock('fs');
-jest.mock('../../../prompts');
+jest.mock('../../../utils/prompts');
 
 beforeEach(() => {
   vol.reset();
@@ -264,6 +264,7 @@ describe('update credentials.json', () => {
         './cert.p12': 'somebinarycontent2',
       });
       await credentialsJsonUpdateUtils.updateIosCredentialsAsync(ctx, 'bundleIdentifier');
+      expect(prompts).toBeCalledTimes(1);
       const certP12Exists = await fs.pathExists('./cert.p12');
       const pprofile = await fs.readFile('./pprofile', 'base64');
       const credJson = await fs.readJson('./credentials.json');
