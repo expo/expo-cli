@@ -12,6 +12,36 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+## [Thu, 9 Dec 2021 14:38:50 -0800](https://github.com/expo/expo-cli/commit/e24ce591c0051d7300f048f19fb252717f4870b8)
+
+### 🎉 New features
+
+- [cli] Always upgrade expo package when prereleased ([#3936](https://github.com/expo/expo-cli/issues/3936))
+- [cli] Server modern manifest type with EAS Update updates.url ([#4054](https://github.com/expo/expo-cli/issues/4054))
+- [prebuild-config] use autolinking for auto plugins ([#3926](https://github.com/expo/expo-cli/issues/3926))
+
+### 🧹 Chores
+
+- [interstitial] Capture analytics event when user selects "custom client" ([#4023](https://github.com/expo/expo-cli/issues/4023))
+- [xdl] remove username and project root from analytics events ([#4049](https://github.com/expo/expo-cli/issues/4049))
+
+### 📦 Packages updated
+
+- @expo/config-plugins@4.0.12
+- @expo/config@6.0.12
+- @expo/dev-server@0.1.99
+- @expo/dev-tools@0.13.134
+- expo-cli@5.0.0-rc.4
+- expo-optimize@0.2.4
+- install-expo-modules@0.1.4
+- @expo/metro-config@0.3.5
+- @expo/next-adapter@3.1.12
+- @expo/prebuild-config@3.0.12
+- expo-pwa@0.0.107
+- uri-scheme@1.0.108
+- @expo/webpack-config@0.16.12
+- xdl@59.2.18
+
 ## [Fri, 3 Dec 2021 10:48:28 -0800](https://github.com/expo/expo-cli/commit/ce6fd8710d895074becf48b0fac3907cf87c6192)
 
 ### 🎉 New features
