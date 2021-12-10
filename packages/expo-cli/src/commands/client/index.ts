@@ -8,7 +8,7 @@ export default function (program: Command) {
     program
       .command('client:ios [path]')
       .helpGroup('deprecated')
-      .description(chalk.yellow('Deprecated ') + 'in favor of Expo Dev Clients')
+      .description(chalk.yellow`Superseded` + ' by Expo Dev Clients')
       .longDescription(
         'Build a custom version of Expo Go for iOS using your own Apple credentials and install it on your mobile device using Safari.'
       )
