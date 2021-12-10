@@ -1,5 +1,4 @@
 import assert from 'assert';
-import forEach from 'lodash/forEach';
 import keyBy from 'lodash/keyBy';
 import omit from 'lodash/omit';
 import pick from 'lodash/pick';
@@ -267,7 +266,7 @@ export default class IosApi {
     await this.client.deleteProvisioningProfileApi(appLookupParams);
     const appCredentials = this.credentials?.[accountName]?.appCredentials?.[appCredentialsIndex];
     if (appCredentials?.credentials) {
-      // teamId should still be there becaus it might be part of push cert definition
+      // teamId should still be there because it might be part of push cert definition
       appCredentials.credentials = omit(appCredentials.credentials, [
         'provisioningProfile',
         'provisioningProfileId',
@@ -286,7 +285,7 @@ export default class IosApi {
       delete this.credentials[accountName].userCredentials[String(id)];
     }
     const appCredentials = this.credentials[accountName]?.appCredentials;
-    forEach(appCredentials, (val, key) => {
+    Object.entries(appCredentials).forEach(([key, val]) => {
       if (val.distCredentialsId === id) {
         delete appCredentials[key].distCredentialsId;
       }
