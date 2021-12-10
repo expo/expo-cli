@@ -18,7 +18,7 @@ export function logBuildMigration(platform: string) {
   Log.newLine();
   const command = chalk.bold(`expo build:${platform}`);
   Log.log(
-    `${command} has been replaced by ${chalk.bold`eas build`}. ${chalk.dim(
+    `${command} has been superseded by ${chalk.bold`eas build`}. ${chalk.dim(
       TerminalLink.learnMore(`https://blog.expo.dev/turtle-goes-out-to-sea-d334db2a6b60`)
     )}`
   );

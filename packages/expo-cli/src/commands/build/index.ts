@@ -47,7 +47,7 @@ export default function (program: Command) {
         'Skip warning about build service bare workflow limitations.'
       )
       .longDescription('Build and sign a standalone IPA for the Apple App Store')
-      .description(`${chalk.yellow`Deprecated`} in favor of ${chalk.bold`eas build`} in eas-cli`),
+      .description(`${chalk.yellow`Superseded`} by ${chalk.bold`eas build`} in eas-cli`),
     () => import('./buildIosAsync'),
     { checkConfig: true }
   );
@@ -74,7 +74,7 @@ export default function (program: Command) {
       )
       .option('-t --type <app-bundle|apk>', 'Type of build: [app-bundle|apk].')
       .longDescription('Build and sign a standalone APK or App Bundle for the Google Play Store')
-      .description(`${chalk.yellow`Deprecated`} in favor of ${chalk.bold`eas build`} in eas-cli`),
+      .description(`${chalk.yellow`Superseded`} by ${chalk.bold`eas build`} in eas-cli`),
     () => import('./buildAndroidAsync'),
     { checkConfig: true }
   );
@@ -103,9 +103,7 @@ export default function (program: Command) {
         'The URL of an externally hosted manifest (for self-hosted apps).'
       )
       .longDescription('Get the status of the latest build for the project')
-      .description(
-        `${chalk.yellow`Deprecated`} in favor of ${chalk.bold`eas build:list`} in eas-cli`
-      ),
+      .description(`${chalk.yellow`Superseded`} by ${chalk.bold`eas build:list`} in eas-cli`),
     () => import('./buildStatusAsync')
   );
 }

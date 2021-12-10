@@ -6,7 +6,6 @@ const COMMANDS = [
   require('./auth/register'),
   require('./auth/whoami'),
   require('./build'),
-  require('./client'),
   require('./credentials'),
   require('./eject/customize'),
   require('./eject/eject'),
@@ -27,6 +26,9 @@ const COMMANDS = [
   require('./send'),
   require('./start'),
   require('./upload'),
+  // Moved this to below upload for the ordering in the help command.
+  // eslint-disable-next-line import/order
+  require('./client'),
   require('./url'),
   require('./webhooks'),
 ];
