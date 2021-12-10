@@ -285,14 +285,16 @@ export default class IosApi {
       delete this.credentials[accountName].userCredentials[String(id)];
     }
     const appCredentials = this.credentials[accountName]?.appCredentials;
-    Object.entries(appCredentials).forEach(([key, val]) => {
-      if (val.distCredentialsId === id) {
-        delete appCredentials[key].distCredentialsId;
-      }
-      if (val.pushCredentialsId === id) {
-        delete appCredentials[key].pushCredentialsId;
-      }
-    });
+    if (appCredentials) {
+      Object.entries(appCredentials).forEach(([key, val]) => {
+        if (val.distCredentialsId === id) {
+          delete appCredentials[key].distCredentialsId;
+        }
+        if (val.pushCredentialsId === id) {
+          delete appCredentials[key].pushCredentialsId;
+        }
+      });
+    }
   }
 
   // ensures that credentials are fetched from the server if they exists

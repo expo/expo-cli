@@ -38,7 +38,7 @@ export async function ensurePNGIsNotTransparent(imagePathOrURL: string): Promise
         }
         try {
           // @ts-ignore: 'this' implicitly has type 'any' because it does not have a type annotation.
-          const { width, height, data } = this;
+          const { data, width, height } = this;
           validateAlphaChannelIsEmpty(data, { width, height });
           res();
         } catch (err) {
