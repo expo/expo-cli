@@ -1,6 +1,7 @@
 import path from 'path';
 
 import { Analytics, Log, Logger, LogStream } from '../internal';
+import messageScrubber from './MessageScrubber';
 
 const MAX_MESSAGE_LENGTH = 200;
 const _projectRootToLogger: { [projectRoot: string]: Log } = {};
@@ -104,7 +105,9 @@ export function logWarning(projectRoot: string, tag: LogTag, message: string, id
   }
   _getLogger(projectRoot).warn(fields, message.toString());
 
-  let truncatedMessage = message.toString();
+  const scrubbedMessage = messageScrubber.scrubMessage(message.toString());
+
+  let truncatedMessage = scrubbedMessage;
   if (truncatedMessage.length > MAX_MESSAGE_LENGTH) {
     truncatedMessage = truncatedMessage.substring(0, MAX_MESSAGE_LENGTH);
   }
