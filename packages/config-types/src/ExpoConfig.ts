@@ -17,7 +17,7 @@ export interface ExpoConfig {
    */
   slug: string;
   /**
-   * The Expo account name of the team owner, only applicable if you are enrolled in the EAS Priority Plan. If not provided, defaults to the username of the current user.
+   * The name of the Expo account that owns the project. This is useful for teams collaborating on a project. If not provided, the owner defaults to the username of the current user.
    */
   owner?: string;
   /**
@@ -105,7 +105,7 @@ export interface ExpoConfig {
     androidCollapsedTitle?: string;
   };
   /**
-   * By default, Expo looks for the application registered with the AppRegistry as `main`. If you would like to change this, you can specify the name in this property.
+   * @deprecated By default, Expo looks for the application registered with the AppRegistry as `main`. If you would like to change this, you can specify the name in this property.
    */
   appKey?: string;
   /**
