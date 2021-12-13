@@ -12,6 +12,24 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+## [Mon, 13 Dec 2021 11:00:23 -0800](https://github.com/expo/expo-cli/commit/1387ccc525abd7d55436004cb84e787d00728cb0)
+
+### 🧹 Chores
+
+- [expo-cli] Add deprecation notice to build commands ([#4056](https://github.com/expo/expo-cli/issues/4056))
+
+### 🐛 Bug fixes
+
+- [next-adapter] fix incorrect detection of webpack 5 ([#4058](https://github.com/expo/expo-cli/issues/4058))
+- [cli] prebuild should keep expo-updates package in sdk 44 ([#4061](https://github.com/expo/expo-cli/issues/4061))
+
+### 📦 Packages updated
+
+- @expo/dev-tools@0.13.135
+- expo-cli@5.0.0
+- @expo/next-adapter@3.1.13
+- xdl@59.2.19
+
 ## [Thu, 9 Dec 2021 14:38:50 -0800](https://github.com/expo/expo-cli/commit/e24ce591c0051d7300f048f19fb252717f4870b8)
 
 ### 🎉 New features
