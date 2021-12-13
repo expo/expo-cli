@@ -1,23 +1,11 @@
 import { ExpoConfig } from '@expo/config-types';
-import { XcodeProject } from 'xcode';
 
-import { ConfigPlugin } from '../Plugin.types';
-import { createInfoPlistPlugin, withXcodeProject } from '../plugins/ios-plugins';
+import { createInfoPlistPlugin } from '../plugins/ios-plugins';
 import { InfoPlist } from './IosConfig.types';
-import { findFirstNativeTarget } from './Target';
-import { ConfigurationSectionEntry, getBuildConfigurationsForListId } from './utils/Xcodeproj';
 
 export const withDisplayName = createInfoPlistPlugin(setDisplayName, 'withDisplayName');
 
 export const withName = createInfoPlistPlugin(setName, 'withName');
-
-/** Set the PRODUCT_NAME variable in the xcproj file based on the app.json name property. */
-export const withProductName: ConfigPlugin = config => {
-  return withXcodeProject(config, config => {
-    config.modResults = setProductName(config, config.modResults);
-    return config;
-  });
-};
 
 export function getName(config: Pick<ExpoConfig, 'name'>) {
   return typeof config.name === 'string' ? config.name : null;
@@ -67,32 +55,3 @@ export function setName(
     CFBundleName: name,
   };
 }
-
-export function setProductName(
-  config: Pick<ExpoConfig, 'name'>,
-  project: XcodeProject
-): XcodeProject {
-  const name = getName(config);
-
-  if (!name) {
-    return project;
-  }
-  const quotedName = ensureQuotes(name);
-
-  const [, nativeTarget] = findFirstNativeTarget(project);
-
-  getBuildConfigurationsForListId(project, nativeTarget.buildConfigurationList).forEach(
-    ([, item]: ConfigurationSectionEntry) => {
-      item.buildSettings.PRODUCT_NAME = quotedName;
-    }
-  );
-
-  return project;
-}
-
-const ensureQuotes = (value: string) => {
-  if (!value.match(/^['"]/)) {
-    return `"${value}"`;
-  }
-  return value;
-};
