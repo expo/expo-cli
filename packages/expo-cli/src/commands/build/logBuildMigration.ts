@@ -29,7 +29,7 @@ export function logBuildMigration(platform: string) {
   Log.log(
     `\u203A ${TerminalLink.linkedText(
       chalk.cyan.bold(`eas build -p ${platform}`),
-      `https://docs.expo.dev/build-reference/${platform}-builds/`
+      `https://docs.expo.dev/build/setup/`
     )}`
   );
 
