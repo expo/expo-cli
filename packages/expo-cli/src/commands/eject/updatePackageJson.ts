@@ -98,7 +98,12 @@ export function updatePackageJSONDependencies({
     ...pkg.dependencies,
   });
 
-  const requiredDependencies = ['react', 'react-native-unimodules', 'react-native', 'expo-updates'];
+  const requiredDependencies = [
+    'react',
+    'react-native-unimodules',
+    'react-native',
+    'expo-updates',
+  ].filter(depKey => !!defaultDependencies[depKey]);
 
   const symlinkedPackages: string[] = [];
 
