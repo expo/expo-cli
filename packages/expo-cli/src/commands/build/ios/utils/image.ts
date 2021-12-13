@@ -32,14 +32,13 @@ export async function ensurePNGIsNotTransparent(imagePathOrURL: string): Promise
           res();
         }
       })
-      .on('parsed', function () {
+      .on('parsed', () => {
         if (hasAlreadyResolved) {
           return;
         }
         try {
           // @ts-ignore: 'this' implicitly has type 'any' because it does not have a type annotation.
-          const { data, width, height } = this;
-          validateAlphaChannelIsEmpty(data, { width, height });
+          validateAlphaChannelIsEmpty(this.data, { width: this.width, height: this.height });
           res();
         } catch (err) {
           rej(err);
