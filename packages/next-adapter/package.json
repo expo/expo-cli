@@ -1,6 +1,6 @@
 {
   "name": "@expo/next-adapter",
-  "version": "3.1.12",
+  "version": "3.1.13",
   "description": "Adapter for using Next.js with Expo modules",
   "main": "build/index.js",
   "types": "build/index.d.ts",
