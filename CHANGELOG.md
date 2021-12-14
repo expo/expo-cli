@@ -12,6 +12,72 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+### [Tue, 14 Dec 2021 11:14:43 -0800](https://github.com/expo/expo-cli/commit/d2aca480eea9d9ab570ba0e10f1963c0613052db)
+
+### 🎉 New features
+
+- [config-plugins] Add plugin to restrict android permissions ([#3817](https://github.com/expo/expo-cli/issues/3817))
+
+### 🧹 Chores
+
+- [cli] Update link to eas build info
+
+### 🐛 Bug fixes
+
+- [config-plugins] Fix react-native-maps regex to account for React AppDelegate ([#4068](https://github.com/expo/expo-cli/issues/4068))
+- [prebuild-config] Revert autolinking config plugin behavior to always add expo-dev-client plugin when installed ([#4070](https://github.com/expo/expo-cli/issues/4070))
+- [prebuild-config] android.icon now properly overrides root icon property ([#4063](https://github.com/expo/expo-cli/issues/4063))
+
+### 📦 Packages updated
+
+- @expo/config-plugins@4.0.13
+- @expo/config@6.0.13
+- @expo/dev-server@0.1.100
+- @expo/dev-tools@0.13.136
+- expo-cli@5.0.1
+- expo-optimize@0.2.5
+- install-expo-modules@0.1.5
+- @expo/metro-config@0.3.6
+- @expo/next-adapter@3.1.14
+- @expo/prebuild-config@3.0.13
+- expo-pwa@0.0.108
+- uri-scheme@1.0.109
+- @expo/webpack-config@0.16.13
+- xdl@59.2.20# [Tue, 14 Dec 2021 11:14:43 -0800](https://github.com/expo/expo-cli/commit/d2aca480eea9d9ab570ba0e10f1963c0613052db)
+
+### 🛠 Breaking changes
+
+### 🎉 New features
+
+### 🧹 Chores
+
+### 🐛 Bug fixes
+
+- Update getAutolinkedPackages.ts ([#4070](https://github.com/expo/expo-cli/issues/4070))
+- [config-plugins] Fix react-native-maps regex to account for React AppDelegate ([#4068](https://github.com/expo/expo-cli/issues/4068))
+- Add plugin to restrict android permissions ([#3817](https://github.com/expo/expo-cli/issues/3817))
+- fix e2e tests
+- [cli] Update link to eas build info
+- Update withAndroidIcons.ts ([#4063](https://github.com/expo/expo-cli/issues/4063))
+- Update CHANGELOG and commit schema cache
+
+### 📦 Packages updated
+
+- @expo/config-plugins@4.0.13
+- @expo/config@6.0.13
+- @expo/dev-server@0.1.100
+- @expo/dev-tools@0.13.136
+- expo-cli@5.0.1
+- expo-optimize@0.2.5
+- install-expo-modules@0.1.5
+- @expo/metro-config@0.3.6
+- @expo/next-adapter@3.1.14
+- @expo/prebuild-config@3.0.13
+- expo-pwa@0.0.108
+- uri-scheme@1.0.109
+- @expo/webpack-config@0.16.13
+- xdl@59.2.20
+
 ## [Mon, 13 Dec 2021 11:00:23 -0800](https://github.com/expo/expo-cli/commit/1387ccc525abd7d55436004cb84e787d00728cb0)
 
 ### 🧹 Chores
