@@ -36,6 +36,11 @@ describe('MATCH_INIT', () => {
     // wrapped
     expect(`RCTBridge*bri=[[RCTBridge alloc]`).toMatch(MATCH_INIT);
   });
+  it(`matches React AppDelegate`, () => {
+    expect(
+      `RCTBridge *bridge = [self.reactDelegate createBridgeWithDelegate:self launchOptions:launchOptions];`
+    ).toMatch(MATCH_INIT);
+  });
 });
 
 describe(getGoogleMapsApiKey, () => {
