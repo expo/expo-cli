@@ -53,7 +53,7 @@ describe(setProductName, () => {
   it(`sets the iOS PRODUCT_NAME value`, () => {
     for (const [input, output] of [
       ['My Cool Thing', `"My Cool Thing"`],
-      ['h"&<world/>🚀', `\"h\"&<world/>🚀\"`],
+      ['h"&<world/>🚀', `"h"&<world/>🚀"`],
     ]) {
       // Ensure the value can be parsed and written.
       const project = setProductNameForRoot({ name: input, slug: '' }, projectRoot);
