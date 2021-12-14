@@ -2,8 +2,7 @@ export default {
   name: 'basic',
   description: 'A Neat Expo App',
   sdkVersion: '42.0.0',
-  icon:
-    'https://github.com/expo/expo/blob/master/templates/expo-template-blank/assets/icon.png?raw=true',
+  icon: 'https://github.com/expo/expo/blob/master/templates/expo-template-blank/assets/icon.png?raw=true',
   splash: {
     image:
       'https://github.com/expo/expo/blob/master/templates/expo-template-blank/assets/splash.png?raw=true',

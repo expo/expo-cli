@@ -49,12 +49,13 @@ describe('android', () => {
         'android/app/src/main/res/values/strings.xml': reactNativeProjectWithSplashScreenConfigured[
           'android/app/src/main/res/values/strings.xml'
         ].replace('contain', 'native'),
-        'android/app/src/main/res/drawable/splashscreen.xml': reactNativeProjectWithSplashScreenConfigured[
-          'android/app/src/main/res/drawable/splashscreen.xml'
-        ].replace(
-          /(?<=<item.*\/>\n)/m,
-          '  <item>\n    <bitmap android:gravity="center" android:src="@drawable/splashscreen_image"/>\n  </item>\n'
-        ),
+        'android/app/src/main/res/drawable/splashscreen.xml':
+          reactNativeProjectWithSplashScreenConfigured[
+            'android/app/src/main/res/drawable/splashscreen.xml'
+          ].replace(
+            /(?<=<item.*\/>\n)/m,
+            '  <item>\n    <bitmap android:gravity="center" android:src="@drawable/splashscreen_image"/>\n  </item>\n'
+          ),
         'android/app/src/main/res/values/colors.xml': reactNativeProjectWithSplashScreenConfigured[
           'android/app/src/main/res/values/colors.xml'
         ].replace('#38E3F292', '#80237BD9'),

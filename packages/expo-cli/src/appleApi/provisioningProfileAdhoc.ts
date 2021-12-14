@@ -74,9 +74,8 @@ async function findProfileByBundleIdAsync(
     // there is an expo managed profile with our desired certificate
     // return the profile that will be valid for the longest duration
     return {
-      profile: expoProfilesWithCertificate.sort(sortByExpiration)[
-        expoProfilesWithCertificate.length - 1
-      ],
+      profile:
+        expoProfilesWithCertificate.sort(sortByExpiration)[expoProfilesWithCertificate.length - 1],
       didUpdate: false,
     };
   } else if (expoProfiles) {
@@ -228,16 +227,12 @@ async function createOrReuseAdhocProvisioningProfileAsync(
   const spinner = ora(`Handling Apple ad hoc provisioning profiles`).start();
   try {
     const context = getRequestContext(authCtx);
-    const {
-      didUpdate,
-      didCreate,
-      profileName,
-      ...adhocProvisioningProfile
-    } = await manageAdHocProfilesAsync(context, {
-      udids,
-      bundleId: bundleIdentifier,
-      certSerialNumber: distCertSerialNumber,
-    });
+    const { didUpdate, didCreate, profileName, ...adhocProvisioningProfile } =
+      await manageAdHocProfilesAsync(context, {
+        udids,
+        bundleId: bundleIdentifier,
+        certSerialNumber: distCertSerialNumber,
+      });
 
     if (didCreate) {
       spinner.succeed(`Created new profile: ${profileName}`);

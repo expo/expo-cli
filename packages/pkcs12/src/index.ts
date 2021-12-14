@@ -34,8 +34,10 @@ export function getX509CertificateByFriendlyName(
 ): forge.pki.Certificate | null {
   const certBagType = forge.pki.oids.certBag;
   // node-forge converts friendly names to lowercase, so we search by lowercase
-  const bags = p12.getBags({ friendlyName: friendlyName.toLowerCase(), bagType: certBagType })
-    .friendlyName;
+  const bags = p12.getBags({
+    friendlyName: friendlyName.toLowerCase(),
+    bagType: certBagType,
+  }).friendlyName;
   if (!bags || bags.length === 0) {
     return null;
   }
@@ -61,8 +63,10 @@ export function getX509Asn1ByFriendlyName(
 ): forge.asn1.Asn1 | null {
   const certBagType = forge.pki.oids.certBag;
   // node-forge converts friendly names to lowercase, so we search by lowercase
-  const bags = p12.getBags({ friendlyName: friendlyName.toLowerCase(), bagType: certBagType })
-    .friendlyName;
+  const bags = p12.getBags({
+    friendlyName: friendlyName.toLowerCase(),
+    bagType: certBagType,
+  }).friendlyName;
   if (!bags || bags.length === 0) {
     return null;
   }

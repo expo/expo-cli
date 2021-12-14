@@ -45,9 +45,9 @@ export function importMetroServerFromProject(projectRoot: string): typeof Metro.
   return importFromProject(projectRoot, 'metro/src/Server');
 }
 
-export function importInspectorProxyServerFromProject(
-  projectRoot: string
-): { InspectorProxy: any } {
+export function importInspectorProxyServerFromProject(projectRoot: string): {
+  InspectorProxy: any;
+} {
   return importFromProject(projectRoot, 'metro-inspector-proxy');
 }
 

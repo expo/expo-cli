@@ -74,15 +74,13 @@ export async function listDevicesAsync(): Promise<SimulatorDevice[]> {
 
   return (
     await Promise.all(
-      devices.map(
-        async (device): Promise<SimulatorDevice | null> => {
-          const plistPath = path.join(devicesDirectory, device, 'device.plist');
-          if (!fs.existsSync(plistPath)) return null;
-          // The plist is stored in binary format
-          const data = await parseBinaryPlistAsync(plistPath);
-          return devicePlistToSimulatorDevice(devicesDirectory, data);
-        }
-      )
+      devices.map(async (device): Promise<SimulatorDevice | null> => {
+        const plistPath = path.join(devicesDirectory, device, 'device.plist');
+        if (!fs.existsSync(plistPath)) return null;
+        // The plist is stored in binary format
+        const data = await parseBinaryPlistAsync(plistPath);
+        return devicePlistToSimulatorDevice(devicesDirectory, data);
+      })
     )
   ).filter(Boolean) as SimulatorDevice[];
 }

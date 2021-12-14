@@ -29,17 +29,15 @@ export async function getConnectedDevices(): Promise<DeviceValues[]> {
   usbmuxClient.socket.end();
 
   return Promise.all(
-    usbmuxDevices.map(
-      async (d: any): Promise<DeviceValues> => {
-        const socket = await new UsbmuxdClient(UsbmuxdClient.connectUsbmuxdSocket()).connect(
-          d,
-          62078
-        );
-        const device = await new LockdowndClient(socket).getAllValues();
-        socket.end();
-        return device;
-      }
-    )
+    usbmuxDevices.map(async (d: any): Promise<DeviceValues> => {
+      const socket = await new UsbmuxdClient(UsbmuxdClient.connectUsbmuxdSocket()).connect(
+        d,
+        62078
+      );
+      const device = await new LockdowndClient(socket).getAllValues();
+      socket.end();
+      return device;
+    })
   );
 }
 

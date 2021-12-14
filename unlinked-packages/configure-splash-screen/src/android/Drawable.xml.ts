@@ -25,14 +25,16 @@ function configureDrawable(xml: Element, resizeMode?: SplashScreenImageResizeMod
           'xmlns:android': 'http://schemas.android.com/apk/res/android',
         },
         elements: {
-          newValue: ([
-            {
-              name: 'item',
-              attributes: {
-                'android:drawable': '@color/splashscreen_background',
+          newValue: (
+            [
+              {
+                name: 'item',
+                attributes: {
+                  'android:drawable': '@color/splashscreen_background',
+                },
               },
-            },
-          ] as ExpectedElementType[]).concat(
+            ] as ExpectedElementType[]
+          ).concat(
             resizeMode !== SplashScreenImageResizeMode.NATIVE
               ? []
               : [

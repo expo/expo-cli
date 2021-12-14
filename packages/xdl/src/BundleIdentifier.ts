@@ -31,9 +31,8 @@ export async function configureBundleIdentifierAsync(
   exp: ExpoConfig
 ): Promise<string> {
   const configDescription = getProjectConfigDescription(projectRoot);
-  const bundleIdentifierFromPbxproj = IOSConfig.BundleIdentifier.getBundleIdentifierFromPbxproj(
-    projectRoot
-  );
+  const bundleIdentifierFromPbxproj =
+    IOSConfig.BundleIdentifier.getBundleIdentifierFromPbxproj(projectRoot);
   const bundleIdentifierFromConfig = IOSConfig.BundleIdentifier.getBundleIdentifier(exp);
   if (bundleIdentifierFromPbxproj && bundleIdentifierFromConfig) {
     if (bundleIdentifierFromPbxproj === bundleIdentifierFromConfig) {

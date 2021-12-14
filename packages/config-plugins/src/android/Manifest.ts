@@ -235,9 +235,8 @@ export function addMetaDataItemToMainApplication(
       (e: any) => e.$['android:name'] === itemName
     );
     if (existingMetaDataItem.length) {
-      existingMetaDataItem[0].$[
-        `android:${itemType}` as keyof ManifestMetaDataAttributes
-      ] = itemValue;
+      existingMetaDataItem[0].$[`android:${itemType}` as keyof ManifestMetaDataAttributes] =
+        itemValue;
     } else {
       mainApplication['meta-data'].push(newItem);
     }

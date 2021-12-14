@@ -46,9 +46,11 @@ export const generatedFooterComment = `# @end expo-cli`;
  *
  * @param gitIgnore
  */
-function getGeneratedSectionIndexes(
-  gitIgnore: string
-): { contents: string[]; start: number; end: number } {
+function getGeneratedSectionIndexes(gitIgnore: string): {
+  contents: string[];
+  start: number;
+  end: number;
+} {
   const contents = gitIgnore.split('\n');
   const start = contents.findIndex(line => line.startsWith(generatedHeaderPrefix));
   const end = contents.findIndex(line => line.startsWith(generatedFooterComment));

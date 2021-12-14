@@ -119,9 +119,8 @@ describe(exportAppAsync, () => {
       '/dist/debug.html': expect.stringMatching(/<script/),
       '/dist/assetmap.json': expect.any(String),
       '/dist/assets': null,
-      '/dist/bundles/ios-4fe3891dcaca43901bd8797db78405e4.js': expect.stringMatching(
-        /sourceMappingURL/
-      ),
+      '/dist/bundles/ios-4fe3891dcaca43901bd8797db78405e4.js':
+        expect.stringMatching(/sourceMappingURL/),
       '/dist/bundles/ios-4fe3891dcaca43901bd8797db78405e4.map': 'ios_map',
       '/dist/ios-index.json': expect.stringContaining('"name":"my-app"'),
       '/package.json': expect.any(String),
@@ -156,9 +155,8 @@ describe(exportAppAsync, () => {
       '/dist/debug.html': expect.stringMatching(/<script/),
       '/dist/assetmap.json': expect.any(String),
       '/dist/assets': null,
-      '/dist/bundles/ios-4fe3891dcaca43901bd8797db78405e4.js': expect.stringMatching(
-        /sourceMappingURL/
-      ),
+      '/dist/bundles/ios-4fe3891dcaca43901bd8797db78405e4.js':
+        expect.stringMatching(/sourceMappingURL/),
       '/dist/metadata.json': expect.stringContaining('"fileMetadata"'),
       '/dist/bundles/ios-4fe3891dcaca43901bd8797db78405e4.map': 'ios_map',
       '/dist/ios-index.json': expect.stringContaining('"name":"my-app"'),

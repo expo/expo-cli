@@ -76,35 +76,33 @@ export async function generateSplashAsync(
   }
 
   const data = await Promise.all<HTMLOutput>(
-    icons.map(
-      async (icon: SplashIcon): Promise<HTMLOutput> => {
-        // Ensure the default `splash.resizeMode` is used here:
-        // https://docs.expo.dev/versions/latest/config/app/#splash
-        if (!icon.resizeMode) {
-          icon.resizeMode = 'contain';
-        }
-        const { source, name } = await Image.generateImageAsync({ projectRoot, cacheType }, icon);
-
-        const href = `pwa/apple-touch-startup-image/${name}`;
-
-        return {
-          asset: {
-            source,
-            path: href,
-          },
-          tag: {
-            tagName: 'link',
-            attributes: {
-              rel: 'apple-touch-startup-image',
-              media: icon.media,
-              // TODO(Bacon): Use sizes to query splash screens better
-              // sizes: `${icon.width}x${icon.height}`,
-              href: joinUrlPath(publicPath, href),
-            },
-          },
-        };
+    icons.map(async (icon: SplashIcon): Promise<HTMLOutput> => {
+      // Ensure the default `splash.resizeMode` is used here:
+      // https://docs.expo.dev/versions/latest/config/app/#splash
+      if (!icon.resizeMode) {
+        icon.resizeMode = 'contain';
       }
-    )
+      const { source, name } = await Image.generateImageAsync({ projectRoot, cacheType }, icon);
+
+      const href = `pwa/apple-touch-startup-image/${name}`;
+
+      return {
+        asset: {
+          source,
+          path: href,
+        },
+        tag: {
+          tagName: 'link',
+          attributes: {
+            rel: 'apple-touch-startup-image',
+            media: icon.media,
+            // TODO(Bacon): Use sizes to query splash screens better
+            // sizes: `${icon.width}x${icon.height}`,
+            href: joinUrlPath(publicPath, href),
+          },
+        },
+      };
+    })
   );
 
   await Image.Cache.clearUnusedCachesAsync(projectRoot, cacheType);
@@ -120,32 +118,30 @@ export async function generateAppleIconAsync(
   const cacheType = 'apple-touch-icon';
 
   const data = await Promise.all<HTMLOutput>(
-    sizes.map(
-      async (size: number): Promise<HTMLOutput> => {
-        const rel = 'apple-touch-icon';
-        const { source, name } = await Image.generateImageAsync(
-          { projectRoot, cacheType },
-          { ...icon, width: size, height: size, name: `${rel}-${size}.png` }
-        );
+    sizes.map(async (size: number): Promise<HTMLOutput> => {
+      const rel = 'apple-touch-icon';
+      const { source, name } = await Image.generateImageAsync(
+        { projectRoot, cacheType },
+        { ...icon, width: size, height: size, name: `${rel}-${size}.png` }
+      );
 
-        const href = `pwa/${rel}/${name}`;
+      const href = `pwa/${rel}/${name}`;
 
-        return {
-          asset: {
-            source,
-            path: href,
+      return {
+        asset: {
+          source,
+          path: href,
+        },
+        tag: {
+          tagName: 'link',
+          attributes: {
+            rel,
+            sizes: `${size}x${size}`,
+            href: joinUrlPath(publicPath, href),
           },
-          tag: {
-            tagName: 'link',
-            attributes: {
-              rel,
-              sizes: `${size}x${size}`,
-              href: joinUrlPath(publicPath, href),
-            },
-          },
-        };
-      }
-    )
+        },
+      };
+    })
   );
 
   // Don't clear the caches if no generation was performed.
@@ -164,29 +160,27 @@ export async function generateChromeIconAsync(
   const cacheType = 'chrome-icon';
 
   const data = await Promise.all<HTMLOutput>(
-    sizes.map(
-      async (size: number): Promise<HTMLOutput> => {
-        const rel = 'chrome-icon';
-        const { source, name } = await Image.generateImageAsync(
-          { projectRoot, cacheType },
-          { ...icon, width: size, height: size, name: `${rel}-${size}.png` }
-        );
+    sizes.map(async (size: number): Promise<HTMLOutput> => {
+      const rel = 'chrome-icon';
+      const { source, name } = await Image.generateImageAsync(
+        { projectRoot, cacheType },
+        { ...icon, width: size, height: size, name: `${rel}-${size}.png` }
+      );
 
-        const href = `pwa/${rel}/${name}`;
+      const href = `pwa/${rel}/${name}`;
 
-        return {
-          asset: {
-            source,
-            path: href,
-          },
-          manifest: {
-            src: joinUrlPath(publicPath, href),
-            sizes: `${size}x${size}`,
-            type: 'image/png',
-          },
-        };
-      }
-    )
+      return {
+        asset: {
+          source,
+          path: href,
+        },
+        manifest: {
+          src: joinUrlPath(publicPath, href),
+          sizes: `${size}x${size}`,
+          type: 'image/png',
+        },
+      };
+    })
   );
 
   // Don't clear the caches if no generation was performed.
@@ -204,39 +198,37 @@ export async function generateFaviconAsync(
   const cacheType = 'favicon';
   const dimensions = [16, 32, 48];
   const data: HTMLOutput[] = await Promise.all<HTMLOutput>(
-    dimensions.map(
-      async (size: number): Promise<HTMLOutput> => {
-        const rel = 'icon';
-        const { source, name } = await Image.generateImageAsync(
-          { projectRoot, cacheType },
-          {
-            ...icon,
-            backgroundColor: icon.backgroundColor || 'transparent',
-            width: size,
-            height: size,
-            name: `favicon-${size}.png`,
-          }
-        );
+    dimensions.map(async (size: number): Promise<HTMLOutput> => {
+      const rel = 'icon';
+      const { source, name } = await Image.generateImageAsync(
+        { projectRoot, cacheType },
+        {
+          ...icon,
+          backgroundColor: icon.backgroundColor || 'transparent',
+          width: size,
+          height: size,
+          name: `favicon-${size}.png`,
+        }
+      );
 
-        const href = `${name}`;
+      const href = `${name}`;
 
-        return {
-          asset: {
-            source,
-            path: href,
+      return {
+        asset: {
+          source,
+          path: href,
+        },
+        tag: {
+          tagName: 'link',
+          attributes: {
+            rel,
+            type: 'image/png',
+            sizes: `${size}x${size}`,
+            href: joinUrlPath(publicPath, href),
           },
-          tag: {
-            tagName: 'link',
-            attributes: {
-              rel,
-              type: 'image/png',
-              sizes: `${size}x${size}`,
-              href: joinUrlPath(publicPath, href),
-            },
-          },
-        };
-      }
-    )
+        },
+      };
+    })
   );
 
   const faviconUrl = joinUrlPath(publicPath, 'favicon.ico');

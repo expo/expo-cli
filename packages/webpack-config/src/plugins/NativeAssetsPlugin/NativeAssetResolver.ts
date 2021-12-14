@@ -48,9 +48,7 @@ interface CollectOptions {
 
 type Resolver = {
   fileSystem: typeof fs;
-  getHook: (
-    type: string
-  ) => {
+  getHook: (type: string) => {
     tapAsync: (type: string, callback: (request: any, context: any, callback: any) => void) => void;
   };
 };

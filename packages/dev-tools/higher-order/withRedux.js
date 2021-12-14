@@ -18,33 +18,34 @@ const getOrCreateStore = (initStore, initialState) => {
   return window[__NEXT_REDUX_STORE__];
 };
 
-export default (initStore, ...connectArgs) => Component => {
-  const ConnectedComponent = connect(...connectArgs)(Component);
+export default (initStore, ...connectArgs) =>
+  Component => {
+    const ConnectedComponent = connect(...connectArgs)(Component);
 
-  const ComponentWithRedux = (props = {}) => {
-    const { store, initialProps, initialState, ...otherProps } = props;
+    const ComponentWithRedux = (props = {}) => {
+      const { store, initialProps, initialState, ...otherProps } = props;
 
-    return React.createElement(
-      Provider,
-      { store: store && store.dispatch ? store : getOrCreateStore(initStore, initialState) },
-      React.createElement(ConnectedComponent, { ...initialProps, ...otherProps })
-    );
-  };
-
-  ComponentWithRedux.getInitialProps = async (props = {}) => {
-    const isServer = isCallOnServer();
-    const store = getOrCreateStore(initStore);
-
-    const initialProps = Component.getInitialProps
-      ? await Component.getInitialProps({ ...props, isServer, store })
-      : {};
-
-    return {
-      store,
-      initialState: store.getState(),
-      initialProps,
+      return React.createElement(
+        Provider,
+        { store: store && store.dispatch ? store : getOrCreateStore(initStore, initialState) },
+        React.createElement(ConnectedComponent, { ...initialProps, ...otherProps })
+      );
     };
-  };
 
-  return ComponentWithRedux;
-};
+    ComponentWithRedux.getInitialProps = async (props = {}) => {
+      const isServer = isCallOnServer();
+      const store = getOrCreateStore(initStore);
+
+      const initialProps = Component.getInitialProps
+        ? await Component.getInitialProps({ ...props, isServer, store })
+        : {};
+
+      return {
+        store,
+        initialState: store.getState(),
+        initialProps,
+      };
+    };
+
+    return ComponentWithRedux;
+  };

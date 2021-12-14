@@ -142,20 +142,18 @@ export async function collectMergeSourceUrlsAsync(
     await fs.ensureDir(tmpFolder);
 
     // Download the urls into a tmp dir
-    const downloadDecompressPromises = mergeSrcUrl.map(
-      async (url: string): Promise<void> => {
-        // Add the absolute paths to srcDir
-        const uniqFilename = `${path.basename(url, '.tar.gz')}_${crypto
-          .randomBytes(16)
-          .toString('hex')}`;
+    const downloadDecompressPromises = mergeSrcUrl.map(async (url: string): Promise<void> => {
+      // Add the absolute paths to srcDir
+      const uniqFilename = `${path.basename(url, '.tar.gz')}_${crypto
+        .randomBytes(16)
+        .toString('hex')}`;
 
-        const tmpFolderUncompressed = path.resolve(tmpFolder, uniqFilename);
-        await fs.ensureDir(tmpFolderUncompressed);
-        await downloadAndDecompressAsync(url, tmpFolderUncompressed);
-        // add the decompressed folder to be merged
-        mergeSrcDirs.push(tmpFolderUncompressed);
-      }
-    );
+      const tmpFolderUncompressed = path.resolve(tmpFolder, uniqFilename);
+      await fs.ensureDir(tmpFolderUncompressed);
+      await downloadAndDecompressAsync(url, tmpFolderUncompressed);
+      // add the decompressed folder to be merged
+      mergeSrcDirs.push(tmpFolderUncompressed);
+    });
 
     await Promise.all(downloadDecompressPromises);
   }

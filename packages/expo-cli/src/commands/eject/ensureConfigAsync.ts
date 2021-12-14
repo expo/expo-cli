@@ -29,7 +29,7 @@ export async function ensureConfigExistsAsync(projectRoot: string) {
       await JsonFile.writeAsync(
         // TODO: Write to app.config.json because it's easier to convert to a js config file.
         path.join(projectRoot, 'app.json'),
-        { expo: (config.exp as unknown) as JSONObject },
+        { expo: config.exp as unknown as JSONObject },
         { json5: false }
       );
     }

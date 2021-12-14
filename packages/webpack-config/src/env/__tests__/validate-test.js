@@ -7,7 +7,12 @@ const projectRoot = path.resolve(__dirname, '../../../e2e/basic');
 const mode = 'development';
 
 it(`returns a full environment`, () => {
-  const { projectRoot: outputProjectRoot, locations, config, ...env } = validateEnvironment({
+  const {
+    projectRoot: outputProjectRoot,
+    locations,
+    config,
+    ...env
+  } = validateEnvironment({
     projectRoot,
     mode,
   });
@@ -20,7 +25,12 @@ it(`returns a full environment`, () => {
 });
 
 it(`auto fills a truthy report`, () => {
-  const { projectRoot: outputProjectRoot, locations, config, ...env } = validateEnvironment({
+  const {
+    projectRoot: outputProjectRoot,
+    locations,
+    config,
+    ...env
+  } = validateEnvironment({
     projectRoot,
     mode,
   });

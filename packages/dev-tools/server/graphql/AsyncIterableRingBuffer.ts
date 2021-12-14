@@ -57,9 +57,10 @@ export default class AsyncIterableRingBuffer {
     }
   }
 
-  filterWithCursor(
-    filter: (item: any, cursor: number) => number
-  ): { cursor?: number; items: any[] } {
+  filterWithCursor(filter: (item: any, cursor: number) => number): {
+    cursor?: number;
+    items: any[];
+  } {
     let cursor: number | undefined;
     const items = this.buffer.filter((item, i) => {
       cursor = this._startItem + i;

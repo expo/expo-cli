@@ -118,16 +118,8 @@ export function shouldEmbedAssetsForExpoUpdates(
 }
 
 async function _maybeWriteArtifactsToDiskAsync(config: EmbeddedAssetsConfiguration) {
-  const {
-    projectRoot,
-    pkg,
-    exp,
-    iosManifest,
-    iosBundle,
-    androidManifest,
-    androidBundle,
-    target,
-  } = config;
+  const { projectRoot, pkg, exp, iosManifest, iosBundle, androidManifest, androidBundle, target } =
+    config;
 
   let androidBundlePath;
   let androidManifestPath;
@@ -301,12 +293,8 @@ async function _maybeRunModifiedExpoUpdatesPluginAsync(config: EmbeddedAssetsCon
       fs.writeFileSync(expoPlistPath, plist.build(expoPlistForProject));
     } else {
       // Log warnings if this is not the first publish and critical properties seem misconfigured
-      const {
-        UPDATE_URL,
-        SDK_VERSION,
-        RUNTIME_VERSION,
-        RELEASE_CHANNEL,
-      } = IOSConfig.Updates.Config;
+      const { UPDATE_URL, SDK_VERSION, RUNTIME_VERSION, RELEASE_CHANNEL } =
+        IOSConfig.Updates.Config;
       for (const key of [UPDATE_URL, SDK_VERSION, RUNTIME_VERSION, RELEASE_CHANNEL]) {
         let currentlyConfiguredValue = currentlyConfiguredExpoPlist[key];
         const inferredValue = expoPlistForProject[key];
@@ -346,9 +334,8 @@ async function _maybeRunModifiedExpoUpdatesPluginAsync(config: EmbeddedAssetsCon
   );
   const AndroidManifestKeyForUpdateURL = AndroidConfig.Updates.Config.UPDATE_URL;
   if (fs.existsSync(androidManifestXmlPath)) {
-    const currentlyConfiguredAndroidManifest = await AndroidConfig.Manifest.readAndroidManifestAsync(
-      androidManifestXmlPath
-    );
+    const currentlyConfiguredAndroidManifest =
+      await AndroidConfig.Manifest.readAndroidManifestAsync(androidManifestXmlPath);
     const currentConfiguredManifestApplication = AndroidConfig.Manifest.getMainApplicationOrThrow(
       currentlyConfiguredAndroidManifest
     );
@@ -362,9 +349,8 @@ async function _maybeRunModifiedExpoUpdatesPluginAsync(config: EmbeddedAssetsCon
       currentlyConfiguredAndroidManifest,
       /*username*/ null
     );
-    const inferredMainApplication = AndroidConfig.Manifest.getMainApplicationOrThrow(
-      inferredAndroidManifest
-    );
+    const inferredMainApplication =
+      AndroidConfig.Manifest.getMainApplicationOrThrow(inferredAndroidManifest);
     // overwrite the URL defined in AndroidConfig.Updates.setUpdatesConfig
     AndroidConfig.Manifest.addMetaDataItemToMainApplication(
       inferredMainApplication,
@@ -393,17 +379,12 @@ async function _maybeRunModifiedExpoUpdatesPluginAsync(config: EmbeddedAssetsCon
       );
     } else {
       // Log warnings if this is not the first publish and critical properties seem misconfigured
-      const inferredMainApplication = AndroidConfig.Manifest.getMainApplicationOrThrow(
-        inferredAndroidManifest
-      );
+      const inferredMainApplication =
+        AndroidConfig.Manifest.getMainApplicationOrThrow(inferredAndroidManifest);
       const inferredMetaDataAttributes = inferredMainApplication['meta-data']?.map(md => md['$'])!;
 
-      const {
-        UPDATE_URL,
-        SDK_VERSION,
-        RUNTIME_VERSION,
-        RELEASE_CHANNEL,
-      } = AndroidConfig.Updates.Config;
+      const { UPDATE_URL, SDK_VERSION, RUNTIME_VERSION, RELEASE_CHANNEL } =
+        AndroidConfig.Updates.Config;
       for (const key of [UPDATE_URL, SDK_VERSION, RUNTIME_VERSION, RELEASE_CHANNEL]) {
         const inferredValue = inferredMetaDataAttributes.find(x => x['android:name'] === key)?.[
           'android:value'

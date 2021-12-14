@@ -4,7 +4,6 @@
     "packages/*"
   ],
   "scripts": {
-    "format": "prettier --write .",
     "build": "lerna run prepare --stream",
     "postinstall": "yarn-deduplicate && expo-yarn-workspaces check-workspace-dependencies",
     "publish": "echo \"This script is deprecated. Run \\\"node ./scripts/publish.js\\\" instead.\"; exit 1",
@@ -21,7 +20,6 @@
   "lint-staged": {
     "*.{js,ts}": [
       "eslint --fix",
-      "prettier --write",
       "git add"
     ]
   },
@@ -41,7 +39,7 @@
     "jest-watch-typeahead": "^0.6.0",
     "lerna": "3.4.1",
     "lint-staged": "^8.0.4",
-    "prettier": "^2.2.1",
+    "prettier": "^2.5.1",
     "rimraf": "^3.0.2",
     "memfs": "^2.15.5",
     "typescript": "^4.2.4",

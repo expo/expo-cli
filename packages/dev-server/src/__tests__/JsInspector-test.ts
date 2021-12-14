@@ -20,12 +20,10 @@ const { Response } = jest.requireActual('node-fetch');
 describe(openJsInspector, () => {
   it('should open browser for PUT request with given app', async () => {
     const mockOpen = open.openApp as jest.MockedFunction<typeof open.openApp>;
-    mockOpen.mockImplementation(
-      (): Promise<ChildProcess> => {
-        const result: Partial<ChildProcess> = { exitCode: 0 };
-        return Promise.resolve(result as ChildProcess);
-      }
-    );
+    mockOpen.mockImplementation((): Promise<ChildProcess> => {
+      const result: Partial<ChildProcess> = { exitCode: 0 };
+      return Promise.resolve(result as ChildProcess);
+    });
 
     const app = METRO_INSPECTOR_RESPONSE_FIXTURE[0];
     openJsInspector(app);

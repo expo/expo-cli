@@ -105,10 +105,8 @@ export default function transform(fileInfo: FileInfo, api: API, options: object)
     .find(j.ImportDeclaration)
     .filter(path => path.node.source.value === 'expo');
 
-  const importedModules: Map<
-    string,
-    Identifier | JSXIdentifier | TSTypeParameter | null
-  > = new Map();
+  const importedModules: Map<string, Identifier | JSXIdentifier | TSTypeParameter | null> =
+    new Map();
 
   expoImports
     .find(j.ImportSpecifier)

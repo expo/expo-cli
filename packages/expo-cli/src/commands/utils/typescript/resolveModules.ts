@@ -52,9 +52,7 @@ export async function hasTSConfig(projectRoot: string): Promise<string | null> {
   return null;
 }
 
-export function collectMissingPackages(
-  projectRoot: string
-): {
+export function collectMissingPackages(projectRoot: string): {
   missing: {
     file: string;
     pkg: string;

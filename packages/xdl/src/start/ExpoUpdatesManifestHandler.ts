@@ -73,7 +73,7 @@ async function getScopeKeyForProjectIdAsync(projectId: string): Promise<string> 
 async function signManifestAsync(manifest: ExpoUpdatesManifest): Promise<string> {
   const user = await UserManager.ensureLoggedInAsync();
   const { signature } = await ApiV2.clientForUser(user).postAsync('manifest/eas/sign', {
-    manifest: (manifest as any) as JSONObject,
+    manifest: manifest as any as JSONObject,
   });
   return signature;
 }

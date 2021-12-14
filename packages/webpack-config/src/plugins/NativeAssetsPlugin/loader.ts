@@ -55,7 +55,7 @@ function getOptions(loaderContext: any): Options {
     { name: 'nativeAssetsLoader' }
   );
 
-  return (options as unknown) as Options;
+  return options as unknown as Options;
 }
 
 export const raw = true;

@@ -52,19 +52,16 @@ export async function prebuildAsync(
   const { exp, pkg } = await ensureConfigAsync({ projectRoot, platforms });
   const tempDir = temporary.directory();
 
-  const {
-    hasNewProjectFiles,
-    needsPodInstall,
-    hasNewDependencies,
-  } = await createNativeProjectsFromTemplateAsync({
-    projectRoot,
-    exp,
-    pkg,
-    template: options.template != null ? resolveTemplateOption(options.template) : undefined,
-    tempDir,
-    platforms,
-    skipDependencyUpdate: options.skipDependencyUpdate,
-  });
+  const { hasNewProjectFiles, needsPodInstall, hasNewDependencies } =
+    await createNativeProjectsFromTemplateAsync({
+      projectRoot,
+      exp,
+      pkg,
+      template: options.template != null ? resolveTemplateOption(options.template) : undefined,
+      tempDir,
+      platforms,
+      skipDependencyUpdate: options.skipDependencyUpdate,
+    });
 
   // Install node modules
   const shouldInstall = options?.install !== false;

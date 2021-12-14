@@ -14,25 +14,23 @@ function assertHTTPS(url?: string) {
   }
 }
 
-export const logArtifactUrl = (platform: 'ios' | 'android') => async (
-  projectRoot: string,
-  options: ArtifactUrlOptions
-) => {
-  assertHTTPS(options.publicUrl);
+export const logArtifactUrl =
+  (platform: 'ios' | 'android') => async (projectRoot: string, options: ArtifactUrlOptions) => {
+    assertHTTPS(options.publicUrl);
 
-  const result = await getBuildStatusAsync(projectRoot, {
-    current: false,
-    ...(options.publicUrl ? { publicUrl: options.publicUrl } : {}),
-  });
+    const result = await getBuildStatusAsync(projectRoot, {
+      current: false,
+      ...(options.publicUrl ? { publicUrl: options.publicUrl } : {}),
+    });
 
-  const url = result.jobs?.filter((job: BuildJobFields) => job.platform === platform)[0]?.artifacts
-    ?.url;
+    const url = result.jobs?.filter((job: BuildJobFields) => job.platform === platform)[0]
+      ?.artifacts?.url;
 
-  if (!url) {
-    throw new CommandError(
-      `No ${platform} binary file found. Use "expo build:${platform}" to create one.`
-    );
-  }
+    if (!url) {
+      throw new CommandError(
+        `No ${platform} binary file found. Use "expo build:${platform}" to create one.`
+      );
+    }
 
-  Log.nested(url);
-};
+    Log.nested(url);
+  };

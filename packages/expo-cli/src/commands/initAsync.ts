@@ -75,7 +75,7 @@ function parseOptions(command: Partial<Options>): Options {
     template: command.template,
     /// XXX(ville): this is necessary because with Commander.js, when the --name
     // option is not set, `command.name` will point to `Command.prototype.name`.
-    name: typeof command.name === 'string' ? ((command.name as unknown) as string) : undefined,
+    name: typeof command.name === 'string' ? (command.name as unknown as string) : undefined,
   };
 }
 
@@ -181,10 +181,8 @@ export async function actionAsync(incomingProjectRoot: string, command: Partial<
     resolvedTemplate = 'blank';
   }
 
-  const {
-    version: newestSdkVersion,
-    data: newestSdkReleaseData,
-  } = await Versions.newestReleasedSdkVersionAsync();
+  const { version: newestSdkVersion, data: newestSdkReleaseData } =
+    await Versions.newestReleasedSdkVersionAsync();
 
   // If the user is opting into a beta then we need to append the template tag explicitly
   // in order to not fall back to the latest tag for templates.

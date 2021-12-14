@@ -63,9 +63,10 @@ async function projectHasLatestFileAsync(destinationPath: string, tag: string): 
 
 const packageRoot = path.join(__dirname, '../../');
 
-function getDependencies(
-  projectRoot: string
-): { dependencies: string[]; devDependencies: string[] } {
+function getDependencies(projectRoot: string): {
+  dependencies: string[];
+  devDependencies: string[];
+} {
   const dependencies = ['react-native-web', 'next'].filter(
     dependency => !resolveFrom.silent(projectRoot, dependency)
   );

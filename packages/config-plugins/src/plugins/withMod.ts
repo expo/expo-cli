@@ -111,7 +111,7 @@ export function withBaseMod<T>(
     });
 
     if (saveToInternal) {
-      saveToInternalObject(results, platform, mod, (results.modResults as unknown) as JSONObject);
+      saveToInternalObject(results, platform, mod, results.modResults as unknown as JSONObject);
     }
     return results;
   }

@@ -23,14 +23,12 @@ export default (program: any) => {
     .option('--no-https', 'To start webpack with http protocol')
     .urlOpts()
     .allowOffline()
-    .asyncActionProjectDir(
-      async (projectRoot: string, options: RawStartOptions): Promise<void> => {
-        const { normalizeOptionsAsync } = await import('./start/parseStartOptions');
-        const normalizedOptions = await normalizeOptionsAsync(projectRoot, options);
-        const { actionAsync } = await import('./start/startAsync');
-        return await actionAsync(projectRoot, normalizedOptions);
-      }
-    );
+    .asyncActionProjectDir(async (projectRoot: string, options: RawStartOptions): Promise<void> => {
+      const { normalizeOptionsAsync } = await import('./start/parseStartOptions');
+      const normalizedOptions = await normalizeOptionsAsync(projectRoot, options);
+      const { actionAsync } = await import('./start/startAsync');
+      return await actionAsync(projectRoot, normalizedOptions);
+    });
 
   program
     .command('start:web [path]')
@@ -48,15 +46,13 @@ export default (program: any) => {
     .option('-s, --send-to [dest]', 'An email address to send a link to')
     .urlOpts()
     .allowOffline()
-    .asyncActionProjectDir(
-      async (projectRoot: string, options: RawStartOptions): Promise<void> => {
-        const { normalizeOptionsAsync } = await import('./start/parseStartOptions');
-        const normalizedOptions = await normalizeOptionsAsync(projectRoot, {
-          ...options,
-          webOnly: true,
-        });
-        const { actionAsync } = await import('./start/startAsync');
-        return await actionAsync(projectRoot, normalizedOptions);
-      }
-    );
+    .asyncActionProjectDir(async (projectRoot: string, options: RawStartOptions): Promise<void> => {
+      const { normalizeOptionsAsync } = await import('./start/parseStartOptions');
+      const normalizedOptions = await normalizeOptionsAsync(projectRoot, {
+        ...options,
+        webOnly: true,
+      });
+      const { actionAsync } = await import('./start/startAsync');
+      return await actionAsync(projectRoot, normalizedOptions);
+    });
 };

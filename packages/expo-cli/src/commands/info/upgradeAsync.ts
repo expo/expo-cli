@@ -231,7 +231,11 @@ async function makeBreakingChangesToConfigAsync(
     'Updating your app.json to account for breaking changes (if applicable)...'
   );
 
-  const { exp: currentExp, dynamicConfigPath, staticConfigPath } = getConfig(projectRoot, {
+  const {
+    exp: currentExp,
+    dynamicConfigPath,
+    staticConfigPath,
+  } = getConfig(projectRoot, {
     skipSDKVersionRequirement: true,
   });
 

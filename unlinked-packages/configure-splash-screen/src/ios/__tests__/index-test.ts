@@ -31,9 +31,8 @@ describe('ios', () => {
       delete received['ios/ReactNativeProject.xcodeproj/project.pbxproj'];
       const expected = {
         ...reactNativeProjectWithSplashScreenConfiured,
-        'ios/ReactNativeProject/Images.xcassets/SplashScreenBackground.imageset/background.png': await getPng1x1FileContent(
-          '#E3F29238'
-        ),
+        'ios/ReactNativeProject/Images.xcassets/SplashScreenBackground.imageset/background.png':
+          await getPng1x1FileContent('#E3F29238'),
       };
       expect(received).toEqual(expected);
     });
@@ -58,10 +57,10 @@ describe('ios', () => {
       delete received['ios/ReactNativeProject.xcodeproj/project.pbxproj'];
       const expected = {
         ...reactNativeProjectWithSplashScreenConfiured,
-        'ios/ReactNativeProject/Images.xcassets/SplashScreenBackground.imageset/background.png': await getPng1x1FileContent(
-          'yellow'
-        ),
-        'ios/ReactNativeProject/Images.xcassets/SplashScreen.imageset/splashscreen.png': backgroundImage,
+        'ios/ReactNativeProject/Images.xcassets/SplashScreenBackground.imageset/background.png':
+          await getPng1x1FileContent('yellow'),
+        'ios/ReactNativeProject/Images.xcassets/SplashScreen.imageset/splashscreen.png':
+          backgroundImage,
         'ios/ReactNativeProject/Images.xcassets/SplashScreen.imageset/Contents.json': `{
   "images": [
     {
@@ -83,12 +82,13 @@ describe('ios', () => {
     "author": "xcode"
   }
 }`,
-        'ios/ReactNativeProject/SplashScreen.storyboard': reactNativeProjectWithSplashScreenConfiured[
-          'ios/ReactNativeProject/SplashScreen.storyboard'
-        ]
-          .replace(
-            /(?<=\/imageView>)/,
-            `
+        'ios/ReactNativeProject/SplashScreen.storyboard':
+          reactNativeProjectWithSplashScreenConfiured[
+            'ios/ReactNativeProject/SplashScreen.storyboard'
+          ]
+            .replace(
+              /(?<=\/imageView>)/,
+              `
               <imageView
                 clipsSubviews="YES"
                 userInteractionEnabled="NO"
@@ -102,20 +102,20 @@ describe('ios', () => {
               >
                 <rect key="frame" x="0.0" y="0.0" width="414" height="736"/>
               </imageView>`
-          )
-          .replace(
-            /(?<=id="jkI-2V-eW5"\/>)/,
-            `
+            )
+            .replace(
+              /(?<=id="jkI-2V-eW5"\/>)/,
+              `
               <constraint firstItem="EXPO-SplashScreen" firstAttribute="top" secondItem="EXPO-ContainerView" secondAttribute="top" id="2VS-Uz-0LU"/>
               <constraint firstItem="EXPO-SplashScreen" firstAttribute="leading" secondItem="EXPO-ContainerView" secondAttribute="leading" id="LhH-Ei-DKo"/>
               <constraint firstItem="EXPO-SplashScreen" firstAttribute="trailing" secondItem="EXPO-ContainerView" secondAttribute="trailing" id="I6l-TP-6fn"/>
               <constraint firstItem="EXPO-SplashScreen" firstAttribute="bottom" secondItem="EXPO-ContainerView" secondAttribute="bottom" id="nbp-HC-eaG"/>`
-          )
-          .replace(
-            /(?<=resources>)/,
-            `
+            )
+            .replace(
+              /(?<=resources>)/,
+              `
     <image name="SplashScreen" width="414" height="736"/>`
-          ),
+            ),
       };
       expect(received).toEqual(expected);
     });
@@ -144,10 +144,8 @@ describe('ios', () => {
         image: '/assets/background.png',
       });
 
-      const {
-        'ios/ReactNativeProject.xcodeproj/project.pbxproj': actualPbxproj,
-        ...restActual
-      } = getDirFromFS(vol.toJSON(), '/app');
+      const { 'ios/ReactNativeProject.xcodeproj/project.pbxproj': actualPbxproj, ...restActual } =
+        getDirFromFS(vol.toJSON(), '/app');
       expect(actualPbxproj).toMatch(
         /[A-F0-9]{24} \/\* SplashScreen\.storyboard in Resources \*\/,/
       );
