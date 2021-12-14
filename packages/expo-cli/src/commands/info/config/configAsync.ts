@@ -10,6 +10,7 @@ import { profileMethod } from '../../utils/profileMethod';
 type Options = {
   type?: string;
   full: boolean;
+  json?: boolean;
 };
 
 export async function actionAsync(projectRoot: string, options: Options) {
@@ -49,7 +50,13 @@ export async function actionAsync(projectRoot: string, options: Options) {
     });
   }
 
-  Log.log();
-  logConfig(options.full ? config : config.exp);
-  Log.log();
+  const configOutput = options.full ? config : config.exp;
+
+  if (!options.json) {
+    Log.log();
+    logConfig(configOutput);
+    Log.log();
+  } else {
+    Log.nested(JSON.stringify(configOutput));
+  }
 }
