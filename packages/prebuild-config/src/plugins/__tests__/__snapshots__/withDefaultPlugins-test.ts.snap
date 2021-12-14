@@ -150,9 +150,7 @@ Object {
       "usesNonExemptEncryption": true,
     },
     "entitlements": Object {
-      "com.apple.developer.applesignin": Array [
-        "Default",
-      ],
+      "aps-environment": "development",
       "com.apple.developer.associated-domains": Array [
         "applinks:https://pillarvalley.netlify.app",
       ],
@@ -548,6 +546,7 @@ Object {
                       Object {
                         "$": Object {
                           "android:autoVerify": "true",
+                          "data-generated": "true",
                         },
                         "action": Array [
                           Object {
@@ -889,9 +888,7 @@ Object {
       },
       "ios": Object {
         "entitlements": Object {
-          "com.apple.developer.applesignin": Array [
-            "Default",
-          ],
+          "aps-environment": "development",
           "com.apple.developer.associated-domains": Array [
             "applinks:https://pillarvalley.netlify.app",
           ],
@@ -1139,9 +1136,7 @@ Object {
       "usesNonExemptEncryption": true,
     },
     "entitlements": Object {
-      "com.apple.developer.applesignin": Array [
-        "Default",
-      ],
+      "aps-environment": "development",
       "com.apple.developer.associated-domains": Array [
         "applinks:https://pillarvalley.netlify.app",
       ],
@@ -1426,6 +1421,7 @@ Object {
                       Object {
                         "$": Object {
                           "android:autoVerify": "true",
+                          "data-generated": "true",
                         },
                         "action": Array [
                           Object {
@@ -1791,9 +1787,7 @@ Object {
       },
       "ios": Object {
         "entitlements": Object {
-          "com.apple.developer.applesignin": Array [
-            "Default",
-          ],
+          "aps-environment": "development",
           "com.apple.developer.associated-domains": Array [
             "applinks:https://pillarvalley.netlify.app",
           ],
@@ -2042,9 +2036,7 @@ Object {
       "usesNonExemptEncryption": true,
     },
     "entitlements": Object {
-      "com.apple.developer.applesignin": Array [
-        "Default",
-      ],
+      "aps-environment": "development",
       "com.apple.developer.associated-domains": Array [
         "applinks:https://pillarvalley.netlify.app",
       ],

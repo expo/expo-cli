@@ -1,3 +1,4 @@
+import chalk from 'chalk';
 import type { Command } from 'commander';
 
 import { applyAsyncActionProjectDir } from '../utils/applyAsyncAction';
@@ -7,7 +8,7 @@ export default function (program: Command) {
     program
       .command('build:ios [path]')
       .alias('bi')
-      .helpGroup('build')
+      .helpGroup('deprecated')
       .option('-c, --clear-credentials', 'Clear all credentials stored on Expo servers.')
       .option('--clear-dist-cert', 'Remove Distribution Certificate stored on Expo servers.')
       .option('--clear-push-key', 'Remove Push Notifications Key stored on Expo servers.')
@@ -45,7 +46,8 @@ export default function (program: Command) {
         '--skip-workflow-check',
         'Skip warning about build service bare workflow limitations.'
       )
-      .description('Build and sign a standalone IPA for the Apple App Store'),
+      .longDescription('Build and sign a standalone IPA for the Apple App Store')
+      .description(`${chalk.yellow`Superseded`} by ${chalk.bold`eas build`} in eas-cli`),
     () => import('./buildIosAsync'),
     { checkConfig: true }
   );
@@ -54,7 +56,7 @@ export default function (program: Command) {
     program
       .command('build:android [path]')
       .alias('ba')
-      .helpGroup('build')
+      .helpGroup('deprecated')
       .option('-c, --clear-credentials', 'Clear stored credentials.')
       .option('--release-channel <name>', 'Pull from specified release channel.', 'default')
       .option('--no-publish', 'Disable automatic publishing before building.')
@@ -71,7 +73,8 @@ export default function (program: Command) {
         'Skip warning about build service bare workflow limitations.'
       )
       .option('-t --type <app-bundle|apk>', 'Type of build: [app-bundle|apk].')
-      .description('Build and sign a standalone APK or App Bundle for the Google Play Store'),
+      .longDescription('Build and sign a standalone APK or App Bundle for the Google Play Store')
+      .description(`${chalk.yellow`Superseded`} by ${chalk.bold`eas build`} in eas-cli`),
     () => import('./buildAndroidAsync'),
     { checkConfig: true }
   );
@@ -94,12 +97,13 @@ export default function (program: Command) {
     program
       .command('build:status [path]')
       .alias('bs')
-      .helpGroup('build')
+      .helpGroup('deprecated')
       .option(
         '--public-url <url>',
         'The URL of an externally hosted manifest (for self-hosted apps).'
       )
-      .description(`Get the status of the latest build for the project`),
+      .longDescription('Get the status of the latest build for the project')
+      .description(`${chalk.yellow`Superseded`} by ${chalk.bold`eas build:list`} in eas-cli`),
     () => import('./buildStatusAsync')
   );
 }

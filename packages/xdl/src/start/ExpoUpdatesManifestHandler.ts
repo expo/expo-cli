@@ -209,7 +209,6 @@ export function getManifestHandler(projectRoot: string) {
       res.end(JSON.stringify(body));
 
       Analytics.logEvent('Serve Expo Updates Manifest', {
-        projectRoot,
         developerTool: Config.developerTool,
         runtimeVersion: (body as any).runtimeVersion,
       });

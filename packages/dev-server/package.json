@@ -1,6 +1,6 @@
 {
   "name": "@expo/dev-server",
-  "version": "0.1.94",
+  "version": "0.1.99",
   "description": "Development servers for starting React Native projects",
   "main": "build/MetroDevServer.js",
   "scripts": {
@@ -36,8 +36,8 @@
   ],
   "dependencies": {
     "@expo/bunyan": "4.0.0",
-    "@expo/metro-config": "0.3.0",
-    "@expo/osascript": "2.0.30",
+    "@expo/metro-config": "0.3.5",
+    "@expo/osascript": "2.0.31",
     "@react-native-community/cli-server-api": "^5.0.1",
     "body-parser": "1.19.0",
     "chalk": "^4.0.0",

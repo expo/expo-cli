@@ -243,8 +243,32 @@
     <p class="bottom-bar-header">
       How would you like to open this project?
     </p>
-    <a href="_expo/link?choice=expo-dev-client" class="bottom-bar-button bottom-bar-button-dark">Development App</a>
-    <a href="_expo/link?choice=expo-go" class="bottom-bar-button bottom-bar-button-grey">Expo Go</a>
+    <a id="expo-dev-client-link" href="/_expo/link?choice=expo-dev-client" class="bottom-bar-button bottom-bar-button-dark">Development App</a>
+    <a id="expo-go-link" href="/_expo/link?choice=expo-go" class="bottom-bar-button bottom-bar-button-grey">Expo Go</a>
   </div>
+  
+  <script>
+  function findGetParameter(parameterName) {
+    let result = null;
+
+    location.search
+      .substr(1)
+      .split("&")
+      .forEach(function (item) {
+        const tmp = item.split("=");
+        if (tmp[0] === parameterName) result = decodeURIComponent(tmp[1]);
+      });
+    return result;
+  }
+
+  const platform = findGetParameter("platform");
+  if (platform) {
+    const devClientLink = document.getElementById("expo-dev-client-link");
+    const goLink = document.getElementById("expo-go-link");
+
+    devClientLink.href += "&platform=" + platform;
+    goLink.href += "&platform=" + platform;
+  }
+  </script>
 </body>
 </html>

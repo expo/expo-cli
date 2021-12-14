@@ -77,7 +77,7 @@ describe(updatePackageJSONDependencies, () => {
       devDependencies: {},
     };
     updatePackageJSONDependencies({ projectRoot: 'fake path', tempDir: 'fake path', pkg });
-    expect(pkg.dependencies).toMatchObject({
+    expect(pkg.dependencies).toStrictEqual({
       ...requiredPackages,
       'optional-package': 'version-from-project-1',
       'optional-package-2': 'version-from-template-2',
@@ -108,9 +108,38 @@ describe(updatePackageJSONDependencies, () => {
       pkg,
       skipDependencyUpdate: ['react-native'],
     });
-    expect(pkg.dependencies).toMatchObject({
+    expect(pkg.dependencies).toStrictEqual({
       ...requiredPackages,
       'react-native': 'version-from-project',
+      'optional-package': 'version-from-project-1',
+      'optional-package-2': 'version-from-template-2',
+      'optional-package-3': 'version-from-project-3',
+    });
+  });
+  test('test expo-updates not required by default in sdk 44', () => {
+    const sdk44RequiredPackages = {
+      react: 'version-from-template-required-1',
+      'react-native': 'version-from-template-required-1',
+    };
+    (getPackageJson as any).mockImplementation(() => ({
+      dependencies: {
+        ...sdk44RequiredPackages,
+        'optional-package': 'version-from-template-1',
+        'optional-package-2': 'version-from-template-2',
+      },
+      devDependencies: {},
+    }));
+    const pkg = {
+      dependencies: {
+        'react-native': 'version-from-project',
+        'optional-package': 'version-from-project-1',
+        'optional-package-3': 'version-from-project-3',
+      },
+      devDependencies: {},
+    };
+    updatePackageJSONDependencies({ projectRoot: 'fake path', tempDir: 'fake path', pkg });
+    expect(pkg.dependencies).toStrictEqual({
+      ...sdk44RequiredPackages,
       'optional-package': 'version-from-project-1',
       'optional-package-2': 'version-from-template-2',
       'optional-package-3': 'version-from-project-3',

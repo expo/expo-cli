@@ -19,7 +19,7 @@ export default function withExpo(nextConfig: any = {}): any {
         },
         {
           supportsFontLoading: false,
-          webpack5: webpack5 !== false,
+          webpack5: webpack5 && webpack5 !== false,
         }
       );
       // Use original public path

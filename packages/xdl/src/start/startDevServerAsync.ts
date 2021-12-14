@@ -76,11 +76,7 @@ export async function startDevServerAsync(
 
   const { server, middleware, messageSocket } = await runMetroDevServerAsync(projectRoot, options);
 
-  const easProjectId = projectConfig.exp.extra?.eas?.projectId;
-  const useExpoUpdatesManifest =
-    startOptions.forceManifestType === 'expo-updates' ||
-    (startOptions.forceManifestType !== 'classic' && easProjectId);
-
+  const useExpoUpdatesManifest = startOptions.forceManifestType === 'expo-updates';
   // We need the manifest handler to be the first middleware to run so our
   // routes take precedence over static files. For example, the manifest is
   // served from '/' and if the user has an index.html file in their project

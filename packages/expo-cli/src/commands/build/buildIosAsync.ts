@@ -3,9 +3,11 @@ import program from 'commander';
 import CommandError from '../../CommandError';
 import type { IosOptions } from './BaseBuilder.types';
 import IOSBuilder from './ios/IOSBuilder';
+import { logBuildMigration } from './logBuildMigration';
 import { assertPublicUrl, assertReleaseChannel, maybeBailOnWorkflowWarning } from './utils';
 
 export async function actionAsync(projectRoot: string, options: IosOptions) {
+  logBuildMigration('ios');
   if (!options.skipWorkflowCheck) {
     if (
       await maybeBailOnWorkflowWarning({

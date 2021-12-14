@@ -33,11 +33,13 @@ export function setProvisioningProfileForPbxproj(
     : findFirstNativeTarget(project);
   const [nativeTargetId, nativeTarget] = nativeTargetEntry;
 
+  const quotedAppleTeamId = ensureQuotes(appleTeamId);
+
   getBuildConfigurationsForListId(project, nativeTarget.buildConfigurationList)
     .filter(([, item]: ConfigurationSectionEntry) => item.name === buildConfiguration)
     .forEach(([, item]: ConfigurationSectionEntry) => {
       item.buildSettings.PROVISIONING_PROFILE_SPECIFIER = `"${profileName}"`;
-      item.buildSettings.DEVELOPMENT_TEAM = appleTeamId;
+      item.buildSettings.DEVELOPMENT_TEAM = quotedAppleTeamId;
       item.buildSettings.CODE_SIGN_IDENTITY = '"iPhone Distribution"';
       item.buildSettings.CODE_SIGN_STYLE = 'Manual';
     });
@@ -45,9 +47,16 @@ export function setProvisioningProfileForPbxproj(
   Object.entries(getProjectSection(project))
     .filter(isNotComment)
     .forEach(([, item]: ProjectSectionEntry) => {
-      item.attributes.TargetAttributes[nativeTargetId].DevelopmentTeam = appleTeamId;
+      item.attributes.TargetAttributes[nativeTargetId].DevelopmentTeam = quotedAppleTeamId;
       item.attributes.TargetAttributes[nativeTargetId].ProvisioningStyle = 'Manual';
     });
 
   fs.writeFileSync(project.filepath, project.writeSync());
 }
+
+const ensureQuotes = (value: string) => {
+  if (!value.match(/^['"]/)) {
+    return `"${value}"`;
+  }
+  return value;
+};

@@ -1,9 +1,15 @@
 import path from 'path';
 import resolveFrom from 'resolve-from';
+import semver from 'semver';
 
 import { ConfigPlugin } from '../Plugin.types';
 import { withAndroidManifest } from '../plugins/android-plugins';
-import { ExpoConfigUpdates, getRuntimeVersionNullable, getUpdateUrl } from '../utils/Updates';
+import {
+  ExpoConfigUpdates,
+  getExpoUpdatesPackageVersion,
+  getRuntimeVersionNullable,
+  getUpdateUrl,
+} from '../utils/Updates';
 import {
   addMetaDataItemToMainApplication,
   AndroidManifest,
@@ -30,7 +36,13 @@ export const withUpdates: ConfigPlugin<{ expoUsername: string | null }> = (
   { expoUsername }
 ) => {
   return withAndroidManifest(config, config => {
-    config.modResults = setUpdatesConfig(config, config.modResults, expoUsername);
+    const expoUpdatesPackageVersion = getExpoUpdatesPackageVersion(config.modRequest.projectRoot);
+    config.modResults = setUpdatesConfig(
+      config,
+      config.modResults,
+      expoUsername,
+      expoUpdatesPackageVersion
+    );
     return config;
   });
 };
@@ -48,9 +60,14 @@ export function getUpdatesTimeout(config: Pick<ExpoConfigUpdates, 'updates'>): n
 }
 
 export function getUpdatesCheckOnLaunch(
-  config: Pick<ExpoConfigUpdates, 'updates'>
-): 'NEVER' | 'ALWAYS' {
+  config: Pick<ExpoConfigUpdates, 'updates'>,
+  expoUpdatesPackageVersion?: string | null
+): 'NEVER' | 'ERROR_RECOVERY_ONLY' | 'ALWAYS' {
   if (config.updates?.checkAutomatically === 'ON_ERROR_RECOVERY') {
+    // native 'ERROR_RECOVERY_ONLY' option was only introduced in 0.11.x
+    if (expoUpdatesPackageVersion && semver.gte(expoUpdatesPackageVersion, '0.11.0')) {
+      return 'ERROR_RECOVERY_ONLY';
+    }
     return 'NEVER';
   } else if (config.updates?.checkAutomatically === 'ON_LOAD') {
     return 'ALWAYS';
@@ -61,7 +78,8 @@ export function getUpdatesCheckOnLaunch(
 export function setUpdatesConfig(
   config: ExpoConfigUpdates,
   androidManifest: AndroidManifest,
-  username: string | null
+  username: string | null,
+  expoUpdatesPackageVersion?: string | null
 ): AndroidManifest {
   const mainApplication = getMainApplicationOrThrow(androidManifest);
 
@@ -73,7 +91,7 @@ export function setUpdatesConfig(
   addMetaDataItemToMainApplication(
     mainApplication,
     Config.CHECK_ON_LAUNCH,
-    getUpdatesCheckOnLaunch(config)
+    getUpdatesCheckOnLaunch(config, expoUpdatesPackageVersion)
   );
   addMetaDataItemToMainApplication(
     mainApplication,

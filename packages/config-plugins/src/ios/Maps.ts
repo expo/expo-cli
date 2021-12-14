@@ -10,9 +10,9 @@ import { mergeContents, MergeResults, removeContents } from '../utils/generateCo
 
 const debug = require('debug')('expo:config-plugins:ios:maps') as typeof console.log;
 
-// Match against `UMModuleRegistryAdapter` (unimodules), and React Native without unimodules (Expo Modules).
+// Match against `UMModuleRegistryAdapter` (unimodules), and React Native without unimodules (Expo Modules), and SDK +44 React AppDelegate subscriber.
 export const MATCH_INIT =
-  /(?:(self\.|_)(\w+)\s?=\s?\[\[UMModuleRegistryAdapter alloc\])|(?:RCTBridge\s?\*\s?(\w+)\s?=\s?\[\[RCTBridge alloc\])/g;
+  /(?:(self\.|_)(\w+)\s?=\s?\[\[UMModuleRegistryAdapter alloc\])|(?:RCTBridge\s?\*\s?(\w+)\s?=\s?\[\[RCTBridge alloc\])|(\[self\.reactDelegate createBridgeWithDelegate:self launchOptions:launchOptions\])/g;
 
 const withGoogleMapsKey = createInfoPlistPlugin(setGoogleMapsApiKey, 'withGoogleMapsKey');
 
@@ -130,9 +130,15 @@ function isReactNativeMapsInstalled(projectRoot: string): string | null {
   return resolved ? path.dirname(resolved) : null;
 }
 
-function isReactNativeMapsAutolinked(config: Pick<ExpoConfig, '_internal'>): boolean {
-  // TODO: Detect autolinking
-  return true;
+function isReactNativeMapsAutolinked(config: Pick<ExpoConfig, '_internal'>): string | null {
+  // Only add the native code changes if we know that the package is going to be linked natively.
+  // This is specifically for monorepo support where one app might have react-native-maps (adding it to the node_modules)
+  // but another app will not have it installed in the package.json, causing it to not be linked natively.
+  // This workaround only exists because react-native-maps doesn't have a config plugin vendored in the package.
+  return (
+    !config._internal?.autolinkedModules ||
+    config._internal.autolinkedModules.includes('react-native-maps')
+  );
 }
 
 const withMapsCocoaPods: ConfigPlugin<{ useGoogleMaps: boolean }> = (config, { useGoogleMaps }) => {

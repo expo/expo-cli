@@ -35,4 +35,32 @@ describe(findApplicationTargetWithDependenciesAsync, () => {
     expect(applicationTarget.dependencies[0].name).toBe('shareextension');
     expect(applicationTarget.dependencies[0].type).toBe(TargetType.EXTENSION);
   });
+
+  it('also reads dependency dependencies', async () => {
+    vol.fromJSON(
+      {
+        'ios/easwatchtest.xcodeproj/project.pbxproj': originalFs.readFileSync(
+          path.join(__dirname, 'fixtures/watch.pbxproj'),
+          'utf-8'
+        ),
+        'ios/easwatchtest.xcodeproj/xcshareddata/xcschemes/easwatchtest.xcscheme':
+          originalFs.readFileSync(path.join(__dirname, 'fixtures/watch.xcscheme'), 'utf-8'),
+      },
+      projectRoot
+    );
+
+    const applicationTarget = await findApplicationTargetWithDependenciesAsync(
+      projectRoot,
+      'easwatchtest'
+    );
+    expect(applicationTarget.name).toBe('easwatchtest');
+    expect(applicationTarget.type).toBe(TargetType.APPLICATION);
+    expect(applicationTarget.dependencies.length).toBe(1);
+    expect(applicationTarget.dependencies[0].name).toBe('eas-watch-test');
+    expect(applicationTarget.dependencies[0].type).toBe(TargetType.OTHER);
+    expect(applicationTarget.dependencies[0].dependencies[0].name).toBe(
+      'eas-watch-test WatchKit Extension'
+    );
+    expect(applicationTarget.dependencies[0].dependencies[0].type).toBe(TargetType.OTHER);
+  });
 });
