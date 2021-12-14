@@ -5,7 +5,11 @@ import { ConfigPlugin } from '../Plugin.types';
 import { createInfoPlistPlugin, withXcodeProject } from '../plugins/ios-plugins';
 import { InfoPlist } from './IosConfig.types';
 import { findFirstNativeTarget } from './Target';
-import { ConfigurationSectionEntry, getBuildConfigurationsForListId } from './utils/Xcodeproj';
+import {
+  ConfigurationSectionEntry,
+  getBuildConfigurationsForListId,
+  sanitizedName,
+} from './utils/Xcodeproj';
 
 export const withDisplayName = createInfoPlistPlugin(setDisplayName, 'withDisplayName');
 
@@ -72,7 +76,7 @@ export function setProductName(
   config: Pick<ExpoConfig, 'name'>,
   project: XcodeProject
 ): XcodeProject {
-  const name = (getName(config) ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const name = sanitizedName(getName(config) ?? '');
 
   if (!name) {
     return project;
