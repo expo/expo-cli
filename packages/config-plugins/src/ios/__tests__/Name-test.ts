@@ -51,15 +51,20 @@ describe(setProductName, () => {
   });
 
   it(`sets the iOS PRODUCT_NAME value`, () => {
-    // Ensure the value can be parsed and written.
-    const project = setProductNameForRoot({ name: 'My Cool Thing', slug: '' }, projectRoot);
-    expect(
-      Object.entries(project.pbxXCBuildConfigurationSection())
-        .filter(isNotComment)
-        // @ts-ignore
-        .filter(isBuildConfig)[0][1]?.buildSettings?.PRODUCT_NAME
-      // Ensure the value is wrapped in quotes.
-    ).toBe(`"My Cool Thing"`);
+    for (const [input, output] of [
+      ['My Cool Thing', `"My Cool Thing"`],
+      ['h"&<world/>🚀', `\"h\"&<world/>🚀\"`],
+    ]) {
+      // Ensure the value can be parsed and written.
+      const project = setProductNameForRoot({ name: input, slug: '' }, projectRoot);
+      expect(
+        Object.entries(project.pbxXCBuildConfigurationSection())
+          .filter(isNotComment)
+          // @ts-ignore
+          .filter(isBuildConfig)[0][1]?.buildSettings?.PRODUCT_NAME
+        // Ensure the value is wrapped in quotes.
+      ).toBe(output);
+    }
   });
 });
 

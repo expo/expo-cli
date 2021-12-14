@@ -76,7 +76,7 @@ export function setProductName(
   config: Pick<ExpoConfig, 'name'>,
   project: XcodeProject
 ): XcodeProject {
-  const name = sanitizedName(getName(config) ?? '');
+  const name = (getName(config) ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
   if (!name) {
     return project;
