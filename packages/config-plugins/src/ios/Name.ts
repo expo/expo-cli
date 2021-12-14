@@ -5,11 +5,7 @@ import { ConfigPlugin } from '../Plugin.types';
 import { createInfoPlistPlugin, withXcodeProject } from '../plugins/ios-plugins';
 import { InfoPlist } from './IosConfig.types';
 import { findFirstNativeTarget } from './Target';
-import {
-  ConfigurationSectionEntry,
-  getBuildConfigurationsForListId,
-  sanitizedName,
-} from './utils/Xcodeproj';
+import { ConfigurationSectionEntry, getBuildConfigurationsForListId } from './utils/Xcodeproj';
 
 export const withDisplayName = createInfoPlistPlugin(setDisplayName, 'withDisplayName');
 
