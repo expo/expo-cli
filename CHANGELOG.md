@@ -12,6 +12,20 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+## [Thu, 16 Dec 2021 15:44:19 -0800](https://github.com/expo/expo-cli/commit/487031d3de00d9710aadbf32913cd831158a771f)
+
+### 🎉 New features
+
+- [install-expo-modules] Add Expo SDK 44 support ([#4077](https://github.com/expo/expo-cli/issues/4077))
+- [cli] Allow specifying `expo config --json` in order to output config as a valid json string. ([#4071](https://github.com/expo/expo-cli/issues/4071))
+
+### 📦 Packages updated
+
+- @expo/dev-tools@0.13.138
+- expo-cli@5.0.3
+- install-expo-modules@0.2.0
+- xdl@59.2.22
+
 ## [Wed, 15 Dec 2021 19:25:08 -0800](https://github.com/expo/expo-cli/commit/c610a9b2b5864dd614fc12aefc55cc74b92d8e61)
 
 ### 🎉 New features
