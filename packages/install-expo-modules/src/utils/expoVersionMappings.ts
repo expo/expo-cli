@@ -2,9 +2,12 @@ interface VersionInfo {
   iosDeploymentTarget: string;
 }
 
-const DEFAULT_VERSION = '43.0.0';
+const DEFAULT_VERSION = '44.0.0';
 
 export const ExpoVersionMappings: Record<string, VersionInfo> = {
+  '44.0.0': {
+    iosDeploymentTarget: '12.0',
+  },
   '43.0.0': {
     iosDeploymentTarget: '12.0',
   },
