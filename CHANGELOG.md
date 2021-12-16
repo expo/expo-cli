@@ -12,6 +12,40 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+## [Wed, 15 Dec 2021 19:25:08 -0800](https://github.com/expo/expo-cli/commit/c610a9b2b5864dd614fc12aefc55cc74b92d8e61)
+
+### 🎉 New features
+
+- [config-plugins] Resolve against fully qualified MainApplications ([#4072](https://github.com/expo/expo-cli/issues/4072))
+- [config-plugins][prebuild-config] Set iOS PRODUCT_NAME on prebuild ([#4064](https://github.com/expo/expo-cli/issues/4064))
+
+### 🧹 Chores
+
+- [cli] replace few Lodash methods with native code ([#4059](https://github.com/expo/expo-cli/issues/4059))
+- [schemer] replace few Lodash methods with native code ([#4057](https://github.com/expo/expo-cli/issues/4057))
+
+### 🐛 Bug fixes
+
+- [config-plugins] Fix adding Google maps pods ([#4075](https://github.com/expo/expo-cli/issues/4075))
+
+### 📦 Packages updated
+
+- @expo/config-plugins@4.0.14
+- @expo/config@6.0.14
+- @expo/dev-server@0.1.101
+- @expo/dev-tools@0.13.137
+- expo-cli@5.0.2
+- expo-optimize@0.2.6
+- install-expo-modules@0.1.6
+- @expo/metro-config@0.3.7
+- @expo/next-adapter@3.1.15
+- @expo/prebuild-config@3.0.14
+- expo-pwa@0.0.109
+- @expo/schemer@1.3.33
+- uri-scheme@1.0.110
+- @expo/webpack-config@0.16.14
+- xdl@59.2.21
+
 ### [Tue, 14 Dec 2021 11:14:43 -0800](https://github.com/expo/expo-cli/commit/d2aca480eea9d9ab570ba0e10f1963c0613052db)
 
 ### 🎉 New features
