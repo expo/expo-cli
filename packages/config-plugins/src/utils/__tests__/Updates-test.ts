@@ -73,10 +73,8 @@ describe(getRuntimeVersion, () => {
       )
     ).toBe(`${version}(${buildNumber})`);
   });
-  it('throws no runtime version is supplied', () => {
-    expect(() => {
-      getRuntimeVersion({}, 'ios');
-    }).toThrow(`There is neither a value or a policy set for the runtime version on "ios"`);
+  it('returns null if no runtime version is supplied', () => {
+    expect(getRuntimeVersion({}, 'ios')).toEqual(null);
   });
   it('throws if runtime version is not parseable', () => {
     expect(() => {

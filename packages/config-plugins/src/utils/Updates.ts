@@ -66,16 +66,22 @@ export function getNativeVersion(
  */
 export const withRuntimeVersion: (config: ExpoConfig) => ExpoConfig = config => {
   if (config.ios?.runtimeVersion || config.runtimeVersion) {
-    config.ios = {
-      ...config.ios,
-      runtimeVersion: getRuntimeVersion(config, 'ios'),
-    };
+    const runtimeVersion = getRuntimeVersion(config, 'ios');
+    if (runtimeVersion) {
+      config.ios = {
+        ...config.ios,
+        runtimeVersion,
+      };
+    }
   }
   if (config.android?.runtimeVersion || config.runtimeVersion) {
-    config.android = {
-      ...config.android,
-      runtimeVersion: getRuntimeVersion(config, 'android'),
-    };
+    const runtimeVersion = getRuntimeVersion(config, 'android');
+    if (runtimeVersion) {
+      config.android = {
+        ...config.android,
+        runtimeVersion,
+      };
+    }
   }
   delete config.runtimeVersion;
   return config;
@@ -100,12 +106,10 @@ export function getRuntimeVersion(
     ios?: Pick<IOS, 'buildNumber' | 'runtimeVersion'>;
   },
   platform: 'android' | 'ios'
-): string {
+): string | null {
   const runtimeVersion = config[platform]?.runtimeVersion ?? config.runtimeVersion;
   if (!runtimeVersion) {
-    throw new Error(
-      `There is neither a value or a policy set for the runtime version on "${platform}"`
-    );
+    return null;
   }
 
   if (typeof runtimeVersion === 'string') {
