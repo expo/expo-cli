@@ -71,6 +71,10 @@ async function runAsync(programName: string) {
     isModdedConfig: true,
   });
 
+  // for react-native project, we do not verify sdkVersion with the `skipSDKVersionRequirement` flag.
+  // to get the target sdkVersion easier for config plugins, we fill the target sdkVersion into config.
+  config.sdkVersion = sdkVersion;
+
   config = withAndroidModules(config);
   config = withIosModules(config);
   config = withIosDeploymentTarget(config, {

@@ -1,3 +1,7 @@
+import fs from 'fs';
+import path from 'path';
+
+import { getDefaultVersion } from '../../../utils/expoVersionMappings';
 import {
   updateModulesAppDelegateObjcHeader,
   updateModulesAppDelegateObjcImpl,
@@ -27,11 +31,15 @@ describe(updateModulesAppDelegateObjcHeader, () => {
 
 @end`;
 
-    const contents = updateModulesAppDelegateObjcHeader(rawContents);
-    expect(updateModulesAppDelegateObjcHeader(contents)).toEqual(expectContents);
+    const contents = updateModulesAppDelegateObjcHeader(rawContents, getDefaultVersion());
+    expect(updateModulesAppDelegateObjcHeader(contents, getDefaultVersion())).toEqual(
+      expectContents
+    );
     // Try it twice...
-    const nextContents = updateModulesAppDelegateObjcHeader(contents);
-    expect(updateModulesAppDelegateObjcHeader(nextContents)).toEqual(expectContents);
+    const nextContents = updateModulesAppDelegateObjcHeader(contents, getDefaultVersion());
+    expect(updateModulesAppDelegateObjcHeader(nextContents, getDefaultVersion())).toEqual(
+      expectContents
+    );
   });
 });
 
@@ -54,8 +62,8 @@ describe(updateModulesAppDelegateObjcImpl, () => {
 
   RCTBridge *bridge = [[RCTBridge alloc] initWithDelegate:self launchOptions:launchOptions];
   RCTRootView *rootView = [[RCTRootView alloc] initWithBridge:bridge
-                                                   moduleName:@"RN0633"
-                                            initialProperties:nil];
+                                               moduleName:@"RN0633"
+                                               initialProperties:nil];
 
   rootView.backgroundColor = [[UIColor alloc] initWithRed:1.0f green:1.0f blue:1.0f alpha:1];
 
@@ -93,15 +101,15 @@ describe(updateModulesAppDelegateObjcImpl, () => {
   InitializeFlipper(application);
 #endif
 
-  RCTBridge *bridge = [[RCTBridge alloc] initWithDelegate:self launchOptions:launchOptions];
-  RCTRootView *rootView = [[RCTRootView alloc] initWithBridge:bridge
-                                                   moduleName:@"RN0633"
-                                            initialProperties:nil];
+  RCTBridge *bridge = [self.reactDelegate createBridgeWithDelegate:self launchOptions:launchOptions];
+  RCTRootView *rootView = [self.reactDelegate createRootViewWithBridge:bridge
+                                               moduleName:@"RN0633"
+                                               initialProperties:nil];
 
   rootView.backgroundColor = [[UIColor alloc] initWithRed:1.0f green:1.0f blue:1.0f alpha:1];
 
   self.window = [[UIWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
-  UIViewController *rootViewController = [UIViewController new];
+  UIViewController *rootViewController = [self.reactDelegate createRootViewController];
   rootViewController.view = rootView;
   self.window.rootViewController = rootViewController;
   [self.window makeKeyAndVisible];
@@ -120,10 +128,10 @@ describe(updateModulesAppDelegateObjcImpl, () => {
 
 @end`;
 
-    const contents = updateModulesAppDelegateObjcImpl(rawContents);
+    const contents = updateModulesAppDelegateObjcImpl(rawContents, getDefaultVersion());
     expect(contents).toEqual(expectContents);
     // Try it twice...
-    const nextContents = updateModulesAppDelegateObjcImpl(contents);
+    const nextContents = updateModulesAppDelegateObjcImpl(contents, getDefaultVersion());
     expect(nextContents).toEqual(expectContents);
   });
 });
@@ -173,8 +181,8 @@ class AppDelegate: AppDelegateWrapper, RCTBridgeDelegate {
   var window: UIWindow?
 
   func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-    let bridge = RCTBridge(delegate: self, launchOptions: launchOptions)!
-    let rootView = RCTRootView(bridge: bridge, moduleName: "HelloWorld", initialProperties: nil)
+    let bridge = reactDelegate.createBridge(delegate: self, launchOptions: launchOptions)!
+    let rootView = reactDelegate.createRootView(bridge: bridge, moduleName: "HelloWorld", initialProperties: nil)
 
     if #available(iOS 13.0, *) {
       rootView.backgroundColor = UIColor.systemBackground
@@ -183,7 +191,7 @@ class AppDelegate: AppDelegateWrapper, RCTBridgeDelegate {
     }
 
     self.window = UIWindow(frame: UIScreen.main.bounds);
-    let rootViewController = UIViewController()
+    let rootViewController = reactDelegate.createRootViewController()
     rootViewController.view = rootView
     self.window?.rootViewController = rootViewController
     self.window?.makeKeyAndVisible()
@@ -201,6 +209,29 @@ class AppDelegate: AppDelegateWrapper, RCTBridgeDelegate {
 }
 `;
 
-    expect(updateModulesAppDelegateSwift(contents)).toEqual(expectContents);
+    expect(updateModulesAppDelegateSwift(contents, getDefaultVersion())).toEqual(expectContents);
+  });
+});
+
+describe('withIosModulesAppDelegate sdkVersion snapshots', () => {
+  const objcHeaderFixture = fs.readFileSync(
+    path.join(__dirname, 'fixtures', 'AppDelegate.h'),
+    'utf-8'
+  );
+  const objcImplFixture = fs.readFileSync(
+    path.join(__dirname, 'fixtures', 'AppDelegate.m'),
+    'utf-8'
+  );
+  const swiftFixture = fs.readFileSync(
+    path.join(__dirname, 'fixtures', 'AppDelegate.swift'),
+    'utf-8'
+  );
+
+  ['43.0.0', '44.0.0'].forEach(sdkVersion => {
+    it(`sdkVersion ${sdkVersion}`, () => {
+      expect(updateModulesAppDelegateObjcHeader(objcHeaderFixture, sdkVersion)).toMatchSnapshot();
+      expect(updateModulesAppDelegateObjcImpl(objcImplFixture, sdkVersion)).toMatchSnapshot();
+      expect(updateModulesAppDelegateSwift(swiftFixture, sdkVersion)).toMatchSnapshot();
+    });
   });
 });

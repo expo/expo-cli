@@ -11,14 +11,15 @@ import {
 } from '@expo/config-plugins/build/ios/codeMod';
 import fs from 'fs';
 import { sync as globSync } from 'glob';
+import semver from 'semver';
 import xcode from 'xcode';
 
 export const withIosModulesAppDelegate: ConfigPlugin = config => {
   return withAppDelegate(config, config => {
     config.modResults.contents =
       config.modResults.language === 'objc'
-        ? updateModulesAppDelegateObjcImpl(config.modResults.contents)
-        : updateModulesAppDelegateSwift(config.modResults.contents);
+        ? updateModulesAppDelegateObjcImpl(config.modResults.contents, config.sdkVersion)
+        : updateModulesAppDelegateSwift(config.modResults.contents, config.sdkVersion);
     return config;
   });
 };
@@ -32,7 +33,7 @@ export const withIosModulesAppDelegateObjcHeader: ConfigPlugin = config => {
           config.modRequest.projectRoot
         );
         let contents = await fs.promises.readFile(appDelegateObjcHeaderPath, 'utf8');
-        contents = updateModulesAppDelegateObjcHeader(contents);
+        contents = updateModulesAppDelegateObjcHeader(contents, config.sdkVersion);
         await fs.promises.writeFile(appDelegateObjcHeaderPath, contents);
       } catch {}
       return config;
@@ -75,7 +76,10 @@ export const withIosModulesSwiftBridgingHeader: ConfigPlugin = config => {
   ]);
 };
 
-export function updateModulesAppDelegateObjcImpl(contents: string): string {
+export function updateModulesAppDelegateObjcImpl(
+  contents: string,
+  sdkVersion: string | undefined
+): string {
   // application:didFinishLaunchingWithOptions:
   const superDidFinishLaunchingWithOptionsCode =
     '[super application:application didFinishLaunchingWithOptions:launchOptions];';
@@ -88,10 +92,29 @@ export function updateModulesAppDelegateObjcImpl(contents: string): string {
     );
   }
 
+  // ExpoReactDelegate
+  if (sdkVersion && semver.gte(sdkVersion, '44.0.0')) {
+    contents = contents.replace(
+      /\[\[RCTBridge alloc\] initWithDelegate:/g,
+      '[self.reactDelegate createBridgeWithDelegate:'
+    );
+    contents = contents.replace(
+      /\[\[RCTRootView alloc\] initWithBridge:/g,
+      '[self.reactDelegate createRootViewWithBridge:'
+    );
+    contents = contents.replace(
+      /\[UIViewController new\]/g,
+      '[self.reactDelegate createRootViewController]'
+    );
+  }
+
   return contents;
 }
 
-export function updateModulesAppDelegateObjcHeader(contents: string): string {
+export function updateModulesAppDelegateObjcHeader(
+  contents: string,
+  sdkVersion: string | undefined
+): string {
   // Add imports if needed
   if (!contents.match(/^#import\s+<Expo\/Expo\.h>\s*$/m)) {
     contents = addObjcImports(contents, ['<Expo/Expo.h>']);
@@ -106,7 +129,10 @@ export function updateModulesAppDelegateObjcHeader(contents: string): string {
   return contents;
 }
 
-export function updateModulesAppDelegateSwift(contents: string): string {
+export function updateModulesAppDelegateSwift(
+  contents: string,
+  sdkVersion: string | undefined
+): string {
   // Replace superclass with AppDelegateWrapper
   contents = contents.replace(
     /^(class\s+AppDelegate\s*:\s*)NSObject,\s*UIApplicationDelegate(\W+)/m,
@@ -122,6 +148,16 @@ export function updateModulesAppDelegateSwift(contents: string): string {
       'application(_:didFinishLaunchingWithOptions:)',
       superDidFinishLaunchingWithOptionsCode,
       { position: 'tailBeforeLastReturn', indent: 4 }
+    );
+  }
+
+  // ExpoReactDelegate
+  if (sdkVersion && semver.gte(sdkVersion, '44.0.0')) {
+    contents = contents.replace(/\bRCTBridge\(delegate:/g, 'reactDelegate.createBridge(delegate:');
+    contents = contents.replace(/\bRCTRootView\(bridge:/g, 'reactDelegate.createRootView(bridge:');
+    contents = contents.replace(
+      /\bUIViewController\(\)/g,
+      'reactDelegate.createRootViewController()'
     );
   }
 
