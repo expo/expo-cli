@@ -101,16 +101,14 @@ export function removeGoogleMapsAppDelegateInit(src: string): MergeResults {
 }
 
 /**
- * @param src
- * @param useGoogleMaps
- * @param googleMapsPath '../node_modules/react-native-maps'
- * @returns
+ * @param src The contents of the Podfile.
+ * @returns Podfile with Google Maps added.
  */
-export function addMapsCocoaPods(src: string, googleMapsPath: string): MergeResults {
+export function addMapsCocoaPods(src: string): MergeResults {
   return mergeContents({
     tag: 'react-native-maps',
     src,
-    newSrc: `  pod 'react-native-google-maps', path: '${googleMapsPath}'`,
+    newSrc: `  pod 'react-native-google-maps', path: File.dirname(\`node --print "require.resolve('react-native-maps/package.json')"\`)`,
     anchor: /use_native_modules/,
     offset: 0,
     comment: '#',
@@ -129,15 +127,19 @@ function isReactNativeMapsInstalled(projectRoot: string): string | null {
   return resolved ? path.dirname(resolved) : null;
 }
 
-function isReactNativeMapsAutolinked(config: Pick<ExpoConfig, '_internal'>): string | null {
+function isReactNativeMapsAutolinked(config: Pick<ExpoConfig, '_internal'>): boolean {
   // Only add the native code changes if we know that the package is going to be linked natively.
   // This is specifically for monorepo support where one app might have react-native-maps (adding it to the node_modules)
   // but another app will not have it installed in the package.json, causing it to not be linked natively.
   // This workaround only exists because react-native-maps doesn't have a config plugin vendored in the package.
-  return (
-    !config._internal?.autolinkedModules ||
-    config._internal.autolinkedModules.includes('react-native-maps')
-  );
+
+  // TODO: `react-native-maps` doesn't use Expo autolinking so we cannot safely disable the module.
+  return true;
+
+  // return (
+  //   !config._internal?.autolinkedModules ||
+  //   config._internal.autolinkedModules.includes('react-native-maps')
+  // );
 }
 
 const withMapsCocoaPods: ConfigPlugin<{ useGoogleMaps: boolean }> = (config, { useGoogleMaps }) => {
@@ -154,13 +156,8 @@ const withMapsCocoaPods: ConfigPlugin<{ useGoogleMaps: boolean }> = (config, { u
       debug('Is Expo Autolinked:', isLinked);
       debug('react-native-maps path:', googleMapsPath);
       if (isLinked && googleMapsPath && useGoogleMaps) {
-        // Make the pod path relative to the ios folder.
-        const googleMapsPodPath = path.relative(
-          config.modRequest.platformProjectRoot,
-          googleMapsPath
-        );
         try {
-          results = addMapsCocoaPods(contents, googleMapsPodPath);
+          results = addMapsCocoaPods(contents);
         } catch (error: any) {
           if (error.code === 'ERR_NO_MATCH') {
             throw new Error(
