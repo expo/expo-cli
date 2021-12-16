@@ -66,16 +66,16 @@ describe(getGoogleMapsApiKey, () => {
 
 describe(addMapsCocoaPods, () => {
   it(`adds maps pods to Podfile`, () => {
-    const results = addMapsCocoaPods(PodfileBasic, '../node_modules/react-native-maps');
+    const results = addMapsCocoaPods(PodfileBasic);
     // matches a static snapshot
     expect(results.contents).toMatchSnapshot();
-    expect(results.contents).toMatch(/2f0a6817224f18601deb2879c9e783ba07387bc9/);
+    expect(results.contents).toMatch(/e9cc66c360abe50bc66d89fffb3c55b034d7d369/);
     // did add new content
     expect(results.didMerge).toBe(true);
     // didn't remove old content
     expect(results.didClear).toBe(false);
 
-    const modded = addMapsCocoaPods(results.contents, '../node_modules/react-native-maps');
+    const modded = addMapsCocoaPods(results.contents);
     // nothing changed
     expect(modded.didMerge).toBe(false);
     expect(modded.didClear).toBe(false);

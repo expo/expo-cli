@@ -431,8 +431,8 @@ platform :ios, '11.0'
 
 target 'myapp' do
   use_unimodules!
-# @generated begin react-native-maps - expo prebuild (DO NOT MODIFY) sync-2f0a6817224f18601deb2879c9e783ba07387bc9
-  pod 'react-native-google-maps', path: '../node_modules/react-native-maps'
+# @generated begin react-native-maps - expo prebuild (DO NOT MODIFY) sync-e9cc66c360abe50bc66d89fffb3c55b034d7d369
+  pod 'react-native-google-maps', path: File.dirname(\`node --print \\"require.resolve('react-native-maps/package.json')\\"\`)
 # @generated end react-native-maps
   config = use_native_modules!
 
