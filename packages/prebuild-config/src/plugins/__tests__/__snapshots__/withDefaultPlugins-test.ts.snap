@@ -1504,12 +1504,6 @@ Object {
                   },
                   Object {
                     "$": Object {
-                      "android:name": "expo.modules.updates.EXPO_SDK_VERSION",
-                      "android:value": "YOUR-APP-SDK-VERSION-HERE",
-                    },
-                  },
-                  Object {
-                    "$": Object {
                       "android:name": "com.facebook.sdk.ApplicationId",
                       "android:value": "@string/facebook_app_id",
                     },
