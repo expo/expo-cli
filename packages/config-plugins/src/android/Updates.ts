@@ -117,7 +117,7 @@ export function setVersionsConfig(
   const mainApplication = getMainApplicationOrThrow(androidManifest);
 
   const runtimeVersion = getRuntimeVersionNullable(config, 'android');
-  if (!runtimeVersion && findMetaDataItem(mainApplication, Config.RUNTIME_VERSION)) {
+  if (!runtimeVersion && findMetaDataItem(mainApplication, Config.RUNTIME_VERSION) > -1) {
     throw new Error(
       'A runtime version is set in your AndroidManifest.xml, but is missing from your app.json/app.config.js. Please either set runtimeVersion in your app.json/app.config.js or remove expo.modules.updates.EXPO_RUNTIME_VERSION from your AndroidManifest.xml.'
     );
