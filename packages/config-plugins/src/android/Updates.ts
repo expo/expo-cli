@@ -119,7 +119,7 @@ export function setVersionsConfig(
   const runtimeVersion = getRuntimeVersionNullable(config, 'android');
   if (!runtimeVersion && findMetaDataItem(mainApplication, Config.RUNTIME_VERSION)) {
     throw new Error(
-      'A runtime version is set in your AndroidManifest.xml, but is missing from your app.json/app.config.js. Please either set the runtimeVersion in your app.json/app.config.js or remove the runtimeVersion from your AndroidManifest.xml.'
+      'A runtime version is set in your AndroidManifest.xml, but is missing from your app.json/app.config.js. Please either set runtimeVersion in your app.json/app.config.js or remove expo.modules.updates.EXPO_RUNTIME_VERSION from your AndroidManifest.xml.'
     );
   }
 
@@ -133,7 +133,7 @@ export function setVersionsConfig(
      */
     const sdkVersion = getSDKVersion(config);
     if (!sdkVersion) {
-      throw new Error('Either a runtime or sdk version must be set in an expo project.');
+      throw new Error('Either a runtime or SDK version must be set in an Expo project.');
     }
     addMetaDataItemToMainApplication(mainApplication, Config.SDK_VERSION, sdkVersion);
   }
