@@ -97,6 +97,11 @@ export function setVersionsConfig(config: ExpoConfigUpdates, expoPlist: ExpoPlis
   const newExpoPlist = { ...expoPlist };
 
   const runtimeVersion = getRuntimeVersionNullable(config, 'ios');
+  if (!runtimeVersion && expoPlist[Config.RUNTIME_VERSION]) {
+    throw new Error(
+      'A runtime version is set in your Expo.plist, but is missing from your app.json/app.config.js. Please either set runtimeVersion in your app.json/app.config.js or remove EXUpdatesRuntimeVersion from your Expo.plist.'
+    );
+  }
   const sdkVersion = getSDKVersion(config);
   if (runtimeVersion) {
     delete newExpoPlist[Config.SDK_VERSION];
