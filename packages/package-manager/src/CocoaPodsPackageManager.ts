@@ -360,16 +360,24 @@ export class CocoaPodsPackageManager implements PackageManager {
     if (!this.silent) {
       console.log(`> pod ${args.join(' ')}`);
     }
-    const promise = spawnAsync('pod', [...args], {
-      // Add the cwd and other options to the spawn options.
-      ...this.options,
-      // We use pipe by default instead of inherit so that we can capture stderr/stdout and process it for errors.
-      // This is particularly required for the `pod install --repo-update` error.
+    const promise = spawnAsync(
+      'pod',
+      [
+        ...args,
+        // Enables colors while collecting output.
+        '--ansi',
+      ],
+      {
+        // Add the cwd and other options to the spawn options.
+        ...this.options,
+        // We use pipe by default instead of inherit so that we can capture stderr/stdout and process it for errors.
+        // This is particularly required for the `pod install --repo-update` error.
 
-      // Later we'll also pipe the stdout/stderr to the terminal when silent is false,
-      // currently this means we lose out on the ansi colors.
-      stdio: 'pipe',
-    });
+        // Later we'll also pipe the stdout/stderr to the terminal when silent is false,
+        // currently this means we lose out on the ansi colors unless passing the `--ansi` flag to every command.
+        stdio: 'pipe',
+      }
+    );
 
     if (!this.silent) {
       // If not silent, pipe the stdout/stderr to the terminal.
