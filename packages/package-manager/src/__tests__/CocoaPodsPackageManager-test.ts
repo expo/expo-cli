@@ -30,8 +30,15 @@ beforeAll(() => {
   });
 });
 
+const originalForceColor = process.env.FORCE_COLOR;
+
 beforeEach(() => {
+  process.env.FORCE_COLOR = '1';
   delete process.env.TEST_COCOAPODS_MANAGER_SPAWN_VALUE_TO_RETURN;
+});
+
+afterAll(() => {
+  process.env.FORCE_COLOR = originalForceColor;
 });
 
 const fakePodRepoUpdateErrorOutput = {
