@@ -129,14 +129,8 @@ describe('installAsync', () => {
 
     manager._runAsync = jest.fn((commands: string[]) => {
       const cmd = commands.join(' ');
-      if (cmd === 'install') {
+      if (['install', 'update EXFileSystem', 'install --repo-update'].includes(cmd)) {
         throw fakePodRepoUpdateErrorOutput;
-      }
-      if (cmd === 'update EXFileSystem') {
-        throw fakePodRepoUpdateErrorOutput;
-      }
-      if (cmd === 'install --repo-update') {
-        return {};
       }
       // eslint-disable-next-line no-throw-literal
       throw 'unhandled ig';
@@ -199,8 +193,7 @@ describe('installAsync', () => {
     // `pod install` > `pod update EXFileSystem` > `pod install`
     expect(manager._runAsync).toHaveBeenNthCalledWith(1, ['install']);
     expect(manager._runAsync).toHaveBeenNthCalledWith(2, ['update', 'EXFileSystem']);
-    expect(manager._runAsync).toHaveBeenNthCalledWith(3, ['install']);
-    expect(manager._runAsync).toBeCalledTimes(3);
+    expect(manager._runAsync).toBeCalledTimes(2);
   });
 
   it(`runs install as expected`, async () => {
