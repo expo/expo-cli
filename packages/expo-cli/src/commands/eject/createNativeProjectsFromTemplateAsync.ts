@@ -4,7 +4,6 @@ import { getBareExtensions, getFileWithExtensions } from '@expo/config/paths';
 import chalk from 'chalk';
 import fs from 'fs-extra';
 import npmPackageArg from 'npm-package-arg';
-import pacote from 'pacote';
 import path from 'path';
 import semver from 'semver';
 
@@ -13,6 +12,7 @@ import Log from '../../log';
 import { logNewSection } from '../../utils/ora';
 import * as GitIgnore from '../utils/GitIgnore';
 import { extractTemplateAppAsync } from '../utils/extractTemplateAppAsync';
+import { assertNpmPackageHasDistTagAsync } from '../utils/npm';
 import { resolveTemplateArgAsync } from './Github';
 import {
   DependenciesModificationResults,
@@ -141,7 +141,7 @@ async function cloneNativeDirectoriesAsync({
       message += Log.chalk.dim(` | synced gitignore`);
     }
     creatingNativeProjectStep.succeed(message);
-  } catch (e) {
+  } catch (e: any) {
     if (!(e instanceof AbortCommandError)) {
       Log.error(e.message);
     }
@@ -160,19 +160,14 @@ async function cloneNativeDirectoriesAsync({
 async function validateBareTemplateExistsAsync(sdkVersion: string): Promise<npmPackageArg.Result> {
   // Validate that the template exists
   const sdkMajorVersionNumber = semver.major(sdkVersion);
-  const templateSpec = npmPackageArg(`expo-template-bare-minimum@sdk-${sdkMajorVersionNumber}`);
-  try {
-    await pacote.manifest(templateSpec);
-  } catch (e) {
-    if (e.code === 'E404') {
-      throw new Error(
-        `Unable to eject because an eject template for SDK ${sdkMajorVersionNumber} was not found.`
-      );
-    } else {
-      throw e;
-    }
-  }
 
+  const templateName = `expo-template-bare-minimum`;
+  const templateTag = `sdk-${sdkMajorVersionNumber}`;
+
+  await assertNpmPackageHasDistTagAsync(templateName, templateTag);
+
+  // TODO(Bacon): Replace this with a simple object.
+  const templateSpec = npmPackageArg(`${templateName}@${templateTag}`);
   return templateSpec;
 }
 

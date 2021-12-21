@@ -74,8 +74,10 @@ export async function extractAndPrepareTemplateAppAsync(
   projectRoot: string,
   config: AppJsonInput | BareAppConfig
 ) {
+  const inputName = 'name' in config ? config.name : config.expo.name;
+
   await extractTemplateAppAsync(templateSpec, projectRoot, {
-    name: 'name' in config ? config.name : config.expo.name,
+    name: inputName,
   });
 
   const appFile = new JsonFile(path.join(projectRoot, 'app.json'));
@@ -85,7 +87,6 @@ export async function extractAndPrepareTemplateAppAsync(
   const packageFile = new JsonFile(path.join(projectRoot, 'package.json'));
   const packageJson = await packageFile.readAsync();
   // name and version are required for yarn workspaces (monorepos)
-  const inputName = 'name' in config ? config.name : config.expo.name;
   packageJson.name = sanitizeNpmPackageName(inputName);
   // These are metadata fields related to the template package, let's remove them from the package.json.
   // A good place to start
