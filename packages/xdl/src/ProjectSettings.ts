@@ -42,6 +42,15 @@ type PackagerInfo = {
 };
 const packagerInfoFile = 'packager-info.json';
 
+export type DeviceInfo = {
+  installationId: string;
+  lastUsed: number;
+};
+export type DevicesInfo = {
+  devices: DeviceInfo[];
+};
+const devicesFile = 'devices.json';
+
 function projectSettingsJsonFile(projectRoot: string): JsonFile<ProjectSettings> {
   return new JsonFile<ProjectSettings>(
     path.join(dotExpoProjectDirectory(projectRoot), projectSettingsFile)
@@ -52,6 +61,10 @@ function packagerInfoJsonFile(projectRoot: string): JsonFile<PackagerInfo> {
   return new JsonFile<PackagerInfo>(
     path.join(dotExpoProjectDirectory(projectRoot), packagerInfoFile)
   );
+}
+
+function devicesJsonFile(projectRoot: string): JsonFile<DevicesInfo> {
+  return new JsonFile<DevicesInfo>(path.join(dotExpoProjectDirectory(projectRoot), devicesFile));
 }
 
 export async function readAsync(projectRoot: string): Promise<ProjectSettings> {
@@ -135,6 +148,64 @@ export async function setPackagerInfoAsync(
   }
 }
 
+let devicesInfo: DevicesInfo | undefined;
+
+export async function readDevicesInfoAsync(projectRoot: string): Promise<DevicesInfo> {
+  if (devicesInfo) {
+    return devicesInfo;
+  }
+
+  try {
+    return await devicesJsonFile(projectRoot).readAsync({
+      cantReadFileDefault: { devices: [] },
+    });
+  } catch (e) {
+    return await devicesJsonFile(projectRoot).writeAsync({ devices: [] });
+  }
+}
+
+export async function setDevicesInfoAsync(
+  projectRoot: string,
+  json: DevicesInfo
+): Promise<DevicesInfo> {
+  devicesInfo = json;
+
+  try {
+    return await devicesJsonFile(projectRoot).mergeAsync(json, {
+      cantReadFileDefault: { devices: [] },
+    });
+  } catch (e) {
+    return await devicesJsonFile(projectRoot).writeAsync(json);
+  }
+}
+
+const MILLISECONDS_IN_30_DAYS = 30 * 24 * 60 * 60 * 1000;
+export async function saveDevicesAsync(
+  projectRoot: string,
+  deviceIds: string | string[]
+): Promise<void> {
+  const currentTime = new Date().getTime();
+  const newDeviceIds = typeof deviceIds === 'string' ? [deviceIds] : deviceIds;
+
+  const { devices } = await readDevicesInfoAsync(projectRoot);
+  const newDevicesJson = devices
+    .filter(device => {
+      if (newDeviceIds.includes(device.installationId)) {
+        return false;
+      }
+      // delete any devices that haven't been used to open this project in 30 days
+      if (currentTime - device.lastUsed > MILLISECONDS_IN_30_DAYS) {
+        return false;
+      }
+      return true;
+    })
+    .concat(newDeviceIds.map(deviceId => ({ installationId: deviceId, lastUsed: currentTime })))
+    // keep only the 10 most recently used devices
+    .sort((a, b) => b.lastUsed - a.lastUsed)
+    .slice(0, 10);
+  await setDevicesInfoAsync(projectRoot, { devices: newDevicesJson });
+}
+
 export function dotExpoProjectDirectory(projectRoot: string): string {
   const dirPath = path.join(projectRoot, '.expo');
   try {
@@ -164,6 +235,10 @@ The "packager-info.json" file contains port numbers and process PIDs that are us
 > What does the "settings.json" file contain?
 
 The "settings.json" file contains the server configuration that is used to serve the application manifest.
+
+> What does the "devices.json" file contain?
+
+The "devices.json" file contains information about devices that have recently opened this project. This is used to populate the "Development sessions" list in your development builds.
 
 > Should I commit the ".expo" folder?
 

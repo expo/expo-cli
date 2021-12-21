@@ -1,6 +1,8 @@
 import { ExpoConfig } from '@expo/config-types';
 import os from 'os';
+import { URLSearchParams } from 'url';
 
+import { ProjectSettings } from '.';
 import {
   ApiV2 as ApiV2Client,
   ConnectionStatus,
@@ -25,12 +27,12 @@ export async function startSession(
   }
 
   if (!ConnectionStatus.isOffline() && keepUpdating) {
-    // TODO(anp) if the user has configured device ids, then notify for those too
     const authSession = await UserManager.getSessionAsync();
+    const { devices } = await ProjectSettings.readDevicesInfoAsync(projectRoot);
 
-    if (!authSession) {
+    if (!authSession && (!devices || !devices.length)) {
       // NOTE(brentvatne) let's just bail out in this case for now
-      // throw new Error('development sessions can only be initiated for logged in users');
+      // throw new Error('development sessions can only be initiated for logged in users or with a device ID');
       return;
     }
 
@@ -44,8 +46,17 @@ export async function startSession(
         throw new Error(`Unsupported platform: ${platform}`);
       }
 
+      let queryString = '';
+      if (devices) {
+        const searchParams = new URLSearchParams();
+        devices.forEach(device => {
+          searchParams.append('deviceId', device.installationId);
+        });
+        queryString = `?${searchParams.toString()}`;
+      }
+
       const apiClient = ApiV2Client.clientForUser(authSession);
-      await apiClient.postAsync('development-sessions/notify-alive', {
+      await apiClient.postAsync(`development-sessions/notify-alive${queryString}`, {
         data: {
           session: {
             description: `${exp.name} on ${os.hostname()}`,

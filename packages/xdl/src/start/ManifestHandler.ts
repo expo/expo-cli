@@ -174,6 +174,15 @@ export function getManifestHandler(projectRoot: string) {
         })
       );
     }
+
+    try {
+      const deviceIds = req.headers['expo-dev-client-id'];
+      if (deviceIds) {
+        await ProjectSettings.saveDevicesAsync(projectRoot, deviceIds);
+      }
+    } catch (e) {
+      ProjectUtils.logError(projectRoot, 'expo', e.stack);
+    }
   };
 }
 
