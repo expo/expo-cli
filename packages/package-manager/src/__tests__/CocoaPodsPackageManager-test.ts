@@ -4,7 +4,11 @@ import os from 'os';
 import path from 'path';
 import stripAnsi from 'strip-ansi';
 
-import { CocoaPodsPackageManager, getPodRepoUpdateMessage } from '../CocoaPodsPackageManager';
+import {
+  CocoaPodsPackageManager,
+  getPodRepoUpdateMessage,
+  getPodUpdateMessage,
+} from '../CocoaPodsPackageManager';
 
 const projectRoot = getTemporaryPath();
 
@@ -75,6 +79,26 @@ const fakePodRepoUpdateErrorOutput = {
   signal: null,
 };
 
+describe(getPodUpdateMessage, () => {
+  it(`matches pod update`, () => {
+    expect(getPodUpdateMessage(fakePodRepoUpdateErrorOutput.stdout)).toStrictEqual({
+      shouldUpdateRepo: true,
+      updatePackage: 'EXFileSystem',
+    });
+  });
+  it(`matches pod update without repo update`, () => {
+    expect(
+      getPodUpdateMessage(
+        "It seems like you've changed the version of the dependency `React-Core/RCTWebSocket` and it differs from the version stored in `Pods/Local Podspecs`.\n" +
+          'You should run `pod update React-Core/RCTWebSocket --no-repo-update` to apply changes made locally.\n'
+      )
+    ).toStrictEqual({
+      shouldUpdateRepo: false,
+      updatePackage: 'React-Core/RCTWebSocket',
+    });
+  });
+});
+
 describe(getPodRepoUpdateMessage, () => {
   it(`formats pod repo update message`, () => {
     expect(
@@ -111,39 +135,37 @@ describe('installAsync', () => {
       if (cmd === 'update EXFileSystem') {
         throw fakePodRepoUpdateErrorOutput;
       }
-      if (cmd === 'repo update') {
+      if (cmd === 'install --repo-update') {
         return {};
       }
       // eslint-disable-next-line no-throw-literal
       throw 'unhandled ig';
     });
 
-    // Ensure a useful error is thrown
     await expect(manager.installAsync()).rejects.toThrowErrorMatchingInlineSnapshot(`
-          "Command \`pod repo update\` failed.
-          └─ Cause: This is often due to native package versions mismatching. Try deleting the 'ios/Pods' folder or the 'ios/Podfile.lock' file and running 'npx pod-install' to resolve.
+            "Command \`pod install --repo-update\` failed.
+            └─ Cause: This is often due to native package versions mismatching. Try deleting the 'ios/Pods' folder or the 'ios/Podfile.lock' file and running 'npx pod-install' to resolve.
 
-          [90m[!] CocoaPods could not find compatible versions for pod \\"EXFileSystem\\":[39m
-          [90m  In snapshot (Podfile.lock):[39m
-          [90m    EXFileSystem (from \`../node_modules/expo-file-system/ios\`)[39m
-          [90m[39m
-          [90m  In Podfile:[39m
-          [90m    EXFileSystem (from \`../node_modules/expo-file-system/ios\`)[39m
-          [90m[39m
-          [90m[39m
-          [90mYou have either:[39m
-          [90m * out-of-date source repos which you can update with \`pod repo update\` or with \`pod install --repo-update\`.[39m
-          [90m * changed the constraints of dependency \`EXFileSystem\` inside your development pod \`EXFileSystem\`.[39m
-          [90m   You should run \`pod update EXFileSystem\` to apply changes you've made.[39m
-          [90m[39m"
-        `);
+            [90m[!] CocoaPods could not find compatible versions for pod \\"EXFileSystem\\":[39m
+            [90m  In snapshot (Podfile.lock):[39m
+            [90m    EXFileSystem (from \`../node_modules/expo-file-system/ios\`)[39m
+            [90m[39m
+            [90m  In Podfile:[39m
+            [90m    EXFileSystem (from \`../node_modules/expo-file-system/ios\`)[39m
+            [90m[39m
+            [90m[39m
+            [90mYou have either:[39m
+            [90m * out-of-date source repos which you can update with \`pod repo update\` or with \`pod install --repo-update\`.[39m
+            [90m * changed the constraints of dependency \`EXFileSystem\` inside your development pod \`EXFileSystem\`.[39m
+            [90m   You should run \`pod update EXFileSystem\` to apply changes you've made.[39m
+            [90m[39m"
+          `);
 
     // `pod install` > `pod update EXFileSystem` > `pod repo update` > `pod install`
     expect(manager._runAsync).toHaveBeenNthCalledWith(1, ['install']);
     expect(manager._runAsync).toHaveBeenNthCalledWith(2, ['update', 'EXFileSystem']);
-    expect(manager._runAsync).toHaveBeenNthCalledWith(3, ['repo', 'update']);
-    expect(manager._runAsync).toHaveBeenNthCalledWith(4, ['install']);
-    expect(manager._runAsync).toBeCalledTimes(4);
+    expect(manager._runAsync).toHaveBeenNthCalledWith(3, ['install', '--repo-update']);
+    expect(manager._runAsync).toBeCalledTimes(3);
   });
 
   it(`auto updates malformed package versions`, async () => {

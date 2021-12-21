@@ -195,72 +195,123 @@ export class CocoaPodsPackageManager implements PackageManager {
     });
   }
 
-  private async _installAsync({
-    spinner,
+  async handleInstallErrorAsync({
+    error,
     shouldUpdate = true,
-  }: { spinner?: Ora; shouldUpdate?: boolean } = {}): Promise<SpawnResult> {
-    try {
-      return await this._runAsync(['install']);
-    } catch (error: any) {
-      // Unknown errors are rethrown.
-      if (!error.output) throw error;
+    updatedPackages = [],
+    spinner,
+  }: {
+    error: any;
+    spinner?: Ora;
+    shouldUpdate?: boolean;
+    updatedPackages?: string[];
+  }) {
+    // Unknown errors are rethrown.
+    if (!error.output) {
+      throw error;
+    }
 
-      // Collect all of the spawn info.
-      const output = error.output.join('\n').trim();
-
-      // To emulate a `pod repo update` error, enter your `ios/Podfile.lock` and change one of `PODS` version numbers to some lower value.
-      const isPodRepoUpdateError = shouldPodRepoUpdate(output);
-
-      // If the error message contains `pod repo update` then we'll try to fix it automatically.
-      if (shouldUpdate && isPodRepoUpdateError) {
-        // Extract useful information from the error message and push it to the spinner.
-        const { message, update } = getPodRepoUpdateMessage(output);
-        if (spinner) {
-          spinner.text = chalk.bold(message);
-        }
-
-        if (!this.silent) {
-          console.warn(chalk.yellow(message));
-        }
-
-        // If a single package is broken, we'll try to update it.
-        // If you manually change a version number in your `Podfile.lock`, you'll observe this error.
-        if (update) {
-          try {
-            await this._runAsync(['update', update]);
-            // If update succeeds, we'll try to install again (skipping `pod repo update`).
-            return await this._installAsync({ spinner, shouldUpdate: false });
-          } catch (error) {
-            // If the specific package update failed then simply run `pod repo update`.
-            const updateMessage = `Failed to update ${chalk.bold(
-              update
-            )}. Attempting to update the repo instead.`;
-            if (spinner) {
-              spinner.text = chalk.bold(updateMessage);
-            }
-
-            if (!this.silent) {
-              console.warn(chalk.yellow(updateMessage));
-            }
-          }
-        }
-        // Finally run `pod repo update` if nothing else worked.
-        await this.podRepoUpdateAsync();
-
-        // Assuming pod repo update succeeded, we'll try to install again.
-        return await this._installAsync({
-          spinner,
-          // Include a boolean to ensure pod repo update isn't invoked in the unlikely case where the pods fail to update.
-          shouldUpdate: false,
-        });
-      }
-
+    // To emulate a `pod install --repo-update` error, enter your `ios/Podfile.lock` and change one of `PODS` version numbers to some lower value.
+    // const isPodRepoUpdateError = shouldPodRepoUpdate(output);
+    if (!shouldUpdate) {
       // If we can't automatically fix the error, we'll just rethrow it with some known troubleshooting info.
       throw getImprovedPodInstallError(error, {
-        errorOutput: output,
-        isPodRepoUpdateError,
-        cwd: this.options.cwd || process.cwd(),
+        cwd: this.options.cwd,
       });
+    }
+
+    // Collect all of the spawn info.
+    const errorOutput = error.output.join(os.EOL).trim();
+
+    // Extract useful information from the error message and push it to the spinner.
+    const { updatePackage, shouldUpdateRepo } = getPodUpdateMessage(errorOutput);
+
+    if (!updatePackage || updatedPackages.includes(updatePackage)) {
+      // `pod install --repo-update`...
+      // Attempt to install again but this time with install --repo-update enabled.
+      return await this._installAsync({
+        spinner,
+        shouldRepoUpdate: true,
+        // Include a boolean to ensure pod install --repo-update isn't invoked in the unlikely case where the pods fail to update.
+        shouldUpdate: false,
+        updatedPackages,
+      });
+    }
+    // Store the package we should update to prevent a loop.
+    updatedPackages.push(updatePackage);
+
+    // If a single package is broken, we'll try to update it.
+    // You can manually test this by changing a version number in your `Podfile.lock`.
+
+    // Attempt `pod update <package> <--no-repo-update>` and then try again.
+    return await this.runInstallTypeCommandAsync(
+      ['update', updatePackage, shouldUpdateRepo ? '' : '--no-repo-update'].filter(Boolean),
+      {
+        formatWarning() {
+          const updateMessage = `Failed to update ${chalk.bold(
+            updatePackage
+          )}. Attempting to update the repo instead.`;
+          return updateMessage;
+        },
+        spinner,
+        updatedPackages,
+      }
+    );
+    // // If update succeeds, we'll try to install again (skipping `pod install --repo-update`).
+    // return await this._installAsync({
+    //   spinner,
+    //   shouldUpdate: false,
+    //   updatedPackages,
+    // });
+  }
+
+  private async _installAsync({
+    shouldRepoUpdate,
+    ...props
+  }: {
+    spinner?: Ora;
+    shouldUpdate?: boolean;
+    updatedPackages?: string[];
+    shouldRepoUpdate?: boolean;
+  } = {}): Promise<SpawnResult> {
+    return await this.runInstallTypeCommandAsync(
+      ['install', shouldRepoUpdate ? '--repo-update' : ''].filter(Boolean),
+      {
+        formatWarning(error: any) {
+          // Extract useful information from the error message and push it to the spinner.
+          return getPodRepoUpdateMessage(error.output.join(os.EOL).trim()).message;
+        },
+        ...props,
+      }
+    );
+  }
+
+  private async runInstallTypeCommandAsync(
+    command: string[],
+    {
+      formatWarning,
+      ...props
+    }: {
+      formatWarning?: (error: Error) => string;
+      spinner?: Ora;
+      shouldUpdate?: boolean;
+      updatedPackages?: string[];
+    } = {}
+  ): Promise<SpawnResult> {
+    try {
+      return await this._runAsync(command);
+    } catch (error: any) {
+      if (formatWarning) {
+        const warning = formatWarning(error);
+        if (props.spinner) {
+          props.spinner.text = chalk.bold(warning);
+        }
+        if (!this.silent) {
+          console.warn(chalk.yellow(warning));
+        }
+      }
+
+      return await this.handleInstallErrorAsync({ error, ...props });
     }
   }
 
@@ -296,7 +347,11 @@ export class CocoaPodsPackageManager implements PackageManager {
     } catch (error: any) {
       error.message = error.message || (error.stderr ?? error.stdout);
 
-      throw new CocoaPodsError('The command `pod repo update` failed', 'COMMAND_FAILED', error);
+      throw new CocoaPodsError(
+        'The command `pod install --repo-update` failed',
+        'COMMAND_FAILED',
+        error
+      );
     }
   }
 
@@ -309,7 +364,7 @@ export class CocoaPodsPackageManager implements PackageManager {
       // Add the cwd and other options to the spawn options.
       ...this.options,
       // We use pipe by default instead of inherit so that we can capture stderr/stdout and process it for errors.
-      // This is particularly required for the `pod repo update` error.
+      // This is particularly required for the `pod install --repo-update` error.
 
       // Later we'll also pipe the stdout/stderr to the terminal when silent is false,
       // currently this means we lose out on the ansi colors.
@@ -328,30 +383,39 @@ export class CocoaPodsPackageManager implements PackageManager {
   }
 }
 
-/** When pods are outdated, they'll throw an error informing you to run "pod repo update" */
+/** When pods are outdated, they'll throw an error informing you to run "pod install --repo-update" */
 function shouldPodRepoUpdate(errorOutput: string) {
   const output = errorOutput;
-  const isPodRepoUpdateError = output.includes('pod repo update');
+  const isPodRepoUpdateError =
+    output.includes('pod repo update') || output.includes('--no-repo-update');
   return isPodRepoUpdateError;
+}
+
+export function getPodUpdateMessage(output: string) {
+  const props = output.match(
+    /run ['"`]pod update ([\w-_\d/]+)( --no-repo-update)?['"`] to apply changes/
+  );
+
+  return {
+    updatePackage: props?.[1] ?? null,
+    shouldUpdateRepo: !props?.[2],
+  };
 }
 
 export function getPodRepoUpdateMessage(errorOutput: string) {
   const warningInfo = extractMissingDependencyError(errorOutput);
-  const brokenPackage =
-    errorOutput.match(
-      /You should run ['"`]pod update ([\w-_\d\s]+)['"`] to apply changes you've made/
-    )?.[1] ?? null;
+  const brokenPackage = getPodUpdateMessage(errorOutput);
 
   let message: string;
   if (warningInfo) {
     message = `Couldn't install: ${warningInfo[1]} » ${chalk.underline(warningInfo[0])}.`;
-  } else if (brokenPackage) {
-    message = `Couldn't install: ${brokenPackage}.`;
+  } else if (brokenPackage?.updatePackage) {
+    message = `Couldn't install: ${brokenPackage?.updatePackage}.`;
   } else {
     message = `Couldn't install Pods.`;
   }
   message += ` Updating the Pods project and trying again...`;
-  return { message, update: brokenPackage };
+  return { message, ...brokenPackage };
 }
 
 /**
@@ -362,17 +426,16 @@ export function getPodRepoUpdateMessage(errorOutput: string) {
  */
 export function getImprovedPodInstallError(
   error: SpawnResult & Error,
-  {
-    errorOutput,
-    isPodRepoUpdateError,
-    cwd,
-  }: { errorOutput: string; isPodRepoUpdateError: boolean; cwd: string }
+  { cwd = process.cwd() }: { cwd?: string }
 ): Error {
+  // Collect all of the spawn info.
+  const errorOutput = error.output.join(os.EOL).trim();
+
   if (error.stdout.match(/No [`'"]Podfile[`'"] found in the project directory/)) {
     // Ran pod install but no Podfile was found.
     error.message = `No Podfile found in directory: ${cwd}. Ensure CocoaPods is setup any try again.`;
-  } else if (isPodRepoUpdateError) {
-    // Ran pod install but the repo update step failed.
+  } else if (shouldPodRepoUpdate(errorOutput)) {
+    // Ran pod install but the install --repo-update step failed.
     const warningInfo = extractMissingDependencyError(errorOutput);
     let reason: string;
     if (warningInfo) {
@@ -407,7 +470,11 @@ export function getImprovedPodInstallError(
         error.message += `\n\n${chalk.gray(warning)}`;
       }
     }
-    return new CocoaPodsError('Command `pod repo update` failed.', 'COMMAND_FAILED', error);
+    return new CocoaPodsError(
+      'Command `pod install --repo-update` failed.',
+      'COMMAND_FAILED',
+      error
+    );
   } else {
     let stderr: string | null = error.stderr.trim();
 
@@ -420,10 +487,7 @@ export function getImprovedPodInstallError(
       if (error.message?.match(/pod exited with non-zero code: 1/)) {
         error.message = '';
       }
-      // Remove `<PBXResourcesBuildPhase UUID=`13B07F8E1A680F5B00A75B9A`>` type errors when useful messages exist.
-      if (stderr.match(/PBXResourcesBuildPhase/)) {
-        stderr = null;
-      }
+      stderr = null;
     }
 
     error.message = [usefulError, error.message, stderr].filter(Boolean).join('\n');
