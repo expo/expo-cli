@@ -1,3 +1,7 @@
+import fs from 'fs';
+import path from 'path';
+
+import { getDefaultVersion } from '../../../utils/expoVersionMappings';
 import { updatePodfile } from '../withIosModulesPodfile';
 
 describe(updatePodfile, () => {
@@ -47,6 +51,9 @@ platform :ios, '10.0'
 
 target 'HelloWorld' do
   use_expo_modules!
+  post_integrate do |installer|
+    expo_patch_react_imports!(installer)
+  end
   config = use_native_modules!
 
   use_react_native!(:path => config["reactNativePath"])
@@ -76,6 +83,47 @@ target 'HelloWorld-tvOS' do
 end
 `;
 
-    expect(updatePodfile(contents, 'HelloWorld')).toEqual(expectContents);
+    expect(updatePodfile(contents, 'HelloWorld', getDefaultVersion())).toEqual(expectContents);
+  });
+
+  it('minimum support for existing post_integrate hook', () => {
+    const contents = `\
+target 'HelloWorld' do
+  config = use_native_modules!
+
+  use_react_native!(:path => config["reactNativePath"])
+
+  post_integrate do |installer|
+    puts "Existing post_integrate hook"
+  end
+end
+`;
+
+    const expectContents = `\
+require File.join(File.dirname(\`node --print "require.resolve('expo/package.json')"\`), "scripts/autolinking")
+target 'HelloWorld' do
+  use_expo_modules!
+  config = use_native_modules!
+
+  use_react_native!(:path => config["reactNativePath"])
+
+  post_integrate do |installer|
+    expo_patch_react_imports!(installer)
+    puts "Existing post_integrate hook"
+  end
+end
+`;
+
+    expect(updatePodfile(contents, 'HelloWorld', getDefaultVersion())).toEqual(expectContents);
+  });
+});
+
+describe('withIosModulesPodfile sdkVersion snapshots', () => {
+  const podfileFixture = fs.readFileSync(path.join(__dirname, 'fixtures', 'Podfile'), 'utf-8');
+
+  ['43.0.0', '44.0.0'].forEach(sdkVersion => {
+    it(`sdkVersion ${sdkVersion}`, () => {
+      expect(updatePodfile(podfileFixture, 'HelloWorld', sdkVersion)).toMatchSnapshot();
+    });
   });
 });
