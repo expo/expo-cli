@@ -94,29 +94,6 @@ export async function getNpmUrlAsync(packageName: string): Promise<string> {
   );
 }
 
-/**
- * Given an NPM package name, returns a record where the keys are dist-tags and the values are the associated versions.
- *
- * Example: `npm v expo-template-bare-minimum dist-tags --json`
- * ```json
- * {
- *   "latest": "44.0.7",
- *   "sdk-43": "43.0.13",
- *   // ...
- * }
- * ```
- */
-export async function getNpmDistTagsAsync(packageName: string): Promise<Record<string, string>> {
-  const results = await npmViewAsync(packageName, 'dist-tags');
-  assert(results, `Could not get npm url for package "${packageName}"`);
-  // If the tag is arbitrary, the results will be an object of objects, use the latest value.
-  const vals = Object.values(results);
-  if (typeof vals[0] !== 'string') {
-    return vals[vals.length - 1] as Record<string, string>;
-  }
-  return results as Record<string, string>;
-}
-
 // @ts-ignore
 const pipeline = promisify(Stream.pipeline);
 
@@ -173,8 +150,6 @@ export async function extractNpmTarballAsync(
 
   await fs.ensureDir(cwd);
 
-  // TODO: Add offline cache support
-  // `cache: path.join(UserSettings.dotExpoHomeDirectory(), 'template-cache'),`
   return pipeline(
     stream,
     tar.extract(
