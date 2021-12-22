@@ -54,7 +54,6 @@ const FEATURED_TEMPLATES = [
   },
 ];
 
-const BARE_WORKFLOW_TEMPLATES = ['expo-template-bare-minimum'];
 const isMacOS = process.platform === 'darwin';
 
 function assertValidName(folderName: string) {
