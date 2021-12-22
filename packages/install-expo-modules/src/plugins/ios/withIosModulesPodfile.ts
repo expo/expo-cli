@@ -1,5 +1,4 @@
 import { ConfigPlugin, IOSConfig, withDangerousMod } from '@expo/config-plugins';
-import { insertContentsAtOffset } from '@expo/config-plugins/build/utils/commonCodeMod';
 import fs from 'fs';
 import path from 'path';
 import semver from 'semver';
@@ -33,13 +32,8 @@ export function updatePodfile(
 
   // use_expo_modules!
   if (!contents.match(/^\s*use_expo_modules!\s*$/m)) {
-    const targetRegExp = new RegExp(`^\\s*target\\s+['"]${projectName}['"]\\s+do\\s*$`, 'm');
-    const matched = contents.match(targetRegExp);
-    if (!matched) {
-      throw new Error(`Cannot find target at Podfile - targetName[${projectName}]`);
-    }
-    const offset = (matched?.index ?? 0) + matched[0].length;
-    contents = insertContentsAtOffset(contents, '\n  use_expo_modules!', offset);
+    const targetRegExp = new RegExp(`(^\\s*target\\s+['"]${projectName}['"]\\s+do\\s*$)`, 'm');
+    contents = contents.replace(targetRegExp, '$1\n  use_expo_modules!');
   }
 
   // expo_patch_react_imports!
