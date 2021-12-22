@@ -1,4 +1,4 @@
-import { sanitizeNpmPackageName } from '../extractTemplateAppAsync';
+import { sanitizeNpmPackageName } from '../npm';
 
 describe(sanitizeNpmPackageName, () => {
   it(`leaves valid names`, () => {

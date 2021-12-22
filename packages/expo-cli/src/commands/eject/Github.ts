@@ -3,19 +3,10 @@ import * as fs from 'fs-extra';
 import got from 'got';
 import { Ora } from 'ora';
 import path from 'path';
-import { Stream } from 'stream';
-import tar from 'tar';
-import { promisify } from 'util';
 
 import CommandError, { AbortCommandError } from '../../CommandError';
-import {
-  createEntryResolver,
-  createFileTransform,
-  extractTemplateAppFolderAsync,
-} from '../utils/extractTemplateAppAsync';
-
-// @ts-ignore
-const pipeline = promisify(Stream.pipeline);
+import Log from '../../log';
+import { extractLocalNpmTarballAsync, extractNpmTarballFromUrlAsync } from '../utils/npm';
 
 type RepoInfo = {
   username: string;
@@ -80,7 +71,7 @@ export async function resolveTemplateArgAsync(
     try {
       // @ts-ignore
       repoUrl = new URL(template);
-    } catch (error) {
+    } catch (error: any) {
       if (error.code !== 'ERR_INVALID_URL') {
         oraInstance.fail(error);
         throw error;
@@ -93,7 +84,8 @@ export async function resolveTemplateArgAsync(
         throw new CommandError(`template file does not exist: ${templatePath}`);
       }
 
-      return await extractTemplateAppFolderAsync(templatePath, tempDir, { name: appName });
+      await extractLocalNpmTarballAsync(templatePath, { cwd: tempDir, name: appName });
+      return tempDir;
     }
 
     if (repoUrl.origin !== 'https://github.com') {
@@ -144,16 +136,13 @@ function downloadAndExtractRepoAsync(
   const projectName = path.basename(root);
 
   const strip = filePath ? filePath.split('/').length + 1 : 1;
-  return pipeline(
-    got.stream(`https://codeload.github.com/${username}/${name}/tar.gz/${branch}`),
-    tar.extract(
-      {
-        cwd: root,
-        transform: createFileTransform({ name: projectName }),
-        onentry: createEntryResolver(projectName),
-        strip,
-      },
-      [`${name}-${branch}${filePath ? `/${filePath}` : ''}`]
-    )
-  );
+
+  const url = `https://codeload.github.com/${username}/${name}/tar.gz/${branch}`;
+  Log.debug('Downloading tarball from:', url);
+  return extractNpmTarballFromUrlAsync(url, {
+    cwd: root,
+    name: projectName,
+    strip,
+    fileList: [`${name}-${branch}${filePath ? `/${filePath}` : ''}`],
+  });
 }

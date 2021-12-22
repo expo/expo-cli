@@ -163,39 +163,7 @@ function padEnd(str: string, width: number): string {
   return str + Array(len + 1).join(' ');
 }
 
-export async function actionAsync(incomingProjectRoot: string, command: Partial<Options>) {
-  const options = parseOptions(command);
-
-  // Resolve the name, and projectRoot
-  let projectRoot: string;
-  if (!incomingProjectRoot && options.yes) {
-    projectRoot = path.resolve(process.cwd());
-    const folderName = path.basename(projectRoot);
-    assertValidName(folderName);
-    await assertFolderEmptyAsync(projectRoot, folderName);
-  } else {
-    projectRoot = await resolveProjectRootAsync(incomingProjectRoot || options.name);
-  }
-
-  let resolvedTemplate: string | null = options.template ?? null;
-  // @ts-ignore: This guards against someone passing --template without a name after it.
-  if (resolvedTemplate === true) {
-    throw new CommandError('Please specify the template name');
-  }
-
-  // Supported templates:
-  // `-t tabs` (tabs, blank, bare-minimum, expo-template-blank-typescript)
-  // `-t tabs@40`
-  // `-t tabs@sdk-40`
-  // `-t tabs@latest`
-  // `-t expo-template-tabs@latest`
-
-  // Download and sync templates
-  // TODO(Bacon): revisit
-  if (options.yes && !resolvedTemplate) {
-    resolvedTemplate = 'blank';
-  }
-
+async function resolveTemplateAsync(resolvedTemplate?: string | null) {
   const {
     version: newestSdkVersion,
     data: newestSdkReleaseData,
@@ -230,37 +198,73 @@ export async function actionAsync(incomingProjectRoot: string, command: Partial<
       templateSpec.name = templateSpec.escapedName;
       templateSpec.raw = templateSpec.escapedName;
     }
-  } else {
-    const descriptionColumn =
-      Math.max(...FEATURED_TEMPLATES.map(t => (typeof t === 'object' ? t.shortName.length : 0))) +
-      2;
-    const template = await selectAsync(
-      {
-        message: 'Choose a template:',
-        optionsPerPage: 20,
-        choices: FEATURED_TEMPLATES.map(template => {
-          if (typeof template === 'string') {
-            return prompts.separator(template);
-          } else {
-            return {
-              value: template.name,
-              title:
-                chalk.bold(padEnd(template.shortName, descriptionColumn)) +
-                template.description.trim(),
-              short: template.name,
-            };
-          }
-        }),
-      },
-      {
-        nonInteractiveHelp:
-          '--template: argument is required in non-interactive mode. Valid choices are: "blank", "tabs", "bare-minimum" or any custom template (name of npm package).',
-      }
-    );
-    templateSpec = npmPackageArg(`${template}${versionParam}`);
+
+    return `${templateSpec.name ?? templateSpec.raw}@${templateSpec.fetchSpec ?? 'latest'}`;
   }
 
-  Log.debug(`Using template: ${templateSpec.name}@${templateSpec.fetchSpec}`);
+  const descriptionColumn =
+    Math.max(...FEATURED_TEMPLATES.map(t => (typeof t === 'object' ? t.shortName.length : 0))) + 2;
+  const template = await selectAsync(
+    {
+      message: 'Choose a template:',
+      optionsPerPage: 20,
+      choices: FEATURED_TEMPLATES.map(template => {
+        if (typeof template === 'string') {
+          return prompts.separator(template);
+        } else {
+          return {
+            value: template.name,
+            title:
+              chalk.bold(padEnd(template.shortName, descriptionColumn)) +
+              template.description.trim(),
+            short: template.name,
+          };
+        }
+      }),
+    },
+    {
+      nonInteractiveHelp:
+        '--template: argument is required in non-interactive mode. Valid choices are: "blank", "tabs", "bare-minimum" or any custom template (name of npm package).',
+    }
+  );
+  return `${template}${versionParam}`;
+}
+
+export async function actionAsync(incomingProjectRoot: string, command: Partial<Options>) {
+  const options = parseOptions(command);
+
+  // Resolve the name, and projectRoot
+  let projectRoot: string;
+  if (!incomingProjectRoot && options.yes) {
+    projectRoot = path.resolve(process.cwd());
+    const folderName = path.basename(projectRoot);
+    assertValidName(folderName);
+    await assertFolderEmptyAsync(projectRoot, folderName);
+  } else {
+    projectRoot = await resolveProjectRootAsync(incomingProjectRoot || options.name);
+  }
+
+  let resolvedTemplate: string | null = options.template ?? null;
+  // @ts-ignore: This guards against someone passing --template without a name after it.
+  if (resolvedTemplate === true) {
+    throw new CommandError('Please specify the template name');
+  }
+
+  // Download and sync templates
+  // TODO(Bacon): revisit
+  if (options.yes && !resolvedTemplate) {
+    resolvedTemplate = 'blank';
+  }
+
+  // Supported templates:
+  // `-t tabs` (tabs, blank, bare-minimum, expo-template-blank-typescript)
+  // `-t tabs@40`
+  // `-t tabs@sdk-40`
+  // `-t tabs@latest`
+  // `-t expo-template-tabs@latest`
+  const npmPackageName = await resolveTemplateAsync(resolvedTemplate);
+
+  Log.debug(`Using template: ${npmPackageName}`);
 
   const projectName = path.basename(projectRoot);
   const initialConfig: Record<string, any> & { expo: any } = {
@@ -275,7 +279,11 @@ export async function actionAsync(incomingProjectRoot: string, command: Partial<
   const extractTemplateStep = logNewSection('Downloading template.');
   let projectPath;
   try {
-    projectPath = await extractAndPrepareTemplateAppAsync(templateSpec, projectRoot, initialConfig);
+    projectPath = await extractAndPrepareTemplateAppAsync(
+      npmPackageName,
+      projectRoot,
+      initialConfig
+    );
     extractTemplateStep.succeed('Downloaded template.');
   } catch (e) {
     extractTemplateStep.fail('Something went wrong while downloading and extracting the template.');

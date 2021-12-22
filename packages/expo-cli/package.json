@@ -43,6 +43,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.9.0",
+    "@types/cacache": "^15.0.1",
     "@types/command-exists": "^1.2.0",
     "@types/dateformat": "^3.0.0",
     "@types/fs-extra": "^9.0.1",
@@ -80,6 +81,7 @@
     "better-opn": "^3.0.1",
     "boxen": "^5.0.1",
     "bplist-parser": "0.2.0",
+    "cacache": "^15.3.0",
     "chalk": "^4.0.0",
     "cli-table3": "^0.6.0",
     "command-exists": "^1.2.8",
@@ -102,7 +104,6 @@
     "minipass": "2.3.5",
     "npm-package-arg": "6.1.0",
     "ora": "3.4.0",
-    "pacote": "^11.1.0",
     "pngjs": "3.4.0",
     "progress": "2.0.3",
     "prompts": "^2.3.2",

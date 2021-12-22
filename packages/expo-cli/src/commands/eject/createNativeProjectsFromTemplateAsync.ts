@@ -3,7 +3,6 @@ import { ModPlatform } from '@expo/config-plugins';
 import { getBareExtensions, getFileWithExtensions } from '@expo/config/paths';
 import chalk from 'chalk';
 import fs from 'fs-extra';
-import npmPackageArg from 'npm-package-arg';
 import path from 'path';
 import semver from 'semver';
 
@@ -11,8 +10,7 @@ import { AbortCommandError, SilentError } from '../../CommandError';
 import Log from '../../log';
 import { logNewSection } from '../../utils/ora';
 import * as GitIgnore from '../utils/GitIgnore';
-import { extractTemplateAppAsync } from '../utils/extractTemplateAppAsync';
-import { assertNpmPackageHasDistTagAsync } from '../utils/npm';
+import { downloadAndExtractNpmModuleAsync, getNpmUrlAsync } from '../utils/npm';
 import { resolveTemplateArgAsync } from './Github';
 import {
   DependenciesModificationResults,
@@ -115,8 +113,12 @@ async function cloneNativeDirectoriesAsync({
     if (template) {
       await resolveTemplateArgAsync(tempDir, creatingNativeProjectStep, exp.name, template);
     } else {
-      const templateSpec = await validateBareTemplateExistsAsync(exp.sdkVersion!);
-      await extractTemplateAppAsync(templateSpec, tempDir, exp);
+      const templatePackageName = await getTemplateNpmPackageName(exp.sdkVersion);
+      await getNpmUrlAsync(templatePackageName);
+      await downloadAndExtractNpmModuleAsync(templatePackageName, {
+        cwd: tempDir,
+        name: exp.name,
+      });
     }
     [copiedPaths, skippedPaths] = await copyPathsFromTemplateAsync(
       projectRoot,
@@ -157,18 +159,14 @@ async function cloneNativeDirectoriesAsync({
   return copiedPaths;
 }
 
-async function validateBareTemplateExistsAsync(sdkVersion: string): Promise<npmPackageArg.Result> {
-  // Validate that the template exists
-  const sdkMajorVersionNumber = semver.major(sdkVersion);
-
-  const templateName = `expo-template-bare-minimum`;
-  const templateTag = `sdk-${sdkMajorVersionNumber}`;
-
-  await assertNpmPackageHasDistTagAsync(templateName, templateTag);
-
-  // TODO(Bacon): Replace this with a simple object.
-  const templateSpec = npmPackageArg(`${templateName}@${templateTag}`);
-  return templateSpec;
+/** Given an `sdkVersion` like `44.0.0` return a fully qualified NPM package name like: `expo-template-bare-minimum@sdk-44` */
+function getTemplateNpmPackageName(sdkVersion?: string): string {
+  // When undefined or UNVERSIONED, we use the latest version.
+  if (!sdkVersion || sdkVersion === 'UNVERSIONED') {
+    Log.log('Using an unspecified Expo SDK version. The latest template will be used.');
+    return `expo-template-bare-minimum@latest`;
+  }
+  return `expo-template-bare-minimum@sdk-${semver.major(sdkVersion)}`;
 }
 
 async function copyPathsFromTemplateAsync(
