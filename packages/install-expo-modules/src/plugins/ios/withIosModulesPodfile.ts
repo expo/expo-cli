@@ -46,6 +46,8 @@ export function updatePodfile(
           '$1\n    expo_patch_react_imports!(installer)'
         );
       } else {
+        // If there's no existing post_integrate hook,
+        // use the `use_expo_modules!` as the insertion anchor.
         contents = contents.replace(
           /(\buse_expo_modules!\n)/gm,
           `$1\
