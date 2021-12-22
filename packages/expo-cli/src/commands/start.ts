@@ -13,19 +13,19 @@ export default (program: any) => {
     .option('-c, --clear', 'Clear the Metro bundler cache')
     // TODO(anp) set a default for this dynamically based on whether we're inside a container?
     .option('--max-workers <num>', 'Maximum number of tasks to allow Metro to spawn.')
-    .option('--dev', deprecatedHelp('dev mode is used by default'))
     .option('--no-dev', 'Turn development mode off')
     .option('--minify', 'Minify code')
-    .option('--no-minify', deprecatedHelp('minify is disabled by default'))
     .option('--https', 'To start webpack with https protocol')
     .option('--force-manifest-type <manifest-type>', 'Override auto detection of manifest type')
     .option(
       '-p, --port <port>',
       'Port to start the native Metro bundler on (does not apply to web or tunnel). Default: 19000'
     )
-    .option('--no-https', deprecatedHelp('http is used by default'))
     .urlOpts()
     .allowOffline()
+    .option('--dev', deprecatedHelp('Dev mode is used by default'))
+    .option('--no-minify', deprecatedHelp('Minify is disabled by default'))
+    .option('--no-https', deprecatedHelp('https is disabled by default'))
     .asyncActionProjectDir(
       async (projectRoot: string, options: RawStartOptions): Promise<void> => {
         const { normalizeOptionsAsync } = await import('./start/parseStartOptions');
@@ -40,17 +40,17 @@ export default (program: any) => {
     .alias('web')
     .description('Start a Webpack dev server for the web app')
     .helpGroup('core')
-    .option('--dev', deprecatedHelp('dev mode is used by default'))
     .option('--no-dev', 'Turn development mode off')
     .option('--minify', 'Minify code')
-    .option('--no-minify', deprecatedHelp('minify is disabled by default'))
     .option('--https', 'To start webpack with https protocol')
-    .option('--no-https', deprecatedHelp('http is used by default'))
     .option('--force-manifest-type <manifest-type>', 'Override auto detection of manifest type')
     .option('-p, --port <port>', 'Port to start the Webpack bundler on. Default: 19006')
     .option('-s, --send-to [dest]', 'An email address to send a link to')
     .urlOpts()
     .allowOffline()
+    .option('--dev', deprecatedHelp('Dev mode is used by default'))
+    .option('--no-minify', deprecatedHelp('Minify is disabled by default'))
+    .option('--no-https', deprecatedHelp('https is disabled by default'))
     .asyncActionProjectDir(
       async (projectRoot: string, options: RawStartOptions): Promise<void> => {
         const { normalizeOptionsAsync } = await import('./start/parseStartOptions');
