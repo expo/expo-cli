@@ -74,6 +74,11 @@ export async function startDevServerAsync(
   options.unversioned =
     !projectConfig.exp.sdkVersion || projectConfig.exp.sdkVersion === 'UNVERSIONED';
 
+  // Override for default body-parser raw-body limit for json()
+  if (projectConfig.exp.devServer?.bodyParserLimit) {
+    options.bodyParserLimit = projectConfig.exp.devServer.bodyParserLimit;
+  }
+
   const { server, middleware, messageSocket } = await runMetroDevServerAsync(projectRoot, options);
 
   const useExpoUpdatesManifest = startOptions.forceManifestType === 'expo-updates';

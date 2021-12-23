@@ -37,10 +37,12 @@ export function createDevServerMiddleware({
   watchFolders,
   port,
   logger,
+  bodyParserLimit,
 }: {
   watchFolders: readonly string[];
   port: number;
   logger: Log;
+  bodyParserLimit: string | number;
 }): { middleware: ConnectServer; attachToServer: AttachToServerFunction; logger: Log } {
   const { middleware, attachToServer } = createReactNativeDevServerMiddleware({
     port,
@@ -57,7 +59,7 @@ export function createDevServerMiddleware({
   middleware.use(remoteDevtoolsCorsMiddleware);
   prependMiddleware(middleware, suppressRemoteDebuggingErrorMiddleware);
 
-  middleware.use(bodyParser.json());
+  middleware.use(bodyParser.json({ limit: bodyParserLimit }));
   middleware.use('/logs', clientLogsMiddleware(logger));
   middleware.use('/inspector', createJsInspectorMiddleware());
 

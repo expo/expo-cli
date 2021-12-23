@@ -162,6 +162,15 @@ export interface ExpoConfig {
     silentLaunch?: boolean;
   };
   /**
+   * Configuration for dev-server package
+   */
+  devServer?: {
+    /**
+     * DevServerMiddleware option - Override for default body-parser raw-body limit for json()
+     */
+    bodyParserLimit?: string | number;
+  };
+  /**
    * **Standalone Apps Only**. URL scheme to link into your app. For example, if we set this to `'demo'`, then demo:// URLs would open your app when tapped.
    */
   scheme?: string;

@@ -89,6 +89,7 @@ export async function runMetroDevServerAsync(
     port: metroConfig.server.port,
     watchFolders: metroConfig.watchFolders,
     logger: options.logger,
+    bodyParserLimit: options.bodyParserLimit,
   });
 
   const customEnhanceMiddleware = metroConfig.server.enhanceMiddleware;
