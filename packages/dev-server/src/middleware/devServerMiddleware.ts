@@ -42,7 +42,7 @@ export function createDevServerMiddleware({
   watchFolders: readonly string[];
   port: number;
   logger: Log;
-  bodyParserLimit: string | number;
+  bodyParserLimit?: string | number;
 }): { middleware: ConnectServer; attachToServer: AttachToServerFunction; logger: Log } {
   const { middleware, attachToServer } = createReactNativeDevServerMiddleware({
     port,

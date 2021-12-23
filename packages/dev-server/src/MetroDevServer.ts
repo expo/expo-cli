@@ -24,6 +24,7 @@ export type MetroDevServerOptions = LoadOptions & {
   logger: Log;
   quiet?: boolean;
   unversioned?: boolean;
+  bodyParserLimit?: string | number;
 };
 export type BundleOptions = {
   entryPoint: string;
