@@ -2,7 +2,6 @@ import { ExpoConfig, getAccountUsername, ProjectConfig } from '@expo/config';
 import { compileModsAsync, ModPlatform } from '@expo/config-plugins';
 import { getPrebuildConfigAsync } from '@expo/prebuild-config';
 import util from 'util';
-import { UserManager } from 'xdl';
 
 import Log from '../../log';
 import {
