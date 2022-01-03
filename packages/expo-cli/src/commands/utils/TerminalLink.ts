@@ -1,6 +1,5 @@
+import chalk from 'chalk';
 import terminalLink from 'terminal-link';
-
-import Log from '../../log';
 
 /**
  * When linking isn't available, fallback to displaying the URL beside the
@@ -39,15 +38,15 @@ export function fallbackToUrl(text: string, url: string): string {
  * @param url
  */
 export function learnMore(url: string): string {
-  return terminalLink(Log.chalk.underline('Learn more.'), url, {
-    fallback: (text, url) => `Learn more: ${Log.chalk.underline(url)}`,
+  return terminalLink(chalk.underline('Learn more.'), url, {
+    fallback: (text, url) => `Learn more: ${chalk.underline(url)}`,
   });
 }
 
 export function linkedText(text: string, url: string): string {
   return terminalLink(text, url, {
     fallback: (text, url) => {
-      return `${text} ${Log.chalk.dim.underline(url)}`;
+      return `${text} ${chalk.dim.underline(url)}`;
     },
   });
 }

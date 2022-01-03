@@ -5,22 +5,23 @@ import Log from '../../log';
 import { learnMore } from '../utils/TerminalLink';
 import { PrebuildResults } from './prebuildAppAsync';
 
-export function logNextSteps({
-  hasAssetBundlePatterns,
-  hasNewProjectFiles,
-  legacyUpdates,
-  platforms,
-  podInstall,
-  nodeInstall,
-  packageManager,
-}: PrebuildResults) {
+export function logNextSteps(
+  { exp, hasNewProjectFiles, platforms, podInstall, nodeInstall, packageManager }: PrebuildResults,
+  {
+    legacyUpdates,
+  }: {
+    legacyUpdates: boolean;
+  }
+) {
+  const hasAssetBundlePatterns = exp.hasOwnProperty('assetBundlePatterns');
+
   Log.newLine();
   Log.nested(`➡️  ${chalk.bold('Next steps')}`);
 
   // Log a warning about needing to install node modules
   if (nodeInstall) {
     const installCmd = packageManager === 'npm' ? 'npm install' : 'yarn';
-    Log.nested(`\u203A ⚠️  Install node modules: ${Log.chalk.bold(installCmd)}`);
+    Log.nested(`\u203A ⚠️  Install node modules: ${chalk.bold(installCmd)}`);
   }
   if (podInstall) {
     Log.nested(
@@ -44,7 +45,7 @@ export function logNextSteps({
     Log.nested(
       `\u203A 📁 The property ${chalk.bold(
         `assetBundlePatterns`
-      )} does not have the same effect in the bare workflow.\n  ${Log.chalk.dim(
+      )} does not have the same effect in the bare workflow.\n  ${chalk.dim(
         learnMore('https://docs.expo.dev/bare/updating-your-app/#embedding-assets')
       )}`
     );
@@ -62,7 +63,7 @@ export function logNextSteps({
         })
       } has been configured in your project. Before you do a release build, make sure you run ${chalk.bold(
         'expo publish'
-      )}. ${Log.chalk.dim(learnMore('https://expo.fyi/release-builds-with-expo-updates'))}`
+      )}. ${chalk.dim(learnMore('https://expo.fyi/release-builds-with-expo-updates'))}`
     );
   }
 
