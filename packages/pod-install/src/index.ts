@@ -51,7 +51,16 @@ async function runAsync(): Promise<void> {
     await CocoaPodsPackageManager.installCLIAsync({ nonInteractive: program.nonInteractive });
   }
   const manager = new CocoaPodsPackageManager({ cwd: projectRoot });
-  await manager.installAsync();
+  try {
+    await manager.installAsync();
+  } catch (error: any) {
+    if (error.isPackageManagerError) {
+      console.error(chalk.red(error.message));
+      process.exit(1);
+    }
+    // throw unhandled
+    throw error;
+  }
 }
 
 (async () => {
