@@ -1,6 +1,7 @@
 import chalk from 'chalk';
 import * as fs from 'fs-extra';
 import got from 'got';
+import fetch from 'node-fetch';
 import { Ora } from 'ora';
 import path from 'path';
 import { Stream } from 'stream';
@@ -25,8 +26,8 @@ type RepoInfo = {
 };
 
 async function isUrlOk(url: string): Promise<boolean> {
-  const res = await got(url).catch(e => e);
-  return res.statusCode === 200;
+  const res = await fetch(url);
+  return res.status === 200;
 }
 
 async function getRepoInfo(url: any, examplePath?: string): Promise<RepoInfo | undefined> {
@@ -36,13 +37,11 @@ async function getRepoInfo(url: any, examplePath?: string): Promise<RepoInfo | u
   // Support repos whose entire purpose is to be an example, e.g.
   // https://github.com/:username/:my-cool-example-repo-name.
   if (t === undefined) {
-    const infoResponse = await got(`https://api.github.com/repos/${username}/${name}`).catch(
-      e => e
-    );
-    if (infoResponse.statusCode !== 200) {
+    const infoResponse = await fetch(`https://api.github.com/repos/${username}/${name}`);
+    if (infoResponse.status !== 200) {
       return;
     }
-    const info = JSON.parse(infoResponse.body);
+    const info = await infoResponse.json();
     return { username, name, branch: info['default_branch'], filePath };
   }
 
