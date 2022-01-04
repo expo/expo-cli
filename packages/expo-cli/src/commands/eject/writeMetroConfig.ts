@@ -60,7 +60,7 @@ export function writeMetroConfig({
     Log.nested(
       `\u203A You will need to extend the default ${chalk.bold(
         '@expo/metro-config'
-      )} in your Metro config.\n  ${Log.chalk.dim(
+      )} in your Metro config.\n  ${chalk.dim(
         learnMore('https://docs.expo.dev/guides/customizing-metro')
       )}`
     );

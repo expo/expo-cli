@@ -4,6 +4,7 @@ import { Versions } from 'xdl';
 import CommandError from '../../CommandError';
 import Log from '../../log';
 import { confirmAsync } from '../../utils/prompts';
+import { usesOldExpoUpdatesAsync } from '../utils/ProjectUtils';
 import maybeBailOnGitStatusAsync from '../utils/maybeBailOnGitStatusAsync';
 import { promptToClearMalformedNativeProjectsAsync } from './clearNativeFolder';
 import { logNextSteps } from './logNextSteps';
@@ -35,7 +36,8 @@ async function ejectAsync(
   await promptToClearMalformedNativeProjectsAsync(projectRoot, platforms);
 
   const results = await prebuildAsync(projectRoot, { platforms, ...options });
-  logNextSteps(results);
+  const legacyUpdates = await usesOldExpoUpdatesAsync(projectRoot);
+  logNextSteps(results, { legacyUpdates });
 }
 
 export async function actionAsync(

@@ -1,5 +1,6 @@
 import { getConfig } from '@expo/config';
 import * as PackageManager from '@expo/package-manager';
+import chalk from 'chalk';
 import npmPackageArg from 'npm-package-arg';
 import resolveFrom from 'resolve-from';
 import { Versions } from 'xdl';
@@ -24,7 +25,7 @@ async function resolveExpoProjectRootAsync() {
     Log.addNewLineIfNone();
     Log.error(error.message);
     Log.newLine();
-    Log.log(Log.chalk.cyan(`You can create a new project with ${Log.chalk.bold(`expo init`)}`));
+    Log.log(chalk.cyan(`You can create a new project with ${chalk.bold(`expo init`)}`));
     Log.newLine();
     throw new SilentError(error);
   }
@@ -59,22 +60,22 @@ export async function actionAsync(
   if (!exp.sdkVersion) {
     Log.addNewLineIfNone();
     throw new CommandError(
-      `The ${Log.chalk.bold(`expo`)} package was found in your ${Log.chalk.bold(
+      `The ${chalk.bold(`expo`)} package was found in your ${chalk.bold(
         `package.json`
-      )} but we couldn't resolve the Expo SDK version. Run ${Log.chalk.bold(
+      )} but we couldn't resolve the Expo SDK version. Run ${chalk.bold(
         `${packageManager.name.toLowerCase()} install`
       )} and then try this command again.\n`
     );
   }
 
   if (!Versions.gteSdkVersion(exp, '33.0.0')) {
-    const message = `${Log.chalk.bold(
+    const message = `${chalk.bold(
       `expo install`
     )} is only available for Expo SDK version 33 or higher.`;
     Log.addNewLineIfNone();
     Log.error(message);
     Log.newLine();
-    Log.log(Log.chalk.cyan(`Current version: ${Log.chalk.bold(exp.sdkVersion)}`));
+    Log.log(chalk.cyan(`Current version: ${chalk.bold(exp.sdkVersion)}`));
     Log.newLine();
     throw new SilentError(message);
   }
@@ -83,9 +84,7 @@ export async function actionAsync(
   // Every React project should have react installed...
   if (!resolveFrom.silent(projectRoot, 'react')) {
     Log.addNewLineIfNone();
-    Log.log(
-      Log.chalk.cyan(`node_modules not found, running ${packageManager.name} install command.`)
-    );
+    Log.log(chalk.cyan(`node_modules not found, running ${packageManager.name} install command.`));
     Log.newLine();
     await packageManager.installAsync();
   }

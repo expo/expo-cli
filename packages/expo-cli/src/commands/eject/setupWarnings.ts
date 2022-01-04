@@ -56,7 +56,7 @@ export function getSetupWarnings({
       'Constants.manifest'
     )} is not available in the bare workflow. You should replace it with ${chalk.bold(
       'Updates.manifest'
-    )}. ${Log.chalk.dim(
+    )}. ${chalk.dim(
       learnMore('https://docs.expo.dev/versions/latest/sdk/updates/#updatesmanifest')
     )}`;
   }

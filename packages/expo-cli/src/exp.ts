@@ -398,9 +398,7 @@ Command.prototype.asyncActionProjectDir = function (
       if (opts.config === true) {
         Log.addNewLineIfNone();
         Log.log('Please specify your custom config path:');
-        Log.log(
-          Log.chalk.green(`  expo ${this.name()} --config ${Log.chalk.cyan(`<app-config>`)}`)
-        );
+        Log.log(chalk.green(`  expo ${this.name()} --config ${chalk.cyan(`<app-config>`)}`));
         Log.newLine();
         process.exit(1);
       }
@@ -409,13 +407,13 @@ Command.prototype.asyncActionProjectDir = function (
       // Warn the user when the custom config path they provided does not exist.
       if (!fs.existsSync(pathToConfig)) {
         const relativeInput = path.relative(process.cwd(), opts.config);
-        const formattedPath = Log.chalk
+        const formattedPath = chalk
           .reset(pathToConfig)
-          .replace(relativeInput, Log.chalk.bold(relativeInput));
+          .replace(relativeInput, chalk.bold(relativeInput));
         Log.addNewLineIfNone();
         Log.nestedWarn(`Custom config file does not exist:\n${formattedPath}`);
         Log.newLine();
-        const helpCommand = Log.chalk.green(`expo ${this.name()} --help`);
+        const helpCommand = chalk.green(`expo ${this.name()} --help`);
         Log.log(`Run ${helpCommand} for more info`);
         Log.newLine();
         process.exit(1);
