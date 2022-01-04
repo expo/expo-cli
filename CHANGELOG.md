@@ -22,6 +22,7 @@ This is the log of notable changes to Expo CLI and related packages.
 ### 🧹 Chores
 
 - [cli] Change "dev client" to "development build" ([#3946](https://github.com/expo/expo-cli/issues/3946))
+- [xdl] Swap out Cloudfront CDN for `classic-assets.eascdn.net`. ([#4115](https://github.com/expo/expo-cli/issues/4115))
 
 ### 📦 Packages updated
 
@@ -263,7 +264,7 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 📦 Packages updated
 
-*Note*: a patch version was skipped due to a failed build that was resolved in [909d47](https://github.com/expo/expo-cli/commit/909d47)
+_Note_: a patch version was skipped due to a failed build that was resolved in [909d47](https://github.com/expo/expo-cli/commit/909d47)
 
 - @expo/config-plugins@4.0.2
 - @expo/config@6.0.2
@@ -448,7 +449,7 @@ This is the log of notable changes to Expo CLI and related packages.
 
 - [next-adapter] Remove custom server and service worker code ([#3705](https://github.com/expo/expo-cli/issues/3705))
 - [webpack] Drop asset aliases ([#3706](https://github.com/expo/expo-cli/issues/3706))
-- [webpack] Drop support for deep-scope plugin  ([#3701](https://github.com/expo/expo-cli/issues/3701))
+- [webpack] Drop support for deep-scope plugin ([#3701](https://github.com/expo/expo-cli/issues/3701))
 - [webpack] Drop support for worker-loader ([#3696](https://github.com/expo/expo-cli/issues/3696))
 
 ### 🎉 New features
