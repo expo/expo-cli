@@ -136,9 +136,9 @@ async function resolveProjectRootAsync(input?: string): Promise<string> {
     const message = [
       '',
       'Please choose your app name:',
-      `  ${Log.chalk.green(`${program.name()} init`)} ${Log.chalk.cyan('<app-name>')}`,
+      `  ${chalk.green(`${program.name()} init`)} ${chalk.cyan('<app-name>')}`,
       '',
-      `Run ${Log.chalk.green(`${program.name()} init --help`)} for more info`,
+      `Run ${chalk.green(`${program.name()} init --help`)} for more info`,
       '',
     ].join('\n');
     Log.nested(message);

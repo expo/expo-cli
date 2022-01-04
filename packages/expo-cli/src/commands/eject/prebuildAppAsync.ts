@@ -5,7 +5,6 @@ import temporary from 'tempy';
 import Log from '../../log';
 import { logNewSection } from '../../utils/ora';
 import * as CreateApp from '../utils/CreateApp';
-import { usesOldExpoUpdatesAsync } from '../utils/ProjectUtils';
 import configureProjectAsync from './configureProjectAsync';
 import { createNativeProjectsFromTemplateAsync } from './createNativeProjectsFromTemplateAsync';
 import { ensureConfigAsync } from './ensureConfigAsync';
@@ -25,8 +24,7 @@ export type EjectAsyncOptions = {
 };
 
 export type PrebuildResults = {
-  hasAssetBundlePatterns: boolean;
-  legacyUpdates: boolean;
+  exp: ExpoConfig;
   hasNewProjectFiles: boolean;
   platforms: ModPlatform[];
   podInstall: boolean;
@@ -116,9 +114,8 @@ export async function prebuildAsync(
     packageManager,
     nodeInstall: options.install === false,
     podInstall: !podsInstalled,
-    legacyUpdates: await usesOldExpoUpdatesAsync(projectRoot),
     platforms,
     hasNewProjectFiles,
-    hasAssetBundlePatterns: exp.hasOwnProperty('assetBundlePatterns'),
+    exp,
   };
 }

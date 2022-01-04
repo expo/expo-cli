@@ -1,6 +1,6 @@
+import chalk from 'chalk';
 import got from 'got';
 
-import Log from '../../log';
 import { learnMore } from './TerminalLink';
 import { isUrlAvailableAsync } from './url';
 
@@ -65,9 +65,9 @@ export async function getPackageNameWarningAsync(packageName: string): Promise<s
     if (response.statusCode === 200) {
       // There is no JSON API for the Play Store so we can't concisely
       // locate the app name and developer to match the iOS warning.
-      const message = `⚠️  The package ${Log.chalk.bold(
-        packageName
-      )} is already in use. ${Log.chalk.dim(learnMore(url))}`;
+      const message = `⚠️  The package ${chalk.bold(packageName)} is already in use. ${chalk.dim(
+        learnMore(url)
+      )}`;
       cachedPackageNameResults[packageName] = message;
       return message;
     }
@@ -78,7 +78,7 @@ export async function getPackageNameWarningAsync(packageName: string): Promise<s
 }
 
 function formatInUseWarning(appName: string, author: string, id: string): string {
-  return `⚠️  The app ${Log.chalk.bold(appName)} by ${Log.chalk.italic(
+  return `⚠️  The app ${chalk.bold(appName)} by ${chalk.italic(
     author
-  )} is already using ${Log.chalk.bold(id)}`;
+  )} is already using ${chalk.bold(id)}`;
 }
