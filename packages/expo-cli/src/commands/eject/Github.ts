@@ -26,8 +26,12 @@ type RepoInfo = {
 };
 
 async function isUrlOk(url: string): Promise<boolean> {
-  const res = await fetch(url);
-  return res.status === 200;
+  try {
+    const res = await fetch(url);
+    return res.status === 200;
+  } catch {
+    return false;
+  }
 }
 
 async function getRepoInfo(url: any, examplePath?: string): Promise<RepoInfo | undefined> {
