@@ -71,14 +71,14 @@ const defaultConfig = getDefaultConfig(__dirname, {
 });
 
 // Use the new transformer
-baseConfig.transformer.babelTransformerPath = require.resolve('./metro-exotic-transformer');
+defaultConfig.transformer.babelTransformerPath = require.resolve('./metro-exotic-transformer');
 
 // Optionally, you can add support for the `react-native` resolver field back
 // doing this will increase bundling time and size as many community packages ship untransformed code using this feature.
 // Other packages like `nanoid` use the field to support `react-native` so you may need to enable it regardless.
 // defaultConfig.resolver.resolverMainFields.unshift('react-native');
 
-module.exports = baseConfig;
+module.exports = defaultConfig;
 ```
 
 ### Source Maps
