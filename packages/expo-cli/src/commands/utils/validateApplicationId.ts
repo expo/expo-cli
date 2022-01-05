@@ -33,7 +33,8 @@ export async function getBundleIdWarningAsync(bundleId: string): Promise<string 
 
   const url = `http://itunes.apple.com/lookup?bundleId=${bundleId}`;
   try {
-    const json = await fetch(url).then(value => value.json());
+    const response = await fetch(url);
+    const json = await response.json();
     if (json.resultCount > 0) {
       const firstApp = json.results[0];
       const message = formatInUseWarning(firstApp.trackName, firstApp.sellerName, bundleId);
