@@ -50,6 +50,13 @@ export async function prebuildAsync(
   const { exp, pkg } = await ensureConfigAsync({ projectRoot, platforms });
   const tempDir = temporary.directory();
 
+  const template = options.template || process.env.EXPO_PREBUILD_TEMPLATE;
+  const skipDependencyUpdate =
+    options.skipDependencyUpdate ||
+    (process.env.EXPO_PREBUILD_SKIP_DEPENDENCY_UPDATE
+      ? process.env.EXPO_PREBUILD_SKIP_DEPENDENCY_UPDATE.split(',')
+      : undefined);
+
   const {
     hasNewProjectFiles,
     needsPodInstall,
@@ -58,10 +65,10 @@ export async function prebuildAsync(
     projectRoot,
     exp,
     pkg,
-    template: options.template != null ? resolveTemplateOption(options.template) : undefined,
+    template: template != null ? resolveTemplateOption(template) : undefined,
     tempDir,
     platforms,
-    skipDependencyUpdate: options.skipDependencyUpdate,
+    skipDependencyUpdate,
   });
 
   // Install node modules
