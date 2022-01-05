@@ -99,7 +99,7 @@ export async function loginOrRegisterIfLoggedOutAsync(): Promise<User> {
 }
 
 export async function login(options: CommandOptions): Promise<User> {
-  const user = await UserManager.getCurrentUserAsync();
+  const user = await UserManager.getCurrentUserAsync({ silent: true });
   if (user?.accessToken) {
     throw new CommandError(
       'ACCESS_TOKEN_ERROR',

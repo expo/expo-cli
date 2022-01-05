@@ -4,7 +4,7 @@ import CommandError from '../../CommandError';
 import Log from '../../log';
 
 export async function actionAsync() {
-  const user = await UserManager.getCurrentUserAsync();
+  const user = await UserManager.getCurrentUserAsync({ silent: true });
   if (user?.accessToken) {
     throw new CommandError(
       'ACCESS_TOKEN_ERROR',
