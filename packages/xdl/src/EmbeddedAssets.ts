@@ -280,6 +280,7 @@ async function _maybeRunModifiedExpoUpdatesPluginAsync(config: EmbeddedAssetsCon
     // The username is only used for defining a default updates URL.
     // Since we overwrite the URL below the username is superfluous.
     expoPlistForProject = IOSConfig.Updates.setUpdatesConfig(
+      projectRoot,
       exp,
       expoPlistForProject,
       /*expoUsername*/ null
@@ -358,6 +359,7 @@ async function _maybeRunModifiedExpoUpdatesPluginAsync(config: EmbeddedAssetsCon
     // The username is only used for defining a default updates URL.
     // Since we overwrite the URL below the username is superfluous.
     const inferredAndroidManifest = AndroidConfig.Updates.setUpdatesConfig(
+      projectRoot,
       exp,
       currentlyConfiguredAndroidManifest,
       /*username*/ null

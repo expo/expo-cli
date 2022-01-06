@@ -2,7 +2,9 @@ import { Android, ExpoConfig, IOS } from '@expo/config-types';
 import { getRuntimeVersionForSDKVersion } from '@expo/sdk-runtime-versions';
 import fs from 'fs';
 import { boolish } from 'getenv';
+import path from 'path';
 import resolveFrom from 'resolve-from';
+import semver from 'semver';
 
 import { AndroidConfig, IOSConfig } from '..';
 
@@ -124,4 +126,68 @@ export function getRuntimeVersion(
       typeof runtimeVersion === 'object' ? JSON.stringify(runtimeVersion) : runtimeVersion
     }" is not a valid runtime version. getRuntimeVersion only supports a string, "sdkVersion", or "nativeVersion" policy.`
   );
+}
+
+export function getSDKVersion(config: Pick<ExpoConfigUpdates, 'sdkVersion'>): string | null {
+  return typeof config.sdkVersion === 'string' ? config.sdkVersion : null;
+}
+
+export function getUpdatesEnabled(config: Pick<ExpoConfigUpdates, 'updates'>): boolean {
+  return config.updates?.enabled !== false;
+}
+
+export function getUpdatesTimeout(config: Pick<ExpoConfigUpdates, 'updates'>): number {
+  return config.updates?.fallbackToCacheTimeout ?? 0;
+}
+
+export function getUpdatesCheckOnLaunch(
+  config: Pick<ExpoConfigUpdates, 'updates'>,
+  expoUpdatesPackageVersion?: string | null
+): 'NEVER' | 'ERROR_RECOVERY_ONLY' | 'ALWAYS' {
+  if (config.updates?.checkAutomatically === 'ON_ERROR_RECOVERY') {
+    // native 'ERROR_RECOVERY_ONLY' option was only introduced in 0.11.x
+    if (expoUpdatesPackageVersion && semver.gte(expoUpdatesPackageVersion, '0.11.0')) {
+      return 'ERROR_RECOVERY_ONLY';
+    }
+    return 'NEVER';
+  } else if (config.updates?.checkAutomatically === 'ON_LOAD') {
+    return 'ALWAYS';
+  }
+  return 'ALWAYS';
+}
+
+export function getUpdatesCodeSigningCertificate(
+  projectRoot: string,
+  config: Pick<ExpoConfigUpdates, 'updates'>
+): string | undefined {
+  const codeSigningCertificatePath = config.updates?.codeSigningCertificate;
+  if (!codeSigningCertificatePath) {
+    return undefined;
+  }
+
+  const finalPath = path.join(projectRoot, codeSigningCertificatePath);
+  if (!finalPath || !fs.existsSync(finalPath)) {
+    throw new Error(`File not found at \`updates.codeSigningCertificate\` path: ${finalPath}`);
+  }
+
+  // need to format it as a single line string with `\n` characters actually in the string
+  return fs.readFileSync(finalPath, 'utf8').replace(/\n/g, '\\n');
+}
+
+export function getUpdatesCodeSigningMetadata(
+  config: Pick<ExpoConfigUpdates, 'updates'>
+): NonNullable<ExpoConfigUpdates['updates']>['codeSigningMetadata'] {
+  return config.updates?.codeSigningMetadata;
+}
+
+export function getUpdatesCodeSigningMetadataStringified(
+  config: Pick<ExpoConfigUpdates, 'updates'>
+): string | undefined {
+  const metadata = getUpdatesCodeSigningMetadata(config);
+  if (!metadata) {
+    return undefined;
+  }
+
+  // replace double quotes with single quotes for android manifest
+  return JSON.stringify(metadata).replace(/"/g, "'");
 }
