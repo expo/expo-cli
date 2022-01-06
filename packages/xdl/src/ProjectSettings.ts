@@ -51,6 +51,8 @@ export type DevicesInfo = {
 };
 const devicesFile = 'devices.json';
 
+const MILLISECONDS_IN_30_DAYS = 30 * 24 * 60 * 60 * 1000;
+
 function projectSettingsJsonFile(projectRoot: string): JsonFile<ProjectSettings> {
   return new JsonFile<ProjectSettings>(
     path.join(dotExpoProjectDirectory(projectRoot), projectSettingsFile)
@@ -179,7 +181,6 @@ export async function setDevicesInfoAsync(
   }
 }
 
-const MILLISECONDS_IN_30_DAYS = 30 * 24 * 60 * 60 * 1000;
 export async function saveDevicesAsync(
   projectRoot: string,
   deviceIds: string | string[]
@@ -236,7 +237,7 @@ The "packager-info.json" file contains port numbers and process PIDs that are us
 
 The "settings.json" file contains the server configuration that is used to serve the application manifest.
 
-> What is `devices.json`?
+> What is \`devices.json\`?
 
 The "devices.json" file contains information about devices that have recently opened this project. This is used to populate the "Development sessions" list in your development builds.
 

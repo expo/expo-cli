@@ -2,11 +2,11 @@ import { ExpoConfig } from '@expo/config-types';
 import os from 'os';
 import { URLSearchParams } from 'url';
 
-import { ProjectSettings } from '.';
 import {
   ApiV2 as ApiV2Client,
   ConnectionStatus,
   Logger as logger,
+  ProjectSettings,
   UrlUtils,
   UserManager,
 } from './internal';
