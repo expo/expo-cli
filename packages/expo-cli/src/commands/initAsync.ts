@@ -343,7 +343,7 @@ export async function actionAsync(incomingProjectRoot: string, command: Partial<
   try {
     // check if git is installed
     // check if inside git repo
-    await initGitRepoAsync(projectPath, { silent: true, commit: true });
+    await initGitRepoAsync(projectPath);
   } catch {
     // todo: check if git is installed, bail out
   }
@@ -361,19 +361,21 @@ async function installNodeDependenciesAsync(projectRoot: string, packageManager:
   }
 }
 
-export async function initGitRepoAsync(
-  root: string,
-  flags: { silent: boolean; commit: boolean } = { silent: false, commit: true }
-) {
+async function initGitRepoAsync(root: string) {
   // let's see if we're in a git tree
   try {
     await spawnAsync('git', ['rev-parse', '--is-inside-work-tree'], {
       cwd: root,
     });
-    !flags.silent && Log.log('New project is already inside of a git repo, skipping git init.');
-  } catch (e) {
+    // Log a light notice if we're in a git tree.
+    Log.log(
+      chalk.gray(`Project is already inside of a git repo, skipping ${chalk.bold`git init`}.`)
+    );
+    // Bail out if inside git repo, this makes monorepos a bit easier to setup.
+    return true;
+  } catch (e: any) {
     if (e.errno === 'ENOENT') {
-      !flags.silent && Log.warn('Unable to initialize git repo. `git` not in PATH.');
+      Log.warn('Unable to initialize git repo. `git` not in PATH.');
       return false;
     }
   }
@@ -381,17 +383,16 @@ export async function initGitRepoAsync(
   // not in git tree, so let's init
   try {
     await spawnAsync('git', ['init'], { cwd: root });
-    !flags.silent && Log.log('Initialized a git repository.');
+    Log.debug('Initialized a git repository.');
 
-    if (flags.commit) {
-      await spawnAsync('git', ['add', '--all'], { cwd: root, stdio: 'ignore' });
-      await spawnAsync('git', ['commit', '-m', 'Created a new Expo app'], {
-        cwd: root,
-        stdio: 'ignore',
-      });
-    }
+    await spawnAsync('git', ['add', '--all'], { cwd: root, stdio: 'ignore' });
+    await spawnAsync('git', ['commit', '-m', 'Created a new Expo app'], {
+      cwd: root,
+      stdio: 'ignore',
+    });
+
     return true;
-  } catch (e) {
+  } catch (e: any) {
     Log.debug('git error:', e);
     // no-op -- this is just a convenience and we don't care if it fails
     return false;
