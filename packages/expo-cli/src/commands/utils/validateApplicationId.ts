@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-import got from 'got';
+import fetch from 'node-fetch';
 
 import { learnMore } from './TerminalLink';
 import { isUrlAvailableAsync } from './url';
@@ -33,8 +33,8 @@ export async function getBundleIdWarningAsync(bundleId: string): Promise<string 
 
   const url = `http://itunes.apple.com/lookup?bundleId=${bundleId}`;
   try {
-    const response = await got(url);
-    const json = JSON.parse(response.body?.trim());
+    const response = await fetch(url);
+    const json = await response.json();
     if (json.resultCount > 0) {
       const firstApp = json.results[0];
       const message = formatInUseWarning(firstApp.trackName, firstApp.sellerName, bundleId);
@@ -60,9 +60,9 @@ export async function getPackageNameWarningAsync(packageName: string): Promise<s
 
   const url = `https://play.google.com/store/apps/details?id=${packageName}`;
   try {
-    const response = await got(url);
+    const response = await fetch(url);
     // If the page exists, then warn the user.
-    if (response.statusCode === 200) {
+    if (response.status === 200) {
       // There is no JSON API for the Play Store so we can't concisely
       // locate the app name and developer to match the iOS warning.
       const message = `⚠️  The package ${chalk.bold(packageName)} is already in use. ${chalk.dim(
