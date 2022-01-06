@@ -30,7 +30,7 @@ export async function startSession(
     const authSession = await UserManager.getSessionAsync();
     const { devices } = await ProjectSettings.readDevicesInfoAsync(projectRoot);
 
-    if (!authSession && (!devices || !devices.length)) {
+    if (!authSession && !devices?.length) {
       // NOTE(brentvatne) let's just bail out in this case for now
       // throw new Error('development sessions can only be initiated for logged in users or with a device ID');
       return;

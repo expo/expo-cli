@@ -159,7 +159,7 @@ export async function readDevicesInfoAsync(projectRoot: string): Promise<Devices
     return await devicesJsonFile(projectRoot).readAsync({
       cantReadFileDefault: { devices: [] },
     });
-  } catch (e) {
+  } catch {
     return await devicesJsonFile(projectRoot).writeAsync({ devices: [] });
   }
 }
@@ -174,7 +174,7 @@ export async function setDevicesInfoAsync(
     return await devicesJsonFile(projectRoot).mergeAsync(json, {
       cantReadFileDefault: { devices: [] },
     });
-  } catch (e) {
+  } catch {
     return await devicesJsonFile(projectRoot).writeAsync(json);
   }
 }
@@ -236,7 +236,7 @@ The "packager-info.json" file contains port numbers and process PIDs that are us
 
 The "settings.json" file contains the server configuration that is used to serve the application manifest.
 
-> What does the "devices.json" file contain?
+> What is `devices.json`?
 
 The "devices.json" file contains information about devices that have recently opened this project. This is used to populate the "Development sessions" list in your development builds.
 
