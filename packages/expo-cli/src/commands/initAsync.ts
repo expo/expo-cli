@@ -336,17 +336,7 @@ export async function actionAsync(incomingProjectRoot: string, command: Partial<
   }
 
   // Initialize Git at the end to ensure all lock files are committed.
-  // for now, we will just init a git repo if they have git installed and the
-  // project is not inside an existing git tree, and do it silently. we should
-  // at some point check if git is installed and actually bail out if not, because
-  // npm install will fail with a confusing error if so.
-  try {
-    // check if git is installed
-    // check if inside git repo
-    await initGitRepoAsync(projectPath);
-  } catch {
-    // todo: check if git is installed, bail out
-  }
+  await initGitRepoAsync(projectPath);
 }
 
 async function installNodeDependenciesAsync(projectRoot: string, packageManager: 'yarn' | 'npm') {
@@ -361,7 +351,12 @@ async function installNodeDependenciesAsync(projectRoot: string, packageManager:
   }
 }
 
-async function initGitRepoAsync(root: string) {
+/**
+ * Check if the project is inside an existing Git repo, if so bail out,
+ * if not then create a new git repo and commit the initial files.
+ *
+ */
+async function initGitRepoAsync(root: string): Promise<boolean> {
   // let's see if we're in a git tree
   try {
     await spawnAsync('git', ['rev-parse', '--is-inside-work-tree'], {
