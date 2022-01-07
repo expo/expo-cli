@@ -355,6 +355,7 @@ async function installNodeDependenciesAsync(projectRoot: string, packageManager:
  * Check if the project is inside an existing Git repo, if so bail out,
  * if not then create a new git repo and commit the initial files.
  *
+ * @returns `true` if git is setup.
  */
 async function initGitRepoAsync(root: string): Promise<boolean> {
   // let's see if we're in a git tree
