@@ -427,12 +427,7 @@ function joinURLComponents({
   const validPort = port ?? '80';
   const validProtocol = protocol ? `${protocol}://` : '';
 
-  let output = `${validProtocol}${hostname}`;
-  if (validPort) {
-    output += `:${validPort}`;
-  }
-
-  return output;
+  return `${validProtocol}${hostname}:${validPort}`;
 }
 
 export function stripJSExtension(entryPoint: string): string {
