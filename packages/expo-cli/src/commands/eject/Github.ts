@@ -1,6 +1,5 @@
 import chalk from 'chalk';
 import * as fs from 'fs-extra';
-import got from 'got';
 import fetch from 'node-fetch';
 import { Ora } from 'ora';
 import path from 'path';
