@@ -87,9 +87,7 @@ async function resolvePackageFromProjectAsync(projectRoot: string) {
     const pkg = require(ngrokPackagePath);
     if (pkg && semver.satisfies(pkg.version, NGROK_REQUIRED_VERSION)) {
       const ngrokPath = resolveFrom(projectRoot, '@expo/ngrok');
-      if (EXPO_DEBUG) {
-        Logger.global.info(`Resolving @expo/ngrok from project: "${ngrokPath}"`);
-      }
+      Logger.global.debug(`Resolving @expo/ngrok from project: "${ngrokPath}"`);
       return require(ngrokPath);
     }
   } catch {}
@@ -102,11 +100,9 @@ async function resolveGlobalPackageAsync() {
     // use true to disable the use of local packages.
     const pkg = requireg('@expo/ngrok/package.json', true);
     if (semver.satisfies(pkg.version, NGROK_REQUIRED_VERSION)) {
-      if (EXPO_DEBUG) {
-        Logger.global.info(
-          `Resolving global @expo/ngrok from: "${requireg.resolve('@expo/ngrok')}"`
-        );
-      }
+      Logger.global.debug(
+        `Resolving global @expo/ngrok from: "${requireg.resolve('@expo/ngrok')}"`
+      );
       return requireg('@expo/ngrok', true);
     }
   } catch {}
