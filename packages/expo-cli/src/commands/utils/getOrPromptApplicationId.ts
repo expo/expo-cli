@@ -1,4 +1,5 @@
 import { getConfig } from '@expo/config';
+import chalk from 'chalk';
 import { UserManager } from 'xdl';
 
 import CommandError from '../../CommandError';
@@ -44,7 +45,7 @@ export async function getOrPromptForBundleIdentifier(projectRoot: string): Promi
 
   Log.addNewLineIfNone();
   Log.log(
-    `${Log.chalk.bold(`📝  iOS Bundle Identifier`)} ${Log.chalk.dim(
+    `${chalk.bold(`📝  iOS Bundle Identifier`)} ${chalk.dim(
       learnMore('https://expo.fyi/bundle-identifier')
     )}`
   );
@@ -125,7 +126,7 @@ export async function getOrPromptForPackage(projectRoot: string): Promise<string
 
   Log.addNewLineIfNone();
   Log.log(
-    `${Log.chalk.bold(`📝  Android package`)} ${Log.chalk.dim(
+    `${chalk.bold(`📝  Android package`)} ${chalk.dim(
       learnMore('https://expo.fyi/android-package')
     )}`
   );

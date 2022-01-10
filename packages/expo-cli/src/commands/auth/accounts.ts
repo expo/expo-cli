@@ -99,7 +99,7 @@ export async function loginOrRegisterIfLoggedOutAsync(): Promise<User> {
 }
 
 export async function login(options: CommandOptions): Promise<User> {
-  const user = await UserManager.getCurrentUserAsync();
+  const user = await UserManager.getCurrentUserAsync({ silent: true });
   if (user?.accessToken) {
     throw new CommandError(
       'ACCESS_TOKEN_ERROR',
@@ -137,8 +137,8 @@ export async function login(options: CommandOptions): Promise<User> {
 async function _promptForOTPAsync(cancelBehavior: 'cancel' | 'menu'): Promise<string | null> {
   const enterMessage =
     cancelBehavior === 'cancel'
-      ? `press ${Log.chalk.bold('Enter')} to cancel`
-      : `press ${Log.chalk.bold('Enter')} for more options`;
+      ? `press ${chalk.bold('Enter')} to cancel`
+      : `press ${chalk.bold('Enter')} for more options`;
   const otpQuestion: NewQuestion = {
     type: 'text',
     name: 'otp',

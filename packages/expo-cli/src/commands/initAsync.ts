@@ -135,9 +135,9 @@ async function resolveProjectRootAsync(input?: string): Promise<string> {
     const message = [
       '',
       'Please choose your app name:',
-      `  ${Log.chalk.green(`${program.name()} init`)} ${Log.chalk.cyan('<app-name>')}`,
+      `  ${chalk.green(`${program.name()} init`)} ${chalk.cyan('<app-name>')}`,
       '',
-      `Run ${Log.chalk.green(`${program.name()} init --help`)} for more info`,
+      `Run ${chalk.green(`${program.name()} init --help`)} for more info`,
       '',
     ].join('\n');
     Log.nested(message);
@@ -346,8 +346,6 @@ export async function actionAsync(incomingProjectRoot: string, command: Partial<
   }
 
   // Initialize Git at the end to ensure all lock files are committed.
-  // for now, we will just init a git repo if they have git installed and the
-  // project is not inside an existing git tree, and do it silently.
   await initGitRepoAsync(projectPath);
 }
 
@@ -363,7 +361,13 @@ async function installNodeDependenciesAsync(projectRoot: string, packageManager:
   }
 }
 
-async function initGitRepoAsync(root: string) {
+/**
+ * Check if the project is inside an existing Git repo, if so bail out,
+ * if not then create a new git repo and commit the initial files.
+ *
+ * @returns `true` if git is setup.
+ */
+async function initGitRepoAsync(root: string): Promise<boolean> {
   // let's see if we're in a git tree
   try {
     await spawnAsync('git', ['rev-parse', '--is-inside-work-tree'], {

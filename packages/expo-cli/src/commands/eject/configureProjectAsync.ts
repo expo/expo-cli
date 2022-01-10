@@ -1,8 +1,7 @@
-import { ExpoConfig, ProjectConfig } from '@expo/config';
+import { ExpoConfig, getAccountUsername, ProjectConfig } from '@expo/config';
 import { compileModsAsync, ModPlatform } from '@expo/config-plugins';
 import { getPrebuildConfigAsync } from '@expo/prebuild-config';
 import util from 'util';
-import { UserManager } from 'xdl';
 
 import Log from '../../log';
 import {
@@ -46,17 +45,12 @@ export default async function configureManagedProjectAsync({
     packageName = await getOrPromptForPackage(projectRoot);
   }
 
-  const possibleUsername =
-    process.env.EXPO_CLI_USERNAME ||
-    process.env.EAS_BUILD_USERNAME ||
-    (await UserManager.getCurrentUsernameAsync());
-
   let { exp: config } = await getPrebuildConfigAsync(projectRoot, {
     platforms,
     packageName,
     bundleIdentifier,
     expoUsername(config) {
-      return config.owner || possibleUsername;
+      return getAccountUsername(config);
     },
   });
 

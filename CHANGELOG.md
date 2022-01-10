@@ -12,6 +12,35 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+- [cli] suppress unauthorized warning on login and logout commands after logging out of all sessions on the website ([#4120](https://github.com/expo/expo-cli/issues/4120))
+
+## [Wed, 22 Dec 2021 14:05:44 +0800](https://github.com/expo/expo-cli/commit/de947a91dfc3aa5c4b92330c3c03ec6649e0129f)
+
+### 🐛 Bug fixes
+
+- [install-expo-modules] Add `expo_patch_react_imports!` for sdk 44 ([#4090](https://github.com/expo/expo-cli/issues/4090))
+- Remove all `yarn global add X` prompts ([#4086](https://github.com/expo/expo-cli/issues/4086))
+- [config-plugins] throw if there is a runtime version mismatch ([#4078](https://github.com/expo/expo-cli/issues/4078))
+- [prebuild-config] update expo-modules-autolinking version ([#4083](https://github.com/expo/expo-cli/issues/4083))
+
+### 📦 Packages updated
+
+- @expo/config-plugins@4.0.15
+- @expo/config@6.0.15
+- @expo/dev-server@0.1.102
+- @expo/dev-tools@0.13.139
+- expo-cli@5.0.4
+- expo-optimize@0.2.7
+- install-expo-modules@0.2.1
+- @expo/metro-config@0.3.8
+- @expo/next-adapter@3.1.16
+- pod-install@0.1.30
+- @expo/prebuild-config@3.0.15
+- expo-pwa@0.0.110
+- uri-scheme@1.0.111
+- @expo/webpack-config@0.16.15
+- xdl@59.2.23
+
 ## [Thu, 16 Dec 2021 15:44:19 -0800](https://github.com/expo/expo-cli/commit/487031d3de00d9710aadbf32913cd831158a771f)
 
 ### 🎉 New features
@@ -352,6 +381,7 @@ This is the log of notable changes to Expo CLI and related packages.
 ### 🧹 Chores
 
 - [cli] Change "dev client" to "development build" ([#3946](https://github.com/expo/expo-cli/issues/3946))
+- [xdl] Swap out Cloudfront CDN for `classic-assets.eascdn.net`. ([#4115](https://github.com/expo/expo-cli/issues/4115))
 
 ### 📦 Packages updated
 
@@ -593,7 +623,7 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 📦 Packages updated
 
-*Note*: a patch version was skipped due to a failed build that was resolved in [909d47](https://github.com/expo/expo-cli/commit/909d47)
+_Note_: a patch version was skipped due to a failed build that was resolved in [909d47](https://github.com/expo/expo-cli/commit/909d47)
 
 - @expo/config-plugins@4.0.2
 - @expo/config@6.0.2
@@ -778,7 +808,7 @@ This is the log of notable changes to Expo CLI and related packages.
 
 - [next-adapter] Remove custom server and service worker code ([#3705](https://github.com/expo/expo-cli/issues/3705))
 - [webpack] Drop asset aliases ([#3706](https://github.com/expo/expo-cli/issues/3706))
-- [webpack] Drop support for deep-scope plugin  ([#3701](https://github.com/expo/expo-cli/issues/3701))
+- [webpack] Drop support for deep-scope plugin ([#3701](https://github.com/expo/expo-cli/issues/3701))
 - [webpack] Drop support for worker-loader ([#3696](https://github.com/expo/expo-cli/issues/3696))
 
 ### 🎉 New features

@@ -133,14 +133,14 @@ async function cloneNativeDirectoriesAsync({
     let message = `Created native project${platforms.length > 1 ? 's' : ''}`;
 
     if (skippedPaths.length) {
-      message += Log.chalk.dim(
-        ` | ${skippedPaths.map(path => Log.chalk.bold(`/${path}`)).join(', ')} already created`
+      message += chalk.dim(
+        ` | ${skippedPaths.map(path => chalk.bold(`/${path}`)).join(', ')} already created`
       );
     }
     if (!results?.didMerge) {
-      message += Log.chalk.dim(` | gitignore already synced`);
+      message += chalk.dim(` | gitignore already synced`);
     } else if (results.didMerge && results.didClear) {
-      message += Log.chalk.dim(` | synced gitignore`);
+      message += chalk.dim(` | synced gitignore`);
     }
     creatingNativeProjectStep.succeed(message);
   } catch (e: any) {

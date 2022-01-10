@@ -4,7 +4,7 @@
   "useWorkspaces": true,
   "version": "independent",
   "packages": ["packages/*"],
-  "commands": {
+  "command": {
     "publish": {
       "ignoreChanges": ["packages/config-types/**/*"]
     }

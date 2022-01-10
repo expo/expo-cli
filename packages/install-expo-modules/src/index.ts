@@ -89,8 +89,8 @@ async function runAsync(programName: string) {
 
   console.log('\u203A Installing expo packages...');
   const packageManager = PackageManager.createForProject(projectRoot);
-  // e.g. `expo@>=43.0.0-* <44.0.0`, this will cover prerelease version for beta testing.
-  await packageManager.addAsync(`expo@>=${sdkVersion}-* <${semver.inc(sdkVersion, 'major')}`);
+  // e.g. `expo@>=43.0.0-0 <44.0.0`, this will cover prerelease version for beta testing.
+  await packageManager.addAsync(`expo@>=${sdkVersion}-0 <${semver.inc(sdkVersion, 'major')}`);
 
   console.log('\u203A Installing ios pods...');
   const podPackageManager = new PackageManager.CocoaPodsPackageManager({

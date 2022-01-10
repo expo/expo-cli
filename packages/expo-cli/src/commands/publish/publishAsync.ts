@@ -63,14 +63,14 @@ export async function actionAsync(
   // Log building info before building.
   // This gives the user sometime to bail out if the info is unexpected.
   if (runtimeVersion) {
-    Log.log(`\u203A Runtime version: ${Log.chalk.bold(runtimeVersion)}`);
+    Log.log(`\u203A Runtime version: ${chalk.bold(runtimeVersion)}`);
   } else if (sdkVersion) {
-    Log.log(`\u203A Expo SDK: ${Log.chalk.bold(sdkVersion)}`);
+    Log.log(`\u203A Expo SDK: ${chalk.bold(sdkVersion)}`);
   }
-  Log.log(`\u203A Release channel: ${Log.chalk.bold(options.releaseChannel)}`);
-  Log.log(`\u203A Workflow: ${Log.chalk.bold(target.replace(/\b\w/g, l => l.toUpperCase()))}`);
+  Log.log(`\u203A Release channel: ${chalk.bold(options.releaseChannel)}`);
+  Log.log(`\u203A Workflow: ${chalk.bold(target.replace(/\b\w/g, l => l.toUpperCase()))}`);
   if (user.kind === 'robot') {
-    Log.log(`\u203A Owner: ${Log.chalk.bold(owner)}`);
+    Log.log(`\u203A Owner: ${chalk.bold(owner)}`);
   }
 
   Log.newLine();
@@ -183,7 +183,7 @@ function logManifestUrl({
 }) {
   const manifestUrl = getExampleManifestUrl(url, { sdkVersion, runtimeVersion }) ?? url;
   Log.log(
-    `📝  Manifest: ${Log.chalk.bold(TerminalLink.fallbackToUrl(url, manifestUrl))} ${Log.chalk.dim(
+    `📝  Manifest: ${chalk.bold(TerminalLink.fallbackToUrl(url, manifestUrl))} ${chalk.dim(
       TerminalLink.learnMore('https://expo.fyi/manifest-url')
     )}`
   );
@@ -201,14 +201,12 @@ function logProjectPageUrl({
   url: string;
   copiedToClipboard: boolean;
 }) {
-  let productionMessage = `⚙️   Project page: ${Log.chalk.bold(
-    TerminalLink.fallbackToUrl(url, url)
-  )}`;
+  let productionMessage = `⚙️   Project page: ${chalk.bold(TerminalLink.fallbackToUrl(url, url))}`;
 
   if (copiedToClipboard) {
-    productionMessage += ` ${Log.chalk.gray(`[copied to clipboard]`)}`;
+    productionMessage += ` ${chalk.gray(`[copied to clipboard]`)}`;
   }
-  productionMessage += ` ${Log.chalk.dim(TerminalLink.learnMore('https://expo.fyi/project-page'))}`;
+  productionMessage += ` ${chalk.dim(TerminalLink.learnMore('https://expo.fyi/project-page'))}`;
 
   Log.log(productionMessage);
 }

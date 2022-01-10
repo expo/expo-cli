@@ -1,6 +1,6 @@
 {
   "name": "pod-install",
-  "version": "0.1.29",
+  "version": "0.1.30",
   "main": "build",
   "keywords": [
     "cocoapods",
