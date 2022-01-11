@@ -1,11 +1,10 @@
-import { UserManager, UserSettings } from '@expo/api';
+import { ConnectionStatus, UserManager, UserSettings } from '@expo/api';
 import { getConfig, writeConfigJsonAsync } from '@expo/config';
 import spawnAsync from '@expo/spawn-async';
 import { makeExecutableSchema } from 'graphql-tools';
 import { $$asyncIterator } from 'iterall';
 import {
   Android,
-  Exp,
   Logger,
   Project,
   ProjectSettings,
@@ -627,7 +626,8 @@ const resolvers = {
     async sendProjectUrl(parent, { recipient }, context) {
       const currentProject = context.getCurrentProject();
       const url = await UrlUtils.constructManifestUrlAsync(currentProject.projectDir);
-      const result = await Exp.sendAsync(recipient, url);
+      const user = await UserManager.ensureLoggedInAsync();
+      const result = await UserManager.sendProjectAsync(user, recipient, url);
       await UserSettings.setAsync('sendTo', recipient);
       return { medium: result.medium, url }; // medium can be a phone number or email
     },

@@ -1,6 +1,5 @@
-import { UserSettings } from '@expo/api';
+import { UserManager, UserSettings } from '@expo/api';
 import chalk from 'chalk';
-import { Exp } from 'xdl';
 
 import Log from '../../log';
 import { ora } from '../../utils/ora';
@@ -40,7 +39,8 @@ export async function sendUrlAsync(url: string, recipient: string) {
   const email = chalk.bold(recipient);
   const spinner = ora(`Sending URL to ${email}`).start();
   try {
-    const result = await Exp.sendAsync(recipient, url);
+    const user = await UserManager.ensureLoggedInAsync();
+    const result = await UserManager.sendProjectAsync(user, recipient, url);
     spinner.succeed(`Sent URL to ${email}`);
     return result;
   } catch (e) {

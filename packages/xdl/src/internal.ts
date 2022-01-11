@@ -22,7 +22,6 @@ export * as Android from './Android';
 export * as Binaries from './Binaries';
 export * as EmbeddedAssets from './EmbeddedAssets';
 export { ErrorCode } from './ErrorCode';
-export * as Exp from './Exp';
 export { publishAsync, PublishedProjectResult } from './project/publishAsync';
 export { createBundlesAsync, printBundleSizes } from './project/createBundlesAsync';
 export { getPublishExpConfigAsync, PublishOptions } from './project/getPublishExpConfigAsync';

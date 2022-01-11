@@ -13,7 +13,6 @@ export {
   Doctor,
   Env,
   EmbeddedAssets,
-  Exp,
   ErrorCode,
   isDevClientPackageInstalled,
   IosCodeSigning,

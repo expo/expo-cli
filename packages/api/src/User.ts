@@ -437,6 +437,21 @@ export class UserManagerInstance {
     });
   }
 
+  /** Send project URL to the user. */
+  public async sendProjectAsync(
+    user: User | RobotUser,
+    recipient: string,
+    url_: string,
+    allowUnauthed: boolean = true
+  ) {
+    const api = ApiV2Client.clientForUser(user);
+    return await api.postAsync('send-project', {
+      emailOrPhone: recipient,
+      url: url_,
+      includeExpoLinks: allowUnauthed,
+    });
+  }
+
   /**
    * Get profile given token data. Errors if token is not valid or if no
    * user profile is returned.
