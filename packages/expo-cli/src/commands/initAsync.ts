@@ -1,4 +1,4 @@
-import { BareAppConfig, getConfig } from '@expo/config';
+import { getConfig } from '@expo/config';
 import { AndroidConfig, IOSConfig } from '@expo/config-plugins';
 import plist from '@expo/plist';
 import spawnAsync from '@expo/spawn-async';
@@ -6,7 +6,6 @@ import chalk from 'chalk';
 import program from 'commander';
 import fs from 'fs-extra';
 import npmPackageArg from 'npm-package-arg';
-import pacote from 'pacote';
 import path from 'path';
 import stripAnsi from 'strip-ansi';
 import terminalLink from 'terminal-link';
@@ -16,6 +15,7 @@ import CommandError, { SilentError } from '../CommandError';
 import Log from '../log';
 import { logNewSection } from '../utils/ora';
 import prompts, { selectAsync } from '../utils/prompts';
+import { directoryExistsAsync } from './eject/clearNativeFolder';
 import * as CreateApp from './utils/CreateApp';
 import { usesOldExpoUpdatesAsync } from './utils/ProjectUtils';
 import { extractAndPrepareTemplateAppAsync } from './utils/extractTemplateAppAsync';
@@ -54,7 +54,6 @@ const FEATURED_TEMPLATES = [
   },
 ];
 
-const BARE_WORKFLOW_TEMPLATES = ['expo-template-bare-minimum'];
 const isMacOS = process.platform === 'darwin';
 
 function assertValidName(folderName: string) {
@@ -124,7 +123,7 @@ async function resolveProjectRootAsync(input?: string): Promise<string> {
       if (typeof answer === 'string') {
         name = answer.trim();
       }
-    } catch (error) {
+    } catch (error: any) {
       // Handle the aborted message in a custom way.
       if (error.code !== 'ABORTED') {
         throw error;
@@ -163,32 +162,7 @@ function padEnd(str: string, width: number): string {
   return str + Array(len + 1).join(' ');
 }
 
-export async function actionAsync(incomingProjectRoot: string, command: Partial<Options>) {
-  const options = parseOptions(command);
-
-  // Resolve the name, and projectRoot
-  let projectRoot: string;
-  if (!incomingProjectRoot && options.yes) {
-    projectRoot = path.resolve(process.cwd());
-    const folderName = path.basename(projectRoot);
-    assertValidName(folderName);
-    await assertFolderEmptyAsync(projectRoot, folderName);
-  } else {
-    projectRoot = await resolveProjectRootAsync(incomingProjectRoot || options.name);
-  }
-
-  let resolvedTemplate: string | null = options.template ?? null;
-  // @ts-ignore: This guards against someone passing --template without a name after it.
-  if (resolvedTemplate === true) {
-    throw new CommandError('Please specify the template name');
-  }
-
-  // Download and sync templates
-  // TODO(Bacon): revisit
-  if (options.yes && !resolvedTemplate) {
-    resolvedTemplate = 'blank';
-  }
-
+async function resolveTemplateAsync(resolvedTemplate?: string | null) {
   const {
     version: newestSdkVersion,
     data: newestSdkReleaseData,
@@ -215,68 +189,103 @@ export async function actionAsync(incomingProjectRoot: string, command: Partial<
     // For backwards compatibility, 'blank' and 'tabs' are aliases for
     // 'expo-template-blank' and 'expo-template-tabs', respectively.
     if (
-      (templateSpec.name === 'blank' ||
-        templateSpec.name === 'tabs' ||
-        templateSpec.name === 'bare-minimum') &&
-      templateSpec.registry
+      templateSpec.name &&
+      templateSpec.registry &&
+      ['blank', 'tabs', 'bare-minimum'].includes(templateSpec.name)
     ) {
       templateSpec.escapedName = `expo-template-${templateSpec.name}`;
       templateSpec.name = templateSpec.escapedName;
       templateSpec.raw = templateSpec.escapedName;
     }
-  } else {
-    const descriptionColumn =
-      Math.max(...FEATURED_TEMPLATES.map(t => (typeof t === 'object' ? t.shortName.length : 0))) +
-      2;
-    const template = await selectAsync(
-      {
-        message: 'Choose a template:',
-        optionsPerPage: 20,
-        choices: FEATURED_TEMPLATES.map(template => {
-          if (typeof template === 'string') {
-            return prompts.separator(template);
-          } else {
-            return {
-              value: template.name,
-              title:
-                chalk.bold(padEnd(template.shortName, descriptionColumn)) +
-                template.description.trim(),
-              short: template.name,
-            };
-          }
-        }),
-      },
-      {
-        nonInteractiveHelp:
-          '--template: argument is required in non-interactive mode. Valid choices are: "blank", "tabs", "bare-minimum" or any custom template (name of npm package).',
-      }
-    );
-    templateSpec = npmPackageArg(`${template}${versionParam}`);
+
+    return `${templateSpec.name ?? templateSpec.raw}@${templateSpec.fetchSpec ?? 'latest'}`;
   }
+
+  const descriptionColumn =
+    Math.max(...FEATURED_TEMPLATES.map(t => (typeof t === 'object' ? t.shortName.length : 0))) + 2;
+  const template = await selectAsync(
+    {
+      message: 'Choose a template:',
+      optionsPerPage: 20,
+      choices: FEATURED_TEMPLATES.map(template => {
+        if (typeof template === 'string') {
+          return prompts.separator(template);
+        } else {
+          return {
+            value: template.name,
+            title:
+              chalk.bold(padEnd(template.shortName, descriptionColumn)) +
+              template.description.trim(),
+            short: template.name,
+          };
+        }
+      }),
+    },
+    {
+      nonInteractiveHelp:
+        '--template: argument is required in non-interactive mode. Valid choices are: "blank", "tabs", "bare-minimum" or any custom template (name of npm package).',
+    }
+  );
+  return `${template}${versionParam}`;
+}
+
+export async function actionAsync(incomingProjectRoot: string, command: Partial<Options>) {
+  const options = parseOptions(command);
+
+  // Resolve the name, and projectRoot
+  let projectRoot: string;
+  if (!incomingProjectRoot && options.yes) {
+    projectRoot = path.resolve(process.cwd());
+    const folderName = path.basename(projectRoot);
+    assertValidName(folderName);
+    await assertFolderEmptyAsync(projectRoot, folderName);
+  } else {
+    projectRoot = await resolveProjectRootAsync(incomingProjectRoot || options.name);
+  }
+
+  let resolvedTemplate: string | null = options.template ?? null;
+  // @ts-ignore: This guards against someone passing --template without a name after it.
+  if (resolvedTemplate === true) {
+    throw new CommandError('Please specify the template name');
+  }
+
+  // Download and sync templates
+  // TODO(Bacon): revisit
+  if (options.yes && !resolvedTemplate) {
+    resolvedTemplate = 'blank';
+  }
+
+  // Supported templates:
+  // `-t tabs` (tabs, blank, bare-minimum, expo-template-blank-typescript)
+  // `-t tabs@40`
+  // `-t tabs@sdk-40`
+  // `-t tabs@latest`
+  // `-t expo-template-tabs@latest`
+  const npmPackageName = await resolveTemplateAsync(resolvedTemplate);
+
+  Log.debug(`Using template: ${npmPackageName}`);
 
   const projectName = path.basename(projectRoot);
   const initialConfig: Record<string, any> & { expo: any } = {
+    // In older templates the `.name` property is set when extracting template files. This is because older templates have the `.name` property set to `HelloWorld`.
+    // Newer templates don't need the `.name` property set, so we don't bother with setting it.
     expo: {
       name: projectName,
       slug: projectName,
     },
   };
-  const templateManifest = await pacote.manifest(templateSpec);
-  // TODO: Use presence of ios/android folder instead.
-  const isBare = BARE_WORKFLOW_TEMPLATES.includes(templateManifest.name);
-  if (isBare) {
-    initialConfig.name = projectName;
-  }
 
-  const extractTemplateStep = logNewSection('Downloading and extracting project files.');
+  const extractTemplateStep = logNewSection('Downloading template.');
   let projectPath;
   try {
-    projectPath = await extractAndPrepareTemplateAppAsync(templateSpec, projectRoot, initialConfig);
-    extractTemplateStep.succeed('Downloaded and extracted project files.');
-  } catch (e) {
-    extractTemplateStep.fail(
-      'Something went wrong in downloading and extracting the project files.'
+    projectPath = await extractAndPrepareTemplateAppAsync(
+      npmPackageName,
+      projectRoot,
+      initialConfig
     );
+    extractTemplateStep.succeed('Downloaded template.');
+  } catch (e) {
+    extractTemplateStep.fail('Something went wrong while downloading and extracting the template.');
     throw e;
   }
 
@@ -284,15 +293,16 @@ export async function actionAsync(incomingProjectRoot: string, command: Partial<
 
   const packageManager = CreateApp.resolvePackageManager(options);
 
-  // TODO: not this
+  // TODO(Bacon): not this
+  const isBare = await directoryExistsAsync(path.join(projectRoot, 'ios'));
   const workflow = isBare ? 'bare' : 'managed';
 
-  let podsInstalled: boolean = false;
-  const needsPodsInstalled = fs.existsSync(path.join(projectRoot, 'ios'));
+  let hasPodsInstalled: boolean = false;
+  const needsPodsInstalled = fs.existsSync(path.join(projectRoot, 'ios/Podfile'));
   if (options.install) {
     await installNodeDependenciesAsync(projectRoot, packageManager);
     if (needsPodsInstalled) {
-      podsInstalled = await CreateApp.installCocoaPodsAsync(projectRoot);
+      hasPodsInstalled = await CreateApp.installCocoaPodsAsync(projectRoot);
     }
   }
 
@@ -308,7 +318,7 @@ export async function actionAsync(incomingProjectRoot: string, command: Partial<
     username = await UserManager.getCurrentUsernameAsync();
     if (username) {
       try {
-        await configureUpdatesProjectFilesAsync(projectPath, initialConfig as any, username);
+        await configureUpdatesProjectFilesAsync(projectPath, username);
         didConfigureUpdatesProjectFiles = true;
       } catch {}
     }
@@ -331,7 +341,7 @@ export async function actionAsync(incomingProjectRoot: string, command: Partial<
   if (!options.install) {
     logNodeInstallWarning(cdPath, packageManager);
   }
-  if (needsPodsInstalled && !podsInstalled) {
+  if (needsPodsInstalled && !hasPodsInstalled) {
     logCocoaPodsWarning(cdPath);
   }
 
@@ -395,7 +405,6 @@ async function initGitRepoAsync(root: string): Promise<boolean> {
   }
 }
 
-// TODO: Use in eject
 function logNodeInstallWarning(cdPath: string, packageManager: 'yarn' | 'npm'): void {
   Log.newLine();
   Log.nested(`⚠️  Before running your app, make sure you have node modules installed:`);
@@ -408,7 +417,6 @@ function logNodeInstallWarning(cdPath: string, packageManager: 'yarn' | 'npm'): 
   Log.nested('');
 }
 
-// TODO: Use in eject
 function logCocoaPodsWarning(cdPath: string): void {
   if (process.platform !== 'darwin') {
     return;
@@ -426,7 +434,6 @@ function logCocoaPodsWarning(cdPath: string): void {
   Log.nested('');
 }
 
-// TODO: Use in eject
 function logProjectReadyAsync({
   cdPath,
   packageManager,
@@ -521,11 +528,7 @@ function logProjectReadyAsync({
   }
 }
 
-async function configureUpdatesProjectFilesAsync(
-  projectRoot: string,
-  initialConfig: BareAppConfig,
-  username: string
-) {
+async function configureUpdatesProjectFilesAsync(projectRoot: string, username: string) {
   // skipSDKVersionRequirement here so that this will work when you use the
   // --no-install flag. the tradeoff is that the SDK version field won't be
   // filled in, but we should be getting rid of that for expo-updates ASAP
