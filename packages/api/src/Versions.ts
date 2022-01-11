@@ -1,11 +1,12 @@
-import { ApiV2 as ApiV2Client } from '@expo/api';
 import { ExpoConfig } from '@expo/config';
 import getenv from 'getenv';
 import pickBy from 'lodash/pickBy';
 import path from 'path';
 import semver from 'semver';
 
-import { FsCache, XDLError } from './internal';
+import ApiV2Client from './ApiV2';
+import { Cacher } from './FsCache';
+import { APIError } from './utils/errors';
 
 export type SDKVersion = {
   androidExpoViewUrl?: string;
@@ -46,7 +47,7 @@ type Versions = {
 
 export async function versionsAsync(options?: { skipCache?: boolean }): Promise<Versions> {
   const api = new ApiV2Client();
-  const versionCache = new FsCache.Cacher(
+  const versionCache = new Cacher(
     () => api.getAsync('versions/latest'),
     'versions.json',
     0,
@@ -93,7 +94,7 @@ export function gteSdkVersion(
   try {
     return semver.gte(expJson.sdkVersion, sdkVersion);
   } catch (e) {
-    throw new XDLError(
+    throw new APIError(
       'INVALID_VERSION',
       `${expJson.sdkVersion} is not a valid version. Must be in the form of x.y.z`
     );
@@ -115,7 +116,7 @@ export function lteSdkVersion(
   try {
     return semver.lte(expJson.sdkVersion, sdkVersion);
   } catch (e) {
-    throw new XDLError(
+    throw new APIError(
       'INVALID_VERSION',
       `${expJson.sdkVersion} is not a valid version. Must be in the form of x.y.z`
     );
@@ -177,7 +178,7 @@ export async function canTurtleBuildSdkVersion(
   }
 
   if (semver.valid(sdkVersion) == null) {
-    throw new XDLError(
+    throw new APIError(
       'INVALID_VERSION',
       `"${sdkVersion}" is not a valid version. Must be in the form of x.y.z`
     );

@@ -6,6 +6,7 @@ import {
   ConnectionStatus,
   UserManager,
   UserSettings,
+  Versions,
 } from '@expo/api';
 import { ExpoAppManifest, ExpoConfig, ExpoGoConfig, getConfig } from '@expo/config';
 import { JSONObject } from '@expo/json-file';
@@ -23,7 +24,6 @@ import {
   ProjectUtils,
   resolveEntryPoint,
   UrlUtils,
-  Versions,
   Webpack,
 } from '../internal';
 

@@ -1,4 +1,4 @@
-import { Versions } from 'xdl';
+import { Versions } from '@expo/api';
 
 export type DependencyList = Record<string, string>;
 

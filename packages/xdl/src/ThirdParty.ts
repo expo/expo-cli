@@ -1,6 +1,7 @@
+import { Versions } from '@expo/api';
 import axios, { AxiosRequestConfig } from 'axios';
 
-import { Versions, XDLError } from './internal';
+import { XDLError } from './internal';
 
 export async function getManifest(
   publicUrl: string,

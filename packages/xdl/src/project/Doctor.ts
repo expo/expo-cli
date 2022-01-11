@@ -1,4 +1,4 @@
-import { Config } from '@expo/api';
+import { Versions } from '@expo/api';
 import { configFilename, ExpoConfig, getConfig, PackageJSONConfig } from '@expo/config';
 import Schemer, { SchemerError, ValidationError } from '@expo/schemer';
 import spawnAsync from '@expo/spawn-async';
@@ -9,7 +9,7 @@ import memoize from 'lodash/memoize';
 import resolveFrom from 'resolve-from';
 import semver from 'semver';
 
-import { ExpSchema, ProjectUtils, Versions, Watchman } from '../internal';
+import { ExpSchema, ProjectUtils, Watchman } from '../internal';
 import { learnMore } from '../logs/TerminalLink';
 import { profileMethod } from '../utils/profileMethod';
 

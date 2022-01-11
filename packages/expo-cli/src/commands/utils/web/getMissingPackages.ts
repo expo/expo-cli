@@ -1,7 +1,7 @@
+import { Versions } from '@expo/api';
 import { getConfig } from '@expo/config';
 import { ExpoConfig } from '@expo/config-types';
 import resolveFrom from 'resolve-from';
-import { Versions } from 'xdl';
 
 export type ResolvedPackage = {
   file: string;

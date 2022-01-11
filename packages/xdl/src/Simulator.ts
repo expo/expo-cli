@@ -1,4 +1,4 @@
-import { Analytics, downloadAppAsync, UserSettings } from '@expo/api';
+import { Analytics, downloadAppAsync, UserSettings, Versions } from '@expo/api';
 import { ExpoConfig, getConfig } from '@expo/config';
 import { IOSConfig } from '@expo/config-plugins';
 import * as osascript from '@expo/osascript';
@@ -25,7 +25,6 @@ import {
   SimControl,
   SimControlLogs,
   UrlUtils,
-  Versions,
   Webpack,
   Xcode,
 } from './internal';

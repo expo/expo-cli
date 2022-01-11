@@ -1,6 +1,7 @@
+import { Versions } from '@expo/api';
 import chalk from 'chalk';
 import program from 'commander';
-import { UrlUtils, Versions } from 'xdl';
+import { UrlUtils } from 'xdl';
 
 import CommandError from '../../CommandError';
 import Log from '../../log';

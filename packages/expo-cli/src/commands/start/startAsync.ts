@@ -1,9 +1,9 @@
-import { UnifiedAnalytics } from '@expo/api';
+import { UnifiedAnalytics, Versions } from '@expo/api';
 import { ConfigError, ExpoConfig, getConfig, isLegacyImportsEnabled } from '@expo/config';
 import chalk from 'chalk';
 import path from 'path';
 import resolveFrom from 'resolve-from';
-import { LoadingPageHandler, Project, UrlUtils, Versions } from 'xdl';
+import { LoadingPageHandler, Project, UrlUtils } from 'xdl';
 
 import StatusEventEmitter from '../../analytics/StatusEventEmitter';
 import getDevClientProperties from '../../analytics/getDevClientProperties';

@@ -1,5 +1,6 @@
+import { Versions } from '@expo/api';
 import chalk from 'chalk';
-import { Android, Versions } from 'xdl';
+import { Android } from 'xdl';
 
 import Log from '../../log';
 import { confirmAsync } from '../../utils/prompts';

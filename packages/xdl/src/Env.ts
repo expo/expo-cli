@@ -1,7 +1,6 @@
+import { Versions } from '@expo/api';
 import { ExpoConfig } from '@expo/config';
 import { boolish, string } from 'getenv';
-
-import { Versions } from './internal';
 
 export function isDebug(): boolean {
   return boolish('EXPO_DEBUG', false);

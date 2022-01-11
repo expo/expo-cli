@@ -1,3 +1,4 @@
+import { Versions } from '@expo/api';
 import {
   getConfig,
   isLegacyImportsEnabled,
@@ -16,8 +17,7 @@ import pickBy from 'lodash/pickBy';
 import resolveFrom from 'resolve-from';
 import semver from 'semver';
 import terminalLink from 'terminal-link';
-import { Project, ProjectSettings, Versions } from 'xdl';
-import { SDKVersion } from 'xdl/build/Versions';
+import { Project, ProjectSettings } from 'xdl';
 
 import CommandError from '../../CommandError';
 import Log from '../../log';
@@ -78,7 +78,7 @@ async function getExactInstalledModuleVersionAsync(moduleName: string, projectRo
 export async function getUpdatedDependenciesAsync(
   projectRoot: string,
   workflow: ExpoWorkflow,
-  targetSdkVersion: SDKVersion | null,
+  targetSdkVersion: Versions.SDKVersion | null,
   targetSdkVersionString: string
 ): Promise<{ dependencies: DependencyList; removed: string[] }> {
   // Get the updated version for any bundled modules
@@ -132,7 +132,7 @@ export type UpgradeDependenciesOptions = {
   bundledNativeModules: DependencyList;
   sdkVersion?: string;
   workflow: ExpoWorkflow;
-  targetSdkVersion: SDKVersion | null;
+  targetSdkVersion: Versions.SDKVersion | null;
   targetSdkVersionString: string | null;
 };
 

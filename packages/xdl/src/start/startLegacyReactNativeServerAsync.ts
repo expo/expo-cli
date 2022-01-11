@@ -1,3 +1,4 @@
+import { Versions } from '@expo/api';
 import { ExpoConfig, getConfig } from '@expo/config';
 import { getBareExtensions, getManagedExtensions } from '@expo/config/paths';
 import axios from 'axios';
@@ -17,7 +18,6 @@ import {
   ProjectUtils,
   StartDevServerOptions,
   UrlUtils,
-  Versions,
   Watchman,
 } from '../internal';
 

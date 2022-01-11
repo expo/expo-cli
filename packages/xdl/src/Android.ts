@@ -1,4 +1,4 @@
-import { Analytics } from '@expo/api';
+import { Analytics, Versions } from '@expo/api';
 import { ExpoConfig, getConfig, readExpRcAsync } from '@expo/config';
 import { AndroidConfig } from '@expo/config-plugins';
 import * as osascript from '@expo/osascript';
@@ -22,7 +22,6 @@ import {
   ProjectSettings,
   Prompts,
   UrlUtils,
-  Versions,
   Webpack,
   XDLError,
 } from './internal';

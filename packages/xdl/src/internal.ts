@@ -36,7 +36,6 @@ export * as SimControlLogs from './SimControlLogs';
 export * as Simulator from './Simulator';
 export * as ThirdParty from './ThirdParty';
 export * as UrlUtils from './UrlUtils';
-export * as Versions from './Versions';
 export * as Webpack from './Webpack';
 export { default as XDLError } from './XDLError';
 export * as AndroidCredentials from './credentials/AndroidCredentials';

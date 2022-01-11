@@ -35,7 +35,6 @@ export {
   Simulator,
   ThirdParty,
   UrlUtils,
-  Versions,
   Webpack,
   XDLError,
 } from './internal';

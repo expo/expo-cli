@@ -1,9 +1,9 @@
+import { Versions } from '@expo/api';
 import { getConfig } from '@expo/config';
 import * as PackageManager from '@expo/package-manager';
 import chalk from 'chalk';
 import npmPackageArg from 'npm-package-arg';
 import resolveFrom from 'resolve-from';
-import { Versions } from 'xdl';
 
 import CommandError, { SilentError } from '../CommandError';
 import Log from '../log';
@@ -16,7 +16,7 @@ async function resolveExpoProjectRootAsync() {
   try {
     const info = await findProjectRootAsync(process.cwd());
     return info.projectRoot;
-  } catch (error) {
+  } catch (error: any) {
     if (error.code !== 'NO_PROJECT') {
       // An unknown error occurred.
       throw error;

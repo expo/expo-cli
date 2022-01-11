@@ -1,10 +1,10 @@
+import { Versions } from '@expo/api';
 import { ExpoConfig, PackageJSONConfig } from '@expo/config';
 import JsonFile from '@expo/json-file';
 import assert from 'assert';
 import chalk from 'chalk';
 import resolveFrom from 'resolve-from';
 import semver from 'semver';
-import { Versions } from 'xdl';
 
 import CommandError from '../../CommandError';
 import Log from '../../log';

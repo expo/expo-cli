@@ -1,5 +1,5 @@
+import { Versions } from '@expo/api';
 import { getConfig } from '@expo/config';
-import { Versions } from 'xdl';
 
 import CommandError from '../../CommandError';
 import Log from '../../log';

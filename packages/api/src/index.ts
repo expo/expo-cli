@@ -14,3 +14,4 @@ export {
   UserData,
 } from './User';
 export { default as UserSettings } from './UserSettings';
+export * as Versions from './Versions';

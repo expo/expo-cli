@@ -1,6 +1,7 @@
+import { Versions } from '@expo/api';
 import { ExpoConfig, isLegacyImportsEnabled } from '@expo/config';
 import chalk from 'chalk';
-import { Project, ProjectSettings, Versions, Webpack } from 'xdl';
+import { Project, ProjectSettings, Webpack } from 'xdl';
 import * as WebpackEnvironment from 'xdl/build/webpack-utils/WebpackEnvironment';
 
 import { AbortCommandError } from '../../CommandError';

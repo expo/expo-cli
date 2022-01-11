@@ -1,7 +1,7 @@
+import { Versions } from '@expo/api';
 import { getConfig } from '@expo/config';
 import { ExpoConfig } from '@expo/config-types';
 import chalk from 'chalk';
-import { Versions } from 'xdl';
 
 import prompt from '../../utils/prompts';
 import { findProjectRootAsync } from './ProjectUtils';
@@ -13,7 +13,7 @@ export async function getExpoSdkConfig(path: string) {
       skipSDKVersionRequirement: true,
     });
     return exp;
-  } catch (error) {
+  } catch (error: any) {
     if (error.code !== 'NO_PROJECT') {
       throw error;
     }
