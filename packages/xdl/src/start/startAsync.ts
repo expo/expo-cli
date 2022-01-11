@@ -65,17 +65,11 @@ export async function startAsync(
       ...options,
       port: options.webpackPort,
     });
-
-    // This is used to make Expo Go open the project in either Expo Go, or the web browser.
-    DevSession.startSession(projectRoot, exp, Webpack.isTargetingNative() ? 'native' : 'web');
-    return exp;
   } else if (Env.shouldUseDevServer(exp) || options.devClient) {
     [serverInstance, , messageSocket] = await startDevServerAsync(projectRoot, options);
-    DevSession.startSession(projectRoot, exp, 'native');
   } else {
     await startExpoServerAsync(projectRoot);
     await startReactNativeServerAsync({ projectRoot, exp, options, verbose });
-    DevSession.startSession(projectRoot, exp, 'native');
   }
 
   const { hostType } = await ProjectSettings.readAsync(projectRoot);
@@ -83,10 +77,15 @@ export async function startAsync(
   if (!ConnectionStatus.isOffline() && hostType === 'tunnel') {
     try {
       await startTunnelsAsync(projectRoot);
-    } catch (e) {
-      ProjectUtils.logDebug(projectRoot, 'expo', `Error starting tunnel ${e.message}`);
+    } catch (e: any) {
+      ProjectUtils.logError(projectRoot, 'expo', `Error starting ngrok: ${e.message}`);
     }
   }
+
+  const target = !options.webOnly || Webpack.isTargetingNative() ? 'native' : 'web';
+  // This is used to make Expo Go open the project in either Expo Go, or the web browser.
+  // Must come after ngrok (`startTunnelsAsync`) setup.
+  DevSession.startSession(projectRoot, exp, target);
   return exp;
 }
 
@@ -117,8 +116,8 @@ async function stopInternalAsync(projectRoot: string): Promise<void> {
       if (!ConnectionStatus.isOffline()) {
         try {
           await stopTunnelsAsync(projectRoot);
-        } catch (e) {
-          ProjectUtils.logDebug(projectRoot, 'expo', `Error stopping ngrok ${e.message}`);
+        } catch (e: any) {
+          ProjectUtils.logError(projectRoot, 'expo', `Error stopping ngrok: ${e.message}`);
         }
       }
     },

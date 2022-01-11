@@ -783,7 +783,7 @@ async function constructDeepLinkAsync(
   } else {
     try {
       return await UrlUtils.constructDeepLinkAsync(projectRoot, {
-        hostType: 'localhost',
+        // Don't pass a `hostType` or ngrok will break.
         scheme,
       });
     } catch (e) {

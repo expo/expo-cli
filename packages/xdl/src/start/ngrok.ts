@@ -60,7 +60,7 @@ async function connectToNgrokAsync(
       ...args,
     });
     return url;
-  } catch (e) {
+  } catch (e: any) {
     // Attempt to connect 3 times
     if (attempts >= 2) {
       if (e.message) {
@@ -101,7 +101,6 @@ export async function startTunnelsAsync(
   options: { autoInstall?: boolean } = {}
 ): Promise<void> {
   const ngrok = await resolveNgrokAsync(projectRoot, options);
-
   const username = (await UserManager.getCurrentUsernameAsync()) || ANONYMOUS_USERNAME;
   assertValidProjectRoot(projectRoot);
   const packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
@@ -137,7 +136,30 @@ export async function startTunnelsAsync(
         throw new Error('Starting tunnels timed out');
       }
     })(),
+
     (async () => {
+      const createResolver = (extra: string[] = []) =>
+        async function resolveHostnameAsync() {
+          const randomness = expRc.manifestTunnelRandomness
+            ? expRc.manifestTunnelRandomness
+            : await getProjectRandomnessAsync(projectRoot);
+          return [
+            ...extra,
+            randomness,
+            UrlUtils.domainify(username),
+            UrlUtils.domainify(packageShortName),
+            NGROK_CONFIG.domain,
+          ].join('.');
+        };
+
+      // If both ports are defined and they don't match then we can assume the legacy dev server is being used.
+      const isLegacyDevServer =
+        !!expoServerPort &&
+        !!packagerInfo.packagerPort &&
+        expoServerPort !== packagerInfo.packagerPort;
+
+      ProjectUtils.logInfo(projectRoot, 'expo', `Using legacy dev server: ${isLegacyDevServer}`);
+
       const expoServerNgrokUrl = await connectToNgrokAsync(
         projectRoot,
         ngrok,
@@ -146,41 +168,29 @@ export async function startTunnelsAsync(
           port: expoServerPort,
           proto: 'http',
         },
-        async () => {
-          const randomness = expRc.manifestTunnelRandomness
-            ? expRc.manifestTunnelRandomness
-            : await getProjectRandomnessAsync(projectRoot);
-          return [
-            randomness,
-            UrlUtils.domainify(username),
-            UrlUtils.domainify(packageShortName),
-            NGROK_CONFIG.domain,
-          ].join('.');
-        },
+        createResolver(),
         packagerInfo.ngrokPid
       );
-      const packagerNgrokUrl = await connectToNgrokAsync(
-        projectRoot,
-        ngrok,
-        {
-          authtoken: NGROK_CONFIG.authToken,
-          port: packagerInfo.packagerPort,
-          proto: 'http',
-        },
-        async () => {
-          const randomness = expRc.manifestTunnelRandomness
-            ? expRc.manifestTunnelRandomness
-            : await getProjectRandomnessAsync(projectRoot);
-          return [
-            'packager',
-            randomness,
-            UrlUtils.domainify(username),
-            UrlUtils.domainify(packageShortName),
-            NGROK_CONFIG.domain,
-          ].join('.');
-        },
-        packagerInfo.ngrokPid
-      );
+
+      let packagerNgrokUrl: string;
+      if (isLegacyDevServer) {
+        packagerNgrokUrl = await connectToNgrokAsync(
+          projectRoot,
+          ngrok,
+          {
+            authtoken: NGROK_CONFIG.authToken,
+            port: packagerInfo.packagerPort,
+            proto: 'http',
+          },
+          createResolver(['packager']),
+          packagerInfo.ngrokPid
+        );
+      } else {
+        // Custom dev server will share the port across expo and metro dev servers,
+        // this means we only need one ngrok URL.
+        packagerNgrokUrl = expoServerNgrokUrl;
+      }
+
       await ProjectSettings.setPackagerInfoAsync(projectRoot, {
         expoServerNgrokUrl,
         packagerNgrokUrl,
