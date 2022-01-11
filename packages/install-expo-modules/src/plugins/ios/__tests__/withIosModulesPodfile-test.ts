@@ -52,7 +52,11 @@ platform :ios, '10.0'
 target 'HelloWorld' do
   use_expo_modules!
   post_integrate do |installer|
-    expo_patch_react_imports!(installer)
+    begin
+      expo_patch_react_imports!(installer)
+    rescue => e
+      Pod::UI.warn e
+    end
   end
   config = use_native_modules!
 
@@ -108,7 +112,11 @@ target 'HelloWorld' do
   use_react_native!(:path => config["reactNativePath"])
 
   post_integrate do |installer|
-    expo_patch_react_imports!(installer)
+    begin
+      expo_patch_react_imports!(installer)
+    rescue => e
+      Pod::UI.warn e
+    end
     puts "Existing post_integrate hook"
   end
 end

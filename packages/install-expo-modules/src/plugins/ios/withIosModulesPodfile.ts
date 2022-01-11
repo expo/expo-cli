@@ -43,7 +43,12 @@ export function updatePodfile(
       if (contents.match(regExpPostIntegrate)) {
         contents = contents.replace(
           regExpPostIntegrate,
-          '$1\n    expo_patch_react_imports!(installer)'
+          `$1
+    begin
+      expo_patch_react_imports!(installer)
+    rescue => e
+      Pod::UI.warn e
+    end`
         );
       } else {
         // If there's no existing post_integrate hook,
@@ -52,7 +57,11 @@ export function updatePodfile(
           /(\buse_expo_modules!\n)/gm,
           `$1\
   post_integrate do |installer|
-    expo_patch_react_imports!(installer)
+    begin
+      expo_patch_react_imports!(installer)
+    rescue => e
+      Pod::UI.warn e
+    end
   end\n`
         );
       }
