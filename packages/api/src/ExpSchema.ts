@@ -1,13 +1,11 @@
-import { ApiV2 } from '@expo/api';
-import { getConfig } from '@expo/config';
 import { JSONObject } from '@expo/json-file';
-import Schemer from '@expo/schemer';
 import fs from 'fs';
-import { boolish } from 'getenv';
 import schemaDerefSync from 'json-schema-deref-sync';
 import path from 'path';
 
-import { FsCache } from '../internal';
+import ApiV2 from './ApiV2';
+import { isLocalSchemaEnabled } from './Env';
+import { Cacher } from './FsCache';
 
 export type Schema = any;
 export type AssetSchema = {
@@ -16,24 +14,10 @@ export type AssetSchema = {
 };
 
 const _xdlSchemaJson: { [sdkVersion: string]: Schema } = {};
-const _schemaCaches: { [version: string]: FsCache.Cacher<JSONObject> } = {};
+const _schemaCaches: { [version: string]: Cacher<JSONObject> } = {};
 
-export async function validatorFromProjectRoot(projectRoot: string): Promise<Schemer> {
-  const { exp } = getConfig(projectRoot);
-  if (!exp.sdkVersion) throw new Error(`Couldn't read local manifest`);
-  const schema = await getSchemaAsync(exp.sdkVersion);
-  const validator = new Schemer(schema);
-  return validator;
-}
-
-export async function validateAsync(projectRoot: string) {
-  const { exp } = getConfig(projectRoot);
-  if (!exp.sdkVersion) throw new Error(`Couldn't read local manifest`);
-  const schema = await getSchemaAsync(exp.sdkVersion);
-  const validator = new Schemer(schema);
-  await validator.validateAll(exp);
-}
-
+// TODO: Maybe move json-schema-deref-sync out of api (1.58MB)
+// https://packagephobia.com/result?p=json-schema-deref-sync
 export async function getSchemaAsync(sdkVersion: string): Promise<Schema> {
   const json = await _getSchemaJSONAsync(sdkVersion);
   const schema = schemaDerefSync(json.schema);
@@ -66,7 +50,7 @@ export async function getAssetSchemasAsync(sdkVersion: string | undefined): Prom
 }
 
 async function _getSchemaJSONAsync(sdkVersion: string): Promise<{ schema: Schema }> {
-  if (boolish('LOCAL_XDL_SCHEMA', false)) {
+  if (isLocalSchemaEnabled()) {
     if (process.env.EXPONENT_UNIVERSE_DIR) {
       return JSON.parse(
         fs
@@ -89,7 +73,7 @@ async function _getSchemaJSONAsync(sdkVersion: string): Promise<{ schema: Schema
   if (!_xdlSchemaJson[sdkVersion]) {
     try {
       _xdlSchemaJson[sdkVersion] = await getConfigurationSchemaAsync(sdkVersion);
-    } catch (e) {
+    } catch (e: any) {
       if (e.code && e.code === 'INVALID_JSON') {
         throw new Error(`Couldn't read schema from server`);
       } else {
@@ -103,7 +87,7 @@ async function _getSchemaJSONAsync(sdkVersion: string): Promise<{ schema: Schema
 
 async function getConfigurationSchemaAsync(sdkVersion: string): Promise<JSONObject> {
   if (!_schemaCaches.hasOwnProperty(sdkVersion)) {
-    _schemaCaches[sdkVersion] = new FsCache.Cacher(
+    _schemaCaches[sdkVersion] = new Cacher(
       async () => {
         return await new ApiV2().getAsync(`project/configuration/schema/${sdkVersion}`);
       },

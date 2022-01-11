@@ -1,4 +1,4 @@
-import { ApiV2, UserManager } from '@expo/api';
+import { ApiV2, ExpSchema, UserManager } from '@expo/api';
 import { ExpoAppManifest, ExpoConfig } from '@expo/config';
 import { BundleAssetWithFileHashes, BundleOutput } from '@expo/dev-server';
 import assert from 'assert';
@@ -13,7 +13,7 @@ import minimatch from 'minimatch';
 import path from 'path';
 import urljoin from 'url-join';
 
-import { ExpSchema, Logger as logger, ProjectUtils } from './internal';
+import { Logger as logger, ProjectUtils } from './internal';
 
 const EXPO_CDN = 'https://classic-assets.eascdn.net';
 

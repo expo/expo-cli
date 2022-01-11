@@ -15,3 +15,5 @@ export {
 } from './User';
 export { default as UserSettings } from './UserSettings';
 export * as Versions from './Versions';
+// TODO: Rename to ExpoConfigSchema
+export * as ExpSchema from './ExpSchema';

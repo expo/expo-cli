@@ -16,3 +16,7 @@ export function isStaging(): boolean {
 export function isLocal(): boolean {
   return boolish('EXPO_LOCAL', false);
 }
+
+export function isLocalSchemaEnabled(): boolean {
+  return boolish('LOCAL_XDL_SCHEMA', false);
+}

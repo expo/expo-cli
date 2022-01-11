@@ -1,33 +1,34 @@
+import { UserSettings } from '@expo/api';
 import { ExpoConfig } from '@expo/config';
 import axios from 'axios';
 import fs from 'fs-extra';
 import { vol } from 'memfs';
 import path from 'path';
 
-import { ManifestHandler, UserSettings } from '../../internal';
+import { ManifestHandler } from '../../internal';
 
 const actualFs = jest.requireActual('fs') as typeof fs;
 jest.mock('fs');
 jest.mock('axios');
 
-jest.mock('../../User', () => {
-  // const user = jest.requireActual('../../User');
+jest.mock('@expo/api', () => {
+  const api = jest.requireActual('@expo/api');
   return {
-    // ...user,
-    ANONYMOUS_USERNAME: 'anonymous',
-    getSessionAsync() {
-      return null;
+    ...api,
+    UserSettings: {
+      // ...user,
+      ANONYMOUS_USERNAME: 'anonymous',
+      getSessionAsync() {
+        return null;
+      },
+      ensureLoggedInAsync: () => ({
+        sessionSecret: 'SECRET',
+      }),
     },
-    ensureLoggedInAsync: () => ({
-      sessionSecret: 'SECRET',
-    }),
-  };
-});
-jest.mock('../../project/ExpSchema', () => {
-  // const user = jest.requireActual('../../User');
-  return {
-    getAssetSchemasAsync() {
-      return ['icon', 'splash.image'];
+    ExpSchema: {
+      getAssetSchemasAsync() {
+        return ['icon', 'splash.image'];
+      },
     },
   };
 });
