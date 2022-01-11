@@ -2,9 +2,8 @@ import { ApiV2, UserManager } from '@expo/api';
 import { getConfig } from '@expo/config';
 
 import Log from '../../log';
-import { getProjectOwner } from '../../projects';
-import { confirmAsync } from '../../prompts';
 import { ora } from '../../utils/ora';
+import { confirmAsync } from '../../utils/prompts';
 import * as table from './cli-table';
 
 export type HistoryOptions = {
@@ -13,6 +12,7 @@ export type HistoryOptions = {
   platform?: 'android' | 'ios';
   raw?: boolean;
   sdkVersion?: string;
+  runtimeVersion?: string;
 };
 
 export type DetailOptions = {
@@ -25,6 +25,7 @@ export type SetOptions = { releaseChannel: string; publishId: string };
 export type RollbackOptions = {
   releaseChannel: string;
   sdkVersion: string;
+  runtimeVersion?: string;
   platform?: 'android' | 'ios';
   parent?: { nonInteractive?: boolean };
 };
@@ -36,12 +37,13 @@ export type Publication = {
   publicationId: string;
   appVersion: string;
   sdkVersion: string;
+  runtimeVersion?: string;
   publishedTime: string;
   platform: 'android' | 'ios';
 };
 
 export type PublicationDetail = {
-  manifest: {
+  manifest?: {
     [key: string]: string;
   };
   publishedTime: string;
@@ -51,6 +53,7 @@ export type PublicationDetail = {
   fullName: string;
   hash: string;
   sdkVersion: string;
+  runtimeVersion?: string;
   s3Key: string;
   s3Url: string;
   abiVersion: string | null;
@@ -80,13 +83,14 @@ export async function getPublishHistoryAsync(
 
   const api = ApiV2.clientForUser(user);
   return await api.postAsync('publish/history', {
-    owner: getProjectOwner(user, exp),
+    owner: UserManager.getProjectOwner(user, exp),
     slug: exp.slug,
     version: VERSION,
     releaseChannel: options.releaseChannel,
     count: options.count,
     platform: options.platform,
     sdkVersion: options.sdkVersion,
+    runtimeVersion: options.runtimeVersion,
   });
 }
 
@@ -109,12 +113,13 @@ async function _rollbackPublicationFromChannelForPlatformAsync(
   platform: 'android' | 'ios',
   options: Omit<RollbackOptions, 'platform'>
 ) {
-  const { releaseChannel, sdkVersion } = options;
+  const { releaseChannel, sdkVersion, runtimeVersion } = options;
   // get the 2 most recent things in the channel history
   const historyQueryResult = await getPublishHistoryAsync(projectRoot, {
     releaseChannel,
     platform,
     sdkVersion,
+    runtimeVersion,
     count: 2,
   });
 
@@ -229,7 +234,7 @@ export async function getPublicationDetailAsync(
 
   const api = ApiV2.clientForUser(user);
   const result = await api.postAsync('publish/details', {
-    owner: getProjectOwner(user, exp),
+    owner: UserManager.getProjectOwner(user, exp),
     publishId: options.publishId,
     slug: exp.slug,
   });
@@ -257,7 +262,9 @@ export async function printPublicationDetailAsync(
   const generalTableString = table.printTableJson(detail, 'Release Description');
   Log.log(generalTableString);
 
-  // Print manifest info
-  const manifestTableString = table.printTableJson(manifest, 'Manifest Details');
-  Log.log(manifestTableString);
+  if (manifest) {
+    // Print manifest info
+    const manifestTableString = table.printTableJson(manifest, 'Manifest Details');
+    Log.log(manifestTableString);
+  }
 }

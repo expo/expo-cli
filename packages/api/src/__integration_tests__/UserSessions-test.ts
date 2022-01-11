@@ -1,7 +1,6 @@
 import fs from 'fs-extra';
 import HashIds from 'hashids';
-import path from 'path';
-import uuid from 'uuid';
+import { v1 as uuidv1 } from 'uuid';
 
 import { ApiV2 as ApiV2Client, User, UserManagerInstance, UserSettings } from '../';
 
@@ -17,16 +16,12 @@ describe.skip('User Sessions', () => {
   let userForTestPassword: string;
 
   beforeAll(async () => {
-    process.env.__UNSAFE_EXPO_HOME_DIRECTORY = path.join(
-      '/',
-      'tmp',
-      `.expo-${_makeShortId(uuid.v1())}`
-    );
+    fs.removeSync(UserSettings.userSettingsFile());
 
     const UserManager = _newTestUserManager();
 
-    const username = `xdl-test-${_makeShortId(uuid.v1())}`;
-    const password = uuid.v1();
+    const username = `xdl-test-${_makeShortId(uuidv1())}`;
+    const password = uuidv1();
 
     // Register a new user that we can use for this test run
     const newUser = await UserManager.registerAsync({
@@ -44,9 +39,7 @@ describe.skip('User Sessions', () => {
   });
 
   afterAll(async () => {
-    if (process.env.__UNSAFE_EXPO_HOME_DIRECTORY) {
-      fs.removeSync(process.env.__UNSAFE_EXPO_HOME_DIRECTORY);
-    }
+    fs.removeSync(UserSettings.userSettingsFile());
 
     const api = ApiV2Client.clientForUser(userForTest);
     try {

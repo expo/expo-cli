@@ -6,8 +6,7 @@ import semver from 'semver';
 import { Versions } from 'xdl';
 
 import Log from '../../log';
-import { getProjectOwner } from '../../projects';
-import { action as publishAction } from '../publish';
+import { actionAsync as publishAction } from '../publish/publishAsync';
 import { sleep } from '../utils/promise';
 import * as UrlUtils from '../utils/url';
 import { BuilderOptions } from './BaseBuilder.types';
@@ -74,7 +73,7 @@ export default class BaseBuilder {
     await this.checkProjectConfig();
     // note: this validates if a robot user is used without "owner" in the manifest
     // without this check, build/status returns "robots not allowed".
-    getProjectOwner(
+    UserManager.getProjectOwner(
       // TODO: Move this since it can add delay
       await this.getUserAsync(),
       this.projectConfig.exp
@@ -155,7 +154,7 @@ export default class BaseBuilder {
     if (reuseStatus.canReuse) {
       Log.warn(`Did you know that Expo provides over-the-air updates?
 Please see the docs (${chalk.underline(
-        'https://docs.expo.io/guides/configuring-ota-updates/'
+        'https://docs.expo.dev/guides/configuring-ota-updates/'
       )}) and check if you can use them instead of building your app binaries again.`);
 
       Log.warn(
@@ -194,6 +193,7 @@ Please see the docs (${chalk.underline(
       Log.log(
         `### ${i} | ${platform} | ${UrlUtils.constructBuildLogsUrl({
           buildId: job.id,
+          projectSlug: this.manifest.slug,
           username: username ?? undefined,
         })} ###`
       );
@@ -215,7 +215,7 @@ Please see the docs (${chalk.underline(
           )}`;
           if (shouldShowUpgradeInfo) {
             status += `\nWant to wait less? Get priority builds at ${chalk.underline(
-              'https://expo.io/settings/billing'
+              'https://expo.dev/settings/billing'
             )}.`;
           }
           break;
@@ -226,7 +226,7 @@ Please see the docs (${chalk.underline(
           status = 'Build in progress...';
           if (shouldShowUpgradeInfo) {
             status += `\nWant to wait less? Get priority builds at ${chalk.underline(
-              'https://expo.io/settings/billing'
+              'https://expo.dev/settings/billing'
             )}.`;
           }
           break;
@@ -234,7 +234,7 @@ Please see the docs (${chalk.underline(
           status = 'Build finished.';
           if (shouldShowUpgradeInfo) {
             status += `\nLooks like this build could have been faster.\nRead more about priority builds at ${chalk.underline(
-              'https://expo.io/settings/billing'
+              'https://expo.dev/settings/billing'
             )}.`;
           }
           break;
@@ -378,7 +378,7 @@ ${job.id}
     );
     if (priority === 'normal' && canPurchasePriorityBuilds) {
       Log.log(
-        'You can make this faster. 🐢\nGet priority builds at: https://expo.io/settings/billing\n'
+        'You can make this faster. 🐢\nGet priority builds at: https://expo.dev/settings/billing\n'
       );
     }
 
@@ -387,6 +387,7 @@ ${job.id}
     if (buildId) {
       const url = UrlUtils.constructBuildLogsUrl({
         buildId,
+        projectSlug: this.manifest.slug,
         username: this.manifest.owner || (user?.kind === 'user' ? user.username : undefined),
       });
 

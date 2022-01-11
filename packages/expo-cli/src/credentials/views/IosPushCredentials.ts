@@ -5,8 +5,8 @@ import terminalLink from 'terminal-link';
 import CommandError from '../../CommandError';
 import { isPushKey, PushKey, PushKeyInfo, PushKeyManager } from '../../appleApi';
 import Log from '../../log';
-import prompt, { confirmAsync, Question } from '../../prompts';
 import { ora } from '../../utils/ora';
+import prompt, { confirmAsync, Question } from '../../utils/prompts';
 import { displayIosUserCredentials } from '../actions/list';
 import { askForUserProvided, CredentialSchema } from '../actions/promptForCredentials';
 import { AppLookupParams, getAppLookupParams } from '../api/IosApi';
@@ -530,7 +530,7 @@ async function generatePushKey(ctx: Context, accountName: string): Promise<PushK
           {}
         );
 
-      // https://docs.expo.io/distribution/app-signing/#summary
+      // https://docs.expo.dev/distribution/app-signing/#summary
       const here = terminalLink('here', 'https://bit.ly/3cfJJkQ');
       Log.log(chalk.grey(`⚠️  Revoking a Push Key will affect other apps that rely on it`));
       Log.log(chalk.grey(`ℹ️  Learn more ${here}`));

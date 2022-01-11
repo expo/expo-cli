@@ -43,7 +43,7 @@ This package will do the following:
 - Ensure CocoaPods CLI is installed on the machine.
   - If not then it'll try to install CocoaPods CLI, first with gem, then with homebrew.
 - Check if there is an Xcode project in the current directory
-  - If not then it'll try again in an `ios/` directory (if one exists).
+  - If not then it'll try again in `ios/` than `macos/` directories (if any exists).
 - Run `pod install`
   - If `pod install` fails because the repo is out of date, then it'll run `pod repo update` and try again.
 

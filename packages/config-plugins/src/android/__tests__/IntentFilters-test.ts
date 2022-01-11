@@ -13,7 +13,7 @@ describe('Android intent filters', () => {
 
   it(`writes intent filter to android manifest`, async () => {
     let androidManifestJson = await readAndroidManifestAsync(sampleManifestPath);
-    androidManifestJson = await setAndroidIntentFilters(
+    androidManifestJson = setAndroidIntentFilters(
       {
         android: {
           intentFilters: [
@@ -25,18 +25,38 @@ describe('Android intent filters', () => {
               },
               category: ['BROWSABLE', 'DEFAULT'],
             },
+            {
+              autoVerify: false,
+              action: 'VIEW',
+              data: {
+                scheme: 'https',
+                host: 'test.foo.bar',
+                pathPrefix: '/deeplink',
+              },
+              category: ['BROWSABLE', 'DEFAULT'],
+            },
           ],
         },
       },
       androidManifestJson
     );
 
-    expect(getMainActivity(androidManifestJson)['intent-filter']).toHaveLength(2);
+    expect(getMainActivity(androidManifestJson)['intent-filter']).toHaveLength(3);
+
+    // Test removing generated intent filters.
+    androidManifestJson = setAndroidIntentFilters(
+      {
+        android: {},
+      },
+      androidManifestJson
+    );
+
+    expect(getMainActivity(androidManifestJson)['intent-filter']).toHaveLength(1);
   });
 
   xit(`does not duplicate android intent filters`, async () => {
     let androidManifestJson = await readAndroidManifestAsync(sampleManifestPath);
-    androidManifestJson = await setAndroidIntentFilters(
+    androidManifestJson = setAndroidIntentFilters(
       {
         android: {
           intentFilters: [
@@ -54,7 +74,7 @@ describe('Android intent filters', () => {
       androidManifestJson
     );
 
-    androidManifestJson = await setAndroidIntentFilters(
+    androidManifestJson = setAndroidIntentFilters(
       {
         android: {
           intentFilters: [

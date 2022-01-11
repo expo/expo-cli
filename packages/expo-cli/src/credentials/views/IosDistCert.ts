@@ -7,8 +7,8 @@ import { PKCS12Utils } from 'xdl';
 import CommandError from '../../CommandError';
 import { DistCert, DistCertInfo, DistCertManager, isDistCert } from '../../appleApi';
 import Log from '../../log';
-import prompt, { confirmAsync, Question } from '../../prompts';
 import { ora } from '../../utils/ora';
+import prompt, { confirmAsync, Question } from '../../utils/prompts';
 import { displayIosUserCredentials } from '../actions/list';
 import { askForUserProvided, CredentialSchema } from '../actions/promptForCredentials';
 import { AppLookupParams, getAppLookupParams } from '../api/IosApi';
@@ -447,7 +447,7 @@ async function generateDistCert(ctx: Context, accountName: string): Promise<Dist
           {}
         );
 
-      // https://docs.expo.io/distribution/app-signing/#summary
+      // https://docs.expo.dev/distribution/app-signing/#summary
       const here = terminalLink('here', 'https://bit.ly/3cfJJkQ');
       Log.log(
         chalk.grey(`✅  Distribution Certificates can be revoked with no production side effects`)

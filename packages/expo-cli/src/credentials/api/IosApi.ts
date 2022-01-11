@@ -1,11 +1,10 @@
 import { ApiV2 } from '@expo/api';
-import forEach from 'lodash/forEach';
+import assert from 'assert';
 import keyBy from 'lodash/keyBy';
 import omit from 'lodash/omit';
 import pick from 'lodash/pick';
 
 import * as appleApi from '../../appleApi';
-import { assert } from '../../assert';
 import {
   IosAppCredentials,
   IosCredentials,
@@ -13,10 +12,6 @@ import {
   IosPushCredentials,
 } from '../credentials';
 import ApiClient from './IosApiV2Wrapper';
-
-type CredentialFields = {
-  credentials: { [key: string]: any };
-};
 
 export interface AppLookupParams {
   accountName: string;
@@ -44,7 +39,7 @@ export function getAppLookupParams(experienceName: string, bundleIdentifier: str
 // - when accessing user or app credentials identified by AppLookupParams fetch all credentials for that app (user and app credentials)
 // - when updating userCredentials refetch only userCredentials
 // - when deleting userCredentials modify prefetched appCredentials without calling api
-// - when updating provisioningProfile refetch all credentials for that app (user and app crednetials)
+// - when updating provisioningProfile refetch all credentials for that app (user and app credentials)
 // - when deleting provisioningProfile modify appCredentials in cache
 // - when deleting pushCert refetch all credentials for app (app + user)
 //
@@ -271,7 +266,7 @@ export default class IosApi {
     await this.client.deleteProvisioningProfileApi(appLookupParams);
     const appCredentials = this.credentials?.[accountName]?.appCredentials?.[appCredentialsIndex];
     if (appCredentials?.credentials) {
-      // teamId should still be there becaus it might be part of push cert definition
+      // teamId should still be there because it might be part of push cert definition
       appCredentials.credentials = omit(appCredentials.credentials, [
         'provisioningProfile',
         'provisioningProfileId',
@@ -290,14 +285,16 @@ export default class IosApi {
       delete this.credentials[accountName].userCredentials[String(id)];
     }
     const appCredentials = this.credentials[accountName]?.appCredentials;
-    forEach(appCredentials, (val, key) => {
-      if (val.distCredentialsId === id) {
-        delete appCredentials[key].distCredentialsId;
-      }
-      if (val.pushCredentialsId === id) {
-        delete appCredentials[key].pushCredentialsId;
-      }
-    });
+    if (appCredentials) {
+      Object.entries(appCredentials).forEach(([key, val]) => {
+        if (val.distCredentialsId === id) {
+          delete appCredentials[key].distCredentialsId;
+        }
+        if (val.pushCredentialsId === id) {
+          delete appCredentials[key].pushCredentialsId;
+        }
+      });
+    }
   }
 
   // ensures that credentials are fetched from the server if they exists

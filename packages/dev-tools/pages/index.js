@@ -38,6 +38,7 @@ const query = gql`
         description
         slug
         githubUrl
+        platforms
       }
       sources {
         id
@@ -99,6 +100,7 @@ const projectPollQuery = gql`
         description
         slug
         githubUrl
+        platforms
       }
     }
     userSettings {

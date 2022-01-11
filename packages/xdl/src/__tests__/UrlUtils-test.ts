@@ -84,6 +84,17 @@ describe(UrlUtils.constructBundleQueryParamsWithConfig, () => {
       expect(
         UrlUtils.constructBundleQueryParamsWithConfig(projectRoot, {}, { sdkVersion: '33.0.0' })
       ).toBe('dev=false&hot=false');
+      // Defaults to highest SDK Support
+      expect(UrlUtils.constructBundleQueryParamsWithConfig(projectRoot, {}, {})).toBe(
+        'dev=false&hot=false'
+      );
+      expect(
+        UrlUtils.constructBundleQueryParamsWithConfig(
+          projectRoot,
+          {},
+          { sdkVersion: 'UNVERSIONED' }
+        )
+      ).toBe('dev=false&hot=false');
     });
     it(`creates a full query string`, async () => {
       expect(
@@ -93,6 +104,29 @@ describe(UrlUtils.constructBundleQueryParamsWithConfig, () => {
           { sdkVersion: '33.0.0' }
         )
       ).toBe('dev=true&hot=false&strict=true&minify=true');
+    });
+  });
+  describe('SDK -10', () => {
+    it(`adds includeAssetFileHashes`, async () => {
+      expect(
+        UrlUtils.constructBundleQueryParamsWithConfig(projectRoot, {}, { sdkVersion: '10.0.0' })
+      ).toBe('dev=false&hot=false&includeAssetFileHashes=true');
+    });
+  });
+  describe('SDK 11-32', () => {
+    it(`adds assetPlugin param`, async () => {
+      vol.fromJSON(
+        {
+          'node_modules/expo/tools/hashAssetFiles.js': 'foobar',
+        },
+        projectRoot
+      );
+
+      expect(
+        UrlUtils.constructBundleQueryParamsWithConfig(projectRoot, {}, { sdkVersion: '11.0.0' })
+      ).toBe(
+        'dev=false&hot=false&assetPlugin=%252Fapp%252Fnode_modules%252Fexpo%252Ftools%252FhashAssetFiles.js'
+      );
     });
   });
 });
@@ -212,7 +246,7 @@ describe(UrlUtils.constructDevClientUrlAsync, () => {
     ).rejects.toThrowErrorMatchingInlineSnapshot(`"No scheme specified for development client"`);
   });
 
-  it(`creates dev client url if a scheme is provided`, async () => {
+  it(`creates an expo-dev-client compatible url if a scheme is provided`, async () => {
     const result = await UrlUtils.constructDevClientUrlAsync(devClientWithSchemesProjectRoot);
     expect(result).toEqual(
       'custom-scheme://expo-development-client/?url=http%3A%2F%2F100.100.1.100%3A80'
@@ -243,7 +277,7 @@ describe(UrlUtils.isURL, () => {
     expect(
       UrlUtils.isURL('127.0.0.1:80', { protocols: ['https', 'http'], requireProtocol: true })
     ).toBe(false);
-    expect(UrlUtils.isURL('https://expo.io/', { protocols: ['https'] })).toBe(true);
+    expect(UrlUtils.isURL('https://expo.dev/', { protocols: ['https'] })).toBe(true);
     expect(UrlUtils.isURL('', { protocols: ['https'] })).toBe(false);
     expect(UrlUtils.isURL('hello', { protocols: ['https'] })).toBe(false);
   });

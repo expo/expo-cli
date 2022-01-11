@@ -1,7 +1,8 @@
 import JsonFile from '@expo/json-file';
 import fs from 'fs-extra';
+import os from 'os';
 import path from 'path';
-import uuid from 'uuid';
+import { v4 as uuidv4 } from 'uuid';
 
 import * as Env from './Env';
 import { UserData } from './User';
@@ -21,18 +22,7 @@ export type UserSettingsData = {
 const SETTINGS_FILE_NAME = 'state.json';
 
 function userSettingsFile(): string {
-  const dir = dotExpoHomeDirectory();
-  const file = path.join(dir, SETTINGS_FILE_NAME);
-  try {
-    // move exponent.json to state.json
-    const oldFile = path.join(dir, 'exponent.json');
-    if (fs.statSync(oldFile).isFile()) {
-      fs.renameSync(oldFile, file);
-    }
-  } catch (e) {
-    // no old directory, continue
-  }
-  return file;
+  return path.join(dotExpoHomeDirectory(), SETTINGS_FILE_NAME);
 }
 
 function userSettingsJsonFile(): JsonFile<UserSettingsData> {
@@ -45,33 +35,16 @@ function userSettingsJsonFile(): JsonFile<UserSettingsData> {
 let mkdirped = false;
 
 function dotExpoHomeDirectory() {
-  let dirPath;
-  if (process.env.__UNSAFE_EXPO_HOME_DIRECTORY) {
-    dirPath = process.env.__UNSAFE_EXPO_HOME_DIRECTORY;
-  } else {
-    const home = Env.home();
-    if (!home) {
-      throw new Error(
-        "Can't determine your home directory; make sure your $HOME environment variable is set."
-      );
-    }
+  let dirPath = process.env.__UNSAFE_EXPO_HOME_DIRECTORY;
+  if (!dirPath) {
+    const home = os.homedir();
 
-    if (process.env.EXPO_STAGING) {
+    if (Env.isStaging()) {
       dirPath = path.join(home, '.expo-staging');
-    } else if (process.env.EXPO_LOCAL) {
+    } else if (Env.isLocal()) {
       dirPath = path.join(home, '.expo-local');
     } else {
       dirPath = path.join(home, '.expo');
-    }
-
-    try {
-      // move .exponent to .expo
-      const oldDirPath = path.join(home, '.exponent');
-      if (fs.statSync(oldDirPath).isDirectory()) {
-        fs.renameSync(oldDirPath, dirPath);
-      }
-    } catch (e) {
-      // no old directory, continue
     }
   }
   if (!mkdirped) {
@@ -82,12 +55,12 @@ function dotExpoHomeDirectory() {
 }
 
 // returns an anonymous, unique identifier for a user on the current computer
-async function anonymousIdentifier(): Promise<string> {
+async function getAnonymousIdentifierAsync(): Promise<string> {
   const settings = await userSettingsJsonFile();
   let id = await settings.getAsync('uuid', null);
 
   if (!id) {
-    id = uuid.v4();
+    id = uuidv4();
     await settings.setAsync('uuid', id);
   }
 
@@ -103,7 +76,7 @@ const UserSettings = Object.assign(userSettingsJsonFile(), {
   userSettingsFile,
   userSettingsJsonFile,
   accessToken,
-  anonymousIdentifier,
+  getAnonymousIdentifierAsync,
   SETTINGS_FILE_NAME,
 });
 

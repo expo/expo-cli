@@ -110,7 +110,6 @@ export function logWarning(projectRoot: string, tag: LogTag, message: string, id
     truncatedMessage = truncatedMessage.substring(0, MAX_MESSAGE_LENGTH);
   }
   Analytics.logEvent('Project Warning', {
-    projectRoot,
     tag,
     message: truncatedMessage,
   });

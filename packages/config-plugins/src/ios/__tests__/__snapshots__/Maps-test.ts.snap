@@ -134,6 +134,184 @@ exports[`addGoogleMapsAppDelegateInit adds maps import to AppDelegate 1`] = `
   "
 `;
 
+exports[`addGoogleMapsAppDelegateInit adds maps import to Expo Modules AppDelegate 1`] = `
+"
+#import \\"AppDelegate.h\\"
+
+#import <React/RCTBridge.h>
+#import <React/RCTBundleURLProvider.h>
+#import <React/RCTRootView.h>
+#import <React/RCTLinkingManager.h>
+#import <React/RCTConvert.h>
+
+#if defined(FB_SONARKIT_ENABLED) && __has_include(<FlipperKit/FlipperClient.h>)
+#import <FlipperKit/FlipperClient.h>
+#import <FlipperKitLayoutPlugin/FlipperKitLayoutPlugin.h>
+#import <FlipperKitUserDefaultsPlugin/FKUserDefaultsPlugin.h>
+#import <FlipperKitNetworkPlugin/FlipperKitNetworkPlugin.h>
+#import <SKIOSNetworkPlugin/SKIOSNetworkAdapter.h>
+#import <FlipperKitReactPlugin/FlipperKitReactPlugin.h>
+
+static void InitializeFlipper(UIApplication *application) {
+  FlipperClient *client = [FlipperClient sharedClient];
+  SKDescriptorMapper *layoutDescriptorMapper = [[SKDescriptorMapper alloc] initWithDefaults];
+  [client addPlugin:[[FlipperKitLayoutPlugin alloc] initWithRootNode:application withDescriptorMapper:layoutDescriptorMapper]];
+  [client addPlugin:[[FKUserDefaultsPlugin alloc] initWithSuiteName:nil]];
+  [client addPlugin:[FlipperKitReactPlugin new]];
+  [client addPlugin:[[FlipperKitNetworkPlugin alloc] initWithNetworkAdapter:[SKIOSNetworkAdapter new]]];
+  [client start];
+}
+#endif
+
+@implementation AppDelegate
+
+- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
+{
+#if defined(FB_SONARKIT_ENABLED) && __has_include(<FlipperKit/FlipperClient.h>)
+  InitializeFlipper(application);
+#endif
+  
+// @generated begin react-native-maps-init - expo prebuild (DO NOT MODIFY) sync-97501819d6911e5f50d66c63d369b0cec62853c2
+#if __has_include(<GoogleMaps/GoogleMaps.h>)
+  [GMSServices provideAPIKey:@\\"mykey\\"];
+#endif
+// @generated end react-native-maps-init
+  RCTBridge *bridge = [[RCTBridge alloc] initWithDelegate:self launchOptions:launchOptions];
+  RCTRootView *rootView = [[RCTRootView alloc] initWithBridge:bridge moduleName:@\\"main\\" initialProperties:nil];
+  id rootViewBackgroundColor = [[NSBundle mainBundle] objectForInfoDictionaryKey:@\\"RCTRootViewBackgroundColor\\"];
+  if (rootViewBackgroundColor != nil) {
+    rootView.backgroundColor = [RCTConvert UIColor:rootViewBackgroundColor];
+  } else {
+    rootView.backgroundColor = [UIColor whiteColor];
+  }
+
+  self.window = [[UIWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
+  UIViewController *rootViewController = [UIViewController new];
+  rootViewController.view = rootView;
+  self.window.rootViewController = rootViewController;
+  [self.window makeKeyAndVisible];
+
+  [super application:application didFinishLaunchingWithOptions:launchOptions];
+
+  return YES;
+ }
+
+- (NSArray<id<RCTBridgeModule>> *)extraModulesForBridge:(RCTBridge *)bridge
+{
+  // If you'd like to export some custom RCTBridgeModules, add them here!
+  return @[];
+}
+
+- (NSURL *)sourceURLForBridge:(RCTBridge *)bridge {
+ #ifdef DEBUG
+  return [[RCTBundleURLProvider sharedSettings] jsBundleURLForBundleRoot:@\\"index\\" fallbackResource:nil];
+ #else
+  return [[NSBundle mainBundle] URLForResource:@\\"main\\" withExtension:@\\"jsbundle\\"];
+ #endif
+}
+
+// Linking API
+- (BOOL)application:(UIApplication *)application openURL:(NSURL *)url options:(NSDictionary<UIApplicationOpenURLOptionsKey,id> *)options {
+  return [RCTLinkingManager application:application openURL:url options:options];
+}
+
+// Universal Links
+- (BOOL)application:(UIApplication *)application continueUserActivity:(nonnull NSUserActivity *)userActivity restorationHandler:(nonnull void (^)(NSArray<id<UIUserActivityRestoring>> * _Nullable))restorationHandler {
+  return [RCTLinkingManager application:application
+                   continueUserActivity:userActivity
+                     restorationHandler:restorationHandler];
+}
+
+@end
+"
+`;
+
+exports[`addGoogleMapsAppDelegateInit adds maps import to Expo Modules SDK 44 AppDelegate 1`] = `
+"
+#import \\"AppDelegate.h\\"
+
+#import <React/RCTBridge.h>
+#import <React/RCTBundleURLProvider.h>
+#import <React/RCTRootView.h>
+#import <React/RCTLinkingManager.h>
+#import <React/RCTConvert.h>
+
+#if defined(FB_SONARKIT_ENABLED) && __has_include(<FlipperKit/FlipperClient.h>)
+#import <FlipperKit/FlipperClient.h>
+#import <FlipperKitLayoutPlugin/FlipperKitLayoutPlugin.h>
+#import <FlipperKitUserDefaultsPlugin/FKUserDefaultsPlugin.h>
+#import <FlipperKitNetworkPlugin/FlipperKitNetworkPlugin.h>
+#import <SKIOSNetworkPlugin/SKIOSNetworkAdapter.h>
+#import <FlipperKitReactPlugin/FlipperKitReactPlugin.h>
+
+static void InitializeFlipper(UIApplication *application) {
+  FlipperClient *client = [FlipperClient sharedClient];
+  SKDescriptorMapper *layoutDescriptorMapper = [[SKDescriptorMapper alloc] initWithDefaults];
+  [client addPlugin:[[FlipperKitLayoutPlugin alloc] initWithRootNode:application withDescriptorMapper:layoutDescriptorMapper]];
+  [client addPlugin:[[FKUserDefaultsPlugin alloc] initWithSuiteName:nil]];
+  [client addPlugin:[FlipperKitReactPlugin new]];
+  [client addPlugin:[[FlipperKitNetworkPlugin alloc] initWithNetworkAdapter:[SKIOSNetworkAdapter new]]];
+  [client start];
+}
+#endif
+
+@implementation AppDelegate
+
+- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
+{
+#if defined(FB_SONARKIT_ENABLED) && __has_include(<FlipperKit/FlipperClient.h>)
+  InitializeFlipper(application);
+#endif
+  
+// @generated begin react-native-maps-init - expo prebuild (DO NOT MODIFY) sync-97501819d6911e5f50d66c63d369b0cec62853c2
+#if __has_include(<GoogleMaps/GoogleMaps.h>)
+  [GMSServices provideAPIKey:@\\"mykey\\"];
+#endif
+// @generated end react-native-maps-init
+  RCTBridge *bridge = [self.reactDelegate createBridgeWithDelegate:self launchOptions:launchOptions];
+  RCTRootView *rootView = [self.reactDelegate createRootViewWithBridge:bridge moduleName:@\\"main\\" initialProperties:nil];
+  rootView.backgroundColor = [UIColor whiteColor];
+  self.window = [[UIWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
+  UIViewController *rootViewController = [self.reactDelegate createRootViewController];
+  rootViewController.view = rootView;
+  self.window.rootViewController = rootViewController;
+  [self.window makeKeyAndVisible];
+
+  [super application:application didFinishLaunchingWithOptions:launchOptions];
+
+  return YES;
+ }
+
+- (NSArray<id<RCTBridgeModule>> *)extraModulesForBridge:(RCTBridge *)bridge
+{
+  // If you'd like to export some custom RCTBridgeModules, add them here!
+  return @[];
+}
+
+- (NSURL *)sourceURLForBridge:(RCTBridge *)bridge {
+ #ifdef DEBUG
+  return [[RCTBundleURLProvider sharedSettings] jsBundleURLForBundleRoot:@\\"index\\" fallbackResource:nil];
+ #else
+  return [[NSBundle mainBundle] URLForResource:@\\"main\\" withExtension:@\\"jsbundle\\"];
+ #endif
+}
+
+// Linking API
+- (BOOL)application:(UIApplication *)application openURL:(NSURL *)url options:(NSDictionary<UIApplicationOpenURLOptionsKey,id> *)options {
+  return [RCTLinkingManager application:application openURL:url options:options];
+}
+
+// Universal Links
+- (BOOL)application:(UIApplication *)application continueUserActivity:(nonnull NSUserActivity *)userActivity restorationHandler:(nonnull void (^)(NSArray<id<UIUserActivityRestoring>> * _Nullable))restorationHandler {
+  return [RCTLinkingManager application:application
+                   continueUserActivity:userActivity
+                     restorationHandler:restorationHandler];
+}
+
+@end
+"
+`;
+
 exports[`addGoogleMapsAppDelegateInit adds maps import to Unimodules AppDelegate 1`] = `
 "
 #import \\"AppDelegate.h\\"
@@ -253,8 +431,8 @@ platform :ios, '11.0'
 
 target 'myapp' do
   use_unimodules!
-# @generated begin react-native-maps - expo prebuild (DO NOT MODIFY) sync-2f0a6817224f18601deb2879c9e783ba07387bc9
-  pod 'react-native-google-maps', path: '../node_modules/react-native-maps'
+# @generated begin react-native-maps - expo prebuild (DO NOT MODIFY) sync-e9cc66c360abe50bc66d89fffb3c55b034d7d369
+  pod 'react-native-google-maps', path: File.dirname(\`node --print \\"require.resolve('react-native-maps/package.json')\\"\`)
 # @generated end react-native-maps
   config = use_native_modules!
 

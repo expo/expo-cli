@@ -21,8 +21,11 @@ export async function tryOpeningDevToolsAsync(
   Log.log(`Developer tools running on ${chalk.underline(devToolsUrl)}`);
 
   if (!options.nonInteractive && !exp.isDetached) {
-    if (await UserSettings.getAsync('openDevToolsAtStartup', true)) {
+    if (await TerminalUI.shouldOpenDevToolsOnStartupAsync()) {
+      await UserSettings.setAsync('openDevToolsAtStartup', true);
       TerminalUI.openDeveloperTools(devToolsUrl);
+    } else {
+      await UserSettings.setAsync('openDevToolsAtStartup', false);
     }
   }
 }

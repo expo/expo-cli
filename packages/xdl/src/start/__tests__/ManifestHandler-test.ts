@@ -2,11 +2,9 @@ import { ExpoConfig } from '@expo/config';
 import axios from 'axios';
 import fs from 'fs-extra';
 import { vol } from 'memfs';
-import os from 'os';
 import path from 'path';
-import uuid from 'uuid';
 
-import { ManifestHandler } from '../../internal';
+import { ManifestHandler, UserSettings } from '../../internal';
 
 const actualFs = jest.requireActual('fs') as typeof fs;
 jest.mock('fs');
@@ -98,17 +96,8 @@ describe('getUnsignedManifestString', () => {
 });
 
 describe('getManifestResponseAsync', () => {
-  // for some reason, tempy fails with memfs in XDL
-  const expoDir = path.join(os.tmpdir(), `.expo-${uuid.v4()}`);
-
   beforeAll(() => {
-    process.env.__UNSAFE_EXPO_HOME_DIRECTORY = expoDir;
-    fs.mkdirpSync(expoDir);
-  });
-
-  afterAll(() => {
-    process.env.__UNSAFE_EXPO_HOME_DIRECTORY = '';
-    fs.removeSync(expoDir);
+    fs.removeSync(UserSettings.userSettingsFile());
   });
 
   beforeEach(() => {
@@ -178,7 +167,7 @@ describe('getManifestResponseAsync', () => {
     // This value is blacklisted
     expect(res.exp.env.EXPO_APPLE_PASSWORD).not.toBeDefined();
     // Users should use app.config.js + extras now so test that it always works
-    expect(res.exp.extras.myExtra).toBe('123');
+    expect((res.exp as any).extras.myExtra).toBe('123');
 
     // Ensure the bundle URL is built correctly
     expect(res.exp.bundleUrl).toBe(
@@ -194,7 +183,7 @@ describe('getManifestResponseAsync', () => {
     expect(res.exp.developer.projectRoot).toBe('/alpha');
 
     // ProjectAssets gathered URLs
-    expect(res.exp.iconUrl).toBe('http://127.0.0.1:80/assets/./icon.png');
+    expect((res.exp as any).iconUrl).toBe('http://127.0.0.1:80/assets/./icon.png');
     expect(res.exp.splash.imageUrl).toBe('http://127.0.0.1:80/assets/./assets/splash.png');
   });
 });

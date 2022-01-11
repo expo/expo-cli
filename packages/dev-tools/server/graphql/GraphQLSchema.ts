@@ -1,4 +1,4 @@
-import { Config, UserManager, UserSettings } from '@expo/api';
+import { UserManager, UserSettings } from '@expo/api';
 import { getConfig, writeConfigJsonAsync } from '@expo/config';
 import spawnAsync from '@expo/spawn-async';
 import { makeExecutableSchema } from 'graphql-tools';
@@ -69,6 +69,7 @@ const typeDefs = graphql`
     description: String
     slug: String
     githubUrl: String
+    platforms: [String]
   }
 
   input ProjectConfigInput {
@@ -285,7 +286,7 @@ const typeDefs = graphql`
     openSimulator(platform: Platform!): OpenSimulatorResult
     # Starts WebPack server
     openWeb: OpenWebResult
-    # Publishes the current project to expo.io
+    # Publishes the current project to expo.dev (classic updates)
     publishProject(releaseChannel: String): PublishProjectResult
     # Sends the project URL by email.
     sendProjectUrl(recipient: String!): SendProjectResult
@@ -456,7 +457,7 @@ const resolvers = {
   },
   ProjectSettings: {
     hostType(projectSettings) {
-      if (Config.offline && projectSettings.hostType === 'tunnel') {
+      if (ConnectionStatus.isOffline() && projectSettings.hostType === 'tunnel') {
         return 'lan';
       } else {
         return projectSettings.hostType;

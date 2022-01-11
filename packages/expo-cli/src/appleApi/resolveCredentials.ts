@@ -6,7 +6,7 @@ import wrapAnsi from 'wrap-ansi';
 import CommandError from '../CommandError';
 import { learnMore } from '../commands/utils/TerminalLink';
 import Log from '../log';
-import promptAsync from '../prompts';
+import promptAsync from '../utils/prompts';
 import * as Keychain from './keychain';
 
 /**
@@ -92,11 +92,11 @@ export async function promptPasswordAsync({
 
   if (cachedPassword) {
     Log.log(`\u203A Using password for ${username} from your local Keychain`);
-    Log.log(`  ${learnMore('https://docs.expo.io/distribution/security#keychain')}`);
+    Log.log(`  ${learnMore('https://docs.expo.dev/distribution/security#keychain')}`);
     return cachedPassword;
   }
 
-  // https://docs.expo.io/distribution/security/#apple-developer-account-credentials
+  // https://docs.expo.dev/distribution/security/#apple-developer-account-credentials
   Log.log(
     wrapAnsi(
       chalk.bold(
@@ -171,7 +171,7 @@ async function cachePasswordAsync({ username, password }: Auth.UserCredentials):
   }
 
   Log.log(`\u203A Saving Apple ID password to the local Keychain`);
-  Log.log(`  ${learnMore('https://docs.expo.io/distribution/security#keychain')}`);
+  Log.log(`  ${learnMore('https://docs.expo.dev/distribution/security#keychain')}`);
   const serviceName = getKeychainServiceName(username);
   return Keychain.setPasswordAsync({ username, password, serviceName });
 }

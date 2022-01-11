@@ -5,11 +5,13 @@ import spawnAsync from '@expo/spawn-async';
 import { execSync } from 'child_process';
 import getenv from 'getenv';
 import isReachable from 'is-reachable';
+import memoize from 'lodash/memoize';
 import resolveFrom from 'resolve-from';
 import semver from 'semver';
 
 import { ExpSchema, ProjectUtils, Versions, Watchman } from '../internal';
 import { learnMore } from '../logs/TerminalLink';
+import { profileMethod } from '../utils/profileMethod';
 
 export const NO_ISSUES = 0;
 export const WARNING = 1;
@@ -89,17 +91,27 @@ async function _checkWatchmanVersionAsync(projectRoot: string) {
     return;
   }
 
-  if (semver.lt(watchmanVersion, MIN_WATCHMAN_VERSION)) {
-    let warningMessage = `Warning: You are using an old version of watchman (v${watchmanVersion}). This may cause problems for you.\n\nWe recommend that you either uninstall watchman (and XDE will try to use a copy it is bundled with) or upgrade watchman to a newer version, at least v${MIN_WATCHMAN_VERSION}.`;
+  // Watchman versioning through homebrew is changed from semver to date since "2021.05.31.00"
+  // see: https://github.com/Homebrew/homebrew-core/commit/d299c2867503cb6ad8d90792343993c80e745071
+  const validSemver =
+    !!semver.valid(watchmanVersion) && semver.gte(watchmanVersion, MIN_WATCHMAN_VERSION);
+
+  // This new format is used later than the MIN_WATCHMAN_VERSION, we assume/estimate if the version is correct here.
+  const validNewVersion =
+    !validSemver && /[0-9]{4}\.[0-9]{2}\.[0-9]{2}\.[0-9]{2}/.test(watchmanVersion);
+
+  if (!validSemver && !validNewVersion) {
+    let warningMessage = `Warning: You are using an old version of watchman (v${watchmanVersion}).\n\nIt is recommend to always use the latest version, or at least v${MIN_WATCHMAN_VERSION}.`;
 
     // Add a note about homebrew if the user is on a Mac
     if (process.platform === 'darwin') {
       warningMessage += `\n\nIf you are using homebrew, try:\nbrew uninstall watchman; brew install watchman`;
     }
     ProjectUtils.logWarning(projectRoot, 'expo', warningMessage, 'doctor-watchman-version');
-  } else {
-    ProjectUtils.clearNotification(projectRoot, 'doctor-watchman-version');
+    return;
   }
+
+  ProjectUtils.clearNotification(projectRoot, 'doctor-watchman-version');
 }
 
 async function validateWithSchema(
@@ -125,7 +137,7 @@ async function validateWithSchema(
       schemaErrorMessage = `Error: Problem${
         e.errors.length > 1 ? 's' : ''
       } validating fields in ${configName}. ${learnMore(
-        'https://docs.expo.io/workflow/configuration/'
+        'https://docs.expo.dev/workflow/configuration/'
       )}`;
       schemaErrorMessage += e.errors.map(formatValidationError).join('');
     }
@@ -138,7 +150,7 @@ async function validateWithSchema(
       if (e instanceof SchemerError) {
         assetsErrorMessage = `Error: Problem${
           e.errors.length > 1 ? '' : 's'
-        } validating asset fields in ${configName}. ${learnMore('https://docs.expo.io/')}`;
+        } validating asset fields in ${configName}. ${learnMore('https://docs.expo.dev/')}`;
         assetsErrorMessage += e.errors.map(formatValidationError).join('');
       }
     }
@@ -271,6 +283,13 @@ async function _validateExpJsonAsync(
   return NO_ISSUES;
 }
 
+const resolveReactNativeVersionFromProjectRoot = memoize((projectRoot: string): string | null => {
+  try {
+    return require(resolveFrom(projectRoot, 'react-native/package.json')).version;
+  } catch {}
+  return null;
+});
+
 async function _validateReactNativeVersionAsync(
   exp: ExpoConfig,
   pkg: PackageJSONConfig,
@@ -278,67 +297,84 @@ async function _validateReactNativeVersionAsync(
   sdkVersions: Versions.SDKVersions,
   sdkVersion: string
 ): Promise<number> {
-  if (Config.validation.reactNativeVersionWarnings) {
-    let reactNative = null;
+  let reactNative = null;
 
-    if (pkg.dependencies?.['react-native']) {
-      reactNative = pkg.dependencies['react-native'];
-    } else if (pkg.devDependencies?.['react-native']) {
-      reactNative = pkg.devDependencies['react-native'];
-    } else if (pkg.peerDependencies?.['react-native']) {
-      reactNative = pkg.peerDependencies['react-native'];
-    }
+  if (pkg.dependencies?.['react-native']) {
+    reactNative = pkg.dependencies['react-native'];
+  } else if (pkg.devDependencies?.['react-native']) {
+    reactNative = pkg.devDependencies['react-native'];
+  } else if (pkg.peerDependencies?.['react-native']) {
+    reactNative = pkg.peerDependencies['react-native'];
+  }
 
-    // react-native is required
-    if (!reactNative) {
-      ProjectUtils.logError(
-        projectRoot,
-        'expo',
-        `Error: Can't find react-native in package.json dependencies`,
-        'doctor-no-react-native-in-package-json'
-      );
-      return ERROR;
-    }
-    ProjectUtils.clearNotification(projectRoot, 'doctor-no-react-native-in-package-json');
+  // react-native is required
+  if (!reactNative) {
+    ProjectUtils.logError(
+      projectRoot,
+      'expo',
+      `Error: Can't find react-native in package.json dependencies`,
+      'doctor-no-react-native-in-package-json'
+    );
+    return ERROR;
+  }
 
-    if (
-      Versions.gteSdkVersion(exp, '41.0.0') &&
-      pkg.dependencies?.['@react-native-community/async-storage']
-    ) {
+  ProjectUtils.clearNotification(projectRoot, 'doctor-no-react-native-in-package-json');
+
+  if (
+    Versions.gteSdkVersion(exp, '41.0.0') &&
+    pkg.dependencies?.['@react-native-community/async-storage']
+  ) {
+    ProjectUtils.logWarning(
+      projectRoot,
+      'expo',
+      `\n@react-native-community/async-storage has been renamed. To upgrade:\n- remove @react-native-community/async-storage from package.json\n- run "expo install @react-native-async-storage/async-storage"\n- update your imports manually, or run "npx expo-codemod sdk41-async-storage './**/*'".\n`,
+      'doctor-legacy-async-storage'
+    );
+    return WARNING;
+  } else {
+    ProjectUtils.clearNotification(projectRoot, 'doctor-legacy-async-storage');
+  }
+
+  const isExpoForkedReactNative = /expo\/react-native/.test(reactNative);
+  if (!isExpoForkedReactNative) {
+    // Expo fork of react-native is required for deprecated `isDetached` project
+    if (exp.isDetached) {
       ProjectUtils.logWarning(
         projectRoot,
         'expo',
-        `@react-native-community/async-storage has been renamed. To upgrade:\n- remove @react-native-community/async-storage from package.json\n- run "expo install @react-native-async-storage/async-storage"\n- run "npx expo-codemod sdk41-async-storage src" to rename imports`,
-        'doctor-legacy-async-storage'
-      );
-      return WARNING;
-    } else {
-      ProjectUtils.clearNotification(projectRoot, 'doctor-legacy-async-storage');
-    }
-
-    if (!exp.isDetached) {
-      return NO_ISSUES;
-
-      // (TODO-2017-07-20): Validate the react-native version if it uses
-      // officially published package rather than Expo fork. Expo fork of
-      // react-native was required before CRNA. We now only run the react-native
-      // validation of the version if we are using the fork. We should probably
-      // validate the version here as well such that it matches with the
-      // react-native version compatible with the selected SDK.
-    }
-
-    // Expo fork of react-native is required
-    if (!/expo\/react-native/.test(reactNative)) {
-      ProjectUtils.logWarning(
-        projectRoot,
-        'expo',
-        `Warning: Not using the Expo fork of react-native. ${learnMore('https://docs.expo.io/')}`,
+        `Warning: Not using the Expo fork of react-native (${reactNative}). ${learnMore(
+          'https://docs.expo.dev/'
+        )}`,
         'doctor-not-using-expo-fork'
       );
       return WARNING;
     }
     ProjectUtils.clearNotification(projectRoot, 'doctor-not-using-expo-fork');
 
+    // Get the exact version as late as possible
+    // `semver` will match `semver.satisfies('~1.0.0', '~1.0.0')` as `false` even though it's technically allowed,
+    // to combat this, attempt to get the exact installed version.
+    const exactReactNativeVersion = profileMethod(resolveReactNativeVersionFromProjectRoot)(
+      projectRoot
+    );
+
+    reactNative = exactReactNativeVersion || reactNative;
+
+    // Check react-native version satisfies with sdk's `facebookReactNativeVersion`
+    const { facebookReactNativeVersion } = sdkVersions[sdkVersion];
+    const anyReactNativePatchVersion = `~${facebookReactNativeVersion}`;
+    if (!semver.satisfies(reactNative, anyReactNativePatchVersion)) {
+      ProjectUtils.logWarning(
+        projectRoot,
+        'expo',
+        `Warning: Invalid version react-native@${reactNative} for expo sdkVersion ${sdkVersion}. Use react-native@${facebookReactNativeVersion}`,
+        'doctor-invalid-version-of-react-native'
+      );
+      return WARNING;
+    }
+    ProjectUtils.clearNotification(projectRoot, 'doctor-invalid-version-of-react-native');
+  } else {
+    // If `isExpoForkedReactNative === true`
     try {
       const reactNativeTag = reactNative.match(/sdk-\d+\.\d+\.\d+/)[0];
       const sdkVersionObject = sdkVersions[sdkVersion];
@@ -369,6 +405,7 @@ async function _validateReactNativeVersionAsync(
       return WARNING;
     }
   }
+
   return NO_ISSUES;
 }
 

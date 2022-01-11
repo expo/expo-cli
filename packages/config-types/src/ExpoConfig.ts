@@ -13,13 +13,21 @@ export interface ExpoConfig {
    */
   description?: string;
   /**
-   * The friendly URL name for publishing. For example, `myAppName` will refer to the `expo.io/@project-owner/myAppName` project.
+   * The friendly URL name for publishing. For example, `myAppName` will refer to the `expo.dev/@project-owner/myAppName` project.
    */
   slug: string;
   /**
-   * The Expo account name of the team owner, only applicable if you are enrolled in the EAS Priority Plan. If not provided, defaults to the username of the current user.
+   * The name of the Expo account that owns the project. This is useful for teams collaborating on a project. If not provided, the owner defaults to the username of the current user.
    */
   owner?: string;
+  /**
+   * The auto generated Expo account name and slug used for display purposes. Formatted like `@username/slug`. When unauthenticated, the username is `@anonymous`. For published projects, this value may change when a project is transferred between accounts or renamed.
+   */
+  currentFullName?: string;
+  /**
+   * The auto generated Expo account name and slug used for services like Notifications and AuthSession proxy. Formatted like `@username/slug`. When unauthenticated, the username is `@anonymous`. For published projects, this value will not change when a project is transferred between accounts or renamed.
+   */
+  originalFullName?: string;
   /**
    * Defaults to `unlisted`. `unlisted` hides the project from search results. `hidden` restricts access to the project page to only the owner and other users that have been granted access. Valid values: `public`, `unlisted`, `hidden`.
    */
@@ -31,11 +39,16 @@ export interface ExpoConfig {
   /**
    * **Note: Don't use this property unless you are sure what you're doing**
    *
-   * The runtime version associated with this manifest for bare workflow projects. If provided, this must match the version set in Expo.plist or AndroidManifest.xml.
+   * The runtime version associated with this manifest.
+   * Set this to `{"policy": "nativeVersion"}` to generate it automatically.
    */
-  runtimeVersion?: string;
+  runtimeVersion?:
+    | string
+    | {
+        policy: 'nativeVersion' | 'sdkVersion';
+      };
   /**
-   * Your app version. In addition to this field, you'll also use `ios.buildNumber` and `android.versionCode` — read more about how to version your app [here](https://docs.expo.io/distribution/app-stores/#versioning-your-app). On iOS this corresponds to `CFBundleShortVersionString`, and on Android, this corresponds to `versionName`. The required format can be found [here](https://developer.apple.com/documentation/bundleresources/information_property_list/cfbundleshortversionstring).
+   * Your app version. In addition to this field, you'll also use `ios.buildNumber` and `android.versionCode` — read more about how to version your app [here](https://docs.expo.dev/distribution/app-stores/#versioning-your-app). On iOS this corresponds to `CFBundleShortVersionString`, and on Android, this corresponds to `versionName`. The required format can be found [here](https://developer.apple.com/documentation/bundleresources/information_property_list/cfbundleshortversionstring).
    */
   version?: string;
   /**
@@ -51,11 +64,11 @@ export interface ExpoConfig {
    */
   orientation?: 'default' | 'portrait' | 'landscape';
   /**
-   * Configuration to force the app to always use the light or dark user-interface appearance, such as "dark mode", or make it automatically adapt to the system preferences. If not provided, defaults to `light`.
+   * Configuration to force the app to always use the light or dark user-interface appearance, such as "dark mode", or make it automatically adapt to the system preferences. If not provided, defaults to `light`. Requires `expo-system-ui` be installed in your project to work on Android.
    */
   userInterfaceStyle?: 'light' | 'dark' | 'automatic';
   /**
-   * The background color for your app, behind any of your React views. This is also known as the root view background color.
+   * The background color for your app, behind any of your React views. This is also known as the root view background color. Requires `expo-system-ui` be installed in your project to work on iOS.
    */
   backgroundColor?: string;
   /**
@@ -79,7 +92,7 @@ export interface ExpoConfig {
      */
     color?: string;
     /**
-     * Whether or not to display notifications when the app is in the foreground on iOS. `_displayInForeground` option in the individual push notification message overrides this option. [Learn more.](https://docs.expo.io/push-notifications/receiving-notifications/#foreground-notification-behavior) Defaults to `false`.
+     * Whether or not to display notifications when the app is in the foreground on iOS. `_displayInForeground` option in the individual push notification message overrides this option. [Learn more.](https://docs.expo.dev/push-notifications/receiving-notifications/#foreground-notification-behavior) Defaults to `false`.
      */
     iosDisplayInForeground?: boolean;
     /**
@@ -92,15 +105,11 @@ export interface ExpoConfig {
     androidCollapsedTitle?: string;
   };
   /**
-   * By default, Expo looks for the application registered with the AppRegistry as `main`. If you would like to change this, you can specify the name in this property.
+   * @deprecated By default, Expo looks for the application registered with the AppRegistry as `main`. If you would like to change this, you can specify the name in this property.
    */
   appKey?: string;
   /**
-   * @deprecated Use `androidStatusBar` instead.
-   */
-  androidStatusBarColor?: string;
-  /**
-   * Configuration for the status bar on Android. For more details please navigate to [Configuring StatusBar](https://docs.expo.io/guides/configuring-statusbar/).
+   * Configuration for the status bar on Android. For more details please navigate to [Configuring StatusBar](https://docs.expo.dev/guides/configuring-statusbar/).
    */
   androidStatusBar?: {
     /**
@@ -116,22 +125,22 @@ export interface ExpoConfig {
      */
     hidden?: boolean;
     /**
-     * Specifies whether the status bar should be translucent (whether it should be treated as a block element that will take up space on the device's screen and limit space available for the rest of your app to be rendered, or be treated as an element with `'position = absolute'` that is rendered above your app's content). Defaults to `true` (default iOS behavior, the iOS status bar cannot be set translucent by the system)
+     * Sets `android:windowTranslucentStatus` in `styles.xml`. When false, the system status bar pushes the content of your app down (similar to `position: relative`). When true, the status bar floats above the content in your app (similar to `position: absolute`). Defaults to `true` to match the iOS status bar behavior (which can only float above content).
      */
     translucent?: boolean;
   };
   /**
-   * Configuration for the bottom navigation bar on Android.
+   * Configuration for the bottom navigation bar on Android. Can be used to configure the `expo-navigation-bar` module in EAS Build.
    */
   androidNavigationBar?: {
     /**
-     * Determines how and when the navigation bar is shown. [Learn more](https://developer.android.com/training/system-ui/immersive). Valid values: `leanback`, `immersive`, `sticky-immersive`
+     * Determines how and when the navigation bar is shown. [Learn more](https://developer.android.com/training/system-ui/immersive). Requires `expo-navigation-bar` be installed in your project. Valid values: `leanback`, `immersive`, `sticky-immersive`
      *
      *  `leanback` results in the navigation bar being hidden until the first touch gesture is registered.
      *
      *  `immersive` results in the navigation bar being hidden until the user swipes up from the edge where the navigation bar is hidden.
      *
-     *  `sticky-immersive` is identical to `'immersive'` except that the navigation bar will be semi-transparent and will be hidden again after a short period of time
+     *  `sticky-immersive` is identical to `'immersive'` except that the navigation bar will be semi-transparent and will be hidden again after a short period of time.
      */
     visible?: 'leanback' | 'immersive' | 'sticky-immersive';
     /**
@@ -161,13 +170,13 @@ export interface ExpoConfig {
    */
   entryPoint?: string;
   /**
-   * Any extra fields you want to pass to your experience. Values are accessible via `Expo.Constants.manifest.extra` ([Learn more](https://docs.expo.io/versions/latest/sdk/constants/#constantsmanifest))
+   * Any extra fields you want to pass to your experience. Values are accessible via `Expo.Constants.manifest.extra` ([Learn more](https://docs.expo.dev/versions/latest/sdk/constants/#constantsmanifest))
    */
   extra?: {
     [k: string]: any;
   };
   /**
-   * @deprecated Use a `metro.config.js` file instead. [Learn more](https://docs.expo.io/guides/customizing-metro/)
+   * @deprecated Use a `metro.config.js` file instead. [Learn more](https://docs.expo.dev/guides/customizing-metro/)
    */
   packagerOpts?: {
     [k: string]: any;
@@ -177,7 +186,7 @@ export interface ExpoConfig {
    */
   updates?: {
     /**
-     * If set to false, your standalone app will never download any code, and will only use code bundled locally on the device. In that case, all updates to your app must be submitted through Apple review. Defaults to true. (Note: This will not work out of the box with ExpoKit projects)
+     * If set to false, your standalone app will never download any code, and will only use code bundled locally on the device. In that case, all updates to your app must be submitted through app store review. Defaults to true. (Note: This will not work out of the box with ExpoKit projects)
      */
     enabled?: boolean;
     /**
@@ -185,9 +194,13 @@ export interface ExpoConfig {
      */
     checkAutomatically?: 'ON_ERROR_RECOVERY' | 'ON_LOAD';
     /**
-     * How long (in ms) to allow for fetching OTA updates before falling back to a cached version of the app. Defaults to 30000 (30 sec). Must be between 0 and 300000 (5 minutes).
+     * How long (in ms) to allow for fetching OTA updates before falling back to a cached version of the app. Defaults to 0. Must be between 0 and 300000 (5 minutes).
      */
     fallbackToCacheTimeout?: number;
+    /**
+     * URL from which expo-updates will fetch update manifests
+     */
+    url?: string;
   };
   /**
    * Provide overrides by locale for System Dialog prompts like Permissions Boxes
@@ -234,10 +247,18 @@ export interface ExpoConfig {
     [k: string]: any;
   };
   /**
-   * An array of file glob strings which point to assets that will be bundled within your standalone app binary. Read more in the [Offline Support guide](https://docs.expo.io/guides/offline-support/)
+   * An array of file glob strings which point to assets that will be bundled within your standalone app binary. Read more in the [Offline Support guide](https://docs.expo.dev/guides/offline-support/)
    */
   assetBundlePatterns?: string[];
+  /**
+   * Config plugins for adding extra functionality to your project. [Learn more](https://docs.expo.dev/guides/config-plugins/).
+   */
+  plugins?: (string | [] | [string] | [string, any])[];
   splash?: Splash;
+  /**
+   * Specifies the JavaScript engine for apps. Supported only on EAS Build. Defaults to `jsc`. Valid values: `hermes`, `jsc`.
+   */
+  jsEngine?: 'hermes' | 'jsc';
   ios?: IOS;
   android?: Android;
   web?: Web;
@@ -269,10 +290,6 @@ export interface ExpoConfig {
     };
     [k: string]: any;
   };
-  /**
-   * Plugins for adding extra functionality to your project
-   */
-  plugins?: (string | [] | [string] | [string, any])[];
 }
 /**
  * Configuration for loading and splash screen for standalone apps.
@@ -313,7 +330,7 @@ export interface IOS {
    */
   buildNumber?: string;
   /**
-   * The background color for your iOS app, behind any of your React views. Overrides the top-level `backgroundColor` key if it is present.
+   * The background color for your iOS app, behind any of your React views. Overrides the top-level `backgroundColor` key if it is present. Requires `expo-system-ui` be installed in your project to work on iOS.
    */
   backgroundColor?: string;
   /**
@@ -323,13 +340,17 @@ export interface IOS {
    */
   icon?: string;
   /**
-   * Merchant ID for use with Apple Pay in your standalone app.
+   * @deprecated Merchant ID for use with Apple Pay in your standalone app.
    */
   merchantId?: string;
   /**
    * URL to your app on the Apple App Store, if you have deployed it there. This is used to link to your store page from your Expo project page if your app is public.
    */
   appStoreUrl?: string;
+  /**
+   * Enable iOS Bitcode optimizations in the native build. Accepts the name of an iOS build configuration to enable for a single configuration and disable for all others, e.g. Debug, Release. Not available in the classic 'expo build:ios' or Expo Go. Defaults to `undefined` which uses the template's predefined settings.
+   */
+  bitcode?: boolean | string;
   /**
    * Note: This property key is not included in the production manifest and will evaluate to `undefined`. It is used internally only in the build process, because it contains API keys that some may want to keep private.
    */
@@ -370,17 +391,9 @@ export interface IOS {
     };
   };
   /**
-   * @deprecated Use `updates.enabled` instead.
-   */
-  isRemoteJSEnabled?: boolean;
-  /**
    * [Firebase Configuration File](https://support.google.com/firebase/answer/7015592) Location of the `GoogleService-Info.plist` file for configuring Firebase.
    */
   googleServicesFile?: string;
-  /**
-   * @deprecated Use `updates` key with `fallbackToCacheTimeout: 0` instead.
-   */
-  loadJSInBackgroundExperimental?: boolean;
   /**
    * Whether your standalone iOS app supports tablet screen sizes. Defaults to `false`.
    */
@@ -390,7 +403,7 @@ export interface IOS {
    */
   isTabletOnly?: boolean;
   /**
-   * If true, indicates that your standalone iOS app does not support Slide Over and Split View on iPad. Defaults to `true` currently, but will change to `false` in a future SDK version.
+   * If true, indicates that your standalone iOS app does not support Slide Over and Split View on iPad. Defaults to `false`
    */
   requireFullScreen?: boolean;
   /**
@@ -410,7 +423,7 @@ export interface IOS {
     [k: string]: any;
   };
   /**
-   * An array that contains Associated Domains for the standalone app. See [Apple's docs for config](https://developer.apple.com/documentation/safariservices/supporting_associated_domains).
+   * An array that contains Associated Domains for the standalone app. [Learn more](https://developer.apple.com/documentation/safariservices/supporting_associated_domains).
    */
   associatedDomains?: string[];
   /**
@@ -430,7 +443,7 @@ export interface IOS {
    */
   splash?: {
     /**
-     * Local path to a XIB file as the loading screen. It overrides other loading screen options. Note: This will only be used in the standalone app (i.e., after you build the app). It will not be used in the Expo Go.
+     * @deprecated Apple has deprecated `.xib` splash screens in favor of `.storyboard` files. Local path to a XIB file as the loading screen. It overrides other loading screen options. Note: This will only be used in the standalone app (i.e., after you build the app). It will not be used in the Expo Go.
      */
     xib?: string;
     /**
@@ -449,21 +462,28 @@ export interface IOS {
      * Local path or remote URL to an image to fill the background of the loading screen. Image size and aspect ratio are up to you. Must be a .png.
      */
     tabletImage?: string;
-    /**
-     * Supported user interface styles. If left blank, `light` will be used. Use `automatic` if you would like to support either `light` or `dark` depending on iOS settings.
-     */
-    userInterfaceStyle?: 'light' | 'dark' | 'automatic';
     [k: string]: any;
   };
+  /**
+   * Specifies the JavaScript engine for iOS apps. Supported only on EAS Build. Defaults to `jsc`. Valid values: `hermes`, `jsc`.
+   */
+  jsEngine?: 'hermes' | 'jsc';
+  /**
+   * **Note: Don't use this property unless you are sure what you're doing**
+   *
+   * The runtime version associated with this manifest for the iOS platform. If provided, this will override the top level runtimeVersion key.
+   * Set this to `{"policy": "nativeVersion"}` to generate it automatically.
+   */
+  runtimeVersion?:
+    | string
+    | {
+        policy: 'nativeVersion' | 'sdkVersion';
+      };
 }
 /**
  * Configuration that is specific to the Android platform.
  */
 export interface Android {
-  /**
-   * If set to true, APK will contain only unimodules that are explicitly added in package.json and their dependecies
-   */
-  enableDangerousExperimentalLeanBuilds?: boolean;
   /**
    * The manifest for the Android version of your app will be written to this path during publish.
    */
@@ -477,7 +497,7 @@ export interface Android {
    */
   package?: string;
   /**
-   * Version number required by Google Play. Increment by one for each release. Must be an integer. [Learn more](https://developer.android.com/studio/publish/versioning.html)
+   * Version number required by Google Play. Increment by one for each release. Must be a positive integer. [Learn more](https://developer.android.com/studio/publish/versioning.html)
    */
   versionCode?: number;
   /**
@@ -485,11 +505,11 @@ export interface Android {
    */
   backgroundColor?: string;
   /**
-   * Configuration to force the app to always use the light or dark user-interface appearance, such as "dark mode", or make it automatically adapt to the system preferences. If not provided, defaults to `light`.
+   * Configuration to force the app to always use the light or dark user-interface appearance, such as "dark mode", or make it automatically adapt to the system preferences. If not provided, defaults to `light`. Requires `expo-system-ui` be installed in your project to work on Android.
    */
   userInterfaceStyle?: 'light' | 'dark' | 'automatic';
   /**
-   * A Boolean value that indicates whether the app should use the new notifications API.
+   * @deprecated A Boolean value that indicates whether the app should use the new notifications API.
    */
   useNextNotificationsApi?: boolean;
   /**
@@ -681,34 +701,49 @@ export interface Android {
    * Determines how the software keyboard will impact the layout of your application. This maps to the `android:windowSoftInputMode` property. Defaults to `resize`. Valid values: `resize`, `pan`.
    */
   softwareKeyboardLayoutMode?: 'resize' | 'pan';
+  /**
+   * Specifies the JavaScript engine for Android apps. Supported only on EAS Build and in Expo Go. Defaults to `jsc`. Valid values: `hermes`, `jsc`.
+   */
+  jsEngine?: 'hermes' | 'jsc';
+  /**
+   * **Note: Don't use this property unless you are sure what you're doing**
+   *
+   * The runtime version associated with this manifest for the Android platform. If provided, this will override the top level runtimeVersion key.
+   * Set this to `{"policy": "nativeVersion"}` to generate it automatically.
+   */
+  runtimeVersion?:
+    | string
+    | {
+        policy: 'nativeVersion' | 'sdkVersion';
+      };
 }
 export interface AndroidIntentFiltersData {
   /**
-   * the scheme of the URL, e.g. `https`
+   * Scheme of the URL, e.g. `https`
    */
   scheme?: string;
   /**
-   * the hostname, e.g. `myapp.io`
+   * Hostname, e.g. `myapp.io`
    */
   host?: string;
   /**
-   * the port, e.g. `3000`
+   * Port, e.g. `3000`
    */
   port?: string;
   /**
-   * an exact path for URLs that should be matched by the filter, e.g. `/records`
+   * Exact path for URLs that should be matched by the filter, e.g. `/records`
    */
   path?: string;
   /**
-   *  a regex for paths that should be matched by the filter, e.g. `.*`
+   * Pattern for paths that should be matched by the filter, e.g. `.*`. Must begin with `/`
    */
   pathPattern?: string;
   /**
-   * a prefix for paths that should be matched by the filter, e.g. `/records/` will match `/records/123`
+   * Prefix for paths that should be matched by the filter, e.g. `/records/` will match `/records/123`
    */
   pathPrefix?: string;
   /**
-   * a MIME type for URLs that should be matched by the filter
+   * MIME type for URLs that should be matched by the filter
    */
   mimeType?: string;
 }

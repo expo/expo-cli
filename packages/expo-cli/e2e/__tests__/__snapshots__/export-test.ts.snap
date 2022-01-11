@@ -1,44 +1,99 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`exports the project for a self-hosted production deployment 1`] = `
+exports[`EXPO_USE_EXOTIC=false exports the project for a self-hosted production deployment 1`] = `
 Array [
-  "dist/android-index.json (621 B)",
+  "dist/android-index.json (666 B)",
   "dist/assetmap.json (size ignored)",
   "dist/assets (dir)",
-  "dist/assets/0886a6b127c6057cee83f9c65c7ffd62 (26.2 kB)",
-  "dist/assets/09dd345dbd4ec5a0874841d5749ac153 (30.2 kB)",
-  "dist/assets/140c53a7643ea949007aa9a282153849 (13.5 kB)",
-  "dist/assets/1a0e3525dd5df87e77057204129a5e6e (109 kB)",
-  "dist/assets/39843e5d52a6c5c42d5abdb0b34bcaa6 (13.1 kB)",
-  "dist/assets/3a2ba31570920eeb9b1d217cabe58315 (70.3 kB)",
-  "dist/assets/3c851d60ad5ef3f2fe43ebd263490d78 (681 kB)",
-  "dist/assets/3e6805fbc794680014716b8c752f20b8 (17.2 kB)",
-  "dist/assets/461d9bba8b6a3c91675039df12cfe6ca (9.49 kB)",
-  "dist/assets/54a5c98d22f313098b3dbe2d5b2e87ba (5.93 kB)",
-  "dist/assets/5cdf883b18a5651a29a4d1ef276d2457 (25.6 kB)",
-  "dist/assets/60668d999bbaf663420340f7bdd580d7 (6.42 kB)",
-  "dist/assets/647543ebfccf6e5495434383598453d1 (4.1 kB)",
-  "dist/assets/744ce60078c17d86006dd0edabcd59a7 (65.6 kB)",
-  "dist/assets/74d124a3caeac2bea111f3ca2f2dd34a (2.01 kB)",
-  "dist/assets/7e078700f0c35367a56c5bbb2047dda7 (22.8 kB)",
-  "dist/assets/8b12b3e16d591abc926165fa8f760e3b (6.3 kB)",
-  "dist/assets/8e7f807ef943bff1f6d3c2c6e0f3769e (28.4 kB)",
-  "dist/assets/94c4ffdcbffeb0570c635d7f8edd8a25 (1.45 kB)",
-  "dist/assets/a37b0c01c0baf1888ca812cc0508f6e2 (128 kB)",
-  "dist/assets/b06871f281fee6b241d60582ae9369b9 (166 kB)",
-  "dist/assets/b2e0fc821c6886fb3940f85a3320003e (112 kB)",
-  "dist/assets/b49ae8ab2dbccb02c4d11caaacf09eab (314 kB)",
-  "dist/assets/b70cea0339374107969eb53e5b1f603f (186 kB)",
-  "dist/assets/c39278f7abfc798a241551194f55e29f (125 kB)",
-  "dist/assets/ca9ce9ff0676a9b04ef0f8a3ad17dd08 (58.3 kB)",
-  "dist/assets/d2285965fe34b05465047401b8595dd0 (54.1 kB)",
-  "dist/assets/e20945d7c929279ef7a6f1db184a4470 (57 kB)",
-  "dist/assets/f1f91feb805137c9283fb766620ec5eb (17.4 kB)",
-  "dist/assets/f6c6f6c8cb7784254ad00056f6fbd74e (34.1 kB)",
-  "dist/assets/fdc01171a7a7ea76b187afcd162dee7d (3.99 kB)",
   "dist/bundles (dir)",
-  "dist/bundles/android-3a2672da067816389ac33f1bcbb4a78a.js (1.13 MB)",
-  "dist/bundles/ios-cb481eb604922019260028d33ea85c47.js (1.12 MB)",
-  "dist/ios-index.json (613 B)",
+  "dist/bundles/android-XXX.js (837 kB)",
+  "dist/bundles/ios-XXX.js (836 kB)",
+  "dist/ios-index.json (658 B)",
 ]
 `;
+
+exports[`EXPO_USE_EXOTIC=false exports the project for a self-hosted production deployment: android-index 1`] = `
+Object {
+  "android": Object {
+    "package": "com.example.minimal",
+  },
+  "assetUrlOverride": "./assets",
+  "bundleUrl": Any<String>,
+  "commitTime": Any<String>,
+  "currentFullName": "@anonymous/basic",
+  "dependencies": Array [
+    "expo",
+    "react",
+    "react-native",
+  ],
+  "id": "@anonymous/basic",
+  "ios": Object {
+    "bundleIdentifier": "com.example.minimal",
+  },
+  "locales": Object {},
+  "name": "basic",
+  "originalFullName": "@anonymous/basic",
+  "platform": "android",
+  "platforms": Array [
+    "ios",
+    "android",
+  ],
+  "publishedTime": Any<String>,
+  "releaseId": Any<String>,
+  "revisionId": Any<String>,
+  "sdkVersion": "43.0.0",
+  "slug": "basic",
+  "version": "1.0.0",
+}
+`;
+
+exports[`EXPO_USE_EXOTIC=false exports the project for a self-hosted production deployment: assetmap 1`] = `Object {}`;
+
+exports[`EXPO_USE_EXOTIC=true exports the project for a self-hosted production deployment 1`] = `
+Array [
+  "dist/android-index.json (666 B)",
+  "dist/assetmap.json (size ignored)",
+  "dist/assets (dir)",
+  "dist/bundles (dir)",
+  "dist/bundles/android-XXX.js (837 kB)",
+  "dist/bundles/ios-XXX.js (836 kB)",
+  "dist/ios-index.json (658 B)",
+]
+`;
+
+exports[`EXPO_USE_EXOTIC=true exports the project for a self-hosted production deployment: android-index 1`] = `
+Object {
+  "android": Object {
+    "package": "com.example.minimal",
+  },
+  "assetUrlOverride": "./assets",
+  "bundleUrl": Any<String>,
+  "commitTime": Any<String>,
+  "currentFullName": "@anonymous/basic",
+  "dependencies": Array [
+    "expo",
+    "react",
+    "react-native",
+  ],
+  "id": "@anonymous/basic",
+  "ios": Object {
+    "bundleIdentifier": "com.example.minimal",
+  },
+  "locales": Object {},
+  "name": "basic",
+  "originalFullName": "@anonymous/basic",
+  "platform": "android",
+  "platforms": Array [
+    "ios",
+    "android",
+  ],
+  "publishedTime": Any<String>,
+  "releaseId": Any<String>,
+  "revisionId": Any<String>,
+  "sdkVersion": "43.0.0",
+  "slug": "basic",
+  "version": "1.0.0",
+}
+`;
+
+exports[`EXPO_USE_EXOTIC=true exports the project for a self-hosted production deployment: assetmap 1`] = `Object {}`;

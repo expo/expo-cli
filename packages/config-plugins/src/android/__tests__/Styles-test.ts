@@ -23,7 +23,7 @@ const mockStyles = `
     <item name="android:windowTranslucentStatus">true</item>
     <item name="colorPrimary">@color/colorPrimary</item>
   </style>
-  <style name="Theme.App.SplashScreen" parent="Theme.AppCompat.Light.NoActionBar">
+  <style name="Theme.App.SplashScreen" parent="AppTheme">
     <item name="android:windowBackground">@drawable/splashscreen</item>
   </style>
 </resources>`;
@@ -61,7 +61,7 @@ describe('Styles', () => {
   it(`changes the value of a style`, async () => {
     const stylesPath = await getProjectStylesXMLPathAsync('/app')!;
     const xml = await readResourcesXMLAsync({ path: stylesPath });
-    const parent = { name: 'Theme.App.SplashScreen', parent: 'Theme.AppCompat.Light.NoActionBar' };
+    const parent = { name: 'Theme.App.SplashScreen', parent: 'AppTheme' };
     setStylesItem({
       xml,
       parent,
@@ -72,7 +72,7 @@ describe('Styles', () => {
     const modifiedXml = await readResourcesXMLAsync({ path: stylesPath });
 
     expect(getStyleParent(modifiedXml, parent)).toStrictEqual({
-      $: { name: 'Theme.App.SplashScreen', parent: 'Theme.AppCompat.Light.NoActionBar' },
+      $: { name: 'Theme.App.SplashScreen', parent: 'AppTheme' },
       item: [
         { $: { name: 'android:windowBackground' }, _: '@drawable/splashscreen' },
         {
@@ -88,7 +88,7 @@ describe('Styles', () => {
   it(`removes a value`, async () => {
     const stylesPath = await getProjectStylesXMLPathAsync('/app')!;
     const xml = await readResourcesXMLAsync({ path: stylesPath });
-    const parent = { name: 'Theme.App.SplashScreen', parent: 'Theme.AppCompat.Light.NoActionBar' };
+    const parent = { name: 'Theme.App.SplashScreen', parent: 'AppTheme' };
     expect(getStylesItem({ xml, parent, name: 'android:textColor' })).toStrictEqual({
       $: {
         name: 'android:textColor',

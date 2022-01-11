@@ -11,38 +11,10 @@ export interface XMLObject {
   [key: string]: XMLValue | undefined;
 }
 
-export function logXMLString(doc: XMLObject) {
-  const builder = new Builder();
-  const xmlInput = builder.buildObject(doc);
-  console.log(xmlInput);
-}
-
 export async function writeXMLAsync(options: { path: string; xml: any }): Promise<void> {
-  const xml = new Builder().buildObject(options.xml);
+  const xml = format(options.xml);
   await fs.ensureDir(path.dirname(options.path));
   await fs.writeFile(options.path, xml);
-}
-
-async function removeFileIfExists(filePath: string) {
-  if (await fs.pathExists(filePath)) {
-    await fs.unlink(filePath);
-  }
-}
-
-function hasResources(xml: XMLObject): boolean {
-  return Array.isArray(xml.resources) && !!xml.resources.length;
-}
-
-export async function writeXMLOrRemoveFileUponNoResourcesAsync(
-  filePath: string,
-  xml: XMLObject,
-  { disregardComments }: { disregardComments?: boolean } = {}
-) {
-  if (hasResources(xml)) {
-    await writeXMLAsync({ path: filePath, xml });
-  } else {
-    await removeFileIfExists(filePath);
-  }
 }
 
 export async function readXMLAsync(options: {
@@ -60,6 +32,11 @@ export async function readXMLAsync(options: {
   return manifest;
 }
 
+export async function parseXMLAsync(contents: string): Promise<XMLObject> {
+  const xml = await new Parser().parseStringPromise(contents);
+  return xml;
+}
+
 const stringTimesN = (n: number, char: string) => Array(n + 1).join(char);
 
 export function format(manifest: any, { indentLevel = 2, newline = EOL } = {}): string {
@@ -67,8 +44,22 @@ export function format(manifest: any, { indentLevel = 2, newline = EOL } = {}): 
   if (typeof manifest === 'string') {
     xmlInput = manifest;
   } else if (manifest.toString) {
-    const builder = new Builder({ headless: true });
+    const builder = new Builder({
+      headless: true,
+    });
+
+    // For strings.xml
+    if (Array.isArray(manifest?.resources?.string)) {
+      for (const string of manifest?.resources?.string) {
+        if (string.$.translatable === 'false' || string.$.translatable === false) {
+          continue;
+        }
+        string._ = escapeAndroidString(string._);
+      }
+    }
+
     xmlInput = builder.buildObject(manifest);
+
     return xmlInput;
   } else {
     throw new Error(`Invalid XML value passed in: ${manifest}`);
@@ -87,8 +78,6 @@ export function format(manifest: any, { indentLevel = 2, newline = EOL } = {}): 
       if (line.match(/.+<\/\w[^>]*>$/)) {
         indent = 0;
       } else if (line.match(/^<\/\w/)) {
-        // Somehow istanbul doesn't see the else case as covered, although it is. Skip it.
-        /* istanbul ignore else  */
         if (pad !== 0) {
           pad -= 1;
         }
@@ -99,9 +88,37 @@ export function format(manifest: any, { indentLevel = 2, newline = EOL } = {}): 
       }
 
       const padding = stringTimesN(pad, indentString);
-      formatted += padding + line + newline; // eslint-disable-line prefer-template
+      formatted += padding + line + newline;
       pad += indent;
     });
 
   return formatted.trim();
+}
+
+/**
+ * Escapes Android string literals, specifically characters `"`, `'`, `\`, `\n`, `\r`, `\t`
+ *
+ * @param value unescaped Android XML string literal.
+ */
+export function escapeAndroidString(value: string): string {
+  value = value.replace(/[\n\r\t'"@]/g, m => {
+    switch (m) {
+      case '"':
+      case "'":
+      case '@':
+        return '\\' + m;
+      case '\n':
+        return '\\n';
+      case '\r':
+        return '\\r';
+      case '\t':
+        return '\\t';
+      default:
+        throw new Error(`Cannot escape unhandled XML character: ${m}`);
+    }
+  });
+  if (value.match(/(^\s|\s$)/)) {
+    value = '"' + value + '"';
+  }
+  return value;
 }

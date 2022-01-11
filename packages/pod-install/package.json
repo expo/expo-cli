@@ -1,6 +1,6 @@
 {
   "name": "pod-install",
-  "version": "0.1.19",
+  "version": "0.1.30",
   "main": "build",
   "keywords": [
     "cocoapods",
@@ -13,8 +13,8 @@
     "type": "git",
     "url": "https://github.com/expo/expo-cli.git"
   },
-  "homepage": "https://github.com/expo/expo-cli/tree/master/packages/pod-install",
-  "author": "Expo <support@expo.io>",
+  "homepage": "https://github.com/expo/expo-cli/tree/main/packages/pod-install",
+  "author": "Expo <support@expo.dev>",
   "license": "MIT",
   "bin": {
     "pod-install": "./build/index.js"
@@ -25,18 +25,16 @@
   "scripts": {
     "prepare": "yarn run clean && yarn run build:prod",
     "lint": "eslint .",
-    "watch": "tsc --watch",
+    "watch": "tsc --watch --preserveWatchOutput",
     "watch:ncc": "yarn run build -w",
     "build": "ncc build ./src/index.ts -o build/",
     "build:prod": "ncc build ./src/index.ts -o build/ --minify --no-cache --no-source-map-register",
     "clean": "rimraf ./build/"
   },
   "devDependencies": {
-    "@expo/babel-preset-cli": "0.2.19",
-    "@expo/package-manager": "0.0.39",
+    "@expo/package-manager": "0.0.48",
     "chalk": "^4.0.0",
     "commander": "2.20.0",
-    "rimraf": "^3.0.2",
     "update-check": "1.5.3"
   }
 }

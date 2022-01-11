@@ -1,8 +1,6 @@
 import { Analytics, ApiV2, Config, UserManager } from '@expo/api';
 import bunyan from '@expo/bunyan';
 import { setCustomConfigPath } from '@expo/config';
-import { INTERNAL_CALLSITES_REGEX } from '@expo/metro-config';
-import simpleSpinner from '@expo/simple-spinner';
 import boxen from 'boxen';
 import chalk from 'chalk';
 import program, { Command } from 'commander';
@@ -17,7 +15,7 @@ import url from 'url';
 import wrapAnsi from 'wrap-ansi';
 import {
   Binaries,
-  Doctor,
+  Env,
   Logger,
   LogRecord,
   LogUpdater,
@@ -25,17 +23,20 @@ import {
   PackagerLogsStream,
   ProjectSettings,
   ProjectUtils,
+  UnifiedAnalytics,
 } from 'xdl';
 
-import { AbortCommandError, SilentError } from './CommandError';
-import { loginOrRegisterAsync } from './accounts';
+import StatusEventEmitter from './analytics/StatusEventEmitter';
 import { registerCommands } from './commands';
+import { loginOrRegisterAsync } from './commands/auth/accounts';
+import { learnMore } from './commands/utils/TerminalLink';
 import { profileMethod } from './commands/utils/profileMethod';
+import urlOpts from './commands/utils/urlOpts';
 import Log from './log';
-import update from './update';
-import urlOpts from './urlOpts';
+import { handleErrorsAsync } from './utils/handleErrors';
 import { matchFileNameOrURLFromStackTrace } from './utils/matchFileNameOrURLFromStackTrace';
-import { ora } from './utils/ora';
+import { logNewSection, ora } from './utils/ora';
+import update from './utils/update';
 
 // We use require() to exclude package.json from TypeScript's analysis since it lives outside the
 // src directory and would change the directory structure of the emitted files under the build
@@ -100,7 +101,7 @@ Command.prototype.prepareCommands = function () {
       if (getenv.boolish('EXPO_DEBUG', false)) {
         return true;
       }
-      return !['internal', 'eas'].includes(cmd.__helpGroup);
+      return !['internal'].includes(cmd.__helpGroup);
     })
     .map(function (cmd: Command, i: number) {
       const args = cmd._args.map(humanReadableArgName).join(' ');
@@ -191,21 +192,20 @@ function replaceAll(string: string, search: string, replace: string): string {
 }
 
 export const helpGroupOrder = [
-  'auth',
   'core',
+  'auth',
   'client',
   'info',
+  'eject',
   'publish',
   'build',
   'credentials',
-  'eas',
   'notifications',
   'url',
   'webhooks',
   'upload',
-  'eject',
-  'experimental',
   'internal',
+  'deprecated',
 ];
 
 function sortHelpGroups(helpGroups: Record<string, string[][]>): Record<string, string[][]> {
@@ -219,7 +219,6 @@ function sortHelpGroups(helpGroups: Record<string, string[][]>): Record<string, 
 
   const subGroupOrder: Record<string, string[]> = {
     core: ['init', 'start', 'start:web', 'publish', 'export'],
-    eas: ['eas:credentials'],
   };
 
   const sortSubGroupWithOrder = (groupName: string, group: string[][]): string[][] => {
@@ -329,7 +328,7 @@ export type Action = (...args: any[]) => void;
 // parsing the command input
 Command.prototype.asyncAction = function (asyncFn: Action) {
   return this.action(async (...args: any[]) => {
-    if (process.env.EAS_BUILD !== '1') {
+    if (!getenv.boolish('EAS_BUILD', false) && !program.nonInteractive) {
       try {
         await profileMethod(checkCliVersionAsync)();
       } catch (e) {}
@@ -338,99 +337,20 @@ Command.prototype.asyncAction = function (asyncFn: Action) {
     try {
       const options = args[args.length - 1];
       if (options.offline) {
-        Config.offline = true;
+        const { ConnectionStatus } = await import('xdl');
+        ConnectionStatus.setIsOffline(true);
       }
 
       await asyncFn(...args);
       // After a command, flush the analytics queue so the program will not have any active timers
       // This allows node js to exit immediately
-      Analytics.flush();
+      await Promise.all([Analytics.flush(), UnifiedAnalytics.flush()]);
     } catch (err) {
-      // TODO: Find better ways to consolidate error messages
-      if (err instanceof AbortCommandError || err instanceof SilentError) {
-        // Do nothing when a prompt is cancelled or the error is logged in a pretty way.
-      } else if (err.isCommandError) {
-        Log.error(err.message);
-      } else if (err._isApiError) {
-        Log.error(chalk.red(err.message));
-      } else if (err.isXDLError || err.isAuthError) {
-        Log.error(err.message);
-      } else if (err.isJsonFileError || err.isConfigError || err.isPackageManagerError) {
-        if (err.code === 'EJSONEMPTY') {
-          // Empty JSON is an easy bug to debug. Often this is thrown for package.json or app.json being empty.
-          Log.error(err.message);
-        } else {
-          Log.addNewLineIfNone();
-          Log.error(err.message);
-          const stacktrace = formatStackTrace(err.stack, this.name());
-          Log.error(chalk.gray(stacktrace));
-        }
-      } else {
-        Log.error(err.message);
-        Log.error(chalk.gray(err.stack));
-      }
-
+      await handleErrorsAsync(err, { command: this.name() });
       process.exit(1);
     }
   });
 };
-
-function getStringBetweenParens(value: string): string {
-  const regExp = /\(([^)]+)\)/;
-  const matches = regExp.exec(value);
-  if (matches && matches?.length > 1) {
-    return matches[1];
-  }
-  return value;
-}
-
-function focusLastPathComponent(value: string): string {
-  const parts = value.split('/');
-  if (parts.length > 1) {
-    const last = parts.pop();
-    const current = chalk.dim(parts.join('/') + '/');
-    return `${current}${last}`;
-  }
-  return chalk.dim(value);
-}
-
-function formatStackTrace(stacktrace: string, command: string): string {
-  const treeStackLines: string[][] = [];
-  for (const line of stacktrace.split('\n')) {
-    const [first, ...parts] = line.trim().split(' ');
-    // Remove at -- we'll use a branch instead.
-    if (first === 'at') {
-      treeStackLines.push(parts);
-    }
-  }
-
-  return treeStackLines
-    .map((parts, index) => {
-      let first = parts.shift();
-      let last = parts.pop();
-
-      // Replace anonymous with command name
-      if (first === 'Command.<anonymous>') {
-        first = chalk.bold(`expo ${command}`);
-      } else if (first?.startsWith('Object.')) {
-        // Remove extra JS types from function names
-        first = first.split('Object.').pop()!;
-      } else if (first?.startsWith('Function.')) {
-        // Remove extra JS types from function names
-        first = first.split('Function.').pop()!;
-      } else if (first?.startsWith('/')) {
-        // If the first element is a path
-        first = focusLastPathComponent(getStringBetweenParens(first));
-      }
-
-      if (last) {
-        last = focusLastPathComponent(getStringBetweenParens(last));
-      }
-      const branch = (index === treeStackLines.length - 1 ? '└' : '├') + '─';
-      return ['   ', branch, first, ...parts, last].filter(Boolean).join(' ');
-    })
-    .join('\n');
-}
 
 // asyncActionProjectDir captures the projectDirectory from the command line,
 // setting it to cwd if it is not provided.
@@ -446,7 +366,10 @@ Command.prototype.asyncActionProjectDir = function (
   asyncFn: Action,
   options: { checkConfig?: boolean; skipSDKVersionRequirement?: boolean } = {}
 ) {
-  this.option('--config [file]', 'Specify a path to app.json or app.config.js');
+  this.option(
+    '--config [file]',
+    `${chalk.yellow('Deprecated:')} Use app.config.js to switch config files instead.`
+  );
   return this.asyncAction(async (projectRoot: string, ...args: any[]) => {
     const opts = args[0];
 
@@ -457,13 +380,22 @@ Command.prototype.asyncActionProjectDir = function (
     }
 
     if (opts.config) {
+      Log.log(
+        chalk.yellow(
+          `\u203A ${chalk.bold(
+            '--config'
+          )} flag is deprecated. Use app.config.js instead. ${learnMore(
+            'https://expo.fyi/config-flag-migration'
+          )}`
+        )
+      );
+      Log.newLine();
+
       // @ts-ignore: This guards against someone passing --config without a path.
       if (opts.config === true) {
         Log.addNewLineIfNone();
         Log.log('Please specify your custom config path:');
-        Log.log(
-          Log.chalk.green(`  expo ${this.name()} --config ${Log.chalk.cyan(`<app-config>`)}`)
-        );
+        Log.log(chalk.green(`  expo ${this.name()} --config ${chalk.cyan(`<app-config>`)}`));
         Log.newLine();
         process.exit(1);
       }
@@ -472,13 +404,13 @@ Command.prototype.asyncActionProjectDir = function (
       // Warn the user when the custom config path they provided does not exist.
       if (!fs.existsSync(pathToConfig)) {
         const relativeInput = path.relative(process.cwd(), opts.config);
-        const formattedPath = Log.chalk
+        const formattedPath = chalk
           .reset(pathToConfig)
-          .replace(relativeInput, Log.chalk.bold(relativeInput));
+          .replace(relativeInput, chalk.bold(relativeInput));
         Log.addNewLineIfNone();
         Log.nestedWarn(`Custom config file does not exist:\n${formattedPath}`);
         Log.newLine();
-        const helpCommand = Log.chalk.green(`expo ${this.name()} --help`);
+        const helpCommand = chalk.green(`expo ${this.name()} --help`);
         Log.log(`Run ${helpCommand} for more info`);
         Log.newLine();
         process.exit(1);
@@ -497,7 +429,9 @@ Command.prototype.asyncActionProjectDir = function (
       }
     };
 
-    const logStackTrace = (
+    const { INTERNAL_CALLSITES_REGEX } = await import('@expo/metro-config');
+
+    const logStackTrace = async (
       chunk: LogRecord,
       logFn: (...args: any[]) => void,
       nestedLogFn: (...args: any[]) => void
@@ -594,8 +528,10 @@ Command.prototype.asyncActionProjectDir = function (
     // eslint-disable-next-line no-new
     new PackagerLogsStream({
       projectRoot,
-      onStartBuildBundle: () => {
-        bar = new ProgressBar('Building JavaScript bundle [:bar] :percent', {
+      onStartBuildBundle({ bundleDetails }) {
+        // TODO: Unify with commands/utils/progress.ts
+        const platform = PackagerLogsStream.getPlatformTagForBuildDetails(bundleDetails);
+        bar = new ProgressBar(`${platform}Bundling JavaScript [:bar] :percent`, {
           width: 64,
           total: 100,
           clear: true,
@@ -605,12 +541,12 @@ Command.prototype.asyncActionProjectDir = function (
 
         Log.setBundleProgressBar(bar);
       },
-      onProgressBuildBundle: (percent: number) => {
+      onProgressBuildBundle({ progress }) {
         if (!bar || bar.complete) return;
-        const ticks = percent - bar.curr;
+        const ticks = progress - bar.curr;
         ticks > 0 && bar.tick(ticks);
       },
-      onFinishBuildBundle: (err, startTime, endTime) => {
+      onFinishBuildBundle({ error, start, end, bundleDetails }) {
         if (bar && !bar.complete) {
           bar.tick(100 - bar.curr);
         }
@@ -620,16 +556,14 @@ Command.prototype.asyncActionProjectDir = function (
           bar.terminate();
           bar = null;
 
-          if (err) {
-            Log.log(chalk.red('Failed building JavaScript bundle.'));
+          const platform = PackagerLogsStream.getPlatformTagForBuildDetails(bundleDetails);
+          const totalBuildTimeMs = end.getTime() - start.getTime();
+          const durationSuffix = chalk.gray(` ${totalBuildTimeMs}ms`);
+          if (error) {
+            Log.log(chalk.red(`${platform}Bundling failed` + durationSuffix));
           } else {
-            Log.log(
-              chalk.green(
-                `Finished building JavaScript bundle in ${
-                  endTime.getTime() - startTime.getTime()
-                }ms.`
-              )
-            );
+            Log.log(chalk.green(`${platform}Bundling complete` + durationSuffix));
+            StatusEventEmitter.emit('bundleBuildFinish', { totalBuildTimeMs });
           }
         }
       },
@@ -650,6 +584,10 @@ Command.prototype.asyncActionProjectDir = function (
         write: (chunk: LogRecord) => {
           if (chunk.tag === 'device') {
             logWithLevel(chunk);
+            StatusEventEmitter.emit('deviceLogReceive', {
+              deviceId: chunk.deviceId,
+              deviceName: chunk.deviceName,
+            });
           }
         },
       },
@@ -671,6 +609,7 @@ Command.prototype.asyncActionProjectDir = function (
       Log.setSpinner(spinner);
       // validate that this is a good projectDir before we try anything else
 
+      const { Doctor } = await import('xdl');
       const status = await Doctor.validateWithoutNetworkAsync(projectRoot, {
         skipSDKVersionRequirement: options.skipSDKVersionRequirement,
       });
@@ -688,12 +627,55 @@ Command.prototype.asyncActionProjectDir = function (
   });
 };
 
-function runAsync(programName: string) {
+export async function bootstrapAnalyticsAsync(): Promise<void> {
+  Analytics.initializeClient(
+    '1wHTzmVgmZvNjCalKL45chlc2VN',
+    'https://cdp.expo.dev',
+    packageJSON.version
+  );
+
+  UnifiedAnalytics.initializeClient(
+    '1wabJGd5IiuF9Q8SGlcI90v8WTs',
+    'https://cdp.expo.dev',
+    packageJSON.version
+  );
+
+  const userData = await profileMethod(
+    UserManager.getCachedUserDataAsync,
+    'getCachedUserDataAsync'
+  )();
+
+  if (!userData?.userId) return;
+
+  UnifiedAnalytics.identifyUser(userData.userId, {
+    userId: userData.userId,
+    currentConnection: userData?.currentConnection,
+    username: userData?.username,
+  });
+}
+
+export function trackUsage(commands: Command[] = []) {
+  const input = process.argv[2];
+  const ExpoCommand = (cmd: Command): boolean =>
+    (cmd._name === input || cmd._alias === input) && input !== undefined;
+  const subCommand = commands.find(ExpoCommand)?._name;
+
+  if (!subCommand) return; // only track valid expo commands
+
+  UnifiedAnalytics.logEvent('action', {
+    action: `expo ${subCommand}`,
+    source: 'expo cli',
+    source_version: UnifiedAnalytics.version,
+  });
+}
+
+async function runAsync(programName: string) {
   try {
-    // Setup analytics
-    Analytics.setSegmentNodeKey('vGu92cdmVaggGA26s3lBX6Y5fILm8SQ7');
-    Analytics.setVersionName(packageJSON.version);
     _registerLogs();
+
+    if (Env.shouldEnableAnalytics()) {
+      await bootstrapAnalyticsAsync();
+    }
 
     UserManager.setInteractiveAuthenticationCallback(loginOrRegisterAsync);
 
@@ -712,8 +694,6 @@ function runAsync(programName: string) {
       }
     }
 
-    Config.developerTool = packageJSON.name;
-
     // Setup our commander instance
     program.name(programName);
     program
@@ -722,6 +702,8 @@ function runAsync(programName: string) {
 
     // Load each module found in ./commands by 'registering' it with our commander instance
     profileMethod(registerCommands)(program);
+
+    trackUsage(program.commands); // must be after register commands
 
     program.on('command:detach', () => {
       Log.warn('To eject your project to ExpoKit (previously "detach"), use `expo eject`.');
@@ -759,6 +741,11 @@ function runAsync(programName: string) {
 }
 
 async function checkCliVersionAsync() {
+  // Skip checking for latest version on EAS Build
+  if (getenv.boolish('EAS_BUILD', false)) {
+    return;
+  }
+
   const { updateIsAvailable, current, latest, deprecated } = await update.checkForUpdateAsync();
   if (updateIsAvailable) {
     Log.nestedWarn(
@@ -789,17 +776,48 @@ any interaction with Expo servers may result in unexpected behaviour.`
 }
 
 function _registerLogs() {
-  const stream = {
+  const stream: bunyan.Stream = {
+    level: Log.isDebug ? 'debug' : 'info',
     stream: {
       write: (chunk: any) => {
         if (chunk.code) {
           switch (chunk.code) {
+            case NotificationCode.START_PROGRESS_BAR: {
+              const bar = new ProgressBar(chunk.msg, {
+                width: 64,
+                total: 100,
+                clear: true,
+                complete: '=',
+                incomplete: ' ',
+              });
+              Log.setBundleProgressBar(bar);
+              return;
+            }
+            case NotificationCode.TICK_PROGRESS_BAR: {
+              const bar = Log.getProgress();
+              if (bar) {
+                bar.tick(1, chunk.msg);
+              }
+              return;
+            }
+            case NotificationCode.STOP_PROGRESS_BAR: {
+              const bar = Log.getProgress();
+              if (bar) {
+                Log.setBundleProgressBar(null);
+                bar.terminate();
+              }
+              return;
+            }
             case NotificationCode.START_LOADING:
-              simpleSpinner.start();
+              logNewSection(chunk.msg || '');
               return;
-            case NotificationCode.STOP_LOADING:
-              simpleSpinner.stop();
+            case NotificationCode.STOP_LOADING: {
+              const spinner = Log.getSpinner();
+              if (spinner) {
+                spinner.stop();
+              }
               return;
+            }
             case NotificationCode.DOWNLOAD_CLI_PROGRESS:
               return;
           }
@@ -809,6 +827,8 @@ function _registerLogs() {
           Log.log(chunk.msg);
         } else if (chunk.level === bunyan.WARN) {
           Log.warn(chunk.msg);
+        } else if (chunk.level === bunyan.DEBUG) {
+          Log.debug(chunk.msg);
         } else if (chunk.level >= bunyan.ERROR) {
           Log.error(chunk.msg);
         }

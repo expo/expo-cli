@@ -3,7 +3,7 @@ import { ExpoConfig } from '@expo/config-types';
 
 export { ExpoConfig };
 
-export type PackageJSONConfig = Record<string, any>;
+export type PackageJSONConfig = { dependencies?: Record<string, string>; [key: string]: any };
 
 export interface ProjectConfig {
   /**
@@ -49,41 +49,84 @@ export type HookArguments = {
   config: any;
   url: any;
   exp: ExpoConfig;
-  iosBundle: string;
+  iosBundle: string | Uint8Array;
   iosSourceMap: string | null;
   iosManifest: any;
-  androidBundle: string;
+  iosManifestUrl: string;
+  androidBundle: string | Uint8Array;
   androidSourceMap: string | null;
   androidManifest: any;
+  androidManifestUrl: string;
   projectRoot: string;
   log: (msg: any) => void;
 };
 
-export type ExpoAppManifest = ExpoConfig & {
-  sdkVersion: string;
-  bundledAssets?: string[];
-  isKernel?: boolean;
-  xde?: boolean;
-  kernel?: { androidManifestPath?: string; iosManifestPath?: string };
-  assetUrlOverride?: string;
-  publishedTime?: string;
-  commitTime?: string;
-  releaseId?: string;
-  revisionId?: string;
-  mainModuleName?: string;
-  env?: Record<string, any>;
-  bundleUrl?: string;
-  debuggerHost?: string;
-  logUrl?: string;
-  hostUri?: string;
-  id?: string;
-  developer?: {
+export type ExpoGoConfig = {
+  mainModuleName: string;
+  // A string that flipper checks to determine if Metro bundler is running
+  // by adding it to the manifest, we can trick Flipper into working properly.
+  // https://github.com/facebook/flipper/blob/9ca8bee208b7bfe2b8c0dab8eb4b79688a0c84bc/desktop/app/src/dispatcher/metroDevice.tsx#L37
+  __flipperHack: 'React Native packager is running';
+  debuggerHost: string;
+  logUrl: string;
+  developer: {
     tool: string | null;
     projectRoot?: string;
   };
-  ios?: { publishSourceMapPath?: string } & ExpoConfig['ios'];
-  android?: { publishSourceMapPath?: string } & ExpoConfig['android'];
+  packagerOpts: {
+    [key: string]: any;
+  };
 };
+
+export type EASConfig = {
+  projectId?: string;
+};
+
+export type ClientScopingConfig = {
+  scopeKey?: string;
+};
+
+export type ExpoClientConfig = ExpoConfig & {
+  id?: string;
+  releaseId?: string;
+  revisionId?: string;
+  bundleUrl?: string;
+  hostUri?: string;
+  publishedTime?: string;
+};
+
+export type ExpoAppManifest = ExpoClientConfig &
+  EASConfig &
+  Partial<ExpoGoConfig> & {
+    sdkVersion: string;
+    bundledAssets?: string[];
+    isKernel?: boolean;
+    kernel?: { androidManifestPath?: string; iosManifestPath?: string };
+    assetUrlOverride?: string;
+    commitTime?: string;
+    env?: Record<string, any>;
+  };
+
+export interface ExpoUpdatesManifestAsset {
+  url: string;
+  key: string;
+  contentType: string;
+  hash?: string;
+}
+
+export interface ExpoUpdatesManifest {
+  id: string;
+  createdAt: string;
+  runtimeVersion: string;
+  launchAsset: ExpoUpdatesManifestAsset;
+  assets: ExpoUpdatesManifestAsset[];
+  metadata: { [key: string]: string };
+  extra: ClientScopingConfig & {
+    expoClient?: ExpoClientConfig;
+    expoGo?: ExpoGoConfig;
+    eas?: EASConfig;
+  };
+}
 
 export type Hook = {
   file: string;
@@ -130,6 +173,10 @@ export type GetConfigOptions = {
    */
   isModdedConfig?: boolean;
   skipSDKVersionRequirement?: boolean;
+  /**
+   * Dangerously skip resolving plugins.
+   */
+  skipPlugins?: boolean;
   strict?: boolean;
 };
 

@@ -1,11 +1,11 @@
 {
   "name": "@expo/config-types",
-  "version": "40.0.0-beta.2",
+  "version": "43.0.1",
   "description": "Types for the Expo config object app.config.ts",
   "types": "build/ExpoConfig.d.ts",
   "main": "build/ExpoConfig.js",
   "scripts": {
-    "watch": "tsc --watch",
+    "watch": "tsc --watch --preserveWatchOutput",
     "build": "tsc",
     "generate": "ts-node ./scripts/generate.ts",
     "prepare": "yarn run clean && yarn build",
@@ -30,7 +30,7 @@
   "bugs": {
     "url": "https://github.com/expo/expo-cli/issues"
   },
-  "homepage": "https://github.com/expo/expo-cli/tree/master/packages/config-types#readme",
+  "homepage": "https://github.com/expo/expo-cli/tree/main/packages/config-types#readme",
   "files": [
     "build"
   ],

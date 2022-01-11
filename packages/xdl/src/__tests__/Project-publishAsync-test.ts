@@ -79,6 +79,7 @@ jest.mock('axios', () => ({
         return mockApiV2Response(
           {
             url: 'https://test.exp.host/@testing/publish-test-app',
+            projectPageUrl: 'https://test.expo.dev/@testing/projects/publish-test-app',
             ids: ['1', '2'],
           },
           options
@@ -124,6 +125,7 @@ describe('publishAsync', () => {
     process.env.EXPO_USE_DEV_SERVER = 'true';
     const result = await publishAsync(projectRoot, { resetCache: true });
     expect(result.url).toBe('https://test.exp.host/@testing/publish-test-app');
+    expect(result.projectPageUrl).toBe('https://test.expo.dev/@testing/projects/publish-test-app');
 
     process.env.EXPO_USE_DEV_SERVER = 'false';
     const resultOld = await publishAsync(projectRoot, { resetCache: true });

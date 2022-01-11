@@ -3,12 +3,16 @@ import plist from '@expo/plist';
 import binaryPlist from 'bplist-parser';
 import fs from 'fs-extra';
 
+import Log from '../../../log';
+
 const CHAR_CHEVRON_OPEN = 60;
 const CHAR_B_LOWER = 98;
 // .mobileprovision
 // const CHAR_ZERO = 30;
 
 export async function parseBinaryPlistAsync(plistPath: string) {
+  Log.debug(`Parse plist: ${plistPath}`);
+
   return parsePlistBuffer(await fs.readFile(plistPath));
 }
 

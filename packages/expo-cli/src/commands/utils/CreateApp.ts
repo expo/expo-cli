@@ -7,7 +7,7 @@ import * as path from 'path';
 import semver from 'semver';
 
 import Log from '../../log';
-import { ora } from '../../utils/ora';
+import { logNewSection } from '../../utils/ora';
 import { hasPackageJsonDependencyListChangedAsync } from '../run/ios/Podfile';
 
 export function validateName(name?: string): string | true {
@@ -18,6 +18,12 @@ export function validateName(name?: string): string | true {
     return 'The project name can only contain URL-friendly characters (alphanumeric and @ . -  _)';
   }
   return true;
+}
+
+const FORBIDDEN_NAMES = ['react-native', 'react', 'react-dom', 'react-native-web', 'expo'];
+
+export function isFolderNameForbidden(folderName: string): boolean {
+  return FORBIDDEN_NAMES.includes(folderName);
 }
 
 // Any of these files are allowed to exist in the projectRoot
@@ -62,7 +68,7 @@ export async function assertFolderEmptyAsync({
   const conflicts = getConflictsForDirectory(projectRoot);
   if (conflicts.length) {
     Log.addNewLineIfNone();
-    Log.nested(`The directory ${Log.chalk.green(folderName)} has files that might be overwritten:`);
+    Log.nested(`The directory ${chalk.green(folderName)} has files that might be overwritten:`);
     Log.newLine();
     for (const file of conflicts) {
       Log.nested(`  ${file}`);
@@ -70,7 +76,7 @@ export async function assertFolderEmptyAsync({
 
     if (overwrite) {
       Log.newLine();
-      Log.nested(`Removing existing files from ${Log.chalk.green(folderName)}`);
+      Log.nested(`Removing existing files from ${chalk.green(folderName)}`);
       await Promise.all(conflicts.map(conflict => fs.remove(path.join(projectRoot, conflict))));
       return true;
     }
@@ -144,14 +150,6 @@ export async function installNodeDependenciesAsync(
   }
 }
 
-export function logNewSection(title: string) {
-  const spinner = ora(Log.chalk.bold(title));
-  // respect loading indicators
-  Log.setSpinner(spinner);
-  spinner.start();
-  return spinner;
-}
-
 export function getChangeDirectoryPath(projectRoot: string): string {
   const cdPath = path.relative(process.cwd(), projectRoot);
   if (cdPath.length <= projectRoot.length) {
@@ -161,7 +159,6 @@ export function getChangeDirectoryPath(projectRoot: string): string {
 }
 
 export async function installCocoaPodsAsync(projectRoot: string) {
-  Log.addNewLineIfNone();
   let step = logNewSection('Installing CocoaPods...');
   if (process.platform !== 'darwin') {
     step.succeed('Skipped installing CocoaPods because operating system is not on macOS.');
@@ -170,7 +167,6 @@ export async function installCocoaPodsAsync(projectRoot: string) {
 
   const packageManager = new PackageManager.CocoaPodsPackageManager({
     cwd: path.join(projectRoot, 'ios'),
-    log: Log.log,
     silent: !EXPO_DEBUG,
   });
 
@@ -178,19 +174,21 @@ export async function installCocoaPodsAsync(projectRoot: string) {
     try {
       // prompt user -- do you want to install cocoapods right now?
       step.text = 'CocoaPods CLI not found in your PATH, installing it now.';
-      step.render();
+      step.stopAndPersist();
       await PackageManager.CocoaPodsPackageManager.installCLIAsync({
         nonInteractive: true,
-        spawnOptions: packageManager.options,
+        spawnOptions: {
+          ...packageManager.options,
+          // Don't silence this part
+          stdio: ['inherit', 'inherit', 'pipe'],
+        },
       });
       step.succeed('Installed CocoaPods CLI.');
       step = logNewSection('Running `pod install` in the `ios` directory.');
     } catch (e) {
       step.stopAndPersist({
         symbol: '⚠️ ',
-        text: Log.chalk.red(
-          'Unable to install the CocoaPods CLI. Continuing with project sync, you can install CocoaPods CLI afterwards.'
-        ),
+        text: chalk.red('Unable to install the CocoaPods CLI.'),
       });
       if (e instanceof PackageManager.CocoaPodsError) {
         Log.log(e.message);
@@ -202,7 +200,7 @@ export async function installCocoaPodsAsync(projectRoot: string) {
   }
 
   try {
-    await packageManager.installAsync();
+    await packageManager.installAsync({ spinner: step });
     // Create cached list for later
     await hasPackageJsonDependencyListChangedAsync(projectRoot).catch(() => null);
     step.succeed('Installed pods and initialized Xcode workspace.');
@@ -210,9 +208,7 @@ export async function installCocoaPodsAsync(projectRoot: string) {
   } catch (e) {
     step.stopAndPersist({
       symbol: '⚠️ ',
-      text: Log.chalk.red(
-        'Something went wrong running `pod install` in the `ios` directory. Continuing with project sync, you can debug this afterwards.'
-      ),
+      text: chalk.red('Something went wrong running `pod install` in the `ios` directory.'),
     });
     if (e instanceof PackageManager.CocoaPodsError) {
       Log.log(e.message);

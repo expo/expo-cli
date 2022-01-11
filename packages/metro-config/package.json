@@ -1,10 +1,10 @@
 {
   "name": "@expo/metro-config",
-  "version": "0.1.60",
+  "version": "0.3.8",
   "description": "A Metro config for running React Native projects with the Metro bundler",
   "main": "build/ExpoMetroConfig.js",
   "scripts": {
-    "watch": "tsc --watch",
+    "watch": "tsc --watch --preserveWatchOutput",
     "build": "tsc",
     "prepare": "yarn run clean && yarn build",
     "clean": "rimraf build ./tsconfig.tsbuildinfo",
@@ -28,24 +28,27 @@
   "bugs": {
     "url": "https://github.com/expo/expo-cli/issues"
   },
-  "homepage": "https://github.com/expo/expo-cli/tree/master/packages/metro-config#readme",
+  "homepage": "https://github.com/expo/expo-cli/tree/main/packages/metro-config#readme",
   "files": [
     "build",
-    "transformer.js"
+    "transformer"
   ],
   "dependencies": {
-    "@expo/config": "3.3.34",
+    "@expo/config": "6.0.15",
+    "@expo/json-file": "8.2.34",
     "chalk": "^4.1.0",
+    "debug": "^4.3.2",
+    "find-yarn-workspace-root": "~2.0.0",
     "getenv": "^1.0.0",
-    "metro-react-native-babel-transformer": "^0.59.0"
+    "sucrase": "^3.20.0"
   },
   "devDependencies": {
-    "@expo/babel-preset-cli": "0.2.19",
-    "expo": "37",
-    "metro": "^0.59.0",
-    "metro-config": "^0.59.0",
-    "react-native": "0.61.4",
-    "rimraf": "^3.0.2"
+    "@babel/core": "^7.15.5",
+    "expo": "43",
+    "metro": "~0.64.0",
+    "metro-babel-transformer": "~0.64.0",
+    "metro-config": "~0.64.0",
+    "react-native": "~0.64.3"
   },
   "publishConfig": {
     "access": "public"

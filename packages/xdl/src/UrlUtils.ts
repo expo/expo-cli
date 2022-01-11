@@ -1,7 +1,7 @@
-import { Config } from '@expo/api';
+import { Config, ConnectionStatus } from '@expo/api';
 import { ExpoConfig, getConfig } from '@expo/config';
-import joi from '@hapi/joi';
 import assert from 'assert';
+import Joi from 'joi';
 import os from 'os';
 import QueryString from 'querystring';
 import resolveFrom from 'resolve-from';
@@ -31,9 +31,8 @@ export async function constructDeepLinkAsync(
   projectRoot: string,
   opts?: Partial<URLOptions>,
   requestHostname?: string
-) {
-  const { devClient } = await ProjectSettings.getPackagerOptsAsync(projectRoot);
-
+): Promise<string> {
+  const { devClient } = await ProjectSettings.readAsync(projectRoot);
   if (devClient) {
     return constructDevClientUrlAsync(projectRoot, opts, requestHostname);
   } else {
@@ -54,11 +53,17 @@ export async function constructDevClientUrlAsync(
   opts?: Partial<URLOptions>,
   requestHostname?: string
 ) {
-  const { scheme } = await ProjectSettings.getPackagerOptsAsync(projectRoot);
-  if (!scheme || typeof scheme !== 'string') {
-    throw new XDLError('NO_DEV_CLIENT_SCHEME', 'No scheme specified for development client');
+  let _scheme: string;
+  if (opts?.scheme) {
+    _scheme = opts?.scheme;
+  } else {
+    const { scheme } = await ProjectSettings.readAsync(projectRoot);
+    if (!scheme || typeof scheme !== 'string') {
+      throw new XDLError('NO_DEV_CLIENT_SCHEME', 'No scheme specified for development client');
+    }
+    _scheme = scheme;
   }
-  const protocol = resolveProtocol(projectRoot, { scheme, urlType: 'custom' });
+  const protocol = resolveProtocol(projectRoot, { scheme: _scheme, urlType: 'custom' });
   const manifestUrl = await constructManifestUrlAsync(
     projectRoot,
     { ...opts, urlType: 'http' },
@@ -86,6 +91,15 @@ export async function constructLogUrlAsync(
 ): Promise<string> {
   const baseUrl = await constructUrlAsync(projectRoot, { urlType: 'http' }, false, requestHostname);
   return `${baseUrl}/logs`;
+}
+
+export async function constructLoadingUrlAsync(
+  projectRoot: string,
+  platform: 'ios' | 'android',
+  requestHostname?: string
+): Promise<string> {
+  const baseUrl = await constructUrlAsync(projectRoot, { urlType: 'http' }, false, requestHostname);
+  return `${baseUrl}/_expo/loading?platform=${platform}`;
 }
 
 export async function constructUrlWithExtensionAsync(
@@ -162,7 +176,8 @@ export async function constructDebuggerHostAsync(
 }
 
 export function constructBundleQueryParams(projectRoot: string, opts: MetroQueryOptions): string {
-  const { exp } = getConfig(projectRoot);
+  // No SDK Version will assume the latest requirements
+  const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
   return constructBundleQueryParamsWithConfig(projectRoot, opts, exp);
 }
 
@@ -185,26 +200,22 @@ export function constructBundleQueryParamsWithConfig(
     queryParams.minify = !!opts.minify;
   }
 
-  // No special requirements after SDK 33 (Jun 5 2019)
-  if (Versions.gteSdkVersion(exp, '33.0.0')) {
-    return QueryString.stringify(queryParams);
-  }
-
   // TODO: Remove this ...
 
   // SDK11 to SDK32 require us to inject hashAssetFiles through the params, but this is not
   // needed with SDK33+
-  const supportsAssetPlugins = Versions.gteSdkVersion(exp, '11.0.0');
-  const usesAssetPluginsQueryParam = supportsAssetPlugins && Versions.lteSdkVersion(exp, '32.0.0');
-  if (usesAssetPluginsQueryParam) {
-    // Use an absolute path here so that we can not worry about symlinks/relative requires
-    const pluginModule = resolveFrom(projectRoot, 'expo/tools/hashAssetFiles');
-    queryParams.assetPlugin = encodeURIComponent(pluginModule);
-  } else if (!supportsAssetPlugins) {
+  if (Versions.lteSdkVersion(exp, '10.0.0')) {
+    // SDK <=10
     // Only sdk-10.1.0+ supports the assetPlugin parameter. We use only the
     // major version in the sdkVersion field, so check for 11.0.0 to be sure.
     queryParams.includeAssetFileHashes = true;
+  } else if (Versions.lteSdkVersion(exp, '32.0.0')) {
+    // SDK 11-32
+    // Use an absolute path here so that we can not worry about symlinks/relative requires
+    const pluginModule = resolveFrom(projectRoot, 'expo/tools/hashAssetFiles');
+    queryParams.assetPlugin = encodeURIComponent(pluginModule);
   }
+  // Special requirements aren't needed after SDK 33 (Jun 5 2019)
 
   return QueryString.stringify(queryParams);
 }
@@ -230,18 +241,18 @@ export async function constructWebAppUrlAsync(
 }
 
 function assertValidOptions(opts: Partial<URLOptions>): URLOptions {
-  const schema = joi.object().keys({
-    devClient: joi.boolean().optional(),
-    scheme: joi.string().optional().allow(null),
+  const schema = Joi.object().keys({
+    devClient: Joi.boolean().optional(),
+    scheme: Joi.string().optional().allow(null),
     // Replaced by `scheme`
-    urlType: joi.any().valid('exp', 'http', 'redirect', 'no-protocol').allow(null),
-    lanType: joi.any().valid('ip', 'hostname'),
-    hostType: joi.any().valid('localhost', 'lan', 'tunnel'),
-    dev: joi.boolean(),
-    strict: joi.boolean(),
-    minify: joi.boolean(),
-    https: joi.boolean().optional(),
-    urlRandomness: joi.string().optional().allow(null),
+    urlType: Joi.any().valid('exp', 'http', 'redirect', 'no-protocol').allow(null),
+    lanType: Joi.any().valid('ip', 'hostname'),
+    hostType: Joi.any().valid('localhost', 'lan', 'tunnel'),
+    dev: Joi.boolean(),
+    strict: Joi.boolean(),
+    minify: Joi.boolean(),
+    https: Joi.boolean().optional(),
+    urlRandomness: Joi.string().optional().allow(null),
   });
 
   const { error } = schema.validate(opts);
@@ -260,7 +271,7 @@ async function ensureOptionsAsync(
     assertValidOptions(opts);
   }
 
-  const defaultOpts = await ProjectSettings.getPackagerOptsAsync(projectRoot);
+  const defaultOpts = await ProjectSettings.readAsync(projectRoot);
   if (!opts) {
     return { urlType: null, ...defaultOpts };
   }
@@ -281,7 +292,7 @@ function resolveProtocol(
   }
   let protocol = 'exp';
 
-  const { exp } = getConfig(projectRoot);
+  const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
 
   // We only use these values from the config
   const { scheme, detach, sdkVersion } = exp;
@@ -293,7 +304,7 @@ function resolveProtocol(
     );
     // Get the first valid scheme.
     const firstScheme = schemes[0];
-    if (firstScheme && Versions.gteSdkVersion({ sdkVersion }, '27.0.0')) {
+    if (firstScheme && !Versions.lteSdkVersion({ sdkVersion }, '26.0.0')) {
       protocol = firstScheme;
     } else if (detach.scheme) {
       // must keep this fallback in place for older projects
@@ -338,7 +349,7 @@ export async function constructUrlAsync(
   } else if (opts.hostType === 'localhost' || requestHostname === 'localhost') {
     hostname = '127.0.0.1';
     port = isPackager ? packagerInfo.packagerPort : packagerInfo.expoServerPort;
-  } else if (opts.hostType === 'lan' || Config.offline) {
+  } else if (opts.hostType === 'lan' || ConnectionStatus.isOffline()) {
     if (process.env.EXPO_PACKAGER_HOSTNAME) {
       hostname = process.env.EXPO_PACKAGER_HOSTNAME.trim();
     } else if (process.env.REACT_NATIVE_PACKAGER_HOSTNAME) {
@@ -365,6 +376,7 @@ export async function constructUrlAsync(
         'Tunnel URL not found (it might not be ready yet), falling back to LAN URL.',
         'tunnel-url-not-found'
       );
+
       return constructUrlAsync(
         projectRoot,
         { ...opts, hostType: 'lan' },
@@ -402,7 +414,10 @@ function joinURLComponents({
   port?: string | number | null;
 }): string {
   assert(hostname, 'hostname cannot be inferred.');
-  // Android HMR breaks without this port 80
+  // Android HMR breaks without this port 80.
+  // This is because Android React Native WebSocket implementation is not spec compliant and fails without a port:
+  // `E unknown:ReactNative: java.lang.IllegalArgumentException: Invalid URL port: "-1"`
+  // Invoked first in `metro-runtime/src/modules/HMRClient.js`
   const validPort = port ?? '80';
   const validProtocol = protocol ? `${protocol}://` : '';
 
@@ -411,37 +426,6 @@ function joinURLComponents({
 
 export function stripJSExtension(entryPoint: string): string {
   return entryPoint.replace(/\.js$/, '');
-}
-
-export function randomIdentifier(length: number = 6): string {
-  const alphabet = '23456789qwertyuipasdfghjkzxcvbnm';
-  let result = '';
-  for (let i = 0; i < length; i++) {
-    const j = Math.floor(Math.random() * alphabet.length);
-    const c = alphabet.substr(j, 1);
-    result += c;
-  }
-  return result;
-}
-
-export function sevenDigitIdentifier(): string {
-  return `${randomIdentifier(3)}-${randomIdentifier(4)}`;
-}
-
-export function randomIdentifierForUser(username: string): string {
-  return `${username}-${randomIdentifier(3)}-${randomIdentifier(2)}`;
-}
-
-export function someRandomness(): string {
-  return [randomIdentifier(2), randomIdentifier(3)].join('-');
-}
-
-export function domainify(s: string): string {
-  return s
-    .toLowerCase()
-    .replace(/[^a-z0-9-]/g, '-')
-    .replace(/^-+/, '')
-    .replace(/-+$/, '');
 }
 
 export function isHttps(urlString: string): boolean {

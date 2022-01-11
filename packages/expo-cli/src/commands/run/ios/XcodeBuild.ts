@@ -1,14 +1,14 @@
 import spawnAsync from '@expo/spawn-async';
+import { ExpoRunFormatter } from '@expo/xcpretty';
 import chalk from 'chalk';
 import { spawn, SpawnOptionsWithoutStdio } from 'child_process';
 import * as fs from 'fs-extra';
+import os from 'os';
 import * as path from 'path';
 import { SimControl } from 'xdl';
 
-import CommandError from '../../../CommandError';
+import CommandError, { AbortCommandError } from '../../../CommandError';
 import Log from '../../../log';
-import { ExpoLogFormatter } from './ExpoLogFormatter';
-import { getDependenciesFromPodfileLock } from './Podfile';
 import { ensureDeviceIsCodeSignedForDeploymentAsync } from './developmentCodeSigning';
 import { ProjectInfo, XcodeConfiguration } from './resolveOptionsAsync';
 
@@ -20,12 +20,18 @@ export type BuildProps = {
   configuration: XcodeConfiguration;
   shouldSkipInitialBundling: boolean;
   shouldStartBundler: boolean;
+  /** Should use derived data for builds. */
+  buildCache: boolean;
   terminal?: string;
   port: number;
   scheme: string;
 };
 
 type XcodeSDKName = 'iphoneos' | 'iphonesimulator';
+
+export function logPrettyItem(message: string) {
+  Log.log(`${chalk.whiteBright`\u203A`} ${message}`);
+}
 
 export async function getProjectBuildSettings(
   xcodeProject: ProjectInfo,
@@ -84,11 +90,28 @@ export function getAppBinaryPath(buildOutput: string) {
     buildOutput,
     'UNLOCALIZED_RESOURCES_FOLDER_PATH'
   );
-  return path.join(
+
+  const binaryPath = path.join(
     // Use the shortest defined env variable (usually there's just one).
     CONFIGURATION_BUILD_DIR[0],
     // Use the last defined env variable.
     UNLOCALIZED_RESOURCES_FOLDER_PATH[UNLOCALIZED_RESOURCES_FOLDER_PATH.length - 1]
+  );
+
+  // If the app has a space in the name it'll fail because it isn't escaped properly by Xcode.
+  return getEscapedPath(binaryPath);
+}
+
+export function getEscapedPath(filePath: string): string {
+  if (fs.existsSync(filePath)) {
+    return filePath;
+  }
+  const unescapedPath = filePath.split(/\\ /).join(' ');
+  if (fs.existsSync(unescapedPath)) {
+    return unescapedPath;
+  }
+  throw new Error(
+    `Unexpected: Generated app at path "${filePath}" cannot be read, the app cannot be installed. Please report this and build onto a simulator.`
   );
 }
 
@@ -142,10 +165,6 @@ function getProcessOptions({
   };
 }
 
-export function logPrettyItem(message: string) {
-  Log.log(`${chalk.whiteBright`\u203A`} ${message}`);
-}
-
 export async function buildAsync({
   projectRoot,
   xcodeProject,
@@ -156,6 +175,7 @@ export async function buildAsync({
   shouldSkipInitialBundling,
   terminal,
   port,
+  buildCache,
 }: BuildProps): Promise<string> {
   const args = [
     xcodeProject.isWorkspace ? '-workspace' : '-project',
@@ -179,14 +199,23 @@ export async function buildAsync({
     }
   }
 
-  logPrettyItem(chalk.bold`Planning build`);
+  // Add last
+  if (buildCache === false) {
+    args.push(
+      // Will first clean the derived data folder.
+      'clean',
+      // Then build step must be added otherwise the process will simply clean and exit.
+      'build'
+    );
+  }
+
   Log.debug(`  xcodebuild ${args.join(' ')}`);
-  const podfileLock = path.join(projectRoot, 'ios', 'Podfile.lock');
-  const appName = xcodeProject.name.match(/.*\/(.*)\.\w+/)?.[1] || '';
-  const formatter = new ExpoLogFormatter({
-    projectRoot,
-    appName,
-    podfile: getDependenciesFromPodfileLock(podfileLock),
+
+  logPrettyItem(chalk.bold`Planning build`);
+
+  const formatter = ExpoRunFormatter.create(projectRoot, {
+    xcodeProject,
+    isDebug: Log.isDebug,
   });
 
   return new Promise(async (resolve, reject) => {
@@ -198,13 +227,33 @@ export async function buildAsync({
     let buildOutput = '';
     let errorOutput = '';
 
+    let currentBuffer = '';
+
+    // Data can be sent in chunks that would have no relevance to our regex
+    // this can cause massive slowdowns, so we need to ensure the data is complete before attempting to parse it.
+    function flushBuffer() {
+      if (!currentBuffer) {
+        return;
+      }
+
+      const data = currentBuffer;
+      // Reset buffer.
+      currentBuffer = '';
+      // Process data.
+      const lines = formatter.pipe(data);
+      for (const line of lines) {
+        // Log parsed results.
+        Log.log(line);
+      }
+    }
+
     buildProcess.stdout.on('data', (data: Buffer) => {
       const stringData = data.toString();
       buildOutput += stringData;
-
-      const lines = formatter.pipe(stringData);
-      for (const line of lines) {
-        Log.log(line);
+      currentBuffer += stringData;
+      // Only flush the data if we have a full line.
+      if (currentBuffer.endsWith(os.EOL)) {
+        flushBuffer();
       }
     });
 
@@ -214,8 +263,23 @@ export async function buildAsync({
     });
 
     buildProcess.on('close', (code: number) => {
-      formatter.finish();
+      // Flush log data at the end just in case we missed something.
+      flushBuffer();
+      Log.debug(`Exited with code: ${code}`);
+
+      if (
+        // User cancelled with ctrl-c
+        code === null ||
+        // Build interrupted
+        code === 75
+      ) {
+        reject(new AbortCommandError());
+        return;
+      }
+
+      Log.log(formatter.getBuildSummary());
       const logFilePath = writeBuildLogs(projectRoot, buildOutput, errorOutput);
+
       if (code !== 0) {
         // Determine if the logger found any errors;
         const wasErrorPresented = !!formatter.errors.length;
@@ -249,21 +313,15 @@ export async function buildAsync({
 }
 
 function writeBuildLogs(projectRoot: string, buildOutput: string, errorOutput: string) {
-  const output =
-    '# Build output\n\n```log\n' +
-    buildOutput +
-    '\n```\n\n# Error output\n\n```log\n' +
-    errorOutput +
-    '\n```\n';
-  const logFilePath = getErrorLogFilePath(projectRoot);
+  const [logFilePath, errorFilePath] = getErrorLogFilePath(projectRoot);
 
-  fs.writeFileSync(logFilePath, output);
+  fs.writeFileSync(logFilePath, buildOutput);
+  fs.writeFileSync(errorFilePath, errorOutput);
   return logFilePath;
 }
 
-function getErrorLogFilePath(projectRoot: string): string {
-  const filename = 'xcodebuild.md';
+function getErrorLogFilePath(projectRoot: string): [string, string] {
   const folder = path.join(projectRoot, '.expo');
   fs.ensureDirSync(folder);
-  return path.join(folder, filename);
+  return [path.join(folder, 'xcodebuild.log'), path.join(folder, 'xcodebuild-error.log')];
 }

@@ -16,9 +16,8 @@ declare module 'metro-config' {
   type CacheStore = unknown;
   // TODO: import { CustomResolver } from 'metro-resolver';
   type CustomResolver = unknown;
-  // TODO: import { BasicSourceMap, MixedSourceMap } from 'metro-source-map';
-  type BasicSourceMap = unknown;
-  type MixedSourceMap = unknown;
+
+  import type { BasicSourceMap, MixedSourceMap } from 'metro-source-map';
 
   //#region metro/packages/metro-config/src/configTypes.flow.js
 
@@ -86,6 +85,7 @@ declare module 'metro-config' {
     extraNodeModules: {
       [name: string]: string;
     };
+    nodeModulesPaths?: readonly string[];
     hasteImplModulePath: string | null | undefined;
     platforms: ReadonlyArray<string>;
     resolverMainFields: ReadonlyArray<string>;

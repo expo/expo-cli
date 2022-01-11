@@ -26,7 +26,6 @@ describe('Android Updates config', () => {
 
   it(`returns correct default values from all getters if no value provided`, () => {
     expect(Updates.getSDKVersion({})).toBe(null);
-    expect(Updates.getUpdateUrl({ slug: 'foo' }, null)).toBe(null);
     expect(Updates.getUpdatesCheckOnLaunch({})).toBe('ALWAYS');
     expect(Updates.getUpdatesEnabled({})).toBe(true);
     expect(Updates.getUpdatesTimeout({})).toBe(0);
@@ -34,12 +33,20 @@ describe('Android Updates config', () => {
 
   it(`returns correct value from all getters if value provided`, () => {
     expect(Updates.getSDKVersion({ sdkVersion: '37.0.0' })).toBe('37.0.0');
-    expect(Updates.getUpdateUrl({ slug: 'my-app' }, 'user')).toBe('https://exp.host/@user/my-app');
-    expect(Updates.getUpdateUrl({ slug: 'my-app', owner: 'owner' }, 'user')).toBe(
-      'https://exp.host/@owner/my-app'
-    );
     expect(
       Updates.getUpdatesCheckOnLaunch({ updates: { checkAutomatically: 'ON_ERROR_RECOVERY' } })
+    ).toBe('NEVER');
+    expect(
+      Updates.getUpdatesCheckOnLaunch(
+        { updates: { checkAutomatically: 'ON_ERROR_RECOVERY' } },
+        '0.11.0'
+      )
+    ).toBe('ERROR_RECOVERY_ONLY');
+    expect(
+      Updates.getUpdatesCheckOnLaunch(
+        { updates: { checkAutomatically: 'ON_ERROR_RECOVERY' } },
+        '0.10.15'
+      )
     ).toBe('NEVER');
     expect(Updates.getUpdatesCheckOnLaunch({ updates: { checkAutomatically: 'ON_LOAD' } })).toBe(
       'ALWAYS'
@@ -67,7 +74,7 @@ describe('Android Updates config', () => {
         checkAutomatically: 'ON_ERROR_RECOVERY',
       },
     };
-    androidManifestJson = Updates.setUpdatesConfig(config, androidManifestJson, 'user');
+    androidManifestJson = Updates.setUpdatesConfig(config, androidManifestJson, 'user', '0.11.0');
     const mainApplication = getMainApplication(androidManifestJson);
 
     const updateUrl = mainApplication['meta-data'].filter(
@@ -92,7 +99,7 @@ describe('Android Updates config', () => {
       e => e.$['android:name'] === 'expo.modules.updates.EXPO_UPDATES_CHECK_ON_LAUNCH'
     );
     expect(checkOnLaunch).toHaveLength(1);
-    expect(checkOnLaunch[0].$['android:value']).toMatch('NEVER');
+    expect(checkOnLaunch[0].$['android:value']).toMatch('ERROR_RECOVERY_ONLY');
 
     const timeout = mainApplication['meta-data'].filter(
       e => e.$['android:name'] === 'expo.modules.updates.EXPO_UPDATES_LAUNCH_WAIT_MS'

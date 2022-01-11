@@ -5,7 +5,7 @@ import snakeCase from 'lodash/snakeCase';
 
 import Analytics from './Analytics';
 import ApiV2Client from './ApiV2';
-import Config from './Config';
+import * as ConnectionStatus from './ConnectionStatus';
 import { Semaphore } from './Semaphore';
 import UserSettings from './UserSettings';
 
@@ -111,6 +111,21 @@ export class UserManagerInstance {
   }
 
   /**
+   * Get the account and project name using a user and Expo config.
+   * This will validate if the owner field is set when using a robot account.
+   */
+  getProjectOwner(user: User | RobotUser, exp: ExpoConfig): string {
+    if (user.kind === 'robot' && !exp.owner) {
+      throw new XDLError(
+        'ROBOT_OWNER_ERROR',
+        'The "owner" manifest property is required when using robot users. See: https://docs.expo.dev/versions/latest/config/app/#owner'
+      );
+    }
+
+    return exp.owner || user.username;
+  }
+
+  /**
    * Logs in a user for a given login type.
    *
    * Valid login types are:
@@ -190,7 +205,7 @@ export class UserManagerInstance {
    * If there are any issues with the login, this method throws.
    */
   async ensureLoggedInAsync(): Promise<User | RobotUser> {
-    if (Config.offline) {
+    if (ConnectionStatus.isOffline()) {
       throw new AuthError('NETWORK_REQUIRED', "Can't verify user without network access");
     }
 
@@ -226,6 +241,35 @@ export class UserManagerInstance {
   }
 
   /**
+   * Returns cached user data without hitting our backend. Only works for 'Username-Password-Authentication' flow. Does not work with 'Access-Token-Authentication' flow.
+   */
+  getCachedUserDataAsync = async (): Promise<UserData | null> => {
+    await this._getSessionLock.acquire();
+
+    try {
+      const currentUser = this._currentUser;
+      // If user is cached and there is an accessToken or sessionSecret, return the user
+      if (currentUser && (currentUser.accessToken || currentUser.sessionSecret)) {
+        return currentUser;
+      }
+
+      const userData = await this._readUserData();
+
+      // // No token, no session, no current user. Need to login
+      if (!userData?.sessionSecret) {
+        return null;
+      }
+
+      return userData;
+    } catch (e) {
+      Logger.global.warn(e);
+      return null;
+    } finally {
+      this._getSessionLock.release();
+    }
+  };
+
+  /**
    * Get the current user based on the available token.
    * If there is no current token, returns null.
    */
@@ -240,7 +284,7 @@ export class UserManagerInstance {
         return currentUser;
       }
 
-      if (Config.offline) {
+      if (ConnectionStatus.isOffline()) {
         return null;
       }
 
@@ -302,33 +346,6 @@ export class UserManagerInstance {
       throw new AuthError('USER_ACCOUNT_ERROR', 'This action is not supported for normal users.');
     }
     return user;
-  }
-
-  /**
-   * Used in expo-constants to generate the `id` property statically for an app in custom managed workflow.
-   * This `id` is used for legacy Expo services AuthSession proxy and Expo notifications device ID.
-   *
-   * @param manifest
-   * @returns
-   */
-  async getProjectCurrentFullNameAsync(manifest: ExpoConfig): Promise<string> {
-    const username = await this.getProjectAccountNameAsync(manifest);
-    return `@${username}/${manifest.slug}`;
-  }
-
-  async getProjectAccountNameAsync(manifest: ExpoConfig): Promise<string> {
-    // TODO: Must match what's generated in Expo Go.
-    if (manifest.owner) {
-      return manifest.owner;
-    } else if (process.env.EAS_BUILD_USERNAME) {
-      return process.env.EAS_BUILD_USERNAME;
-    } else if (!Config.offline) {
-      const username = await this.getCurrentUsernameAsync();
-      if (username) {
-        return username;
-      }
-    }
-    return ANONYMOUS_USERNAME;
   }
 
   async getCurrentUsernameAsync(): Promise<string | null> {
@@ -399,7 +416,6 @@ export class UserManagerInstance {
     if (this._currentUser && !this._currentUser?.accessToken) {
       Analytics.logEvent('Logout', {
         userId: this._currentUser.userId,
-        username: this._currentUser.username,
         currentConnection: this._currentUser.currentConnection,
       });
     }
@@ -491,15 +507,23 @@ export class UserManagerInstance {
         Analytics.logEvent('Login', {
           userId: user.userId,
           currentConnection: user.currentConnection,
-          username: user.username,
         });
       }
 
-      Analytics.setUserProperties(user.username, {
+      UnifiedAnalytics.identifyUser(user.userId, {
         userId: user.userId,
         currentConnection: user.currentConnection,
         username: user.username,
         userType: user.kind,
+        primaryAccountId: user.primaryAccountId,
+      });
+
+      Analytics.identifyUser(user.userId, {
+        userId: user.userId,
+        currentConnection: user.currentConnection,
+        username: user.username,
+        userType: user.kind,
+        primaryAccountId: user.primaryAccountId,
       });
     }
 

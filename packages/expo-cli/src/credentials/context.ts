@@ -1,10 +1,8 @@
 import { ApiV2, RobotUser, User, UserManager } from '@expo/api';
 import { ExpoConfig, getConfig } from '@expo/config';
-import pick from 'lodash/pick';
 
 import { AppleCtx, authenticateAsync } from '../appleApi';
 import Log from '../log';
-import { getProjectOwner } from '../projects';
 import AndroidApi from './api/AndroidApi';
 import IosApi from './api/IosApi';
 
@@ -49,7 +47,7 @@ export class Context {
     return this._projectDir as string;
   }
   get projectOwner(): string {
-    return getProjectOwner(this.user, this.manifest);
+    return UserManager.getProjectOwner(this.user, this.manifest);
   }
   get manifest(): ExpoConfig {
     if (!this._manifest) {
@@ -97,10 +95,11 @@ export class Context {
   }
 
   async init(projectDir: string, options: CtxOptions = {}) {
+    const { allowAnonymous, appleId, appleIdPassword, teamId, nonInteractive } = options;
     this._user = (await UserManager.getCurrentUserAsync()) || undefined;
 
     // User isn't signed it, but needs to be signed in
-    if (!this._user && !options.allowAnonymous) {
+    if (!this._user && !allowAnonymous) {
       this._user = (await UserManager.ensureLoggedInAsync()) as User;
     }
 
@@ -108,10 +107,10 @@ export class Context {
     this._apiClient = ApiV2.clientForUser(this.user);
     this._iosApiClient = new IosApi(this.api);
     this._androidApiClient = new AndroidApi(this.api);
-    this._appleCtxOptions = pick(options, ['appleId', 'appleIdPassword', 'teamId']);
-    this._nonInteractive = options.nonInteractive;
+    this._appleCtxOptions = { appleId, appleIdPassword, teamId };
+    this._nonInteractive = nonInteractive;
 
-    // try to acccess project context
+    // try to access project context
     try {
       const { exp } = getConfig(projectDir, { skipSDKVersionRequirement: true });
       this._manifest = exp;

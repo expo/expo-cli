@@ -6,6 +6,8 @@ import { getDynamicConfig } from '../getConfig';
 
 const mockConfigContext = {} as any;
 
+jest.unmock('resolve-from');
+
 describe(getDynamicConfig, () => {
   describe('process.cwd in a child process', () => {
     const originalCwd = process.cwd();
@@ -47,6 +49,18 @@ describe(getConfig, () => {
     });
     // @ts-ignore: foo property is not defined
     expect(exp.foo).toBe('bar');
+  });
+
+  it('throws a useful error for a project with an external syntax error', () => {
+    const projectRoot = resolve(__dirname, './fixtures/external-error');
+    const configPath = resolve(projectRoot, 'app.config.js');
+
+    setCustomConfigPath(projectRoot, configPath);
+    expect(() =>
+      getConfig(projectRoot, {
+        skipSDKVersionRequirement: true,
+      })
+    ).toThrowErrorMatchingSnapshot();
   });
 
   it('resolves plugins', () => {

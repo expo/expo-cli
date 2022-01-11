@@ -2,17 +2,15 @@ import { ExpoConfig } from '@expo/config-types';
 import plist, { PlistObject } from '@expo/plist';
 import assert from 'assert';
 import fs from 'fs-extra';
-import xcode from 'xcode';
+import xcode, { XCBuildConfiguration } from 'xcode';
 
 import { ConfigPlugin } from '../Plugin.types';
-import { withDangerousMod } from '../plugins/core-plugins';
+import { withDangerousMod } from '../plugins/withDangerousMod';
 import { InfoPlist } from './IosConfig.types';
 import { getAllInfoPlistPaths, getAllPBXProjectPaths, getPBXProjectPath } from './Paths';
-import {
-  ConfigurationSectionEntry,
-  findFirstNativeTarget,
-  getBuildConfigurationForId,
-} from './utils/Xcodeproj';
+import { findFirstNativeTarget, getXCBuildConfigurationFromPbxproj } from './Target';
+import { ConfigurationSectionEntry, getBuildConfigurationsForListId } from './utils/Xcodeproj';
+import { trimQuotes } from './utils/string';
 
 export const withBundleIdentifier: ConfigPlugin<{ bundleIdentifier?: string }> = (
   config,
@@ -32,7 +30,7 @@ export const withBundleIdentifier: ConfigPlugin<{ bundleIdentifier?: string }> =
   ]);
 };
 
-function getBundleIdentifier(config: ExpoConfig): string | null {
+function getBundleIdentifier(config: Pick<ExpoConfig, 'ios'>): string | null {
   return config.ios?.bundleIdentifier ?? null;
 }
 
@@ -54,14 +52,27 @@ function setBundleIdentifier(config: ExpoConfig, infoPlist: InfoPlist): InfoPlis
 }
 
 /**
- * Gets the bundle identifier of the Xcode project found in the project directory.
- * If either the Xcode project doesn't exist or the project is not configured
- * this function returns null.
+ * Gets the bundle identifier defined in the Xcode project found in the project directory.
+ *
+ * A bundle identifier is stored as a value in XCBuildConfiguration entry.
+ * Those entries exist for every pair (build target, build configuration).
+ * Unless target name is passed, the first target defined in the pbxproj is used
+ * (to keep compatibility with the inaccurate legacy implementation of this function).
+ * The build configuration is usually 'Release' or 'Debug'. However, it could be any arbitrary string.
+ * Defaults to 'Release'.
  *
  * @param {string} projectRoot Path to project root containing the ios directory
+ * @param {string} targetName Target name
+ * @param {string} buildConfiguration Build configuration. Defaults to 'Release'.
  * @returns {string | null} bundle identifier of the Xcode project or null if the project is not configured
  */
-function getBundleIdentifierFromPbxproj(projectRoot: string): string | null {
+function getBundleIdentifierFromPbxproj(
+  projectRoot: string,
+  {
+    targetName,
+    buildConfiguration = 'Release',
+  }: { targetName?: string; buildConfiguration?: string } = {}
+): string | null {
   let pbxprojPath: string;
   try {
     pbxprojPath = getPBXProjectPath(projectRoot);
@@ -71,30 +82,40 @@ function getBundleIdentifierFromPbxproj(projectRoot: string): string | null {
   const project = xcode.project(pbxprojPath);
   project.parseSync();
 
-  const [, nativeTarget] = findFirstNativeTarget(project);
-  for (const [, item] of getBuildConfigurationForId(project, nativeTarget.buildConfigurationList)) {
-    const bundleIdentifierRaw = item.buildSettings.PRODUCT_BUNDLE_IDENTIFIER;
-    if (bundleIdentifierRaw) {
-      const bundleIdentifier =
-        bundleIdentifierRaw[0] === '"' ? bundleIdentifierRaw.slice(1, -1) : bundleIdentifierRaw;
-      // it's possible to use interpolation for the bundle identifier
-      // the most common case is when the last part of the id is set to `$(PRODUCT_NAME:rfc1034identifier)`
-      // in this case, PRODUCT_NAME should be replaced with its value
-      // the `rfc1034identifier` modifier replaces all non-alphanumeric characters with dashes
-      const bundleIdentifierParts = bundleIdentifier.split('.');
-      if (
-        bundleIdentifierParts[bundleIdentifierParts.length - 1] ===
-          '$(PRODUCT_NAME:rfc1034identifier)' &&
-        item.buildSettings.PRODUCT_NAME
-      ) {
-        bundleIdentifierParts[
-          bundleIdentifierParts.length - 1
-        ] = item.buildSettings.PRODUCT_NAME.replace(/[^a-zA-Z0-9]/g, '-');
-      }
-      return bundleIdentifierParts.join('.');
-    }
+  const xcBuildConfiguration = getXCBuildConfigurationFromPbxproj(project, {
+    targetName,
+    buildConfiguration,
+  });
+  if (!xcBuildConfiguration) {
+    return null;
   }
-  return null;
+  return getProductBundleIdentifierFromBuildConfiguration(xcBuildConfiguration);
+}
+
+function getProductBundleIdentifierFromBuildConfiguration(
+  xcBuildConfiguration: XCBuildConfiguration
+): string | null {
+  const bundleIdentifierRaw = xcBuildConfiguration.buildSettings.PRODUCT_BUNDLE_IDENTIFIER;
+  if (bundleIdentifierRaw) {
+    const bundleIdentifier = trimQuotes(bundleIdentifierRaw);
+    // it's possible to use interpolation for the bundle identifier
+    // the most common case is when the last part of the id is set to `$(PRODUCT_NAME:rfc1034identifier)`
+    // in this case, PRODUCT_NAME should be replaced with its value
+    // the `rfc1034identifier` modifier replaces all non-alphanumeric characters with dashes
+    const bundleIdentifierParts = bundleIdentifier.split('.');
+    if (
+      bundleIdentifierParts[bundleIdentifierParts.length - 1] ===
+        '$(PRODUCT_NAME:rfc1034identifier)' &&
+      xcBuildConfiguration.buildSettings.PRODUCT_NAME
+    ) {
+      bundleIdentifierParts[
+        bundleIdentifierParts.length - 1
+      ] = xcBuildConfiguration.buildSettings.PRODUCT_NAME.replace(/[^a-zA-Z0-9]/g, '-');
+    }
+    return bundleIdentifierParts.join('.');
+  } else {
+    return null;
+  }
 }
 
 /**
@@ -114,7 +135,7 @@ function updateBundleIdentifierForPbxproj(
 
   const [, nativeTarget] = findFirstNativeTarget(project);
 
-  getBuildConfigurationForId(project, nativeTarget.buildConfigurationList).forEach(
+  getBuildConfigurationsForListId(project, nativeTarget.buildConfigurationList).forEach(
     ([, item]: ConfigurationSectionEntry) => {
       if (item.buildSettings.PRODUCT_BUNDLE_IDENTIFIER === bundleIdentifier) {
         return;

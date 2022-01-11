@@ -1,6 +1,6 @@
 import { Analytics, ApiV2, Config, UserManager } from '@expo/api';
 import { configFilename, getConfig } from '@expo/config';
-import joi from '@hapi/joi';
+import Joi from 'joi';
 import slug from 'slugify';
 import { ThirdParty, XDLError } from 'xdl';
 
@@ -26,16 +26,16 @@ export type GetExpConfigOptions = {
 };
 
 export function validateOptions(options: any) {
-  const schema = joi.object().keys({
-    current: joi.boolean(),
-    mode: joi.string(),
-    platform: joi.any().valid('ios', 'android', 'all'),
-    expIds: joi.array(),
-    type: joi.any().valid('archive', 'simulator', 'client', 'app-bundle', 'apk'),
-    releaseChannel: joi.string().regex(/[a-z\d][a-z\d._-]*/),
-    bundleIdentifier: joi.string().regex(/^[a-zA-Z][a-zA-Z0-9\-.]+$/),
-    publicUrl: joi.string(),
-    sdkVersion: joi.string().strict(),
+  const schema = Joi.object().keys({
+    current: Joi.boolean(),
+    mode: Joi.string(),
+    platform: Joi.any().valid('ios', 'android', 'all'),
+    expIds: Joi.array(),
+    type: Joi.any().valid('archive', 'simulator', 'client', 'app-bundle', 'apk'),
+    releaseChannel: Joi.string().regex(/[a-z\d][a-z\d._-]*/),
+    bundleIdentifier: Joi.string().regex(/^[a-zA-Z0-9-.]+$/),
+    publicUrl: Joi.string(),
+    sdkVersion: Joi.string().strict(),
   });
 
   const { error } = schema.validate(options);

@@ -5,7 +5,6 @@
 /packages/dev-tools/.next
 /packages/dev-tools/build
 /packages/dev-tools/fragmentTypes.json
-/packages/electron-adapter/build
 /packages/expo-cli/build
 /packages/expo-codemod/build
 /packages/expo-optimize/build

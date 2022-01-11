@@ -7,6 +7,7 @@ import {
   findUsesLibraryItem,
   getMainActivity,
   getMainApplication,
+  getRunnableActivity,
   prefixAndroidKeys,
   readAndroidManifestAsync,
   removeMetaDataItemFromMainApplication,
@@ -28,6 +29,16 @@ describe(getMainActivity, () => {
     expect(activity).toBe(null);
   });
 });
+describe(getRunnableActivity, () => {
+  it(`works`, async () => {
+    const sampleManifestPath = resolve(fixturesPath, 'complex-react-native-AndroidManifest.xml');
+    const manifest = await readAndroidManifestAsync(sampleManifestPath);
+    const activity = getRunnableActivity(manifest);
+    expect(activity.$).toBeDefined();
+    expect(activity.$['android:name']).toBe('.CustomNamed');
+    expect(Array.isArray(activity['intent-filter'])).toBe(true);
+  });
+});
 describe(getMainApplication, () => {
   it(`works`, async () => {
     const manifest = await readAndroidManifestAsync(sampleManifestPath);
@@ -38,6 +49,12 @@ describe(getMainApplication, () => {
   it(`returns null`, async () => {
     const app = getMainApplication({} as any);
     expect(app).toBe(null);
+  });
+  it(`matches against fully qualified MainApplications`, async () => {
+    const manifest = await readAndroidManifestAsync(sampleManifestPath);
+    const app = getMainApplication(manifest);
+    app.$['android:name'] = 'dev.expo.go.MainApplication';
+    expect(getMainApplication(manifest)).toBeDefined();
   });
 });
 describe(addMetaDataItemToMainApplication, () => {

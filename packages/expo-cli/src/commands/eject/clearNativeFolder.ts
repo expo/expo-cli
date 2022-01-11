@@ -1,19 +1,19 @@
 import { AndroidConfig, IOSConfig } from '@expo/config-plugins';
 import chalk from 'chalk';
-import program from 'commander';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 
 import Log from '../../log';
-import { confirmAsync } from '../../prompts';
-import * as CreateApp from '../utils/CreateApp';
+import { logNewSection } from '../../utils/ora';
+import { confirmAsync } from '../../utils/prompts';
+import { isNonInteractive } from '../utils/environment';
 
 export async function directoryExistsAsync(file: string): Promise<boolean> {
   return (await fs.stat(file).catch(() => null))?.isDirectory() ?? false;
 }
 
 export async function clearNativeFolder(projectRoot: string, folders: string[]) {
-  const step = CreateApp.logNewSection(`Clearing ${folders.join(', ')}`);
+  const step = logNewSection(`Clearing ${folders.join(', ')}`);
   try {
     await Promise.all(folders.map(folderName => fs.remove(path.join(projectRoot, folderName))));
     step.succeed(`Cleared ${folders.join(', ')} code`);
@@ -68,10 +68,15 @@ async function isIOSProjectValidAsync(projectRoot: string) {
   return hasRequiredIOSFilesAsync(projectRoot);
 }
 
-export async function promptToClearMalformedNativeProjectsAsync(projectRoot: string) {
+export async function promptToClearMalformedNativeProjectsAsync(
+  projectRoot: string,
+  checkPlatforms: string[]
+) {
   const [isAndroidValid, isIOSValid] = await Promise.all([
-    isAndroidProjectValidAsync(projectRoot),
-    isIOSProjectValidAsync(projectRoot),
+    checkPlatforms.includes('android')
+      ? isAndroidProjectValidAsync(projectRoot)
+      : Promise.resolve(true),
+    checkPlatforms.includes('ios') ? isIOSProjectValidAsync(projectRoot) : Promise.resolve(true),
   ]);
 
   if (isAndroidValid && isIOSValid) {
@@ -92,7 +97,7 @@ export async function promptToClearMalformedNativeProjectsAsync(projectRoot: str
   if (
     // If the process is non-interactive, default to clearing the malformed native project.
     // This would only happen on re-running eject.
-    program.nonInteractive ||
+    isNonInteractive() ||
     // Prompt to clear the native folders.
     (await confirmAsync({
       message: `${message}, would you like to clear the project files and reinitialize them?`,

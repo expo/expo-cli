@@ -84,6 +84,33 @@ describe(getConfig, () => {
       },
       'custom-location-json'
     );
+    vol.fromJSON(
+      {
+        'app.json': JSON.stringify({
+          expo: {
+            name: 'app-expo-name',
+            plugins: ['__missing-plugin'],
+          },
+        }),
+        'package.json': JSON.stringify({
+          version: '1.0.0',
+        }),
+      },
+      'json-missing-plugins'
+    );
+    vol.fromJSON(
+      {
+        'app.config.js': `module.exports = {
+          foo: 'bar',
+          name: 'cool+export-json_app.config',
+          plugins: [(config)=> { config.name ='custom'; return config; }]
+        };`,
+        'package.json': JSON.stringify({
+          version: '1.0.0',
+        }),
+      },
+      'js-plugins'
+    );
   });
 
   afterAll(() => {
@@ -96,6 +123,7 @@ describe(getConfig, () => {
   // - generated `.expo` object is created and the language hint is added
   describe('language support', () => {
     beforeEach(() => {
+      delete process.env.EXPO_DEBUG;
       const projectRoot = 'js';
       setCustomConfigPath(projectRoot, undefined);
     });
@@ -109,7 +137,7 @@ describe(getConfig, () => {
       expect(exp.name).toBe('rewrote+ts-config-test');
       expect(exp._internal).toStrictEqual({
         dynamicConfigPath: 'ts/app.config.ts',
-        isDebug: true,
+        isDebug: false,
         packageJsonPath: 'ts/package.json',
         projectRoot: 'ts',
         staticConfigPath: null,
@@ -132,7 +160,7 @@ describe(getConfig, () => {
       expect(exp.slug).toBe('someslug+config');
       expect(exp._internal).toStrictEqual({
         dynamicConfigPath: 'js/app.config.js',
-        isDebug: true,
+        isDebug: false,
         packageJsonPath: 'js/package.json',
         projectRoot: 'js',
         staticConfigPath: 'js/app.json',
@@ -166,7 +194,42 @@ describe(getConfig, () => {
 
   describe('behavior', () => {
     beforeEach(() => {
+      delete process.env.EXPO_DEBUG;
       resetCustomConfigPaths();
+    });
+
+    it(`skips plugin parsing`, () => {
+      const { exp } = getConfig('json-missing-plugins', {
+        skipSDKVersionRequirement: true,
+        skipPlugins: true,
+      });
+      expect(exp.plugins).toBeUndefined();
+    });
+    it(`skips JS plugin parsing`, () => {
+      const { exp } = getConfig('js-plugins', {
+        skipSDKVersionRequirement: true,
+        skipPlugins: true,
+      });
+      expect(exp.name).toBe('cool+export-json_app.config');
+      expect(exp.plugins).toBeUndefined();
+    });
+    it(`applies JS plugins`, () => {
+      const { exp } = getConfig('js-plugins', {
+        skipSDKVersionRequirement: true,
+        skipPlugins: false,
+      });
+      expect(exp.name).toBe('custom');
+      expect(exp.plugins).toBeDefined();
+    });
+    it(`throws when plugins are missing`, () => {
+      expect(() =>
+        getConfig('json-missing-plugins', {
+          skipSDKVersionRequirement: true,
+          skipPlugins: false,
+        })
+      ).toThrow(
+        /Failed to resolve plugin for module "__missing-plugin" relative to "json-missing-plugins"/
+      );
     });
 
     // Test that setCustomConfigPath works to read custom json configs.
@@ -209,7 +272,7 @@ describe(getConfig, () => {
 
       expect(exp._internal).toStrictEqual({
         dynamicConfigPath: null,
-        isDebug: true,
+        isDebug: false,
         packageJsonPath: 'custom-location-json/package.json',
         projectRoot: 'custom-location-json',
         staticConfigPath: 'custom-location-json/src/app.staging.json',

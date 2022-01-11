@@ -45,7 +45,7 @@ export async function getSchemaAsync(sdkVersion: string): Promise<Schema> {
  *
  * @param sdkVersion
  */
-export async function getAssetSchemasAsync(sdkVersion: string): Promise<string[]> {
+export async function getAssetSchemasAsync(sdkVersion: string | undefined): Promise<string[]> {
   // If no SDK version is available then fall back to unversioned
   const schema = await getSchemaAsync(sdkVersion ?? 'UNVERSIONED');
   const assetSchemas: string[] = [];

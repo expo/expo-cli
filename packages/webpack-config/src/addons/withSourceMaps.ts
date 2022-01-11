@@ -8,7 +8,7 @@ function isNative(env: Pick<InputEnvironment, 'platform'>): boolean {
 
 function createSourceMapPlugin(
   webpackConfig: AnyConfiguration,
-  env: Pick<InputEnvironment, 'mode'> = {}
+  env: Pick<InputEnvironment, 'mode' | 'platform'> = {}
 ) {
   const mode = env.mode ?? webpackConfig.mode;
   const isDev = mode !== 'production';
@@ -19,13 +19,16 @@ function createSourceMapPlugin(
     // This doesn't support inline source maps.
     new SourceMapDevToolPlugin({
       test: /\.(js|tsx?|(js)?bundle)($|\?)/i,
-      filename: webpackConfig.output?.sourceMapFilename,
+      exclude: /\.chunk\.(js)?bundle$/,
+      filename: webpackConfig.output?.sourceMapFilename ?? '[file].map',
+      append: `//# sourceMappingURL=[url]?platform=${env.platform!}`,
       // @ts-ignore: this is how webpack works internally
       moduleFilenameTemplate: webpackConfig.output?.devtoolModuleFilenameTemplate,
       // Emulate the `devtool` settings based on CRA defaults
       ...(isDev
         ? {
-            // cheap-module-source-map
+            // `module: false` = cheap-module-source-map -- less accurate but faster
+            // `module: true` = more accurate but some paths are non existent
             module: true,
             columns: false,
           }

@@ -7,8 +7,6 @@ import chalk from 'chalk';
 import child_process, { execFileSync } from 'child_process';
 import trim from 'lodash/trim';
 import os from 'os';
-import path from 'path';
-import ProgressBar from 'progress';
 import prompts from 'prompts';
 import semver from 'semver';
 
@@ -17,6 +15,7 @@ import {
   downloadApkAsync,
   Env,
   ImageUtils,
+  isDevClientPackageInstalled,
   learnMore,
   Logger,
   NotificationCode,
@@ -25,6 +24,7 @@ import {
   UrlUtils,
   Versions,
   Webpack,
+  XDLError,
 } from './internal';
 
 export type Device = {
@@ -116,7 +116,7 @@ export async function getAllAvailableDevicesAsync(): Promise<Device[]> {
   if (!allDevices.length) {
     const genymotionMessage = `https://developer.android.com/studio/run/device.html#developer-device-options. If you are using Genymotion go to Settings -> ADB, select "Use custom Android SDK tools", and point it at your Android SDK directory.`;
     throw new Error(
-      `No Android connected device found, and no emulators could be started automatically.\nPlease connect a device or create an emulator (https://docs.expo.io/workflow/android-studio-emulator).\nThen follow the instructions here to enable USB debugging:\n${genymotionMessage}`
+      `No Android connected device found, and no emulators could be started automatically.\nPlease connect a device or create an emulator (https://docs.expo.dev/workflow/android-studio-emulator).\nThen follow the instructions here to enable USB debugging:\n${genymotionMessage}`
     );
   }
 
@@ -282,7 +282,8 @@ async function adbAlreadyRunning(adb: string): Promise<boolean> {
     if (errorMessage.startsWith(BEGINNING_OF_ADB_ERROR_MESSAGE)) {
       errorMessage = errorMessage.substring(BEGINNING_OF_ADB_ERROR_MESSAGE.length);
     }
-    throw new Error(errorMessage);
+    e.message = errorMessage;
+    throw e;
   }
 }
 
@@ -300,14 +301,19 @@ export async function getAdbOutputAsync(args: string[]): Promise<string> {
   }
   try {
     const result = await spawnAsync(adb, args);
-    return result.stdout;
+    return result.output.join('\n');
   } catch (e) {
+    // User pressed ctrl+c to cancel the process...
+    if (e.signal === 'SIGINT') {
+      e.isAbortError = true;
+    }
     // TODO: Support heap corruption for adb 29 (process exits with code -1073740940) (windows and linux)
     let errorMessage = (e.stderr || e.stdout || e.message).trim();
     if (errorMessage.startsWith(BEGINNING_OF_ADB_ERROR_MESSAGE)) {
       errorMessage = errorMessage.substring(BEGINNING_OF_ADB_ERROR_MESSAGE.length);
     }
-    throw new Error(errorMessage);
+    e.message = errorMessage;
+    throw e;
   }
 }
 
@@ -323,13 +329,15 @@ export async function getAdbFileOutputAsync(args: string[], encoding?: 'latin1')
   try {
     return await execFileSync(adb, args, {
       encoding,
+      stdio: 'pipe',
     });
   } catch (e) {
     let errorMessage = (e.stderr || e.stdout || e.message).trim();
     if (errorMessage.startsWith(BEGINNING_OF_ADB_ERROR_MESSAGE)) {
       errorMessage = errorMessage.substring(BEGINNING_OF_ADB_ERROR_MESSAGE.length);
     }
-    throw new Error(errorMessage);
+    e.message = errorMessage;
+    throw e;
   }
 }
 
@@ -362,8 +370,8 @@ async function ensureDevClientInstalledAsync(device: Device, applicationId: stri
   if (!(await isInstalledAsync(device, applicationId))) {
     throw new Error(
       `The development client (${applicationId}) for this project is not installed. ` +
-        `Please build and install the client on the simulator first.\n${learnMore(
-          'https://docs.expo.io/clients/distribution-for-android/'
+        `Please build and install the client on the device first.\n${learnMore(
+          'https://docs.expo.dev/clients/distribution-for-android/'
         )}`
     );
   }
@@ -400,11 +408,6 @@ export async function installExpoAsync({
   url?: string;
   version?: string;
 }) {
-  const bar = new ProgressBar('Downloading the Expo Go app [:bar] :percent :etas', {
-    total: 100,
-    width: 64,
-  });
-
   let warningTimer: NodeJS.Timeout;
   const setWarningTimer = () => {
     if (warningTimer) {
@@ -413,22 +416,28 @@ export async function installExpoAsync({
     return setTimeout(() => {
       Logger.global.info('');
       Logger.global.info(
-        'This download is taking longer than expected. You can also try downloading the clients from the website at https://expo.io/tools'
+        'This download is taking longer than expected. You can also try downloading the clients from the website at https://expo.dev/tools'
       );
     }, INSTALL_WARNING_TIMEOUT);
   };
 
-  Logger.notifications.info({ code: NotificationCode.START_LOADING });
-  warningTimer = setWarningTimer();
-  const path = await downloadApkAsync(url, progress => bar.tick(1, progress));
-  Logger.notifications.info({ code: NotificationCode.STOP_LOADING });
+  Logger.notifications.info(
+    { code: NotificationCode.START_PROGRESS_BAR },
+    'Downloading the Expo Go app [:bar] :percent :etas'
+  );
 
-  if (version) {
-    Logger.global.info(`Installing Expo Go ${version} on device`);
-  } else {
-    Logger.global.info(`Installing Expo Go on device`);
-  }
-  Logger.notifications.info({ code: NotificationCode.START_LOADING });
+  warningTimer = setWarningTimer();
+  const path = await downloadApkAsync(url, progress => {
+    Logger.notifications.info({ code: NotificationCode.TICK_PROGRESS_BAR }, progress);
+  });
+
+  Logger.notifications.info({ code: NotificationCode.STOP_PROGRESS_BAR });
+
+  const message = version
+    ? `Installing Expo Go ${version} on ${device.name}`
+    : `Installing Expo Go on ${device.name}`;
+
+  Logger.notifications.info({ code: NotificationCode.START_LOADING }, message);
   warningTimer = setWarningTimer();
   const result = await installOnDeviceAsync(device, { binaryPath: path });
   Logger.notifications.info({ code: NotificationCode.STOP_LOADING });
@@ -475,19 +484,23 @@ export async function uninstallExpoAsync(device: Device): Promise<string | undef
   }
 }
 
-export async function upgradeExpoAsync(options?: {
+export async function upgradeExpoAsync({
+  url,
+  version,
+  device,
+}: {
   url?: string;
   version?: string;
-}): Promise<boolean> {
-  const { url, version } = options || {};
-
+  device?: Device | null;
+} = {}): Promise<boolean> {
   try {
-    const devices = await getAttachedDevicesAsync();
-    if (!devices.length) {
-      throw new Error('no devices connected');
+    if (!device) {
+      device = (await getAttachedDevicesAsync())[0];
+      if (!device) {
+        throw new Error('no devices connected');
+      }
     }
-
-    const device = await attemptToStartEmulatorOrAssertAsync(devices[0]);
+    device = await attemptToStartEmulatorOrAssertAsync(device);
     if (!device) {
       return false;
     }
@@ -495,7 +508,7 @@ export async function upgradeExpoAsync(options?: {
     await uninstallExpoAsync(device);
     await installExpoAsync({ device, url, version });
     if (_lastUrl) {
-      Logger.global.info(`Opening ${_lastUrl} in Expo.`);
+      Logger.global.info(`\u203A Opening ${_lastUrl} in Expo.`);
       await getAdbOutputAsync([
         'shell',
         'am',
@@ -528,20 +541,23 @@ async function _openUrlAsync({
   // launch the project!
   // https://github.com/expo/expo/issues/7772
   // adb shell monkey -p host.exp.exponent -c android.intent.category.LAUNCHER 1
-  const openClient = await getAdbOutputAsync(
-    adbPidArgs(
-      pid,
-      'shell',
-      'monkey',
-      '-p',
-      applicationId,
-      '-c',
-      'android.intent.category.LAUNCHER',
-      '1'
-    )
-  );
-  if (openClient.includes(CANT_START_ACTIVITY_ERROR)) {
-    throw new Error(openClient.substring(openClient.indexOf('Error: ')));
+  // Note: this is not needed in Expo Development Client, it only applies to Expo Go
+  if (applicationId === 'host.exp.exponent') {
+    const openClient = await getAdbOutputAsync(
+      adbPidArgs(
+        pid,
+        'shell',
+        'monkey',
+        '-p',
+        applicationId,
+        '-c',
+        'android.intent.category.LAUNCHER',
+        '1'
+      )
+    );
+    if (openClient.includes(CANT_START_ACTIVITY_ERROR)) {
+      throw new Error(openClient.substring(openClient.indexOf('Error: ')));
+    }
   }
 
   const openProject = await getAdbOutputAsync(
@@ -591,36 +607,38 @@ export async function activateEmulatorWindowAsync(device: Pick<Device, 'type' | 
   }
 }
 
+/**
+ * @param device Android device to open on
+ * @param props.launchActivity Activity to launch `[application identifier]/.[main activity name]`, ex: `com.bacon.app/.MainActivity`
+ */
 export async function openAppAsync(
   device: Pick<Device, 'pid' | 'type'>,
   {
-    packageName,
-    mainActivity,
+    launchActivity,
   }: {
-    packageName: string;
-    mainActivity: string;
+    launchActivity: string;
   }
 ) {
-  const targetActivityURI = mainActivity.includes('.')
-    ? mainActivity
-    : [packageName, mainActivity].filter(Boolean).join('/.');
-
   const openProject = await getAdbOutputAsync(
     adbPidArgs(
       device.pid,
       'shell',
       'am',
       'start',
+      '-a',
+      'android.intent.action.RUN',
       // FLAG_ACTIVITY_SINGLE_TOP -- If set, the activity will not be launched if it is already running at the top of the history stack.
       '-f',
       '0x20000000',
+      // Activity to open first: com.bacon.app/.MainActivity
       '-n',
-      targetActivityURI
+      launchActivity
     )
   );
 
-  if (openProject.includes(CANT_START_ACTIVITY_ERROR)) {
-    throw new Error(openProject.substring(openProject.indexOf('Error: ')));
+  // App is not installed or main activity cannot be found
+  if (openProject.match(/Error: Activity class .* does not exist./g)) {
+    throw new XDLError('APP_NOT_INSTALLED', openProject.substring(openProject.indexOf('Error: ')));
   }
 
   await activateEmulatorWindowAsync(device);
@@ -655,6 +673,15 @@ function logUnauthorized(device: Device) {
 // This can prevent annoying interactions when they don't want to upgrade for whatever reason.
 const hasPromptedToUpgrade: Record<string, boolean> = {};
 
+async function isManagedProjectAsync(projectRoot: string) {
+  try {
+    await AndroidConfig.Paths.getProjectPathOrThrowAsync(projectRoot);
+    return false;
+  } catch {
+    return true;
+  }
+}
+
 async function openUrlAsync({
   url,
   device,
@@ -672,29 +699,40 @@ async function openUrlAsync({
   exp?: ExpoConfig;
   projectRoot: string;
 }): Promise<void> {
+  const bootedDevice = await attemptToStartEmulatorOrAssertAsync(device);
+  if (!bootedDevice) {
+    return;
+  }
+  Logger.global.info(`\u203A Opening ${chalk.underline(url)} on ${chalk.bold(bootedDevice.name)}`);
+
+  await activateEmulatorWindowAsync(bootedDevice);
+
+  device = bootedDevice;
+  let installedExpo = false;
+  let clientApplicationId = 'host.exp.exponent';
+
   try {
-    const bootedDevice = await attemptToStartEmulatorOrAssertAsync(device);
-    if (!bootedDevice) {
-      return;
-    }
-
-    await activateEmulatorWindowAsync(bootedDevice);
-
-    device = bootedDevice;
-
-    let installedExpo = false;
-    let clientApplicationId = 'host.exp.exponent';
     if (devClient) {
-      const applicationId = await AndroidConfig.Package.getApplicationIdAsync(projectRoot);
-      if (!applicationId) {
-        // TODO(ville): possibly need to compare Gradle project with app.json/config.ts
-        // and show a helpful error message, if there's a mismatch.
-        throw new Error(
-          `Could not find applicationId in ${AndroidConfig.Paths.getAppBuildGradle(projectRoot)}`
-        );
+      let applicationId;
+      const isManaged = await isManagedProjectAsync(projectRoot);
+      if (isManaged) {
+        applicationId = exp?.android?.package;
+        if (!applicationId) {
+          throw new Error(
+            `Could not find property android.package in app.config.js/app.json. This setting is required to launch the app.`
+          );
+        }
       } else {
-        clientApplicationId = applicationId;
+        applicationId = await resolveApplicationIdAsync(projectRoot);
+        if (!applicationId) {
+          throw new Error(
+            `Could not find applicationId in ${AndroidConfig.Paths.getAppBuildGradleFilePath(
+              projectRoot
+            )}`
+          );
+        }
       }
+      clientApplicationId = applicationId;
       await ensureDevClientInstalledAsync(device, clientApplicationId);
     } else if (!isDetached) {
       let shouldInstall = !(await _isExpoInstalledAsync(device));
@@ -725,8 +763,6 @@ async function openUrlAsync({
       _lastUrl = url;
       // _checkExpoUpToDateAsync(); // let this run in background
     }
-
-    Logger.global.info(`Opening ${chalk.underline(url)} on ${chalk.bold(device.name)}`);
 
     try {
       await _openUrlAsync({ pid: device.pid!, url, applicationId: clientApplicationId });
@@ -770,43 +806,132 @@ async function getClientForSDK(sdkVersionString?: string) {
   };
 }
 
+export async function resolveApplicationIdAsync(projectRoot: string): Promise<string | null> {
+  try {
+    const applicationIdFromGradle = await AndroidConfig.Package.getApplicationIdAsync(projectRoot);
+    if (applicationIdFromGradle) {
+      return applicationIdFromGradle;
+    }
+  } catch {}
+
+  try {
+    const filePath = await AndroidConfig.Paths.getAndroidManifestAsync(projectRoot);
+    const androidManifest = await AndroidConfig.Manifest.readAndroidManifestAsync(filePath);
+    // Assert MainActivity defined.
+    await AndroidConfig.Manifest.getMainActivityOrThrow(androidManifest);
+    if (androidManifest.manifest?.$?.package) {
+      return androidManifest.manifest.$.package;
+    }
+  } catch {}
+
+  const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
+  return exp.android?.package ?? null;
+}
+
+async function constructDeepLinkAsync(
+  projectRoot: string,
+  scheme?: string,
+  devClient?: boolean
+): Promise<string | null> {
+  if (
+    process.env['EXPO_ENABLE_INTERSTITIAL_PAGE'] &&
+    !devClient &&
+    isDevClientPackageInstalled(projectRoot)
+  ) {
+    return UrlUtils.constructLoadingUrlAsync(projectRoot, 'android');
+  } else {
+    return await UrlUtils.constructDeepLinkAsync(projectRoot, {
+      scheme,
+    }).catch(e => {
+      if (devClient) {
+        return null;
+      }
+      throw e;
+    });
+  }
+}
+
 export async function openProjectAsync({
   projectRoot,
   shouldPrompt,
   devClient = false,
   device,
+  scheme,
+  applicationId,
+  launchActivity,
 }: {
   projectRoot: string;
   shouldPrompt?: boolean;
   devClient?: boolean;
   device?: Device;
-}): Promise<{ success: true; url: string } | { success: false; error: string }> {
-  try {
-    await startAdbReverseAsync(projectRoot);
+  scheme?: string;
+  applicationId?: string | null;
+  launchActivity?: string;
+}): Promise<{ success: true; url: string } | { success: false; error: Error | string }> {
+  await startAdbReverseAsync(projectRoot);
 
-    const projectUrl = await UrlUtils.constructDeepLinkAsync(projectRoot);
-    const { exp } = getConfig(projectRoot, {
-      skipSDKVersionRequirement: true,
-    });
+  const projectUrl = await constructDeepLinkAsync(projectRoot, scheme, devClient);
 
-    if (device) {
-      const booted = await attemptToStartEmulatorOrAssertAsync(device);
-      if (!booted) {
-        return { success: false, error: 'escaped' };
+  const { exp } = getConfig(projectRoot, {
+    skipSDKVersionRequirement: true,
+  });
+
+  // Resolve device
+  if (device) {
+    const booted = await attemptToStartEmulatorOrAssertAsync(device);
+    if (!booted) {
+      return { success: false, error: 'escaped' };
+    }
+    device = booted;
+  } else {
+    const devices = await getAllAvailableDevicesAsync();
+    let booted: Device | null = devices[0];
+    if (shouldPrompt) {
+      booted = await promptForDeviceAsync(devices);
+    }
+    if (!booted) {
+      return { success: false, error: 'escaped' };
+    }
+    device = booted;
+  }
+
+  // No URL, and is devClient
+  if (!projectUrl) {
+    if (!launchActivity) {
+      applicationId = applicationId ?? (await resolveApplicationIdAsync(projectRoot));
+      if (!applicationId) {
+        return {
+          success: false,
+          error:
+            'Cannot resolve application identifier or URI scheme to open the native Android app.\nBuild the native app with `expo run:android` or `eas build -p android`',
+        };
       }
-      device = booted;
-    } else {
-      const devices = await getAllAvailableDevicesAsync();
-      let booted: Device | null = devices[0];
-      if (shouldPrompt) {
-        booted = await promptForDeviceAsync(devices);
-      }
-      if (!booted) {
-        return { success: false, error: 'escaped' };
-      }
-      device = booted;
+      launchActivity = `${applicationId}/.MainActivity`;
     }
 
+    try {
+      await openAppAsync(device, {
+        launchActivity,
+      });
+    } catch (error) {
+      let errorMessage = `Couldn't open Android app with activity "${launchActivity}" on device "${device.name}".`;
+      if (error instanceof XDLError && error.code === 'APP_NOT_INSTALLED') {
+        errorMessage += `\nThe app might not be installed, try installing it with: ${chalk.bold(
+          `expo run:android -d ${device.name}`
+        )}`;
+      }
+      errorMessage += chalk.gray(`\n${error.message}`);
+      error.message = errorMessage;
+      return { success: false, error };
+    }
+    return {
+      success: true,
+      // TODO: Remove this hack
+      url: '',
+    };
+  }
+
+  try {
     await openUrlAsync({
       url: projectUrl,
       device,
@@ -818,7 +943,12 @@ export async function openProjectAsync({
     });
     return { success: true, url: projectUrl };
   } catch (e) {
-    Logger.global.error(`Couldn't start project on Android: ${e.message}`);
+    if (e.isAbortError) {
+      // Don't log anything when the user cancelled the process
+      return { success: false, error: 'escaped' };
+    } else {
+      e.message = `Couldn't start project on Android: ${e.message}`;
+    }
     return { success: false, error: e };
   }
 }
@@ -852,8 +982,7 @@ export async function openWebProjectAsync({
     await openUrlAsync({ url: projectUrl, device, isDetached: true, projectRoot });
     return { success: true, url: projectUrl };
   } catch (e) {
-    Logger.global.error(`Couldn't open the web project on Android: ${e.message}`);
-    return { success: false, error: e };
+    return { success: false, error: `Couldn't open the web project on Android: ${e.message}` };
   }
 }
 
@@ -1048,7 +1177,7 @@ export async function checkSplashScreenImages(projectRoot: string): Promise<void
 Be aware that your splash image will be used as xxxhdpi asset and its ${chalk.bold(
       'actual size will be different'
     )} depending on device's DPI.
-See https://docs.expo.io/guides/splash-screens/#splash-screen-api-limitations-on-android for more information`);
+See https://docs.expo.dev/guides/splash-screens/#splash-screen-api-limitations-on-android for more information`);
     return;
   }
 
@@ -1061,7 +1190,7 @@ but their sizes mismatch expected ones: [dpi: provided (expected)] ${androidSpla
           `${dpi}: ${width}x${height} (${expectedWidth}x${expectedHeight})`
       )
       .join(', ')}
-See https://docs.expo.io/guides/splash-screens/#splash-screen-api-limitations-on-android for more information`);
+See https://docs.expo.dev/guides/splash-screens/#splash-screen-api-limitations-on-android for more information`);
   }
 }
 
@@ -1176,14 +1305,6 @@ export async function getDeviceAPIVersionAsync(
     (await getPropertyForDeviceAsync(device, PROP_API_VERSION)) ??
     LOWEST_SUPPORTED_EXPO_API_VERSION;
   return parseInt(sdkVersion, 10);
-}
-
-/**
- *
- * @returns app/android/app/build/outputs/apk
- */
-export function getAPKDirectory(projectRoot: string): string {
-  return path.join(projectRoot, 'android', 'app', 'build', 'outputs', 'apk');
 }
 
 export async function getDeviceABIsAsync(

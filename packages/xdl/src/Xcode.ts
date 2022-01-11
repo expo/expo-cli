@@ -6,14 +6,22 @@ import { Logger } from './internal';
 export const minimumVersion = 9.4;
 export const appStoreId = '497799835';
 
+let _xcodeVersion: string | null | false = false;
+
 export function getXcodeVersion(): string | null {
+  // This method anywhere from 1-2s so cache the results in case we run it multiple times
+  // (like in run:ios or reopening on iOS for development build).
+  if (_xcodeVersion !== false) {
+    return _xcodeVersion;
+  }
   try {
     const last = execSync('xcodebuild -version', { stdio: 'pipe' })
       .toString()
       .match(/^Xcode (\d+\.\d+)/)?.[1];
     // Convert to a semver string
     if (last) {
-      return `${last}.0`;
+      _xcodeVersion = `${last}.0`;
+      return _xcodeVersion;
     }
     // not sure what's going on
     Logger.global.error(
@@ -22,7 +30,8 @@ export function getXcodeVersion(): string | null {
   } catch {
     // not installed
   }
-  return null;
+  _xcodeVersion = null;
+  return _xcodeVersion;
 }
 
 /**

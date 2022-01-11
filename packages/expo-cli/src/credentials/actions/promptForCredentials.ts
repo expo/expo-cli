@@ -4,8 +4,8 @@ import path from 'path';
 import untildify from 'untildify';
 
 import Log from '../../log';
-import prompts, { Question as PromptQuestion } from '../../prompts';
-import * as validators from '../../validators';
+import prompts, { Question as PromptQuestion } from '../../utils/prompts';
+import * as validators from '../../utils/validators';
 
 export type Question = {
   question: string;
@@ -17,6 +17,7 @@ type Results = {
   [key: string]: string | undefined;
 };
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export type CredentialSchema<T> = {
   id: string;
   canReuse?: boolean;

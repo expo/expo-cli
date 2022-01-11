@@ -1,5 +1,6 @@
-import { Analytics, Config } from '@expo/api';
+import { Analytics, Config, ConnectionStatus } from '@expo/api';
 import { ExpoConfig, getConfig } from '@expo/config';
+import { closeJsInspector, MessageSocket } from '@expo/dev-server';
 import { Server } from 'http';
 
 import {
@@ -19,9 +20,10 @@ import {
   stopTunnelsAsync,
   Webpack,
 } from '../internal';
+import { watchBabelConfigForProject } from './watchBabelConfig';
 
 let serverInstance: Server | null = null;
-let messageSocket: any | null = null;
+let messageSocket: MessageSocket | null = null;
 
 /**
  * Sends a message over web sockets to any connected device,
@@ -42,41 +44,62 @@ export function broadcastMessage(
 export async function startAsync(
   projectRoot: string,
   {
-    exp = getConfig(projectRoot).exp,
+    exp = getConfig(projectRoot, { skipSDKVersionRequirement: true }).exp,
     ...options
   }: StartDevServerOptions & { exp?: ExpoConfig } = {},
   verbose: boolean = true
 ): Promise<ExpoConfig> {
   assertValidProjectRoot(projectRoot);
+
   Analytics.logEvent('Start Project', {
-    projectRoot,
     developerTool: Config.developerTool,
     sdkVersion: exp.sdkVersion ?? null,
   });
 
+  watchBabelConfigForProject(projectRoot);
+
   if (options.webOnly) {
-    await Webpack.restartAsync(projectRoot, options);
-    DevSession.startSession(projectRoot, exp, 'web');
-    return exp;
+    await Webpack.startAsync(projectRoot, {
+      ...options,
+      port: options.webpackPort,
+    });
   } else if (Env.shouldUseDevServer(exp) || options.devClient) {
     [serverInstance, , messageSocket] = await startDevServerAsync(projectRoot, options);
-    DevSession.startSession(projectRoot, exp, 'native');
   } else {
     await startExpoServerAsync(projectRoot);
     await startReactNativeServerAsync({ projectRoot, exp, options, verbose });
-    DevSession.startSession(projectRoot, exp, 'native');
   }
 
   const { hostType } = await ProjectSettings.readAsync(projectRoot);
 
-  if (!Config.offline && hostType === 'tunnel') {
+  if (!ConnectionStatus.isOffline() && hostType === 'tunnel') {
     try {
       await startTunnelsAsync(projectRoot);
-    } catch (e) {
-      ProjectUtils.logDebug(projectRoot, 'expo', `Error starting tunnel ${e.message}`);
+    } catch (e: any) {
+      ProjectUtils.logError(projectRoot, 'expo', `Error starting ngrok: ${e.message}`);
     }
   }
+
+  const target = !options.webOnly || Webpack.isTargetingNative() ? 'native' : 'web';
+  // This is used to make Expo Go open the project in either Expo Go, or the web browser.
+  // Must come after ngrok (`startTunnelsAsync`) setup.
+  DevSession.startSession(projectRoot, exp, target);
   return exp;
+}
+
+async function stopDevServerAsync() {
+  return new Promise<void>((resolve, reject) => {
+    if (serverInstance) {
+      closeJsInspector();
+      serverInstance.close(error => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve();
+        }
+      });
+    }
+  });
 }
 
 async function stopInternalAsync(projectRoot: string): Promise<void> {
@@ -84,25 +107,15 @@ async function stopInternalAsync(projectRoot: string): Promise<void> {
 
   await Promise.all([
     Webpack.stopAsync(projectRoot),
-    new Promise<void>((resolve, reject) => {
-      if (serverInstance) {
-        serverInstance.close(error => {
-          if (error) {
-            reject(error);
-          } else {
-            resolve();
-          }
-        });
-      }
-    }),
+    stopDevServerAsync(),
     stopExpoServerAsync(projectRoot),
     stopReactNativeServerAsync(projectRoot),
     async () => {
-      if (!Config.offline) {
+      if (!ConnectionStatus.isOffline()) {
         try {
           await stopTunnelsAsync(projectRoot);
-        } catch (e) {
-          ProjectUtils.logDebug(projectRoot, 'expo', `Error stopping ngrok ${e.message}`);
+        } catch (e: any) {
+          ProjectUtils.logError(projectRoot, 'expo', `Error stopping ngrok: ${e.message}`);
         }
       }
     },

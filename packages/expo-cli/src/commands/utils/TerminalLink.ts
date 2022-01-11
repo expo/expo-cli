@@ -1,13 +1,12 @@
+import chalk from 'chalk';
 import terminalLink from 'terminal-link';
-
-import Log from '../../log';
 
 /**
  * When linking isn't available, fallback to displaying the URL beside the
  * text in parentheses.
  *
- * @example [Expo](https://expo.io)
- * @example Expo (https://expo.io)
+ * @example [Expo](https://expo.dev)
+ * @example Expo (https://expo.dev)
  *
  * @param value
  * @param url
@@ -19,8 +18,8 @@ export function fallbackToTextAndUrl(text: string, url: string) {
 /**
  * When linking isn't available, fallback to just displaying the URL.
  *
- * @example [value](https://expo.io)
- * @example https://expo.io
+ * @example [value](https://expo.dev)
+ * @example https://expo.dev
  *
  * @param text
  * @param url
@@ -34,20 +33,20 @@ export function fallbackToUrl(text: string, url: string): string {
 /**
  * When linking isn't available, format the learn more link better.
  *
- * @example [Learn more](https://expo.io)
- * @example Learn more: https://expo.io
+ * @example [Learn more](https://expo.dev)
+ * @example Learn more: https://expo.dev
  * @param url
  */
 export function learnMore(url: string): string {
-  return terminalLink(Log.chalk.underline('Learn more.'), url, {
-    fallback: (text, url) => `Learn more: ${Log.chalk.underline(url)}`,
+  return terminalLink(chalk.underline('Learn more.'), url, {
+    fallback: (text, url) => `Learn more: ${chalk.underline(url)}`,
   });
 }
 
 export function linkedText(text: string, url: string): string {
   return terminalLink(text, url, {
     fallback: (text, url) => {
-      return `${text} ${Log.chalk.dim.underline(url)}`;
+      return `${text} ${chalk.dim.underline(url)}`;
     },
   });
 }

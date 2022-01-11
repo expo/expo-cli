@@ -1,4 +1,6 @@
 import { ExpoAppManifest, getConfig, PackageJSONConfig, ProjectTarget } from '@expo/config';
+import { AndroidConfig, IOSConfig, WarningAggregator } from '@expo/config-plugins';
+import plist from '@expo/plist';
 import fs from 'fs-extra';
 import path from 'path';
 import semver from 'semver';
@@ -12,6 +14,9 @@ import {
   writeArtifactSafelyAsync,
 } from './internal';
 
+const PLACEHOLDER_URL = 'YOUR-APP-URL-HERE';
+const FYI_URL = 'https://expo.fyi/expo-updates-config';
+
 export type EmbeddedAssetsConfiguration = {
   projectRoot: string;
   pkg: PackageJSONConfig;
@@ -19,19 +24,17 @@ export type EmbeddedAssetsConfiguration = {
   releaseChannel?: string;
   iosManifestUrl: string;
   iosManifest: any;
-  iosBundle: string;
-  iosSourceMap: string | null;
+  iosBundle: string | Uint8Array;
   androidManifestUrl: string;
   androidManifest: any;
-  androidBundle: string;
-  androidSourceMap: string | null;
+  androidBundle: string | Uint8Array;
   target: ProjectTarget;
 };
 
 export async function configureAsync(config: EmbeddedAssetsConfiguration) {
   await _maybeWriteArtifactsToDiskAsync(config);
   await _maybeConfigureExpoKitEmbeddedAssetsAsync(config);
-  await _maybeConfigureExpoUpdatesEmbeddedAssetsAsync(config);
+  await _maybeRunModifiedExpoUpdatesPluginAsync(config);
 }
 
 export function getEmbeddedManifestPath(
@@ -121,19 +124,15 @@ async function _maybeWriteArtifactsToDiskAsync(config: EmbeddedAssetsConfigurati
     exp,
     iosManifest,
     iosBundle,
-    iosSourceMap,
     androidManifest,
     androidBundle,
-    androidSourceMap,
     target,
   } = config;
 
   let androidBundlePath;
   let androidManifestPath;
-  let androidSourceMapPath;
   let iosBundlePath;
   let iosManifestPath;
-  let iosSourceMapPath;
 
   if (shouldEmbedAssetsForExpoUpdates(projectRoot, exp, pkg, target)) {
     const defaultAndroidDir = _getDefaultEmbeddedAssetDir('android', projectRoot, exp);
@@ -161,17 +160,11 @@ async function _maybeWriteArtifactsToDiskAsync(config: EmbeddedAssetsConfigurati
   if (exp.android?.publishManifestPath) {
     androidManifestPath = exp.android.publishManifestPath;
   }
-  if (exp.android?.publishSourceMapPath) {
-    androidSourceMapPath = exp.android.publishSourceMapPath;
-  }
   if (exp.ios?.publishBundlePath) {
     iosBundlePath = exp.ios.publishBundlePath;
   }
   if (exp.ios?.publishManifestPath) {
     iosManifestPath = exp.ios.publishManifestPath;
-  }
-  if (exp.ios?.publishSourceMapPath) {
-    iosSourceMapPath = exp.ios.publishSourceMapPath;
   }
 
   if (androidBundlePath) {
@@ -192,15 +185,6 @@ async function _maybeWriteArtifactsToDiskAsync(config: EmbeddedAssetsConfigurati
     );
   }
 
-  if (androidSourceMapPath && androidSourceMap) {
-    await writeArtifactSafelyAsync(
-      projectRoot,
-      'android.publishSourceMapPath',
-      androidSourceMapPath,
-      androidSourceMap
-    );
-  }
-
   if (iosBundlePath) {
     await writeArtifactSafelyAsync(projectRoot, 'ios.publishBundlePath', iosBundlePath, iosBundle);
   }
@@ -211,15 +195,6 @@ async function _maybeWriteArtifactsToDiskAsync(config: EmbeddedAssetsConfigurati
       'ios.publishManifestPath',
       iosManifestPath,
       JSON.stringify(iosManifest)
-    );
-  }
-
-  if (iosSourceMapPath && iosSourceMap) {
-    await writeArtifactSafelyAsync(
-      projectRoot,
-      'ios.publishSourceMapPath',
-      iosSourceMapPath,
-      iosSourceMap
     );
   }
 }
@@ -282,35 +257,85 @@ async function _maybeConfigureExpoKitEmbeddedAssetsAsync(config: EmbeddedAssetsC
   }
 }
 
-async function _maybeConfigureExpoUpdatesEmbeddedAssetsAsync(config: EmbeddedAssetsConfiguration) {
+/**
+ * Guess if this is a user's first publish and run a slightly modified expo-updates plugin.
+ * If it is not their first publish and a config mismatch is noticed, log warnings.
+ */
+async function _maybeRunModifiedExpoUpdatesPluginAsync(config: EmbeddedAssetsConfiguration) {
   if (!config.pkg.dependencies?.['expo-updates'] || config.target === 'managed') {
     return;
   }
-
-  let isLikelyFirstPublish = false;
 
   const { projectRoot, exp, releaseChannel, iosManifestUrl, androidManifestUrl } = config;
 
   const { iosSupportingDirectory: supportingDirectory } = getIOSPaths(projectRoot);
 
   // iOS expo-updates
-  if (fs.existsSync(path.join(supportingDirectory, 'Expo.plist'))) {
-    // This is an app with expo-updates installed, set properties in Expo.plist
-    await IosPlist.modifyAsync(supportingDirectory, 'Expo', (configPlist: any) => {
-      if (configPlist.EXUpdatesURL === 'YOUR-APP-URL-HERE') {
-        isLikelyFirstPublish = true;
+  let isLikelyFirstIOSPublish = false;
+  const expoPlistPath = path.join(supportingDirectory, 'Expo.plist');
+  if (fs.existsSync(expoPlistPath)) {
+    let expoPlistForProject = plist.parse(await fs.readFileSync(expoPlistPath, 'utf8'));
+    const currentlyConfiguredExpoPlist = { ...expoPlistForProject };
+
+    // The username is only used for defining a default updates URL.
+    // Since we overwrite the URL below the username is superfluous.
+    expoPlistForProject = IOSConfig.Updates.setUpdatesConfig(
+      exp,
+      expoPlistForProject,
+      /*expoUsername*/ null
+    );
+
+    // overwrite the URL defined in IOSConfig.Updates.setUpdatesConfig
+    expoPlistForProject[IOSConfig.Updates.Config.UPDATE_URL] = iosManifestUrl;
+    // set a release channel (not done in updates plugin)
+    if (releaseChannel) {
+      expoPlistForProject[IOSConfig.Updates.Config.RELEASE_CHANNEL] = releaseChannel;
+    }
+
+    // If we guess that this is a users first publish, modify the native code to match
+    // what is configured.
+    const configuredIOSUpdatesURL =
+      currentlyConfiguredExpoPlist[IOSConfig.Updates.Config.UPDATE_URL];
+    if (configuredIOSUpdatesURL === PLACEHOLDER_URL) {
+      isLikelyFirstIOSPublish = true;
+      fs.writeFileSync(expoPlistPath, plist.build(expoPlistForProject));
+    } else {
+      // Log warnings if this is not the first publish and critical properties seem misconfigured
+      const {
+        UPDATE_URL,
+        SDK_VERSION,
+        RUNTIME_VERSION,
+        RELEASE_CHANNEL,
+      } = IOSConfig.Updates.Config;
+      for (const key of [UPDATE_URL, SDK_VERSION, RUNTIME_VERSION, RELEASE_CHANNEL]) {
+        let currentlyConfiguredValue = currentlyConfiguredExpoPlist[key];
+        const inferredValue = expoPlistForProject[key];
+        if (key === RELEASE_CHANNEL && inferredValue) {
+          // A client with an undefined release channel is mapped to
+          // 'default' in the server, so avoid logging an unneccessary warning.
+          currentlyConfiguredValue = currentlyConfiguredValue ?? 'default';
+        }
+        if (currentlyConfiguredValue !== inferredValue) {
+          let message: string;
+          switch (key) {
+            case RELEASE_CHANNEL: {
+              message = `The value passed to the --release-channel flag is to "${inferredValue}", but it is set to "${currentlyConfiguredValue}".`;
+              break;
+            }
+            case UPDATE_URL:
+            case SDK_VERSION:
+            case RUNTIME_VERSION:
+            default:
+              message = `${key} is inferred to be "${inferredValue}", but it is set to "${currentlyConfiguredValue}".`;
+          }
+          WarningAggregator.addWarningIOS(`Expo.plist key: "${key}"`, message, FYI_URL);
+        }
       }
-      configPlist.EXUpdatesURL = iosManifestUrl;
-      configPlist.EXUpdatesSDKVersion = exp.sdkVersion;
-      if (releaseChannel) {
-        configPlist.EXUpdatesReleaseChannel = releaseChannel;
-      }
-      return configPlist;
-    });
-    await IosPlist.cleanBackupAsync(supportingDirectory, 'Expo', false);
+    }
   }
 
   // Android expo-updates
+  let isLikelyFirstAndroidPublish = false;
   const androidManifestXmlPath = path.join(
     projectRoot,
     'android',
@@ -319,69 +344,123 @@ async function _maybeConfigureExpoUpdatesEmbeddedAssetsAsync(config: EmbeddedAss
     'main',
     'AndroidManifest.xml'
   );
-  const androidManifestXmlFile = fs.readFileSync(androidManifestXmlPath, 'utf8');
-  const expoUpdateUrlRegex = /<meta-data[^>]+"expo.modules.updates.EXPO_UPDATE_URL"[^>]+\/>/;
-  const expoSdkVersionRegex = /<meta-data[^>]+"expo.modules.updates.EXPO_SDK_VERSION"[^>]+\/>/;
-  const expoReleaseChannelRegex = /<meta-data[^>]+"expo.modules.updates.EXPO_RELEASE_CHANNEL"[^>]+\/>/;
-
-  const expoUpdateUrlTag = `<meta-data android:name="expo.modules.updates.EXPO_UPDATE_URL" android:value="${androidManifestUrl}" />`;
-  const expoSdkVersionTag = `<meta-data android:name="expo.modules.updates.EXPO_SDK_VERSION" android:value="${exp.sdkVersion}" />`;
-  const expoReleaseChannelTag = `<meta-data android:name="expo.modules.updates.EXPO_RELEASE_CHANNEL" android:value="${releaseChannel}" />`;
-
-  const tagsToInsert = [];
-  if (androidManifestXmlFile.search(expoUpdateUrlRegex) < 0) {
-    tagsToInsert.push(expoUpdateUrlTag);
-  }
-  if (androidManifestXmlFile.search(expoSdkVersionRegex) < 0) {
-    tagsToInsert.push(expoSdkVersionTag);
-  }
-  if (releaseChannel && androidManifestXmlFile.search(expoReleaseChannelRegex) < 0) {
-    tagsToInsert.push(expoReleaseChannelTag);
-  }
-  if (tagsToInsert.length) {
-    // try to insert the meta-data tags that aren't found
-    await ExponentTools.regexFileAsync(
-      /<activity\s+android:name=".MainActivity"/,
-      `${tagsToInsert.join('\n      ')}
-
-  <activity
-    android:name=".MainActivity"`,
+  const AndroidManifestKeyForUpdateURL = AndroidConfig.Updates.Config.UPDATE_URL;
+  if (fs.existsSync(androidManifestXmlPath)) {
+    const currentlyConfiguredAndroidManifest = await AndroidConfig.Manifest.readAndroidManifestAsync(
       androidManifestXmlPath
     );
-  }
-  await ExponentTools.regexFileAsync(expoUpdateUrlRegex, expoUpdateUrlTag, androidManifestXmlPath);
-  await ExponentTools.regexFileAsync(
-    expoSdkVersionRegex,
-    expoSdkVersionTag,
-    androidManifestXmlPath
-  );
-  if (releaseChannel) {
-    await ExponentTools.regexFileAsync(
-      expoReleaseChannelRegex,
-      expoReleaseChannelTag,
-      androidManifestXmlPath
+    const currentConfiguredManifestApplication = AndroidConfig.Manifest.getMainApplicationOrThrow(
+      currentlyConfiguredAndroidManifest
     );
+    const currentlyConfiguredMetaDataAttributes =
+      currentConfiguredManifestApplication['meta-data']?.map(md => md['$']) ?? [];
+
+    // The username is only used for defining a default updates URL.
+    // Since we overwrite the URL below the username is superfluous.
+    const inferredAndroidManifest = AndroidConfig.Updates.setUpdatesConfig(
+      exp,
+      currentlyConfiguredAndroidManifest,
+      /*username*/ null
+    );
+    const inferredMainApplication = AndroidConfig.Manifest.getMainApplicationOrThrow(
+      inferredAndroidManifest
+    );
+    // overwrite the URL defined in AndroidConfig.Updates.setUpdatesConfig
+    AndroidConfig.Manifest.addMetaDataItemToMainApplication(
+      inferredMainApplication,
+      AndroidManifestKeyForUpdateURL,
+      androidManifestUrl
+    );
+    // set a release channel (not done in updates plugin)
+    if (releaseChannel) {
+      AndroidConfig.Manifest.addMetaDataItemToMainApplication(
+        inferredMainApplication,
+        AndroidConfig.Updates.Config.RELEASE_CHANNEL,
+        releaseChannel
+      );
+    }
+
+    // If we guess that this is a users first publish, modify the native code to match
+    // what is configured.
+    const currentlyConfiguredAndroidUpdateURL = currentlyConfiguredMetaDataAttributes.find(
+      x => x['android:name'] === AndroidConfig.Updates.Config.UPDATE_URL
+    )?.['android:value'];
+    if (currentlyConfiguredAndroidUpdateURL === PLACEHOLDER_URL) {
+      isLikelyFirstAndroidPublish = true;
+      await AndroidConfig.Manifest.writeAndroidManifestAsync(
+        androidManifestXmlPath,
+        inferredAndroidManifest
+      );
+    } else {
+      // Log warnings if this is not the first publish and critical properties seem misconfigured
+      const inferredMainApplication = AndroidConfig.Manifest.getMainApplicationOrThrow(
+        inferredAndroidManifest
+      );
+      const inferredMetaDataAttributes = inferredMainApplication['meta-data']?.map(md => md['$'])!;
+
+      const {
+        UPDATE_URL,
+        SDK_VERSION,
+        RUNTIME_VERSION,
+        RELEASE_CHANNEL,
+      } = AndroidConfig.Updates.Config;
+      for (const key of [UPDATE_URL, SDK_VERSION, RUNTIME_VERSION, RELEASE_CHANNEL]) {
+        const inferredValue = inferredMetaDataAttributes.find(x => x['android:name'] === key)?.[
+          'android:value'
+        ];
+        let currentlyConfiguredValue = currentlyConfiguredMetaDataAttributes.find(
+          x => x['android:name'] === key
+        )?.['android:value'];
+        if (key === RELEASE_CHANNEL && inferredValue) {
+          // A client with an undefined release channel is mapped to
+          // 'default' in the server, so avoid logging an unneccessary warning.
+          currentlyConfiguredValue = currentlyConfiguredValue ?? 'default';
+        }
+        if (inferredValue !== currentlyConfiguredValue) {
+          let message: string;
+          switch (key) {
+            case RELEASE_CHANNEL: {
+              message = `The value passed to the --release-channel flag is "${inferredValue}", but it is set to "${currentlyConfiguredValue}".`;
+              break;
+            }
+            case UPDATE_URL:
+            case SDK_VERSION:
+            case RUNTIME_VERSION:
+            default:
+              message = `The inferred value is "${inferredValue}", but it is set to "${currentlyConfiguredValue}".`;
+          }
+          WarningAggregator.addWarningAndroid(`AndroidManifest.xml key "${key}"`, message, FYI_URL);
+        }
+      }
+    }
   }
 
-  if (isLikelyFirstPublish) {
+  if (isLikelyFirstIOSPublish || isLikelyFirstAndroidPublish) {
+    let platformSpecificMessage: string;
+
+    if (isLikelyFirstIOSPublish && !isLikelyFirstAndroidPublish) {
+      platformSpecificMessage =
+        '🚀 It looks like this your first iOS publish for this project! ' +
+        `We've automatically set some configuration values in Expo.plist. `;
+    } else if (!isLikelyFirstIOSPublish && isLikelyFirstAndroidPublish) {
+      platformSpecificMessage =
+        '🚀 It looks like this your first Android publish for this project! ' +
+        `We've automatically set some configuration values in AndroidManifest.xml. `;
+    } else {
+      platformSpecificMessage =
+        '🚀 It looks like this your first publish for this project! ' +
+        `We've automatically set some configuration values in Expo.plist and AndroidManifest.xml. `;
+    }
+
     logger.global.warn(
-      '🚀 It looks like this your first publish for this project! ' +
-        "We've automatically set some configuration values in Expo.plist and AndroidManifest.xml. " +
-        "You'll need to make a new build with these changes before you can download the update " +
+      platformSpecificMessage +
+        `You'll need to make and release a new build before your users can download the update ` +
         'you just published.'
     );
   }
 }
 
 /** The code below here is duplicated from expo-cli currently **/
-
-// TODO: come up with a better solution for using app.json expo.name in various places
-function sanitizedName(name: string) {
-  return name
-    .replace(/[\W_]+/g, '')
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '');
-}
 
 // TODO: it's silly and kind of fragile that we look at app config to determine
 // the ios project paths. Overall this function needs to be revamped, just a
@@ -395,11 +474,15 @@ export function getIOSPaths(projectRoot: string) {
     throw new Error('Your project needs a name in app.json/app.config.js.');
   }
 
-  const iosProjectDirectory = path.join(projectRoot, 'ios', sanitizedName(projectName));
+  const iosProjectDirectory = path.join(
+    projectRoot,
+    'ios',
+    IOSConfig.XcodeUtils.sanitizedName(projectName)
+  );
   const iosSupportingDirectory = path.join(
     projectRoot,
     'ios',
-    sanitizedName(projectName),
+    IOSConfig.XcodeUtils.sanitizedName(projectName),
     'Supporting'
   );
   const iconPath = path.join(iosProjectDirectory, 'Assets.xcassets', 'AppIcon.appiconset');

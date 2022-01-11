@@ -1,6 +1,6 @@
 {
   "name": "uri-scheme",
-  "version": "1.0.71",
+  "version": "1.0.111",
   "main": "build",
   "preferGlobal": true,
   "keywords": [
@@ -15,7 +15,7 @@
     "url": "https://github.com/expo/expo-cli.git",
     "directory": "packages/uri-scheme"
   },
-  "author": "Expo <support@expo.io>",
+  "author": "Expo <support@expo.dev>",
   "license": "MIT",
   "bin": {
     "uri-scheme": "./cli.js"
@@ -34,16 +34,14 @@
     "clean": "rimraf ./build/"
   },
   "devDependencies": {
-    "@expo/babel-preset-cli": "0.2.19",
-    "@expo/config-plugins": "1.0.24",
-    "@expo/plist": "0.0.12",
+    "@expo/config-plugins": "4.0.15",
+    "@expo/plist": "0.0.16",
     "@expo/spawn-async": "1.5.0",
     "@types/prompts": "^2.0.6",
     "chalk": "^4.0.0",
     "commander": "2.20.0",
     "glob": "7.1.6",
     "prompts": "^2.3.2",
-    "rimraf": "2.6.3",
     "update-check": "1.5.3"
   }
 }

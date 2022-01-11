@@ -7,72 +7,37 @@ interface ApiConfig {
   host: string;
   port: number | null;
 }
+
 interface XDLConfig {
-  turtleApi: ApiConfig;
   api: ApiConfig;
-  developerTool: string | null;
-  validation: {
-    reactNativeVersionWarnings: boolean;
-  };
-  offline: boolean;
+  developerTool: string;
 }
 
-type Environment = 'local' | 'staging' | 'production';
-
-const apiConfig: { [env in Environment]: ApiConfig } = {
-  local: {
-    scheme: 'http',
-    host: 'localhost',
-    port: 3000,
-  },
-  staging: {
-    scheme: getenv.string('XDL_SCHEME', 'https'),
-    host: 'staging.exp.host',
-    port: getenv.int('XDL_PORT', 0) || null,
-  },
-  production: {
-    scheme: getenv.string('XDL_SCHEME', 'https'),
-    host: getenv.string('XDL_HOST', 'exp.host'),
-    port: getenv.int('XDL_PORT', 0) || null,
-  },
-};
-
-const turtleApiConfig: { [env in Environment]: ApiConfig } = {
-  local: {
-    scheme: 'http',
-    host: 'localhost',
-    port: 3006,
-  },
-  staging: {
-    scheme: 'https',
-    host: 'staging.turtle.expo.io',
-    port: 443,
-  },
-  production: {
-    scheme: 'https',
-    host: 'turtle.expo.io',
-    port: 443,
-  },
-};
-
-let api: ApiConfig = apiConfig.production;
-let turtleApi: ApiConfig = turtleApiConfig.production;
-if (Env.isLocal()) {
-  api = apiConfig.local;
-  turtleApi = turtleApiConfig.local;
-} else if (Env.isStaging()) {
-  api = apiConfig.staging;
-  turtleApi = turtleApiConfig.staging;
+function getAPI(): ApiConfig {
+  if (Env.isLocal()) {
+    return {
+      scheme: 'http',
+      host: 'localhost',
+      port: 3000,
+    };
+  } else if (Env.isStaging()) {
+    return {
+      scheme: getenv.string('XDL_SCHEME', 'https'),
+      host: 'staging.exp.host',
+      port: getenv.int('XDL_PORT', 0) || null,
+    };
+  } else {
+    return {
+      scheme: getenv.string('XDL_SCHEME', 'https'),
+      host: getenv.string('XDL_HOST', 'exp.host'),
+      port: getenv.int('XDL_PORT', 0) || null,
+    };
+  }
 }
 
 const config: XDLConfig = {
-  api,
-  turtleApi,
-  developerTool: null,
-  validation: {
-    reactNativeVersionWarnings: true,
-  },
-  offline: false,
+  api: getAPI(),
+  developerTool: 'expo-cli',
 };
 
 export default config;

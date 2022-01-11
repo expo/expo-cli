@@ -4,8 +4,8 @@ import { vol } from 'memfs';
 import path from 'path';
 
 import { withGradleProperties } from '../android-plugins';
-import { withAndroidGradlePropertiesBaseMod } from '../compiler-plugins';
 import { evalModsAsync } from '../mod-compiler';
+import { getAndroidModFileProviders, withAndroidBaseMods } from '../withAndroidBaseMods';
 import rnFixture from './fixtures/react-native-project';
 
 jest.mock('fs');
@@ -40,9 +40,17 @@ describe(withGradleProperties, () => {
       config.modResults.push({ type: 'comment', value: 'end-expo-test' });
       return config;
     });
-    config = withAndroidGradlePropertiesBaseMod(config);
+    config = withAndroidBaseMods(config, {
+      providers: {
+        gradleProperties: getAndroidModFileProviders().gradleProperties,
+      },
+    });
 
-    await evalModsAsync(config, { projectRoot, platforms: ['android'] });
+    await evalModsAsync(config, {
+      projectRoot,
+      platforms: ['android'],
+      assertMissingModProviders: true,
+    });
 
     const contents = fs.readFileSync(path.join(projectRoot, 'android/gradle.properties'), 'utf8');
     expect(contents.endsWith('# expo-test\n\nfoo=bar\n\n# end-expo-test')).toBe(true);

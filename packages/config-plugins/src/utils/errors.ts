@@ -1,5 +1,3 @@
-import nodeAssert from 'assert';
-
 export class UnexpectedError extends Error {
   readonly name = 'UnexpectedError';
 
@@ -8,7 +6,13 @@ export class UnexpectedError extends Error {
   }
 }
 
-export type PluginErrorCode = 'INVALID_PLUGIN_TYPE';
+export type PluginErrorCode =
+  | 'INVALID_PLUGIN_TYPE'
+  | 'INVALID_PLUGIN_IMPORT'
+  | 'PLUGIN_NOT_FOUND'
+  | 'CONFLICTING_PROVIDER'
+  | 'INVALID_MOD_ORDER'
+  | 'MISSING_PROVIDER';
 
 /**
  * Based on `JsonFileError` from `@expo/json-file`
@@ -20,9 +24,4 @@ export class PluginError extends Error {
   constructor(message: string, public code: PluginErrorCode, public cause?: Error) {
     super(cause ? `${message}\n└─ Cause: ${cause.name}: ${cause.message}` : message);
   }
-}
-
-export function assert(value: any, message?: string | Error): asserts value {
-  // TODO: Upgrade node? TypeScript isn't properly asserting values without this wrapper.
-  return nodeAssert(value, message);
 }

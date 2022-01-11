@@ -1,4 +1,11 @@
 export default {
+  'ios/ReactNativeProject/Supporting/Expo.plist': `<?xml version="1.0" encoding="UTF-8"?>
+  <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+  <plist version="1.0">
+  <dict>
+  </dict>
+  </plist>
+  `,
   'ios/ReactNativeProject/Info.plist': `<?xml version="1.0" encoding="UTF-8"?>
   <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
   <plist version="1.0">
@@ -843,6 +850,130 @@ public class MainActivity extends ReactActivity {
   }
 }
 `,
+  'android/app/BUCK': `# To learn about Buck see [Docs](https://buckbuild.com/).
+# To run your application with Buck:
+# - install Buck
+# - \`npm start\` - to start the packager
+# - \`cd android\`
+# - \`keytool -genkey -v -keystore keystores/debug.keystore -storepass android -alias androiddebugkey -keypass android -dname "CN=Android Debug,O=Android,C=US"\`
+# - \`./gradlew :app:copyDownloadableDepsToLibs\` - make all Gradle compile dependencies available to Buck
+# - \`buck install -r android/app\` - compile, install and run application
+#
+
+load(":build_defs.bzl", "create_aar_targets", "create_jar_targets")
+
+lib_deps = []
+
+create_aar_targets(glob(["libs/*.aar"]))
+
+create_jar_targets(glob(["libs/*.jar"]))
+
+android_library(
+    name = "all-libs",
+    exported_deps = lib_deps,
+)
+
+android_library(
+    name = "app-code",
+    srcs = glob([
+        "src/main/java/**/*.java",
+    ]),
+    deps = [
+        ":all-libs",
+        ":build_config",
+        ":res",
+    ],
+)
+
+android_build_config(
+    name = "build_config",
+    package = "com.reactnativeproject",
+)
+
+android_resource(
+    name = "res",
+    package = "com.reactnativeproject",
+    res = "src/main/res",
+)
+
+android_binary(
+    name = "app",
+    keystore = "//android/keystores:debug",
+    manifest = "src/main/AndroidManifest.xml",
+    package_type = "debug",
+    deps = [
+        ":app-code",
+    ],
+)`,
+  'android/app/src/debug/java/com/reactnativeproject/ReactNativeFlipper.java': `/**
+* Copyright (c) Facebook, Inc. and its affiliates.
+*
+* <p>This source code is licensed under the MIT license found in the LICENSE file in the root
+* directory of this source tree.
+*/
+package com.reactnativeproject;
+
+import android.content.Context;
+import com.facebook.flipper.android.AndroidFlipperClient;
+import com.facebook.flipper.android.utils.FlipperUtils;
+import com.facebook.flipper.core.FlipperClient;
+import com.facebook.flipper.plugins.crashreporter.CrashReporterPlugin;
+import com.facebook.flipper.plugins.databases.DatabasesFlipperPlugin;
+import com.facebook.flipper.plugins.fresco.FrescoFlipperPlugin;
+import com.facebook.flipper.plugins.inspector.DescriptorMapping;
+import com.facebook.flipper.plugins.inspector.InspectorFlipperPlugin;
+import com.facebook.flipper.plugins.network.FlipperOkhttpInterceptor;
+import com.facebook.flipper.plugins.network.NetworkFlipperPlugin;
+import com.facebook.flipper.plugins.react.ReactFlipperPlugin;
+import com.facebook.flipper.plugins.sharedpreferences.SharedPreferencesFlipperPlugin;
+import com.facebook.react.ReactInstanceManager;
+import com.facebook.react.bridge.ReactContext;
+import com.facebook.react.modules.network.NetworkingModule;
+import okhttp3.OkHttpClient;
+
+public class ReactNativeFlipper {
+ public static void initializeFlipper(Context context, ReactInstanceManager reactInstanceManager) {
+   if (FlipperUtils.shouldEnableFlipper(context)) {
+     final FlipperClient client = AndroidFlipperClient.getInstance(context);
+     client.addPlugin(new InspectorFlipperPlugin(context, DescriptorMapping.withDefaults()));
+     client.addPlugin(new ReactFlipperPlugin());
+     client.addPlugin(new DatabasesFlipperPlugin(context));
+     client.addPlugin(new SharedPreferencesFlipperPlugin(context));
+     client.addPlugin(CrashReporterPlugin.getInstance());
+     NetworkFlipperPlugin networkFlipperPlugin = new NetworkFlipperPlugin();
+     NetworkingModule.setCustomClientBuilder(
+         new NetworkingModule.CustomClientBuilder() {
+           @Override
+           public void apply(OkHttpClient.Builder builder) {
+             builder.addNetworkInterceptor(new FlipperOkhttpInterceptor(networkFlipperPlugin));
+           }
+         });
+     client.addPlugin(networkFlipperPlugin);
+     client.start();
+     // Fresco Plugin needs to ensure that ImagePipelineFactory is initialized
+     // Hence we run if after all native modules have been initialized
+     ReactContext reactContext = reactInstanceManager.getCurrentReactContext();
+     if (reactContext == null) {
+       reactInstanceManager.addReactInstanceEventListener(
+           new ReactInstanceManager.ReactInstanceEventListener() {
+             @Override
+             public void onReactContextInitialized(ReactContext reactContext) {
+               reactInstanceManager.removeReactInstanceEventListener(this);
+               reactContext.runOnNativeModulesQueueThread(
+                   new Runnable() {
+                     @Override
+                     public void run() {
+                       client.addPlugin(new FrescoFlipperPlugin());
+                     }
+                   });
+             }
+           });
+     } else {
+       client.addPlugin(new FrescoFlipperPlugin());
+     }
+   }
+ }
+}`,
   'android/app/src/main/java/com/reactnativeproject/MainApplication.java': `package com.reactnativeproject;
 
   import android.app.Application;
@@ -967,6 +1098,15 @@ public class MainActivity extends ReactActivity {
   'android/app/src/main/AndroidManifest.xml': `<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.reactnativeproject">
 
   <uses-permission android:name="android.permission.INTERNET" />
+
+  <queries>
+    <!-- Support checking for http(s) links via the Linking API -->
+    <intent>
+      <action android:name="android.intent.action.VIEW" />
+      <category android:name="android.intent.category.BROWSABLE" />
+      <data android:scheme="https" />
+    </intent>
+  </queries>
 
   <application
     android:name=".MainApplication"

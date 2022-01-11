@@ -1,7 +1,6 @@
 import { ANONYMOUS_USERNAME, UserManager, UserSettings } from '@expo/api';
 import { readExpRcAsync } from '@expo/config';
 import * as path from 'path';
-import { promisify } from 'util';
 
 import {
   Android,
@@ -11,9 +10,9 @@ import {
   ProjectSettings,
   ProjectUtils,
   resolveNgrokAsync,
-  UrlUtils,
   XDLError,
 } from '../internal';
+import * as UrlUtils from './ngrokUrl';
 
 const NGROK_CONFIG = {
   authToken: '5W1bR67GNbWcXqmxZzBG1_56GezNeaX6sSRvn8npeQ8',
@@ -49,19 +48,17 @@ async function connectToNgrokAsync(
   ngrokPid: number | null | undefined,
   attempts: number = 0
 ): Promise<string> {
-  const ngrokConnectAsync = promisify(ngrok.connect);
-  const ngrokKillAsync = promisify(ngrok.kill);
-
   try {
     const configPath = getNgrokConfigPath();
     const hostname = await hostnameAsync();
-    const url = await ngrokConnectAsync({
+    const url = await ngrok.connect({
       hostname,
       configPath,
+      onStatusChange: handleStatusChange.bind(null, projectRoot),
       ...args,
     });
     return url;
-  } catch (e) {
+  } catch (e: any) {
     // Attempt to connect 3 times
     if (attempts >= 2) {
       if (e.message) {
@@ -83,7 +80,7 @@ async function connectToNgrokAsync(
             ProjectUtils.logDebug(projectRoot, 'expo', `Couldn't kill ngrok with PID ${ngrokPid}`);
           }
         } else {
-          await ngrokKillAsync();
+          await ngrok.kill();
         }
       } else {
         // Change randomness to avoid conflict if killing ngrok didn't help
@@ -102,7 +99,6 @@ export async function startTunnelsAsync(
   options: { autoInstall?: boolean } = {}
 ): Promise<void> {
   const ngrok = await resolveNgrokAsync(projectRoot, options);
-
   const username = (await UserManager.getCurrentUsernameAsync()) || ANONYMOUS_USERNAME;
   assertValidProjectRoot(projectRoot);
   const packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
@@ -138,7 +134,30 @@ export async function startTunnelsAsync(
         throw new Error('Starting tunnels timed out');
       }
     })(),
+
     (async () => {
+      const createResolver = (extra: string[] = []) =>
+        async function resolveHostnameAsync() {
+          const randomness = expRc.manifestTunnelRandomness
+            ? expRc.manifestTunnelRandomness
+            : await getProjectRandomnessAsync(projectRoot);
+          return [
+            ...extra,
+            randomness,
+            UrlUtils.domainify(username),
+            UrlUtils.domainify(packageShortName),
+            NGROK_CONFIG.domain,
+          ].join('.');
+        };
+
+      // If both ports are defined and they don't match then we can assume the legacy dev server is being used.
+      const isLegacyDevServer =
+        !!expoServerPort &&
+        !!packagerInfo.packagerPort &&
+        expoServerPort !== packagerInfo.packagerPort;
+
+      ProjectUtils.logInfo(projectRoot, 'expo', `Using legacy dev server: ${isLegacyDevServer}`);
+
       const expoServerNgrokUrl = await connectToNgrokAsync(
         projectRoot,
         ngrok,
@@ -147,45 +166,33 @@ export async function startTunnelsAsync(
           port: expoServerPort,
           proto: 'http',
         },
-        async () => {
-          const randomness = expRc.manifestTunnelRandomness
-            ? expRc.manifestTunnelRandomness
-            : await getProjectRandomnessAsync(projectRoot);
-          return [
-            randomness,
-            UrlUtils.domainify(username),
-            UrlUtils.domainify(packageShortName),
-            NGROK_CONFIG.domain,
-          ].join('.');
-        },
+        createResolver(),
         packagerInfo.ngrokPid
       );
-      const packagerNgrokUrl = await connectToNgrokAsync(
-        projectRoot,
-        ngrok,
-        {
-          authtoken: NGROK_CONFIG.authToken,
-          port: packagerInfo.packagerPort,
-          proto: 'http',
-        },
-        async () => {
-          const randomness = expRc.manifestTunnelRandomness
-            ? expRc.manifestTunnelRandomness
-            : await getProjectRandomnessAsync(projectRoot);
-          return [
-            'packager',
-            randomness,
-            UrlUtils.domainify(username),
-            UrlUtils.domainify(packageShortName),
-            NGROK_CONFIG.domain,
-          ].join('.');
-        },
-        packagerInfo.ngrokPid
-      );
+
+      let packagerNgrokUrl: string;
+      if (isLegacyDevServer) {
+        packagerNgrokUrl = await connectToNgrokAsync(
+          projectRoot,
+          ngrok,
+          {
+            authtoken: NGROK_CONFIG.authToken,
+            port: packagerInfo.packagerPort,
+            proto: 'http',
+          },
+          createResolver(['packager']),
+          packagerInfo.ngrokPid
+        );
+      } else {
+        // Custom dev server will share the port across expo and metro dev servers,
+        // this means we only need one ngrok URL.
+        packagerNgrokUrl = expoServerNgrokUrl;
+      }
+
       await ProjectSettings.setPackagerInfoAsync(projectRoot, {
         expoServerNgrokUrl,
         packagerNgrokUrl,
-        ngrokPid: ngrok.process().pid,
+        ngrokPid: ngrok.getActiveProcess().pid,
       });
 
       startedTunnelsSuccessfully = true;
@@ -199,21 +206,6 @@ export async function startTunnelsAsync(
         },
         'Tunnel ready.'
       );
-
-      ngrok.addListener('statuschange', (status: string) => {
-        if (status === 'reconnecting') {
-          ProjectUtils.logError(
-            projectRoot,
-            'expo',
-            'We noticed your tunnel is having issues. ' +
-              'This may be due to intermittent problems with our tunnel provider. ' +
-              'If you have trouble connecting to your app, try to Restart the project, ' +
-              'or switch Host to LAN.'
-          );
-        } else if (status === 'online') {
-          ProjectUtils.logInfo(projectRoot, 'expo', 'Tunnel connected.');
-        }
-      });
     })(),
   ]);
 }
@@ -224,15 +216,13 @@ export async function stopTunnelsAsync(projectRoot: string): Promise<void> {
   if (!ngrok) {
     return;
   }
-  const ngrokKillAsync = promisify(ngrok.kill);
 
   // This will kill all ngrok tunnels in the process.
   // We'll need to change this if we ever support more than one project
   // open at a time in XDE.
   const packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
-  const ngrokProcess = ngrok.process();
+  const ngrokProcess = ngrok.getActiveProcess();
   const ngrokProcessPid = ngrokProcess ? ngrokProcess.pid : null;
-  ngrok.removeAllListeners('statuschange');
   if (packagerInfo.ngrokPid && packagerInfo.ngrokPid !== ngrokProcessPid) {
     // Ngrok is running in some other process. Kill at the os level.
     try {
@@ -246,7 +236,7 @@ export async function stopTunnelsAsync(projectRoot: string): Promise<void> {
     }
   } else {
     // Ngrok is running from the current process. Kill using ngrok api.
-    await ngrokKillAsync();
+    await ngrok.kill();
   }
   await ProjectSettings.setPackagerInfoAsync(projectRoot, {
     expoServerNgrokUrl: null,
@@ -254,4 +244,19 @@ export async function stopTunnelsAsync(projectRoot: string): Promise<void> {
     ngrokPid: null,
   });
   await Android.stopAdbReverseAsync(projectRoot);
+}
+
+function handleStatusChange(projectRoot: string, status: string) {
+  if (status === 'closed') {
+    ProjectUtils.logError(
+      projectRoot,
+      'expo',
+      'We noticed your tunnel is having issues. ' +
+        'This may be due to intermittent problems with our tunnel provider. ' +
+        'If you have trouble connecting to your app, try to Restart the project, ' +
+        'or switch Host to LAN.'
+    );
+  } else if (status === 'connected') {
+    ProjectUtils.logInfo(projectRoot, 'expo', 'Tunnel connected.');
+  }
 }

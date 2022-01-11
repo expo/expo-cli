@@ -1,6 +1,6 @@
 {
   "name": "expo-optimize",
-  "version": "0.1.82",
+  "version": "0.2.7",
   "main": "build",
   "preferGlobal": true,
   "keywords": [
@@ -16,7 +16,7 @@
     "url": "https://github.com/expo/expo-cli.git",
     "directory": "packages/expo-optimize"
   },
-  "author": "Expo <support@expo.io>",
+  "author": "Expo <support@expo.dev>",
   "license": "MIT",
   "bin": {
     "expo-optimize": "./build/index.js"
@@ -33,16 +33,14 @@
     "clean": "rimraf ./build/"
   },
   "devDependencies": {
-    "@expo/babel-preset-cli": "0.2.19",
-    "@expo/config": "3.3.34",
-    "@expo/image-utils": "0.3.12",
-    "@expo/json-file": "8.2.28",
+    "@expo/config": "6.0.15",
+    "@expo/image-utils": "0.3.18",
+    "@expo/json-file": "8.2.34",
     "chalk": "^4.0.0",
     "commander": "2.20.0",
     "cross-spawn": "6.0.5",
     "glob": "7.1.6",
     "pretty-bytes": "5.2.0",
-    "rimraf": "2.6.3",
     "tempy": "0.3.0",
     "update-check": "1.5.3"
   }

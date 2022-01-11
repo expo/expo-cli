@@ -1,17 +1,29 @@
-import Log from '@expo/bunyan';
-import * as ExpoMetroConfig from '@expo/metro-config';
-import { createDevServerMiddleware } from '@react-native-community/cli-server-api';
-import bodyParser from 'body-parser';
+import type Log from '@expo/bunyan';
+import { ExpoConfig, getConfigFilePaths } from '@expo/config';
+import type { LoadOptions } from '@expo/metro-config';
+import chalk from 'chalk';
+import type { Server as ConnectServer } from 'connect';
 import http from 'http';
 import type Metro from 'metro';
-import resolveFrom from 'resolve-from';
 
+import {
+  buildHermesBundleAsync,
+  isEnableHermesManaged,
+  maybeThrowFromInconsistentEngineAsync,
+} from './HermesBundler';
 import LogReporter from './LogReporter';
-import clientLogsMiddleware from './middleware/clientLogsMiddleware';
+import {
+  importExpoMetroConfigFromProject,
+  importInspectorProxyServerFromProject,
+  importMetroFromProject,
+  importMetroServerFromProject,
+} from './metro/importMetroFromProject';
+import { createDevServerMiddleware } from './middleware/devServerMiddleware';
 
-export type MetroDevServerOptions = ExpoMetroConfig.LoadOptions & {
+export type MetroDevServerOptions = LoadOptions & {
   logger: Log;
   quiet?: boolean;
+  unversioned?: boolean;
 };
 export type BundleOptions = {
   entryPoint: string;
@@ -26,11 +38,36 @@ export type BundleAssetWithFileHashes = Metro.AssetData & {
 export type BundleOutput = {
   code: string;
   map: string;
+  hermesBytecodeBundle?: Uint8Array;
+  hermesSourcemap?: string;
   assets: readonly BundleAssetWithFileHashes[];
 };
 export type MessageSocket = {
   broadcast: (method: string, params?: Record<string, any> | undefined) => void;
 };
+
+function getExpoMetroConfig(
+  projectRoot: string,
+  { logger, unversioned }: Pick<MetroDevServerOptions, 'logger' | 'unversioned'>
+): typeof import('@expo/metro-config') {
+  if (!unversioned) {
+    try {
+      return importExpoMetroConfigFromProject(projectRoot);
+    } catch {
+      // If expo isn't installed, use the unversioned config and warn about installing expo.
+    }
+  }
+
+  const unversionedVersion = require('@expo/metro-config/package.json').version;
+  logger.info(
+    { tag: 'expo' },
+    chalk.gray(
+      `\u203A Unversioned ${chalk.bold`@expo/metro-config@${unversionedVersion}`} is being used. Bundling apps may not work as expected, and is subject to breaking changes. Install ${chalk.bold`expo`} or set the app.json sdkVersion to use a stable version of @expo/metro-config.`
+    )
+  );
+
+  return require('@expo/metro-config');
+}
 
 export async function runMetroDevServerAsync(
   projectRoot: string,
@@ -44,14 +81,15 @@ export async function runMetroDevServerAsync(
 
   const reporter = new LogReporter(options.logger);
 
+  const ExpoMetroConfig = getExpoMetroConfig(projectRoot, options);
+
   const metroConfig = await ExpoMetroConfig.loadAsync(projectRoot, { reporter, ...options });
 
   const { middleware, attachToServer } = createDevServerMiddleware({
     port: metroConfig.server.port,
     watchFolders: metroConfig.watchFolders,
+    logger: options.logger,
   });
-  middleware.use(bodyParser.json());
-  middleware.use('/logs', clientLogsMiddleware(options.logger));
 
   const customEnhanceMiddleware = metroConfig.server.enhanceMiddleware;
   // @ts-ignore can't mutate readonly config
@@ -62,13 +100,13 @@ export async function runMetroDevServerAsync(
     return middleware.use(metroMiddleware);
   };
 
-  const serverInstance = await Metro.runServer(metroConfig, { hmrEnabled: true });
+  const server = await Metro.runServer(metroConfig, { hmrEnabled: true });
 
-  const { messageSocket, eventsSocket } = attachToServer(serverInstance);
+  const { messageSocket, eventsSocket } = attachToServer(server);
   reporter.reportEvent = eventsSocket.reportEvent;
 
   return {
-    server: serverInstance,
+    server,
     middleware,
     messageSocket,
   };
@@ -79,6 +117,7 @@ let nextBuildID = 0;
 // TODO: deprecate options.target
 export async function bundleAsync(
   projectRoot: string,
+  expoConfig: ExpoConfig,
   options: MetroDevServerOptions,
   bundles: BundleOptions[]
 ): Promise<BundleOutput[]> {
@@ -86,6 +125,8 @@ export async function bundleAsync(
   const Server = importMetroServerFromProject(projectRoot);
 
   const reporter = new LogReporter(options.logger);
+  const ExpoMetroConfig = getExpoMetroConfig(projectRoot, options);
+
   const config = await ExpoMetroConfig.loadAsync(projectRoot, { reporter, ...options });
   const buildID = `bundle_${nextBuildID++}`;
 
@@ -137,37 +178,90 @@ export async function bundleAsync(
     return { code, map, assets };
   };
 
+  const maybeAddHermesBundleAsync = async (
+    bundle: BundleOptions,
+    bundleOutput: BundleOutput
+  ): Promise<BundleOutput> => {
+    const { platform } = bundle;
+    const isHermesManaged = isEnableHermesManaged(expoConfig, platform);
+
+    const paths = getConfigFilePaths(projectRoot);
+    const configFilePath = paths.dynamicConfigPath ?? paths.staticConfigPath ?? 'app.json';
+    await maybeThrowFromInconsistentEngineAsync(
+      projectRoot,
+      configFilePath,
+      platform,
+      isHermesManaged
+    );
+
+    if (isHermesManaged) {
+      const platformTag = chalk.bold(
+        { ios: 'iOS', android: 'Android', web: 'Web' }[platform] || platform
+      );
+      options.logger.info(
+        { tag: 'expo' },
+        `💿 ${platformTag} Building Hermes bytecode for the bundle`
+      );
+      const hermesBundleOutput = await buildHermesBundleAsync(
+        projectRoot,
+        bundleOutput.code,
+        bundleOutput.map,
+        bundle.minify
+      );
+      bundleOutput.hermesBytecodeBundle = hermesBundleOutput.hbc;
+      bundleOutput.hermesSourcemap = hermesBundleOutput.sourcemap;
+    }
+    return bundleOutput;
+  };
+
   try {
-    return await Promise.all(bundles.map((bundle: BundleOptions) => buildAsync(bundle)));
+    const intermediateOutputs = await Promise.all(bundles.map(bundle => buildAsync(bundle)));
+    const bundleOutputs: BundleOutput[] = [];
+    for (let i = 0; i < bundles.length; ++i) {
+      // hermesc does not support parallel building even we spawn processes.
+      // we should build them sequentially.
+      bundleOutputs.push(await maybeAddHermesBundleAsync(bundles[i], intermediateOutputs[i]));
+    }
+    return bundleOutputs;
   } finally {
     metroServer.end();
   }
 }
 
-function importMetroFromProject(projectRoot: string): typeof Metro {
-  const resolvedPath = resolveFrom.silent(projectRoot, 'metro');
-  if (!resolvedPath) {
-    throw new Error(
-      'Missing package "metro" in the project at ' +
-        projectRoot +
-        '. ' +
-        'This usually means `react-native` is not installed. ' +
-        'Please verify that dependencies in package.json include "react-native" ' +
-        'and run `yarn` or `npm install`.'
-    );
+/**
+ * Attach the inspector proxy to a development server.
+ * Inspector proxy is used for viewing the JS context in a browser.
+ * This must be attached after the server is listening.
+ * Attaching consists of pushing custom middleware and appending WebSockets to the server.
+ *
+ *
+ * @param projectRoot
+ * @param props.server dev server to add WebSockets to
+ * @param props.middleware dev server middleware to add extra middleware to
+ */
+export function attachInspectorProxy(
+  projectRoot: string,
+  { server, middleware }: { server: http.Server; middleware: ConnectServer }
+) {
+  const { InspectorProxy } = importInspectorProxyServerFromProject(projectRoot);
+  const inspectorProxy = new InspectorProxy(projectRoot);
+  if ('addWebSocketListener' in inspectorProxy) {
+    // metro@0.59.0
+    inspectorProxy.addWebSocketListener(server);
+  } else if ('createWebSocketListeners' in inspectorProxy) {
+    // metro@0.66.0
+    // TODO: This isn't properly support without a ws router.
+    inspectorProxy.createWebSocketListeners(server);
   }
-  return require(resolvedPath);
+  // TODO(hypuk): Refactor inspectorProxy.processRequest into separate request handlers
+  // so that we could provide routes (/json/list and /json/version) here.
+  // Currently this causes Metro to give warning about T31407894.
+  // $FlowFixMe[method-unbinding] added when improving typing for this parameters
+  middleware.use(inspectorProxy.processRequest.bind(inspectorProxy));
+
+  return { inspectorProxy };
 }
 
-function importMetroServerFromProject(projectRoot: string): typeof Metro.Server {
-  const resolvedPath = resolveFrom.silent(projectRoot, 'metro/src/Server');
-  if (!resolvedPath) {
-    throw new Error(
-      'Missing module "metro/src/Server" in the project. ' +
-        'This usually means React Native is not installed. ' +
-        'Please verify that dependencies in package.json include "react-native" ' +
-        'and run `yarn` or `npm install`.'
-    );
-  }
-  return require(resolvedPath);
-}
+export { LogReporter, createDevServerMiddleware };
+export * from './middlwareMutations';
+export * from './JsInspector';

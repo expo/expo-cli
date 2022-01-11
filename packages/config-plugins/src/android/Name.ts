@@ -2,19 +2,21 @@ import { ExpoConfig } from '@expo/config-types';
 
 import { ConfigPlugin } from '../Plugin.types';
 import { createStringsXmlPlugin, withSettingsGradle } from '../plugins/android-plugins';
-import { writeXMLAsync } from '../utils/XML';
-import { assert } from '../utils/errors';
 import { addWarningAndroid } from '../utils/warnings';
-import { buildResourceItem, readResourcesXMLAsync, ResourceXML } from './Resources';
-import { getProjectStringsXMLPathAsync, removeStringItem, setStringItem } from './Strings';
+import { buildResourceItem, ResourceXML } from './Resources';
+import { removeStringItem, setStringItem } from './Strings';
 
 /**
  * Sanitize a name, this should be used for files and gradle names.
- * - `[/, \, :, <, >, ", ?, *, |]` are not allowed https://bit.ly/3l6xqKL
+ * - `[/, \, :, <, >, ", ?, *, |]` are not allowed
+ * https://docs.gradle.org/4.2/release-notes.html#path-separator-characters-in-names-are-deprecated
  *
  * @param name
  */
 export function sanitizeNameForGradle(name: string): string {
+  // Remove escape characters which are valid in XML names but not in gradle.
+  name = name.replace(/[\n\r\t]/g, '');
+
   // Gradle disallows these:
   // The project name 'My-Special 😃 Co/ol_Project' must not contain any of the following characters: [/, \, :, <, >, ", ?, *, |]. Set the 'rootProject.name' or adjust the 'include' statement (see https://docs.gradle.org/6.2/dsl/org.gradle.api.initialization.Settings.html#org.gradle.api.initialization.Settings:include(java.lang.String[]) for more details).
   return name.replace(/(\/|\\|:|<|>|"|\?|\*|\|)/g, '');
@@ -28,7 +30,7 @@ export const withNameSettingsGradle: ConfigPlugin = config => {
       config.modResults.contents = applyNameSettingsGradle(config, config.modResults.contents);
     } else {
       addWarningAndroid(
-        'android-name-settings-gradle',
+        'name',
         `Cannot automatically configure settings.gradle if it's not groovy`
       );
     }
@@ -38,28 +40,6 @@ export const withNameSettingsGradle: ConfigPlugin = config => {
 
 export function getName(config: Pick<ExpoConfig, 'name'>) {
   return typeof config.name === 'string' ? config.name : null;
-}
-
-/**
- * Changes the display name on the home screen,
- * notifications, and others.
- */
-export async function setName(
-  config: Pick<ExpoConfig, 'name'>,
-  projectRoot: string
-): Promise<boolean> {
-  const stringsPath = await getProjectStringsXMLPathAsync(projectRoot);
-  assert(stringsPath);
-
-  let stringsJSON = await readResourcesXMLAsync({ path: stringsPath });
-  stringsJSON = applyNameFromConfig(config, stringsJSON);
-
-  try {
-    await writeXMLAsync({ path: stringsPath, xml: stringsJSON });
-  } catch {
-    throw new Error(`Error setting name. Cannot write strings.xml to ${stringsPath}.`);
-  }
-  return true;
 }
 
 function applyNameFromConfig(
@@ -85,6 +65,6 @@ export function applyNameSettingsGradle(config: Pick<ExpoConfig, 'name'>, settin
   // Select rootProject.name = '***' and replace the contents between the quotes.
   return settingsGradle.replace(
     /rootProject.name\s?=\s?(["'])(?:(?=(\\?))\2.)*?\1/g,
-    `rootProject.name = '${name}'`
+    `rootProject.name = '${name.replace(/'/g, "\\'")}'`
   );
 }

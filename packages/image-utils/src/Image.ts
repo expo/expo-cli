@@ -106,15 +106,9 @@ async function maybeWarnAboutInstallingSharpAsync() {
   // Putting the warning here will prevent the warning from showing if all images were reused from the cache
   if (!hasWarned && !(await Sharp.isAvailableAsync())) {
     hasWarned = true;
-    console.log();
-    console.log(
-      chalk.bgYellow.black(
-        `Using node to generate images. This is much slower than using native packages.`
-      )
-    );
-    console.log(
+    console.warn(
       chalk.yellow(
-        `\u203A Optionally you can stop the process and try again after successfully running \`npm install -g sharp-cli\`.\n`
+        `Using node to generate images. This is much slower than using native packages.\n\u203A Optionally you can stop the process and try again after successfully running \`npm install -g sharp-cli\`.\n`
       )
     );
   }
@@ -125,6 +119,11 @@ async function ensureImageOptionsAsync(imageOptions: ImageOptions): Promise<Imag
     ...imageOptions,
     src: await Download.downloadOrUseCachedImage(imageOptions.src),
   };
+
+  // Default to contain
+  if (!icon.resizeMode) {
+    icon.resizeMode = 'contain';
+  }
 
   const mimeType = mime.getType(icon.src);
 

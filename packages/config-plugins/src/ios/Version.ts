@@ -8,7 +8,7 @@ export const withVersion = createInfoPlistPlugin(setVersion, 'withVersion');
 export const withBuildNumber = createInfoPlistPlugin(setBuildNumber, 'withBuildNumber');
 
 export function getVersion(config: Pick<ExpoConfig, 'version'>) {
-  return config.version || '0.0.0';
+  return config.version || '1.0.0';
 }
 
 export function setVersion(config: Pick<ExpoConfig, 'version'>, infoPlist: InfoPlist): InfoPlist {

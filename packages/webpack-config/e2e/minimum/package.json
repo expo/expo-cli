@@ -4,12 +4,12 @@
     "start": "expo start:web"
   },
   "dependencies": {
-    "expo": "37.0.11",
-    "react": "16.9.0",
-    "react-dom": "16.9.0",
-    "react-native-web": "0.11.7"
+    "expo": "^43.0.0",
+    "react": "17.0.1",
+    "react-dom": "17.0.1",
+    "react-native-web": "0.17.1"
   },
   "devDependencies": {
-    "@babel/core": "7.9.0"
+    "@babel/core": "^7.12.9"
   }
 }

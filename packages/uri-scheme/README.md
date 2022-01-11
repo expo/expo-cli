@@ -9,7 +9,7 @@
     <b>Interact with native URI schemes</b>
     <br/>
     <br/>
-    <a aria-label="Circle CI" href="https://circleci.com/gh/expo/expo-cli/tree/master">
+    <a aria-label="Circle CI" href="https://circleci.com/gh/expo/expo-cli/tree/main">
         <img alt="Circle CI" src="https://flat.badgen.net/circleci/github/expo/expo-cli?label=Circle%20CI&labelColor=555555&icon=circleci">
     </a>
 </p>
@@ -51,7 +51,7 @@ In order to make this package fast with npx we don't ship types or doc-blocks.
 ```js
 import { Android, Ios } from 'uri-scheme';
 
-Ios.openAsync({ uri: 'http://expo.io/' });
+Ios.openAsync({ uri: 'http://expo.dev/' });
 ```
 
 ## ⚙️ Options
@@ -121,7 +121,7 @@ Open a URI scheme in a running simulator or emulator
 **Examples**
 
 - `uri-scheme open com.app://oauth --ios`
-- `uri-scheme open http://expo.io --android`
+- `uri-scheme open http://expo.dev --android`
 
 ### list
 
@@ -146,7 +146,7 @@ The Expo source code is made available under the [MIT license](LICENSE). Some of
 ---
 
 <p>
-    <a aria-label="sponsored by expo" href="http://expo.io">
+    <a aria-label="sponsored by expo" href="http://expo.dev">
         <img src="https://img.shields.io/badge/Sponsored_by-Expo-4630EB.svg?style=for-the-badge&logo=EXPO&labelColor=000&logoColor=fff" target="_blank" />
     </a>
     <a aria-label="uri-scheme is free to use" href="/LICENSE" target="_blank">

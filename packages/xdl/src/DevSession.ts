@@ -1,4 +1,5 @@
-import { ApiV2 as ApiV2Client, Config, UserManager } from '@expo/api';
+import { ApiV2 as ApiV2Client, ConnectionStatus, UserManager } from '@expo/api';
+import { ExpoConfig } from '@expo/config-types';
 import os from 'os';
 
 import { Logger as logger, UrlUtils } from './internal';
@@ -10,7 +11,7 @@ let keepUpdating = true;
 // TODO notify www when a project is started, and every N seconds afterwards
 export async function startSession(
   projectRoot: string,
-  exp: any,
+  exp: Pick<ExpoConfig, 'name' | 'description' | 'slug' | 'primaryColor'>,
   platform: 'native' | 'web',
   forceUpdate: boolean = false
 ): Promise<void> {
@@ -18,7 +19,7 @@ export async function startSession(
     keepUpdating = true;
   }
 
-  if (!Config.offline && keepUpdating) {
+  if (!ConnectionStatus.isOffline() && keepUpdating) {
     // TODO(anp) if the user has configured device ids, then notify for those too
     const authSession = await UserManager.getSessionAsync();
 

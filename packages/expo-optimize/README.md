@@ -9,7 +9,7 @@
     <b>Compress the assets in your project</b>
     <br/>
     <br/>
-    <a aria-label="Circle CI" href="https://circleci.com/gh/expo/expo-cli/tree/master">
+    <a aria-label="Circle CI" href="https://circleci.com/gh/expo/expo-cli/tree/main">
         <img alt="Circle CI" src="https://flat.badgen.net/circleci/github/expo/expo-cli?label=Circle%20CI&labelColor=555555&icon=circleci">
     </a>
 </p>
@@ -52,12 +52,12 @@ For more information run `npx expo-optimize --help` (or `-h`)
 
 ## 📚 Further Reading
 
-Read more about how this package works here: [Image compression in Expo projects](https://blog.expo.io/image-compression-with-expo-cli-d32d15cc8b73).
+Read more about how this package works here: [Image compression in Expo projects](https://blog.expo.dev/image-compression-with-expo-cli-d32d15cc8b73).
 
 ## Related
 
 - [sharp](https://sharp.pixelplumbing.com/) - native image editing library for node
-- [expo-cli](https://docs.expo.io/workflow/expo-cli/) - the original location for this command
+- [expo-cli](https://docs.expo.dev/workflow/expo-cli/) - the original location for this command
   <!-- - [react-native-cli optimize](https://github.com/react-native-community/cli/pull/419) - an alias for this command -->
 
 ## License
@@ -69,7 +69,7 @@ The Expo source code is made available under the [MIT license](LICENSE). Some of
 ---
 
 <p>
-    <a aria-label="sponsored by expo" href="http://expo.io">
+    <a aria-label="sponsored by expo" href="http://expo.dev">
         <img src="https://img.shields.io/badge/Sponsored_by-Expo-4630EB.svg?style=for-the-badge&logo=EXPO&labelColor=000&logoColor=fff" target="_blank" />
     </a>
     <a aria-label="expo-optimize is free to use" href="/LICENSE" target="_blank">
@@ -77,4 +77,4 @@ The Expo source code is made available under the [MIT license](LICENSE). Some of
     </a>
 </p>
 
-[abp]: https://docs.expo.io/versions/latest/config/app/#assetbundlepatterns
+[abp]: https://docs.expo.dev/versions/latest/config/app/#assetbundlepatterns

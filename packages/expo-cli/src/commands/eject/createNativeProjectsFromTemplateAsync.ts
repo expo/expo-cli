@@ -3,16 +3,15 @@ import { ModPlatform } from '@expo/config-plugins';
 import { getBareExtensions, getFileWithExtensions } from '@expo/config/paths';
 import chalk from 'chalk';
 import fs from 'fs-extra';
-import npmPackageArg from 'npm-package-arg';
-import pacote from 'pacote';
 import path from 'path';
 import semver from 'semver';
 
-import { SilentError } from '../../CommandError';
+import { AbortCommandError, SilentError } from '../../CommandError';
 import Log from '../../log';
-import { extractTemplateAppAsync } from '../../utils/extractTemplateAppAsync';
-import * as CreateApp from '../utils/CreateApp';
+import { logNewSection } from '../../utils/ora';
 import * as GitIgnore from '../utils/GitIgnore';
+import { downloadAndExtractNpmModuleAsync, getNpmUrlAsync } from '../utils/npm';
+import { resolveTemplateArgAsync } from './Github';
 import {
   DependenciesModificationResults,
   isPkgMainExpoAppEntry,
@@ -35,6 +34,7 @@ export async function createNativeProjectsFromTemplateAsync({
   projectRoot,
   exp,
   pkg,
+  template,
   tempDir,
   platforms,
   skipDependencyUpdate,
@@ -42,6 +42,7 @@ export async function createNativeProjectsFromTemplateAsync({
   projectRoot: string;
   exp: ExpoConfig;
   pkg: PackageJSONConfig;
+  template?: string;
   tempDir: string;
   platforms: ModPlatform[];
   skipDependencyUpdate?: string[];
@@ -50,6 +51,7 @@ export async function createNativeProjectsFromTemplateAsync({
 > {
   const copiedPaths = await cloneNativeDirectoriesAsync({
     projectRoot,
+    template,
     tempDir,
     exp,
     pkg,
@@ -85,21 +87,21 @@ export async function createNativeProjectsFromTemplateAsync({
 async function cloneNativeDirectoriesAsync({
   projectRoot,
   tempDir,
+  template,
   exp,
   pkg,
   platforms,
 }: {
   projectRoot: string;
   tempDir: string;
+  template?: string;
   exp: Pick<ExpoConfig, 'name' | 'sdkVersion'>;
   pkg: PackageJSONConfig;
   platforms: ModPlatform[];
 }): Promise<string[]> {
-  const templateSpec = await validateBareTemplateExistsAsync(exp.sdkVersion!);
-
   // NOTE(brentvatne): Removing spaces between steps for now, add back when
   // there is some additional context for steps
-  const creatingNativeProjectStep = CreateApp.logNewSection(
+  const creatingNativeProjectStep = logNewSection(
     'Creating native project directories (./ios and ./android) and updating .gitignore'
   );
 
@@ -108,7 +110,16 @@ async function cloneNativeDirectoriesAsync({
   let copiedPaths: string[] = [];
   let skippedPaths: string[] = [];
   try {
-    await extractTemplateAppAsync(templateSpec, tempDir, exp);
+    if (template) {
+      await resolveTemplateArgAsync(tempDir, creatingNativeProjectStep, exp.name, template);
+    } else {
+      const templatePackageName = await getTemplateNpmPackageName(exp.sdkVersion);
+      await getNpmUrlAsync(templatePackageName);
+      await downloadAndExtractNpmModuleAsync(templatePackageName, {
+        cwd: tempDir,
+        name: exp.name,
+      });
+    }
     [copiedPaths, skippedPaths] = await copyPathsFromTemplateAsync(
       projectRoot,
       tempDir,
@@ -122,24 +133,24 @@ async function cloneNativeDirectoriesAsync({
     let message = `Created native project${platforms.length > 1 ? 's' : ''}`;
 
     if (skippedPaths.length) {
-      message += Log.chalk.dim(
-        ` | ${skippedPaths.map(path => Log.chalk.bold(`/${path}`)).join(', ')} already created`
+      message += chalk.dim(
+        ` | ${skippedPaths.map(path => chalk.bold(`/${path}`)).join(', ')} already created`
       );
     }
     if (!results?.didMerge) {
-      message += Log.chalk.dim(` | gitignore already synced`);
+      message += chalk.dim(` | gitignore already synced`);
     } else if (results.didMerge && results.didClear) {
-      message += Log.chalk.dim(` | synced gitignore`);
+      message += chalk.dim(` | synced gitignore`);
     }
     creatingNativeProjectStep.succeed(message);
-  } catch (e) {
-    Log.error(e.message);
-    creatingNativeProjectStep.fail(
-      'Failed to create the native project - see the output above for more information.'
-    );
+  } catch (e: any) {
+    if (!(e instanceof AbortCommandError)) {
+      Log.error(e.message);
+    }
+    creatingNativeProjectStep.fail('Failed to create the native project.');
     Log.log(
       chalk.yellow(
-        'You may want to delete the `./ios` and/or `./android` directories before running eject again.'
+        'You may want to delete the `./ios` and/or `./android` directories before trying again.'
       )
     );
     throw new SilentError(e);
@@ -148,23 +159,14 @@ async function cloneNativeDirectoriesAsync({
   return copiedPaths;
 }
 
-async function validateBareTemplateExistsAsync(sdkVersion: string): Promise<npmPackageArg.Result> {
-  // Validate that the template exists
-  const sdkMajorVersionNumber = semver.major(sdkVersion);
-  const templateSpec = npmPackageArg(`expo-template-bare-minimum@sdk-${sdkMajorVersionNumber}`);
-  try {
-    await pacote.manifest(templateSpec);
-  } catch (e) {
-    if (e.code === 'E404') {
-      throw new Error(
-        `Unable to eject because an eject template for SDK ${sdkMajorVersionNumber} was not found.`
-      );
-    } else {
-      throw e;
-    }
+/** Given an `sdkVersion` like `44.0.0` return a fully qualified NPM package name like: `expo-template-bare-minimum@sdk-44` */
+function getTemplateNpmPackageName(sdkVersion?: string): string {
+  // When undefined or UNVERSIONED, we use the latest version.
+  if (!sdkVersion || sdkVersion === 'UNVERSIONED') {
+    Log.log('Using an unspecified Expo SDK version. The latest template will be used.');
+    return `expo-template-bare-minimum@latest`;
   }
-
-  return templateSpec;
+  return `expo-template-bare-minimum@sdk-${semver.major(sdkVersion)}`;
 }
 
 async function copyPathsFromTemplateAsync(

@@ -1,11 +1,11 @@
-import { ExpoConfig } from '@expo/config-types';
-import { JSONObject } from '@expo/json-file';
-import { XcodeProject } from 'xcode';
+import type { ExpoConfig } from '@expo/config-types';
+import type { JSONObject, JSONValue } from '@expo/json-file';
+import type { XcodeProject } from 'xcode';
 
-import { ConfigPlugin, Mod } from '../Plugin.types';
-import { ExpoPlist, InfoPlist } from '../ios/IosConfig.types';
-import { AppDelegateProjectFile } from '../ios/Paths';
-import { withExtendedMod } from './core-plugins';
+import type { ConfigPlugin, Mod } from '../Plugin.types';
+import type { ExpoPlist, InfoPlist } from '../ios/IosConfig.types';
+import type { AppDelegateProjectFile } from '../ios/Paths';
+import { withMod } from './withMod';
 
 type MutateInfoPlistAction = (expo: ExpoConfig, infoPlist: InfoPlist) => InfoPlist;
 
@@ -59,7 +59,7 @@ export function createEntitlementsPlugin(
  * @param action
  */
 export const withAppDelegate: ConfigPlugin<Mod<AppDelegateProjectFile>> = (config, action) => {
-  return withExtendedMod(config, {
+  return withMod(config, {
     platform: 'ios',
     mod: 'appDelegate',
     action,
@@ -74,7 +74,7 @@ export const withAppDelegate: ConfigPlugin<Mod<AppDelegateProjectFile>> = (confi
  * @param action
  */
 export const withInfoPlist: ConfigPlugin<Mod<InfoPlist>> = (config, action) => {
-  return withExtendedMod<InfoPlist>(config, {
+  return withMod<InfoPlist>(config, {
     platform: 'ios',
     mod: 'infoPlist',
     async action(config) {
@@ -96,7 +96,7 @@ export const withInfoPlist: ConfigPlugin<Mod<InfoPlist>> = (config, action) => {
  * @param action
  */
 export const withEntitlementsPlist: ConfigPlugin<Mod<JSONObject>> = (config, action) => {
-  return withExtendedMod<JSONObject>(config, {
+  return withMod<JSONObject>(config, {
     platform: 'ios',
     mod: 'entitlements',
     async action(config) {
@@ -117,7 +117,7 @@ export const withEntitlementsPlist: ConfigPlugin<Mod<JSONObject>> = (config, act
  * @param action
  */
 export const withExpoPlist: ConfigPlugin<Mod<ExpoPlist>> = (config, action) => {
-  return withExtendedMod(config, {
+  return withMod(config, {
     platform: 'ios',
     mod: 'expoPlist',
     action,
@@ -131,9 +131,26 @@ export const withExpoPlist: ConfigPlugin<Mod<ExpoPlist>> = (config, action) => {
  * @param action
  */
 export const withXcodeProject: ConfigPlugin<Mod<XcodeProject>> = (config, action) => {
-  return withExtendedMod(config, {
+  return withMod(config, {
     platform: 'ios',
     mod: 'xcodeproj',
+    action,
+  });
+};
+
+/**
+ * Provides the Podfile.properties.json for modification.
+ *
+ * @param config
+ * @param action
+ */
+export const withPodfileProperties: ConfigPlugin<Mod<Record<string, JSONValue>>> = (
+  config,
+  action
+) => {
+  return withMod(config, {
+    platform: 'ios',
+    mod: 'podfileProperties',
     action,
   });
 };

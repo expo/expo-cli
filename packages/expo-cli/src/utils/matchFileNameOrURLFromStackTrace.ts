@@ -13,8 +13,12 @@ export function matchFileNameOrURLFromStackTrace(traceMessage: string): string |
   if (traceLine.match(/https?:\/\//g)) {
     const [url, params] = traceLine.split('?');
 
-    const paramsWithoutLocation = params.replace(/:(\d+)/g, '').trim();
-    return `${url}?${paramsWithoutLocation}`;
+    const results: string[] = [url];
+    if (params) {
+      const paramsWithoutLocation = params.replace(/:(\d+)/g, '').trim();
+      results.push(paramsWithoutLocation);
+    }
+    return results.filter(Boolean).join('?');
   }
 
   // "node_modules/react-native/Libraries/LogBox/LogBox.js:117:10 in registerWarning"

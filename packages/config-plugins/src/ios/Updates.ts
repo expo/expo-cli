@@ -1,18 +1,19 @@
-import { ExpoConfig } from '@expo/config-types';
 import * as path from 'path';
 import resolveFrom from 'resolve-from';
+import semver from 'semver';
 import xcode from 'xcode';
 
 import { ConfigPlugin } from '../Plugin.types';
 import { withExpoPlist } from '../plugins/ios-plugins';
+import {
+  ExpoConfigUpdates,
+  getExpoUpdatesPackageVersion,
+  getRuntimeVersionNullable,
+  getUpdateUrl,
+} from '../utils/Updates';
 import { ExpoPlist } from './IosConfig.types';
 
 const CREATE_MANIFEST_IOS_PATH = 'expo-updates/scripts/create-manifest-ios.sh';
-
-type ExpoConfigUpdates = Pick<
-  ExpoConfig,
-  'sdkVersion' | 'owner' | 'runtimeVersion' | 'updates' | 'slug'
->;
 
 export enum Config {
   ENABLED = 'EXUpdatesEnabled',
@@ -22,23 +23,7 @@ export enum Config {
   SDK_VERSION = 'EXUpdatesSDKVersion',
   UPDATE_URL = 'EXUpdatesURL',
   RELEASE_CHANNEL = 'EXUpdatesReleaseChannel',
-}
-
-export function getUpdateUrl(
-  config: Pick<ExpoConfigUpdates, 'owner' | 'slug'>,
-  username: string | null
-): string | null {
-  const user = typeof config.owner === 'string' ? config.owner : username;
-  if (!user) {
-    return null;
-  }
-  return `https://exp.host/@${user}/${config.slug}`;
-}
-
-export function getRuntimeVersion(
-  config: Pick<ExpoConfigUpdates, 'runtimeVersion'>
-): string | null {
-  return typeof config.runtimeVersion === 'string' ? config.runtimeVersion : null;
+  UPDATES_CONFIGURATION_REQUEST_HEADERS_KEY = 'EXUpdatesRequestHeaders',
 }
 
 export function getSDKVersion(config: Pick<ExpoConfigUpdates, 'sdkVersion'>): string | null {
@@ -54,9 +39,14 @@ export function getUpdatesTimeout(config: Pick<ExpoConfigUpdates, 'updates'>) {
 }
 
 export function getUpdatesCheckOnLaunch(
-  config: Pick<ExpoConfigUpdates, 'updates'>
-): 'NEVER' | 'ALWAYS' {
+  config: Pick<ExpoConfigUpdates, 'updates'>,
+  expoUpdatesPackageVersion?: string | null
+): 'NEVER' | 'ERROR_RECOVERY_ONLY' | 'ALWAYS' {
   if (config.updates?.checkAutomatically === 'ON_ERROR_RECOVERY') {
+    // native 'ERROR_RECOVERY_ONLY' option was only introduced in 0.11.x
+    if (expoUpdatesPackageVersion && semver.gte(expoUpdatesPackageVersion, '0.11.0')) {
+      return 'ERROR_RECOVERY_ONLY';
+    }
     return 'NEVER';
   } else if (config.updates?.checkAutomatically === 'ON_LOAD') {
     return 'ALWAYS';
@@ -69,7 +59,13 @@ export const withUpdates: ConfigPlugin<{ expoUsername: string | null }> = (
   { expoUsername }
 ) => {
   return withExpoPlist(config, config => {
-    config.modResults = setUpdatesConfig(config, config.modResults, expoUsername);
+    const expoUpdatesPackageVersion = getExpoUpdatesPackageVersion(config.modRequest.projectRoot);
+    config.modResults = setUpdatesConfig(
+      config,
+      config.modResults,
+      expoUsername,
+      expoUpdatesPackageVersion
+    );
     return config;
   });
 };
@@ -77,12 +73,13 @@ export const withUpdates: ConfigPlugin<{ expoUsername: string | null }> = (
 export function setUpdatesConfig(
   config: ExpoConfigUpdates,
   expoPlist: ExpoPlist,
-  username: string | null
+  username: string | null,
+  expoUpdatesPackageVersion?: string | null
 ): ExpoPlist {
   const newExpoPlist = {
     ...expoPlist,
     [Config.ENABLED]: getUpdatesEnabled(config),
-    [Config.CHECK_ON_LAUNCH]: getUpdatesCheckOnLaunch(config),
+    [Config.CHECK_ON_LAUNCH]: getUpdatesCheckOnLaunch(config, expoUpdatesPackageVersion),
     [Config.LAUNCH_WAIT_MS]: getUpdatesTimeout(config),
   };
 
@@ -99,12 +96,21 @@ export function setUpdatesConfig(
 export function setVersionsConfig(config: ExpoConfigUpdates, expoPlist: ExpoPlist): ExpoPlist {
   const newExpoPlist = { ...expoPlist };
 
-  const runtimeVersion = getRuntimeVersion(config);
+  const runtimeVersion = getRuntimeVersionNullable(config, 'ios');
+  if (!runtimeVersion && expoPlist[Config.RUNTIME_VERSION]) {
+    throw new Error(
+      'A runtime version is set in your Expo.plist, but is missing from your app.json/app.config.js. Please either set runtimeVersion in your app.json/app.config.js or remove EXUpdatesRuntimeVersion from your Expo.plist.'
+    );
+  }
   const sdkVersion = getSDKVersion(config);
   if (runtimeVersion) {
     delete newExpoPlist[Config.SDK_VERSION];
     newExpoPlist[Config.RUNTIME_VERSION] = runtimeVersion;
   } else if (sdkVersion) {
+    /**
+     * runtime version maybe null in projects using classic updates. In that
+     * case we use SDK version
+     */
     delete newExpoPlist[Config.RUNTIME_VERSION];
     newExpoPlist[Config.SDK_VERSION] = sdkVersion;
   } else {
@@ -208,12 +214,17 @@ export function isPlistVersionConfigurationSynced(
   config: Pick<ExpoConfigUpdates, 'sdkVersion' | 'runtimeVersion'>,
   expoPlist: ExpoPlist
 ): boolean {
-  const expectedRuntimeVersion = getRuntimeVersion(config);
+  const expectedRuntimeVersion = getRuntimeVersionNullable(config, 'ios');
   const expectedSdkVersion = getSDKVersion(config);
+
   const currentRuntimeVersion = expoPlist.EXUpdatesRuntimeVersion ?? null;
   const currentSdkVersion = expoPlist.EXUpdatesSDKVersion ?? null;
 
-  return (
-    currentSdkVersion === expectedSdkVersion && currentRuntimeVersion === expectedRuntimeVersion
-  );
+  if (expectedRuntimeVersion !== null) {
+    return currentRuntimeVersion === expectedRuntimeVersion && currentSdkVersion === null;
+  } else if (expectedSdkVersion !== null) {
+    return currentSdkVersion === expectedSdkVersion && currentRuntimeVersion === null;
+  } else {
+    return true;
+  }
 }

@@ -1,4 +1,4 @@
-import { Config } from '@expo/api';
+import { Config, ConnectionStatus } from '@expo/api';
 import Raven from 'raven';
 
 const SENTRY_DSN =
@@ -22,7 +22,7 @@ function getOptions(options: any = {}) {
     tags: {
       ...options.tags,
       developerTool: Config.developerTool,
-      offline: Config.offline,
+      offline: ConnectionStatus.isOffline(),
     },
   };
 }

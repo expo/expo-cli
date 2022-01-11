@@ -15,7 +15,7 @@ import urljoin from 'url-join';
 
 import { ExpSchema, Logger as logger, ProjectUtils } from './internal';
 
-const EXPO_CDN = 'https://d1wp6m56sqw74a.cloudfront.net';
+const EXPO_CDN = 'https://classic-assets.eascdn.net';
 
 type ManifestAsset = { fileHashes: string[]; files: string[]; hash: string };
 
@@ -26,7 +26,7 @@ type ManifestResolutionError = Error & {
   manifestField?: string;
 };
 
-type BundlesByPlatform = { android: BundleOutput; ios: BundleOutput };
+type BundlesByPlatform = { android?: BundleOutput; ios?: BundleOutput };
 
 type ExportAssetsOptions = {
   projectRoot: string;
@@ -61,7 +61,7 @@ export async function resolveGoogleServicesFile(projectRoot: string, manifest: E
  * @param manifest
  * @returns Asset fields that the user has set like ["icon", "splash.image", ...]
  */
-async function getAssetFieldPathsForManifestAsync(manifest: ExpoAppManifest): Promise<string[]> {
+async function getAssetFieldPathsForManifestAsync(manifest: ExpoConfig): Promise<string[]> {
   // String array like ["icon", "notification.icon", "loading.icon", "loading.backgroundImage", "ios.icon", ...]
   const sdkAssetFieldPaths = await ExpSchema.getAssetSchemasAsync(manifest.sdkVersion);
   return sdkAssetFieldPaths.filter(assetSchema => get(manifest, assetSchema));
@@ -74,7 +74,7 @@ export async function resolveManifestAssets({
   strict = false,
 }: {
   projectRoot: string;
-  manifest: ExpoAppManifest;
+  manifest: ExpoConfig;
   resolver: (assetPath: string) => Promise<string>;
   strict?: boolean;
 }) {
@@ -85,7 +85,7 @@ export async function resolveManifestAssets({
     const urls = await Promise.all(
       assetSchemas.map(async manifestField => {
         const pathOrURL = get(manifest, manifestField);
-        if (pathOrURL.match(/^https?:\/\/(.*)$/)) {
+        if (/^https?:\/\//.test(pathOrURL)) {
           // It's a remote URL
           return pathOrURL;
         } else if (fs.existsSync(path.resolve(projectRoot, pathOrURL))) {
@@ -204,7 +204,10 @@ export async function exportAssetsAsync({
   let assets: Asset[];
   if (experimentalBundle) {
     assert(outputDir, 'outputDir must be specified when exporting to EAS');
-    assets = uniqBy([...bundles.android.assets, ...bundles.ios.assets], asset => asset.hash);
+    assets = uniqBy(
+      Object.values(bundles).flatMap(bundle => bundle!.assets),
+      asset => asset.hash
+    );
   } else {
     const assetCdnPath = urljoin(hostedUrl, assetPath);
     assets = await collectAssets(projectRoot, exp, assetCdnPath, bundles);
@@ -348,5 +351,5 @@ async function collectAssets(
     strict: true,
   });
 
-  return [...bundles.ios.assets, ...bundles.android.assets, ...manifestAssets];
+  return [...Object.values(bundles).flatMap(bundle => bundle!.assets), ...manifestAssets];
 }
