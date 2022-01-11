@@ -1,4 +1,4 @@
-import { ApiV2 as ApiV2Client, UserManager } from '@expo/api';
+import { ApiV2 as ApiV2Client } from '@expo/api';
 import { ExpoConfig } from '@expo/config';
 import getenv from 'getenv';
 import pickBy from 'lodash/pickBy';

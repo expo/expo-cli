@@ -1,4 +1,4 @@
-import { Analytics, ApiV2, Config, User, UserManager } from '@expo/api';
+import { Analytics, ApiV2, Config, RobotUser, User, UserManager } from '@expo/api';
 import {
   ExpoAppManifest,
   ExpoConfig,
@@ -10,7 +10,6 @@ import FormData from 'form-data';
 import fs from 'fs-extra';
 import path from 'path';
 
-import { RobotUser } from '../User';
 import {
   createBundlesAsync,
   Doctor,

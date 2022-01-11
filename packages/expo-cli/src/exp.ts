@@ -1,4 +1,11 @@
-import { Analytics, ApiV2, Config, UserManager } from '@expo/api';
+import {
+  Analytics,
+  ApiV2,
+  Config,
+  ConnectionStatus,
+  UnifiedAnalytics,
+  UserManager,
+} from '@expo/api';
 import bunyan from '@expo/bunyan';
 import { setCustomConfigPath } from '@expo/config';
 import boxen from 'boxen';
@@ -23,7 +30,6 @@ import {
   PackagerLogsStream,
   ProjectSettings,
   ProjectUtils,
-  UnifiedAnalytics,
 } from 'xdl';
 
 import StatusEventEmitter from './analytics/StatusEventEmitter';
@@ -337,7 +343,6 @@ Command.prototype.asyncAction = function (asyncFn: Action) {
     try {
       const options = args[args.length - 1];
       if (options.offline) {
-        const { ConnectionStatus } = await import('xdl');
         ConnectionStatus.setIsOffline(true);
       }
 

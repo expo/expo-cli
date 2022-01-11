@@ -1,3 +1,12 @@
+import {
+  Analytics,
+  ANONYMOUS_USERNAME,
+  ApiV2,
+  Config,
+  ConnectionStatus,
+  UserManager,
+  UserSettings,
+} from '@expo/api';
 import { ExpoUpdatesManifest, getConfig } from '@expo/config';
 import { Updates } from '@expo/config-plugins';
 import { JSONObject } from '@expo/json-file';
@@ -7,19 +16,7 @@ import nullthrows from 'nullthrows';
 import { parse } from 'url';
 import { v4 as uuidv4 } from 'uuid';
 
-import {
-  Analytics,
-  ANONYMOUS_USERNAME,
-  ApiV2,
-  Config,
-  ConnectionStatus,
-  ProjectAssets,
-  ProjectUtils,
-  resolveEntryPoint,
-  UrlUtils,
-  UserManager,
-  UserSettings,
-} from '../internal';
+import { ProjectAssets, ProjectUtils, resolveEntryPoint, UrlUtils } from '../internal';
 import {
   getBundleUrlAsync,
   getExpoGoConfig,
@@ -212,7 +209,7 @@ export function getManifestHandler(projectRoot: string) {
         developerTool: Config.developerTool,
         runtimeVersion: (body as any).runtimeVersion,
       });
-    } catch (e) {
+    } catch (e: any) {
       ProjectUtils.logError(projectRoot, 'expo', e.stack);
       res.statusCode = 520;
       res.end(

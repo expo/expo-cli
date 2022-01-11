@@ -1,4 +1,12 @@
-import { Analytics, ANONYMOUS_USERNAME, ApiV2, Config, UserManager, UserSettings } from '@expo/api';
+import {
+  Analytics,
+  ANONYMOUS_USERNAME,
+  ApiV2,
+  Config,
+  ConnectionStatus,
+  UserManager,
+  UserSettings,
+} from '@expo/api';
 import { ExpoAppManifest, ExpoConfig, ExpoGoConfig, getConfig } from '@expo/config';
 import { JSONObject } from '@expo/json-file';
 import chalk from 'chalk';

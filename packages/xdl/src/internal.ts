@@ -17,7 +17,6 @@ export * as Xcode from './Xcode';
 export { default as Logger, Log, LogStream } from './Logger';
 export { default as NotificationCode } from './NotificationCode';
 export { learnMore } from './logs/TerminalLink';
-export { default as UnifiedAnalytics } from './UnifiedAnalytics';
 export { watchBabelConfigForProject } from './start/watchBabelConfig';
 export * as Android from './Android';
 export * as Binaries from './Binaries';

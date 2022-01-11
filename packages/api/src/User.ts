@@ -7,6 +7,7 @@ import Analytics from './Analytics';
 import ApiV2Client from './ApiV2';
 import * as ConnectionStatus from './ConnectionStatus';
 import { Semaphore } from './Semaphore';
+import UnifiedAnalytics from './UnifiedAnalytics';
 import UserSettings from './UserSettings';
 
 export class AuthError extends Error {
@@ -73,7 +74,7 @@ type LegacyUser = {
 
 type UserOrLegacyUser = User | LegacyUser;
 
-type ConnectionType =
+export type ConnectionType =
   | 'Access-Token-Authentication'
   | 'Username-Password-Authentication'
   | 'facebook'
@@ -116,7 +117,7 @@ export class UserManagerInstance {
    */
   getProjectOwner(user: User | RobotUser, exp: ExpoConfig): string {
     if (user.kind === 'robot' && !exp.owner) {
-      throw new XDLError(
+      throw new AuthError(
         'ROBOT_OWNER_ERROR',
         'The "owner" manifest property is required when using robot users. See: https://docs.expo.dev/versions/latest/config/app/#owner'
       );
@@ -193,7 +194,7 @@ export class UserManagerInstance {
       });
 
       return registeredUser;
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
       throw new AuthError('REGISTRATION_ERROR', 'Error registering user: ' + e.message);
     }
@@ -262,7 +263,7 @@ export class UserManagerInstance {
 
       return userData;
     } catch (e) {
-      Logger.global.warn(e);
+      console.warn(e);
       return null;
     } finally {
       this._getSessionLock.release();
@@ -308,7 +309,7 @@ export class UserManagerInstance {
           currentConnection: data?.currentConnection,
           sessionSecret: data?.sessionSecret,
         });
-      } catch (e) {
+      } catch (e: any) {
         if (!(options && options.silent)) {
           // TODO: Custom logger?
           console.warn('Fetching the user profile failed');

@@ -35,7 +35,6 @@ export {
   Simulator,
   ThirdParty,
   UrlUtils,
-  UnifiedAnalytics,
   Versions,
   Webpack,
   XDLError,

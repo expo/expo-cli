@@ -1,7 +1,7 @@
+import { ApiV2 } from '@expo/api';
 import JsonFile from '@expo/json-file';
 import chalk from 'chalk';
 import resolveFrom from 'resolve-from';
-import { ApiV2 } from 'xdl';
 
 import CommandError from '../../CommandError';
 import Log from '../../log';

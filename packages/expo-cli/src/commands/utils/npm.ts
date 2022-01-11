@@ -1,3 +1,4 @@
+import { UserSettings } from '@expo/api';
 import { JSONValue } from '@expo/json-file';
 import spawnAsync from '@expo/spawn-async';
 import assert from 'assert';
@@ -7,7 +8,6 @@ import slugify from 'slugify';
 import { Stream } from 'stream';
 import tar from 'tar';
 import { promisify } from 'util';
-import { UserSettings } from 'xdl';
 
 import CommandError from '../../CommandError';
 import Log from '../../log';
