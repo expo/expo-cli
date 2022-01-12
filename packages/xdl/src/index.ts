@@ -18,7 +18,7 @@ export {
   IosCodeSigning,
   Logger,
   ModuleVersion,
-  NotificationCode,
+  LoadingEvent,
   printBundleSizes,
   PackagerLogsStream,
   LoadingPageHandler,

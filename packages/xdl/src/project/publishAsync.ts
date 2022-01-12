@@ -17,7 +17,6 @@ import {
   ProjectAssets,
   PublishOptions,
   runHook,
-  Sentry,
   XDLError,
 } from '../internal';
 
@@ -109,7 +108,6 @@ export async function publishAsync(
         `There was an error validating your project schema. Check for any warnings about the contents of your app.json or app.config.js.`
       );
     }
-    Sentry.captureException(e);
     throw e;
   }
 

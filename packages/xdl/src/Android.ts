@@ -17,8 +17,8 @@ import {
   ImageUtils,
   isDevClientPackageInstalled,
   learnMore,
+  LoadingEvent,
   Logger,
-  NotificationCode,
   ProjectSettings,
   Prompts,
   UrlUtils,
@@ -421,25 +421,25 @@ export async function installExpoAsync({
   };
 
   Logger.notifications.info(
-    { code: NotificationCode.START_PROGRESS_BAR },
+    { code: LoadingEvent.START_PROGRESS_BAR },
     'Downloading the Expo Go app [:bar] :percent :etas'
   );
 
   warningTimer = setWarningTimer();
   const path = await downloadApkAsync(url, progress => {
-    Logger.notifications.info({ code: NotificationCode.TICK_PROGRESS_BAR }, progress);
+    Logger.notifications.info({ code: LoadingEvent.TICK_PROGRESS_BAR }, progress);
   });
 
-  Logger.notifications.info({ code: NotificationCode.STOP_PROGRESS_BAR });
+  Logger.notifications.info({ code: LoadingEvent.STOP_PROGRESS_BAR });
 
   const message = version
     ? `Installing Expo Go ${version} on ${device.name}`
     : `Installing Expo Go on ${device.name}`;
 
-  Logger.notifications.info({ code: NotificationCode.START_LOADING }, message);
+  Logger.notifications.info({ code: LoadingEvent.START_LOADING }, message);
   warningTimer = setWarningTimer();
   const result = await installOnDeviceAsync(device, { binaryPath: path });
-  Logger.notifications.info({ code: NotificationCode.STOP_LOADING });
+  Logger.notifications.info({ code: LoadingEvent.STOP_LOADING });
 
   clearTimeout(warningTimer);
   return result;
