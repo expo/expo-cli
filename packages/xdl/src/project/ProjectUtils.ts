@@ -89,12 +89,6 @@ export function logError(projectRoot: string, tag: LogTag, message: string, id?:
   if (truncatedMessage.length > MAX_MESSAGE_LENGTH) {
     truncatedMessage = truncatedMessage.substring(0, MAX_MESSAGE_LENGTH);
   }
-
-  // temporarily remove sentry until we can trim events
-  // send error to Sentry
-  // Sentry.logError(message.toString(), {
-  //   tags: { tag },
-  // });
 }
 
 export function logWarning(projectRoot: string, tag: LogTag, message: string, id?: string) {

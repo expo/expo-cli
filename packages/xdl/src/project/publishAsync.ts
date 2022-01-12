@@ -27,7 +27,6 @@ import {
   ProjectAssets,
   PublishOptions,
   runHook,
-  Sentry,
   User,
   UserManager,
   XDLError,
@@ -112,13 +111,12 @@ export async function publishAsync(
       androidBundle,
       options,
     });
-  } catch (e) {
+  } catch (e: any) {
     if (e.serverError === 'SCHEMA_VALIDATION_ERROR') {
       throw new Error(
         `There was an error validating your project schema. Check for any warnings about the contents of your app.json or app.config.js.`
       );
     }
-    Sentry.captureException(e);
     throw e;
   }
 
