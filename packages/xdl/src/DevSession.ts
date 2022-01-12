@@ -28,7 +28,7 @@ export async function startSession(
 
   if (!ConnectionStatus.isOffline() && keepUpdating) {
     const authSession = await UserManager.getSessionAsync();
-    const { devices } = await ProjectSettings.readDevicesInfoAsync(projectRoot);
+    const { devices } = await ProjectSettings.getDevicesInfoAsync(projectRoot);
 
     if (!authSession && !devices?.length) {
       // NOTE(brentvatne) let's just bail out in this case for now
