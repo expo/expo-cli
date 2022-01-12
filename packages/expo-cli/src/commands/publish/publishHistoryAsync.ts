@@ -1,7 +1,8 @@
+import { HistoryOptions, Publication } from '@expo/api';
 import dateFormat from 'dateformat';
 
 import Log from '../../log';
-import { getPublishHistoryAsync, HistoryOptions, Publication } from '../utils/PublishUtils';
+import { getPublishHistoryAsync } from '../utils/PublishUtils';
 import * as table from '../utils/cli-table';
 
 const HORIZ_CELL_WIDTH_SMALL = 15;

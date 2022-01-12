@@ -47,11 +47,11 @@ jest.mock('commander', () => {
 jest.mock('../../../credentials/api/IosApiV2Wrapper', () => {
   return jest.fn(() => mockIosCredentialsApi);
 });
-jest.mock('../findReusableBuildAsync', () => {
-  return {
-    findReusableBuildAsync: jest.fn(() => ({})),
-  };
-});
+// jest.mock('../findReusableBuildAsync', () => {
+//   return {
+//     findReusableBuildAsync: jest.fn(() => ({})),
+//   };
+// });
 jest.mock('../getLatestReleaseAsync', () => {
   return {
     getLatestReleaseAsync: jest.fn(() => ({ publicationId: 'test-publication-id' })),

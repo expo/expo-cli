@@ -1,4 +1,4 @@
-import { FsCache } from '../../internal';
+import * as FsCache from '../FsCache';
 
 jest.mock('@expo/rudder-sdk-node');
 

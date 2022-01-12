@@ -1,9 +1,8 @@
+import { FsCache } from '@expo/api';
 import latestVersionAsync from 'latest-version';
 import pTimeout from 'p-timeout';
 import npmPackageJson from 'package-json';
 import semver from 'semver';
-
-import { FsCache } from '../internal';
 
 /** @deprecated just use the update-check npm package */
 function createModuleVersionChecker(name: string, currentVersion: string) {

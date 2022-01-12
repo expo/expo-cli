@@ -21,19 +21,20 @@ export async function getLatestReleaseAsync(
   }
 ): Promise<Release | null> {
   const user = await UserManager.ensureLoggedInAsync();
-  const api = ApiV2.clientForUser(user);
   const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
-  const result = await api.postAsync('publish/history', {
+
+  const queryResult = await UserManager.getPublishHistoryAsync(user, {
+    exp,
+    options: {
+      releaseChannel: options.releaseChannel,
+      count: 1,
+      platform: options.platform,
+    },
     owner: options.owner,
-    slug: exp.slug,
-    releaseChannel: options.releaseChannel,
-    count: 1,
-    platform: options.platform,
   });
-  const { queryResult } = result;
-  if (queryResult && queryResult.length > 0) {
+
+  if (queryResult?.length > 0) {
     return queryResult[0];
-  } else {
-    return null;
   }
+  return null;
 }

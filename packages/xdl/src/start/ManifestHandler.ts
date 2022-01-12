@@ -1,7 +1,6 @@
 import {
   Analytics,
   ANONYMOUS_USERNAME,
-  ApiV2,
   Config,
   ConnectionStatus,
   UserManager,
@@ -9,7 +8,6 @@ import {
   Versions,
 } from '@expo/api';
 import { ExpoAppManifest, ExpoConfig, ExpoGoConfig, getConfig } from '@expo/config';
-import { JSONObject } from '@expo/json-file';
 import chalk from 'chalk';
 import express from 'express';
 import http from 'http';
@@ -408,13 +406,7 @@ export async function getSignedManifestStringAsync(
   // WARNING: Removing the following line will regress analytics, see: https://github.com/expo/expo-cli/pull/2357
   // TODO: make this more obvious from code
   const user = await UserManager.ensureLoggedInAsync();
-  const { response } = await ApiV2.clientForUser(user).postAsync('manifest/sign', {
-    args: {
-      remoteUsername: manifest.owner ?? (await UserManager.getCurrentUsernameAsync()),
-      remotePackageName: manifest.slug,
-    },
-    manifest: manifest as JSONObject,
-  });
+  const response = await UserManager.signLegacyManifestAsync(user, manifest);
   _cachedSignedManifest.manifestString = manifestString;
   _cachedSignedManifest.signedManifest = response;
   return response;

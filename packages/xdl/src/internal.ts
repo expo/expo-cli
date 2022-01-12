@@ -9,7 +9,6 @@
   With this module in place, we can fix these circular dependency problems by
   changing the order in this file.
 */
-export { Semaphore } from './utils/Semaphore';
 export * as Env from './Env';
 export * as CoreSimulator from './apple/CoreSimulator';
 export * as AppleDevice from './apple/AppleDevice';
@@ -65,7 +64,6 @@ export { choosePortAsync } from './utils/choosePortAsync';
 export { downloadApkAsync } from './utils/downloadApkAsync';
 export { isDevClientPackageInstalled } from './utils/isDevClientPackageInstalled';
 export * as BundleIdentifier from './BundleIdentifier';
-export * as FsCache from './tools/FsCache';
 export * as WebpackEnvironment from './webpack-utils/WebpackEnvironment';
 export { default as LoggerDetach, pipeOutputToLogger } from './detach/Logger';
 export { default as StandaloneBuildFlags } from './detach/StandaloneBuildFlags';

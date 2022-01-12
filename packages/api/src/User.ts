@@ -1,7 +1,11 @@
 import { ExpoConfig } from '@expo/config-types';
+import { JSONObject } from '@expo/json-file';
+import assert from 'assert';
+import FormData from 'form-data';
 import camelCase from 'lodash/camelCase';
 import isEmpty from 'lodash/isEmpty';
 import snakeCase from 'lodash/snakeCase';
+import os from 'os';
 
 import Analytics from './Analytics';
 import ApiV2Client from './ApiV2';
@@ -18,6 +22,11 @@ export class AuthError extends Error {
     super(message);
   }
 }
+
+export type DetailOptions = {
+  publishId?: string;
+  raw?: boolean;
+};
 
 export type UserData = {
   developmentCodeSigningId?: string;
@@ -94,6 +103,69 @@ export type LoginType = 'user-pass' | 'facebook' | 'google' | 'github';
 
 export const ANONYMOUS_USERNAME = 'anonymous';
 
+export type S3AssetMetadata =
+  | {
+      exists: true;
+      lastModified: Date;
+      contentLength: number;
+      contentType: string;
+    }
+  | {
+      exists: false;
+    };
+
+export type HistoryOptions = {
+  releaseChannel?: string;
+  count?: number;
+  platform?: 'android' | 'ios';
+  raw?: boolean;
+  sdkVersion?: string;
+  runtimeVersion?: string;
+};
+
+export type SetOptions = { releaseChannel: string; publishId: string };
+
+export type PublicationDetail = {
+  manifest?: {
+    [key: string]: string;
+  };
+  publishedTime: string;
+  publishingUsername: string;
+  packageUsername: string;
+  packageName: string;
+  fullName: string;
+  hash: string;
+  sdkVersion: string;
+  runtimeVersion?: string;
+  s3Key: string;
+  s3Url: string;
+  abiVersion: string | null;
+  bundleUrl: string | null;
+  platform: string;
+  version: string;
+  revisionId: string;
+  channels: { [key: string]: string }[];
+  publicationId: string;
+};
+
+export type Publication = {
+  fullName: string;
+  channel: string;
+  channelId: string;
+  publicationId: string;
+  appVersion: string;
+  sdkVersion: string;
+  runtimeVersion?: string;
+  publishedTime: string;
+  platform: 'android' | 'ios';
+};
+
+export interface NativeModule {
+  npmPackage: string;
+  versionRange: string;
+}
+export type BundledNativeModuleList = NativeModule[];
+
 export class UserManagerInstance {
   _currentUser: User | RobotUser | null = null;
   _getSessionLock = new Semaphore();
@@ -115,7 +187,7 @@ export class UserManagerInstance {
    * Get the account and project name using a user and Expo config.
    * This will validate if the owner field is set when using a robot account.
    */
-  getProjectOwner(user: User | RobotUser, exp: ExpoConfig): string {
+  getProjectOwner(user: User | RobotUser, exp: Pick<ExpoConfig, 'owner'>): string {
     if (user.kind === 'robot' && !exp.owner) {
       throw new AuthError(
         'ROBOT_OWNER_ERROR',
@@ -450,6 +522,291 @@ export class UserManagerInstance {
       url: url_,
       includeExpoLinks: allowUnauthed,
     });
+  }
+
+  public async getProjectAsync(user: User | RobotUser, projectId: string): Promise<JSONObject> {
+    return ApiV2Client.clientForUser(user).getAsync(`projects/${encodeURIComponent(projectId)}`);
+  }
+
+  public async signManifestAsync(user: User | RobotUser, manifest: JSONObject): Promise<string> {
+    const { signature } = await ApiV2Client.clientForUser(user).postAsync('manifest/eas/sign', {
+      manifest,
+    });
+    return signature;
+  }
+
+  public async signLegacyManifestAsync(
+    user: User | RobotUser,
+    manifest: JSONObject
+  ): Promise<string> {
+    const { response } = await ApiV2Client.clientForUser(user).postAsync('manifest/sign', {
+      args: {
+        remoteUsername: manifest.owner ?? (await this.getCurrentUsernameAsync()),
+        remotePackageName: manifest.slug,
+      },
+      manifest: manifest as JSONObject,
+    });
+    return response;
+  }
+
+  public async uploadArtifactsAsync(
+    user: User | RobotUser,
+    {
+      exp,
+      iosBundle,
+      androidBundle,
+      options,
+      pkg,
+    }: {
+      exp: ExpoConfig;
+      iosBundle: string | Uint8Array;
+      androidBundle: string | Uint8Array;
+      options: JSONObject;
+      pkg: JSONObject;
+    }
+  ): Promise<{
+    /**
+     * Project manifest URL
+     */
+    url: string;
+    /**
+     * Project page URL
+     */
+    projectPageUrl?: string;
+    /**
+     * TODO: What is this?
+     */
+    ids: string[];
+    /**
+     * TODO: What is this? Where does it come from?
+     */
+    err?: string;
+  }> {
+    const formData = new FormData();
+
+    formData.append('expJson', JSON.stringify(exp));
+    formData.append('packageJson', JSON.stringify(pkg));
+    formData.append('iosBundle', iosBundle, 'iosBundle');
+    formData.append('androidBundle', androidBundle, 'androidBundle');
+    formData.append('options', JSON.stringify(options));
+
+    const api = ApiV2Client.clientForUser(user);
+
+    return await api.uploadFormDataAsync('publish/new', formData);
+  }
+
+  public async getAssetsMetadataAsync(
+    user: User | RobotUser,
+    { keys }: { keys: string[] }
+  ): Promise<Record<string, S3AssetMetadata>> {
+    const api = ApiV2Client.clientForUser(user);
+    const { metadata } = await api.postAsync('assets/metadata', { keys });
+    return metadata;
+  }
+
+  public async uploadAssetsAsync(
+    user: User | RobotUser,
+    { data }: { data: FormData }
+  ): Promise<unknown> {
+    const api = ApiV2Client.clientForUser(user);
+    return await api.uploadFormDataAsync('assets/upload', data);
+  }
+
+  public async notifyAliveAsync(
+    user: User | RobotUser,
+    {
+      exp,
+      platform,
+      url,
+      description,
+      source,
+      openedAt,
+    }: {
+      openedAt?: number;
+      description?: string;
+      exp: ExpoConfig;
+      platform: 'native' | 'web';
+      url: string;
+      source: 'desktop' | 'snack';
+    }
+  ): Promise<unknown> {
+    const api = ApiV2Client.clientForUser(user);
+    return await api.postAsync('development-sessions/notify-alive', {
+      data: {
+        session: {
+          description: description ?? `${exp.name} on ${os.hostname()}`,
+          url,
+          source,
+          openedAt,
+          // not on type
+          hostname: os.hostname(),
+          platform,
+          config: {
+            // TODO: if icons are specified, upload a url for them too so people can distinguish
+            description: exp.description,
+            name: exp.name,
+            slug: exp.slug,
+            primaryColor: exp.primaryColor,
+          },
+        },
+      },
+    });
+  }
+
+  /**
+   * @param user
+   * @param props.secondFactorDeviceID UUID of the second factor device
+   */
+  public async sendSmsOtpAsync(
+    user: User | RobotUser | null,
+    {
+      username,
+      password,
+      secondFactorDeviceID,
+    }: {
+      username: string;
+      password: string;
+      secondFactorDeviceID: string;
+    }
+  ): Promise<unknown> {
+    return await ApiV2Client.clientForUser(user).postAsync('auth/send-sms-otp', {
+      username,
+      password,
+      secondFactorDeviceID,
+    });
+  }
+
+  public async getLegacyReusableBuildAsync(
+    user: User | RobotUser | null,
+    {
+      releaseChannel,
+      platform,
+      sdkVersion,
+      slug,
+      owner,
+    }: {
+      releaseChannel: string;
+      platform: string;
+      sdkVersion: string;
+      slug: string;
+      owner?: string;
+    }
+  ): Promise<{ downloadUrl?: string; canReuse: boolean }> {
+    return await ApiV2Client.clientForUser(user).postAsync('standalone-build/reuse', {
+      releaseChannel,
+      platform,
+      sdkVersion,
+      slug,
+      owner,
+    });
+  }
+
+  public async getPublishHistoryAsync(
+    user: User | RobotUser,
+    {
+      exp,
+      options,
+      version,
+      owner,
+    }: {
+      exp: Pick<ExpoConfig, 'slug' | 'owner'>;
+      options: HistoryOptions;
+      version?: 2;
+      owner?: string;
+    }
+  ): Promise<Publication[]> {
+    if (options.count && (isNaN(options.count) || options.count < 1 || options.count > 100)) {
+      throw new Error('-n must be a number between 1 and 100 inclusive');
+    }
+
+    // const VERSION = 2;
+
+    const results = await ApiV2Client.clientForUser(user).postAsync('publish/history', {
+      owner: owner ?? this.getProjectOwner(user, exp),
+      slug: exp.slug,
+      version,
+      releaseChannel: options.releaseChannel,
+      count: options.count,
+      platform: options.platform,
+      sdkVersion: options.sdkVersion,
+      runtimeVersion: options.runtimeVersion,
+    });
+
+    return results.queryResult;
+  }
+
+  public async setPublishToChannelAsync(
+    user: User | RobotUser,
+    {
+      exp,
+      options,
+    }: {
+      exp: Pick<ExpoConfig, 'slug'>;
+      options: SetOptions;
+    }
+  ): Promise<any> {
+    return await ApiV2Client.clientForUser(user).postAsync('publish/set', {
+      releaseChannel: options.releaseChannel,
+      publishId: options.publishId,
+      slug: exp.slug,
+    });
+  }
+
+  public async getPublicationDetailAsync(
+    user: User | RobotUser,
+    {
+      exp,
+      options,
+    }: {
+      exp: Pick<ExpoConfig, 'slug' | 'owner'>;
+      options: DetailOptions;
+    }
+  ): Promise<PublicationDetail> {
+    const result = await ApiV2Client.clientForUser(user).postAsync('publish/details', {
+      owner: this.getProjectOwner(user, exp),
+      publishId: options.publishId,
+      slug: exp.slug,
+    });
+
+    assert(result.queryResult, 'No records found matching your query.');
+
+    return result.queryResult;
+  }
+
+  /**
+   * The endpoint returns the list of bundled native modules for a given SDK version.
+   * The data is populated by the `et sync-bundled-native-modules` script from expo/expo repo.
+   * See the code for more details:
+   * https://github.com/expo/expo/blob/master/tools/src/commands/SyncBundledNativeModules.ts
+   *
+   * Example result:
+   * [
+   *   {
+   *     id: "79285187-e5c4-47f7-b6a9-664f5d16f0db",
+   *     sdkVersion: "41.0.0",
+   *     npmPackage: "expo-analytics-amplitude",
+   *     versionRange: "~10.1.0",
+   *     createdAt: "2021-04-29T09:34:32.825Z",
+   *     updatedAt: "2021-04-29T09:34:32.825Z"
+   *   },
+   *   ...
+   * ]
+   */
+  public async getBundledNativeModulesFromApiAsync(
+    user: User | RobotUser | null,
+    sdkVersion: string
+  ): Promise<Record<string, string>> {
+    const list = (await ApiV2Client.clientForUser(user).getAsync(
+      `sdks/${sdkVersion}/native-modules`
+    )) as BundledNativeModuleList;
+    if (list.length === 0) {
+      throw new Error('The bundled native module list from www is empty');
+    }
+
+    return list.reduce((acc, i) => {
+      acc[i.npmPackage] = i.versionRange;
+      return acc;
+    }, {} as Record<string, string>);
   }
 
   /**

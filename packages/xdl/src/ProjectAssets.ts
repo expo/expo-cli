@@ -1,4 +1,4 @@
-import { ApiV2, ExpSchema, UserManager } from '@expo/api';
+import { ExpSchema, UserManager } from '@expo/api';
 import { ExpoAppManifest, ExpoConfig } from '@expo/config';
 import { BundleAssetWithFileHashes, BundleOutput } from '@expo/dev-server';
 import assert from 'assert';
@@ -239,10 +239,7 @@ export async function exportAssetsAsync({
  */
 async function fetchMissingAssetsAsync(paths: string[]): Promise<string[]> {
   const user = await UserManager.ensureLoggedInAsync();
-  const api = ApiV2.clientForUser(user);
-  const result = await api.postAsync('assets/metadata', { keys: paths });
-
-  const metas = result.metadata;
+  const metas = await UserManager.getAssetsMetadataAsync(user, { keys: paths });
   const missing = paths.filter(key => !metas[key].exists);
   return missing;
 }
@@ -265,6 +262,7 @@ async function uploadAssetsAsync(projectRoot: string, assets: Asset[]) {
     logger.global.info({ quiet: true }, `No assets changed, skipped.`);
     return;
   }
+  const user = await UserManager.ensureLoggedInAsync();
 
   const keyChunks = chunk(missing, 5);
 
@@ -279,10 +277,7 @@ async function uploadAssetsAsync(projectRoot: string, assets: Asset[]) {
       formData.append(key, fs.createReadStream(pathName), pathName);
     }
 
-    // TODO: Document what's going on
-    const user = await UserManager.ensureLoggedInAsync();
-    const api = ApiV2.clientForUser(user);
-    await api.uploadFormDataAsync('assets/upload', formData);
+    await UserManager.uploadAssetsAsync(user, { data: formData });
   }
 }
 

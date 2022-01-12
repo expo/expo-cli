@@ -11,7 +11,6 @@ import * as UrlUtils from '../utils/url';
 import { BuilderOptions } from './BaseBuilder.types';
 import BuildError from './BuildError';
 import { Platform, PLATFORMS } from './constants';
-import { findReusableBuildAsync } from './findReusableBuildAsync';
 import { BuildJobFields, getBuildStatusAsync } from './getBuildStatusAsync';
 import { getLatestReleaseAsync } from './getLatestReleaseAsync';
 import { startBuildAsync } from './startBuildAsync';
@@ -143,13 +142,13 @@ export default class BaseBuilder {
   async checkStatusBeforeBuild(): Promise<void> {
     Log.log('Checking if this build already exists...\n');
 
-    const reuseStatus = await findReusableBuildAsync(
-      this.options.releaseChannel!,
-      this.platform(),
-      this.manifest.sdkVersion!,
-      this.manifest.slug!,
-      this.manifest.owner
-    );
+    const reuseStatus = await UserManager.getLegacyReusableBuildAsync(null, {
+      releaseChannel: this.options.releaseChannel!,
+      platform: this.platform(),
+      sdkVersion: this.manifest.sdkVersion!,
+      slug: this.manifest.slug!,
+      owner: this.manifest.owner,
+    });
     if (reuseStatus.canReuse) {
       Log.warn(`Did you know that Expo provides over-the-air updates?
 Please see the docs (${chalk.underline(

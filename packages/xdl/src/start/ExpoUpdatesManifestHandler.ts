@@ -1,7 +1,6 @@
 import {
   Analytics,
   ANONYMOUS_USERNAME,
-  ApiV2,
   Config,
   ConnectionStatus,
   UserManager,
@@ -9,7 +8,6 @@ import {
 } from '@expo/api';
 import { ExpoUpdatesManifest, getConfig } from '@expo/config';
 import { Updates } from '@expo/config-plugins';
-import { JSONObject } from '@expo/json-file';
 import express from 'express';
 import http from 'http';
 import nullthrows from 'nullthrows';
@@ -61,18 +59,13 @@ async function shouldUseAnonymousManifestAsync(
 
 async function getScopeKeyForProjectIdAsync(projectId: string): Promise<string> {
   const user = await UserManager.ensureLoggedInAsync();
-  const project = await ApiV2.clientForUser(user).getAsync(
-    `projects/${encodeURIComponent(projectId)}`
-  );
+  const project = await UserManager.getProjectAsync(user, projectId);
   return project.scopeKey;
 }
 
 async function signManifestAsync(manifest: ExpoUpdatesManifest): Promise<string> {
   const user = await UserManager.ensureLoggedInAsync();
-  const { signature } = await ApiV2.clientForUser(user).postAsync('manifest/eas/sign', {
-    manifest: (manifest as any) as JSONObject,
-  });
-  return signature;
+  return UserManager.signManifestAsync(user, manifest);
 }
 
 export async function getManifestResponseAsync({

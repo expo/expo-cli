@@ -1,26 +1,18 @@
-import { ApiV2, UserManager } from '@expo/api';
+import {
+  DetailOptions,
+  HistoryOptions,
+  Publication,
+  PublicationDetail,
+  SetOptions,
+  UserManager,
+} from '@expo/api';
 import { getConfig } from '@expo/config';
+import assert from 'assert';
 
 import Log from '../../log';
 import { ora } from '../../utils/ora';
 import { confirmAsync } from '../../utils/prompts';
 import * as table from './cli-table';
-
-export type HistoryOptions = {
-  releaseChannel?: string;
-  count?: number;
-  platform?: 'android' | 'ios';
-  raw?: boolean;
-  sdkVersion?: string;
-  runtimeVersion?: string;
-};
-
-export type DetailOptions = {
-  publishId?: string;
-  raw?: boolean;
-};
-
-export type SetOptions = { releaseChannel: string; publishId: string };
 
 export type RollbackOptions = {
   releaseChannel: string;
@@ -30,68 +22,14 @@ export type RollbackOptions = {
   parent?: { nonInteractive?: boolean };
 };
 
-export type Publication = {
-  fullName: string;
-  channel: string;
-  channelId: string;
-  publicationId: string;
-  appVersion: string;
-  sdkVersion: string;
-  runtimeVersion?: string;
-  publishedTime: string;
-  platform: 'android' | 'ios';
-};
-
-export type PublicationDetail = {
-  manifest?: {
-    [key: string]: string;
-  };
-  publishedTime: string;
-  publishingUsername: string;
-  packageUsername: string;
-  packageName: string;
-  fullName: string;
-  hash: string;
-  sdkVersion: string;
-  runtimeVersion?: string;
-  s3Key: string;
-  s3Url: string;
-  abiVersion: string | null;
-  bundleUrl: string | null;
-  platform: string;
-  version: string;
-  revisionId: string;
-  channels: { [key: string]: string }[];
-  publicationId: string;
-};
-
-const VERSION = 2;
-
-export async function getPublishHistoryAsync(
-  projectRoot: string,
-  options: HistoryOptions
-): Promise<any> {
-  if (options.count && (isNaN(options.count) || options.count < 1 || options.count > 100)) {
-    throw new Error('-n must be a number between 1 and 100 inclusive');
-  }
-
+export async function getPublishHistoryAsync(projectRoot: string, options: HistoryOptions) {
   // TODO(ville): handle the API result for not authenticated user instead of checking upfront
   const user = await UserManager.ensureLoggedInAsync();
   const { exp } = getConfig(projectRoot, {
     skipSDKVersionRequirement: true,
   });
 
-  const api = ApiV2.clientForUser(user);
-  return await api.postAsync('publish/history', {
-    owner: UserManager.getProjectOwner(user, exp),
-    slug: exp.slug,
-    version: VERSION,
-    releaseChannel: options.releaseChannel,
-    count: options.count,
-    platform: options.platform,
-    sdkVersion: options.sdkVersion,
-    runtimeVersion: options.runtimeVersion,
-  });
+  return await UserManager.getPublishHistoryAsync(user, { exp, version: 2, options });
 }
 
 export async function setPublishToChannelAsync(
@@ -99,13 +37,8 @@ export async function setPublishToChannelAsync(
   options: SetOptions
 ): Promise<any> {
   const user = await UserManager.ensureLoggedInAsync();
-  const api = ApiV2.clientForUser(user);
   const exp = getConfig(projectRoot, { skipSDKVersionRequirement: true }).exp;
-  return await api.postAsync('publish/set', {
-    releaseChannel: options.releaseChannel,
-    publishId: options.publishId,
-    slug: exp.slug,
-  });
+  return await UserManager.setPublishToChannelAsync(user, { exp, options });
 }
 
 async function _rollbackPublicationFromChannelForPlatformAsync(
@@ -115,7 +48,7 @@ async function _rollbackPublicationFromChannelForPlatformAsync(
 ) {
   const { releaseChannel, sdkVersion, runtimeVersion } = options;
   // get the 2 most recent things in the channel history
-  const historyQueryResult = await getPublishHistoryAsync(projectRoot, {
+  const history = await getPublishHistoryAsync(projectRoot, {
     releaseChannel,
     platform,
     sdkVersion,
@@ -123,16 +56,14 @@ async function _rollbackPublicationFromChannelForPlatformAsync(
     count: 2,
   });
 
-  const history = historyQueryResult.queryResult as Publication[];
-  if (history.length === 0) {
-    throw new Error(
-      `There isn't anything published for release channel: ${releaseChannel}, sdk version: ${sdkVersion}, platform: ${platform}`
-    );
-  } else if (history.length === 1) {
-    throw new Error(
-      `There is only 1 publication for release channel: ${releaseChannel}, sdk version: ${sdkVersion}, platform: ${platform}. There won't be anything for users to receive if we rollback.`
-    );
-  }
+  assert(
+    history.length > 0,
+    `There isn't anything published for release channel: ${releaseChannel}, sdk version: ${sdkVersion}, platform: ${platform}`
+  );
+  assert(
+    history.length > 1,
+    `There is only 1 publication for release channel: ${releaseChannel}, sdk version: ${sdkVersion}, platform: ${platform}. There won't be anything for users to receive if we rollback.`
+  );
 
   // The second most recent publication in the history
   const secondMostRecent = history[history.length - 1];
@@ -232,18 +163,7 @@ export async function getPublicationDetailAsync(
     skipSDKVersionRequirement: true,
   });
 
-  const api = ApiV2.clientForUser(user);
-  const result = await api.postAsync('publish/details', {
-    owner: UserManager.getProjectOwner(user, exp),
-    publishId: options.publishId,
-    slug: exp.slug,
-  });
-
-  if (!result.queryResult) {
-    throw new Error('No records found matching your query.');
-  }
-
-  return result.queryResult;
+  return await UserManager.getPublicationDetailAsync(user, { exp, options });
 }
 
 export async function printPublicationDetailAsync(

@@ -1,12 +1,5 @@
-import { Analytics, ApiV2, Config, RobotUser, User, UserManager } from '@expo/api';
-import {
-  ExpoAppManifest,
-  ExpoConfig,
-  getDefaultTarget,
-  HookArguments,
-  PackageJSONConfig,
-} from '@expo/config';
-import FormData from 'form-data';
+import { Analytics, Config, RobotUser, User, UserManager } from '@expo/api';
+import { ExpoAppManifest, getDefaultTarget, HookArguments } from '@expo/config';
 import fs from 'fs-extra';
 import path from 'path';
 
@@ -100,14 +93,17 @@ export async function publishAsync(
 
   let response;
   try {
-    response = await _uploadArtifactsAsync({
+    logger.global.info('');
+    logger.global.info('Uploading JavaScript bundles');
+    const user = await UserManager.ensureLoggedInAsync();
+    response = await UserManager.uploadArtifactsAsync(user, {
       pkg,
       exp,
       iosBundle,
       androidBundle,
       options,
     });
-  } catch (e) {
+  } catch (e: any) {
     if (e.serverError === 'SCHEMA_VALIDATION_ERROR') {
       throw new Error(
         `There was an error validating your project schema. Check for any warnings about the contents of your app.json or app.config.js.`
@@ -217,35 +213,6 @@ export async function publishAsync(
     url,
     projectPageUrl,
   };
-}
-
-async function _uploadArtifactsAsync({
-  exp,
-  iosBundle,
-  androidBundle,
-  options,
-  pkg,
-}: {
-  exp: ExpoConfig;
-  iosBundle: string | Uint8Array;
-  androidBundle: string | Uint8Array;
-  options: PublishOptions;
-  pkg: PackageJSONConfig;
-}) {
-  logger.global.info('');
-  logger.global.info('Uploading JavaScript bundles');
-  const formData = new FormData();
-
-  formData.append('expJson', JSON.stringify(exp));
-  formData.append('packageJson', JSON.stringify(pkg));
-  formData.append('iosBundle', iosBundle, 'iosBundle');
-  formData.append('androidBundle', androidBundle, 'androidBundle');
-  formData.append('options', JSON.stringify(options));
-
-  const user = await UserManager.ensureLoggedInAsync();
-  const api = ApiV2.clientForUser(user);
-
-  return await api.uploadFormDataAsync('publish/new', formData);
 }
 
 async function _handleKernelPublishedAsync({

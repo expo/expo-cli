@@ -1,4 +1,4 @@
-import { ApiV2, ApiV2Error, User, UserManager } from '@expo/api';
+import { ApiV2Error, User, UserManager } from '@expo/api';
 import assert from 'assert';
 import openBrowserAsync from 'better-opn';
 import chalk from 'chalk';
@@ -212,8 +212,7 @@ async function _promptForBackupOTPAsync(
 
   const device = smsNonPrimarySecondFactorDevices[selectedValue];
 
-  const apiAnonymous = ApiV2.clientForUser();
-  await apiAnonymous.postAsync('auth/send-sms-otp', {
+  await UserManager.sendSmsOtpAsync(null, {
     username,
     password,
     secondFactorDeviceID: device.id,

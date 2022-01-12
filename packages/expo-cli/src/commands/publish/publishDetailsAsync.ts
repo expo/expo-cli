@@ -1,10 +1,7 @@
+import { DetailOptions } from '@expo/api';
 import assert from 'assert';
 
-import {
-  DetailOptions,
-  getPublicationDetailAsync,
-  printPublicationDetailAsync,
-} from '../utils/PublishUtils';
+import { getPublicationDetailAsync, printPublicationDetailAsync } from '../utils/PublishUtils';
 
 export async function actionAsync(projectRoot: string, options: DetailOptions) {
   assert(options.publishId, '--publish-id must be specified.');
