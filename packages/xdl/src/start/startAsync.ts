@@ -52,6 +52,7 @@ export async function startAsync(
   assertValidProjectRoot(projectRoot);
 
   Analytics.logEvent('Start Project', {
+    projectRoot,
     developerTool: Config.developerTool,
     sdkVersion: exp.sdkVersion ?? null,
   });
@@ -129,12 +130,12 @@ async function forceQuitAsync(projectRoot: string) {
   if (packagerPid) {
     try {
       process.kill(packagerPid);
-    } catch (e) {}
+    } catch {}
   }
   if (ngrokPid) {
     try {
       process.kill(ngrokPid);
-    } catch (e) {}
+    } catch {}
   }
   await ProjectSettings.setPackagerInfoAsync(projectRoot, {
     expoServerPort: null,
