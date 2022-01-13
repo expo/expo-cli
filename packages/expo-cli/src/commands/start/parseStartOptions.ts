@@ -1,4 +1,5 @@
 import { ExpoConfig, isLegacyImportsEnabled } from '@expo/config';
+import chalk from 'chalk';
 import { Project, ProjectSettings, Versions, Webpack } from 'xdl';
 import * as WebpackEnvironment from 'xdl/build/webpack-utils/WebpackEnvironment';
 
@@ -56,6 +57,21 @@ export function setBooleanArg(
   }
 }
 
+// TODO: Deprecate these features sometime around the versioned migration.
+function warnUsingDeprecatedArgs(rawArgs: string[]) {
+  const deprecatedArgs = [
+    ['--no-https', 'Https is disabled by default.'],
+    ['--no-minify', 'Minify is disabled by default.'],
+    ['--dev', 'Dev is enabled by default.'],
+  ];
+
+  for (const [arg, message] of deprecatedArgs) {
+    if (rawArgs.includes(arg)) {
+      Log.warn(`\u203A The ${chalk.bold(arg)} flag is deprecated. ${message}`);
+    }
+  }
+}
+
 // The main purpose of this function is to take existing options object and
 // support boolean args with as defined in the hasBooleanArg and getBooleanArg
 // functions.
@@ -64,7 +80,7 @@ export async function normalizeOptionsAsync(
   options: RawStartOptions
 ): Promise<NormalizedOptions> {
   const rawArgs = options.parent?.rawArgs || [];
-
+  warnUsingDeprecatedArgs(rawArgs);
   const opts = parseRawArguments(options, rawArgs);
 
   if (options.webOnly) {
@@ -183,7 +199,11 @@ export function parseStartOptions(
         ? 'expo-updates'
         : undefined;
   } else {
-    startOpts.forceManifestType = 'classic';
+    const easUpdatesUrlRegex = /^https:\/\/(staging-)?u\.expo\.dev/;
+    const updatesUrl = exp.updates?.url;
+    const isEasUpdatesUrl = updatesUrl && easUpdatesUrlRegex.test(updatesUrl);
+
+    startOpts.forceManifestType = isEasUpdatesUrl ? 'expo-updates' : 'classic';
   }
 
   if (isLegacyImportsEnabled(exp)) {

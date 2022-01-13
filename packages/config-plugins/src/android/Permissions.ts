@@ -1,4 +1,5 @@
 import { ExpoConfig } from '@expo/config-types';
+import assert from 'assert';
 
 import { ConfigPlugin } from '../Plugin.types';
 import { withAndroidManifest } from '../plugins/android-plugins';
@@ -21,6 +22,76 @@ export const withPermissions: ConfigPlugin<string[] | void> = (config, permissio
     return config;
   });
 };
+
+export const withBlockedPermissions: ConfigPlugin<string[]> = (config, permissions) => {
+  assert(Array.isArray(permissions), 'permissions prop must be an array');
+
+  if (config?.android?.permissions && Array.isArray(config.android.permissions)) {
+    // Remove any static config permissions
+    config.android.permissions = config.android.permissions.filter(
+      permission => !permissions.includes(permission)
+    );
+  }
+
+  return withAndroidManifest(config, async config => {
+    config.modResults = ensureToolsAvailable(config.modResults);
+    config.modResults = addBlockedPermissions(config.modResults, permissions);
+
+    return config;
+  });
+};
+
+/**
+ * Ensure the `tools:*` namespace is available in the manifest.
+ *
+ * @param manifest AndroidManifest.xml
+ * @returns manifest with the `tools:*` namespace available
+ */
+function ensureToolsAvailable(manifest: AndroidManifest) {
+  if (manifest?.manifest?.$?.['xmlns:tools']) {
+    return manifest;
+  }
+  manifest.manifest.$['xmlns:tools'] = 'http://schemas.android.com/tools';
+  return manifest;
+}
+
+export function addBlockedPermissions(androidManifest: AndroidManifest, permissions: string[]) {
+  if (!Array.isArray(androidManifest.manifest['uses-permission'])) {
+    androidManifest.manifest['uses-permission'] = [];
+  }
+
+  for (const permission of permissions) {
+    androidManifest.manifest['uses-permission'] = ensureBlockedPermission(
+      androidManifest.manifest['uses-permission'],
+      permission
+    );
+  }
+
+  return androidManifest;
+}
+
+/**
+ * Filter any existing permissions matching the provided permission name, then add a
+ * restricted permission to overwrite any extra permissions that may be added in a
+ * third-party package's AndroidManifest.xml.
+ *
+ * @param manifestPermissions manifest `uses-permissions` array.
+ * @param permission `android:name` of the permission to restrict
+ * @returns
+ */
+function ensureBlockedPermission(
+  manifestPermissions: ManifestUsesPermission[],
+  permission: string
+) {
+  // Remove permission if it currently exists
+  manifestPermissions = manifestPermissions.filter(e => e.$['android:name'] !== permission);
+
+  // Add a permission with tools:node to overwrite any existing permission and ensure it's removed upon building.
+  manifestPermissions.push({
+    $: { 'android:name': permission, 'tools:node': 'remove' },
+  });
+  return manifestPermissions;
+}
 
 function prefixAndroidPermissionsIfNecessary(permissions: string[]): string[] {
   return permissions.map(permission => {

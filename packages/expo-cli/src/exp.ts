@@ -18,10 +18,10 @@ import {
   Binaries,
   Config,
   Env,
+  LoadingEvent,
   Logger,
   LogRecord,
   LogUpdater,
-  NotificationCode,
   PackagerLogsStream,
   ProjectSettings,
   ProjectUtils,
@@ -398,9 +398,7 @@ Command.prototype.asyncActionProjectDir = function (
       if (opts.config === true) {
         Log.addNewLineIfNone();
         Log.log('Please specify your custom config path:');
-        Log.log(
-          Log.chalk.green(`  expo ${this.name()} --config ${Log.chalk.cyan(`<app-config>`)}`)
-        );
+        Log.log(chalk.green(`  expo ${this.name()} --config ${chalk.cyan(`<app-config>`)}`));
         Log.newLine();
         process.exit(1);
       }
@@ -409,13 +407,13 @@ Command.prototype.asyncActionProjectDir = function (
       // Warn the user when the custom config path they provided does not exist.
       if (!fs.existsSync(pathToConfig)) {
         const relativeInput = path.relative(process.cwd(), opts.config);
-        const formattedPath = Log.chalk
+        const formattedPath = chalk
           .reset(pathToConfig)
-          .replace(relativeInput, Log.chalk.bold(relativeInput));
+          .replace(relativeInput, chalk.bold(relativeInput));
         Log.addNewLineIfNone();
         Log.nestedWarn(`Custom config file does not exist:\n${formattedPath}`);
         Log.newLine();
-        const helpCommand = Log.chalk.green(`expo ${this.name()} --help`);
+        const helpCommand = chalk.green(`expo ${this.name()} --help`);
         Log.log(`Run ${helpCommand} for more info`);
         Log.newLine();
         process.exit(1);
@@ -787,7 +785,7 @@ function _registerLogs() {
       write: (chunk: any) => {
         if (chunk.code) {
           switch (chunk.code) {
-            case NotificationCode.START_PROGRESS_BAR: {
+            case LoadingEvent.START_PROGRESS_BAR: {
               const bar = new ProgressBar(chunk.msg, {
                 width: 64,
                 total: 100,
@@ -798,14 +796,14 @@ function _registerLogs() {
               Log.setBundleProgressBar(bar);
               return;
             }
-            case NotificationCode.TICK_PROGRESS_BAR: {
+            case LoadingEvent.TICK_PROGRESS_BAR: {
               const bar = Log.getProgress();
               if (bar) {
                 bar.tick(1, chunk.msg);
               }
               return;
             }
-            case NotificationCode.STOP_PROGRESS_BAR: {
+            case LoadingEvent.STOP_PROGRESS_BAR: {
               const bar = Log.getProgress();
               if (bar) {
                 Log.setBundleProgressBar(null);
@@ -813,18 +811,16 @@ function _registerLogs() {
               }
               return;
             }
-            case NotificationCode.START_LOADING:
+            case LoadingEvent.START_LOADING:
               logNewSection(chunk.msg || '');
               return;
-            case NotificationCode.STOP_LOADING: {
+            case LoadingEvent.STOP_LOADING: {
               const spinner = Log.getSpinner();
               if (spinner) {
                 spinner.stop();
               }
               return;
             }
-            case NotificationCode.DOWNLOAD_CLI_PROGRESS:
-              return;
           }
         }
 

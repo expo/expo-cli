@@ -9,7 +9,8 @@ export default function (program: Command) {
       .description('Show the project config')
       .helpGroup('info')
       .option('-t, --type <public|prebuild|introspect>', 'Type of config to show.')
-      .option('--full', 'Include all project config data'),
+      .option('--full', 'Include all project config data')
+      .option('--json', 'Output in JSON format'),
     () => import('./configAsync')
   );
 }

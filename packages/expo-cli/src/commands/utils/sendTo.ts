@@ -1,3 +1,4 @@
+import chalk from 'chalk';
 import { Exp, UserSettings } from 'xdl';
 
 import Log from '../../log';
@@ -35,7 +36,7 @@ export async function getRecipient(sendTo?: string | boolean): Promise<string> {
   return recipient;
 }
 export async function sendUrlAsync(url: string, recipient: string) {
-  const email = Log.chalk.bold(recipient);
+  const email = chalk.bold(recipient);
   const spinner = ora(`Sending URL to ${email}`).start();
   try {
     const result = await Exp.sendAsync(recipient, url);

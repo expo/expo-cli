@@ -65,7 +65,7 @@ const withAndroidAdaptiveIconColors: ConfigPlugin<string | null> = (config, back
 };
 
 export function getIcon(config: ExpoConfig) {
-  return config.icon || config.android?.icon || null;
+  return config.android?.icon || config.icon || null;
 }
 
 export function getAdaptiveIcon(config: ExpoConfig) {

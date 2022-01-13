@@ -13,6 +13,7 @@ type ManifestMetaDataAttributes = AndroidManifestAttributes & {
 
 type AndroidManifestAttributes = {
   'android:name': string | 'android.intent.action.VIEW';
+  'tools:node'?: string | 'remove';
 };
 
 type ManifestAction = {
@@ -40,7 +41,11 @@ type ManifestReceiver = {
   'intent-filter'?: ManifestIntentFilter[];
 };
 
-type ManifestIntentFilter = {
+export type ManifestIntentFilter = {
+  $?: {
+    'android:autoVerify'?: StringBoolean;
+    'data-generated'?: StringBoolean;
+  };
   action?: ManifestAction[];
   data?: ManifestData[];
   category?: ManifestCategory[];
@@ -131,7 +136,12 @@ type ManifestUsesFeature = {
 export type AndroidManifest = {
   manifest: {
     // Probably more, but this is currently all we'd need for most cases in Expo.
-    $: { 'xmlns:android': string; package?: string; [key: string]: string | undefined };
+    $: {
+      'xmlns:android': string;
+      'xmlns:tools'?: string;
+      package?: string;
+      [key: string]: string | undefined;
+    };
     permission?: ManifestPermission[];
     'uses-permission'?: ManifestUsesPermission[];
     'uses-permission-sdk-23'?: ManifestUsesPermission[];
@@ -162,10 +172,11 @@ function isManifest(xml: XML.XMLObject): xml is AndroidManifest {
   return !!xml.manifest;
 }
 
+/** Returns the `manifest.application` tag ending in `.MainApplication` */
 export function getMainApplication(androidManifest: AndroidManifest): ManifestApplication | null {
   return (
-    androidManifest?.manifest?.application?.filter(
-      e => e?.$?.['android:name'] === '.MainApplication'
+    androidManifest?.manifest?.application?.filter(e =>
+      e?.$?.['android:name'].endsWith('.MainApplication')
     )[0] ?? null
   );
 }

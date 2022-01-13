@@ -1,11 +1,13 @@
 import { getConfig } from '@expo/config';
 import * as PackageManager from '@expo/package-manager';
+import chalk from 'chalk';
 import npmPackageArg from 'npm-package-arg';
 import resolveFrom from 'resolve-from';
 import { Versions } from 'xdl';
 
 import CommandError, { SilentError } from '../CommandError';
 import Log from '../log';
+import { getRemoteVersionsForSdk } from '../utils/getRemoteVersionsForSdk';
 import { findProjectRootAsync } from './utils/ProjectUtils';
 import { autoAddConfigPluginsAsync } from './utils/autoAddConfigPluginsAsync';
 import { getBundledNativeModulesAsync } from './utils/bundledNativeModules';
@@ -23,7 +25,7 @@ async function resolveExpoProjectRootAsync() {
     Log.addNewLineIfNone();
     Log.error(error.message);
     Log.newLine();
-    Log.log(Log.chalk.cyan(`You can create a new project with ${Log.chalk.bold(`expo init`)}`));
+    Log.log(chalk.cyan(`You can create a new project with ${chalk.bold(`expo init`)}`));
     Log.newLine();
     throw new SilentError(error);
   }
@@ -58,22 +60,22 @@ export async function actionAsync(
   if (!exp.sdkVersion) {
     Log.addNewLineIfNone();
     throw new CommandError(
-      `The ${Log.chalk.bold(`expo`)} package was found in your ${Log.chalk.bold(
+      `The ${chalk.bold(`expo`)} package was found in your ${chalk.bold(
         `package.json`
-      )} but we couldn't resolve the Expo SDK version. Run ${Log.chalk.bold(
+      )} but we couldn't resolve the Expo SDK version. Run ${chalk.bold(
         `${packageManager.name.toLowerCase()} install`
       )} and then try this command again.\n`
     );
   }
 
   if (!Versions.gteSdkVersion(exp, '33.0.0')) {
-    const message = `${Log.chalk.bold(
+    const message = `${chalk.bold(
       `expo install`
     )} is only available for Expo SDK version 33 or higher.`;
     Log.addNewLineIfNone();
     Log.error(message);
     Log.newLine();
-    Log.log(Log.chalk.cyan(`Current version: ${Log.chalk.bold(exp.sdkVersion)}`));
+    Log.log(chalk.cyan(`Current version: ${chalk.bold(exp.sdkVersion)}`));
     Log.newLine();
     throw new SilentError(message);
   }
@@ -82,43 +84,43 @@ export async function actionAsync(
   // Every React project should have react installed...
   if (!resolveFrom.silent(projectRoot, 'react')) {
     Log.addNewLineIfNone();
-    Log.log(
-      Log.chalk.cyan(`node_modules not found, running ${packageManager.name} install command.`)
-    );
+    Log.log(chalk.cyan(`node_modules not found, running ${packageManager.name} install command.`));
     Log.newLine();
     await packageManager.installAsync();
   }
 
   const bundledNativeModules = await getBundledNativeModulesAsync(projectRoot, exp.sdkVersion);
-  const nativeModules = [];
-  const others = [];
+  const versionsForSdk = await getRemoteVersionsForSdk(exp.sdkVersion);
+
+  let nativeModulesCount = 0;
+  let othersCount = 0;
+
   const versionedPackages = packages.map(arg => {
-    const spec = npmPackageArg(arg);
-    const { name } = spec;
-    if (['tag', 'version', 'range'].includes(spec.type) && name && bundledNativeModules[name]) {
+    const { name, type, raw } = npmPackageArg(arg);
+    if (['tag', 'version', 'range'].includes(type) && name && bundledNativeModules[name]) {
       // Unimodule packages from npm registry are modified to use the bundled version.
-      const version = bundledNativeModules[name];
-      const modifiedSpec = `${name}@${version}`;
-      nativeModules.push(modifiedSpec);
-      return modifiedSpec;
+      nativeModulesCount++;
+      return `${name}@${bundledNativeModules[name]}`;
+    } else if (name && versionsForSdk[name]) {
+      // Some packages have the recommended version listed in https://exp.host/--/api/v2/versions.
+      othersCount++;
+      return `${name}@${versionsForSdk[name]}`;
     } else {
       // Other packages are passed through unmodified.
-      others.push(spec.raw);
-      return spec.raw;
+      othersCount++;
+      return raw;
     }
   });
-  const messages = [];
-  if (nativeModules.length > 0) {
-    messages.push(
-      `${nativeModules.length} SDK ${exp.sdkVersion} compatible native ${
-        nativeModules.length === 1 ? 'module' : 'modules'
-      }`
-    );
-  }
-  if (others.length > 0) {
-    messages.push(`${others.length} other ${others.length === 1 ? 'package' : 'packages'}`);
-  }
+
+  const messages = [
+    nativeModulesCount > 0 &&
+      `${nativeModulesCount} SDK ${exp.sdkVersion} compatible native ${
+        nativeModulesCount === 1 ? 'module' : 'modules'
+      }`,
+    othersCount > 0 && `${othersCount} other ${othersCount === 1 ? 'package' : 'packages'}`,
+  ].filter(Boolean);
   Log.log(`Installing ${messages.join(' and ')} using ${packageManager.name}.`);
+
   await packageManager.addAsync(...versionedPackages);
 
   try {

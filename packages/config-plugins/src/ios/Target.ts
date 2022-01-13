@@ -7,6 +7,7 @@ import {
   isNotComment,
   NativeTargetSectionEntry,
 } from './utils/Xcodeproj';
+import { trimQuotes } from './utils/string';
 
 export enum TargetType {
   APPLICATION = 'com.apple.product-type.application',
@@ -46,8 +47,22 @@ export async function findApplicationTargetWithDependenciesAsync(
   const applicationTargetName = await getApplicationTargetNameForSchemeAsync(projectRoot, scheme);
   const project = getPbxproj(projectRoot);
   const [, applicationTarget] = findNativeTargetByName(project, applicationTargetName);
+  const dependencies = getTargetDependencies(project, applicationTarget);
+  return {
+    name: trimQuotes(applicationTarget.name),
+    type: TargetType.APPLICATION,
+    dependencies,
+  };
+}
 
-  const dependencies: Target[] = applicationTarget.dependencies.map(({ value }) => {
+function getTargetDependencies(
+  project: XcodeProject,
+  parentTarget: PBXNativeTarget
+): Target[] | undefined {
+  if (!parentTarget.dependencies || parentTarget.dependencies.length === 0) {
+    return undefined;
+  }
+  return parentTarget.dependencies.map(({ value }) => {
     const { target: targetId } = project.getPBXGroupByKeyAndType(
       value,
       'PBXTargetDependency'
@@ -59,20 +74,15 @@ export async function findApplicationTargetWithDependenciesAsync(
       ? TargetType.EXTENSION
       : TargetType.OTHER;
     return {
-      name: target.name,
+      name: trimQuotes(target.name),
       type,
+      dependencies: getTargetDependencies(project, target),
     };
   });
-
-  return {
-    name: applicationTarget.name,
-    type: TargetType.APPLICATION,
-    dependencies,
-  };
 }
 
 export function isTargetOfType(target: PBXNativeTarget, targetType: TargetType): boolean {
-  return target.productType === targetType || target.productType === `"${targetType}"`;
+  return trimQuotes(target.productType) === targetType;
 }
 
 export function getNativeTargets(project: XcodeProject): NativeTargetSectionEntry[] {
@@ -111,9 +121,7 @@ export function findNativeTargetByName(
   targetName: string
 ): NativeTargetSectionEntry {
   const nativeTargets = getNativeTargets(project);
-  const nativeTargetEntry = nativeTargets.find(
-    ([, i]) => i.name === targetName || i.name === `"${targetName}"`
-  );
+  const nativeTargetEntry = nativeTargets.find(([, i]) => trimQuotes(i.name) === targetName);
   if (!nativeTargetEntry) {
     throw new Error(`Could not find target '${targetName}' in project.pbxproj`);
   }

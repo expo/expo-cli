@@ -6,10 +6,30 @@ import { parse } from 'url';
 
 import { UrlUtils } from './../internal';
 
-export const LoadingEndpoint = '/loading';
-export const DeepLinkEndpoint = '/link';
+export const LoadingEndpoint = '/_expo/loading';
+export const DeepLinkEndpoint = '/_expo/link';
 
-function noCacheMiddleware(
+type OnDeepLinkListener = (
+  projectRoot: string,
+  isDevClient: boolean,
+  platform: string | null
+) => Promise<void>;
+
+let onDeepLink: OnDeepLinkListener = async () => {};
+
+export function setOnDeepLink(listener: OnDeepLinkListener) {
+  onDeepLink = listener;
+}
+
+function getPlatform(query: { [x: string]: string | string[] | null }): string | null {
+  if (query['platform'] === 'android' || query['platform'] === 'ios') {
+    return query['platform'];
+  }
+
+  return null;
+}
+
+export function noCacheMiddleware(
   res: express.Response | http.ServerResponse
 ): express.Response | http.ServerResponse {
   res.setHeader('Cache-Control', 'private, no-cache, no-store, must-revalidate');
@@ -35,7 +55,8 @@ async function deeplinkEndpointHandler(
   res: express.Response | http.ServerResponse
 ) {
   const { query } = parse(req.url!, true);
-  if (query['choice'] === 'expo-dev-client') {
+  const isDevClient = query['choice'] === 'expo-dev-client';
+  if (isDevClient) {
     const projectUrl = await UrlUtils.constructDevClientUrlAsync(projectRoot, {
       hostType: 'localhost',
     });
@@ -46,6 +67,8 @@ async function deeplinkEndpointHandler(
     });
     res.setHeader('Location', projectUrl);
   }
+
+  onDeepLink(projectRoot, isDevClient, getPlatform(query));
 
   res.setHeader('Cache-Control', 'private, no-cache, no-store, must-revalidate');
   res.setHeader('Expires', '-1');

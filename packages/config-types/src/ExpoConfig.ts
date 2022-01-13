@@ -17,7 +17,7 @@ export interface ExpoConfig {
    */
   slug: string;
   /**
-   * The Expo account name of the team owner, only applicable if you are enrolled in the EAS Priority Plan. If not provided, defaults to the username of the current user.
+   * The name of the Expo account that owns the project. This is useful for teams collaborating on a project. If not provided, the owner defaults to the username of the current user.
    */
   owner?: string;
   /**
@@ -64,11 +64,11 @@ export interface ExpoConfig {
    */
   orientation?: 'default' | 'portrait' | 'landscape';
   /**
-   * Configuration to force the app to always use the light or dark user-interface appearance, such as "dark mode", or make it automatically adapt to the system preferences. If not provided, defaults to `light`.
+   * Configuration to force the app to always use the light or dark user-interface appearance, such as "dark mode", or make it automatically adapt to the system preferences. If not provided, defaults to `light`. Requires `expo-system-ui` be installed in your project to work on Android.
    */
   userInterfaceStyle?: 'light' | 'dark' | 'automatic';
   /**
-   * The background color for your app, behind any of your React views. This is also known as the root view background color.
+   * The background color for your app, behind any of your React views. This is also known as the root view background color. Requires `expo-system-ui` be installed in your project to work on iOS.
    */
   backgroundColor?: string;
   /**
@@ -105,7 +105,7 @@ export interface ExpoConfig {
     androidCollapsedTitle?: string;
   };
   /**
-   * By default, Expo looks for the application registered with the AppRegistry as `main`. If you would like to change this, you can specify the name in this property.
+   * @deprecated By default, Expo looks for the application registered with the AppRegistry as `main`. If you would like to change this, you can specify the name in this property.
    */
   appKey?: string;
   /**
@@ -130,17 +130,17 @@ export interface ExpoConfig {
     translucent?: boolean;
   };
   /**
-   * Configuration for the bottom navigation bar on Android.
+   * Configuration for the bottom navigation bar on Android. Can be used to configure the `expo-navigation-bar` module in EAS Build.
    */
   androidNavigationBar?: {
     /**
-     * Determines how and when the navigation bar is shown. [Learn more](https://developer.android.com/training/system-ui/immersive). Valid values: `leanback`, `immersive`, `sticky-immersive`
+     * Determines how and when the navigation bar is shown. [Learn more](https://developer.android.com/training/system-ui/immersive). Requires `expo-navigation-bar` be installed in your project. Valid values: `leanback`, `immersive`, `sticky-immersive`
      *
      *  `leanback` results in the navigation bar being hidden until the first touch gesture is registered.
      *
      *  `immersive` results in the navigation bar being hidden until the user swipes up from the edge where the navigation bar is hidden.
      *
-     *  `sticky-immersive` is identical to `'immersive'` except that the navigation bar will be semi-transparent and will be hidden again after a short period of time
+     *  `sticky-immersive` is identical to `'immersive'` except that the navigation bar will be semi-transparent and will be hidden again after a short period of time.
      */
     visible?: 'leanback' | 'immersive' | 'sticky-immersive';
     /**
@@ -330,7 +330,7 @@ export interface IOS {
    */
   buildNumber?: string;
   /**
-   * The background color for your iOS app, behind any of your React views. Overrides the top-level `backgroundColor` key if it is present.
+   * The background color for your iOS app, behind any of your React views. Overrides the top-level `backgroundColor` key if it is present. Requires `expo-system-ui` be installed in your project to work on iOS.
    */
   backgroundColor?: string;
   /**
@@ -505,7 +505,7 @@ export interface Android {
    */
   backgroundColor?: string;
   /**
-   * Configuration to force the app to always use the light or dark user-interface appearance, such as "dark mode", or make it automatically adapt to the system preferences. If not provided, defaults to `light`.
+   * Configuration to force the app to always use the light or dark user-interface appearance, such as "dark mode", or make it automatically adapt to the system preferences. If not provided, defaults to `light`. Requires `expo-system-ui` be installed in your project to work on Android.
    */
   userInterfaceStyle?: 'light' | 'dark' | 'automatic';
   /**

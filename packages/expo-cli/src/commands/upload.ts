@@ -10,7 +10,7 @@ function logMigration(platform: string) {
   Log.log(
     `${chalk.bold(
       `expo upload:${platform}`
-    )} has been moved to ${chalk.bold`eas submit`}. ${chalk.dim(
+    )} has been superseded by ${chalk.bold`eas submit`}. ${chalk.dim(
       TerminalLink.learnMore(`https://expo.fyi/expo-upload-${platform}`)
     )}`
   );
@@ -37,7 +37,7 @@ export default function (program: Command) {
     program
       .command('upload:android [path]')
       .alias('ua')
-      .description(`${chalk.yellow('Moved')} to ${chalk.bold('eas submit')} in eas-cli`)
+      .description(`${chalk.yellow`Superseded`} by ${chalk.bold`eas submit`} in eas-cli`)
       .helpGroup('deprecated')
       .option('--verbose', migrateToEasCliArg('--verbose'))
       .option('--latest', migrateToEasCliArg('--latest'))
@@ -66,7 +66,7 @@ export default function (program: Command) {
     program
       .command('upload:ios [path]')
       .alias('ui')
-      .description(`${chalk.yellow('Moved')} to ${chalk.bold('eas submit')} in eas-cli`)
+      .description(`${chalk.yellow`Superseded`} by ${chalk.bold`eas submit`} in eas-cli`)
       .helpGroup('deprecated')
       .option('--verbose', migrateToEasCliArg('--verbose'))
       .option('--latest', migrateToEasCliArg('--latest'))

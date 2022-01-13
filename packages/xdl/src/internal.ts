@@ -17,7 +17,7 @@ export { default as Config } from './Config';
 export * as Xcode from './Xcode';
 export * as ConnectionStatus from './ConnectionStatus';
 export { default as Logger, Log, LogStream } from './Logger';
-export { default as NotificationCode } from './NotificationCode';
+export { default as LoadingEvent } from './LoadingEvent';
 export { learnMore } from './logs/TerminalLink';
 export { default as Analytics, AnalyticsClient } from './Analytics';
 export { default as UnifiedAnalytics } from './UnifiedAnalytics';
@@ -92,7 +92,6 @@ export * as AssetBundle from './detach/AssetBundle';
 export * as TableText from './logs/TableText';
 export { resolveEntryPoint } from './tools/resolveEntryPoint';
 export * as Watchman from './Watchman';
-export * as Sentry from './Sentry';
 export * as DevSession from './DevSession';
 export { NgrokOptions, resolveNgrokAsync } from './start/resolveNgrok';
 export {

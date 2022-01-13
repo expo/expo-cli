@@ -1,6 +1,5 @@
 import axios from 'axios';
 import fs from 'fs-extra';
-import pick from 'lodash/pick';
 import { PNG } from 'pngjs';
 import { Readable } from 'stream';
 import { UrlUtils, XDLError } from 'xdl';
@@ -33,13 +32,13 @@ export async function ensurePNGIsNotTransparent(imagePathOrURL: string): Promise
           res();
         }
       })
-      .on('parsed', function () {
+      .on('parsed', () => {
         if (hasAlreadyResolved) {
           return;
         }
         try {
           // @ts-ignore: 'this' implicitly has type 'any' because it does not have a type annotation.
-          validateAlphaChannelIsEmpty(this.data, pick(this, ['width', 'height']));
+          validateAlphaChannelIsEmpty(this.data, { width: this.width, height: this.height });
           res();
         } catch (err) {
           rej(err);

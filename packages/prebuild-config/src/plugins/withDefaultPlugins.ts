@@ -10,7 +10,9 @@ import {
   withStaticPlugin,
 } from '@expo/config-plugins';
 import { ExpoConfig } from '@expo/config-types';
+import Debug from 'debug';
 
+import { shouldSkipAutoPlugin } from '../getAutolinkedPackages';
 import { withAndroidIcons } from './icons/withAndroidIcons';
 import { withIosIcons } from './icons/withIosIcons';
 import withAdMob from './unversioned/expo-ads-admob/expo-ads-admob';
@@ -25,6 +27,8 @@ import withSplashScreen from './unversioned/expo-splash-screen/expo-splash-scree
 import withSystemUI from './unversioned/expo-system-ui/expo-system-ui';
 import withUpdates from './unversioned/expo-updates';
 import withMaps from './unversioned/react-native-maps';
+
+const debug = Debug('expo:prebuild-config');
 
 /**
  * Config plugin to apply all of the custom Expo iOS config plugins we support by default.
@@ -43,6 +47,7 @@ export const withIosExpoPlugins: ConfigPlugin<{
     IOSConfig.Swift.withNoopSwiftFile,
     IOSConfig.Google.withGoogle,
     IOSConfig.Name.withDisplayName,
+    IOSConfig.Name.withProductName,
     IOSConfig.Orientation.withOrientation,
     IOSConfig.RequiresFullScreen.withRequiresFullScreen,
     IOSConfig.Scheme.withScheme,
@@ -197,6 +202,11 @@ const expoManagedVersionedPlugins = [
 
 const withOptionalLegacyPlugins: ConfigPlugin<(StaticPlugin | string)[]> = (config, plugins) => {
   return plugins.reduce((prev, plugin) => {
+    if (shouldSkipAutoPlugin(config, plugin)) {
+      debug('Skipping unlinked auto plugin:', plugin);
+      return prev;
+    }
+
     return withStaticPlugin(prev, {
       // hide errors
       _isLegacyPlugin: true,

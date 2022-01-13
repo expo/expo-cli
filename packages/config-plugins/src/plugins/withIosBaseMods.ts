@@ -1,4 +1,4 @@
-import JsonFile, { JSONObject } from '@expo/json-file';
+import JsonFile, { JSONObject, JSONValue } from '@expo/json-file';
 import plist from '@expo/plist';
 import assert from 'assert';
 import { promises } from 'fs';
@@ -260,14 +260,14 @@ const defaultProviders = {
   }),
 
   // Append a rule to supply Podfile.properties.json data to mods on `mods.ios.podfileProperties`
-  podfileProperties: provider<Record<string, string>>({
+  podfileProperties: provider<Record<string, JSONValue>>({
     isIntrospective: true,
 
     getFilePath({ modRequest: { platformProjectRoot } }) {
       return path.resolve(platformProjectRoot, 'Podfile.properties.json');
     },
     async read(filePath) {
-      let results: Record<string, string> = {};
+      let results: Record<string, JSONValue> = {};
       try {
         results = await JsonFile.readAsync(filePath);
       } catch (e) {}
