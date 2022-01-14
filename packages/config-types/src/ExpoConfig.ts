@@ -201,6 +201,23 @@ export interface ExpoConfig {
      * URL from which expo-updates will fetch update manifests
      */
     url?: string;
+    /**
+     * Local path of a PEM-formatted X.509 certificate used for requiring and verifying signed Expo updates
+     */
+    codeSigningCertificate?: string;
+    /**
+     * Metadata for `codeSigningCertificate`
+     */
+    codeSigningMetadata?: {
+      /**
+       * Algorithm used to generate manifest code signing signature.
+       */
+      alg?: 'rsa-v1_5-sha256';
+      /**
+       * Identifier for the key in the certificate. Used to instruct signing mechanisms when signing or verifying signatures.
+       */
+      keyid?: string;
+    };
   };
   /**
    * Provide overrides by locale for System Dialog prompts like Permissions Boxes

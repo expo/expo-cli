@@ -50,4 +50,6 @@ export type ExpoPlist = {
   EXUpdatesRequestHeaders: Record<string, string>;
   EXUpdatesSDKVersion?: string;
   EXUpdatesURL?: string;
+  EXUpdatesCodeSigningCertificate?: string;
+  EXUpdatesCodeSigningMetadata?: Record<string, string>;
 };

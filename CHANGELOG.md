@@ -6,6 +6,9 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🛠 Breaking changes
 
+- [config-plugins] Add code signing configuration to updates config plugin  ([#4122](https://github.com/expo/expo-cli/issues/4122))
+
+
 ### 🎉 New features
 
 ### 🧹 Chores
