@@ -2,7 +2,7 @@ import { Config, UserManager } from '@expo/api';
 import { ExpoConfig } from '@expo/config-types';
 import assert from 'assert';
 
-import { Logger as logger, UrlUtils } from './internal';
+import { Logger as logger, ProjectSettings, UrlUtils } from './internal';
 
 const UPDATE_FREQUENCY_SECS = 20;
 
@@ -31,12 +31,12 @@ export async function startSession(
   }
 
   if (!Config.isOffline && keepUpdating) {
-    // TODO(anp) if the user has configured device ids, then notify for those too
     const authSession = await UserManager.getSessionAsync();
+    const { devices } = await ProjectSettings.getDevicesInfoAsync(projectRoot);
 
-    if (!authSession) {
+    if (!authSession && !devices?.length) {
       // NOTE(brentvatne) let's just bail out in this case for now
-      // throw new Error('development sessions can only be initiated for logged in users');
+      // throw new Error('development sessions can only be initiated for logged in users or with a device ID');
       return;
     }
 
@@ -48,6 +48,7 @@ export async function startSession(
         exp,
         url,
         platform: runtime,
+        devices,
       });
     } catch (e) {
       logger.global.debug(e, `Error updating dev session: ${e}`);
