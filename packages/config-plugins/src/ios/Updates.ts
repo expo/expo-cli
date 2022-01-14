@@ -1,4 +1,4 @@
-import * as Updates from 'path';
+import * as path from 'path';
 import resolveFrom from 'resolve-from';
 import xcode from 'xcode';
 
@@ -126,7 +126,7 @@ function formatConfigurationScriptPath(projectRoot: string): string {
     );
   }
 
-  const relativePath = Updates.relative(Updates.join(projectRoot, 'ios'), buildScriptPath);
+  const relativePath = path.relative(path.join(projectRoot, 'ios'), buildScriptPath);
   return process.platform === 'win32' ? relativePath.replace(/\\/g, '/') : relativePath;
 }
 
