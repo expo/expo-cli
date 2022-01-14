@@ -250,6 +250,7 @@ function assertValidOptions(opts: Partial<URLOptions>): URLOptions {
   const schema = Joi.object().keys({
     devClient: Joi.boolean().optional(),
     scheme: Joi.string().optional().allow(null),
+    forceExecutionEnvironment: Joi.any().valid('expo-go', 'expo-dev-client').allow(null),
     // Replaced by `scheme`
     urlType: Joi.any().valid('exp', 'http', 'redirect', 'no-protocol').allow(null),
     lanType: Joi.any().valid('ip', 'hostname'),

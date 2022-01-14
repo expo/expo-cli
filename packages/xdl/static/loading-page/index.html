@@ -185,6 +185,17 @@
       color: var(--secondary-text-color);
     }
 
+    .bottom-bar label {
+      font-size: 14px;
+      letter-spacing: -8.5e;
+      color: var(--text-color);
+    }
+
+    .bottom-bar input[type=checkbox] {
+      vertical-align: middle;
+      padding: 10px;
+    }
+
   </style>
   <title>Expo Start | Loading Page</title>
 </head>
@@ -245,6 +256,10 @@
     </p>
     <a id="expo-dev-client-link" href="/_expo/link?choice=expo-dev-client" class="bottom-bar-button bottom-bar-button-dark">Development App</a>
     <a id="expo-go-link" href="/_expo/link?choice=expo-go" class="bottom-bar-button bottom-bar-button-grey">Expo Go</a>
+    <label for="shouldSave">
+      <input type="checkbox" id="shouldSave" name="shouldSave">
+      Remember my choice
+    </label>
   </div>
   
   <script>
@@ -261,14 +276,27 @@
     return result;
   }
 
+  const devClientLink = document.getElementById("expo-dev-client-link");
+  const goLink = document.getElementById("expo-go-link");
+  const shouldSaveCheckbox = document.getElementById("shouldSave");
+  
   const platform = findGetParameter("platform");
-  if (platform) {
-    const devClientLink = document.getElementById("expo-dev-client-link");
-    const goLink = document.getElementById("expo-go-link");
 
-    devClientLink.href += "&platform=" + platform;
-    goLink.href += "&platform=" + platform;
+  const onLinkClick = (event) => {
+    const element = event.target;
+  
+    if (platform) {
+      element.href += "&platform=" + platform;
+    }
+
+    const shouldSave = shouldSaveCheckbox.checked
+    if (shouldSave) {
+      element.href += "&shouldSave=1";
+    }
   }
+
+  devClientLink.onclick = onLinkClick;
+  goLink.onclick = onLinkClick;
   </script>
 </body>
 </html>

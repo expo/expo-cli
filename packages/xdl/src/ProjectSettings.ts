@@ -14,6 +14,7 @@ export type ProjectSettings = {
   minify: boolean;
   urlRandomness: string | null;
   https: boolean;
+  forceExecutionEnvironment: 'expo-go' | 'expo-dev-client' | null;
 };
 export type Settings = ProjectSettings;
 
@@ -27,6 +28,7 @@ const projectSettingsDefaults: ProjectSettings = {
   minify: false,
   urlRandomness: null,
   https: false,
+  forceExecutionEnvironment: null,
 };
 
 type PackagerInfo = {

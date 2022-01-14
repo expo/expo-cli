@@ -831,12 +831,14 @@ export async function resolveApplicationIdAsync(projectRoot: string): Promise<st
 async function constructDeepLinkAsync(
   projectRoot: string,
   scheme?: string,
-  devClient?: boolean
+  devClient?: boolean,
+  shouldGenerateInterstitialPage: boolean = true
 ): Promise<string | null> {
   if (
     process.env['EXPO_ENABLE_INTERSTITIAL_PAGE'] &&
     !devClient &&
-    isDevClientPackageInstalled(projectRoot)
+    isDevClientPackageInstalled(projectRoot) &&
+    shouldGenerateInterstitialPage
   ) {
     return UrlUtils.constructLoadingUrlAsync(projectRoot, 'android');
   } else {
@@ -870,7 +872,20 @@ export async function openProjectAsync({
 }): Promise<{ success: true; url: string } | { success: false; error: Error | string }> {
   await startAdbReverseAsync(projectRoot);
 
-  const projectUrl = await constructDeepLinkAsync(projectRoot, scheme, devClient);
+  let shouldGenerateInterstitialPage = true;
+  if (!devClient) {
+    const { forceExecutionEnvironment } = await ProjectSettings.readAsync(projectRoot);
+    devClient = forceExecutionEnvironment === 'expo-dev-client';
+    shouldGenerateInterstitialPage = forceExecutionEnvironment === null;
+    await ProjectSettings.setAsync(projectRoot, { devClient });
+  }
+
+  const projectUrl = await constructDeepLinkAsync(
+    projectRoot,
+    scheme,
+    devClient,
+    shouldGenerateInterstitialPage
+  );
 
   const { exp } = getConfig(projectRoot, {
     skipSDKVersionRequirement: true,

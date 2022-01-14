@@ -22,6 +22,7 @@ import {
   learnMore,
   LoadingEvent,
   Logger,
+  ProjectSettings,
   Prompts,
   SimControl,
   SimControlLogs,
@@ -772,12 +773,14 @@ export async function resolveApplicationIdAsync(projectRoot: string) {
 async function constructDeepLinkAsync(
   projectRoot: string,
   scheme?: string,
-  devClient?: boolean
+  devClient?: boolean,
+  shouldGenerateInterstitialPage: boolean = true
 ): Promise<string | null> {
   if (
     process.env['EXPO_ENABLE_INTERSTITIAL_PAGE'] &&
     !devClient &&
-    isDevClientPackageInstalled(projectRoot)
+    isDevClientPackageInstalled(projectRoot) &&
+    shouldGenerateInterstitialPage
   ) {
     return UrlUtils.constructLoadingUrlAsync(projectRoot, 'ios', 'localhost');
   } else {
@@ -822,7 +825,20 @@ export async function openProjectAsync({
     };
   }
 
-  const projectUrl = await constructDeepLinkAsync(projectRoot, scheme, devClient);
+  let shouldGenerateInterstitialPage = true;
+  if (!devClient) {
+    const { forceExecutionEnvironment } = await ProjectSettings.readAsync(projectRoot);
+    devClient = forceExecutionEnvironment === 'expo-dev-client';
+    shouldGenerateInterstitialPage = forceExecutionEnvironment === null;
+    await ProjectSettings.setAsync(projectRoot, { devClient });
+  }
+
+  const projectUrl = await constructDeepLinkAsync(
+    projectRoot,
+    scheme,
+    devClient,
+    shouldGenerateInterstitialPage
+  );
   Logger.global.debug(`iOS project url: ${projectUrl}`);
 
   const { exp } = getConfig(projectRoot, {

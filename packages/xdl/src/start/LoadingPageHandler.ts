@@ -4,7 +4,7 @@ import http from 'http';
 import { resolve } from 'path';
 import { parse } from 'url';
 
-import { UrlUtils } from './../internal';
+import { ProjectSettings, UrlUtils } from './../internal';
 
 export const LoadingEndpoint = '/_expo/loading';
 export const DeepLinkEndpoint = '/_expo/link';
@@ -56,6 +56,8 @@ async function deeplinkEndpointHandler(
 ) {
   const { query } = parse(req.url!, true);
   const isDevClient = query['choice'] === 'expo-dev-client';
+  const shouldSave = query['shouldSave'];
+
   if (isDevClient) {
     const projectUrl = await UrlUtils.constructDevClientUrlAsync(projectRoot, {
       hostType: 'localhost',
@@ -69,6 +71,13 @@ async function deeplinkEndpointHandler(
   }
 
   onDeepLink(projectRoot, isDevClient, getPlatform(query));
+
+  if (shouldSave) {
+    const forceExecutionEnvironment = isDevClient ? 'expo-dev-client' : 'expo-go';
+    await ProjectSettings.setAsync(projectRoot, {
+      forceExecutionEnvironment,
+    });
+  }
 
   res.setHeader('Cache-Control', 'private, no-cache, no-store, must-revalidate');
   res.setHeader('Expires', '-1');

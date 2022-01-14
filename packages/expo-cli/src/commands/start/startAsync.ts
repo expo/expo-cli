@@ -2,7 +2,14 @@ import { ConfigError, ExpoConfig, getConfig, isLegacyImportsEnabled } from '@exp
 import chalk from 'chalk';
 import path from 'path';
 import resolveFrom from 'resolve-from';
-import { LoadingPageHandler, Project, UnifiedAnalytics, UrlUtils, Versions } from 'xdl';
+import {
+  LoadingPageHandler,
+  Project,
+  ProjectSettings,
+  UnifiedAnalytics,
+  UrlUtils,
+  Versions,
+} from 'xdl';
 
 import StatusEventEmitter from '../../analytics/StatusEventEmitter';
 import getDevClientProperties from '../../analytics/getDevClientProperties';
@@ -78,6 +85,10 @@ export async function actionAsync(projectRoot: string, options: NormalizedOption
   }
 
   const startOptions = profileMethod(parseStartOptions)(options, exp);
+  if (startOptions.reset) {
+    await ProjectSettings.setAsync(projectRoot, { forceExecutionEnvironment: null });
+  }
+
   LoadingPageHandler.setOnDeepLink(
     async (projectRoot: string, isDevClient: boolean, platform: string | null) => {
       if (!isDevClient) {
