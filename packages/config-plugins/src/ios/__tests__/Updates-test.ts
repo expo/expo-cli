@@ -54,9 +54,10 @@ describe('iOS Updates config', () => {
       EXUpdatesCheckOnLaunch: 'ERROR_RECOVERY_ONLY',
       EXUpdatesLaunchWaitMs: 2000,
       EXUpdatesSDKVersion: '37.0.0',
-      EXUpdatesCodeSigningCertificate: fsReal
-        .readFileSync(sampleCodeSigningCertificatePath, 'utf-8')
-        .replace(/\n/g, '\\n'),
+      EXUpdatesCodeSigningCertificate: fsReal.readFileSync(
+        sampleCodeSigningCertificatePath,
+        'utf-8'
+      ),
       EXUpdatesCodeSigningMetadata: { alg: 'rsa-v1_5-sha256', keyid: 'test' },
     });
   });

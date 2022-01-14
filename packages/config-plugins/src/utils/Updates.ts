@@ -166,12 +166,11 @@ export function getUpdatesCodeSigningCertificate(
   }
 
   const finalPath = path.join(projectRoot, codeSigningCertificatePath);
-  if (!finalPath || !fs.existsSync(finalPath)) {
+  if (!fs.existsSync(finalPath)) {
     throw new Error(`File not found at \`updates.codeSigningCertificate\` path: ${finalPath}`);
   }
 
-  // need to format it as a single line string with `\n` characters actually in the string
-  return fs.readFileSync(finalPath, 'utf8').replace(/\n/g, '\\n');
+  return fs.readFileSync(finalPath, 'utf8');
 }
 
 export function getUpdatesCodeSigningMetadata(
@@ -188,6 +187,5 @@ export function getUpdatesCodeSigningMetadataStringified(
     return undefined;
   }
 
-  // replace double quotes with single quotes for android manifest
-  return JSON.stringify(metadata).replace(/"/g, "'");
+  return JSON.stringify(metadata);
 }

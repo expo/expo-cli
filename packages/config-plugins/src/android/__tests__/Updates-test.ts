@@ -94,7 +94,7 @@ describe('Android Updates config', () => {
     );
     expect(codeSigningCertificate).toHaveLength(1);
     expect(codeSigningCertificate[0].$['android:value']).toMatch(
-      fsReal.readFileSync(sampleCodeSigningCertificatePath, 'utf-8').replace(/\n/g, '\\n')
+      fsReal.readFileSync(sampleCodeSigningCertificatePath, 'utf-8')
     );
 
     const codeSigningMetadata = mainApplication['meta-data'].filter(
@@ -102,7 +102,7 @@ describe('Android Updates config', () => {
     );
     expect(codeSigningMetadata).toHaveLength(1);
     expect(codeSigningMetadata[0].$['android:value']).toMatch(
-      '{"alg":"rsa-v1_5-sha256","keyid":"test"}'.replace(/"/g, "'")
+      '{"alg":"rsa-v1_5-sha256","keyid":"test"}'
     );
   });
 

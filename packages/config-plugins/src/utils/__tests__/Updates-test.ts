@@ -66,7 +66,7 @@ describe('shared config getters', () => {
           codeSigningCertificate: 'hello',
         },
       })
-    ).toBe(fsReal.readFileSync(sampleCodeSigningCertificatePath, 'utf-8').replace(/\n/g, '\\n'));
+    ).toBe(fsReal.readFileSync(sampleCodeSigningCertificatePath, 'utf-8'));
     expect(
       getUpdatesCodeSigningMetadataStringified({
         updates: {
@@ -80,7 +80,7 @@ describe('shared config getters', () => {
       JSON.stringify({
         alg: 'rsa-v1_5-sha256',
         keyid: 'test',
-      }).replace(/"/g, "'")
+      })
     );
     expect(
       getUpdatesCodeSigningMetadata({

@@ -153,12 +153,8 @@ export function getConfig(projectRoot: string, options: GetConfigOptions = {}): 
       // @ts-ignore: originalFullName not on type yet.
       configWithDefaultValues.exp.originalFullName = getFullName(configWithDefaultValues.exp);
 
-      if (configWithDefaultValues.exp.updates?.codeSigningCertificate) {
-        delete configWithDefaultValues.exp.updates.codeSigningCertificate;
-      }
-      if (configWithDefaultValues.exp.updates?.codeSigningMetadata) {
-        delete configWithDefaultValues.exp.updates.codeSigningMetadata;
-      }
+      delete configWithDefaultValues.exp.updates?.codeSigningCertificate;
+      delete configWithDefaultValues.exp.updates?.codeSigningMetadata;
     }
 
     return configWithDefaultValues;
