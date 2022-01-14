@@ -1,5 +1,6 @@
 import { Config, UserManager } from '@expo/api';
 import { ExpoConfig } from '@expo/config-types';
+import assert from 'assert';
 
 import { Logger as logger, UrlUtils } from './internal';
 
@@ -7,11 +8,13 @@ const UPDATE_FREQUENCY_SECS = 20;
 
 let keepUpdating = true;
 
-async function getUrlForRuntimeAsync(projectRoot: string, runtime: string) {
+async function getUrlForRuntimeAsync(projectRoot: string, runtime: string): Promise<string> {
   if (runtime === 'native') {
-    return UrlUtils.constructDeepLinkAsync(projectRoot);
+    return await UrlUtils.constructDeepLinkAsync(projectRoot);
   } else if (runtime === 'web') {
-    return UrlUtils.constructWebAppUrlAsync(projectRoot);
+    const url = await UrlUtils.constructWebAppUrlAsync(projectRoot);
+    assert(url, `Webpack dev server is not running for project at: ${projectRoot}`);
+    return url;
   }
   throw new Error(`Unsupported runtime: ${runtime}`);
 }

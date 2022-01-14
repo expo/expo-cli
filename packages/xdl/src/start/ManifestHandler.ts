@@ -163,7 +163,7 @@ export function getManifestHandler(projectRoot: string) {
         developerTool: Config.developerTool,
         sdkVersion,
       });
-    } catch (e) {
+    } catch (e: any) {
       ProjectUtils.logError(projectRoot, 'expo', e.stack);
       // 5xx = Server Error HTTP code
       res.statusCode = 520;

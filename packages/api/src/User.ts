@@ -1,11 +1,11 @@
-import type { ExpoConfig } from '@expo/config-types';
-import type { JSONObject } from '@expo/json-file';
+import { ExpoConfig } from '@expo/config-types';
+import { JSONObject } from '@expo/json-file';
 import assert from 'assert';
 import FormData from 'form-data';
 import os from 'os';
 
 import Analytics from './Analytics';
-import ApiV2Client from './ApiV2';
+import ApiV2Client, { ApiV2ClientOptions } from './ApiV2';
 import Config from './Config';
 import { Semaphore } from './Semaphore';
 import UnifiedAnalytics from './UnifiedAnalytics';
@@ -505,7 +505,10 @@ export class UserManagerInstance {
     });
   }
 
-  public async getProjectAsync(user: User | RobotUser, projectId: string): Promise<JSONObject> {
+  public async getProjectAsync(
+    user: User | RobotUser,
+    projectId: string
+  ): Promise<{ scopeKey: string }> {
     return await ApiV2Client.clientForUser(user).getAsync(
       `projects/${encodeURIComponent(projectId)}`
     );
@@ -594,7 +597,7 @@ export class UserManagerInstance {
   }
 
   public async notifyAliveAsync(
-    user: User | RobotUser,
+    user: ApiV2ClientOptions | null,
     {
       exp,
       platform,
@@ -638,7 +641,7 @@ export class UserManagerInstance {
    * @param props.secondFactorDeviceID UUID of the second factor device
    */
   public async sendSmsOtpAsync(
-    user: User | RobotUser | null,
+    user: ApiV2ClientOptions | null,
     {
       username,
       password,
@@ -657,7 +660,7 @@ export class UserManagerInstance {
   }
 
   public async getLegacyReusableBuildAsync(
-    user: User | RobotUser | null,
+    user: ApiV2ClientOptions | null,
     {
       releaseChannel,
       platform,
@@ -772,7 +775,7 @@ export class UserManagerInstance {
    * ]
    */
   public async getBundledNativeModulesFromApiAsync(
-    user: User | RobotUser | null,
+    user: ApiV2ClientOptions | null,
     sdkVersion: string
   ): Promise<Record<string, string>> {
     const list = (await ApiV2Client.clientForUser(user).getAsync(

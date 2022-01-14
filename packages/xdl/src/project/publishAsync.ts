@@ -28,7 +28,7 @@ export interface PublishedProjectResult {
   /**
    * Project page URL
    */
-  projectPageUrl: string;
+  projectPageUrl: string | null;
   /**
    * TODO: What is this?
    */
@@ -163,7 +163,7 @@ export async function publishAsync(
       logger.global.info(`Running postPublish hook: ${hook.file}`);
       try {
         runHook(hook, hookOptions);
-      } catch (e) {
+      } catch (e: any) {
         logger.global.warn(`Warning: postPublish hook '${hook.file}' failed: ${e.stack}`);
       }
     }

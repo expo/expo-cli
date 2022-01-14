@@ -58,7 +58,7 @@ async function getScopeKeyForProjectIdAsync(projectId: string): Promise<string> 
 
 async function signManifestAsync(manifest: ExpoUpdatesManifest): Promise<string> {
   const user = await UserManager.ensureLoggedInAsync();
-  return UserManager.signManifestAsync(user, manifest);
+  return UserManager.signManifestAsync(user, manifest as any);
 }
 
 export async function getManifestResponseAsync({

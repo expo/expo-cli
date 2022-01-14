@@ -43,7 +43,7 @@ type UploadOptions = {
 
 type QueryParameters = { [key: string]: string | number | boolean | null | undefined };
 
-type APIV2ClientOptions = {
+export type ApiV2ClientOptions = {
   sessionSecret?: string;
   accessToken?: string;
 };
@@ -53,7 +53,7 @@ export default class ApiV2Client {
   sessionSecret: string | null = null;
   accessToken: string | null = null;
 
-  static clientForUser(user?: APIV2ClientOptions | null): ApiV2Client {
+  static clientForUser(user?: ApiV2ClientOptions | null): ApiV2Client {
     if (user) {
       return new ApiV2Client(user);
     }
@@ -65,7 +65,7 @@ export default class ApiV2Client {
     ApiV2Client.exponentClient = name;
   }
 
-  constructor(options: APIV2ClientOptions = {}) {
+  constructor(options: ApiV2ClientOptions = {}) {
     if (options.accessToken) {
       this.accessToken = options.accessToken;
     }
