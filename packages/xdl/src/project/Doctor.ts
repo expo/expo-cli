@@ -1,4 +1,4 @@
-import { ExpSchema, Versions } from '@expo/api';
+import { ExpoConfigSchema, Versions } from '@expo/api';
 import { configFilename, ExpoConfig, getConfig, PackageJSONConfig } from '@expo/config';
 import Schemer, { SchemerError, ValidationError } from '@expo/schemer';
 import spawnAsync from '@expo/spawn-async';
@@ -28,6 +28,14 @@ const EXPO_NO_DOCTOR = getenv.boolish('EXPO_NO_DOCTOR', false);
 
 function _isNpmVersionWithinRanges(npmVersion: string, ranges: string[]) {
   return ranges.some(range => semver.satisfies(npmVersion, range));
+}
+
+function parseSdkVersionFromTag(tag: string): string {
+  if (tag.startsWith('sdk-')) {
+    return tag.substring(4);
+  }
+
+  return tag;
 }
 
 async function _checkNpmVersionAsync(projectRoot: string) {
@@ -228,7 +236,7 @@ async function _validateExpJsonAsync(
   // Skip validation if the correct token is set in env
   if (sdkVersion && sdkVersion !== 'UNVERSIONED') {
     try {
-      const schema = await ExpSchema.getSchemaAsync(sdkVersion);
+      const schema = await ExpoConfigSchema.getSchemaAsync(sdkVersion);
       const { schemaErrorMessage, assetsErrorMessage } = await validateWithSchema(
         projectRoot,
         exp,
@@ -321,7 +329,7 @@ async function _validateReactNativeVersionAsync(
   ProjectUtils.clearNotification(projectRoot, 'doctor-no-react-native-in-package-json');
 
   if (
-    Versions.gteSdkVersion(exp, '41.0.0') &&
+    Versions.gte(exp.sdkVersion, '41.0.0') &&
     pkg.dependencies?.['@react-native-community/async-storage']
   ) {
     ProjectUtils.logWarning(
@@ -381,8 +389,8 @@ async function _validateReactNativeVersionAsync(
 
       // TODO: Want to be smarter about this. Maybe warn if there's a newer version.
       if (
-        semver.major(Versions.parseSdkVersionFromTag(reactNativeTag)) !==
-        semver.major(Versions.parseSdkVersionFromTag(sdkVersionObject['expoReactNativeTag']))
+        semver.major(parseSdkVersionFromTag(reactNativeTag)) !==
+        semver.major(parseSdkVersionFromTag(sdkVersionObject['expoReactNativeTag']))
       ) {
         ProjectUtils.logWarning(
           projectRoot,

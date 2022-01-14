@@ -21,7 +21,7 @@ const NGROK_CONFIG = {
 };
 
 function getNgrokConfigPath() {
-  return path.join(UserSettings.dotExpoHomeDirectory(), 'ngrok.yml');
+  return path.join(UserSettings.getDirectory(), 'ngrok.yml');
 }
 
 async function getProjectRandomnessAsync(projectRoot: string) {

@@ -1,4 +1,4 @@
-import { User } from '@expo/api';
+import type { User } from '@expo/api';
 
 interface MockProject {
   projectRoot: string;

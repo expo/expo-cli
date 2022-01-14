@@ -1,4 +1,4 @@
-import { ExpSchema, UserManager } from '@expo/api';
+import { ExpoConfigSchema, UserManager } from '@expo/api';
 import { ExpoAppManifest, ExpoConfig } from '@expo/config';
 import { BundleAssetWithFileHashes, BundleOutput } from '@expo/dev-server';
 import assert from 'assert';
@@ -63,7 +63,7 @@ export async function resolveGoogleServicesFile(projectRoot: string, manifest: E
  */
 async function getAssetFieldPathsForManifestAsync(manifest: ExpoConfig): Promise<string[]> {
   // String array like ["icon", "notification.icon", "loading.icon", "loading.backgroundImage", "ios.icon", ...]
-  const sdkAssetFieldPaths = await ExpSchema.getAssetSchemasAsync(manifest.sdkVersion);
+  const sdkAssetFieldPaths = await ExpoConfigSchema.getAssetSchemasAsync(manifest.sdkVersion);
   return sdkAssetFieldPaths.filter(assetSchema => get(manifest, assetSchema));
 }
 

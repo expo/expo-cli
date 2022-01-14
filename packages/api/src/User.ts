@@ -1,27 +1,16 @@
-import { ExpoConfig } from '@expo/config-types';
-import { JSONObject } from '@expo/json-file';
+import type { ExpoConfig } from '@expo/config-types';
+import type { JSONObject } from '@expo/json-file';
 import assert from 'assert';
 import FormData from 'form-data';
-import camelCase from 'lodash/camelCase';
-import isEmpty from 'lodash/isEmpty';
-import snakeCase from 'lodash/snakeCase';
 import os from 'os';
 
 import Analytics from './Analytics';
 import ApiV2Client from './ApiV2';
-import * as ConnectionStatus from './ConnectionStatus';
+import Config from './Config';
 import { Semaphore } from './Semaphore';
 import UnifiedAnalytics from './UnifiedAnalytics';
 import UserSettings from './UserSettings';
-
-export class AuthError extends Error {
-  readonly name = 'AuthError';
-  readonly isAuthError = true;
-
-  constructor(public code: string, message: string) {
-    super(message);
-  }
-}
+import { AuthError } from './utils/errors';
 
 export type DetailOptions = {
   publishId?: string;
@@ -149,11 +138,13 @@ export type PublicationDetail = {
 };
 
 export type Publication = {
+  /** Like `@bacon/test-experience` */
   fullName: string;
   channel: string;
   channelId: string;
   publicationId: string;
   appVersion: string;
+  /** Like `22.0.0` */
   sdkVersion: string;
   runtimeVersion?: string;
   publishedTime: string;
@@ -211,27 +202,24 @@ export class UserManagerInstance {
     loginType: LoginType,
     loginArgs?: { username: string; password: string; otp?: string }
   ): Promise<User> {
-    if (loginType === 'user-pass') {
-      if (!loginArgs) {
-        throw new Error(`The 'user-pass' login type requires a username and password.`);
-      }
-      const apiAnonymous = ApiV2Client.clientForUser();
-      const loginResp = await apiAnonymous.postAsync('auth/loginAsync', {
+    assert(loginType === 'user-pass', `Invalid login type provided. Must be 'user-pass'.`);
+    assert(loginArgs, `The 'user-pass' login type requires a username and password.`);
+    const { error, sessionSecret, error_description } = await ApiV2Client.clientForUser().postAsync(
+      'auth/loginAsync',
+      {
         username: loginArgs.username,
         password: loginArgs.password,
         otp: loginArgs.otp,
-      });
-      if (loginResp.error) {
-        throw new AuthError('INVALID_USERNAME_PASSWORD', loginResp['error_description']);
       }
-      const user = await this._getProfileAsync({
-        currentConnection: 'Username-Password-Authentication',
-        sessionSecret: loginResp.sessionSecret,
-      });
-      return user as User;
-    } else {
-      throw new Error(`Invalid login type provided. Must be 'user-pass'.`);
+    );
+    if (error) {
+      throw new AuthError('INVALID_USERNAME_PASSWORD', error_description);
     }
+    const user = await this._getProfileAsync({
+      currentConnection: 'Username-Password-Authentication',
+      sessionSecret,
+    });
+    return user as User;
   }
 
   async registerAsync(
@@ -278,7 +266,7 @@ export class UserManagerInstance {
    * If there are any issues with the login, this method throws.
    */
   async ensureLoggedInAsync(): Promise<User | RobotUser> {
-    if (ConnectionStatus.isOffline()) {
+    if (Config.isOffline) {
       throw new AuthError('NETWORK_REQUIRED', "Can't verify user without network access");
     }
 
@@ -298,7 +286,7 @@ export class UserManagerInstance {
 
   async _readUserData(): Promise<UserData | null> {
     let auth = await UserSettings.getAsync('auth', null);
-    if (isEmpty(auth)) {
+    if (!auth || !Object.keys(auth).length) {
       // XXX(ville):
       // We sometimes read an empty string from ~/.expo/state.json,
       // even though it has valid credentials in it.
@@ -357,7 +345,7 @@ export class UserManagerInstance {
         return currentUser;
       }
 
-      if (ConnectionStatus.isOffline()) {
+      if (Config.isOffline) {
         return null;
       }
 
@@ -430,10 +418,7 @@ export class UserManagerInstance {
       }
     }
     const data = await this._readUserData();
-    if (data?.username) {
-      return data.username;
-    }
-    return null;
+    return data?.username ?? null;
   }
 
   async getSessionAsync(): Promise<{ sessionSecret?: string; accessToken?: string } | null> {
@@ -442,10 +427,7 @@ export class UserManagerInstance {
       return { accessToken: token };
     }
     const data = await this._readUserData();
-    if (data?.sessionSecret) {
-      return { sessionSecret: data.sessionSecret };
-    }
-    return null;
+    return data?.sessionSecret ? { sessionSecret: data.sessionSecret } : null;
   }
 
   /**
@@ -462,11 +444,12 @@ export class UserManagerInstance {
       throw new AuthError('ROBOT_ACCOUNT_ERROR', 'This action is not available for robot users');
     }
 
-    const api = ApiV2Client.clientForUser(currentUser);
-
-    const { user: updatedUser } = await api.postAsync('auth/createOrUpdateUser', {
-      userData: _prepareAuth0Profile(userData),
-    });
+    const { user: updatedUser } = await ApiV2Client.clientForUser(currentUser).postAsync(
+      'auth/createOrUpdateUser',
+      {
+        userData: _prepareAuth0Profile(userData),
+      }
+    );
 
     this._currentUser = {
       ...this._currentUser,
@@ -503,8 +486,7 @@ export class UserManagerInstance {
    * Forgot Password
    */
   async forgotPasswordAsync(usernameOrEmail: string): Promise<void> {
-    const apiAnonymous = ApiV2Client.clientForUser();
-    return apiAnonymous.postAsync('auth/forgotPasswordAsync', {
+    return ApiV2Client.clientForUser().postAsync('auth/forgotPasswordAsync', {
       usernameOrEmail,
     });
   }
@@ -512,20 +494,21 @@ export class UserManagerInstance {
   /** Send project URL to the user. */
   public async sendProjectAsync(
     user: User | RobotUser,
-    recipient: string,
-    url_: string,
-    allowUnauthed: boolean = true
+    emailOrPhone: string,
+    url: string,
+    includeExpoLinks: boolean = true
   ) {
-    const api = ApiV2Client.clientForUser(user);
-    return await api.postAsync('send-project', {
-      emailOrPhone: recipient,
-      url: url_,
-      includeExpoLinks: allowUnauthed,
+    return await ApiV2Client.clientForUser(user).postAsync('send-project', {
+      emailOrPhone,
+      url,
+      includeExpoLinks,
     });
   }
 
   public async getProjectAsync(user: User | RobotUser, projectId: string): Promise<JSONObject> {
-    return ApiV2Client.clientForUser(user).getAsync(`projects/${encodeURIComponent(projectId)}`);
+    return await ApiV2Client.clientForUser(user).getAsync(
+      `projects/${encodeURIComponent(projectId)}`
+    );
   }
 
   public async signManifestAsync(user: User | RobotUser, manifest: JSONObject): Promise<string> {
@@ -590,17 +573,16 @@ export class UserManagerInstance {
     formData.append('androidBundle', androidBundle, 'androidBundle');
     formData.append('options', JSON.stringify(options));
 
-    const api = ApiV2Client.clientForUser(user);
-
-    return await api.uploadFormDataAsync('publish/new', formData);
+    return await ApiV2Client.clientForUser(user).uploadFormDataAsync('publish/new', formData);
   }
 
   public async getAssetsMetadataAsync(
     user: User | RobotUser,
     { keys }: { keys: string[] }
   ): Promise<Record<string, S3AssetMetadata>> {
-    const api = ApiV2Client.clientForUser(user);
-    const { metadata } = await api.postAsync('assets/metadata', { keys });
+    const { metadata } = await ApiV2Client.clientForUser(user).postAsync('assets/metadata', {
+      keys,
+    });
     return metadata;
   }
 
@@ -608,8 +590,7 @@ export class UserManagerInstance {
     user: User | RobotUser,
     { data }: { data: FormData }
   ): Promise<unknown> {
-    const api = ApiV2Client.clientForUser(user);
-    return await api.uploadFormDataAsync('assets/upload', data);
+    return await ApiV2Client.clientForUser(user).uploadFormDataAsync('assets/upload', data);
   }
 
   public async notifyAliveAsync(
@@ -630,8 +611,7 @@ export class UserManagerInstance {
       source: 'desktop' | 'snack';
     }
   ): Promise<unknown> {
-    const api = ApiV2Client.clientForUser(user);
-    return await api.postAsync('development-sessions/notify-alive', {
+    return await ApiV2Client.clientForUser(user).postAsync('development-sessions/notify-alive', {
       data: {
         session: {
           description: description ?? `${exp.name} on ${os.hostname()}`,
@@ -719,8 +699,6 @@ export class UserManagerInstance {
       throw new Error('-n must be a number between 1 and 100 inclusive');
     }
 
-    // const VERSION = 2;
-
     const results = await ApiV2Client.clientForUser(user).postAsync('publish/history', {
       owner: owner ?? this.getProjectOwner(user, exp),
       slug: exp.slug,
@@ -744,12 +722,13 @@ export class UserManagerInstance {
       exp: Pick<ExpoConfig, 'slug'>;
       options: SetOptions;
     }
-  ): Promise<any> {
-    return await ApiV2Client.clientForUser(user).postAsync('publish/set', {
+  ): Promise<Publication> {
+    const { queryResult } = await ApiV2Client.clientForUser(user).postAsync('publish/set', {
       releaseChannel: options.releaseChannel,
       publishId: options.publishId,
       slug: exp.slug,
     });
+    return queryResult;
   }
 
   public async getPublicationDetailAsync(
@@ -832,13 +811,10 @@ export class UserManagerInstance {
     sessionSecret?: string;
     accessToken?: string;
   }): Promise<User | RobotUser> {
-    let user;
-    const api = ApiV2Client.clientForUser({
+    let user = await ApiV2Client.clientForUser({
       sessionSecret,
       accessToken,
-    });
-
-    user = await api.getAsync('auth/userInfo');
+    }).getAsync('auth/userInfo');
 
     if (!user) {
       throw new Error('Unable to fetch user.');
@@ -909,13 +885,23 @@ export class UserManagerInstance {
 let __globalInstance: UserManagerInstance | undefined;
 export default UserManagerInstance.getGlobalInstance();
 
+const toCamelCase = (str: string) => {
+  return str.replace(/([-_][a-z])/g, group =>
+    group.toUpperCase().replace('-', '').replace('_', '')
+  );
+};
+
+const toSnakeCase = (str: string) => {
+  return str.replace(/([a-z][A-Z])/g, group => group.replace(' ', '_').toLowerCase());
+};
+
 /** Private Methods **/
 function _parseAuth0Profile(rawProfile: any) {
   if (!rawProfile || typeof rawProfile !== 'object') {
     return rawProfile;
   }
   return Object.keys(rawProfile).reduce((p, key) => {
-    p[camelCase(key)] = _parseAuth0Profile(rawProfile[key]);
+    p[toCamelCase(key)] = _parseAuth0Profile(rawProfile[key]);
     return p;
   }, {} as any);
 }
@@ -926,7 +912,7 @@ function _prepareAuth0Profile(niceProfile: any) {
   }
 
   return Object.keys(niceProfile).reduce((p, key) => {
-    p[snakeCase(key)] = _prepareAuth0Profile(niceProfile[key]);
+    p[toSnakeCase(key)] = _prepareAuth0Profile(niceProfile[key]);
     return p;
   }, {} as any);
 }

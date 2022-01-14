@@ -123,7 +123,7 @@ type ExtractProps = {
 };
 
 function getCacheFilePath() {
-  return path.join(UserSettings.dotExpoHomeDirectory(), 'template-cache');
+  return path.join(UserSettings.getDirectory(), 'template-cache');
 }
 
 async function createUrlStreamAsync(url: string) {

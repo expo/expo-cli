@@ -1,10 +1,9 @@
 export { downloadAppAsync } from './utils/downloadAppAsync';
-export * as ConnectionStatus from './ConnectionStatus';
 export { default as Analytics } from './Analytics';
 export { default as UnifiedAnalytics } from './UnifiedAnalytics';
 export { default as Config } from './Config';
-export { default as ApiV2, ApiV2Error } from './ApiV2';
-export * as FsCache from './FsCache';
+export { default as ApiV2 } from './ApiV2';
+export { Cache } from './Cache';
 export {
   default as UserManager,
   UserManagerInstance,
@@ -23,4 +22,7 @@ export {
 export { default as UserSettings } from './UserSettings';
 export * as Versions from './Versions';
 // TODO: Rename to ExpoConfigSchema
-export * as ExpSchema from './ExpSchema';
+export * as ExpoConfigSchema from './ExpoConfigSchema';
+
+export * as StandaloneBuild from './StandaloneBuild';
+export { ApiV2Error, ApiError as APIError, AuthError } from './utils/errors';

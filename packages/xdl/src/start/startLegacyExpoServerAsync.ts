@@ -1,4 +1,4 @@
-import { ConnectionStatus } from '@expo/api';
+import { Config } from '@expo/api';
 import { readExpRcAsync } from '@expo/config';
 import axios from 'axios';
 import express from 'express';
@@ -91,7 +91,7 @@ export async function startExpoServerAsync(projectRoot: string): Promise<void> {
     })
   );
   if (
-    (ConnectionStatus.isOffline()
+    (Config.isOffline
       ? await Doctor.validateWithoutNetworkAsync(projectRoot)
       : await Doctor.validateWithNetworkAsync(projectRoot)) === Doctor.FATAL
   ) {

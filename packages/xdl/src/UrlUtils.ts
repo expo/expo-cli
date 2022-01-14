@@ -1,4 +1,4 @@
-import { ConnectionStatus, Versions } from '@expo/api';
+import { Config, Versions } from '@expo/api';
 import { ExpoConfig, getConfig } from '@expo/config';
 import assert from 'assert';
 import Joi from 'joi';
@@ -204,12 +204,12 @@ export function constructBundleQueryParamsWithConfig(
 
   // SDK11 to SDK32 require us to inject hashAssetFiles through the params, but this is not
   // needed with SDK33+
-  if (Versions.lteSdkVersion(exp, '10.0.0')) {
+  if (Versions.lte(exp.sdkVersion, '10.0.0')) {
     // SDK <=10
     // Only sdk-10.1.0+ supports the assetPlugin parameter. We use only the
     // major version in the sdkVersion field, so check for 11.0.0 to be sure.
     queryParams.includeAssetFileHashes = true;
-  } else if (Versions.lteSdkVersion(exp, '32.0.0')) {
+  } else if (Versions.lte(exp.sdkVersion, '32.0.0')) {
     // SDK 11-32
     // Use an absolute path here so that we can not worry about symlinks/relative requires
     const pluginModule = resolveFrom(projectRoot, 'expo/tools/hashAssetFiles');
@@ -304,7 +304,7 @@ function resolveProtocol(
     );
     // Get the first valid scheme.
     const firstScheme = schemes[0];
-    if (firstScheme && !Versions.lteSdkVersion({ sdkVersion }, '26.0.0')) {
+    if (firstScheme && !Versions.lte(sdkVersion, '26.0.0')) {
       protocol = firstScheme;
     } else if (detach.scheme) {
       // must keep this fallback in place for older projects
@@ -349,7 +349,7 @@ export async function constructUrlAsync(
   } else if (opts.hostType === 'localhost' || requestHostname === 'localhost') {
     hostname = '127.0.0.1';
     port = isPackager ? packagerInfo.packagerPort : packagerInfo.expoServerPort;
-  } else if (opts.hostType === 'lan' || ConnectionStatus.isOffline()) {
+  } else if (opts.hostType === 'lan' || Config.isOffline) {
     if (process.env.EXPO_PACKAGER_HOSTNAME) {
       hostname = process.env.EXPO_PACKAGER_HOSTNAME.trim();
     } else if (process.env.REACT_NATIVE_PACKAGER_HOSTNAME) {

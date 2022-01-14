@@ -765,7 +765,7 @@ async function openUrlAsync({
 
     try {
       await _openUrlAsync({ pid: device.pid!, url, applicationId: clientApplicationId });
-    } catch (e) {
+    } catch (e: any) {
       if (isDetached) {
         e.message = `Error running app. Have you installed the app already using Android Studio? Since you are detached you must build manually. ${e.message}`;
       } else {
@@ -1109,7 +1109,7 @@ export async function checkSplashScreenImages(projectRoot: string): Promise<void
   const { exp } = getConfig(projectRoot);
 
   // return before SDK33
-  if (!Versions.gteSdkVersion(exp, '33.0.0')) {
+  if (!Versions.gte(exp.sdkVersion, '33.0.0')) {
     return;
   }
 

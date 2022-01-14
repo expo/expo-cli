@@ -1,10 +1,10 @@
 import JsonFile from '@expo/json-file';
-import fs from 'fs-extra';
-import os from 'os';
+import fs from 'fs';
+import { homedir } from 'os';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 
-import * as Env from './Env';
+import Env from './Env';
 import { UserData } from './User';
 
 export type UserSettingsData = {
@@ -22,7 +22,7 @@ export type UserSettingsData = {
 const SETTINGS_FILE_NAME = 'state.json';
 
 function userSettingsFile(): string {
-  return path.join(dotExpoHomeDirectory(), SETTINGS_FILE_NAME);
+  return path.join(getDirectory(), SETTINGS_FILE_NAME);
 }
 
 function userSettingsJsonFile(): JsonFile<UserSettingsData> {
@@ -32,26 +32,30 @@ function userSettingsJsonFile(): JsonFile<UserSettingsData> {
   });
 }
 
-let mkdirped = false;
+// TODO: Consolidate the expo/config copy of this function.
+function getExpoHomeDirectory() {
+  const home = homedir();
 
-function dotExpoHomeDirectory() {
-  let dirPath = process.env.__UNSAFE_EXPO_HOME_DIRECTORY;
-  if (!dirPath) {
-    const home = os.homedir();
+  if (Env.__UNSAFE_EXPO_HOME_DIRECTORY) {
+    return Env.__UNSAFE_EXPO_HOME_DIRECTORY;
+  } else if (Env.EXPO_STAGING) {
+    return path.join(home, '.expo-staging');
+  } else if (Env.EXPO_LOCAL) {
+    return path.join(home, '.expo-local');
+  }
+  return path.join(home, '.expo');
+}
 
-    if (Env.isStaging()) {
-      dirPath = path.join(home, '.expo-staging');
-    } else if (Env.isLocal()) {
-      dirPath = path.join(home, '.expo-local');
-    } else {
-      dirPath = path.join(home, '.expo');
-    }
+let ensureDirectoryCreated = false;
+
+/** Return the user cache directory. */
+function getDirectory() {
+  const dir = getExpoHomeDirectory();
+  if (!ensureDirectoryCreated) {
+    fs.mkdirSync(dir, { recursive: true });
+    ensureDirectoryCreated = true;
   }
-  if (!mkdirped) {
-    fs.mkdirpSync(dirPath);
-    mkdirped = true;
-  }
-  return dirPath;
+  return dir;
 }
 
 // returns an anonymous, unique identifier for a user on the current computer
@@ -68,11 +72,11 @@ async function getAnonymousIdentifierAsync(): Promise<string> {
 }
 
 function accessToken(): string | null {
-  return process.env.EXPO_TOKEN || null;
+  return Env.EXPO_TOKEN;
 }
 
 const UserSettings = Object.assign(userSettingsJsonFile(), {
-  dotExpoHomeDirectory,
+  getDirectory,
   userSettingsFile,
   userSettingsJsonFile,
   accessToken,

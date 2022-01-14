@@ -1,11 +1,12 @@
 import { JSONObject } from '@expo/json-file';
+import assert from 'assert';
 import fs from 'fs';
 import schemaDerefSync from 'json-schema-deref-sync';
 import path from 'path';
 
 import ApiV2 from './ApiV2';
-import { isLocalSchemaEnabled } from './Env';
-import { Cacher } from './FsCache';
+import { Cache } from './Cache';
+import Env from './Env';
 
 export type Schema = any;
 export type AssetSchema = {
@@ -13,15 +14,14 @@ export type AssetSchema = {
   fieldPath: string;
 };
 
-const _xdlSchemaJson: { [sdkVersion: string]: Schema } = {};
-const _schemaCaches: { [version: string]: Cacher<JSONObject> } = {};
+const xdlSchemaJson: { [sdkVersion: string]: Schema } = {};
+const schemaCaches: { [version: string]: Cache<JSONObject> } = {};
 
 // TODO: Maybe move json-schema-deref-sync out of api (1.58MB)
 // https://packagephobia.com/result?p=json-schema-deref-sync
 export async function getSchemaAsync(sdkVersion: string): Promise<Schema> {
   const json = await _getSchemaJSONAsync(sdkVersion);
-  const schema = schemaDerefSync(json.schema);
-  return schema;
+  return schemaDerefSync(json.schema);
 }
 
 /**
@@ -50,52 +50,49 @@ export async function getAssetSchemasAsync(sdkVersion: string | undefined): Prom
 }
 
 async function _getSchemaJSONAsync(sdkVersion: string): Promise<{ schema: Schema }> {
-  if (isLocalSchemaEnabled()) {
-    if (process.env.EXPONENT_UNIVERSE_DIR) {
-      return JSON.parse(
-        fs
-          .readFileSync(
-            path.join(
-              process.env.EXPONENT_UNIVERSE_DIR,
-              'server',
-              'www',
-              'xdl-schemas',
-              'UNVERSIONED-schema.json'
-            )
+  if (Env.LOCAL_XDL_SCHEMA) {
+    assert(Env.EXPONENT_UNIVERSE_DIR, `LOCAL_XDL_SCHEMA is set but EXPONENT_UNIVERSE_DIR is not.`);
+    return JSON.parse(
+      fs
+        .readFileSync(
+          path.join(
+            Env.EXPONENT_UNIVERSE_DIR,
+            'server',
+            'www',
+            'xdl-schemas',
+            'UNVERSIONED-schema.json'
           )
-          .toString()
-      );
-    } else {
-      throw new Error(`LOCAL_XDL_SCHEMA is set but EXPONENT_UNIVERSE_DIR is not.`);
-    }
-  }
-
-  if (!_xdlSchemaJson[sdkVersion]) {
-    try {
-      _xdlSchemaJson[sdkVersion] = await getConfigurationSchemaAsync(sdkVersion);
-    } catch (e: any) {
-      if (e.code && e.code === 'INVALID_JSON') {
-        throw new Error(`Couldn't read schema from server`);
-      } else {
-        throw e;
-      }
-    }
-  }
-
-  return _xdlSchemaJson[sdkVersion];
-}
-
-async function getConfigurationSchemaAsync(sdkVersion: string): Promise<JSONObject> {
-  if (!_schemaCaches.hasOwnProperty(sdkVersion)) {
-    _schemaCaches[sdkVersion] = new Cacher(
-      async () => {
-        return await new ApiV2().getAsync(`project/configuration/schema/${sdkVersion}`);
-      },
-      `schema-${sdkVersion}.json`,
-      0,
-      path.join(__dirname, `../caches/schema-${sdkVersion}.json`)
+        )
+        .toString()
     );
   }
 
-  return await _schemaCaches[sdkVersion].getAsync();
+  if (!xdlSchemaJson[sdkVersion]) {
+    try {
+      xdlSchemaJson[sdkVersion] = await getConfigurationSchemaAsync(sdkVersion);
+    } catch (e: any) {
+      if (e.code === 'INVALID_JSON') {
+        throw new Error(`Couldn't read schema from server`);
+      }
+
+      throw e;
+    }
+  }
+
+  return xdlSchemaJson[sdkVersion];
+}
+
+async function getConfigurationSchemaAsync(sdkVersion: string): Promise<JSONObject> {
+  if (!schemaCaches.hasOwnProperty(sdkVersion)) {
+    schemaCaches[sdkVersion] = new Cache({
+      getAsync() {
+        return new ApiV2().getAsync(`project/configuration/schema/${sdkVersion}`);
+      },
+      filename: `schema-${sdkVersion}.json`,
+      ttlMilliseconds: 0,
+      bootstrapFile: path.join(__dirname, `../caches/schema-${sdkVersion}.json`),
+    });
+  }
+
+  return await schemaCaches[sdkVersion].getAsync();
 }

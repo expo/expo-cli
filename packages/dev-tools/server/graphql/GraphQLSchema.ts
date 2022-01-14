@@ -1,4 +1,4 @@
-import { ConnectionStatus, UserManager, UserSettings } from '@expo/api';
+import { Config, UserManager, UserSettings } from '@expo/api';
 import { getConfig, writeConfigJsonAsync } from '@expo/config';
 import spawnAsync from '@expo/spawn-async';
 import { makeExecutableSchema } from 'graphql-tools';
@@ -456,7 +456,7 @@ const resolvers = {
   },
   ProjectSettings: {
     hostType(projectSettings) {
-      if (ConnectionStatus.isOffline() && projectSettings.hostType === 'tunnel') {
+      if (Config.isOffline && projectSettings.hostType === 'tunnel') {
         return 'lan';
       } else {
         return projectSettings.hostType;

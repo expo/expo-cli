@@ -1,7 +1,6 @@
 import { ApiV2 } from '@expo/api';
 import { vol } from 'memfs';
 
-import { mockExpoXDL } from '../../../__tests__/mock-utils';
 import { createTestProject } from '../../../__tests__/project-utils';
 import { jester } from '../../../credentials/__tests__/fixtures/mocks-constants';
 import {
@@ -18,15 +17,19 @@ jest.mock('@expo/image-utils', () => ({
   },
 }));
 
-mockExpoXDL({
-  UserManager: {
-    getProjectOwner: jest.fn(jest.requireActual('xdl').UserManager.getProjectOwner),
-    ensureLoggedInAsync: jest.fn(() => jester),
-    getCurrentUserAsync: jest.fn(() => jester),
-  },
-  ApiV2: {
-    clientForUser: jest.fn(),
-  },
+jest.mock('@expo/api', () => {
+  const api = jest.requireActual('@expo/api');
+  return {
+    ...api,
+    UserManager: {
+      getProjectOwner: jest.fn(jest.requireActual('xdl').UserManager.getProjectOwner),
+      ensureLoggedInAsync: jest.fn(() => jester),
+      getCurrentUserAsync: jest.fn(() => jester),
+    },
+    ApiV2: {
+      clientForUser: jest.fn(),
+    },
+  };
 });
 
 describe('publish details', () => {

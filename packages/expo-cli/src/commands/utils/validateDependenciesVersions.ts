@@ -16,7 +16,7 @@ export async function validateDependenciesVersionsAsync(
   pkg: PackageJSONConfig
 ): Promise<boolean> {
   // expo package for SDK < 33.0.0 does not have bundledNativeModules.json
-  if (!Versions.gteSdkVersion(exp, '33.0.0')) {
+  if (!Versions.gte(exp.sdkVersion, '33.0.0')) {
     return false;
   }
 

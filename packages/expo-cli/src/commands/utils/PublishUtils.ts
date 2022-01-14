@@ -1,7 +1,6 @@
 import {
   DetailOptions,
   HistoryOptions,
-  Publication,
   PublicationDetail,
   SetOptions,
   UserManager,
@@ -32,12 +31,9 @@ export async function getPublishHistoryAsync(projectRoot: string, options: Histo
   return await UserManager.getPublishHistoryAsync(user, { exp, version: 2, options });
 }
 
-export async function setPublishToChannelAsync(
-  projectRoot: string,
-  options: SetOptions
-): Promise<any> {
+export async function setPublishToChannelAsync(projectRoot: string, options: SetOptions) {
   const user = await UserManager.ensureLoggedInAsync();
-  const exp = getConfig(projectRoot, { skipSDKVersionRequirement: true }).exp;
+  const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
   return await UserManager.setPublishToChannelAsync(user, { exp, options });
 }
 
@@ -70,7 +66,7 @@ async function _rollbackPublicationFromChannelForPlatformAsync(
 
   const nonInteractiveOptions = options.parent ? { parent: options.parent } : {};
   // confirm that users will be receiving the secondMostRecent item in the Publish history
-  await _printAndConfirm(
+  await printAndConfirm(
     projectRoot,
     secondMostRecent.publicationId,
     releaseChannel,
@@ -128,7 +124,7 @@ export async function rollbackPublicationFromChannelAsync(
   }
 }
 
-async function _printAndConfirm(
+async function printAndConfirm(
   projectRoot: string,
   publicationId: string,
   channel: string,

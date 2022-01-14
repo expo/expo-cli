@@ -63,7 +63,7 @@ export async function actionAsync(projectRoot: string, options: NormalizedOption
     options,
   });
 
-  if (Versions.gteSdkVersion(exp, '34.0.0')) {
+  if (Versions.gte(exp.sdkVersion, '34.0.0')) {
     await profileMethod(ensureTypeScriptSetupAsync)(projectRoot);
   }
 

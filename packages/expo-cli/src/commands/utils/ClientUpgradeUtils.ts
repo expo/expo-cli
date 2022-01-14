@@ -75,7 +75,7 @@ export function getAvailableClients(options: AvailableClientOptions): AvailableC
       const hasUrl = !!client.clientUrl;
       const isDeprecated = !!client.sdkVersion.isDeprecated;
       const IsCompatible = options.project
-        ? Versions.lteSdkVersion(options.project, client.sdkVersionString)
+        ? Versions.lte(options.project.sdkVersion, client.sdkVersionString)
         : true;
 
       return !isDeprecated && IsCompatible && hasUrl;

@@ -17,9 +17,9 @@ export async function actionAsync(projectRoot: string, options: HistoryOptions) 
     return;
   }
 
-  if (result.queryResult && result.queryResult.length > 0) {
+  if (result.length > 0) {
     // Print general publication info
-    const sampleItem = result.queryResult[0]; // get a sample item
+    const sampleItem = result[0]; // get a sample item
     const generalTableString = table.printTableJson(
       {
         fullName: sampleItem.fullName,
@@ -28,12 +28,10 @@ export async function actionAsync(projectRoot: string, options: HistoryOptions) 
     );
     Log.log(generalTableString);
 
-    const hasRuntimeVersion = result.queryResult.some(
+    const hasRuntimeVersion = result.some(
       (publication: Publication) => !!publication.runtimeVersion
     );
-    const hasSdkVersion = result.queryResult.some(
-      (publication: Publication) => !!publication.sdkVersion
-    );
+    const hasSdkVersion = result.some((publication: Publication) => !!publication.sdkVersion);
 
     // Print info specific to each publication
     const headers = [
@@ -59,7 +57,7 @@ export async function actionAsync(projectRoot: string, options: HistoryOptions) 
         colWidths.push(HORIZ_CELL_WIDTH_SMALL);
       }
     });
-    const resultRows: Publication[] = result.queryResult.map((publication: Publication) => ({
+    const resultRows: Publication[] = result.map((publication: Publication) => ({
       ...publication,
       publishedTime: dateFormat(publication.publishedTime, 'ddd mmm dd yyyy HH:MM:ss Z'),
     }));

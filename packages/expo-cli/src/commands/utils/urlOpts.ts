@@ -1,4 +1,4 @@
-import { ConnectionStatus } from '@expo/api';
+import { Config } from '@expo/api';
 import type { Command } from 'commander';
 import qrcodeTerminal from 'qrcode-terminal';
 import { Android, isDevClientPackageInstalled, ProjectSettings, Simulator, Webpack } from 'xdl';
@@ -56,7 +56,7 @@ async function optsAsync(projectRoot: string, options: any) {
 
   if (options.offline) {
     // TODO: maybe let people know that we will force localhost with offline?
-    ConnectionStatus.setIsOffline(true);
+    Config.isOffline = true;
     opts.hostType = 'localhost';
   }
 

@@ -1,6 +1,4 @@
-import getenv from 'getenv';
-
-import * as Env from './Env';
+import Env from './Env';
 
 interface ApiConfig {
   scheme: string;
@@ -11,26 +9,27 @@ interface ApiConfig {
 interface XDLConfig {
   api: ApiConfig;
   developerTool: string;
+  isOffline: boolean;
 }
 
 function getAPI(): ApiConfig {
-  if (Env.isLocal()) {
+  if (Env.EXPO_LOCAL) {
     return {
       scheme: 'http',
       host: 'localhost',
       port: 3000,
     };
-  } else if (Env.isStaging()) {
+  } else if (Env.EXPO_STAGING) {
     return {
-      scheme: getenv.string('XDL_SCHEME', 'https'),
+      scheme: Env.XDL_SCHEME,
       host: 'staging.exp.host',
-      port: getenv.int('XDL_PORT', 0) || null,
+      port: Env.XDL_PORT || null,
     };
   } else {
     return {
-      scheme: getenv.string('XDL_SCHEME', 'https'),
-      host: getenv.string('XDL_HOST', 'exp.host'),
-      port: getenv.int('XDL_PORT', 0) || null,
+      scheme: Env.XDL_SCHEME,
+      host: Env.XDL_HOST,
+      port: Env.XDL_PORT || null,
     };
   }
 }
@@ -38,6 +37,7 @@ function getAPI(): ApiConfig {
 const config: XDLConfig = {
   api: getAPI(),
   developerTool: 'expo-cli',
+  isOffline: false,
 };
 
 export default config;

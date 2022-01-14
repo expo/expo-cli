@@ -86,7 +86,7 @@ export async function exportAppAsync(
   const bundles = await Project.createBundlesAsync(projectRoot, options.publishOptions, {
     platforms: options.platforms,
     dev: options.isDev,
-    useDevServer: Env.shouldUseDevServer(exp),
+    useDevServer: Env.shouldUseDevServer(exp.sdkVersion),
     // TODO: Disable source map generation if we aren't outputting them.
   });
 

@@ -68,7 +68,7 @@ export async function actionAsync(
     );
   }
 
-  if (!Versions.gteSdkVersion(exp, '33.0.0')) {
+  if (!Versions.gte(exp.sdkVersion, '33.0.0')) {
     const message = `${chalk.bold(
       `expo install`
     )} is only available for Expo SDK version 33 or higher.`;

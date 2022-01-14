@@ -1,11 +1,4 @@
-import {
-  Analytics,
-  ApiV2,
-  Config,
-  ConnectionStatus,
-  UnifiedAnalytics,
-  UserManager,
-} from '@expo/api';
+import { Analytics, ApiV2, Config, UnifiedAnalytics, UserManager } from '@expo/api';
 import bunyan from '@expo/bunyan';
 import { setCustomConfigPath } from '@expo/config';
 import boxen from 'boxen';
@@ -343,7 +336,7 @@ Command.prototype.asyncAction = function (asyncFn: Action) {
     try {
       const options = args[args.length - 1];
       if (options.offline) {
-        ConnectionStatus.setIsOffline(true);
+        Config.isOffline = true;
       }
 
       await asyncFn(...args);

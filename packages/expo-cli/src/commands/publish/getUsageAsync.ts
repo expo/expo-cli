@@ -1,11 +1,8 @@
+import { Publication } from '@expo/api';
 import uniqBy from 'lodash/uniqBy';
 
 import Log from '../../log';
-import {
-  getPublicationDetailAsync,
-  getPublishHistoryAsync,
-  Publication,
-} from '../utils/PublishUtils';
+import { getPublicationDetailAsync, getPublishHistoryAsync } from '../utils/PublishUtils';
 
 export async function getUsageAsync(projectRoot: string): Promise<string> {
   try {
@@ -19,11 +16,10 @@ export async function getUsageAsync(projectRoot: string): Promise<string> {
 
 async function _getUsageAsync(projectRoot: string): Promise<string> {
   const allPlatforms = ['ios', 'android'];
-  const publishesResult = await getPublishHistoryAsync(projectRoot, {
+  const publishes = await getPublishHistoryAsync(projectRoot, {
     releaseChannel: 'default', // not specifying a channel will return most recent publishes but this is not neccesarily the most recent entry in a channel (user could have set an older publish to top of the channel)
     count: allPlatforms.length,
   });
-  const publishes = publishesResult.queryResult as Publication[];
 
   // If the user published normally, there would be a publish for each platform with the same revisionId
   const uniquePlatforms = uniqBy(publishes, publish => publish.platform);

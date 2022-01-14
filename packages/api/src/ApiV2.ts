@@ -1,47 +1,32 @@
-import { JSONObject, JSONValue } from '@expo/json-file';
+import type { JSONObject } from '@expo/json-file';
 import axios, { AxiosRequestConfig } from 'axios';
 import concat from 'concat-stream';
 import FormData from 'form-data';
-import merge from 'lodash/merge';
 import QueryString from 'querystring';
 
 import Config from './Config';
-import * as ConnectionStatus from './ConnectionStatus';
+import { ApiV2Error } from './utils/errors';
 
 const MAX_CONTENT_LENGTH = 100 /* MB */ * 1024 * 1024;
 const MAX_BODY_LENGTH = 100 /* MB */ * 1024 * 1024;
 
 // These aren't constants because some commands switch between staging and prod
-function _rootBaseUrl() {
+function getRootBaseUrl() {
   return `${Config.api.scheme}://${Config.api.host}`;
 }
 
-function _apiBaseUrl() {
-  let rootBaseUrl = _rootBaseUrl();
+function getApiBaseUrl() {
+  let rootBaseUrl = getRootBaseUrl();
   if (Config.api.port) {
     rootBaseUrl += ':' + Config.api.port;
   }
   return rootBaseUrl + '/--/api/v2';
 }
 
-async function _convertFormDataToBuffer(formData: FormData): Promise<{ data: Buffer }> {
+async function convertFormDataToBuffer(formData: FormData): Promise<{ data: Buffer }> {
   return new Promise(resolve => {
     formData.pipe(concat({ encoding: 'buffer' }, data => resolve({ data })));
   });
-}
-
-export class ApiV2Error extends Error {
-  readonly name = 'ApiV2Error';
-  code: string;
-  details?: JSONValue;
-  serverStack?: string;
-  metadata?: object;
-  readonly _isApiError = true;
-
-  constructor(message: string, code: string = 'UNKNOWN') {
-    super(message);
-    this.code = code;
-  }
 }
 
 type RequestOptions = {
@@ -176,7 +161,7 @@ export default class ApiV2Client {
 
   async uploadFormDataAsync(methodName: string, formData: FormData) {
     const options: RequestOptions = { httpMethod: 'put' };
-    const { data } = await _convertFormDataToBuffer(formData);
+    const { data } = await convertFormDataToBuffer(formData);
     const uploadOptions: UploadOptions = {
       headers: formData.getHeaders(),
       data,
@@ -191,7 +176,7 @@ export default class ApiV2Client {
     returnEntireResponse: boolean = false,
     uploadOptions?: UploadOptions
   ) {
-    const url = `${_apiBaseUrl()}/${methodName}`;
+    const url = `${getApiBaseUrl()}/${methodName}`;
     let reqOptions: AxiosRequestConfig = {
       url,
       method: options.httpMethod,
@@ -218,7 +203,7 @@ export default class ApiV2Client {
       reqOptions.data = options.body;
     }
 
-    if (!extraRequestOptions.hasOwnProperty('timeout') && ConnectionStatus.isOffline()) {
+    if (!extraRequestOptions.hasOwnProperty('timeout') && Config.isOffline) {
       reqOptions.timeout = 1;
     }
 
@@ -240,7 +225,7 @@ export default class ApiV2Client {
       }
     }
 
-    if (result.errors && result.errors.length) {
+    if (result.errors?.length) {
       const responseError = result.errors[0];
       const error = new ApiV2Error(responseError.message, responseError.code);
       error.serverStack = responseError.stack;
@@ -252,3 +237,23 @@ export default class ApiV2Client {
     return returnEntireResponse ? response : result.data;
   }
 }
+
+function merge(target: any, ...sources: any[]): any {
+  if (!sources.length) return target;
+  const source = sources.shift();
+
+  if (isObject(target) && isObject(source)) {
+    for (const key in source) {
+      if (isObject(source[key])) {
+        if (!target[key]) Object.assign(target, { [key]: {} });
+        merge(target[key], source[key]);
+      } else {
+        Object.assign(target, { [key]: source[key] });
+      }
+    }
+  }
+
+  return merge(target, ...sources);
+}
+
+const isObject = (item: any) => item && typeof item === 'object' && !Array.isArray(item);

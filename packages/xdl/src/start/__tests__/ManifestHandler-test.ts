@@ -25,7 +25,7 @@ jest.mock('@expo/api', () => {
         sessionSecret: 'SECRET',
       }),
     },
-    ExpSchema: {
+    ExpoConfigSchema: {
       getAssetSchemasAsync() {
         return ['icon', 'splash.image'];
       },

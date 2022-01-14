@@ -1,5 +1,5 @@
 import axios, { AxiosRequestConfig, Canceler } from 'axios';
-import fs from 'fs-extra';
+import fs from 'fs';
 import path from 'path';
 
 import UserSettings from '../UserSettings';
@@ -11,7 +11,7 @@ const TIMEOUT = 3600000;
 type ProgressCallback = (progressPercentage: number) => void;
 type RetryCallback = (cancel: Canceler) => void;
 
-async function _downloadAsync(
+async function downloadAsync(
   url: string,
   outputPath: string,
   progressFunction?: ProgressCallback,
@@ -68,7 +68,7 @@ async function _downloadAsync(
       })
       .pipe(fs.createWriteStream(tmpPath));
   });
-  await fs.rename(tmpPath, outputPath);
+  await fs.promises.rename(tmpPath, outputPath);
 }
 
 export async function downloadAppAsync(
@@ -79,12 +79,12 @@ export async function downloadAppAsync(
   retryFunction?: RetryCallback
 ): Promise<void> {
   if (extract) {
-    const dotExpoHomeDirectory = UserSettings.dotExpoHomeDirectory();
-    const tmpPath = path.join(dotExpoHomeDirectory, 'tmp-download-file');
-    await _downloadAsync(url, tmpPath, progressFunction);
+    const directory = UserSettings.getDirectory();
+    const tmpPath = path.join(directory, 'tmp-download-file');
+    await downloadAsync(url, tmpPath, progressFunction);
     await extractTarAsync(tmpPath, outputPath);
-    fs.removeSync(tmpPath);
+    await fs.promises.unlink(tmpPath).catch(() => {});
   } else {
-    await _downloadAsync(url, outputPath, progressFunction, retryFunction);
+    await downloadAsync(url, outputPath, progressFunction, retryFunction);
   }
 }

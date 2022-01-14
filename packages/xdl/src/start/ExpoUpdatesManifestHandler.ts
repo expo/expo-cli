@@ -1,11 +1,4 @@
-import {
-  Analytics,
-  ANONYMOUS_USERNAME,
-  Config,
-  ConnectionStatus,
-  UserManager,
-  UserSettings,
-} from '@expo/api';
+import { Analytics, ANONYMOUS_USERNAME, Config, UserManager, UserSettings } from '@expo/api';
 import { ExpoUpdatesManifest, getConfig } from '@expo/config';
 import { Updates } from '@expo/config-plugins';
 import express from 'express';
@@ -45,7 +38,7 @@ function getPlatformFromRequest(req: express.Request | http.IncomingMessage): 'a
 async function shouldUseAnonymousManifestAsync(
   easProjectId: string | undefined | null
 ): Promise<boolean> {
-  if (!easProjectId || ConnectionStatus.isOffline()) {
+  if (!easProjectId || Config.isOffline) {
     return true;
   }
 

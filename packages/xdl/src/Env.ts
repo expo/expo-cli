@@ -15,8 +15,8 @@ export function maySkipManifestValidation(): boolean {
  * way), false if we should fall back to spawning it as a subprocess (supported for backwards
  * compatibility with SDK39 and older).
  */
-export function shouldUseDevServer(exp: Pick<ExpoConfig, 'sdkVersion'>) {
-  return !Versions.lteSdkVersion(exp, '39.0.0') || boolish('EXPO_USE_DEV_SERVER', false);
+export function shouldUseDevServer(sdkVersion: ExpoConfig['sdkVersion']) {
+  return !Versions.lte(sdkVersion, '39.0.0') || boolish('EXPO_USE_DEV_SERVER', false);
 }
 
 // do not allow E2E to fire events

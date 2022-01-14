@@ -292,7 +292,7 @@ async function maybeBailOnUnsafeFunctionalityAsync(
   exp: Pick<ExpoConfig, 'sdkVersion'>
 ): Promise<boolean> {
   // Give people a chance to bail out if they're updating from a super old version because YMMV
-  if (!Versions.gteSdkVersion(exp, '33.0.0')) {
+  if (!Versions.gte(exp.sdkVersion, '33.0.0')) {
     if (program.nonInteractive) {
       Log.warn(
         `This command works best on SDK 33 and higher. Because the command is running in nonInteractive mode it'll continue regardless.`
@@ -361,7 +361,7 @@ async function promptSelectSDKVersionAsync(
   exp: Pick<ExpoConfig, 'sdkVersion'>
 ): Promise<string> {
   const sdkVersionStringOptions = sdkVersions.filter(
-    v => semver.lte('33.0.0', v) && !Versions.gteSdkVersion(exp, v)
+    v => semver.lte('33.0.0', v) && !Versions.gte(exp.sdkVersion, v)
   );
 
   return await selectAsync({
@@ -508,7 +508,7 @@ export async function upgradeAsync(
 
   if (dynamicConfigPath) {
     if (
-      !Versions.gteSdkVersion(currentExp, targetSdkVersionString) &&
+      !Versions.gte(currentExp.sdkVersion, targetSdkVersionString) &&
       currentExp.sdkVersion !== 'UNVERSIONED'
     ) {
       Log.addNewLineIfNone();

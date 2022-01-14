@@ -1,34 +1,32 @@
-import * as FsCache from '../FsCache';
+import { Cache } from '../Cache';
 
 jest.mock('@expo/rudder-sdk-node');
 
 const fs = require('fs-extra');
 const path = require('path');
 
-describe('Cacher', () => {
+describe(Cache, () => {
   it('works without a bootstrap file', async () => {
-    const dateCacher = new FsCache.Cacher(
-      async () => {
-        return new Date();
-      },
-      'dateslol',
-      1000
-    );
+    const dateCache = new Cache({
+      getAsync: () => new Date(),
+      filename: 'dateslol',
+      ttlMilliseconds: 1000,
+    });
 
     try {
-      await dateCacher.clearAsync();
+      await dateCache.clearAsync();
     } catch (e) {
       // this is ok
     }
 
-    const date1 = new Date(await dateCacher.getAsync());
+    const date1 = new Date(await dateCache.getAsync());
 
     // should be well within the TTL, should be identical value
-    expect(date1).toEqual(new Date(await dateCacher.getAsync()));
+    expect(date1).toEqual(new Date(await dateCache.getAsync()));
 
     // should be outside of the TTL -- just making sure that sufficient delay will change the value
     setTimeout(() => {
-      dateCacher.getAsync().then(d => {
+      dateCache.getAsync().then(d => {
         expect(date1).not.toEqual(new Date(d));
       });
     }, 3000);
@@ -37,14 +35,14 @@ describe('Cacher', () => {
   xit('works with a bootstrap file', async () => {
     const expected = JSON.parse(await fs.readFile(path.join(__dirname, 'xdl/package.json')));
 
-    const failCacher = new FsCache.Cacher(
-      () => {
+    const failCacher = new Cache({
+      getAsync() {
         throw new Error('lol this never succeeds');
       },
-      'bootstrap',
-      1000,
-      path.join(__dirname, 'xdl/package.json')
-    );
+      filename: 'bootstrap',
+      ttlMilliseconds: 1000,
+      bootstrapFile: path.join(__dirname, 'xdl/package.json'),
+    });
 
     // since we don't mock the fs here (.cache is transient), need to make sure it's empty
     try {

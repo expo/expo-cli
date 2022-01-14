@@ -34,11 +34,9 @@
     "@expo/spawn-async": "^1.5.0",
     "@expo/config-types": "^43.0.1",
     "json-schema-deref-sync": "^0.13.0",
-    "fs-extra": "9.0.0",
     "uuid": "3.3.2",
     "internal-ip": "4.3.0",
     "tar": "^6.0.5",
-    "lodash": "^4.17.19",
     "getenv": "^1.0.0",
     "concat-stream": "1.6.2",
     "axios": "0.21.1",
@@ -51,7 +49,8 @@
     "@types/uuid": "^3.4.4",
     "@types/form-data": "^2.2.0",
     "@types/analytics-node": "^3.1.1",
-    "@types/concat-stream": "^1.6.0"
+    "@types/concat-stream": "^1.6.0",
+    "fs-extra": "9.0.0"
   },
   "publishConfig": {
     "access": "public"

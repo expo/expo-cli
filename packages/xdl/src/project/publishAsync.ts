@@ -73,7 +73,7 @@ export async function publishAsync(
   const validPostPublishHooks: LoadedHook[] = prepareHooks(hooks, 'postPublish', projectRoot);
   const bundles = await createBundlesAsync(projectRoot, options, {
     platforms: ['ios', 'android'],
-    useDevServer: Env.shouldUseDevServer(exp),
+    useDevServer: Env.shouldUseDevServer(exp.sdkVersion),
   });
 
   printBundleSizes(bundles);

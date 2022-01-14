@@ -3,10 +3,9 @@ import fs from 'fs-extra';
 import path from 'path';
 
 function _apkCacheDirectory() {
-  const dotExpoHomeDirectory = UserSettings.dotExpoHomeDirectory();
-  const dir = path.join(dotExpoHomeDirectory, 'android-apk-cache');
-  fs.mkdirpSync(dir);
-  return dir;
+  const directory = path.join(UserSettings.getDirectory(), 'android-apk-cache');
+  fs.mkdirpSync(directory);
+  return directory;
 }
 
 export async function downloadApkAsync(

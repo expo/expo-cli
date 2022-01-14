@@ -1,4 +1,4 @@
-import { Analytics, Config, ConnectionStatus } from '@expo/api';
+import { Analytics, Config } from '@expo/api';
 import { ExpoConfig, getConfig } from '@expo/config';
 import { closeJsInspector, MessageSocket } from '@expo/dev-server';
 import { Server } from 'http';
@@ -64,7 +64,7 @@ export async function startAsync(
       ...options,
       port: options.webpackPort,
     });
-  } else if (Env.shouldUseDevServer(exp) || options.devClient) {
+  } else if (Env.shouldUseDevServer(exp.sdkVersion) || options.devClient) {
     [serverInstance, , messageSocket] = await startDevServerAsync(projectRoot, options);
   } else {
     await startExpoServerAsync(projectRoot);
@@ -73,7 +73,7 @@ export async function startAsync(
 
   const { hostType } = await ProjectSettings.readAsync(projectRoot);
 
-  if (!ConnectionStatus.isOffline() && hostType === 'tunnel') {
+  if (!Config.isOffline && hostType === 'tunnel') {
     try {
       await startTunnelsAsync(projectRoot);
     } catch (e: any) {
@@ -112,7 +112,7 @@ async function stopInternalAsync(projectRoot: string): Promise<void> {
     stopExpoServerAsync(projectRoot),
     stopReactNativeServerAsync(projectRoot),
     async () => {
-      if (!ConnectionStatus.isOffline()) {
+      if (!Config.isOffline) {
         try {
           await stopTunnelsAsync(projectRoot);
         } catch (e: any) {

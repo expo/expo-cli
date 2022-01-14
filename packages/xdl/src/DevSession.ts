@@ -1,4 +1,4 @@
-import { ConnectionStatus, UserManager } from '@expo/api';
+import { Config, UserManager } from '@expo/api';
 import { ExpoConfig } from '@expo/config-types';
 
 import { Logger as logger, UrlUtils } from './internal';
@@ -27,7 +27,7 @@ export async function startSession(
     keepUpdating = true;
   }
 
-  if (!ConnectionStatus.isOffline() && keepUpdating) {
+  if (!Config.isOffline && keepUpdating) {
     // TODO(anp) if the user has configured device ids, then notify for those too
     const authSession = await UserManager.getSessionAsync();
 
