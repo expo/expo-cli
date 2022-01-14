@@ -1,4 +1,4 @@
-import { Config, UserManager } from '@expo/api';
+import { Config, DevelopmentSessions, UserManager } from '@expo/api';
 import { ExpoConfig } from '@expo/config-types';
 import assert from 'assert';
 
@@ -43,7 +43,7 @@ export async function startSession(
     try {
       const url = await getUrlForRuntimeAsync(projectRoot, runtime);
 
-      await UserManager.notifyAliveAsync(authSession, {
+      await DevelopmentSessions.notifyAliveAsync(authSession, {
         source: 'desktop',
         exp,
         url,

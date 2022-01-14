@@ -15,15 +15,20 @@ jest.mock('@expo/api', () => {
   const api = jest.requireActual('@expo/api');
   return {
     ...api,
-    UserSettings: {
+    Manifest: {
+      ...api.Manifest,
+      signLegacyAsync: jest.fn(api.Manifest.signLegacyAsync),
+    },
+    UserManager: {
+      ...api.UserManager,
       // ...user,
       ANONYMOUS_USERNAME: 'anonymous',
       getSessionAsync() {
         return null;
       },
-      ensureLoggedInAsync: () => ({
+      ensureLoggedInAsync: jest.fn(() => ({
         sessionSecret: 'SECRET',
-      }),
+      })),
     },
     ExpoConfigSchema: {
       getAssetSchemasAsync() {

@@ -3,7 +3,8 @@ import HashIds from 'hashids';
 import path from 'path';
 import { v1 as uuidv1 } from 'uuid';
 
-import { ApiV2 as ApiV2Client, User, UserManagerInstance } from '../';
+import { ApiV2 as ApiV2Client, UserManagerInstance } from '../';
+import { User } from '../Auth';
 
 const _makeShortId = (salt: string, minLength = 10) => {
   const hashIds = new HashIds(salt, minLength);
@@ -48,6 +49,7 @@ describe.skip('UserManager', () => {
       fs.removeSync(process.env.__UNSAFE_EXPO_HOME_DIRECTORY);
     }
 
+    expect.assertions(1);
     const api = ApiV2Client.clientForUser(userForTest);
     try {
       await api.postAsync('auth/deleteUser');
@@ -64,9 +66,11 @@ describe.skip('UserManager', () => {
 
   it('should not have a currently logged in user', async () => {
     const UserManager = _newTestUserManager();
+
+    expect.assertions(1);
     try {
       await UserManager.ensureLoggedInAsync();
-    } catch (e) {
+    } catch (e: any) {
       expect(e.message).toEqual('Not logged in');
     }
   });

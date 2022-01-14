@@ -1,19 +1,41 @@
-import * as xdl from 'xdl';
+type MockedXDLModules = Partial<Record<keyof typeof import('xdl'), object>>;
+type MockedAPIModules = Partial<Record<keyof typeof import('@expo/api'), object>>;
 
-type MockedXDLModules = Partial<Record<keyof typeof xdl, object>>;
-
-function mockExpoXDL(mockedXDLModules: MockedXDLModules): void {
+export function mockExpoXDL(mockedXDLModules: MockedXDLModules): void {
   jest.mock('xdl', () => {
     const pkg = jest.requireActual('xdl');
-    const xdlMock = { ...pkg };
+    const custom = { ...pkg };
+
+    const isFunction = (obj: any): obj is Function => typeof obj === 'function';
     for (const [name, value] of Object.entries(mockedXDLModules)) {
-      xdlMock[name] = {
-        ...pkg[name],
-        ...value,
-      };
+      if ((value as any)?._isMockFunction || isFunction(value)) {
+        custom[name] = value;
+      } else {
+        custom[name] = {
+          ...pkg[name],
+          ...value,
+        };
+      }
     }
-    return xdlMock;
+    return custom;
   });
 }
 
-export { mockExpoXDL };
+export function mockExpoAPI(mocked: MockedAPIModules): void {
+  jest.mock('@expo/api', () => {
+    const pkg = jest.requireActual('@expo/api');
+    const custom = { ...pkg };
+    const isFunction = (obj: any): obj is Function => typeof obj === 'function';
+    for (const [name, value] of Object.entries(mocked)) {
+      if (isFunction(value)) {
+        custom[name] = value;
+      } else {
+        custom[name] = {
+          ...pkg[name],
+          ...value,
+        };
+      }
+    }
+    return custom;
+  });
+}

@@ -1,4 +1,3 @@
-import { UserManager } from '@expo/api';
 import { ExpoConfig, getAccountUsername, ProjectConfig } from '@expo/config';
 import { compileModsAsync, ModPlatform } from '@expo/config-plugins';
 import { getPrebuildConfigAsync } from '@expo/prebuild-config';

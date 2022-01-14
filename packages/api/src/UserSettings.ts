@@ -4,8 +4,8 @@ import { homedir } from 'os';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 
+import { UserData } from './Auth';
 import Env from './Env';
-import { UserData } from './User';
 
 export type UserSettingsData = {
   developmentCodeSigningId?: string;

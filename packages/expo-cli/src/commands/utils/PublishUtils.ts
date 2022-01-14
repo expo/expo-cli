@@ -1,10 +1,4 @@
-import {
-  DetailOptions,
-  HistoryOptions,
-  PublicationDetail,
-  SetOptions,
-  UserManager,
-} from '@expo/api';
+import { Publish, UserManager } from '@expo/api';
 import { getConfig } from '@expo/config';
 import assert from 'assert';
 
@@ -21,20 +15,20 @@ export type RollbackOptions = {
   parent?: { nonInteractive?: boolean };
 };
 
-export async function getPublishHistoryAsync(projectRoot: string, options: HistoryOptions) {
+export async function getPublishHistoryAsync(projectRoot: string, options: Publish.HistoryOptions) {
   // TODO(ville): handle the API result for not authenticated user instead of checking upfront
   const user = await UserManager.ensureLoggedInAsync();
   const { exp } = getConfig(projectRoot, {
     skipSDKVersionRequirement: true,
   });
 
-  return await UserManager.getPublishHistoryAsync(user, { exp, version: 2, options });
+  return await Publish.getPublishHistoryAsync(user, { exp, version: 2, options });
 }
 
-export async function setPublishToChannelAsync(projectRoot: string, options: SetOptions) {
+export async function setPublishToChannelAsync(projectRoot: string, options: Publish.SetOptions) {
   const user = await UserManager.ensureLoggedInAsync();
   const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
-  return await UserManager.setPublishToChannelAsync(user, { exp, options });
+  return await Publish.setPublishToChannelAsync(user, { slug: exp.slug, ...options });
 }
 
 async function _rollbackPublicationFromChannelForPlatformAsync(
@@ -151,21 +145,21 @@ async function printAndConfirm(
 
 export async function getPublicationDetailAsync(
   projectRoot: string,
-  options: DetailOptions
-): Promise<PublicationDetail> {
+  options: Publish.DetailOptions
+): Promise<Publish.PublicationDetail> {
   // TODO(ville): handle the API result for not authenticated user instead of checking upfront
   const user = await UserManager.ensureLoggedInAsync();
   const { exp } = getConfig(projectRoot, {
     skipSDKVersionRequirement: true,
   });
 
-  return await UserManager.getPublicationDetailAsync(user, { exp, options });
+  return await Publish.getPublicationDetailAsync(user, { exp, options });
 }
 
 export async function printPublicationDetailAsync(
-  detail: PublicationDetail,
-  options: DetailOptions
-) {
+  detail: Publish.PublicationDetail,
+  options: Publish.DetailOptions
+): Promise<void> {
   if (options.raw) {
     Log.log(JSON.stringify(detail));
     return;

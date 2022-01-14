@@ -1,4 +1,4 @@
-import { Config, UserManager, UserSettings } from '@expo/api';
+import { Config, SendProject, UserManager, UserSettings } from '@expo/api';
 import { getConfig, writeConfigJsonAsync } from '@expo/config';
 import spawnAsync from '@expo/spawn-async';
 import { makeExecutableSchema } from 'graphql-tools';
@@ -627,7 +627,7 @@ const resolvers = {
       const currentProject = context.getCurrentProject();
       const url = await UrlUtils.constructManifestUrlAsync(currentProject.projectDir);
       const user = await UserManager.ensureLoggedInAsync();
-      const result = await UserManager.sendProjectAsync(user, recipient, url);
+      const result = await SendProject.sendProjectAsync(user, recipient, url);
       await UserSettings.setAsync('sendTo', recipient);
       return { medium: result.medium, url }; // medium can be a phone number or email
     },

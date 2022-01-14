@@ -1,7 +1,6 @@
-import { UserManager } from '@expo/api';
+import { Publish, UserManager } from '@expo/api';
 import { getConfig } from '@expo/config';
 import assert from 'assert';
-import { platform } from 'os';
 
 type Release = {
   fullName: string;
@@ -31,7 +30,7 @@ export async function getLatestReleaseAsync(
   const user = await UserManager.ensureLoggedInAsync();
   const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
 
-  const publications = await UserManager.getPublishHistoryAsync(user, {
+  const publications = await Publish.getPublishHistoryAsync(user, {
     exp,
     options: {
       releaseChannel: options.releaseChannel,

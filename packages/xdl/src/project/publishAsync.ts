@@ -1,4 +1,4 @@
-import { Analytics, Config, RobotUser, User, UserManager } from '@expo/api';
+import { Analytics, Auth, Config, Publish, UserManager } from '@expo/api';
 import { ExpoAppManifest, getDefaultTarget, HookArguments } from '@expo/config';
 import fs from 'fs-extra';
 import path from 'path';
@@ -95,7 +95,7 @@ export async function publishAsync(
     logger.global.info('');
     logger.global.info('Uploading JavaScript bundles');
     const user = await UserManager.ensureLoggedInAsync();
-    response = await UserManager.uploadArtifactsAsync(user, {
+    response = await Publish.uploadArtifactsAsync(user, {
       pkg,
       exp,
       iosBundle,
@@ -220,7 +220,7 @@ async function _handleKernelPublishedAsync({
   url,
 }: {
   projectRoot: string;
-  user: User | RobotUser;
+  user: Auth.User | Auth.RobotUser;
   exp: ExpoAppManifest;
   url: string;
 }) {

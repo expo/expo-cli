@@ -1,4 +1,4 @@
-import { ExpoConfigSchema, UserManager } from '@expo/api';
+import { Assets, ExpoConfigSchema, UserManager } from '@expo/api';
 import { ExpoAppManifest, ExpoConfig } from '@expo/config';
 import { BundleAssetWithFileHashes, BundleOutput } from '@expo/dev-server';
 import assert from 'assert';
@@ -103,7 +103,7 @@ export async function resolveManifestAssets({
     assetSchemas.forEach((manifestField, index: number) =>
       set(manifest, `${manifestField}Url`, urls[index])
     );
-  } catch (e) {
+  } catch (e: any) {
     let logMethod = ProjectUtils.logWarning;
     if (strict) {
       logMethod = ProjectUtils.logError;
@@ -239,7 +239,7 @@ export async function exportAssetsAsync({
  */
 async function fetchMissingAssetsAsync(paths: string[]): Promise<string[]> {
   const user = await UserManager.ensureLoggedInAsync();
-  const metas = await UserManager.getAssetsMetadataAsync(user, { keys: paths });
+  const metas = await Assets.getMetadataAsync(user, { keys: paths });
   const missing = paths.filter(key => !metas[key].exists);
   return missing;
 }
@@ -277,7 +277,7 @@ async function uploadAssetsAsync(projectRoot: string, assets: Asset[]) {
       formData.append(key, fs.createReadStream(pathName), pathName);
     }
 
-    await UserManager.uploadAssetsAsync(user, { data: formData });
+    await Assets.uploadAsync(user, formData);
   }
 }
 

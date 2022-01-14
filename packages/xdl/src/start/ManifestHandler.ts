@@ -2,6 +2,7 @@ import {
   Analytics,
   ANONYMOUS_USERNAME,
   Config,
+  Manifest,
   UserManager,
   UserSettings,
   Versions,
@@ -179,7 +180,7 @@ export function getManifestHandler(projectRoot: string) {
       if (deviceIds) {
         await ProjectSettings.saveDevicesAsync(projectRoot, deviceIds);
       }
-    } catch (e) {
+    } catch (e: any) {
       ProjectUtils.logError(projectRoot, 'expo', e.stack);
     }
   };
@@ -414,7 +415,7 @@ export async function getSignedManifestStringAsync(
   // WARNING: Removing the following line will regress analytics, see: https://github.com/expo/expo-cli/pull/2357
   // TODO: make this more obvious from code
   const user = await UserManager.ensureLoggedInAsync();
-  const response = await UserManager.signLegacyManifestAsync(user, manifest as any);
+  const response = await Manifest.signLegacyAsync(user, manifest as any);
   _cachedSignedManifest.manifestString = manifestString;
   _cachedSignedManifest.signedManifest = response;
   return response;

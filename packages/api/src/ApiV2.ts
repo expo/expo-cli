@@ -50,8 +50,8 @@ export type ApiV2ClientOptions = {
 
 export default class ApiV2Client {
   static exponentClient: string = 'xdl';
-  sessionSecret: string | null = null;
-  accessToken: string | null = null;
+  public sessionSecret: string | null = null;
+  public accessToken: string | null = null;
 
   static clientForUser(user?: ApiV2ClientOptions | null): ApiV2Client {
     if (user) {
@@ -74,7 +74,7 @@ export default class ApiV2Client {
     }
   }
 
-  async getAsync(
+  public async getAsync(
     methodName: string,
     args: QueryParameters = {},
     extraOptions?: Partial<RequestOptions>,
@@ -91,7 +91,7 @@ export default class ApiV2Client {
     );
   }
 
-  async postAsync(
+  public async postAsync(
     methodName: string,
     data?: JSONObject,
     extraOptions?: Partial<RequestOptions>,
@@ -108,7 +108,7 @@ export default class ApiV2Client {
     );
   }
 
-  async putAsync(
+  public async putAsync(
     methodName: string,
     data: JSONObject,
     extraOptions?: Partial<RequestOptions>,
@@ -125,7 +125,7 @@ export default class ApiV2Client {
     );
   }
 
-  async patchAsync(
+  public async patchAsync(
     methodName: string,
     data: JSONObject,
     extraOptions?: Partial<RequestOptions>,
@@ -142,7 +142,7 @@ export default class ApiV2Client {
     );
   }
 
-  async deleteAsync(
+  public async deleteAsync(
     methodName: string,
     args: QueryParameters = {},
     extraOptions?: Partial<RequestOptions>,
@@ -159,7 +159,7 @@ export default class ApiV2Client {
     );
   }
 
-  async uploadFormDataAsync(methodName: string, formData: FormData) {
+  public async uploadFormDataAsync(methodName: string, formData: FormData) {
     const options: RequestOptions = { httpMethod: 'put' };
     const { data } = await convertFormDataToBuffer(formData);
     const uploadOptions: UploadOptions = {
@@ -169,6 +169,7 @@ export default class ApiV2Client {
     return await this._requestAsync(methodName, options, undefined, false, uploadOptions);
   }
 
+  // Exposed for testing
   async _requestAsync(
     methodName: string,
     options: RequestOptions,

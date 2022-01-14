@@ -3,97 +3,109 @@ import { vol } from 'memfs';
 import { exportAppAsync } from '../exportAppAsync';
 
 jest.mock('fs');
+jest.mock('os');
 jest.mock('resolve-from');
 
-jest.mock('xdl', () => ({
-  Project: {
-    getPublishExpConfigAsync: () =>
-      Promise.resolve({
-        exp: {
-          name: 'my-app',
-          slug: 'my-app',
-        },
-        pkg: { dependencies: { expo: '43.0.0' } },
-        hooks: {
-          postExport: [],
-        },
-      }),
-    createBundlesAsync: (projectRoot, options, { platforms }: { platforms: string[] }) =>
-      Promise.resolve(
-        platforms.reduce(
-          (prev, platform) => ({
-            ...prev,
-            [platform]: {
-              code: `var foo = true;`,
-              map: `${platform}_map`,
-              assets: [
-                {
-                  hash: 'alpha',
-                  type: 'image',
-                  fileHashes: ['foobar', 'other'],
-                },
-                {
-                  hash: 'beta',
-                  type: 'font',
-                  fileHashes: ['betabar'],
-                },
-              ],
+jest.mock('xdl', () => {
+  const xdl = jest.requireActual('xdl');
+  return {
+    ...xdl,
+    EmbeddedAssets: {
+      ...xdl.EmbeddedAssets,
+      configureAsync: jest.fn(),
+    },
+    Env: {
+      ...xdl.Env,
+      shouldUseDevServer: () => true,
+    },
+    ProjectAssets: {
+      ...xdl.ProjectAssets,
+      exportAssetsAsync: jest.fn(() =>
+        Promise.resolve({
+          assets: [
+            {
+              hash: 'alpha',
+              type: 'image',
+              fileHashes: ['foobar', 'other'],
             },
-          }),
-          {}
-        )
+            {
+              hash: 'beta',
+              type: 'font',
+              fileHashes: ['betabar'],
+            },
+          ],
+        })
       ),
-    prepareHooks: jest.fn(() => []),
-    runHook: jest.fn(async () => {}),
-  },
-  UserManager: {
-    getCurrentUsernameAsync() {
-      return 'bacon';
     },
-  },
 
-  printBundleSizes: jest.fn(),
-
-  EmbeddedAssets: {
-    configureAsync: jest.fn(),
-  },
-  Env: {
-    shouldUseDevServer() {
-      return true;
+    printBundleSizes: jest.fn(),
+    Project: {
+      ...xdl.Project,
+      createBundlesAsync: (projectRoot, options, { platforms }: { platforms: string[] }) =>
+        Promise.resolve(
+          platforms.reduce(
+            (prev, platform) => ({
+              ...prev,
+              [platform]: {
+                code: `var foo = true;`,
+                map: `${platform}_map`,
+                assets: [
+                  {
+                    hash: 'alpha',
+                    type: 'image',
+                    fileHashes: ['foobar', 'other'],
+                  },
+                  {
+                    hash: 'beta',
+                    type: 'font',
+                    fileHashes: ['betabar'],
+                  },
+                ],
+              },
+            }),
+            {}
+          )
+        ),
+      getPublishExpConfigAsync: () =>
+        Promise.resolve({
+          exp: {
+            name: 'my-app',
+            slug: 'my-app',
+          },
+          pkg: { dependencies: { expo: '43.0.0' } },
+          hooks: {
+            postExport: [],
+          },
+        }),
+      prepareHooks: jest.fn(() => []),
+      runHook: jest.fn(async () => {}),
     },
-  },
-  ProjectAssets: {
-    exportAssetsAsync: jest.fn(() =>
-      Promise.resolve({
-        assets: [
-          {
-            hash: 'alpha',
-            type: 'image',
-            fileHashes: ['foobar', 'other'],
-          },
-          {
-            hash: 'beta',
-            type: 'font',
-            fileHashes: ['betabar'],
-          },
-        ],
-      })
-    ),
-  },
-}));
+  };
+});
+
+jest.mock('@expo/api', () => {
+  const api = jest.requireActual('@expo/api');
+  api.getCurrentUsernameAsync = () => {
+    return 'bacon';
+  };
+  return api;
+});
 
 describe(exportAppAsync, () => {
-  afterAll(() => {
+  afterEach(() => {
     vol.reset();
   });
 
-  it(`exports an app`, async () => {
+  beforeEach(() => {
     vol.fromJSON(
       {
         'package.json': JSON.stringify({ dependencies: { expo: '34.0.0' } }),
       },
       '/'
     );
+  });
+
+  it(`exports an app`, async () => {
     const outputDir = '/dist/';
 
     await exportAppAsync(

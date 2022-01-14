@@ -1,4 +1,4 @@
-import { RobotUser, User, UserManager, Versions } from '@expo/api';
+import { Auth, Publish, StandaloneBuild, UserManager, Versions } from '@expo/api';
 import { ExpoConfig, getConfig, ProjectConfig } from '@expo/config';
 import chalk from 'chalk';
 import ora from 'ora';
@@ -20,7 +20,7 @@ export default class BaseBuilder {
   protected projectConfig: ProjectConfig;
   manifest: ExpoConfig;
 
-  async getUserAsync(): Promise<User | RobotUser> {
+  async getUserAsync(): Promise<Auth.User | Auth.RobotUser> {
     return await UserManager.ensureLoggedInAsync();
   }
 
@@ -71,7 +71,7 @@ export default class BaseBuilder {
     await this.checkProjectConfig();
     // note: this validates if a robot user is used without "owner" in the manifest
     // without this check, build/status returns "robots not allowed".
-    UserManager.getProjectOwner(
+    Publish.getProjectOwner(
       // TODO: Move this since it can add delay
       await this.getUserAsync(),
       this.projectConfig.exp
@@ -142,7 +142,7 @@ export default class BaseBuilder {
   async checkStatusBeforeBuild(): Promise<void> {
     Log.log('Checking if this build already exists...\n');
 
-    const reuseStatus = await UserManager.getLegacyReusableBuildAsync(null, {
+    const reuseStatus = await StandaloneBuild.getLegacyReusableBuildAsync(null, {
       releaseChannel: this.options.releaseChannel!,
       platform: this.platform(),
       sdkVersion: this.manifest.sdkVersion!,

@@ -1,4 +1,4 @@
-import { UserManager } from '@expo/api';
+import { Publish, UserManager } from '@expo/api';
 import {
   ExpoConfig,
   getConfig,
@@ -57,7 +57,7 @@ export async function actionAsync(
 
   // note: this validates the exp.owner when the user is a robot
   const user = await UserManager.ensureLoggedInAsync();
-  const owner = UserManager.getProjectOwner(user, exp);
+  const owner = Publish.getProjectOwner(user, exp);
 
   Log.addNewLineIfNone();
 

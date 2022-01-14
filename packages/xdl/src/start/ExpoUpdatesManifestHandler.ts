@@ -1,4 +1,12 @@
-import { Analytics, ANONYMOUS_USERNAME, Config, UserManager, UserSettings } from '@expo/api';
+import {
+  Analytics,
+  ANONYMOUS_USERNAME,
+  Config,
+  Manifest,
+  Projects,
+  UserManager,
+  UserSettings,
+} from '@expo/api';
 import { ExpoUpdatesManifest, getConfig } from '@expo/config';
 import { Updates } from '@expo/config-plugins';
 import express from 'express';
@@ -52,13 +60,13 @@ async function shouldUseAnonymousManifestAsync(
 
 async function getScopeKeyForProjectIdAsync(projectId: string): Promise<string> {
   const user = await UserManager.ensureLoggedInAsync();
-  const project = await UserManager.getProjectAsync(user, projectId);
+  const project = await Projects.getAsync(user, projectId);
   return project.scopeKey;
 }
 
 async function signManifestAsync(manifest: ExpoUpdatesManifest): Promise<string> {
   const user = await UserManager.ensureLoggedInAsync();
-  return UserManager.signManifestAsync(user, manifest as any);
+  return Manifest.signAsync(user, manifest as any);
 }
 
 export async function getManifestResponseAsync({

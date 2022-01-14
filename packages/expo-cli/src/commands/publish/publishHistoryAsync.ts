@@ -1,4 +1,4 @@
-import { HistoryOptions, Publication } from '@expo/api';
+import { Publish } from '@expo/api';
 import dateFormat from 'dateformat';
 
 import Log from '../../log';
@@ -9,7 +9,7 @@ const HORIZ_CELL_WIDTH_SMALL = 15;
 const HORIZ_CELL_WIDTH_MEDIUM = 20;
 const HORIZ_CELL_WIDTH_BIG = 40;
 
-export async function actionAsync(projectRoot: string, options: HistoryOptions) {
+export async function actionAsync(projectRoot: string, options: Publish.HistoryOptions) {
   const result = await getPublishHistoryAsync(projectRoot, options);
 
   if (options.raw) {
@@ -29,9 +29,11 @@ export async function actionAsync(projectRoot: string, options: HistoryOptions) 
     Log.log(generalTableString);
 
     const hasRuntimeVersion = result.some(
-      (publication: Publication) => !!publication.runtimeVersion
+      (publication: Publish.Publication) => !!publication.runtimeVersion
     );
-    const hasSdkVersion = result.some((publication: Publication) => !!publication.sdkVersion);
+    const hasSdkVersion = result.some(
+      (publication: Publish.Publication) => !!publication.sdkVersion
+    );
 
     // Print info specific to each publication
     const headers = [
@@ -57,7 +59,7 @@ export async function actionAsync(projectRoot: string, options: HistoryOptions) 
         colWidths.push(HORIZ_CELL_WIDTH_SMALL);
       }
     });
-    const resultRows: Publication[] = result.map((publication: Publication) => ({
+    const resultRows: Publish.Publication[] = result.map((publication: Publish.Publication) => ({
       ...publication,
       publishedTime: dateFormat(publication.publishedTime, 'ddd mmm dd yyyy HH:MM:ss Z'),
     }));

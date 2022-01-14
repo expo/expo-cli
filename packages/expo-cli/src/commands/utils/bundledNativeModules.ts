@@ -1,4 +1,4 @@
-import { UserManager } from '@expo/api';
+import { Sdks } from '@expo/api';
 import JsonFile from '@expo/json-file';
 import chalk from 'chalk';
 import resolveFrom from 'resolve-from';
@@ -21,17 +21,17 @@ export async function getBundledNativeModulesAsync(
 ): Promise<BundledNativeModules> {
   if (sdkVersion === 'UNVERSIONED') {
     return await getBundledNativeModulesFromExpoPackageAsync(projectRoot);
-  } else {
-    try {
-      return await UserManager.getBundledNativeModulesFromApiAsync(null, sdkVersion);
-    } catch {
-      Log.warn(
-        `Unable to reach Expo servers. Falling back to using the cached dependency map (${chalk.bold(
-          'bundledNativeModules.json'
-        )}) from the package "${chalk.bold`expo`}" installed in your project.`
-      );
-      return await getBundledNativeModulesFromExpoPackageAsync(projectRoot);
-    }
+  }
+
+  try {
+    return await Sdks.getBundledNativeModulesFromApiAsync(null, sdkVersion);
+  } catch {
+    Log.warn(
+      `Unable to reach Expo servers. Falling back to using the cached dependency map (${chalk.bold(
+        'bundledNativeModules.json'
+      )}) from the package "${chalk.bold`expo`}" installed in your project.`
+    );
+    return await getBundledNativeModulesFromExpoPackageAsync(projectRoot);
   }
 }
 
