@@ -1,4 +1,4 @@
-import { ExpoConfig } from '@expo/config';
+import { ExpoConfig } from '@expo/config-types';
 import getenv from 'getenv';
 import pickBy from 'lodash/pickBy';
 import path from 'path';
