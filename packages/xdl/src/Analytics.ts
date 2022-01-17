@@ -2,8 +2,6 @@ import RudderAnalytics from '@expo/rudder-sdk-node';
 import os from 'os';
 import { URL } from 'url';
 
-import { ip } from './internal';
-
 const PLATFORM_TO_ANALYTICS_PLATFORM: { [platform: string]: string } = {
   darwin: 'Mac',
   win32: 'Windows',
@@ -73,7 +71,6 @@ export class AnalyticsClient {
   private getContext(): any {
     const platform = PLATFORM_TO_ANALYTICS_PLATFORM[os.platform()] || os.platform();
     const context = {
-      ip: ip.address(),
       device: {
         model: platform,
         brand: platform,
