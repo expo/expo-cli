@@ -88,11 +88,10 @@ function commandAsJSON(command: Command): CommandData {
   };
 }
 
-/** The easiest workaround for | (pipe) being confused with a markdown table
- * separator and breaking marktown table autoformatting is to use ⎮ (U+23AE,
- * Integral Extension) instead. <> are replaced by [] for HTML reasons. */
+/** <> are replaced by [] for HTML reasons. All pipe characters are
+ * escaped not to break markdown table autoformatting. */
 function sanitizeFlags(flags: string) {
-  return flags.replace('<', '[').replace('>', ']').replace('|', '⎮');
+  return flags.replace('<', '[').replace('>', ']').split('|').join('\\|');
 }
 
 function formatOptionAsMarkdown(option: OptionData) {
@@ -186,7 +185,7 @@ if (['markdown', 'md'].includes(process.argv[2])) {
 
   // Add comments so users hopefully don't open PRs directly into expo/expo
   contents =
-    `\n<!-- BEGIN GENERATED BLOCK. DO NOT MODIFY MANUALLY. https://github.com/expo/expo-cli/blob/master/packages/expo-cli/scripts/introspect.ts -->\n\n` +
+    `\n<!-- BEGIN GENERATED BLOCK. DO NOT MODIFY MANUALLY. https://github.com/expo/expo-cli/blob/main/packages/expo-cli/scripts/introspect.ts -->\n\n` +
     `> Based on \`expo-cli\` v${require('../package.json').version}\n\n` +
     contents +
     `\n<!-- END GENERATED BLOCK. DO NOT MODIFY MANUALLY. -->`;
@@ -194,7 +193,7 @@ if (['markdown', 'md'].includes(process.argv[2])) {
   pbcopy(contents);
 } else if (['fig'].includes(process.argv[2])) {
   const runFig = () => {
-    const branch = 'master';
+    const branch = 'main';
     const ICON = {
       npm: 'fig://icon?type=npm',
       yarn: 'fig://icon?type=yarn',

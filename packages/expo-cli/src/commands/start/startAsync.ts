@@ -2,16 +2,18 @@ import { ConfigError, ExpoConfig, getConfig, isLegacyImportsEnabled } from '@exp
 import chalk from 'chalk';
 import path from 'path';
 import resolveFrom from 'resolve-from';
-import { Project, UnifiedAnalytics, UrlUtils, Versions, Webpack } from 'xdl';
+import { LoadingPageHandler, Project, UnifiedAnalytics, UrlUtils, Versions } from 'xdl';
 
+import StatusEventEmitter from '../../analytics/StatusEventEmitter';
 import getDevClientProperties from '../../analytics/getDevClientProperties';
 import Log from '../../log';
-import * as sendTo from '../../sendTo';
-import urlOpts from '../../urlOpts';
 import { assertProjectHasExpoExtensionFilesAsync } from '../utils/deprecatedExtensionWarnings';
 import { profileMethod } from '../utils/profileMethod';
+import * as sendTo from '../utils/sendTo';
 import { ensureTypeScriptSetupAsync } from '../utils/typescript/ensureTypeScriptSetup';
+import urlOpts from '../utils/urlOpts';
 import { validateDependenciesVersionsAsync } from '../utils/validateDependenciesVersions';
+import { ensureWebSupportSetupAsync } from '../utils/web/ensureWebSetup';
 import * as TerminalUI from './TerminalUI';
 import { installCustomExitHook, installExitHooks } from './installExitHooks';
 import { tryOpeningDevToolsAsync } from './openDevTools';
@@ -38,6 +40,10 @@ export async function actionAsync(projectRoot: string, options: NormalizedOption
   const { exp, pkg } = profileMethod(getConfig)(projectRoot, {
     skipSDKVersionRequirement: options.webOnly || options.devClient,
   });
+
+  if (options.web || options.webOnly) {
+    await ensureWebSupportSetupAsync(projectRoot);
+  }
 
   if (options.devClient) {
     track(projectRoot, exp);
@@ -72,7 +78,29 @@ export async function actionAsync(projectRoot: string, options: NormalizedOption
   }
 
   const startOptions = profileMethod(parseStartOptions)(options, exp);
+  LoadingPageHandler.setOnDeepLink(
+    async (projectRoot: string, isDevClient: boolean, platform: string | null) => {
+      if (!isDevClient) {
+        return;
+      }
 
+      const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
+      StatusEventEmitter.once('deviceLogReceive', () => {
+        // Send the 'ready' event once the app is running in a device.
+        UnifiedAnalytics.logEvent('dev client start command', {
+          status: 'ready',
+          platform,
+          ...getDevClientProperties(projectRoot, exp),
+        });
+      });
+
+      UnifiedAnalytics.logEvent('dev client start command', {
+        status: 'started',
+        platform,
+        ...getDevClientProperties(projectRoot, exp),
+      });
+    }
+  );
   await profileMethod(Project.startAsync)(rootPath, { ...startOptions, exp });
 
   if (!startOptions.webOnly && options.web) {

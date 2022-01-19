@@ -98,7 +98,12 @@ export function updatePackageJSONDependencies({
     ...pkg.dependencies,
   });
 
-  const requiredDependencies = ['react', 'react-native-unimodules', 'react-native', 'expo-updates'];
+  const requiredDependencies = [
+    'react',
+    'react-native-unimodules',
+    'react-native',
+    'expo-updates',
+  ].filter(depKey => !!defaultDependencies[depKey]);
 
   const symlinkedPackages: string[] = [];
 
@@ -194,7 +199,7 @@ function updatePackageJSONScripts({ pkg }: { pkg: PackageJSONConfig }) {
     pkg.scripts = {};
   }
   if (!pkg.scripts.start?.includes('--dev-client')) {
-    pkg.scripts.start = 'react-native start';
+    pkg.scripts.start = 'expo start --dev-client';
   }
   if (!pkg.scripts.android?.includes('run')) {
     pkg.scripts.android = 'expo run:android';

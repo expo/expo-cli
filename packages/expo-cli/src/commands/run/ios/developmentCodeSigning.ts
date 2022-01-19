@@ -6,7 +6,7 @@ import { UserSettings } from 'xdl';
 
 import CommandError from '../../../CommandError';
 import Log from '../../../log';
-import { selectAsync } from '../../../prompts';
+import { selectAsync } from '../../../utils/prompts';
 import { learnMore } from '../../utils/TerminalLink';
 import * as Security from '../utils/Security';
 
@@ -83,6 +83,8 @@ function setAutoCodeSigningInfoForPbxproj(
   const project = IOSConfig.XcodeUtils.getPbxproj(projectRoot);
   const targets = IOSConfig.Target.findSignableTargets(project);
 
+  const quotedAppleTeamId = ensureQuotes(appleTeamId);
+
   for (const [nativeTargetId, nativeTarget] of targets) {
     IOSConfig.XcodeUtils.getBuildConfigurationsForListId(
       project,
@@ -93,7 +95,7 @@ function setAutoCodeSigningInfoForPbxproj(
           item.buildSettings.PRODUCT_NAME
       )
       .forEach(([, item]: IOSConfig.XcodeUtils.ConfigurationSectionEntry) => {
-        item.buildSettings.DEVELOPMENT_TEAM = appleTeamId;
+        item.buildSettings.DEVELOPMENT_TEAM = quotedAppleTeamId;
         item.buildSettings.CODE_SIGN_IDENTITY = '"Apple Development"';
         item.buildSettings.CODE_SIGN_STYLE = 'Automatic';
       });
@@ -104,13 +106,21 @@ function setAutoCodeSigningInfoForPbxproj(
         if (!item.attributes.TargetAttributes[nativeTargetId]) {
           item.attributes.TargetAttributes[nativeTargetId] = {};
         }
-        item.attributes.TargetAttributes[nativeTargetId].DevelopmentTeam = appleTeamId;
+
+        item.attributes.TargetAttributes[nativeTargetId].DevelopmentTeam = quotedAppleTeamId;
         item.attributes.TargetAttributes[nativeTargetId].ProvisioningStyle = 'Automatic';
       });
   }
 
   fs.writeFileSync(project.filepath, project.writeSync());
 }
+
+const ensureQuotes = (value: string) => {
+  if (!value.match(/^['"]/)) {
+    return `"${value}"`;
+  }
+  return value;
+};
 
 export async function ensureDeviceIsCodeSignedForDeploymentAsync(
   projectRoot: string

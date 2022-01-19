@@ -152,6 +152,9 @@ export function getConfig(projectRoot: string, options: GetConfigOptions = {}): 
       configWithDefaultValues.exp.currentFullName = getFullName(configWithDefaultValues.exp);
       // @ts-ignore: originalFullName not on type yet.
       configWithDefaultValues.exp.originalFullName = getFullName(configWithDefaultValues.exp);
+
+      delete configWithDefaultValues.exp.updates?.codeSigningCertificate;
+      delete configWithDefaultValues.exp.updates?.codeSigningMetadata;
     }
 
     return configWithDefaultValues;

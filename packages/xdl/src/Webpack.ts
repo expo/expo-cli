@@ -1,5 +1,4 @@
 import type Log from '@expo/bunyan';
-import { getConfig } from '@expo/config';
 import {
   attachInspectorProxy,
   createDevServerMiddleware,
@@ -8,14 +7,14 @@ import {
 } from '@expo/dev-server';
 import { createSymbolicateMiddleware } from '@expo/dev-server/build/webpack/symbolicateMiddleware';
 import * as devcert from '@expo/devcert';
+import openBrowserAsync from 'better-opn';
 import chalk from 'chalk';
 import fs from 'fs-extra';
 import getenv from 'getenv';
 import http from 'http';
 import * as path from 'path';
 import formatWebpackMessages from 'react-dev-utils/formatWebpackMessages';
-import openBrowser from 'react-dev-utils/openBrowser';
-import webpack, { Configuration } from 'webpack';
+import webpack from 'webpack';
 import WebpackDevServer from 'webpack-dev-server';
 
 import {
@@ -170,10 +169,7 @@ function createNativeDevServerMiddleware(
   // Add manifest middleware to the other middleware.
   // TODO: Move this in to expo/dev-server.
 
-  const projectConfig = getConfig(projectRoot);
-  const easProjectId = projectConfig.exp.extra?.eas?.projectId;
-  const useExpoUpdatesManifest =
-    forceManifestType === 'expo-updates' || (forceManifestType !== 'classic' && easProjectId);
+  const useExpoUpdatesManifest = forceManifestType === 'expo-updates';
 
   const middleware = useExpoUpdatesManifest
     ? ExpoUpdatesManifestHandler.getManifestHandler(projectRoot)
@@ -703,7 +699,7 @@ export async function openAsync(
     if (!url) {
       throw new Error('Webpack Dev Server is not running');
     }
-    openBrowser(url);
+    openBrowserAsync(url);
     return { success: true, url };
   } catch (e) {
     Logger.global.error(`Couldn't start project on web: ${e.message}`);

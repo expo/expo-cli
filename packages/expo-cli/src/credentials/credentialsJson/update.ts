@@ -1,10 +1,10 @@
 import fs from 'fs-extra';
 import path from 'path';
 
-import { gitStatusAsync } from '../../git';
 import Log from '../../log';
-import { confirmAsync } from '../../prompts';
+import { confirmAsync } from '../../utils/prompts';
 import { Context } from '../context';
+import { gitStatusAsync } from '../utils/git';
 
 export async function updateAndroidCredentialsAsync(ctx: Context) {
   const credentialsJsonFilePath = path.join(ctx.projectDir, 'credentials.json');

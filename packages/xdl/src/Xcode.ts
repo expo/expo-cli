@@ -10,7 +10,7 @@ let _xcodeVersion: string | null | false = false;
 
 export function getXcodeVersion(): string | null {
   // This method anywhere from 1-2s so cache the results in case we run it multiple times
-  // (like in run:ios or reopening on iOS for dev client).
+  // (like in run:ios or reopening on iOS for development build).
   if (_xcodeVersion !== false) {
     return _xcodeVersion;
   }

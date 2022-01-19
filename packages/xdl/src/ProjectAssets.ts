@@ -14,7 +14,7 @@ import urljoin from 'url-join';
 
 import { ApiV2, ExpSchema, Logger as logger, ProjectUtils, UserManager } from './internal';
 
-const EXPO_CDN = 'https://d1wp6m56sqw74a.cloudfront.net';
+const EXPO_CDN = 'https://classic-assets.eascdn.net';
 
 type ManifestAsset = { fileHashes: string[]; files: string[]; hash: string };
 

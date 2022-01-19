@@ -99,6 +99,15 @@ export async function constructLogUrlAsync(
   return `${baseUrl}/logs`;
 }
 
+export async function constructLoadingUrlAsync(
+  projectRoot: string,
+  platform: 'ios' | 'android',
+  requestHostname?: string
+): Promise<string> {
+  const baseUrl = await constructUrlAsync(projectRoot, { urlType: 'http' }, false, requestHostname);
+  return `${baseUrl}/_expo/loading?platform=${platform}`;
+}
+
 export async function constructUrlWithExtensionAsync(
   projectRoot: string,
   entryPoint: string,
@@ -373,6 +382,7 @@ export async function constructUrlAsync(
         'Tunnel URL not found (it might not be ready yet), falling back to LAN URL.',
         'tunnel-url-not-found'
       );
+
       return constructUrlAsync(
         projectRoot,
         { ...opts, hostType: 'lan' },
@@ -410,7 +420,10 @@ function joinURLComponents({
   port?: string | number | null;
 }): string {
   assert(hostname, 'hostname cannot be inferred.');
-  // Android HMR breaks without this port 80
+  // Android HMR breaks without this port 80.
+  // This is because Android React Native WebSocket implementation is not spec compliant and fails without a port:
+  // `E unknown:ReactNative: java.lang.IllegalArgumentException: Invalid URL port: "-1"`
+  // Invoked first in `metro-runtime/src/modules/HMRClient.js`
   const validPort = port ?? '80';
   const validProtocol = protocol ? `${protocol}://` : '';
 

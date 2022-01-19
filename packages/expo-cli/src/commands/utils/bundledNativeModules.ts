@@ -1,4 +1,5 @@
 import JsonFile from '@expo/json-file';
+import chalk from 'chalk';
 import resolveFrom from 'resolve-from';
 import { ApiV2 } from 'xdl';
 
@@ -30,9 +31,9 @@ export async function getBundledNativeModulesAsync(
       return await getBundledNativeModulesFromApiAsync(sdkVersion);
     } catch {
       Log.warn(
-        `Unable to reach Expo servers. Falling back to using the cached dependency map (${Log.chalk.bold(
+        `Unable to reach Expo servers. Falling back to using the cached dependency map (${chalk.bold(
           'bundledNativeModules.json'
-        )}) from the package "${Log.chalk.bold`expo`}" installed in your project.`
+        )}) from the package "${chalk.bold`expo`}" installed in your project.`
       );
       return await getBundledNativeModulesFromExpoPackageAsync(projectRoot);
     }
@@ -83,10 +84,9 @@ async function getBundledNativeModulesFromExpoPackageAsync(
   if (!bundledNativeModulesPath) {
     Log.addNewLineIfNone();
     throw new CommandError(
-      `The dependency map ${Log.chalk.bold(
+      `The dependency map ${chalk.bold(
         `expo/bundledNativeModules.json`
-      )} cannot be found, please ensure you have the package "${Log.chalk
-        .bold`expo`}" installed in your project.\n`
+      )} cannot be found, please ensure you have the package "${chalk.bold`expo`}" installed in your project.\n`
     );
   }
   return await JsonFile.readAsync<BundledNativeModules>(bundledNativeModulesPath);

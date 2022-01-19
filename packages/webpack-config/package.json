@@ -1,6 +1,6 @@
 {
   "name": "@expo/webpack-config",
-  "version": "0.16.6",
+  "version": "0.16.16",
   "description": "The default Webpack configuration used to build Expo apps targeting the web.",
   "main": "webpack.config.js",
   "types": "webpack.config.d.ts",
@@ -41,7 +41,7 @@
   },
   "dependencies": {
     "@babel/core": "7.14.2",
-    "@expo/config": "^6.0.6",
+    "@expo/config": "6.0.16",
     "@pmmmwh/react-refresh-webpack-plugin": "^0.4.3",
     "babel-loader": "8.2.2",
     "chalk": "^4.0.0",
@@ -49,7 +49,7 @@
     "copy-webpack-plugin": "~6.0.3",
     "css-loader": "6.2.0",
     "css-minimizer-webpack-plugin": "^3.0.2",
-    "expo-pwa": "^0.0.101",
+    "expo-pwa": "0.0.111",
     "find-yarn-workspace-root": "~2.0.0",
     "getenv": "^1.0.0",
     "html-webpack-plugin": "5.3.2",

@@ -1,3 +1,4 @@
+import chalk from 'chalk';
 import type { Command } from 'commander';
 
 import { applyAnyAsyncAction, applyAsyncActionProjectDir } from '../utils/applyAsyncAction';
@@ -6,10 +7,8 @@ export default function (program: Command) {
   applyAsyncActionProjectDir(
     program
       .command('client:ios [path]')
-      .helpGroup('experimental')
-      .description(
-        'Experimental: build a custom version of Expo Go for iOS using your own Apple credentials'
-      )
+      .helpGroup('deprecated')
+      .description(chalk.yellow`Superseded` + ' by Expo Dev Clients')
       .longDescription(
         'Build a custom version of Expo Go for iOS using your own Apple credentials and install it on your mobile device using Safari.'
       )

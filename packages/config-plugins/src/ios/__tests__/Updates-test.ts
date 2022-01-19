@@ -11,29 +11,24 @@ jest.mock('resolve-from');
 
 const { silent } = require('resolve-from');
 
-describe('iOS Updates config', () => {
-  it(`returns correct default values from all getters if no value provided`, () => {
-    expect(Updates.getSDKVersion({})).toBe(null);
-    expect(Updates.getUpdatesCheckOnLaunch({})).toBe('ALWAYS');
-    expect(Updates.getUpdatesEnabled({})).toBe(true);
-    expect(Updates.getUpdatesTimeout({})).toBe(0);
-  });
+const fixturesPath = path.resolve(__dirname, 'fixtures');
+const sampleCodeSigningCertificatePath = path.resolve(fixturesPath, 'codeSigningCertificate.pem');
 
-  it(`returns correct value from all getters if value provided`, () => {
-    expect(Updates.getSDKVersion({ sdkVersion: '37.0.0' })).toBe('37.0.0');
-    expect(
-      Updates.getUpdatesCheckOnLaunch({ updates: { checkAutomatically: 'ON_ERROR_RECOVERY' } })
-    ).toBe('NEVER');
-    expect(Updates.getUpdatesCheckOnLaunch({ updates: { checkAutomatically: 'ON_LOAD' } })).toBe(
-      'ALWAYS'
-    );
-    expect(Updates.getUpdatesEnabled({ updates: { enabled: false } })).toBe(false);
-    expect(Updates.getUpdatesTimeout({ updates: { fallbackToCacheTimeout: 2000 } })).toBe(2000);
+describe('iOS Updates config', () => {
+  beforeEach(() => {
+    const resolveFrom = require('resolve-from');
+    resolveFrom.silent = silent;
+    vol.reset();
   });
 
   it('sets the correct values in Expo.plist', () => {
+    vol.fromJSON({
+      '/app/hello': fsReal.readFileSync(sampleCodeSigningCertificatePath, 'utf-8'),
+    });
+
     expect(
       Updates.setUpdatesConfig(
+        '/app',
         {
           sdkVersion: '37.0.0',
           slug: 'my-app',
@@ -42,17 +37,28 @@ describe('iOS Updates config', () => {
             enabled: false,
             fallbackToCacheTimeout: 2000,
             checkAutomatically: 'ON_ERROR_RECOVERY',
+            codeSigningCertificate: 'hello',
+            codeSigningMetadata: {
+              alg: 'rsa-v1_5-sha256',
+              keyid: 'test',
+            },
           },
         },
-        {},
-        'user'
+        {} as any,
+        'user',
+        '0.11.0'
       )
     ).toMatchObject({
       EXUpdatesEnabled: false,
       EXUpdatesURL: 'https://exp.host/@owner/my-app',
-      EXUpdatesCheckOnLaunch: 'NEVER',
+      EXUpdatesCheckOnLaunch: 'ERROR_RECOVERY_ONLY',
       EXUpdatesLaunchWaitMs: 2000,
       EXUpdatesSDKVersion: '37.0.0',
+      EXUpdatesCodeSigningCertificate: fsReal.readFileSync(
+        sampleCodeSigningCertificatePath,
+        'utf-8'
+      ),
+      EXUpdatesCodeSigningMetadata: { alg: 'rsa-v1_5-sha256', keyid: 'test' },
     });
   });
 

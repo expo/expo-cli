@@ -1,5 +1,10 @@
 import { Android, ExpoConfig, IOS } from '@expo/config-types';
 import { getRuntimeVersionForSDKVersion } from '@expo/sdk-runtime-versions';
+import fs from 'fs';
+import { boolish } from 'getenv';
+import path from 'path';
+import resolveFrom from 'resolve-from';
+import semver from 'semver';
 
 import { AndroidConfig, IOSConfig } from '..';
 
@@ -7,6 +12,15 @@ export type ExpoConfigUpdates = Pick<
   ExpoConfig,
   'sdkVersion' | 'owner' | 'runtimeVersion' | 'updates' | 'slug'
 >;
+
+export function getExpoUpdatesPackageVersion(projectRoot: string): string | null {
+  const expoUpdatesPackageJsonPath = resolveFrom.silent(projectRoot, 'expo-updates/package.json');
+  if (!expoUpdatesPackageJsonPath || !fs.existsSync(expoUpdatesPackageJsonPath)) {
+    return null;
+  }
+  const packageJson = JSON.parse(fs.readFileSync(expoUpdatesPackageJsonPath, 'utf8'));
+  return packageJson.version;
+}
 
 export function getUpdateUrl(
   config: Pick<ExpoConfigUpdates, 'owner' | 'slug' | 'updates'>,
@@ -69,6 +83,19 @@ export const withRuntimeVersion: (config: ExpoConfig) => ExpoConfig = config => 
   return config;
 };
 
+export function getRuntimeVersionNullable(
+  ...[config, platform]: Parameters<typeof getRuntimeVersion>
+): string | null {
+  try {
+    return getRuntimeVersion(config, platform);
+  } catch (e) {
+    if (boolish('EXPO_DEBUG', false)) {
+      console.log(e);
+    }
+    return null;
+  }
+}
+
 export function getRuntimeVersion(
   config: Pick<ExpoConfig, 'version' | 'runtimeVersion' | 'sdkVersion'> & {
     android?: Pick<Android, 'versionCode' | 'runtimeVersion'>;
@@ -99,4 +126,66 @@ export function getRuntimeVersion(
       typeof runtimeVersion === 'object' ? JSON.stringify(runtimeVersion) : runtimeVersion
     }" is not a valid runtime version. getRuntimeVersion only supports a string, "sdkVersion", or "nativeVersion" policy.`
   );
+}
+
+export function getSDKVersion(config: Pick<ExpoConfigUpdates, 'sdkVersion'>): string | null {
+  return typeof config.sdkVersion === 'string' ? config.sdkVersion : null;
+}
+
+export function getUpdatesEnabled(config: Pick<ExpoConfigUpdates, 'updates'>): boolean {
+  return config.updates?.enabled !== false;
+}
+
+export function getUpdatesTimeout(config: Pick<ExpoConfigUpdates, 'updates'>): number {
+  return config.updates?.fallbackToCacheTimeout ?? 0;
+}
+
+export function getUpdatesCheckOnLaunch(
+  config: Pick<ExpoConfigUpdates, 'updates'>,
+  expoUpdatesPackageVersion?: string | null
+): 'NEVER' | 'ERROR_RECOVERY_ONLY' | 'ALWAYS' {
+  if (config.updates?.checkAutomatically === 'ON_ERROR_RECOVERY') {
+    // native 'ERROR_RECOVERY_ONLY' option was only introduced in 0.11.x
+    if (expoUpdatesPackageVersion && semver.gte(expoUpdatesPackageVersion, '0.11.0')) {
+      return 'ERROR_RECOVERY_ONLY';
+    }
+    return 'NEVER';
+  } else if (config.updates?.checkAutomatically === 'ON_LOAD') {
+    return 'ALWAYS';
+  }
+  return 'ALWAYS';
+}
+
+export function getUpdatesCodeSigningCertificate(
+  projectRoot: string,
+  config: Pick<ExpoConfigUpdates, 'updates'>
+): string | undefined {
+  const codeSigningCertificatePath = config.updates?.codeSigningCertificate;
+  if (!codeSigningCertificatePath) {
+    return undefined;
+  }
+
+  const finalPath = path.join(projectRoot, codeSigningCertificatePath);
+  if (!fs.existsSync(finalPath)) {
+    throw new Error(`File not found at \`updates.codeSigningCertificate\` path: ${finalPath}`);
+  }
+
+  return fs.readFileSync(finalPath, 'utf8');
+}
+
+export function getUpdatesCodeSigningMetadata(
+  config: Pick<ExpoConfigUpdates, 'updates'>
+): NonNullable<ExpoConfigUpdates['updates']>['codeSigningMetadata'] {
+  return config.updates?.codeSigningMetadata;
+}
+
+export function getUpdatesCodeSigningMetadataStringified(
+  config: Pick<ExpoConfigUpdates, 'updates'>
+): string | undefined {
+  const metadata = getUpdatesCodeSigningMetadata(config);
+  if (!metadata) {
+    return undefined;
+  }
+
+  return JSON.stringify(metadata);
 }

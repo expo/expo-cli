@@ -15,9 +15,10 @@ import {
   downloadApkAsync,
   Env,
   ImageUtils,
+  isDevClientPackageInstalled,
   learnMore,
+  LoadingEvent,
   Logger,
-  NotificationCode,
   ProjectSettings,
   Prompts,
   UrlUtils,
@@ -421,25 +422,25 @@ export async function installExpoAsync({
   };
 
   Logger.notifications.info(
-    { code: NotificationCode.START_PROGRESS_BAR },
+    { code: LoadingEvent.START_PROGRESS_BAR },
     'Downloading the Expo Go app [:bar] :percent :etas'
   );
 
   warningTimer = setWarningTimer();
   const path = await downloadApkAsync(url, progress => {
-    Logger.notifications.info({ code: NotificationCode.TICK_PROGRESS_BAR }, progress);
+    Logger.notifications.info({ code: LoadingEvent.TICK_PROGRESS_BAR }, progress);
   });
 
-  Logger.notifications.info({ code: NotificationCode.STOP_PROGRESS_BAR });
+  Logger.notifications.info({ code: LoadingEvent.STOP_PROGRESS_BAR });
 
   const message = version
     ? `Installing Expo Go ${version} on ${device.name}`
     : `Installing Expo Go on ${device.name}`;
 
-  Logger.notifications.info({ code: NotificationCode.START_LOADING }, message);
+  Logger.notifications.info({ code: LoadingEvent.START_LOADING }, message);
   warningTimer = setWarningTimer();
   const result = await installOnDeviceAsync(device, { binaryPath: path });
-  Logger.notifications.info({ code: NotificationCode.STOP_LOADING });
+  Logger.notifications.info({ code: LoadingEvent.STOP_LOADING });
 
   clearTimeout(warningTimer);
   return result;
@@ -827,6 +828,29 @@ export async function resolveApplicationIdAsync(projectRoot: string): Promise<st
   return exp.android?.package ?? null;
 }
 
+async function constructDeepLinkAsync(
+  projectRoot: string,
+  scheme?: string,
+  devClient?: boolean
+): Promise<string | null> {
+  if (
+    process.env['EXPO_ENABLE_INTERSTITIAL_PAGE'] &&
+    !devClient &&
+    isDevClientPackageInstalled(projectRoot)
+  ) {
+    return UrlUtils.constructLoadingUrlAsync(projectRoot, 'android');
+  } else {
+    return await UrlUtils.constructDeepLinkAsync(projectRoot, {
+      scheme,
+    }).catch(e => {
+      if (devClient) {
+        return null;
+      }
+      throw e;
+    });
+  }
+}
+
 export async function openProjectAsync({
   projectRoot,
   shouldPrompt,
@@ -846,12 +870,7 @@ export async function openProjectAsync({
 }): Promise<{ success: true; url: string } | { success: false; error: Error | string }> {
   await startAdbReverseAsync(projectRoot);
 
-  const projectUrl = await UrlUtils.constructDeepLinkAsync(projectRoot, { scheme }).catch(e => {
-    if (devClient) {
-      return null;
-    }
-    throw e;
-  });
+  const projectUrl = await constructDeepLinkAsync(projectRoot, scheme, devClient);
 
   const { exp } = getConfig(projectRoot, {
     skipSDKVersionRequirement: true,

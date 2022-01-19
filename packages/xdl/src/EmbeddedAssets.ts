@@ -15,7 +15,7 @@ import {
 } from './internal';
 
 const PLACEHOLDER_URL = 'YOUR-APP-URL-HERE';
-const FYI_URL = 'https://expo.fyi/expo-updates-config.md';
+const FYI_URL = 'https://expo.fyi/expo-updates-config';
 
 export type EmbeddedAssetsConfiguration = {
   projectRoot: string;
@@ -280,6 +280,7 @@ async function _maybeRunModifiedExpoUpdatesPluginAsync(config: EmbeddedAssetsCon
     // The username is only used for defining a default updates URL.
     // Since we overwrite the URL below the username is superfluous.
     expoPlistForProject = IOSConfig.Updates.setUpdatesConfig(
+      projectRoot,
       exp,
       expoPlistForProject,
       /*expoUsername*/ null
@@ -358,6 +359,7 @@ async function _maybeRunModifiedExpoUpdatesPluginAsync(config: EmbeddedAssetsCon
     // The username is only used for defining a default updates URL.
     // Since we overwrite the URL below the username is superfluous.
     const inferredAndroidManifest = AndroidConfig.Updates.setUpdatesConfig(
+      projectRoot,
       exp,
       currentlyConfiguredAndroidManifest,
       /*username*/ null

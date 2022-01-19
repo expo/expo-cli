@@ -40,6 +40,10 @@ Object {
         "name": "expo-splash-screen",
         "version": "UNVERSIONED",
       },
+      "expo-system-ui": Object {
+        "name": "expo-system-ui",
+        "version": "UNVERSIONED",
+      },
       "expo-updates": Object {
         "name": "expo-updates",
         "version": "UNVERSIONED",
@@ -87,6 +91,8 @@ Object {
     "permissions": Array [
       "CAMERA",
       "com.sec.android.provider.badge.permission.WRITE",
+      "android.permission.ACCESS_COARSE_LOCATION",
+      "android.permission.ACCESS_FINE_LOCATION",
     ],
     "softwareKeyboardLayoutMode": "pan",
     "splash": Object {
@@ -145,9 +151,6 @@ Object {
     },
     "entitlements": Object {
       "aps-environment": "development",
-      "com.apple.developer.applesignin": Array [
-        "Default",
-      ],
       "com.apple.developer.associated-domains": Array [
         "applinks:https://pillarvalley.netlify.app",
       ],
@@ -207,8 +210,7 @@ Object {
           },
         },
       },
-      "NSLocationWhenInUseUsageDescription": "",
-      "RCTRootViewBackgroundColor": 4294901760,
+      "NSLocationWhenInUseUsageDescription": "Allow $(PRODUCT_NAME) to access your location",
       "SKAdNetworkItems": Array [
         Object {
           "SKAdNetworkIdentifier": "v9wttpbfk9.skadnetwork",
@@ -308,12 +310,6 @@ Object {
               },
               Object {
                 "$": Object {
-                  "name": "activityBackground",
-                },
-                "_": "#ff0000",
-              },
-              Object {
-                "$": Object {
                   "name": "navigationBarColor",
                 },
                 "_": "#ff0000",
@@ -323,6 +319,12 @@ Object {
                   "name": "splashscreen_background",
                 },
                 "_": "#ff00ff",
+              },
+              Object {
+                "$": Object {
+                  "name": "activityBackground",
+                },
+                "_": "#ff0000",
               },
               Object {
                 "$": Object {
@@ -544,6 +546,7 @@ Object {
                       Object {
                         "$": Object {
                           "android:autoVerify": "true",
+                          "data-generated": "true",
                         },
                         "action": Array [
                           Object {
@@ -764,6 +767,16 @@ Object {
                   "android:name": "com.sec.android.provider.badge.permission.WRITE",
                 },
               },
+              Object {
+                "$": Object {
+                  "android:name": "android.permission.ACCESS_COARSE_LOCATION",
+                },
+              },
+              Object {
+                "$": Object {
+                  "android:name": "android.permission.ACCESS_FINE_LOCATION",
+                },
+              },
             ],
           },
         },
@@ -837,12 +850,6 @@ Object {
                   },
                   Object {
                     "$": Object {
-                      "name": "android:windowBackground",
-                    },
-                    "_": "@color/activityBackground",
-                  },
-                  Object {
-                    "$": Object {
                       "name": "android:windowLightNavigationBar",
                     },
                     "_": "true",
@@ -852,6 +859,12 @@ Object {
                       "name": "android:navigationBarColor",
                     },
                     "_": "@color/navigationBarColor",
+                  },
+                  Object {
+                    "$": Object {
+                      "name": "android:windowBackground",
+                    },
+                    "_": "@color/activityBackground",
                   },
                 ],
               },
@@ -876,9 +889,6 @@ Object {
       "ios": Object {
         "entitlements": Object {
           "aps-environment": "development",
-          "com.apple.developer.applesignin": Array [
-            "Default",
-          ],
           "com.apple.developer.associated-domains": Array [
             "applinks:https://pillarvalley.netlify.app",
           ],
@@ -943,8 +953,7 @@ Object {
               },
             },
           },
-          "NSLocationWhenInUseUsageDescription": "",
-          "RCTRootViewBackgroundColor": 4294901760,
+          "NSLocationWhenInUseUsageDescription": "Allow $(PRODUCT_NAME) to access your location",
           "SKAdNetworkItems": Array [
             Object {
               "SKAdNetworkIdentifier": "v9wttpbfk9.skadnetwork",
@@ -1017,6 +1026,10 @@ Object {
         "name": "expo-splash-screen",
         "version": "UNVERSIONED",
       },
+      "expo-system-ui": Object {
+        "name": "expo-system-ui",
+        "version": "UNVERSIONED",
+      },
       "expo-updates": Object {
         "name": "expo-updates",
         "version": "UNVERSIONED",
@@ -1064,6 +1077,8 @@ Object {
     "permissions": Array [
       "CAMERA",
       "com.sec.android.provider.badge.permission.WRITE",
+      "android.permission.ACCESS_COARSE_LOCATION",
+      "android.permission.ACCESS_FINE_LOCATION",
     ],
     "softwareKeyboardLayoutMode": "pan",
     "splash": Object {
@@ -1122,9 +1137,6 @@ Object {
     },
     "entitlements": Object {
       "aps-environment": "development",
-      "com.apple.developer.applesignin": Array [
-        "Default",
-      ],
       "com.apple.developer.associated-domains": Array [
         "applinks:https://pillarvalley.netlify.app",
       ],
@@ -1184,8 +1196,7 @@ Object {
           },
         },
       },
-      "NSLocationWhenInUseUsageDescription": "",
-      "RCTRootViewBackgroundColor": 4294901760,
+      "NSLocationWhenInUseUsageDescription": "Allow $(PRODUCT_NAME) to access your location",
       "SKAdNetworkItems": Array [
         Object {
           "SKAdNetworkIdentifier": "v9wttpbfk9.skadnetwork",
@@ -1285,12 +1296,6 @@ Object {
               },
               Object {
                 "$": Object {
-                  "name": "activityBackground",
-                },
-                "_": "#ff0000",
-              },
-              Object {
-                "$": Object {
                   "name": "navigationBarColor",
                 },
                 "_": "#ff0000",
@@ -1300,6 +1305,12 @@ Object {
                   "name": "splashscreen_background",
                 },
                 "_": "#ff00ff",
+              },
+              Object {
+                "$": Object {
+                  "name": "activityBackground",
+                },
+                "_": "#ff0000",
               },
               Object {
                 "$": Object {
@@ -1410,6 +1421,7 @@ Object {
                       Object {
                         "$": Object {
                           "android:autoVerify": "true",
+                          "data-generated": "true",
                         },
                         "action": Array [
                           Object {
@@ -1660,6 +1672,16 @@ Object {
                   "android:name": "com.sec.android.provider.badge.permission.WRITE",
                 },
               },
+              Object {
+                "$": Object {
+                  "android:name": "android.permission.ACCESS_COARSE_LOCATION",
+                },
+              },
+              Object {
+                "$": Object {
+                  "android:name": "android.permission.ACCESS_FINE_LOCATION",
+                },
+              },
             ],
           },
         },
@@ -1727,12 +1749,6 @@ Object {
                   },
                   Object {
                     "$": Object {
-                      "name": "android:windowBackground",
-                    },
-                    "_": "@color/activityBackground",
-                  },
-                  Object {
-                    "$": Object {
                       "name": "android:windowLightNavigationBar",
                     },
                     "_": "true",
@@ -1742,6 +1758,12 @@ Object {
                       "name": "android:navigationBarColor",
                     },
                     "_": "@color/navigationBarColor",
+                  },
+                  Object {
+                    "$": Object {
+                      "name": "android:windowBackground",
+                    },
+                    "_": "@color/activityBackground",
                   },
                 ],
               },
@@ -1766,9 +1788,6 @@ Object {
       "ios": Object {
         "entitlements": Object {
           "aps-environment": "development",
-          "com.apple.developer.applesignin": Array [
-            "Default",
-          ],
           "com.apple.developer.associated-domains": Array [
             "applinks:https://pillarvalley.netlify.app",
           ],
@@ -1833,7 +1852,7 @@ Object {
               },
             },
           },
-          "RCTRootViewBackgroundColor": 4294901760,
+          "NSLocationWhenInUseUsageDescription": "Allow $(PRODUCT_NAME) to access your location",
           "SKAdNetworkItems": Array [
             Object {
               "SKAdNetworkIdentifier": "v9wttpbfk9.skadnetwork",
@@ -1907,6 +1926,10 @@ Object {
         "name": "expo-splash-screen",
         "version": "UNVERSIONED",
       },
+      "expo-system-ui": Object {
+        "name": "expo-system-ui",
+        "version": "UNVERSIONED",
+      },
       "expo-updates": Object {
         "name": "expo-updates",
         "version": "UNVERSIONED",
@@ -1954,6 +1977,8 @@ Object {
     "permissions": Array [
       "CAMERA",
       "com.sec.android.provider.badge.permission.WRITE",
+      "android.permission.ACCESS_COARSE_LOCATION",
+      "android.permission.ACCESS_FINE_LOCATION",
     ],
     "softwareKeyboardLayoutMode": "pan",
     "splash": Object {
@@ -2012,9 +2037,6 @@ Object {
     },
     "entitlements": Object {
       "aps-environment": "development",
-      "com.apple.developer.applesignin": Array [
-        "Default",
-      ],
       "com.apple.developer.associated-domains": Array [
         "applinks:https://pillarvalley.netlify.app",
       ],
@@ -2074,7 +2096,7 @@ Object {
           },
         },
       },
-      "RCTRootViewBackgroundColor": 4294901760,
+      "NSLocationWhenInUseUsageDescription": "Allow $(PRODUCT_NAME) to access your location",
       "SKAdNetworkItems": Array [
         Object {
           "SKAdNetworkIdentifier": "v9wttpbfk9.skadnetwork",

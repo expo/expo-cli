@@ -9,7 +9,7 @@
     <b>Webpack config that's optimized for running universal React and react-native-web projects</b>
     <br/>
     <br/>
-    <a aria-label="Circle CI" href="https://circleci.com/gh/expo/expo-cli/tree/master">
+    <a aria-label="Circle CI" href="https://circleci.com/gh/expo/expo-cli/tree/main">
         <img alt="Circle CI" src="https://flat.badgen.net/circleci/github/expo/expo-cli?label=Circle%20CI&labelColor=555555&icon=circleci">
     </a>
 </p>
@@ -308,7 +308,7 @@ module.exports = async function (env, argv) {
 
 > Example of using service workers with Expo: `npx create-react-native-app -t with-workbox`
 
-This webpack config currently does not supply service workers by default, they can be added to the project locally: [Adding Service Workers](https://github.com/expo/fyi/blob/master/enabling-web-service-workers.md).
+This webpack config currently does not supply service workers by default, they can be added to the project locally: [Adding Service Workers](https://github.com/expo/fyi/blob/main/enabling-web-service-workers.md).
 
 ## Environment Variables
 
@@ -530,4 +530,4 @@ The Expo source code is made available under the [MIT license](LICENSE). Some of
 </p>
 
 [docs]: https://docs.expo.dev/guides/customizing-webpack/
-[docs-latest]: https://github.com/expo/expo/blob/master/docs/pages/versions/unversioned/guides/customizing-webpack.md
+[docs-latest]: https://github.com/expo/expo/blob/main/docs/pages/versions/unversioned/guides/customizing-webpack.md

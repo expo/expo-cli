@@ -21,7 +21,13 @@ describe('getDefaultConfig', () => {
         projectRoot,
         resolver: expect.objectContaining({
           resolverMainFields: expect.arrayContaining(['react-native', 'browser', 'main']),
-          sourceExts: expect.arrayContaining(['expo.ts', 'expo.tsx', 'expo.js', 'expo.jsx', 'jsx']),
+          sourceExts: expect.not.arrayContaining([
+            'expo.ts',
+            'expo.tsx',
+            'expo.js',
+            'expo.jsx',
+            'jsx',
+          ]),
         }),
       })
     );
@@ -46,10 +52,11 @@ describe('getDefaultConfig', () => {
 
   it('complains about an invalid target setting', () => {
     process.env.EXPO_TARGET = 'bare';
+    // Only throws in v40-
     expect(() =>
       // @ts-ignore incorrect `target` value passed on purpose
       getDefaultConfig(projectRoot, { target: 'blooper' })
-    ).toThrowErrorMatchingSnapshot();
+    ).not.toThrow();
   });
   it('logs an error if the environment variable is used', () => {
     console.error = jest.fn();

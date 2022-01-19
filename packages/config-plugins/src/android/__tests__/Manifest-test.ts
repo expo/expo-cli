@@ -50,6 +50,12 @@ describe(getMainApplication, () => {
     const app = getMainApplication({} as any);
     expect(app).toBe(null);
   });
+  it(`matches against fully qualified MainApplications`, async () => {
+    const manifest = await readAndroidManifestAsync(sampleManifestPath);
+    const app = getMainApplication(manifest);
+    app.$['android:name'] = 'dev.expo.go.MainApplication';
+    expect(getMainApplication(manifest)).toBeDefined();
+  });
 });
 describe(addMetaDataItemToMainApplication, () => {
   it(`adds then removes meta-data item`, async () => {

@@ -1,6 +1,6 @@
 {
   "name": "@expo/dev-server",
-  "version": "0.1.92",
+  "version": "0.1.103",
   "description": "Development servers for starting React Native projects",
   "main": "build/MetroDevServer.js",
   "scripts": {
@@ -29,15 +29,15 @@
   "bugs": {
     "url": "https://github.com/expo/expo-cli/issues"
   },
-  "homepage": "https://github.com/expo/expo-cli/tree/master/packages/dev-server#readme",
+  "homepage": "https://github.com/expo/expo-cli/tree/main/packages/dev-server#readme",
   "files": [
     "build",
     "!*/__tests__/*"
   ],
   "dependencies": {
     "@expo/bunyan": "4.0.0",
-    "@expo/metro-config": "0.2.7",
-    "@expo/osascript": "2.0.30",
+    "@expo/metro-config": "0.3.9",
+    "@expo/osascript": "2.0.31",
     "@react-native-community/cli-server-api": "^5.0.1",
     "body-parser": "1.19.0",
     "chalk": "^4.0.0",
@@ -52,7 +52,7 @@
   },
   "devDependencies": {
     "@types/connect": "^3.4.33",
-    "metro-inspector-proxy": "^0.59.0"
+    "metro-inspector-proxy": "^0.64.0"
   },
   "publishConfig": {
     "access": "public"

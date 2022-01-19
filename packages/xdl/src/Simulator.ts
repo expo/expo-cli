@@ -18,9 +18,10 @@ import {
   CoreSimulator,
   delayAsync,
   downloadAppAsync,
+  isDevClientPackageInstalled,
   learnMore,
+  LoadingEvent,
   Logger,
-  NotificationCode,
   Prompts,
   SimControl,
   SimControlLogs,
@@ -494,26 +495,26 @@ export async function installExpoOnSimulatorAsync({
   };
 
   Logger.notifications.info(
-    { code: NotificationCode.START_PROGRESS_BAR },
+    { code: LoadingEvent.START_PROGRESS_BAR },
     'Downloading the Expo Go app [:bar] :percent :etas'
   );
 
   warningTimer = setWarningTimer();
 
   const dir = await _downloadSimulatorAppAsync(url, progress => {
-    Logger.notifications.info({ code: NotificationCode.TICK_PROGRESS_BAR }, progress);
+    Logger.notifications.info({ code: LoadingEvent.TICK_PROGRESS_BAR }, progress);
   });
 
-  Logger.notifications.info({ code: NotificationCode.STOP_PROGRESS_BAR });
+  Logger.notifications.info({ code: LoadingEvent.STOP_PROGRESS_BAR });
 
   const message = version
     ? `Installing Expo Go ${version} on ${simulator.name}`
     : `Installing Expo Go on ${simulator.name}`;
-  Logger.notifications.info({ code: NotificationCode.START_LOADING }, message);
+  Logger.notifications.info({ code: LoadingEvent.START_LOADING }, message);
   warningTimer = setWarningTimer();
 
   const result = await SimControl.installAsync({ udid: simulator.udid, dir });
-  Logger.notifications.info({ code: NotificationCode.STOP_LOADING });
+  Logger.notifications.info({ code: LoadingEvent.STOP_LOADING });
 
   clearTimeout(warningTimer);
   return result;
@@ -626,6 +627,8 @@ async function openUrlInSimulatorSafeAsync({
     } else if (!isDetached) {
       await profileMethod(ensureExpoClientInstalledAsync)(simulator, sdkVersion);
       _lastUrl = url;
+    } else if (!devClient && isDevClientPackageInstalled(projectRoot)) {
+      bundleIdentifier = ''; // it will open browser.
     }
 
     await Promise.all([
@@ -766,6 +769,32 @@ export async function resolveApplicationIdAsync(projectRoot: string) {
   return exp.ios?.bundleIdentifier;
 }
 
+async function constructDeepLinkAsync(
+  projectRoot: string,
+  scheme?: string,
+  devClient?: boolean
+): Promise<string | null> {
+  if (
+    process.env['EXPO_ENABLE_INTERSTITIAL_PAGE'] &&
+    !devClient &&
+    isDevClientPackageInstalled(projectRoot)
+  ) {
+    return UrlUtils.constructLoadingUrlAsync(projectRoot, 'ios', 'localhost');
+  } else {
+    try {
+      return await UrlUtils.constructDeepLinkAsync(projectRoot, {
+        // Don't pass a `hostType` or ngrok will break.
+        scheme,
+      });
+    } catch (e) {
+      if (devClient) {
+        return null;
+      }
+      throw e;
+    }
+  }
+}
+
 export async function openProjectAsync({
   projectRoot,
   shouldPrompt,
@@ -793,16 +822,7 @@ export async function openProjectAsync({
     };
   }
 
-  const projectUrl = await UrlUtils.constructDeepLinkAsync(projectRoot, {
-    hostType: 'localhost',
-    scheme,
-  }).catch(e => {
-    if (devClient) {
-      return null;
-    }
-    throw e;
-  });
-
+  const projectUrl = await constructDeepLinkAsync(projectRoot, scheme, devClient);
   Logger.global.debug(`iOS project url: ${projectUrl}`);
 
   const { exp } = getConfig(projectRoot, {

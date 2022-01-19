@@ -20,6 +20,12 @@ export function validateName(name?: string): string | true {
   return true;
 }
 
+const FORBIDDEN_NAMES = ['react-native', 'react', 'react-dom', 'react-native-web', 'expo'];
+
+export function isFolderNameForbidden(folderName: string): boolean {
+  return FORBIDDEN_NAMES.includes(folderName);
+}
+
 // Any of these files are allowed to exist in the projectRoot
 const TOLERABLE_FILES = [
   // System
@@ -62,7 +68,7 @@ export async function assertFolderEmptyAsync({
   const conflicts = getConflictsForDirectory(projectRoot);
   if (conflicts.length) {
     Log.addNewLineIfNone();
-    Log.nested(`The directory ${Log.chalk.green(folderName)} has files that might be overwritten:`);
+    Log.nested(`The directory ${chalk.green(folderName)} has files that might be overwritten:`);
     Log.newLine();
     for (const file of conflicts) {
       Log.nested(`  ${file}`);
@@ -70,7 +76,7 @@ export async function assertFolderEmptyAsync({
 
     if (overwrite) {
       Log.newLine();
-      Log.nested(`Removing existing files from ${Log.chalk.green(folderName)}`);
+      Log.nested(`Removing existing files from ${chalk.green(folderName)}`);
       await Promise.all(conflicts.map(conflict => fs.remove(path.join(projectRoot, conflict))));
       return true;
     }
@@ -182,7 +188,7 @@ export async function installCocoaPodsAsync(projectRoot: string) {
     } catch (e) {
       step.stopAndPersist({
         symbol: '⚠️ ',
-        text: Log.chalk.red('Unable to install the CocoaPods CLI.'),
+        text: chalk.red('Unable to install the CocoaPods CLI.'),
       });
       if (e instanceof PackageManager.CocoaPodsError) {
         Log.log(e.message);
@@ -202,7 +208,7 @@ export async function installCocoaPodsAsync(projectRoot: string) {
   } catch (e) {
     step.stopAndPersist({
       symbol: '⚠️ ',
-      text: Log.chalk.red('Something went wrong running `pod install` in the `ios` directory.'),
+      text: chalk.red('Something went wrong running `pod install` in the `ios` directory.'),
     });
     if (e instanceof PackageManager.CocoaPodsError) {
       Log.log(e.message);

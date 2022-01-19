@@ -168,7 +168,6 @@ export function getManifestHandler(projectRoot: string, usePlatformHeaders?: boo
 
       // Log analytics
       Analytics.logEvent('Serve Manifest', {
-        projectRoot,
         developerTool: Config.developerTool,
         sdkVersion,
       });
@@ -181,6 +180,15 @@ export function getManifestHandler(projectRoot: string, usePlatformHeaders?: boo
           error: e.toString(),
         })
       );
+    }
+
+    try {
+      const deviceIds = req.headers['expo-dev-client-id'];
+      if (deviceIds) {
+        await ProjectSettings.saveDevicesAsync(projectRoot, deviceIds);
+      }
+    } catch (e) {
+      ProjectUtils.logError(projectRoot, 'expo', e.stack);
     }
   };
 }
@@ -251,11 +259,15 @@ export async function getManifestResponseAsync({
   const hostname = stripPort(host);
 
   // Get project entry point and initial module
-  let mainModuleName: string = 'index';
-  if (!Webpack.isTargetingNative()) {
-    const entryPoint = resolveEntryPoint(projectRoot, platform, projectConfig);
-    mainModuleName = UrlUtils.stripJSExtension(entryPoint);
+  let entryPoint = resolveEntryPoint(projectRoot, platform, projectConfig);
+
+  // NOTE(Bacon): Webpack is currently hardcoded to index.bundle on native
+  // in the future (TODO) we should move this logic into a Webpack plugin and use
+  // a generated file name like we do on web.
+  if (Webpack.isTargetingNative()) {
+    entryPoint = 'index.js';
   }
+  const mainModuleName = UrlUtils.stripJSExtension(entryPoint);
   // Gather packager and host info
   const hostInfo = await createHostInfoAsync();
   const [projectSettings, bundleUrlPackagerOpts] = await getPackagerOptionsAsync(projectRoot);

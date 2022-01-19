@@ -14,12 +14,10 @@ import * as Paths from './Paths';
 import * as Permissions from './Permissions';
 import * as ProvisioningProfile from './ProvisioningProfile';
 import * as RequiresFullScreen from './RequiresFullScreen';
-import * as RootViewBackgroundColor from './RootViewBackgroundColor';
 import * as Scheme from './Scheme';
 import * as Swift from './Swift';
 import * as Target from './Target';
 import * as Updates from './Updates';
-import * as UserInterfaceStyle from './UserInterfaceStyle';
 import * as UsesNonExemptEncryption from './UsesNonExemptEncryption';
 import * as Version from './Version';
 import * as XcodeProjectFile from './XcodeProjectFile';
@@ -43,12 +41,10 @@ export {
   Orientation,
   ProvisioningProfile,
   RequiresFullScreen,
-  RootViewBackgroundColor,
   Scheme,
   Swift,
   Target,
   Updates,
-  UserInterfaceStyle,
   UsesNonExemptEncryption,
   Version,
   XcodeProjectFile,
