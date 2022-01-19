@@ -1,3 +1,5 @@
+import { ExpoConfig, getConfig, getNameFromConfig } from '@expo/config';
+import { getRuntimeVersionNullable } from '@expo/config-plugins/build/utils/Updates';
 import express from 'express';
 import { readFile } from 'fs-extra';
 import http from 'http';
@@ -21,12 +23,20 @@ export function setOnDeepLink(listener: OnDeepLinkListener) {
   onDeepLink = listener;
 }
 
-function getPlatform(query: { [x: string]: string | string[] | null }): string | null {
+function getPlatform(query: { [x: string]: string | string[] | null }): 'android' | 'ios' | null {
   if (query['platform'] === 'android' || query['platform'] === 'ios') {
     return query['platform'];
   }
 
   return null;
+}
+
+function getRuntimeVersion(exp: ExpoConfig, platform: 'android' | 'ios' | null) {
+  if (!platform) {
+    return 'Undetected';
+  }
+
+  return getRuntimeVersionNullable(exp, platform) ?? 'Undetected';
 }
 
 export function noCacheMiddleware(
@@ -39,14 +49,27 @@ export function noCacheMiddleware(
 }
 
 async function loadingEndpointHandler(
+  projectRoot: string,
   req: express.Request | http.IncomingMessage,
   res: express.Response | http.ServerResponse
 ) {
   res.setHeader('Content-Type', 'text/html');
 
-  res.end(
-    (await readFile(resolve(__dirname, './../../static/loading-page/index.html'))).toString('utf-8')
-  );
+  let content = (
+    await readFile(resolve(__dirname, './../../static/loading-page/index.html'))
+  ).toString('utf-8');
+
+  const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
+  const { appName } = getNameFromConfig(exp);
+  const { query } = parse(req.url!, true);
+  const platform = getPlatform(query);
+  const runtimeVersion = getRuntimeVersion(exp, platform);
+
+  content = content.replace(/{{\s*AppName\s*}}/, appName ?? 'App');
+  content = content.replace(/{{\s*RuntimeVersion\s*}}/, runtimeVersion);
+  content = content.replace(/{{\s*Path\s*}}/, projectRoot);
+
+  res.end(content);
 }
 
 async function deeplinkEndpointHandler(
@@ -93,7 +116,7 @@ export function getLoadingPageHandler(projectRoot: string) {
       const url = parse(req.url).pathname || req.url;
       switch (url) {
         case LoadingEndpoint:
-          await loadingEndpointHandler(req, noCacheMiddleware(res));
+          await loadingEndpointHandler(projectRoot, req, noCacheMiddleware(res));
           break;
         case DeepLinkEndpoint:
           await deeplinkEndpointHandler(projectRoot, req, noCacheMiddleware(res));
