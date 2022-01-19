@@ -1,5 +1,7 @@
+// @ts-ignore
 import DeviceEventEmitter from 'react-native-web/dist/exports/DeviceEventEmitter';
 // import { DeviceEventEmitter } from 'react-native';
+// @ts-ignore
 import RCTEventEmitter from 'react-native-web/dist/vendor/react-native/emitter/EventEmitter';
 
 /**

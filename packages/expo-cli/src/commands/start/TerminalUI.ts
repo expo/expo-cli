@@ -416,7 +416,6 @@ export async function startAsync(projectRoot: string, options: StartOptions) {
         }
 
         Log.log(`${BLT} Open in the web browser...`);
-
         await Webpack.openAsync(projectRoot);
         printHelp();
         break;

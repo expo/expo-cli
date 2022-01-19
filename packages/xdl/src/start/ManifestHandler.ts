@@ -6,7 +6,6 @@ import http from 'http';
 import os from 'os';
 import { parse, resolve, URL } from 'url';
 
-import { Webpack } from '..';
 import {
   Analytics,
   ANONYMOUS_USERNAME,

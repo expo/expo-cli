@@ -6,6 +6,7 @@
  */
 
 'use strict';
+// @ts-ignore: untyped
 import hotEmitter from 'webpack/hot/emitter.js';
 
 import * as LoadingView from './LoadingView';

@@ -34,8 +34,17 @@ export default function withOptimizations(webpackConfig: Configuration): Configu
       // @ts-ignore
       new TerserPlugin({
         terserOptions: {
+          parse: {
+            // We want terser to parse ecma 8 code. However, we don't want it
+            // to apply any minification steps that turns valid ecma 5 code
+            // into invalid ecma 5 code. This is why the 'compress' and 'output'
+            // sections only apply transformations that are ecma 5 safe
+            // https://github.com/facebook/create-react-app/pull/4234
+            ecma: 2018,
+          },
           compress: {
             ecma: 5,
+            warnings: false,
             // Disabled because of an issue with Uglify breaking seemingly valid code:
             // https://github.com/facebook/create-react-app/issues/2376
             // Pending further investigation:
@@ -52,6 +61,8 @@ export default function withOptimizations(webpackConfig: Configuration): Configu
             : {
                 safari10: true,
               },
+          keep_classnames: _isDebugMode,
+          keep_fnames: _isDebugMode,
           output: {
             ecma: 5,
             comments: _isDebugMode,
@@ -59,8 +70,6 @@ export default function withOptimizations(webpackConfig: Configuration): Configu
             // https://github.com/facebook/create-react-app/issues/2488
             ascii_only: true,
           },
-          // // Enable file caching
-          // cache: true,
         },
         // Use multi-process parallel running to improve the build speed
         // Default number of concurrent runs: os.cpus().length - 1

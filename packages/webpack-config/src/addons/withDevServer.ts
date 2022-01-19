@@ -1,3 +1,4 @@
+import assert from 'assert';
 import chalk from 'chalk';
 import crypto from 'crypto';
 import fs from 'fs-extra';
@@ -17,7 +18,6 @@ import type {
 import { getPaths, getPublicPaths } from '../env';
 import { host, sockHost, sockPath, sockPort } from '../env/defaults';
 import { Environment } from '../types';
-import { createRedirectAssetPathsMiddleware } from './createRedirectAssetPathsMiddleware';
 
 // Ensure the certificate and key provided are valid and if not
 // throw an easy to debug error
@@ -98,9 +98,7 @@ export default function withDevServer(
   env: SelectiveEnv,
   options: DevServerOptions = {}
 ): Configuration {
-  // if (webpackConfig?.mode === 'development') {
   webpackConfig.devServer = createDevServer(env, options);
-  // }
   return webpackConfig;
 }
 
@@ -124,11 +122,6 @@ export function createDevServer(
   const mimeTypes: any = {
     bundle: 'text/javascript',
   };
-  // const mimeTypes: any = isNative
-  //   ? {
-  //       bundle: 'text/javascript',
-  //     }
-  //   : undefined;
 
   const disableFirewall = !proxy || process.env.DANGEROUSLY_DISABLE_HOST_CHECK === 'true';
 
@@ -224,40 +217,38 @@ export function createDevServer(
       // See https://github.com/facebook/create-react-app/issues/387.
       disableDotRule: true,
       index: publicUrlOrPath,
+      // @ts-ignore
+      rewrites: [
+        isNative && {
+          from: /^\/assets\/.*$/,
+          to: ((context: import('connect-history-api-fallback').Context) => {
+            return context.parsedUrl.pathname;
+          }) as import('connect-history-api-fallback').RewriteTo,
+        },
+      ].filter(Boolean),
     },
 
     // `proxy` is run between `before` and `after` `webpack-dev-server` hooks
     proxy,
-    onBeforeSetupMiddleware(devServer) {
-      // Keep `evalSourceMapMiddleware`
-      // middlewares before `redirectServedPath` otherwise will not have any effect
-      // This lets us fetch source contents from webpack for the error overlay
-      devServer.app.use(evalSourceMapMiddleware(devServer));
+    setupMiddlewares(middlewares, devServer) {
+      assert(devServer, 'webpack-dev-server is not defined');
 
-      // Support Metro assets redirect
-      devServer.app.use(
-        // @ts-ignore
-        createRedirectAssetPathsMiddleware(env.projectRoot, devServer.compiler)
+      middlewares.unshift(
+        // Keep `evalSourceMapMiddleware`
+        // middlewares before `redirectServedPath` otherwise will not have any effect
+        // This lets us fetch source contents from webpack for the error overlay
+        evalSourceMapMiddleware(devServer),
+        // Redirect to `PUBLIC_URL` or `homepage` from `package.json` if url not match
+        redirectServedPath(publicUrlOrPath),
+        // This service worker file is effectively a 'no-op' that will reset any
+        // previous service worker registered for the same host:port combination.
+        // We do this in development to avoid hitting the production cache if
+        // it used the same host and port.
+        // https://github.com/facebook/create-react-app/issues/2272#issuecomment-302832432
+        noopServiceWorkerMiddleware(publicUrlOrPath)
       );
+
+      return middlewares;
     },
-    onAfterSetupMiddleware(devServer) {
-      // Redirect to `PUBLIC_URL` or `homepage` from `package.json` if url not match
-      devServer.app.use(redirectServedPath(publicUrlOrPath));
-
-      // if (isNative) {
-      //   return;
-      // }
-
-      // This service worker file is effectively a 'no-op' that will reset any
-      // previous service worker registered for the same host:port combination.
-      // We do this in development to avoid hitting the production cache if
-      // it used the same host and port.
-      // https://github.com/facebook/create-react-app/issues/2272#issuecomment-302832432
-      devServer.app.use(noopServiceWorkerMiddleware(publicUrlOrPath));
-    },
-
-    // // TODO: Verify these work in Webpack 5 on web
-    // // Specify the mimetypes for hosting native bundles.
-    // mimeTypes,
   };
 }

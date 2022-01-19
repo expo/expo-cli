@@ -27,11 +27,11 @@ const socket = function initSocket(url: string, handlers: Record<string, Functio
     retries = 0;
     handlers.open();
   });
-  client.onError(error => {
+  client.onError((error: unknown) => {
     handlers.onError(error);
   });
 
-  client.onClose(event => {
+  client.onClose((event: unknown) => {
     if (retries === 0) {
       handlers.close(event);
     }
@@ -54,7 +54,7 @@ const socket = function initSocket(url: string, handlers: Record<string, Functio
     }
   });
 
-  client.onMessage(data => {
+  client.onMessage((data: string) => {
     const message = JSON.parse(data);
 
     const platforms: string[] = Array.isArray(message.platforms) ? message.platforms : [];
@@ -79,6 +79,6 @@ const socket = function initSocket(url: string, handlers: Record<string, Functio
 
 export default socket;
 
-export const debug = (...msg) => {
+export const debug = (...msg: string[]) => {
   if (process.env.EXPO_DEBUG) console.log(msg);
 };

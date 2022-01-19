@@ -1,4 +1,10 @@
+/* eslint-env browser */
+
+declare const WebSocket: any;
+
 export default class WebSocketClient {
+  client: typeof WebSocket;
+
   constructor(url: string) {
     this.client = new WebSocket(url);
   }

@@ -93,8 +93,8 @@
     "tree-kill": "1.2.2",
     "url-join": "4.0.0",
     "uuid": "^8.0.0",
-    "webpack": "^5.52.0",
-    "webpack-dev-server": "^4.1.1",
+    "webpack": "^5.64.4",
+    "webpack-dev-server": "^4.7.3",
     "wrap-ansi": "^7.0.0"
   },
   "devDependencies": {
@@ -106,7 +106,7 @@
     "@types/getenv": "^0.7.0",
     "@types/hashids": "^1.0.30",
     "@types/node-forge": "^0.9.7",
-    "@types/react-dev-utils": "~9.0.4",
+    "@types/react-dev-utils": "^9.0.10",
     "@types/semver": "^6.0.0",
     "@types/source-map-support": "^0.5.0",
     "@types/split": "^1.0.0",
@@ -116,7 +116,6 @@
     "@types/url-join": "^4.0.0",
     "@types/uuid": "^8.3.1",
     "@types/webpack": "^5.28.0",
-    "@types/webpack-dev-server": "^4.1.0",
     "@types/wrap-ansi": "^3.0.0",
     "hashids": "1.1.4",
     "tempy": "^0.7.1"

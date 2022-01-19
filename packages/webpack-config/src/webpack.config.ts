@@ -1,7 +1,4 @@
-/** @internal */ /** */
 /* eslint-env node */
-import { getConfig as getRealConfig } from '@expo/config';
-import ReactRefreshPlugin from '@pmmmwh/react-refresh-webpack-plugin';
 import chalk from 'chalk';
 import { CleanWebpackPlugin } from 'clean-webpack-plugin';
 import CopyWebpackPlugin from 'copy-webpack-plugin';
@@ -20,12 +17,8 @@ import { parse } from 'node-html-parser';
 import path from 'path';
 import ModuleNotFoundPlugin from 'react-dev-utils/ModuleNotFoundPlugin';
 import resolveFrom from 'resolve-from';
-import { TypePredicateKind } from 'typescript';
-import url from 'url';
-import { v4 as uuidV4 } from 'uuid';
 import webpack, { Configuration } from 'webpack';
 import { WebpackManifestPlugin } from 'webpack-manifest-plugin';
-import { ManifestHandler, ProjectAssets, ProjectSettings } from 'xdl';
 
 import { withAlias, withDevServer, withOptimizations, withPlatformSourceMaps } from './addons';
 import {
@@ -37,13 +30,7 @@ import {
   getPathsAsync,
   getPublicPaths,
 } from './env';
-import {
-  EXPO_DEBUG,
-  isCI,
-  isFastRefreshEnabled,
-  shouldUseNativeCodeLoading,
-  shouldUseSourceMap,
-} from './env/defaults';
+import { EXPO_DEBUG, isCI, shouldUseNativeCodeLoading, shouldUseSourceMap } from './env/defaults';
 import { createAllLoaders } from './loaders';
 import {
   ApplePwaWebpackPlugin,
@@ -57,9 +44,8 @@ import {
   FaviconWebpackPlugin,
   NativeAssetsPlugin,
 } from './plugins';
-// import ExpoAppManifestWebpackPlugin from './plugins/ExpoAppManifestWebpackPlugin';
 import { HTMLLinkNode } from './plugins/ModifyHtmlWebpackPlugin';
-// import { NativeOutputPlugin } from './plugins/NativeOutputPlugin/NativeOutputPlugin';
+import { HMRPlugin, webpackDevClientEntry } from './plugins/NativeHMRPlugin/NativeHMRPlugin';
 import { Arguments, Environment, FilePaths, Mode } from './types';
 
 function getDevtool(
@@ -79,8 +65,7 @@ function getDevtool(
   }
   return false;
 }
-const webpackDevClientEntry = require.resolve('./runtime/webpackHotDevClient');
-const reactRefreshOverlayEntry = require.resolve('./runtime/refresh-interop');
+
 type Output = Configuration['output'];
 type DevtoolModuleFilenameTemplateInfo = { root: string; absoluteResourcePath: string };
 
@@ -224,23 +209,8 @@ export default async function (env: Environment, argv: Arguments = {}): Promise<
     }
   }
   // Use a universal implementation of Webpack's remote loading method.
-  if (isDev) {
-    // https://github.com/facebook/create-react-app/blob/e59e0920f3bef0c2ac47bbf6b4ff3092c8ff08fb/packages/react-scripts/config/webpack.config.js#L144
-    // Include an alternative client for WebpackDevServer. A client's job is to
-    // connect to WebpackDevServer by a socket and get notified about changes.
-    // When you save a file, the client will either apply hot updates (in case
-    // of CSS changes), or refresh the page (in case of JS changes). When you
-    // make a syntax error, this client will display a syntax error overlay.
-    // Note: instead of the default WebpackDevServer client, we use a custom one
-    // to bring better experience for Create React App users. You can replace
-    // the line below with these two lines if you prefer the stock client:
-    // require.resolve('webpack-dev-server/client') + '?/',
-    // require.resolve('webpack/hot/dev-server'),
-    if (isNative) {
-      appEntry.push(webpackDevClientEntry);
-    } else {
-      appEntry.unshift(webpackDevClientEntry);
-    }
+  if (isDev && isNative) {
+    appEntry.unshift(webpackDevClientEntry);
   }
 
   let generatePWAImageAssets: boolean = !isNative && !isDev;
@@ -317,21 +287,6 @@ export default async function (env: Environment, argv: Arguments = {}): Promise<
     };
   };
 
-  // TODO(Bacon): Move to expo/config - manifest code from XDL Project
-  const publicConfig = {
-    ...getRealConfig(env.projectRoot, { isPublicConfig: true }).exp,
-    developer: {
-      tool: 'expo-cli',
-      projectRoot: env.projectRoot,
-    },
-    packagerOpts: {
-      dev: !isProd,
-      minify: isProd,
-      https: env.https,
-    },
-    updateId: uuidV4(),
-  };
-
   const emacsLockfilePattern = '**/.#*';
 
   const allLoaders = createAllLoaders(env);
@@ -369,28 +324,6 @@ export default async function (env: Environment, argv: Arguments = {}): Promise<
     // Disable file info logs.
     stats: EXPO_DEBUG ? 'detailed' : 'errors-warnings',
 
-    // experiments: {
-    //   lazyCompilation: {
-    //     imports: true,
-    //     entries: true,
-    //     test(module) {
-    //       const lazyLoad = !(
-    //         module.resource.match(/webpack-config\/webpack\/runtime/) ||
-    //         module.resource.match(/\/react-native\/.*\.js/)
-    //       );
-    //       console.log('LAZY:', module.resource, lazyLoad);
-    //       return lazyLoad;
-    //     },
-    //     backend(compiler: webpack.Compiler, client: string, callback) {
-    //       const backend = require(require.resolve('webpack/lib/hmr/lazyCompilationBackend'));
-    //       return backend(
-    //         compiler,
-    //         isNative ? require.resolve('./runtime/lazy-compilation-native') : client,
-    //         callback
-    //       );
-    //     },
-    //   },
-    // },
     cache: {
       type: 'filesystem',
       version: createEnvironmentHash(process.env),
@@ -468,34 +401,6 @@ export default async function (env: Environment, argv: Arguments = {}): Promise<
             'zip',
           ],
         }),
-
-      // isNative &&
-      //   new ExpoAppManifestWebpackPlugin(
-      //     {
-      //       template: locations.template.get('app.config.json'),
-      //       // app.manifest is required otherwise:
-      //       // The embedded manifest is invalid or could not be read. Make sure you have configured expo-updates correctly in your Xcode Build Phases.
-      //       path: isProd ? 'app.manifest' : 'app.config.json',
-      //       publicPath,
-      //     },
-      //     // TODO: Hack
-      //     {
-      //       id: 'ab6c6658-6967-40fa-a99e-7941c5d93c48',
-      //       commitTime: Date.now(),
-      //       assets: [],
-      //     }
-      //   ),
-      // isNative &&
-      //   new ExpoAppManifestWebpackPlugin(
-      //     {
-      //       template: locations.template.get('app.config.json'),
-      //       // app.manifest is required otherwise:
-      //       // The embedded manifest is invalid or could not be read. Make sure you have configured expo-updates correctly in your Xcode Build Phases.
-      //       path: 'app.config',
-      //       publicPath,
-      //     },
-      //     publicConfig
-      //   ),
 
       env.pwa &&
         new ExpoPwaManifestWebpackPlugin(
@@ -608,22 +513,6 @@ export default async function (env: Environment, argv: Arguments = {}): Promise<
           chunkFilename: 'static/css/[name].[contenthash:8].chunk.css',
         }),
 
-      // isNative &&
-      //   isProd &&
-      //   new NativeOutputPlugin({
-      //     // entryFile,
-      //     // bundleOutput: bundleFile,
-      //     // assetsDest: destination,
-
-      //     // @ts-ignore
-      //     assetsDest: env.assetDest,
-      //     platform: env.platform,
-      //     projectRoot: env.projectRoot,
-      //     // @ts-ignore
-      //     bundleOutput: env.bundleOutput, // path.join(env.projectRoot, 'build', env.platform),
-      //     // localChunks: [/Async/],
-      //     // remoteChunksOutput: path.join(env.projectRoot, 'build', env.platform, 'remote'),
-      //   }),
       // Generate an asset manifest file with the following content:
       // - "files" key: Mapping of all asset filenames to their corresponding
       //   output file so that tools can pick it up without having to parse
@@ -735,120 +624,6 @@ export default async function (env: Environment, argv: Arguments = {}): Promise<
     performance: isCI ? false : { maxAssetSize: 600000, maxEntrypointSize: 600000 },
   };
 
-  if (false)
-    webpackConfig.plugins?.push(compiler => {
-      const name = 'ExpoManifestWebpackPlugin';
-      compiler.hooks.thisCompilation.tap(
-        name,
-        /**
-         * Hook into the webpack compilation
-         * @param {WebpackCompilation} compilation
-         */
-        compilation => {
-          compilation.hooks.processAssets.tapAsync(
-            {
-              name,
-              stage:
-                /**
-                 * Generate the html after minification and dev tooling is done
-                 */
-                webpack.Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_INLINE,
-            },
-            /**
-             * Hook into the process assets hook
-             * @param {WebpackCompilation} compilationAssets
-             * @param {(err?: Error) => void} callback
-             */
-            async (compilationAssets, callback) => {
-              // Get all entry point names for this html file
-              const entryNames = Array.from(compilation.entrypoints.keys());
-
-              const entryUrl = [];
-              for (const entry of entryNames) {
-                if (compilation.entrypoints) {
-                  const entryPointUnfilteredFiles = compilation.entrypoints.get(entry)?.getFiles();
-                  entryUrl.push(entryPointUnfilteredFiles);
-                }
-              }
-
-              const projectSettings = await ProjectSettings.readAsync(env.projectRoot);
-              // ManifestHandler.getManifestResponseAsync({
-              //   projectRoot: env.projectRoot,
-              //   projectSettings:,
-              // })
-              const publicPath =
-                (compilation.options.output?.publicPath as string) ??
-                (webpackConfig.output?.publicPath as string) ??
-                '/';
-              const entryPath = entryUrl.flat()[0]!;
-              // const filteredEntryNames = filterChunks(entryNames, options.chunks, options.excludeChunks);
-              // const sortedEntryNames = sortEntryChunks(filteredEntryNames, options.chunksSortMode, compilation);
-              const hostUri = stripProtocol(publicPath);
-              console.log('DO THING:', publicPath, entryPath);
-              const manifest = {
-                ...env.config,
-                developer: {
-                  tool: 'expo-cli',
-                  projectRoot: env.projectRoot,
-                },
-                packagerOpts: projectSettings,
-                mainModuleName: entryPath.substr(0, entryPath.lastIndexOf('.')),
-                // Add this string to make Flipper register React Native / Metro as "running".
-                // Can be tested by running:
-                // `METRO_SERVER_PORT=19000 open -a flipper.app`
-                // Where 19000 is the port where the Expo project is being hosted.
-                __flipperHack: 'React Native packager is running',
-                debuggerHost: hostUri,
-                logUrl: path.join(publicPath, '/logs'),
-
-                // mainModuleName: 'index',
-                // __flipperHack: 'React Native packager is running',
-                // debuggerHost: '127.0.0.1:19006',
-                // logUrl: 'http://127.0.0.1:19006/logs',
-                hostUri: '127.0.0.1:19006',
-                bundleUrl:
-                  'http://127.0.0.1:19006/index.bundle?platform=ios&dev=true&hot=false&minify=false',
-                iconUrl: 'http://127.0.0.1:19006/assets/./assets/icon.png',
-
-                // ...env.config,
-                // publicPath,
-                // entryUrl,
-                // bundleUrl: path.join(publicPath, entryPath),
-                // hostUri,
-                // hostUri
-              };
-
-              delete manifest.sdkVersion;
-              // "mainModuleName": "index",
-              // "__flipperHack": "React Native packager is running",
-              // "debuggerHost": "192.168.6.113:19000",
-              // "logUrl": "http://192.168.6.113:19000/logs",
-              // "hostUri": "192.168.6.113:19000",
-              // "bundleUrl": "http://192.168.6.113:19000/index.bundle?platform=ios&dev=true&hot=false&minify=false",
-              // "iconUrl": "http://192.168.6.113:19000/assets/./assets/icon.png"
-
-              // Resolve all assets and set them on the manifest as URLs
-              await ProjectAssets.resolveManifestAssets({
-                projectRoot: env.projectRoot,
-                manifest,
-                async resolver(assetPath) {
-                  // manifest.bundleUrl!.match(/^https?:\/\/.*?\//)![0] + 'assets/' + path;
-                  return path.join(publicPath, assetPath);
-                },
-              });
-
-              compilation.emitAsset(
-                '/index.json',
-                new webpack.sources.RawSource(JSON.stringify(manifest), false)
-              );
-
-              callback();
-            }
-          );
-        }
-      );
-    });
-
   if (!shouldUseNativeCodeLoading) {
     webpackConfig = withPlatformSourceMaps(webpackConfig, env);
   }
@@ -889,78 +664,4 @@ export default async function (env: Environment, argv: Arguments = {}): Promise<
   }
 
   return webpackConfig;
-}
-function stripProtocol(urlString: string) {
-  // we need to use node's legacy urlObject api since the newer one doesn't like empty protocols
-  const urlObj = url.parse(urlString);
-  urlObj.protocol = '';
-  urlObj.slashes = false;
-  return url.format(urlObj);
-}
-export class HMRPlugin {
-  constructor(public config: { isDev: boolean; isNative: boolean }) {}
-
-  apply(compiler: webpack.Compiler) {
-    if (this.config?.isDev && isFastRefreshEnabled) {
-      new ReactRefreshPlugin(
-        this.config.isNative
-          ? {
-              overlay: false,
-            }
-          : {
-              overlay: {
-                entry: webpackDevClientEntry,
-                // The expected exports are slightly different from what the overlay exports,
-                // so an interop is included here to enable feedback on module-level errors.
-                module: reactRefreshOverlayEntry,
-                // Since we ship a custom dev client and overlay integration,
-                // the bundled socket handling logic can be eliminated.
-                sockIntegration: false,
-              },
-            }
-      ).apply(compiler);
-
-      // To avoid the problem from https://github.com/facebook/react/issues/20377
-      // we need to move React Refresh entry that `ReactRefreshPlugin` injects to evaluate right
-      // before the `WebpackHMRClient` and after `InitializeCore` which sets up React DevTools.
-      // Thanks to that the initialization order is correct:
-      // 0. Polyfills
-      // 1. `InitilizeCore` -> React DevTools
-      // 2. Rect Refresh Entry
-      // 3. `WebpackHMRClient`
-      const getAdjustedEntry = (entry: any) => {
-        for (const key in entry) {
-          const { import: entryImports = [] } = entry[key];
-          const refreshEntryIndex = entryImports.findIndex((value: string) =>
-            /ReactRefreshEntry\.js/.test(value)
-          );
-          if (refreshEntryIndex >= 0) {
-            const refreshEntry = entryImports[refreshEntryIndex];
-            entryImports.splice(refreshEntryIndex, 1);
-
-            const hmrClientIndex = entryImports.findIndex((value: string) =>
-              /webpackHotDevClient\.js/.test(value)
-            );
-            entryImports.splice(hmrClientIndex, 0, refreshEntry);
-          }
-
-          entry[key].import = entryImports;
-        }
-
-        // console.log(entry);
-
-        return entry;
-      };
-
-      if (typeof compiler.options.entry !== 'function') {
-        compiler.options.entry = getAdjustedEntry(compiler.options.entry);
-      } else {
-        const getEntry = compiler.options.entry;
-        compiler.options.entry = async () => {
-          const entry = await getEntry();
-          return getAdjustedEntry(entry);
-        };
-      }
-    }
-  }
 }

@@ -2,6 +2,8 @@ import * as LoadingView from './LoadingView';
 
 let isErrorHandlingEnabled = false;
 
+declare const ErrorUtils: { getGlobalHandler: Function; setGlobalHandler: Function };
+
 module.exports = {
   setEditorHandler(
     callback: (errorLocation: { fileName: string; lineNumber?: number; colNumber?: number }) => void

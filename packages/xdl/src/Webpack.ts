@@ -271,10 +271,10 @@ export async function startAsync(
     });
   }
 
-  const configs: Record<string, Configuration> = {};
+  const configs: Record<string, WebpackConfiguration> = {};
 
   // for (const platform of ['web', 'ios']) {
-  for (const platform of ['ios', 'android', 'web']) {
+  for (const platform of isTargetingNative() ? ['ios', 'android', 'web'] : ['web']) {
     env.platform = platform;
     const config = await loadConfigAsync(env);
     if (!config.devServer) {
@@ -283,7 +283,6 @@ export async function startAsync(
     configs[platform] = config;
   }
 
-  // const webpack = require(resolveFrom(projectRoot, 'webpack'));
   // Create a basic webpack compiler
   const compiler = webpack(Object.values(configs));
 
@@ -297,18 +296,18 @@ export async function startAsync(
 
   const firstConfig = Object.values(configs)[0];
   // @ts-ignore: untyped
-  if (firstConfig.devServer?.onBeforeSetupMiddleware) {
+  if (firstConfig.devServer?.setupMiddlewares) {
     // @ts-ignore: untyped
-    const beforeFunc = firstConfig.devServer?.onBeforeSetupMiddleware ?? function () {};
+    const func = firstConfig.devServer?.setupMiddlewares ?? function () {};
     // Inject the native manifest middleware.
-    const originalBefore = beforeFunc.bind(beforeFunc);
+    const originalSetupMiddlewares = func.bind(func);
     // @ts-ignore: untyped
-    firstConfig.devServer!.onBeforeSetupMiddleware = devServer => {
-      originalBefore(devServer);
-
+    firstConfig.devServer!.setupMiddlewares = (middlewares, devServer) => {
+      const nextMiddlewares = originalSetupMiddlewares(middlewares, devServer);
       if (nativeMiddleware?.middleware) {
-        devServer.app.use(nativeMiddleware.middleware);
+        nextMiddlewares.push(nativeMiddleware.middleware);
       }
+      return nextMiddlewares;
     };
   } else if (isTargetingNative()) {
     throw new Error('Webpack for native is only supported on Webpack 5+');
@@ -327,7 +326,7 @@ export async function startAsync(
     await server.start();
     if (nativeMiddleware) {
       attachNativeDevServerMiddlewareToDevServer(projectRoot, {
-        server: server.server,
+        server: server.server!,
         ...nativeMiddleware,
       });
     }
@@ -383,7 +382,7 @@ export async function startAsync(
 
 export async function stopAsync(projectRoot: string): Promise<void> {
   if (webpackDevServerInstance) {
-    await new Promise<void>(res => {
+    await new Promise<Error | undefined>(res => {
       if (webpackDevServerInstance) {
         ProjectUtils.logInfo(projectRoot, WEBPACK_LOG_TAG, '\u203A Stopping Webpack server');
         webpackDevServerInstance.stopCallback(res);
@@ -531,7 +530,7 @@ async function getAvailablePortAsync(options: {
       throw new Error(`Port ${defaultPort} not available.`);
     }
     return port;
-  } catch (error) {
+  } catch (error: any) {
     throw new XDLError('NO_PORT_FOUND', error.message);
   }
 }
@@ -701,7 +700,7 @@ export async function openAsync(
     }
     openBrowserAsync(url);
     return { success: true, url };
-  } catch (e) {
+  } catch (e: any) {
     Logger.global.error(`Couldn't start project on web: ${e.message}`);
     return { success: false, error: e };
   }

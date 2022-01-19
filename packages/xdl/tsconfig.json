@@ -10,8 +10,7 @@
   ],
   "compilerOptions": {
     "outDir": "build",
-    "rootDir": "src",
-    "noImplicitAny": true
+    "rootDir": "src"
   },
   "references": [
     {

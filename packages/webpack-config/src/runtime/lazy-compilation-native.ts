@@ -2,6 +2,8 @@
 
 'use strict';
 
+declare const __resourceQuery: string;
+
 var urlBase = decodeURIComponent(__resourceQuery.slice(1));
 var activePing;
 var activeKeys = new Map();
@@ -29,7 +31,7 @@ var updatePing = function updatePing() {
   }
 };
 
-exports.keepAlive = function (options) {
+exports.keepAlive = function (options: { data: any; onError: Function; active: any; module: any }) {
   var data = options.data;
   var onError = options.onError;
   var active = options.active;
