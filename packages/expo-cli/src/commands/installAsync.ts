@@ -54,11 +54,7 @@ export async function actionAsync(
   // in package.json, just fall through to npm/yarn.
   //
   if (!pkg.dependencies?.['expo']) {
-    if (options.dev) {
-      return await packageManager.addDevAsync(...packages);
-    } else {
-      return await packageManager.addAsync(...packages);
-    }
+    return await packageManager.addAsync(...packages);
   }
 
   if (!exp.sdkVersion) {
@@ -125,11 +121,7 @@ export async function actionAsync(
   ].filter(Boolean);
   Log.log(`Installing ${messages.join(' and ')} using ${packageManager.name}.`);
 
-  if (options.dev) {
-    await packageManager.addDevAsync(...versionedPackages);
-  } else {
-    await packageManager.addAsync(...versionedPackages);
-  }
+  await packageManager.addAsync(...versionedPackages);
 
   try {
     exp = getConfig(projectRoot, { skipSDKVersionRequirement: true, skipPlugins: true }).exp;
