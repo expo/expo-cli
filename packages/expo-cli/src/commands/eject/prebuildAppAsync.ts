@@ -13,7 +13,7 @@ import { assertPlatforms, ensureValidPlatforms } from './platformOptions';
 import { resolveTemplateOption } from './resolveTemplate';
 import { warnIfDependenciesRequireAdditionalSetup } from './setupWarnings';
 
-export type EjectAsyncOptions = {
+export type PrebuildAsyncOptions = {
   verbose?: boolean;
   force?: boolean;
   template?: string;
@@ -42,7 +42,7 @@ export type PrebuildResults = {
  */
 export async function prebuildAsync(
   projectRoot: string,
-  { platforms, ...options }: EjectAsyncOptions
+  { platforms, ...options }: PrebuildAsyncOptions
 ): Promise<PrebuildResults> {
   platforms = ensureValidPlatforms(platforms);
   assertPlatforms(platforms);

@@ -1,7 +1,7 @@
 import maybeBailOnGitStatusAsync from '../utils/maybeBailOnGitStatusAsync';
 import { clearNativeFolder, promptToClearMalformedNativeProjectsAsync } from './clearNativeFolder';
 import { platformsFromPlatform } from './platformOptions';
-import { EjectAsyncOptions, prebuildAsync } from './prebuildAppAsync';
+import { prebuildAsync, PrebuildAsyncOptions } from './prebuildAppAsync';
 
 export async function actionAsync(
   projectRoot: string,
@@ -10,7 +10,7 @@ export async function actionAsync(
     clean,
     skipDependencyUpdate,
     ...options
-  }: EjectAsyncOptions & {
+  }: PrebuildAsyncOptions & {
     npm?: boolean;
     platform?: string;
     clean?: boolean;
@@ -35,5 +35,5 @@ export async function actionAsync(
     ...options,
     skipDependencyUpdate: skipDependencyUpdate ? skipDependencyUpdate.split(',') : [],
     platforms,
-  } as EjectAsyncOptions);
+  } as PrebuildAsyncOptions);
 }

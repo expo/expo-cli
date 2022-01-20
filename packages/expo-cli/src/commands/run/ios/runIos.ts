@@ -9,7 +9,7 @@ import StatusEventEmitter from '../../../analytics/StatusEventEmitter';
 import getDevClientProperties from '../../../analytics/getDevClientProperties';
 import Log from '../../../log';
 import { promptToClearMalformedNativeProjectsAsync } from '../../eject/clearNativeFolder';
-import { EjectAsyncOptions, prebuildAsync } from '../../eject/prebuildAppAsync';
+import { prebuildAsync, PrebuildAsyncOptions } from '../../eject/prebuildAppAsync';
 import { installCustomExitHook } from '../../start/installExitHooks';
 import { profileMethod } from '../../utils/profileMethod';
 import { setGlobalDevClientSettingsAsync, startBundlerAsync } from '../ios/startBundlerAsync';
@@ -45,7 +45,7 @@ export async function actionAsync(projectRoot: string, options: Options) {
     await prebuildAsync(projectRoot, {
       install: options.install,
       platforms: ['ios'],
-    } as EjectAsyncOptions);
+    } as PrebuildAsyncOptions);
   } else if (options.install) {
     await maybePromptToSyncPodsAsync(projectRoot);
     // TODO: Ensure the pods are in sync -- https://github.com/expo/expo/pull/11593

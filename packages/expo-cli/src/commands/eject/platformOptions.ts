@@ -11,7 +11,7 @@ export function platformsFromPlatform(
   switch (platform) {
     case 'ios':
       if (process.platform === 'win32' && !loose) {
-        Log.warn('Ejecting is unsupported locally on windows, use eas build instead');
+        Log.warn('Prebuilding is unsupported locally on windows, use eas build instead');
         // continue anyways :shrug:
       }
       return ['ios'];
@@ -29,11 +29,11 @@ export function platformsFromPlatform(
 
 export function ensureValidPlatforms(platforms: ModPlatform[]): ModPlatform[] {
   const isWindows = process.platform === 'win32';
-  // Skip ejecting for iOS on Windows
+  // Skip prebuilding for iOS on Windows
   if (isWindows && platforms.includes('ios')) {
     Log.warn(
       `⚠️  Skipping generating the iOS native project files. Run ${chalk.bold(
-        'expo eject'
+        'expo prebuild'
       )} again from macOS or Linux to generate the iOS project.`
     );
     Log.newLine();

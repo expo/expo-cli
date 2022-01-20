@@ -709,7 +709,9 @@ async function runAsync(programName: string) {
     trackUsage(program.commands); // must be after register commands
 
     program.on('command:detach', () => {
-      Log.warn('To eject your project to ExpoKit (previously "detach"), use `expo eject`.');
+      Log.warn(
+        'Ejecting your project to ExpoKit (previously "detach") is deprecated, use `expo prebuild`.'
+      );
       process.exit(0);
     });
 

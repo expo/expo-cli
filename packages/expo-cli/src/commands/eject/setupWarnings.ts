@@ -8,7 +8,7 @@ import { logNewSection } from '../../utils/ora';
 import { learnMore } from '../utils/TerminalLink';
 
 /**
- * Some packages are not configured automatically on eject and may require
+ * Some packages are not configured automatically on prebuild and may require
  * users to add some code, eg: to their AppDelegate.
  */
 export function warnIfDependenciesRequireAdditionalSetup(

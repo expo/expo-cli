@@ -8,7 +8,6 @@ const COMMANDS = [
   require('./build'),
   require('./credentials'),
   require('./eject/customize'),
-  require('./eject/eject'),
   require('./eject/prebuild'),
   require('./expokit/bundle-assets'),
   require('./expokit/prepare-detached-build'),

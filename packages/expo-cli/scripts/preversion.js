@@ -14,11 +14,11 @@ ${bold('1) Offline development')}:
   (Use Network Link Conditioner with the the "100% Loss" profile, or turn off your wi-fi.)
 ${bold('2) Offline development, logged out')}:
   Run \`expo logout\` and then \`<repo-dir>/packages/expo-cli/bin/expo.js start\`.
-${bold('3) Eject')}: Create an app and eject it immediately. Check that it builds.
+${bold('3) Prebuild')}: Create an app and prebuild it immediately. Check that it builds.
 
     <repo-dir>/packages/expo-cli/bin/expo.js init testapp --template blank
     cd testapp
-    <repo-dir>/packages/expo-cli/bin/expo.js eject
+    <repo-dir>/packages/expo-cli/bin/expo.js prebuild
 
     # In another terminal:
     # Test that it builds for iOS
