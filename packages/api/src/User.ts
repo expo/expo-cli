@@ -252,7 +252,14 @@ export class UserManagerInstance {
   /**
    * Create or update a user.
    */
-  async createOrUpdateUserAsync(userData: object): Promise<Auth.User | null> {
+  async createOrUpdateUserAsync(userData: {
+    connection: 'Username-Password-Authentication';
+    email?: string;
+    givenName?: string;
+    familyName?: string;
+    username: string;
+    password: string;
+  }): Promise<Auth.User | null> {
     let currentUser = this._currentUser;
     if (!currentUser) {
       // attempt to get the current user
@@ -261,12 +268,12 @@ export class UserManagerInstance {
 
     const updatedUser = await Auth.createOrUpdateUserAsync(
       currentUser,
-      _prepareAuth0Profile(userData)
+      prepareAuth0Profile(userData)
     );
 
     this._currentUser = {
       ...this._currentUser,
-      ..._parseAuth0Profile(updatedUser),
+      ...parseAuth0Profile(updatedUser),
       kind: 'user',
     } as Auth.User;
 
@@ -320,7 +327,7 @@ export class UserManagerInstance {
   }): Promise<Auth.User | Auth.RobotUser> {
     const _user = await Auth.getUserInfoAsync();
     const user = {
-      ..._parseAuth0Profile(_user),
+      ...parseAuth0Profile(_user),
       // We need to inherit the "robot" type only, the rest is considered "user" but returned as "person".
       kind: _user.user_type === 'robot' ? 'robot' : 'user',
       currentConnection,
@@ -381,7 +388,6 @@ export class UserManagerInstance {
   }
 }
 
-let __globalInstance: UserManagerInstance | undefined;
 export default new UserManagerInstance();
 
 const toCamelCase = (str: string) => {
@@ -394,24 +400,23 @@ const toSnakeCase = (str: string) => {
   return str.replace(/([a-z][A-Z])/g, group => group.replace(' ', '_').toLowerCase());
 };
 
-/** Private Methods **/
-function _parseAuth0Profile(rawProfile: any) {
+function parseAuth0Profile(rawProfile: any) {
   if (!rawProfile || typeof rawProfile !== 'object') {
     return rawProfile;
   }
   return Object.keys(rawProfile).reduce((p, key) => {
-    p[toCamelCase(key)] = _parseAuth0Profile(rawProfile[key]);
+    p[toCamelCase(key)] = parseAuth0Profile(rawProfile[key]);
     return p;
   }, {} as any);
 }
 
-function _prepareAuth0Profile(niceProfile: any) {
+function prepareAuth0Profile(niceProfile: any) {
   if (typeof niceProfile !== 'object') {
     return niceProfile;
   }
 
   return Object.keys(niceProfile).reduce((p, key) => {
-    p[toSnakeCase(key)] = _prepareAuth0Profile(niceProfile[key]);
+    p[toSnakeCase(key)] = prepareAuth0Profile(niceProfile[key]);
     return p;
   }, {} as any);
 }
