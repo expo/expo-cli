@@ -1,11 +1,6 @@
 import RudderAnalytics from '@expo/rudder-sdk-node';
-import internalIp from 'internal-ip';
 import os from 'os';
 import { URL } from 'url';
-
-function getIpAddress() {
-  return internalIp.v4.sync() || '127.0.0.1';
-}
 
 const PLATFORM_TO_ANALYTICS_PLATFORM: { [platform: string]: string } = {
   darwin: 'Mac',
@@ -76,7 +71,6 @@ export class AnalyticsClient {
   private getContext(): any {
     const platform = PLATFORM_TO_ANALYTICS_PLATFORM[os.platform()] || os.platform();
     const context = {
-      ip: getIpAddress(),
       device: {
         model: platform,
         brand: platform,

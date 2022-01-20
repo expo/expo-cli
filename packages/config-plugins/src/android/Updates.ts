@@ -1,6 +1,5 @@
 import path from 'path';
 import resolveFrom from 'resolve-from';
-import semver from 'semver';
 
 import { ConfigPlugin } from '../Plugin.types';
 import { withAndroidManifest } from '../plugins/android-plugins';
@@ -8,6 +7,12 @@ import {
   ExpoConfigUpdates,
   getExpoUpdatesPackageVersion,
   getRuntimeVersionNullable,
+  getSDKVersion,
+  getUpdatesCheckOnLaunch,
+  getUpdatesCodeSigningCertificate,
+  getUpdatesCodeSigningMetadataStringified,
+  getUpdatesEnabled,
+  getUpdatesTimeout,
   getUpdateUrl,
 } from '../utils/Updates';
 import {
@@ -30,6 +35,8 @@ export enum Config {
   UPDATE_URL = 'expo.modules.updates.EXPO_UPDATE_URL',
   RELEASE_CHANNEL = 'expo.modules.updates.EXPO_RELEASE_CHANNEL',
   UPDATES_CONFIGURATION_REQUEST_HEADERS_KEY = 'expo.modules.updates.UPDATES_CONFIGURATION_REQUEST_HEADERS_KEY',
+  CODE_SIGNING_CERTIFICATE = 'expo.modules.updates.CODE_SIGNING_CERTIFICATE',
+  CODE_SIGNING_METADATA = 'expo.modules.updates.CODE_SIGNING_METADATA',
 }
 
 export const withUpdates: ConfigPlugin<{ expoUsername: string | null }> = (
@@ -37,8 +44,10 @@ export const withUpdates: ConfigPlugin<{ expoUsername: string | null }> = (
   { expoUsername }
 ) => {
   return withAndroidManifest(config, config => {
-    const expoUpdatesPackageVersion = getExpoUpdatesPackageVersion(config.modRequest.projectRoot);
+    const projectRoot = config.modRequest.projectRoot;
+    const expoUpdatesPackageVersion = getExpoUpdatesPackageVersion(projectRoot);
     config.modResults = setUpdatesConfig(
+      projectRoot,
       config,
       config.modResults,
       expoUsername,
@@ -48,35 +57,8 @@ export const withUpdates: ConfigPlugin<{ expoUsername: string | null }> = (
   });
 };
 
-export function getSDKVersion(config: Pick<ExpoConfigUpdates, 'sdkVersion'>): string | null {
-  return typeof config.sdkVersion === 'string' ? config.sdkVersion : null;
-}
-
-export function getUpdatesEnabled(config: Pick<ExpoConfigUpdates, 'updates'>): boolean {
-  return config.updates?.enabled !== false;
-}
-
-export function getUpdatesTimeout(config: Pick<ExpoConfigUpdates, 'updates'>): number {
-  return config.updates?.fallbackToCacheTimeout ?? 0;
-}
-
-export function getUpdatesCheckOnLaunch(
-  config: Pick<ExpoConfigUpdates, 'updates'>,
-  expoUpdatesPackageVersion?: string | null
-): 'NEVER' | 'ERROR_RECOVERY_ONLY' | 'ALWAYS' {
-  if (config.updates?.checkAutomatically === 'ON_ERROR_RECOVERY') {
-    // native 'ERROR_RECOVERY_ONLY' option was only introduced in 0.11.x
-    if (expoUpdatesPackageVersion && semver.gte(expoUpdatesPackageVersion, '0.11.0')) {
-      return 'ERROR_RECOVERY_ONLY';
-    }
-    return 'NEVER';
-  } else if (config.updates?.checkAutomatically === 'ON_LOAD') {
-    return 'ALWAYS';
-  }
-  return 'ALWAYS';
-}
-
 export function setUpdatesConfig(
+  projectRoot: string,
   config: ExpoConfigUpdates,
   androidManifest: AndroidManifest,
   username: string | null,
@@ -105,6 +87,28 @@ export function setUpdatesConfig(
     addMetaDataItemToMainApplication(mainApplication, Config.UPDATE_URL, updateUrl);
   } else {
     removeMetaDataItemFromMainApplication(mainApplication, Config.UPDATE_URL);
+  }
+
+  const codeSigningCertificate = getUpdatesCodeSigningCertificate(projectRoot, config);
+  if (codeSigningCertificate) {
+    addMetaDataItemToMainApplication(
+      mainApplication,
+      Config.CODE_SIGNING_CERTIFICATE,
+      codeSigningCertificate
+    );
+  } else {
+    removeMetaDataItemFromMainApplication(mainApplication, Config.CODE_SIGNING_CERTIFICATE);
+  }
+
+  const codeSigningMetadata = getUpdatesCodeSigningMetadataStringified(config);
+  if (codeSigningMetadata) {
+    addMetaDataItemToMainApplication(
+      mainApplication,
+      Config.CODE_SIGNING_METADATA,
+      codeSigningMetadata
+    );
+  } else {
+    removeMetaDataItemFromMainApplication(mainApplication, Config.CODE_SIGNING_METADATA);
   }
 
   return setVersionsConfig(config, androidManifest);
@@ -205,6 +209,7 @@ export function isMainApplicationMetaDataSet(androidManifest: AndroidManifest): 
 }
 
 export function isMainApplicationMetaDataSynced(
+  projectRoot: string,
   config: ExpoConfigUpdates,
   androidManifest: AndroidManifest,
   username: string | null
@@ -218,6 +223,10 @@ export function isMainApplicationMetaDataSynced(
       getMainApplicationMetaDataValue(androidManifest, Config.LAUNCH_WAIT_MS) &&
     getUpdatesCheckOnLaunch(config) ===
       getMainApplicationMetaDataValue(androidManifest, Config.CHECK_ON_LAUNCH) &&
+    getUpdatesCodeSigningCertificate(projectRoot, config) ===
+      getMainApplicationMetaDataValue(androidManifest, Config.CODE_SIGNING_CERTIFICATE) &&
+    getUpdatesCodeSigningMetadataStringified(config) ===
+      getMainApplicationMetaDataValue(androidManifest, Config.CODE_SIGNING_METADATA) &&
     areVersionsSynced(config, androidManifest)
   );
 }

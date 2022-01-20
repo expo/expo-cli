@@ -1,6 +1,5 @@
 import * as path from 'path';
 import resolveFrom from 'resolve-from';
-import semver from 'semver';
 import xcode from 'xcode';
 
 import { ConfigPlugin } from '../Plugin.types';
@@ -9,6 +8,12 @@ import {
   ExpoConfigUpdates,
   getExpoUpdatesPackageVersion,
   getRuntimeVersionNullable,
+  getSDKVersion,
+  getUpdatesCheckOnLaunch,
+  getUpdatesCodeSigningCertificate,
+  getUpdatesCodeSigningMetadata,
+  getUpdatesEnabled,
+  getUpdatesTimeout,
   getUpdateUrl,
 } from '../utils/Updates';
 import { ExpoPlist } from './IosConfig.types';
@@ -24,34 +29,8 @@ export enum Config {
   UPDATE_URL = 'EXUpdatesURL',
   RELEASE_CHANNEL = 'EXUpdatesReleaseChannel',
   UPDATES_CONFIGURATION_REQUEST_HEADERS_KEY = 'EXUpdatesRequestHeaders',
-}
-
-export function getSDKVersion(config: Pick<ExpoConfigUpdates, 'sdkVersion'>): string | null {
-  return typeof config.sdkVersion === 'string' ? config.sdkVersion : null;
-}
-
-export function getUpdatesEnabled(config: Pick<ExpoConfigUpdates, 'updates'>): boolean {
-  return config.updates?.enabled !== false;
-}
-
-export function getUpdatesTimeout(config: Pick<ExpoConfigUpdates, 'updates'>) {
-  return config.updates?.fallbackToCacheTimeout ?? 0;
-}
-
-export function getUpdatesCheckOnLaunch(
-  config: Pick<ExpoConfigUpdates, 'updates'>,
-  expoUpdatesPackageVersion?: string | null
-): 'NEVER' | 'ERROR_RECOVERY_ONLY' | 'ALWAYS' {
-  if (config.updates?.checkAutomatically === 'ON_ERROR_RECOVERY') {
-    // native 'ERROR_RECOVERY_ONLY' option was only introduced in 0.11.x
-    if (expoUpdatesPackageVersion && semver.gte(expoUpdatesPackageVersion, '0.11.0')) {
-      return 'ERROR_RECOVERY_ONLY';
-    }
-    return 'NEVER';
-  } else if (config.updates?.checkAutomatically === 'ON_LOAD') {
-    return 'ALWAYS';
-  }
-  return 'ALWAYS';
+  CODE_SIGNING_CERTIFICATE = 'EXUpdatesCodeSigningCertificate',
+  CODE_SIGNING_METADATA = 'EXUpdatesCodeSigningMetadata',
 }
 
 export const withUpdates: ConfigPlugin<{ expoUsername: string | null }> = (
@@ -59,8 +38,10 @@ export const withUpdates: ConfigPlugin<{ expoUsername: string | null }> = (
   { expoUsername }
 ) => {
   return withExpoPlist(config, config => {
-    const expoUpdatesPackageVersion = getExpoUpdatesPackageVersion(config.modRequest.projectRoot);
+    const projectRoot = config.modRequest.projectRoot;
+    const expoUpdatesPackageVersion = getExpoUpdatesPackageVersion(projectRoot);
     config.modResults = setUpdatesConfig(
+      projectRoot,
       config,
       config.modResults,
       expoUsername,
@@ -71,6 +52,7 @@ export const withUpdates: ConfigPlugin<{ expoUsername: string | null }> = (
 };
 
 export function setUpdatesConfig(
+  projectRoot: string,
   config: ExpoConfigUpdates,
   expoPlist: ExpoPlist,
   username: string | null,
@@ -88,6 +70,20 @@ export function setUpdatesConfig(
     newExpoPlist[Config.UPDATE_URL] = updateUrl;
   } else {
     delete newExpoPlist[Config.UPDATE_URL];
+  }
+
+  const codeSigningCertificate = getUpdatesCodeSigningCertificate(projectRoot, config);
+  if (codeSigningCertificate) {
+    newExpoPlist[Config.CODE_SIGNING_CERTIFICATE] = codeSigningCertificate;
+  } else {
+    delete newExpoPlist[Config.CODE_SIGNING_CERTIFICATE];
+  }
+
+  const codeSigningMetadata = getUpdatesCodeSigningMetadata(config);
+  if (codeSigningMetadata) {
+    newExpoPlist[Config.CODE_SIGNING_METADATA] = codeSigningMetadata;
+  } else {
+    delete newExpoPlist[Config.CODE_SIGNING_METADATA];
   }
 
   return setVersionsConfig(config, newExpoPlist);
@@ -197,6 +193,7 @@ export function isPlistConfigurationSet(expoPlist: ExpoPlist): boolean {
 }
 
 export function isPlistConfigurationSynced(
+  projectRoot: string,
   config: ExpoConfigUpdates,
   expoPlist: ExpoPlist,
   username: string | null
@@ -206,6 +203,9 @@ export function isPlistConfigurationSynced(
     getUpdatesEnabled(config) === expoPlist.EXUpdatesEnabled &&
     getUpdatesTimeout(config) === expoPlist.EXUpdatesLaunchWaitMs &&
     getUpdatesCheckOnLaunch(config) === expoPlist.EXUpdatesCheckOnLaunch &&
+    getUpdatesCodeSigningCertificate(projectRoot, config) ===
+      expoPlist.EXUpdatesCodeSigningCertificate &&
+    getUpdatesCodeSigningMetadata(config) === expoPlist.EXUpdatesCodeSigningMetadata &&
     isPlistVersionConfigurationSynced(config, expoPlist)
   );
 }

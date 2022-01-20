@@ -9,6 +9,7 @@ import * as Updates from '../Updates';
 
 const fixturesPath = path.resolve(__dirname, 'fixtures');
 const sampleManifestPath = path.resolve(fixturesPath, 'react-native-AndroidManifest.xml');
+const sampleCodeSigningCertificatePath = path.resolve(fixturesPath, 'codeSigningCertificate.pem');
 
 jest.mock('fs');
 jest.mock('resolve-from');
@@ -24,40 +25,10 @@ describe('Android Updates config', () => {
     vol.reset();
   });
 
-  it(`returns correct default values from all getters if no value provided`, () => {
-    expect(Updates.getSDKVersion({})).toBe(null);
-    expect(Updates.getUpdatesCheckOnLaunch({})).toBe('ALWAYS');
-    expect(Updates.getUpdatesEnabled({})).toBe(true);
-    expect(Updates.getUpdatesTimeout({})).toBe(0);
-  });
-
-  it(`returns correct value from all getters if value provided`, () => {
-    expect(Updates.getSDKVersion({ sdkVersion: '37.0.0' })).toBe('37.0.0');
-    expect(
-      Updates.getUpdatesCheckOnLaunch({ updates: { checkAutomatically: 'ON_ERROR_RECOVERY' } })
-    ).toBe('NEVER');
-    expect(
-      Updates.getUpdatesCheckOnLaunch(
-        { updates: { checkAutomatically: 'ON_ERROR_RECOVERY' } },
-        '0.11.0'
-      )
-    ).toBe('ERROR_RECOVERY_ONLY');
-    expect(
-      Updates.getUpdatesCheckOnLaunch(
-        { updates: { checkAutomatically: 'ON_ERROR_RECOVERY' } },
-        '0.10.15'
-      )
-    ).toBe('NEVER');
-    expect(Updates.getUpdatesCheckOnLaunch({ updates: { checkAutomatically: 'ON_LOAD' } })).toBe(
-      'ALWAYS'
-    );
-    expect(Updates.getUpdatesEnabled({ updates: { enabled: false } })).toBe(false);
-    expect(Updates.getUpdatesTimeout({ updates: { fallbackToCacheTimeout: 2000 } })).toBe(2000);
-  });
-
   it('set correct values in AndroidManifest.xml', async () => {
     vol.fromJSON({
       '/blah/react-native-AndroidManifest.xml': fsReal.readFileSync(sampleManifestPath, 'utf-8'),
+      '/app/hello': fsReal.readFileSync(sampleCodeSigningCertificatePath, 'utf-8'),
     });
 
     let androidManifestJson = await readAndroidManifestAsync(
@@ -72,9 +43,20 @@ describe('Android Updates config', () => {
         enabled: false,
         fallbackToCacheTimeout: 2000,
         checkAutomatically: 'ON_ERROR_RECOVERY',
+        codeSigningCertificate: 'hello',
+        codeSigningMetadata: {
+          alg: 'rsa-v1_5-sha256',
+          keyid: 'test',
+        },
       },
     };
-    androidManifestJson = Updates.setUpdatesConfig(config, androidManifestJson, 'user', '0.11.0');
+    androidManifestJson = Updates.setUpdatesConfig(
+      '/app',
+      config,
+      androidManifestJson,
+      'user',
+      '0.11.0'
+    );
     const mainApplication = getMainApplication(androidManifestJson);
 
     const updateUrl = mainApplication['meta-data'].filter(
@@ -106,6 +88,22 @@ describe('Android Updates config', () => {
     );
     expect(timeout).toHaveLength(1);
     expect(timeout[0].$['android:value']).toMatch('2000');
+
+    const codeSigningCertificate = mainApplication['meta-data'].filter(
+      e => e.$['android:name'] === 'expo.modules.updates.CODE_SIGNING_CERTIFICATE'
+    );
+    expect(codeSigningCertificate).toHaveLength(1);
+    expect(codeSigningCertificate[0].$['android:value']).toMatch(
+      fsReal.readFileSync(sampleCodeSigningCertificatePath, 'utf-8')
+    );
+
+    const codeSigningMetadata = mainApplication['meta-data'].filter(
+      e => e.$['android:name'] === 'expo.modules.updates.CODE_SIGNING_METADATA'
+    );
+    expect(codeSigningMetadata).toHaveLength(1);
+    expect(codeSigningMetadata[0].$['android:value']).toMatch(
+      '{"alg":"rsa-v1_5-sha256","keyid":"test"}'
+    );
   });
 
   describe(Updates.ensureBuildGradleContainsConfigurationScript, () => {

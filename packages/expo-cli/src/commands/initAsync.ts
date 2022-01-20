@@ -540,7 +540,12 @@ async function configureUpdatesProjectFilesAsync(projectRoot: string, username: 
   const androidManifestJSON = await AndroidConfig.Manifest.readAndroidManifestAsync(
     androidManifestPath
   );
-  const result = await AndroidConfig.Updates.setUpdatesConfig(exp, androidManifestJSON, username);
+  const result = await AndroidConfig.Updates.setUpdatesConfig(
+    projectRoot,
+    exp,
+    androidManifestJSON,
+    username
+  );
   await AndroidConfig.Manifest.writeAndroidManifestAsync(androidManifestPath, result);
 
   // apply iOS config
@@ -549,7 +554,7 @@ async function configureUpdatesProjectFilesAsync(projectRoot: string, username: 
 
   const plistFilePath = path.join(supportingDirectory, 'Expo.plist');
   let data = plist.parse(fs.readFileSync(plistFilePath, 'utf8'));
-  data = IOSConfig.Updates.setUpdatesConfig(exp, data, username);
+  data = IOSConfig.Updates.setUpdatesConfig(projectRoot, exp, data, username);
 
   await fs.writeFile(plistFilePath, plist.build(data));
 }
