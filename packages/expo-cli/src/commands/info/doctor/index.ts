@@ -5,9 +5,10 @@ import { applyAsyncActionProjectDir } from '../../utils/applyAsyncAction';
 export default function (program: Command) {
   applyAsyncActionProjectDir(
     program
-      .command('doctor [path]')
+      .command('doctor')
       .description('Diagnose issues with the project')
-      .helpGroup('info'),
+      .helpGroup('info')
+      .option('--fix-dependencies', 'Fix dependencies versions'),
     () => import('./doctorAsync')
   );
 }
