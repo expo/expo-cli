@@ -1,8 +1,7 @@
 import {
   Analytics,
-  ANONYMOUS_USERNAME,
-  Config,
   Manifest,
+  ProcessSettings,
   Projects,
   UserManager,
   UserSettings,
@@ -46,22 +45,17 @@ function getPlatformFromRequest(req: express.Request | http.IncomingMessage): 'a
 async function shouldUseAnonymousManifestAsync(
   easProjectId: string | undefined | null
 ): Promise<boolean> {
-  if (!easProjectId || Config.isOffline) {
+  if (!easProjectId || ProcessSettings.isOffline) {
     return true;
   }
-
   const currentSession = await UserManager.getSessionAsync();
-  if (!currentSession) {
-    return true;
-  }
-
-  return false;
+  return !currentSession;
 }
 
 async function getScopeKeyForProjectIdAsync(projectId: string): Promise<string> {
   const user = await UserManager.ensureLoggedInAsync();
-  const project = await Projects.getAsync(user, projectId);
-  return project.scopeKey;
+  const { scopeKey } = await Projects.getAsync(user, { id: projectId });
+  return scopeKey;
 }
 
 async function signManifestAsync(manifest: ExpoUpdatesManifest): Promise<string> {
@@ -131,7 +125,7 @@ export async function getManifestResponseAsync({
   const shouldUseAnonymousManifest = await shouldUseAnonymousManifestAsync(easProjectId);
   const userAnonymousIdentifier = await UserSettings.getAnonymousIdentifierAsync();
   const scopeKey = shouldUseAnonymousManifest
-    ? `@${ANONYMOUS_USERNAME}/${expoConfig.slug}-${userAnonymousIdentifier}`
+    ? `@${UserManager.ANONYMOUS_USERNAME}/${expoConfig.slug}-${userAnonymousIdentifier}`
     : await getScopeKeyForProjectIdAsync(nullthrows(easProjectId));
 
   const expoUpdatesManifest = {
@@ -200,7 +194,7 @@ export function getManifestHandler(projectRoot: string) {
       res.end(JSON.stringify(body));
 
       Analytics.logEvent('Serve Expo Updates Manifest', {
-        developerTool: Config.developerTool,
+        developerTool: ProcessSettings.developerTool,
         runtimeVersion: (body as any).runtimeVersion,
       });
     } catch (e: any) {

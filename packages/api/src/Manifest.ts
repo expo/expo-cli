@@ -1,9 +1,12 @@
 import { JSONObject } from '@expo/json-file';
 
 import ApiV2, { ApiV2ClientOptions } from './ApiV2';
-import UserManager from './User';
+import UserManager from './UserManager';
 
-export async function signAsync(user: ApiV2ClientOptions, manifest: JSONObject): Promise<string> {
+export async function signAsync(
+  user: ApiV2ClientOptions | null,
+  manifest: JSONObject
+): Promise<string> {
   const { signature } = await ApiV2.clientForUser(user).postAsync('manifest/eas/sign', {
     manifest,
   });
@@ -11,7 +14,7 @@ export async function signAsync(user: ApiV2ClientOptions, manifest: JSONObject):
 }
 
 export async function signLegacyAsync(
-  user: ApiV2ClientOptions,
+  user: ApiV2ClientOptions | null,
   manifest: JSONObject
 ): Promise<string> {
   const { response } = await ApiV2.clientForUser(user).postAsync('manifest/sign', {

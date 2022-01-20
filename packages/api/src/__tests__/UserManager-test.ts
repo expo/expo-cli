@@ -1,6 +1,8 @@
 import fs from 'fs-extra';
 
-import { ApiV2, UserManager as GlobalUserManager, UserManagerInstance, UserSettings } from '../';
+import ApiV2 from '../ApiV2';
+import GlobalUserManager, { UserManagerInstance } from '../UserManager';
+import UserSettings from '../UserSettings';
 
 jest.mock('../ApiV2', () => ({
   clientForUser: jest.fn(),
@@ -12,7 +14,7 @@ describe('User', () => {
   });
 
   it('uses a UserManager singleton', () => {
-    const { default: manager } = jest.requireActual('../User');
+    const { default: manager } = jest.requireActual('../UserManager');
     expect(manager).toBe(GlobalUserManager);
   });
 

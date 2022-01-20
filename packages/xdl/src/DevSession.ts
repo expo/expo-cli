@@ -1,8 +1,8 @@
-import { Config, DevelopmentSessions, UserManager } from '@expo/api';
+import { DevelopmentSessions, ProcessSettings, ProjectSettings, UserManager } from '@expo/api';
 import { ExpoConfig } from '@expo/config-types';
 import assert from 'assert';
 
-import { Logger as logger, ProjectSettings, UrlUtils } from './internal';
+import { Logger as logger, UrlUtils } from './internal';
 
 const UPDATE_FREQUENCY_SECS = 20;
 
@@ -30,7 +30,7 @@ export async function startSession(
     keepUpdating = true;
   }
 
-  if (!Config.isOffline && keepUpdating) {
+  if (!ProcessSettings.isOffline && keepUpdating) {
     const authSession = await UserManager.getSessionAsync();
     const { devices } = await ProjectSettings.getDevicesInfoAsync(projectRoot);
 

@@ -27,7 +27,6 @@ export {
   PKCS12Utils,
   Project,
   Prompts,
-  ProjectSettings,
   ProjectAssets,
   ProjectUtils,
   SimControl,

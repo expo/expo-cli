@@ -1,10 +1,12 @@
-import type { JSONObject } from '@expo/json-file';
+import { JSONObject } from '@expo/json-file';
 import axios, { AxiosRequestConfig } from 'axios';
 import concat from 'concat-stream';
 import FormData from 'form-data';
+// @ts-ignore
+import merge from 'lodash.merge';
 import QueryString from 'querystring';
 
-import Config from './Config';
+import ProcessSettings from './ProcessSettings';
 import { ApiV2Error } from './utils/errors';
 
 const MAX_CONTENT_LENGTH = 100 /* MB */ * 1024 * 1024;
@@ -12,13 +14,13 @@ const MAX_BODY_LENGTH = 100 /* MB */ * 1024 * 1024;
 
 // These aren't constants because some commands switch between staging and prod
 function getRootBaseUrl() {
-  return `${Config.api.scheme}://${Config.api.host}`;
+  return `${ProcessSettings.api.scheme}://${ProcessSettings.api.host}`;
 }
 
 function getApiBaseUrl() {
   let rootBaseUrl = getRootBaseUrl();
-  if (Config.api.port) {
-    rootBaseUrl += ':' + Config.api.port;
+  if (ProcessSettings.api.port) {
+    rootBaseUrl += ':' + ProcessSettings.api.port;
   }
   return rootBaseUrl + '/--/api/v2';
 }
@@ -204,7 +206,7 @@ export default class ApiV2Client {
       reqOptions.data = options.body;
     }
 
-    if (!extraRequestOptions.hasOwnProperty('timeout') && Config.isOffline) {
+    if (!extraRequestOptions.hasOwnProperty('timeout') && ProcessSettings.isOffline) {
       reqOptions.timeout = 1;
     }
 
@@ -238,23 +240,3 @@ export default class ApiV2Client {
     return returnEntireResponse ? response : result.data;
   }
 }
-
-function merge(target: any, ...sources: any[]): any {
-  if (!sources.length) return target;
-  const source = sources.shift();
-
-  if (isObject(target) && isObject(source)) {
-    for (const key in source) {
-      if (isObject(source[key])) {
-        if (!target[key]) Object.assign(target, { [key]: {} });
-        merge(target[key], source[key]);
-      } else {
-        Object.assign(target, { [key]: source[key] });
-      }
-    }
-  }
-
-  return merge(target, ...sources);
-}
-
-const isObject = (item: any) => item && typeof item === 'object' && !Array.isArray(item);

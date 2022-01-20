@@ -1,4 +1,5 @@
-import { Project, ProjectSettings } from 'xdl';
+import { ProjectSettings } from '@expo/api';
+import { Project } from 'xdl';
 
 import * as TerminalUI from '../../start/TerminalUI';
 import { installExitHooks } from '../../start/installExitHooks';

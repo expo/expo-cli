@@ -1,8 +1,7 @@
 import ApiV2, { ApiV2ClientOptions } from './ApiV2';
-import { RobotUser, User } from './Auth';
 
 export async function getSupportedSDKVersionsAsync(
-  user?: User | RobotUser | null
+  user?: ApiV2ClientOptions | null
 ): Promise<{ android: string[]; ios: string[] }> {
   return await ApiV2.clientForUser(user).getAsync('standalone-build/supportedSDKVersions');
 }

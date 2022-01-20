@@ -85,9 +85,9 @@ export default class BaseBuilder {
     }
 
     // Warn user if building a project using the next deprecated SDK version
-    const oldestSupportedMajorVersion = await Versions.oldestSupportedMajorVersionAsync();
+    const oldestSupportedMajorVersion = await Versions.getLastSupportedMajorVersionAsync();
     if (semver.major(this.manifest.sdkVersion!) === oldestSupportedMajorVersion) {
-      const { version } = await Versions.newestReleasedSdkVersionAsync();
+      const { version } = await Versions.getLatestVersionAsync();
       Log.warn(
         `\nSDK${oldestSupportedMajorVersion} will be ${chalk.bold(
           'deprecated'

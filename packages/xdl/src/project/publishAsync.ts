@@ -1,4 +1,4 @@
-import { Analytics, Auth, Config, Publish, UserManager } from '@expo/api';
+import { Analytics, Auth, ProcessSettings, Publish, UserManager } from '@expo/api';
 import { ExpoAppManifest, getDefaultTarget, HookArguments } from '@expo/config';
 import fs from 'fs-extra';
 import path from 'path';
@@ -55,7 +55,7 @@ export async function publishAsync(
   }
 
   Analytics.logEvent('Publish', {
-    developerTool: Config.developerTool,
+    developerTool: ProcessSettings.developerTool,
   });
 
   const validationStatus = await Doctor.validateWithNetworkAsync(projectRoot);
@@ -235,9 +235,9 @@ async function _handleKernelPublishedAsync({
     owner = user.username;
   }
 
-  let kernelBundleUrl = `${Config.api.scheme}://${Config.api.host}`;
-  if (Config.api.port) {
-    kernelBundleUrl = `${kernelBundleUrl}:${Config.api.port}`;
+  let kernelBundleUrl = `${ProcessSettings.api.scheme}://${ProcessSettings.api.host}`;
+  if (ProcessSettings.api.port) {
+    kernelBundleUrl = `${kernelBundleUrl}:${ProcessSettings.api.port}`;
   }
   kernelBundleUrl = `${kernelBundleUrl}/@${owner}/${exp.slug}/bundle`;
   const sdkOrRuntimeVersion = exp.runtimeVersion

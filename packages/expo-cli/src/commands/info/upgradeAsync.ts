@@ -1,4 +1,4 @@
-import { Versions } from '@expo/api';
+import { ProjectSettings, Versions } from '@expo/api';
 import {
   getConfig,
   isLegacyImportsEnabled,
@@ -17,7 +17,7 @@ import pickBy from 'lodash/pickBy';
 import resolveFrom from 'resolve-from';
 import semver from 'semver';
 import terminalLink from 'terminal-link';
-import { Project, ProjectSettings } from 'xdl';
+import { Project } from 'xdl';
 
 import CommandError from '../../CommandError';
 import Log from '../../log';
@@ -387,7 +387,7 @@ export async function upgradeAsync(
   options: Options
 ) {
   // Force updating the versions cache
-  await Versions.versionsAsync({ skipCache: true });
+  await Versions.getVersionsAsync({ skipCache: true });
 
   const { exp, pkg } = await getConfig(projectRoot);
 
@@ -398,8 +398,8 @@ export async function upgradeAsync(
   await stopExpoServerAsync(projectRoot);
 
   const currentSdkVersionString = exp.sdkVersion!;
-  const sdkVersions = await Versions.releasedSdkVersionsAsync();
-  const latestSdkVersion = await Versions.newestReleasedSdkVersionAsync();
+  const sdkVersions = await Versions.getReleasedVersionsAsync();
+  const latestSdkVersion = await Versions.getLatestVersionAsync();
   const latestSdkVersionString = latestSdkVersion.version;
   let targetSdkVersionString =
     maybeFormatSdkVersion(requestedSdkVersion) || latestSdkVersion.version;
@@ -438,11 +438,11 @@ export async function upgradeAsync(
   } else if (!targetSdkVersion) {
     // This is useful when testing the beta internally, before actually
     // releasing it as a public beta. At this point, we won't have "beta" set on
-    // the versions endpoint and so Versions.releasedSdkVersionsAsync will not
+    // the versions endpoint and so Versions.getReleasedVersionsAsync will not
     // return the beta version, even with the EXPO_BETA flag set.
     if (getenv.boolish('EXPO_BETA', false)) {
-      const allSdkVersions = await Versions.sdkVersionsAsync();
-      targetSdkVersion = allSdkVersions[targetSdkVersionString];
+      const { sdkVersions } = await Versions.getVersionsAsync();
+      targetSdkVersion = sdkVersions[targetSdkVersionString];
     }
 
     // If we still don't have a version, even after searching through unreleased versions

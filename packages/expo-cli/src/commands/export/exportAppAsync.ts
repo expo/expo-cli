@@ -20,8 +20,6 @@ import {
   writeSourceMapsAsync,
 } from './writeContents';
 
-export const ANONYMOUS_USERNAME = 'anonymous';
-
 /**
  * If the `experimentalBundle` flag is true, the structure of the outputDir will be:
  *
@@ -228,7 +226,7 @@ function mutateExpoConfigWithManifestValues(
   }
 
   if (!username) {
-    username = ANONYMOUS_USERNAME;
+    username = UserManager.ANONYMOUS_USERNAME;
   }
 
   exp.id = `@${username}/${exp.slug}`;

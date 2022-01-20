@@ -1,10 +1,10 @@
-import { UserManager, UserSettings } from '@expo/api';
+import { ProjectSettings, UserManager, UserSettings } from '@expo/api';
 import { ExpoConfig } from '@expo/config-types';
 import { openJsInspector, queryAllInspectorAppsAsync } from '@expo/dev-server';
 import openBrowserAsync from 'better-opn';
 import chalk from 'chalk';
 import wrapAnsi from 'wrap-ansi';
-import { Android, Project, ProjectSettings, Prompts, Simulator, UrlUtils, Webpack } from 'xdl';
+import { Android, Project, Prompts, Simulator, UrlUtils, Webpack } from 'xdl';
 
 import Log from '../../log';
 import { handleErrorsAsync } from '../../utils/handleErrors';

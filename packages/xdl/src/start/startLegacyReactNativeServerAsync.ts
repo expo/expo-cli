@@ -1,4 +1,4 @@
-import { Versions } from '@expo/api';
+import { ProjectSettings, Versions } from '@expo/api';
 import { ExpoConfig, getConfig } from '@expo/config';
 import { getBareExtensions, getManagedExtensions } from '@expo/config/paths';
 import axios from 'axios';
@@ -14,7 +14,6 @@ import {
   assertValidProjectRoot,
   delayAsync,
   getFreePortAsync,
-  ProjectSettings,
   ProjectUtils,
   StartDevServerOptions,
   UrlUtils,

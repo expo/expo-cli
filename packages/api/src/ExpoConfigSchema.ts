@@ -14,13 +14,13 @@ export type AssetSchema = {
   fieldPath: string;
 };
 
-const xdlSchemaJson: { [sdkVersion: string]: Schema } = {};
+const schemaJson: { [sdkVersion: string]: Schema } = {};
 const schemaCaches: { [version: string]: Cache<JSONObject> } = {};
 
-// TODO: Maybe move json-schema-deref-sync out of api (1.58MB)
+// TODO: Maybe move json-schema-deref-sync out of api (1.58MB -- lodash)
 // https://packagephobia.com/result?p=json-schema-deref-sync
 export async function getSchemaAsync(sdkVersion: string): Promise<Schema> {
-  const json = await _getSchemaJSONAsync(sdkVersion);
+  const json = await getSchemaJSONAsync(sdkVersion);
   return schemaDerefSync(json.schema);
 }
 
@@ -49,7 +49,7 @@ export async function getAssetSchemasAsync(sdkVersion: string | undefined): Prom
   return assetSchemas;
 }
 
-async function _getSchemaJSONAsync(sdkVersion: string): Promise<{ schema: Schema }> {
+async function getSchemaJSONAsync(sdkVersion: string): Promise<{ schema: Schema }> {
   if (Env.LOCAL_XDL_SCHEMA) {
     assert(Env.EXPONENT_UNIVERSE_DIR, `LOCAL_XDL_SCHEMA is set but EXPONENT_UNIVERSE_DIR is not.`);
     return JSON.parse(
@@ -67,9 +67,9 @@ async function _getSchemaJSONAsync(sdkVersion: string): Promise<{ schema: Schema
     );
   }
 
-  if (!xdlSchemaJson[sdkVersion]) {
+  if (!schemaJson[sdkVersion]) {
     try {
-      xdlSchemaJson[sdkVersion] = await getConfigurationSchemaAsync(sdkVersion);
+      schemaJson[sdkVersion] = await getConfigurationSchemaAsync(sdkVersion);
     } catch (e: any) {
       if (e.code === 'INVALID_JSON') {
         throw new Error(`Couldn't read schema from server`);
@@ -79,7 +79,7 @@ async function _getSchemaJSONAsync(sdkVersion: string): Promise<{ schema: Schema
     }
   }
 
-  return xdlSchemaJson[sdkVersion];
+  return schemaJson[sdkVersion];
 }
 
 async function getConfigurationSchemaAsync(sdkVersion: string): Promise<JSONObject> {

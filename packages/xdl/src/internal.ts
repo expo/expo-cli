@@ -27,7 +27,6 @@ export { getPublishExpConfigAsync, PublishOptions } from './project/getPublishEx
 export { runHook, prepareHooks, LoadedHook } from './project/runHook';
 export { writeArtifactSafelyAsync } from './tools/ArtifactUtils';
 export * as ProjectAssets from './ProjectAssets';
-export * as ProjectSettings from './ProjectSettings';
 export * as Prompts from './Prompts';
 export * as SimControl from './SimControl';
 export * as SimControlLogs from './SimControlLogs';
@@ -46,7 +45,6 @@ export * as Detach from './detach/Detach';
 export * as IosCodeSigning from './detach/IosCodeSigning';
 export { default as ip } from './ip';
 export * as ImageUtils from './tools/ImageUtils';
-export * as Session from './Session';
 export { default as StandaloneContext, AnyStandaloneContext } from './detach/StandaloneContext';
 export * as ExponentTools from './detach/ExponentTools';
 export * as IosPlist from './detach/IosPlist';

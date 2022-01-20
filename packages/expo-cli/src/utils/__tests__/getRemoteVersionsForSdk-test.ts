@@ -1,5 +1,9 @@
 import { getRemoteVersionsForSdk } from '../getRemoteVersionsForSdk';
 
+jest.mock('os');
+jest.mock('fs');
+jest.unmock('@expo/api');
+
 describe(getRemoteVersionsForSdk, () => {
   it(`returns results for a valid SDK version`, async () => {
     const data = await getRemoteVersionsForSdk('43.0.0');

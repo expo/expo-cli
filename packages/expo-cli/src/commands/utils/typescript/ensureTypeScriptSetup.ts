@@ -72,7 +72,7 @@ async function getSDKVersionsAsync(projectRoot: string): Promise<Versions.SDKVer
   try {
     const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
     if (exp.sdkVersion) {
-      const sdkVersions = await Versions.releasedSdkVersionsAsync();
+      const sdkVersions = await Versions.getReleasedVersionsAsync();
       return sdkVersions[exp.sdkVersion] ?? null;
     }
   } catch {

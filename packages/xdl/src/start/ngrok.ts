@@ -1,4 +1,4 @@
-import { ANONYMOUS_USERNAME, UserManager, UserSettings } from '@expo/api';
+import { ProjectSettings, UserManager, UserSettings } from '@expo/api';
 import { readExpRcAsync } from '@expo/config';
 import * as path from 'path';
 
@@ -7,7 +7,6 @@ import {
   assertValidProjectRoot,
   delayAsync,
   NgrokOptions,
-  ProjectSettings,
   ProjectUtils,
   resolveNgrokAsync,
   XDLError,
@@ -99,7 +98,7 @@ export async function startTunnelsAsync(
   options: { autoInstall?: boolean } = {}
 ): Promise<void> {
   const ngrok = await resolveNgrokAsync(projectRoot, options);
-  const username = (await UserManager.getCurrentUsernameAsync()) || ANONYMOUS_USERNAME;
+  const username = (await UserManager.getCurrentUsernameAsync()) || UserManager.ANONYMOUS_USERNAME;
   assertValidProjectRoot(projectRoot);
   const packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
   if (!packagerInfo.packagerPort) {

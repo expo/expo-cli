@@ -210,7 +210,7 @@ async function _validateExpJsonAsync(
     return ERROR;
   }
   ProjectUtils.clearNotification(projectRoot, 'doctor-unversioned');
-  const sdkVersions = await Versions.sdkVersionsAsync();
+  const { sdkVersions } = await Versions.getVersionsAsync();
   if (!sdkVersions) {
     ProjectUtils.logError(
       projectRoot,

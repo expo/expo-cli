@@ -4,7 +4,11 @@ import temporary from 'tempy';
 
 import * as GitIgnore from '../GitIgnore';
 
+jest.mock('os');
+jest.mock('fs');
+
 const testRoot = temporary.directory();
+
 beforeAll(async () => {
   await fs.ensureDir(testRoot);
 });

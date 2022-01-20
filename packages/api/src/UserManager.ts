@@ -1,21 +1,24 @@
 import Analytics from './Analytics';
 import * as Auth from './Auth';
-import Config from './Config';
-import { Semaphore } from './Semaphore';
+import ProcessSettings from './ProcessSettings';
 import UnifiedAnalytics from './UnifiedAnalytics';
 import UserSettings from './UserSettings';
-import { AuthError } from './utils/errors';
-
-export const ANONYMOUS_USERNAME = 'anonymous';
+import { ApiError } from './utils/errors';
+import { Semaphore } from './utils/semaphore';
 
 export class UserManagerInstance {
-  _currentUser: Auth.User | Auth.RobotUser | null = null;
-  _getSessionLock = new Semaphore();
-  _interactiveAuthenticationCallbackAsync?: () => Promise<Auth.User>;
+  get ANONYMOUS_USERNAME() {
+    return 'anonymous';
+  }
 
-  initialize() {
+  private _interactiveAuthenticationCallbackAsync?: () => Promise<Auth.User>;
+  private sessionLock = new Semaphore();
+  // exposed for testing
+  _currentUser: Auth.User | Auth.RobotUser | null = null;
+
+  public initialize() {
     this._currentUser = null;
-    this._getSessionLock = new Semaphore();
+    this.sessionLock = new Semaphore();
   }
 
   /**
@@ -27,7 +30,7 @@ export class UserManagerInstance {
    * If the login type is "user-pass", we directly make the request to www
    * to login a user.
    */
-  async loginAsync(
+  public async loginAsync(
     loginType: Auth.LoginType,
     loginArgs?: { username: string; password: string; otp?: string }
   ): Promise<Auth.User> {
@@ -39,7 +42,7 @@ export class UserManagerInstance {
     return user as Auth.User;
   }
 
-  async registerAsync(
+  public async registerAsync(
     userData: Auth.RegistrationData,
     user: Auth.UserOrLegacyUser | null = null
   ): Promise<Auth.User> {
@@ -56,7 +59,7 @@ export class UserManagerInstance {
 
     try {
       // Create or update the profile
-      let registeredUser = await this.createOrUpdateUserAsync({
+      await this.createOrUpdateUserAsync({
         connection: 'Username-Password-Authentication', // Always create/update username password
         email: userData.email,
         givenName: userData.givenName,
@@ -65,15 +68,12 @@ export class UserManagerInstance {
         password: userData.password,
       });
 
-      registeredUser = await this.loginAsync('user-pass', {
+      return await this.loginAsync('user-pass', {
         username: userData.username,
         password: userData.password,
       });
-
-      return registeredUser;
     } catch (e: any) {
-      console.error(e);
-      throw new AuthError('REGISTRATION_ERROR', 'Error registering user: ' + e.message);
+      throw new ApiError('REGISTRATION_ERROR', 'Error registering user: ' + e.message);
     }
   }
 
@@ -82,9 +82,9 @@ export class UserManagerInstance {
    *
    * If there are any issues with the login, this method throws.
    */
-  async ensureLoggedInAsync(): Promise<Auth.User | Auth.RobotUser> {
-    if (Config.isOffline) {
-      throw new AuthError('NETWORK_REQUIRED', "Can't verify user without network access");
+  public async ensureLoggedInAsync(): Promise<Auth.User | Auth.RobotUser> {
+    if (ProcessSettings.isOffline) {
+      throw new ApiError('NETWORK_REQUIRED', "Can't verify user without network access");
     }
 
     let user = await this.getCurrentUserAsync({ silent: true });
@@ -92,16 +92,16 @@ export class UserManagerInstance {
       user = await this._interactiveAuthenticationCallbackAsync();
     }
     if (!user) {
-      throw new AuthError('NOT_LOGGED_IN', 'Not logged in');
+      throw new ApiError('NOT_LOGGED_IN', 'Not logged in');
     }
     return user;
   }
 
-  setInteractiveAuthenticationCallback(callback: () => Promise<Auth.User>) {
+  public setInteractiveAuthenticationCallback(callback: () => Promise<Auth.User>) {
     this._interactiveAuthenticationCallbackAsync = callback;
   }
 
-  async _readUserData(): Promise<Auth.UserData | null> {
+  private async readUserData(): Promise<Auth.UserData | null> {
     let auth = await UserSettings.getAsync('auth', null);
     if (!auth || !Object.keys(auth).length) {
       // XXX(ville):
@@ -121,8 +121,8 @@ export class UserManagerInstance {
   /**
    * Returns cached user data without hitting our backend. Only works for 'Username-Password-Authentication' flow. Does not work with 'Access-Token-Authentication' flow.
    */
-  getCachedUserDataAsync = async (): Promise<Auth.UserData | null> => {
-    await this._getSessionLock.acquire();
+  public getCachedUserDataAsync = async (): Promise<Auth.UserData | null> => {
+    await this.sessionLock.acquire();
 
     try {
       const currentUser = this._currentUser;
@@ -131,7 +131,7 @@ export class UserManagerInstance {
         return currentUser;
       }
 
-      const userData = await this._readUserData();
+      const userData = await this.readUserData();
 
       // // No token, no session, no current user. Need to login
       if (!userData?.sessionSecret) {
@@ -143,7 +143,7 @@ export class UserManagerInstance {
       console.warn(e);
       return null;
     } finally {
-      this._getSessionLock.release();
+      this.sessionLock.release();
     }
   };
 
@@ -151,10 +151,10 @@ export class UserManagerInstance {
    * Get the current user based on the available token.
    * If there is no current token, returns null.
    */
-  async getCurrentUserAsync(options?: {
+  public async getCurrentUserAsync(options?: {
     silent?: boolean;
   }): Promise<Auth.User | Auth.RobotUser | null> {
-    await this._getSessionLock.acquire();
+    await this.sessionLock.acquire();
 
     try {
       const currentUser = this._currentUser;
@@ -164,11 +164,11 @@ export class UserManagerInstance {
         return currentUser;
       }
 
-      if (Config.isOffline) {
+      if (ProcessSettings.isOffline) {
         return null;
       }
 
-      const data = await this._readUserData();
+      const data = await this.readUserData();
       const accessToken = UserSettings.accessToken();
 
       // No token, no session, no current user. Need to login
@@ -200,7 +200,7 @@ export class UserManagerInstance {
         throw e;
       }
     } finally {
-      this._getSessionLock.release();
+      this.sessionLock.release();
     }
   }
 
@@ -208,27 +208,15 @@ export class UserManagerInstance {
    * Get the current user and check if it's a robot.
    * If the user is not a robot, it will throw an error.
    */
-  async getCurrentUserOnlyAsync(): Promise<Auth.User | null> {
+  public async getCurrentUserOnlyAsync(): Promise<Auth.User | null> {
     const user = await this.getCurrentUserAsync();
     if (user && user.kind !== 'user') {
-      throw new AuthError('ROBOT_ACCOUNT_ERROR', 'This action is not supported for robot users.');
+      throw new ApiError('ROBOT_ACCOUNT_ERROR', 'This action is not supported for robot users.');
     }
     return user;
   }
 
-  /**
-   * Get the current user and check if it's a robot.
-   * If the user is not a robot, it will throw an error.
-   */
-  async getCurrentRobotUserOnlyAsync(): Promise<Auth.RobotUser | null> {
-    const user = await this.getCurrentUserAsync();
-    if (user && user.kind !== 'robot') {
-      throw new AuthError('USER_ACCOUNT_ERROR', 'This action is not supported for normal users.');
-    }
-    return user;
-  }
-
-  async getCurrentUsernameAsync(): Promise<string | null> {
+  public async getCurrentUsernameAsync(): Promise<string | null> {
     const token = UserSettings.accessToken();
     if (token) {
       const user = await this.getCurrentUserAsync();
@@ -236,23 +224,21 @@ export class UserManagerInstance {
         return user.username;
       }
     }
-    const data = await this._readUserData();
+    const data = await this.readUserData();
     return data?.username ?? null;
   }
 
-  async getSessionAsync(): Promise<{ sessionSecret?: string; accessToken?: string } | null> {
+  public async getSessionAsync(): Promise<{ sessionSecret?: string; accessToken?: string } | null> {
     const token = UserSettings.accessToken();
     if (token) {
       return { accessToken: token };
     }
-    const data = await this._readUserData();
+    const data = await this.readUserData();
     return data?.sessionSecret ? { sessionSecret: data.sessionSecret } : null;
   }
 
-  /**
-   * Create or update a user.
-   */
-  async createOrUpdateUserAsync(userData: {
+  /** Create or update a user. */
+  private async createOrUpdateUserAsync(userData: {
     connection: 'Username-Password-Authentication';
     email?: string;
     givenName?: string;
@@ -280,12 +266,10 @@ export class UserManagerInstance {
     return this._currentUser;
   }
 
-  /**
-   * Logout
-   */
-  async logoutAsync(): Promise<void> {
+  /** Logout */
+  public async logoutAsync(): Promise<void> {
     if (this._currentUser?.kind === 'robot') {
-      throw new AuthError('ROBOT_ACCOUNT_ERROR', 'This action is not available for robot users');
+      throw new ApiError('ROBOT_ACCOUNT_ERROR', 'This action is not available for robot users');
     }
 
     // Only send logout events events for users without access tokens
@@ -325,7 +309,8 @@ export class UserManagerInstance {
     sessionSecret?: string;
     accessToken?: string;
   }): Promise<Auth.User | Auth.RobotUser> {
-    const _user = await Auth.getUserInfoAsync();
+    const _user = await Auth.getUserInfoAsync({ sessionSecret, accessToken });
+
     const user = {
       ...parseAuth0Profile(_user),
       // We need to inherit the "robot" type only, the rest is considered "user" but returned as "person".
@@ -390,33 +375,32 @@ export class UserManagerInstance {
 
 export default new UserManagerInstance();
 
-const toCamelCase = (str: string) => {
-  return str.replace(/([-_][a-z])/g, group =>
-    group.toUpperCase().replace('-', '').replace('_', '')
-  );
-};
-
-const toSnakeCase = (str: string) => {
-  return str.replace(/([a-z][A-Z])/g, group => group.replace(' ', '_').toLowerCase());
-};
-
-function parseAuth0Profile(rawProfile: any) {
-  if (!rawProfile || typeof rawProfile !== 'object') {
-    return rawProfile;
+function parseAuth0Profile(profile: any) {
+  if (!profile || typeof profile !== 'object') {
+    return profile;
   }
-  return Object.keys(rawProfile).reduce((p, key) => {
-    p[toCamelCase(key)] = parseAuth0Profile(rawProfile[key]);
+  const toCamelCase = (str: string) => {
+    return str.replace(/([-_][a-z])/g, group =>
+      group.toUpperCase().replace('-', '').replace('_', '')
+    );
+  };
+  return Object.keys(profile).reduce((p, key) => {
+    p[toCamelCase(key)] = parseAuth0Profile(profile[key]);
     return p;
   }, {} as any);
 }
 
-function prepareAuth0Profile(niceProfile: any) {
-  if (typeof niceProfile !== 'object') {
-    return niceProfile;
+function prepareAuth0Profile(profile: any) {
+  if (typeof profile !== 'object') {
+    return profile;
   }
 
-  return Object.keys(niceProfile).reduce((p, key) => {
-    p[toSnakeCase(key)] = prepareAuth0Profile(niceProfile[key]);
+  const toSnakeCase = (str: string) => {
+    return str.replace(/([a-z][A-Z])/g, group => group.replace(' ', '_').toLowerCase());
+  };
+
+  return Object.keys(profile).reduce((p, key) => {
+    p[toSnakeCase(key)] = prepareAuth0Profile(profile[key]);
     return p;
   }, {} as any);
 }

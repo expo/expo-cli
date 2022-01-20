@@ -1,18 +1,15 @@
-import { Config, SendProject, UserManager, UserSettings } from '@expo/api';
+import {
+  ProcessSettings,
+  ProjectSettings,
+  SendProject,
+  UserManager,
+  UserSettings,
+} from '@expo/api';
 import { getConfig, writeConfigJsonAsync } from '@expo/config';
 import spawnAsync from '@expo/spawn-async';
 import { makeExecutableSchema } from 'graphql-tools';
 import { $$asyncIterator } from 'iterall';
-import {
-  Android,
-  Logger,
-  Project,
-  ProjectSettings,
-  ProjectUtils,
-  Simulator,
-  UrlUtils,
-  Webpack,
-} from 'xdl';
+import { Android, Logger, Project, ProjectUtils, Simulator, UrlUtils, Webpack } from 'xdl';
 
 import mergeAsyncIterators from '../asynciterators/mergeAsyncIterators';
 
@@ -456,7 +453,7 @@ const resolvers = {
   },
   ProjectSettings: {
     hostType(projectSettings) {
-      if (Config.isOffline && projectSettings.hostType === 'tunnel') {
+      if (ProcessSettings.isOffline && projectSettings.hostType === 'tunnel') {
         return 'lan';
       } else {
         return projectSettings.hostType;
@@ -627,7 +624,7 @@ const resolvers = {
       const currentProject = context.getCurrentProject();
       const url = await UrlUtils.constructManifestUrlAsync(currentProject.projectDir);
       const user = await UserManager.ensureLoggedInAsync();
-      const result = await SendProject.sendProjectAsync(user, recipient, url);
+      const result = await SendProject.sendProjectAsync(user, { recipient, url });
       await UserSettings.setAsync('sendTo', recipient);
       return { medium: result.medium, url }; // medium can be a phone number or email
     },

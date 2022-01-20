@@ -16,7 +16,7 @@ describe(getMissingPackagesAsync, () => {
   it('gets missing packages', async () => {
     mockExpoAPI({
       Versions: {
-        releasedSdkVersionsAsync: jest.fn(() => ({
+        getReleasedVersionsAsync: jest.fn(() => ({
           '43.0.0': {
             relatedPackages: {
               'react-dom': '420.0.0',

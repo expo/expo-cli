@@ -20,12 +20,3 @@ export class ApiV2Error extends Error {
     super(message);
   }
 }
-
-export class AuthError extends Error {
-  readonly name = 'AuthError';
-  readonly isAuthError = true;
-
-  constructor(public code: string, message: string) {
-    super(message);
-  }
-}

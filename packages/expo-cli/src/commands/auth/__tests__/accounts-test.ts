@@ -1,4 +1,4 @@
-import { UserManager } from '@expo/api';
+import axios from 'axios';
 
 import { mockExpoAPI } from '../../../__tests__/mock-utils';
 import { jester } from '../../../credentials/__tests__/fixtures/mocks-constants';
@@ -7,13 +7,13 @@ import prompt, { selectAsync } from '../../../utils/prompts';
 import { _retryUsernamePasswordAuthWithOTPAsync, UserSecondFactorDeviceMethod } from '../accounts';
 
 jest.mock('../../../utils/prompts');
+jest.mock('axios');
 
 mockExpoAPI({
   UserManager: {
     sendSmsOtpAsync: jest.requireActual('@expo/api').UserManager.sendSmsOtpAsync,
     initialize: () => {},
     loginAsync: () => jester,
-    clientForUser: jest.fn(),
   },
 });
 
@@ -28,8 +28,8 @@ beforeEach(() => {
     throw new Error('Should not be called');
   });
 
-  (UserManager.clientForUser as jest.Mock).mockReset();
-  (UserManager.clientForUser as jest.Mock).mockImplementation(() => {
+  (axios.request as jest.Mock).mockReset();
+  (axios.request as jest.Mock).mockImplementation(() => {
     throw new Error('Should not be called');
   });
 });
@@ -201,12 +201,11 @@ describe(_retryUsernamePasswordAuthWithOTPAsync, () => {
         throw new Error("shouldn't happen");
       });
 
-    const postAsyncFn = jest.fn();
-    (UserManager.clientForUser as jest.Mock)
-      .mockImplementationOnce(() => ({ postAsync: postAsyncFn }))
-      .mockImplementation(() => {
-        throw new Error("shouldn't happen");
-      });
+    const postAsyncFn = jest.fn(() => ({ data: {} }));
+
+    (axios.request as jest.Mock).mockImplementationOnce(postAsyncFn).mockImplementation(() => {
+      throw new Error("shouldn't happen");
+    });
 
     await _retryUsernamePasswordAuthWithOTPAsync('blah', 'blah', {
       secondFactorDevices: [
@@ -228,10 +227,13 @@ describe(_retryUsernamePasswordAuthWithOTPAsync, () => {
 
     expect(prompt).toHaveBeenCalledTimes(2);
 
-    expect(postAsyncFn).toHaveBeenNthCalledWith(1, 'auth/send-sms-otp', {
-      username: 'blah',
-      password: 'blah',
-      secondFactorDeviceID: 'p2',
+    expect(postAsyncFn).toHaveBeenNthCalledWith(1, {
+      data: { password: 'blah', secondFactorDeviceID: 'p2', username: 'blah' },
+      headers: { 'Exponent-Client': 'xdl' },
+      maxBodyLength: 104857600,
+      maxContentLength: 104857600,
+      method: 'post',
+      url: 'https://exp.host/--/api/v2/auth/send-sms-otp',
     });
   });
 

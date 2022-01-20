@@ -1,4 +1,4 @@
-import { Analytics, Config } from '@expo/api';
+import { Analytics, ProcessSettings, ProjectSettings } from '@expo/api';
 import { ExpoConfig, getConfig } from '@expo/config';
 import { closeJsInspector, MessageSocket } from '@expo/dev-server';
 import { Server } from 'http';
@@ -8,7 +8,6 @@ import {
   assertValidProjectRoot,
   DevSession,
   Env,
-  ProjectSettings,
   ProjectUtils,
   startDevServerAsync,
   StartDevServerOptions,
@@ -52,7 +51,7 @@ export async function startAsync(
   assertValidProjectRoot(projectRoot);
 
   Analytics.logEvent('Start Project', {
-    developerTool: Config.developerTool,
+    developerTool: ProcessSettings.developerTool,
     sdkVersion: exp.sdkVersion ?? null,
   });
 
@@ -72,7 +71,7 @@ export async function startAsync(
 
   const { hostType } = await ProjectSettings.readAsync(projectRoot);
 
-  if (!Config.isOffline && hostType === 'tunnel') {
+  if (!ProcessSettings.isOffline && hostType === 'tunnel') {
     try {
       await startTunnelsAsync(projectRoot);
     } catch (e: any) {
@@ -111,7 +110,7 @@ async function stopInternalAsync(projectRoot: string): Promise<void> {
     stopExpoServerAsync(projectRoot),
     stopReactNativeServerAsync(projectRoot),
     async () => {
-      if (!Config.isOffline) {
+      if (!ProcessSettings.isOffline) {
         try {
           await stopTunnelsAsync(projectRoot);
         } catch (e: any) {

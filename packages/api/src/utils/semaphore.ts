@@ -1,11 +1,11 @@
 export class Semaphore {
-  queue: ((v: boolean) => void)[] = [];
-  available = 1;
+  private queue: ((v: boolean) => void)[] = [];
+  private available = 1;
 
-  async acquire(): Promise<boolean> {
+  public async acquire(): Promise<boolean> {
     if (this.available > 0) {
       this.available -= 1;
-      return Promise.resolve(true);
+      return true;
     }
 
     // If there is no permit available, we return a promise that resolves once the semaphore gets
@@ -13,7 +13,7 @@ export class Semaphore {
     return new Promise(resolver => this.queue.push(resolver));
   }
 
-  release() {
+  public release() {
     this.available += 1;
 
     if (this.available > 1 && this.queue.length > 0) {

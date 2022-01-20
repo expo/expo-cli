@@ -18,7 +18,9 @@
     "directory": "packages/api"
   },
   "keywords": [
-    "json"
+    "internal",
+    "api",
+    "dev-tools"
   ],
   "license": "MIT",
   "bugs": {
@@ -31,12 +33,10 @@
   ],
   "dependencies": {
     "@expo/json-file": "^8.2.28",
-    "@expo/spawn-async": "^1.5.0",
     "@expo/config-types": "^43.0.1",
     "json-schema-deref-sync": "^0.13.0",
+    "lodash.merge": "^4.6.2",
     "uuid": "3.3.2",
-    "internal-ip": "4.3.0",
-    "tar": "^6.0.5",
     "getenv": "^1.0.0",
     "concat-stream": "1.6.2",
     "axios": "0.21.1",
@@ -44,7 +44,6 @@
     "form-data": "^2.3.2"
   },
   "devDependencies": {
-    "@types/tar": "^4.0.4",
     "@types/fs-extra": "^9.0.1",
     "@types/uuid": "^3.4.4",
     "@types/form-data": "^2.2.0",

@@ -1,4 +1,4 @@
-import { Analytics, ApiV2, Config, UserManager } from '@expo/api';
+import { Analytics, ApiV2, ProcessSettings, UserManager } from '@expo/api';
 import { configFilename, getConfig } from '@expo/config';
 import Joi from 'joi';
 import slug from 'slugify';
@@ -108,7 +108,7 @@ export async function startBuildAsync(
 
   Analytics.logEvent('Build Shell App', {
     projectRoot,
-    developerTool: Config.developerTool,
+    developerTool: ProcessSettings.developerTool,
     platform: options.platform,
   });
 

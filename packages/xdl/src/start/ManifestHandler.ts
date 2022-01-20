@@ -1,8 +1,8 @@
 import {
   Analytics,
-  ANONYMOUS_USERNAME,
-  Config,
   Manifest,
+  ProcessSettings,
+  ProjectSettings,
   UserManager,
   UserSettings,
   Versions,
@@ -18,7 +18,6 @@ import {
   Doctor,
   learnMore,
   ProjectAssets,
-  ProjectSettings,
   ProjectUtils,
   resolveEntryPoint,
   UrlUtils,
@@ -161,7 +160,7 @@ export function getManifestHandler(projectRoot: string) {
 
       // Log analytics
       Analytics.logEvent('Serve Manifest', {
-        developerTool: Config.developerTool,
+        developerTool: ProcessSettings.developerTool,
         sdkVersion,
       });
     } catch (e: any) {
@@ -216,7 +215,7 @@ export async function getExpoGoConfig({
   ]);
   return {
     developer: {
-      tool: Config.developerTool,
+      tool: ProcessSettings.developerTool,
       projectRoot,
     },
     packagerOpts: projectSettings,
@@ -324,7 +323,7 @@ export async function getManifestResponseAsync({
           `Please request access from an admin of @${manifest.owner} or change the "owner" field to an account you belong to.\n` +
           learnMore('https://docs.expo.dev/versions/latest/config/app/#owner')
       );
-      Config.isOffline = true;
+      ProcessSettings.isOffline = true;
       manifestString = await getManifestStringAsync(manifest, hostInfo.host, acceptSignature);
     } else if (error.code === 'ENOTFOUND') {
       // Got a DNS error, i.e. can't access exp.host, warn and enable offline mode.
@@ -334,7 +333,7 @@ export async function getManifestResponseAsync({
           error.hostname || 'exp.host'
         }.`
       );
-      Config.isOffline = true;
+      ProcessSettings.isOffline = true;
       manifestString = await getManifestStringAsync(manifest, hostInfo.host, acceptSignature);
     } else {
       throw error;
@@ -378,12 +377,12 @@ async function getManifestStringAsync(
   acceptSignature?: string | string[]
 ): Promise<string> {
   const currentSession = await UserManager.getSessionAsync();
-  if (!currentSession || Config.isOffline) {
-    manifest.id = `@${ANONYMOUS_USERNAME}/${manifest.slug}-${hostUUID}`;
+  if (!currentSession || ProcessSettings.isOffline) {
+    manifest.id = `@${UserManager.ANONYMOUS_USERNAME}/${manifest.slug}-${hostUUID}`;
   }
   if (!acceptSignature) {
     return JSON.stringify(manifest);
-  } else if (!currentSession || Config.isOffline) {
+  } else if (!currentSession || ProcessSettings.isOffline) {
     return getUnsignedManifestString(manifest);
   } else {
     return await getSignedManifestStringAsync(manifest, currentSession);
@@ -397,7 +396,7 @@ async function createHostInfoAsync(): Promise<HostInfo> {
     host,
     server: 'xdl',
     serverVersion: require('xdl/package.json').version,
-    serverDriver: Config.developerTool,
+    serverDriver: ProcessSettings.developerTool,
     serverOS: os.platform(),
     serverOSVersion: os.release(),
   };

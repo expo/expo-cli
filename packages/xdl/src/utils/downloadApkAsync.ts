@@ -1,6 +1,8 @@
-import { downloadAppAsync, UserSettings, Versions } from '@expo/api';
+import { UserSettings, Versions } from '@expo/api';
 import fs from 'fs-extra';
 import path from 'path';
+
+import { downloadAppAsync } from './downloadAppAsync';
 
 function _apkCacheDirectory() {
   const directory = path.join(UserSettings.getDirectory(), 'android-apk-cache');
@@ -13,7 +15,7 @@ export async function downloadApkAsync(
   downloadProgressCallback?: (roundedProgress: number) => void
 ) {
   if (!url) {
-    const versions = await Versions.versionsAsync();
+    const versions = await Versions.getVersionsAsync();
     url = versions.androidUrl;
   }
 

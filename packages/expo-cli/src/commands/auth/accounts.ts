@@ -1,4 +1,4 @@
-import { ApiV2Error, Auth, UserManager } from '@expo/api';
+import { Auth, UserManager } from '@expo/api';
 import assert from 'assert';
 import openBrowserAsync from 'better-opn';
 import chalk from 'chalk';
@@ -319,8 +319,8 @@ async function _usernamePasswordAuth(
   let user: Auth.User;
   try {
     user = await UserManager.loginAsync('user-pass', data);
-  } catch (e) {
-    if (e instanceof ApiV2Error && e.code === 'ONE_TIME_PASSWORD_REQUIRED') {
+  } catch (e: any) {
+    if (e.code === 'ONE_TIME_PASSWORD_REQUIRED') {
       user = await _retryUsernamePasswordAuthWithOTPAsync(
         data.username,
         data.password,

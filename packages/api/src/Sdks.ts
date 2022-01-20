@@ -1,4 +1,5 @@
 import ApiV2, { ApiV2ClientOptions } from './ApiV2';
+import { ApiV2Error } from './utils/errors';
 
 export interface NativeModule {
   npmPackage: string;
@@ -32,8 +33,8 @@ export async function getBundledNativeModulesFromApiAsync(
   const list = (await ApiV2.clientForUser(user).getAsync(
     `sdks/${sdkVersion}/native-modules`
   )) as BundledNativeModuleList;
-  if (list.length === 0) {
-    throw new Error('The bundled native module list from www is empty');
+  if (!list.length) {
+    throw new ApiV2Error('The bundled native module list from www is empty');
   }
 
   return list.reduce((acc, i) => {

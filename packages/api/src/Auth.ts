@@ -1,7 +1,7 @@
 import assert from 'assert';
 
 import ApiV2, { ApiV2ClientOptions } from './ApiV2';
-import { AuthError } from './utils/errors';
+import { ApiError } from './utils/errors';
 
 export type User = {
   kind: 'user';
@@ -75,15 +75,6 @@ export type RegistrationData = {
   familyName?: string;
 };
 
-/**
- * Forgot Password
- */
-export async function forgotPasswordAsync(usernameOrEmail: string): Promise<void> {
-  return ApiV2.clientForUser().postAsync('auth/forgotPasswordAsync', {
-    usernameOrEmail,
-  });
-}
-
 export async function getUserInfoAsync(
   user?: ApiV2ClientOptions
 ): Promise<{ user_type: string } & any> {
@@ -142,20 +133,18 @@ export async function loginAsync(
     }
   );
   if (error) {
-    throw new AuthError('INVALID_USERNAME_PASSWORD', error_description);
+    throw new ApiError('INVALID_USERNAME_PASSWORD', error_description);
   }
   return sessionSecret;
 }
 
-/**
- * Create or update a user.
- */
+/** Create or update a user. */
 export async function createOrUpdateUserAsync(
   user: User | RobotUser | null,
   userData: any
 ): Promise<User | null> {
   if (user?.kind === 'robot') {
-    throw new AuthError('ROBOT_ACCOUNT_ERROR', 'This action is not available for robot users');
+    throw new ApiError('ROBOT_ACCOUNT_ERROR', 'This action is not available for robot users');
   }
 
   const { user: updatedUser } = await ApiV2.clientForUser(user).postAsync(

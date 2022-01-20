@@ -5,7 +5,7 @@ import FormData from 'form-data';
 
 import ApiV2, { ApiV2ClientOptions } from './ApiV2';
 import { RobotUser, User } from './Auth';
-import { AuthError } from './utils/errors';
+import { ApiError } from './utils/errors';
 
 export type DetailOptions = {
   publishId?: string;
@@ -69,7 +69,7 @@ export function getProjectOwner(
   exp: Pick<ExpoConfig, 'owner'>
 ): string {
   if (user.kind === 'robot' && !exp.owner) {
-    throw new AuthError(
+    throw new ApiError(
       'ROBOT_OWNER_ERROR',
       'The "owner" manifest property is required when using robot users. See: https://docs.expo.dev/versions/latest/config/app/#owner'
     );
@@ -151,7 +151,7 @@ export async function getPublicationDetailAsync(
   return result.queryResult;
 }
 export async function uploadArtifactsAsync(
-  user: User | RobotUser,
+  user: ApiV2ClientOptions | null,
   {
     exp,
     iosBundle,

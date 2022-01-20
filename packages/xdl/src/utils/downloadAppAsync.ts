@@ -1,9 +1,9 @@
+import { UserSettings } from '@expo/api';
 import axios, { AxiosRequestConfig, Canceler } from 'axios';
-import fs from 'fs';
+import fs from 'fs-extra';
 import path from 'path';
 
-import UserSettings from '../UserSettings';
-import { extractTarAsync } from './extractTarAsync';
+import { extractTarAsync } from './tar';
 
 const TIMER_DURATION = 30000;
 const TIMEOUT = 3600000;
@@ -83,7 +83,7 @@ export async function downloadAppAsync(
     const tmpPath = path.join(directory, 'tmp-download-file');
     await downloadAsync(url, tmpPath, progressFunction);
     await extractTarAsync(tmpPath, outputPath);
-    await fs.promises.unlink(tmpPath).catch(() => {});
+    await fs.remove(tmpPath);
   } else {
     await downloadAsync(url, outputPath, progressFunction, retryFunction);
   }

@@ -1,7 +1,7 @@
-import { Config } from '@expo/api';
-import type { Command } from 'commander';
+import { ProcessSettings, ProjectSettings } from '@expo/api';
+import { Command } from 'commander';
 import qrcodeTerminal from 'qrcode-terminal';
-import { Android, isDevClientPackageInstalled, ProjectSettings, Simulator, Webpack } from 'xdl';
+import { Android, isDevClientPackageInstalled, Simulator, Webpack } from 'xdl';
 
 import CommandError, { AbortCommandError } from '../../CommandError';
 import Log from '../../log';
@@ -56,7 +56,7 @@ async function optsAsync(projectRoot: string, options: any) {
 
   if (options.offline) {
     // TODO: maybe let people know that we will force localhost with offline?
-    Config.isOffline = true;
+    ProcessSettings.isOffline = true;
     opts.hostType = 'localhost';
   }
 

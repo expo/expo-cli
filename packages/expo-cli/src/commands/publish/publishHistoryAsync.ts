@@ -1,6 +1,7 @@
 import { Publish } from '@expo/api';
 import dateFormat from 'dateformat';
 
+import CommandError from '../../CommandError';
 import Log from '../../log';
 import { getPublishHistoryAsync } from '../utils/PublishUtils';
 import * as table from '../utils/cli-table';
@@ -66,6 +67,6 @@ export async function actionAsync(projectRoot: string, options: Publish.HistoryO
     const tableString = table.printTableJsonArray(headers, resultRows, colWidths);
     Log.log(tableString);
   } else {
-    throw new Error('No records found matching your query.');
+    throw new CommandError('No records found matching your query.');
   }
 }

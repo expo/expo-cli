@@ -14,7 +14,7 @@ function createModuleVersionChecker(name: string, currentVersion: string) {
         deprecated: pkgJson.deprecated,
       };
     },
-    filename: `${name}-version.json`,
+    filename: `${name}-updates.json`,
     ttlMilliseconds: 24 * 60 * 60 * 1000, // one day
   });
 

@@ -79,9 +79,9 @@ export async function checkIfSdkIsSupported(
   platform: 'android' | 'ios'
 ): Promise<void> {
   const isSupported = await canTurtleBuildSdkVersion(sdkVersion, platform);
-  const minimumSdkVersionSupported = await Versions.oldestSupportedMajorVersionAsync();
+  const minimumSdkVersionSupported = await Versions.getLastSupportedMajorVersionAsync();
   const majorSdkVersion = Number(sdkVersion.split('.')[0]);
-  const { version: latestSDKVersion } = await Versions.newestReleasedSdkVersionAsync();
+  const { version: latestSDKVersion } = await Versions.getLatestVersionAsync();
 
   if (!isSupported) {
     Log.error(

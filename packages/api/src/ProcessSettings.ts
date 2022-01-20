@@ -6,7 +6,7 @@ interface ApiConfig {
   port: number | null;
 }
 
-interface XDLConfig {
+interface ProcessSettings {
   api: ApiConfig;
   developerTool: string;
   isOffline: boolean;
@@ -34,10 +34,10 @@ function getAPI(): ApiConfig {
   }
 }
 
-const config: XDLConfig = {
+const settings: ProcessSettings = {
   api: getAPI(),
   developerTool: 'expo-cli',
   isOffline: false,
 };
 
-export default config;
+export default settings;

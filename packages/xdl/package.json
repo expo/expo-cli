@@ -99,7 +99,6 @@
   "devDependencies": {
     "@babel/core": "^7.4.5",
     "@expo/ngrok": "4.1.0",
-    "@types/concat-stream": "^1.6.0",
     "@types/form-data": "^2.2.0",
     "@types/fs-extra": "^9.0.1",
     "@types/getenv": "^0.7.0",
@@ -110,6 +109,7 @@
     "@types/source-map-support": "^0.5.0",
     "@types/split": "^1.0.0",
     "@types/strip-ansi": "^5.2.1",
+    "@types/tar": "^4.0.4",
     "@types/text-table": "^0.2.1",
     "@types/url-join": "^4.0.0",
     "@types/uuid": "^8.3.1",

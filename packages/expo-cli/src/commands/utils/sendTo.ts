@@ -40,7 +40,7 @@ export async function sendUrlAsync(url: string, recipient: string) {
   const spinner = ora(`Sending URL to ${email}`).start();
   try {
     const user = await UserManager.ensureLoggedInAsync();
-    const result = await SendProject.sendProjectAsync(user, recipient, url);
+    const result = await SendProject.sendProjectAsync(user, { recipient, url });
     spinner.succeed(`Sent URL to ${email}`);
     return result;
   } catch (e: any) {

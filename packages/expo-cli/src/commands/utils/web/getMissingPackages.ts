@@ -68,7 +68,7 @@ export async function getMissingPackagesAsync(
 async function getSDKVersionsAsync(exp: ExpoConfig): Promise<Versions.SDKVersion | null> {
   try {
     if (exp.sdkVersion) {
-      const sdkVersions = await Versions.releasedSdkVersionsAsync();
+      const sdkVersions = await Versions.getReleasedVersionsAsync();
       return sdkVersions[exp.sdkVersion] ?? null;
     }
   } catch {

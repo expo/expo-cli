@@ -1,4 +1,3 @@
-import { ProjectTarget } from '@expo/config';
 import JsonFile from '@expo/json-file';
 import fs from 'fs-extra';
 import path from 'path';
@@ -38,7 +37,7 @@ type PackagerInfo = {
   ngrokPid?: number | null;
   devToolsPort?: number | null;
   webpackServerPort?: number | null;
-  target?: ProjectTarget;
+  target?: 'managed' | 'bare';
 };
 const packagerInfoFile = 'packager-info.json';
 

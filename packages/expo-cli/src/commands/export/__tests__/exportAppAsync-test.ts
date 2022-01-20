@@ -7,19 +7,14 @@ jest.mock('os');
 jest.mock('resolve-from');
 
 jest.mock('xdl', () => {
-  const xdl = jest.requireActual('xdl');
   return {
-    ...xdl,
     EmbeddedAssets: {
-      ...xdl.EmbeddedAssets,
       configureAsync: jest.fn(),
     },
     Env: {
-      ...xdl.Env,
       shouldUseDevServer: () => true,
     },
     ProjectAssets: {
-      ...xdl.ProjectAssets,
       exportAssetsAsync: jest.fn(() =>
         Promise.resolve({
           assets: [
@@ -40,7 +35,6 @@ jest.mock('xdl', () => {
 
     printBundleSizes: jest.fn(),
     Project: {
-      ...xdl.Project,
       createBundlesAsync: (projectRoot, options, { platforms }: { platforms: string[] }) =>
         Promise.resolve(
           platforms.reduce(
@@ -84,11 +78,13 @@ jest.mock('xdl', () => {
 });
 
 jest.mock('@expo/api', () => {
-  const api = jest.requireActual('@expo/api');
-  api.getCurrentUsernameAsync = () => {
-    return 'bacon';
+  return {
+    UserManager: {
+      getCurrentUsernameAsync() {
+        return 'bacon';
+      },
+    },
   };
-  return api;
 });
 
 describe(exportAppAsync, () => {
@@ -122,6 +118,7 @@ describe(exportAppAsync, () => {
       },
       false
     );
+
     const { Project, EmbeddedAssets } = require('xdl');
 
     expect(EmbeddedAssets.configureAsync).toBeCalled();
@@ -144,8 +141,11 @@ describe(exportAppAsync, () => {
     const outputDir = '/dist/';
 
     const { Project, EmbeddedAssets } = require('xdl');
+
     EmbeddedAssets.configureAsync = jest.fn();
+
     Project.prepareHooks = jest.fn();
+
     await exportAppAsync(
       '/',
       'http://expo.io/',
@@ -173,7 +173,6 @@ describe(exportAppAsync, () => {
       ),
       '/dist/metadata.json': expect.stringContaining('"fileMetadata"'),
       '/dist/bundles/ios-4fe3891dcaca43901bd8797db78405e4.map': 'ios_map',
-      '/dist/ios-index.json': expect.stringContaining('"name":"my-app"'),
       '/package.json': expect.any(String),
     });
   });

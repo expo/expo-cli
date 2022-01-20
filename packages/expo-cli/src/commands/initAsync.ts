@@ -166,7 +166,7 @@ async function resolveTemplateAsync(resolvedTemplate?: string | null) {
   const {
     version: newestSdkVersion,
     data: newestSdkReleaseData,
-  } = await Versions.newestReleasedSdkVersionAsync();
+  } = await Versions.getLatestVersionAsync();
 
   // If the user is opting into a beta then we need to append the template tag explicitly
   // in order to not fall back to the latest tag for templates.

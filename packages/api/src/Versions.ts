@@ -2,7 +2,7 @@ import { ExpoConfig } from '@expo/config-types';
 import path from 'path';
 import semver from 'semver';
 
-import ApiV2Client from './ApiV2';
+import ApiV2 from './ApiV2';
 import { Cache } from './Cache';
 import Env from './Env';
 import { ApiError } from './utils/errors';
@@ -43,8 +43,8 @@ type Versions = {
   turtleSdkVersions: TurtleSDKVersionsOld;
 };
 
-export async function versionsAsync(options?: { skipCache?: boolean }): Promise<Versions> {
-  const api = new ApiV2Client();
+export async function getVersionsAsync(options?: { skipCache?: boolean }): Promise<Versions> {
+  const api = new ApiV2();
   const versionCache = new Cache({
     getAsync: () => api.getAsync('versions/latest'),
     filename: 'versions.json',
@@ -60,16 +60,11 @@ export async function versionsAsync(options?: { skipCache?: boolean }): Promise<
   return await versionCache.getAsync();
 }
 
-export async function sdkVersionsAsync(): Promise<SDKVersions> {
-  const { sdkVersions } = await versionsAsync();
-  return sdkVersions;
-}
-
 // NOTE(brentvatne): it is possible for an unreleased version to be published to
 // the versions endpoint, but in some cases we only want to list out released
 // versions
-export async function releasedSdkVersionsAsync(): Promise<SDKVersions> {
-  const sdkVersions = await sdkVersionsAsync();
+export async function getReleasedVersionsAsync(): Promise<SDKVersions> {
+  const { sdkVersions } = await getVersionsAsync();
   return pickBy(
     sdkVersions,
     (data, _sdkVersionString) => !!data.releaseNoteUrl || (Env.EXPO_BETA && data.beta)
@@ -112,6 +107,7 @@ export function lte(v1: ExpoConfig['sdkVersion'], v2: string): boolean {
   }
 }
 
+/** Asserts that an SDK version string is a valid Expo SDK version. */
 export function assertValid(sdkVersion: string): boolean {
   if (sdkVersion === 'UNVERSIONED') {
     return true;
@@ -129,11 +125,11 @@ export function assertValid(sdkVersion: string): boolean {
 // NOTE(brentvatne): it is possible for an unreleased version to be published to
 // the versions endpoint, but in some cases we need to get the latest *released*
 // version, not just the latest version.
-export async function newestReleasedSdkVersionAsync(): Promise<{
+export async function getLatestVersionAsync(): Promise<{
   version: string;
   data: SDKVersion | null;
 }> {
-  const sdkVersions = await sdkVersionsAsync();
+  const { sdkVersions } = await getVersionsAsync();
 
   let result = null;
   let highestMajorVersion = '0.0.0';
@@ -156,8 +152,9 @@ export async function newestReleasedSdkVersionAsync(): Promise<{
   };
 }
 
-export async function oldestSupportedMajorVersionAsync(): Promise<number> {
-  const sdkVersions = await sdkVersionsAsync();
+/** Returns the major version number for the last supported SDK version. */
+export async function getLastSupportedMajorVersionAsync(): Promise<number> {
+  const { sdkVersions } = await getVersionsAsync();
   const supportedVersions = pickBy(sdkVersions, v => !v.isDeprecated);
   const versionNumbers = Object.keys(supportedVersions).map(version => semver.major(version));
   return Math.min(...versionNumbers);

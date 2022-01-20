@@ -1,4 +1,4 @@
-import { Config } from '@expo/api';
+import { ProcessSettings, ProjectSettings } from '@expo/api';
 import { readExpRcAsync } from '@expo/config';
 import axios from 'axios';
 import express from 'express';
@@ -10,7 +10,6 @@ import {
   getFreePortAsync,
   LoadingPageHandler,
   ManifestHandler,
-  ProjectSettings,
   ProjectUtils,
 } from '../internal';
 
@@ -91,7 +90,7 @@ export async function startExpoServerAsync(projectRoot: string): Promise<void> {
     })
   );
   if (
-    (Config.isOffline
+    (ProcessSettings.isOffline
       ? await Doctor.validateWithoutNetworkAsync(projectRoot)
       : await Doctor.validateWithNetworkAsync(projectRoot)) === Doctor.FATAL
   ) {

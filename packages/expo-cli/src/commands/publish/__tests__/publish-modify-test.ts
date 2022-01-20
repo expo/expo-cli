@@ -10,6 +10,7 @@ import {
 } from '../../utils/PublishUtils';
 
 jest.mock('fs');
+jest.mock('os');
 jest.mock('resolve-from');
 jest.mock('@expo/image-utils', () => ({
   generateImageAsync(input, { src }) {

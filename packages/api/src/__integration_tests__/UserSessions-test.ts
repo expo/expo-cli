@@ -2,8 +2,10 @@ import fs from 'fs-extra';
 import HashIds from 'hashids';
 import { v1 as uuidv1 } from 'uuid';
 
-import { ApiV2 as ApiV2Client, UserManagerInstance, UserSettings } from '../';
+import ApiV2Client from '../ApiV2';
 import { User } from '../Auth';
+import { UserManagerInstance } from '../UserManager';
+import UserSettings from '../UserSettings';
 
 const _makeShortId = (salt: string, minLength = 10) => {
   const hashIds = new HashIds(salt, minLength);
@@ -11,7 +13,7 @@ const _makeShortId = (salt: string, minLength = 10) => {
 };
 
 // Note: these tests are actually calling the API,
-// in the unit test "User-test.ts" the API is mocked and the same tests are executed.
+// in the unit test "UserManager-test.ts" the API is mocked and the same tests are executed.
 describe.skip('User Sessions', () => {
   let userForTest: User;
   let userForTestPassword: string;
