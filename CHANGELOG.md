@@ -11,6 +11,8 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🎉 New features
 
+- [expo-cli] Aew `--fix-dependencies` option for `doctor` ([#4153](https://github.com/expo/expo-cli/issues/4153))
+
 ### 🧹 Chores
 
 - [expo-cli] updated markdown formatting in introspection script ([#4141)(https://github.com/expo/expo-cli/pull/4141))
