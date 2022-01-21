@@ -136,7 +136,7 @@ export async function getManifestResponseAsync({
     },
   });
 
-  const easProjectId = expoConfig.extra?.eas.projectId;
+  const easProjectId = expoConfig.extra?.eas?.projectId;
   const shouldUseAnonymousManifest = await shouldUseAnonymousManifestAsync(easProjectId);
   const userAnonymousIdentifier = await UserSettings.getAnonymousIdentifierAsync();
   const scopeKey = shouldUseAnonymousManifest
