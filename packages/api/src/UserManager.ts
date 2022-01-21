@@ -189,7 +189,7 @@ export class UserManagerInstance {
           sessionSecret: data?.sessionSecret,
         });
       } catch (e: any) {
-        if (!(options && options.silent)) {
+        if (!options?.silent) {
           // TODO: Custom logger?
           console.warn('Fetching the user profile failed');
           console.warn(e);
@@ -209,17 +209,17 @@ export class UserManagerInstance {
    * If the user is not a robot, it will throw an error.
    */
   public async getCurrentUserOnlyAsync(): Promise<Auth.User | null> {
-    const user = await this.getCurrentUserAsync();
+    const user = await this.getCurrentUserAsync({ silent: true });
     if (user && user.kind !== 'user') {
       throw new ApiError('ROBOT_ACCOUNT_ERROR', 'This action is not supported for robot users.');
     }
     return user;
   }
 
-  public async getCurrentUsernameAsync(): Promise<string | null> {
+  public async getCurrentUsernameAsync(options?: { silent?: boolean }): Promise<string | null> {
     const token = UserSettings.accessToken();
     if (token) {
-      const user = await this.getCurrentUserAsync();
+      const user = await this.getCurrentUserAsync(options);
       if (user?.username) {
         return user.username;
       }
