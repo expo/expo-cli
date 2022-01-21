@@ -7,7 +7,8 @@ export default function (program: Command) {
     program
       .command('doctor [path]')
       .description('Diagnose issues with the project')
-      .helpGroup('info'),
+      .helpGroup('info')
+      .option('--fix-dependencies', 'Fix incompatible dependency versions'),
     () => import('./doctorAsync')
   );
 }

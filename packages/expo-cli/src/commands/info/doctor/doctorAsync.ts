@@ -7,14 +7,19 @@ import { profileMethod } from '../../utils/profileMethod';
 import { validateDependenciesVersionsAsync } from '../../utils/validateDependenciesVersions';
 import { warnUponCmdExe } from './windows';
 
-export async function actionAsync(projectRoot: string) {
+type Options = {
+  fixDependencies?: boolean;
+};
+
+export async function actionAsync(projectRoot: string, options: Options) {
   await warnUponCmdExe();
 
   const { exp, pkg } = profileMethod(getConfig)(projectRoot);
   const areDepsValid = await profileMethod(validateDependenciesVersionsAsync)(
     projectRoot,
     exp,
-    pkg
+    pkg,
+    options.fixDependencies
   );
 
   // note: this currently only warns when something isn't right, it doesn't fail
