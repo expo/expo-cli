@@ -460,6 +460,14 @@ export default async function (env: Environment, argv: Arguments = {}): Promise<
           maxChunks: 1,
         }),
 
+      // Replace the Metro specific HMR code in `react-native` with
+      // a shim.
+      isNative &&
+        new webpack.NormalModuleReplacementPlugin(
+          /react-native\/Libraries\/Utilities\/HMRClient\.js$/,
+          require.resolve('./runtime/metro-runtime-shim')
+        ),
+
       !isNative &&
         isProd &&
         new MiniCssExtractPlugin({

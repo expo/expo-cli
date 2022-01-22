@@ -316,21 +316,6 @@ function createAssetCodeBlock({
   width?: number;
   fileSystemLocation: string;
 }) {
-  // Convert `{ "@1x": { ... } }` -> `[1]`
-  const numericScales = Object.keys(scales)
-    .map(scale => {
-      const numericScale = scale.match(/@([\d|.]+)x/)?.[1];
-      if (!numericScale) {
-        return null;
-      }
-      try {
-        return Number(numericScale);
-      } catch {
-        return null;
-      }
-    })
-    .filter(Boolean);
-  // TODO: `fileHashes`?
   return [
     `module.exports = require('react-native/Libraries/Image/AssetRegistry').registerAsset({`,
     `  __packager_asset: true,`,
@@ -347,7 +332,5 @@ function createAssetCodeBlock({
     `  ${height != null ? `height: ${height},` : ''}`,
     `  ${width != null ? `width: ${width},` : ''}`,
     `});`,
-  ]
-    .filter(Boolean)
-    .join('\n');
+  ].join('\n');
 }

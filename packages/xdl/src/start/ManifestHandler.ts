@@ -192,7 +192,7 @@ export function getManifestHandler(projectRoot: string, usePlatformHeaders?: boo
   };
 }
 
-export async function getManifestResponseFromHeadersAsync({
+async function getManifestResponseFromHeadersAsync({
   projectRoot,
   headers,
 }: {
