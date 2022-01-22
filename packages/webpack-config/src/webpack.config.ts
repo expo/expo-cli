@@ -45,7 +45,6 @@ import {
   NativeAssetsPlugin,
 } from './plugins';
 import { HTMLLinkNode } from './plugins/ModifyHtmlWebpackPlugin';
-import { HMRPlugin, webpackDevClientEntry } from './plugins/NativeHMRPlugin/NativeHMRPlugin';
 import { Arguments, Environment, FilePaths, Mode } from './types';
 
 function getDevtool(
@@ -194,10 +193,7 @@ export default async function (env: Environment, argv: Arguments = {}): Promise<
         resolveFrom(env.projectRoot, 'react-native/Libraries/Core/InitializeCore')
       );
     }
-    appEntry.push(
-      require.resolve('./runtime/location-polyfill'),
-      require.resolve('./runtime/__webpack_require__.l')
-    );
+    // TODO: Polyfill __webpack_require__.l and window.location
   } else {
     // Add a loose requirement on the ResizeObserver polyfill if it's installed...
     const resizeObserverPolyfill = resolveFrom.silent(
@@ -207,10 +203,6 @@ export default async function (env: Environment, argv: Arguments = {}): Promise<
     if (resizeObserverPolyfill) {
       appEntry.unshift(resizeObserverPolyfill);
     }
-  }
-  // Use a universal implementation of Webpack's remote loading method.
-  if (isDev && isNative) {
-    appEntry.unshift(webpackDevClientEntry);
   }
 
   let generatePWAImageAssets: boolean = !isNative && !isDev;
@@ -468,42 +460,6 @@ export default async function (env: Environment, argv: Arguments = {}): Promise<
           maxChunks: 1,
         }),
 
-      // Replace the Metro specific HMR code in `react-native` with
-      // a shim.
-      isNative &&
-        new webpack.NormalModuleReplacementPlugin(
-          /react-native\/Libraries\/Utilities\/HMRClient\.js$/,
-          function (resource) {
-            const request = require.resolve('./runtime/metro-runtime-shim');
-            const context = path.dirname(request);
-            resource.request = request;
-            resource.context = context;
-            resource.createData.resource = request;
-            resource.createData.context = context;
-          }
-        ),
-      isNative &&
-        new webpack.NormalModuleReplacementPlugin(/lazy-compilation-web\.js$/, function (resource) {
-          const request = require.resolve('./runtime/lazy-compilation-native');
-          const context = path.dirname(request);
-          resource.request = request;
-          resource.context = context;
-          resource.createData.resource = request;
-          resource.createData.context = context;
-        }),
-      isNative &&
-        new webpack.NormalModuleReplacementPlugin(
-          /react-native\/Libraries\/Core\/setUpReactRefresh\.js$/,
-          function (resource) {
-            const request = require.resolve('./runtime/setUpReactRefresh-shim');
-            const context = path.dirname(request);
-            resource.request = request;
-            resource.context = context;
-            resource.createData.resource = request;
-            resource.createData.context = context;
-          }
-        ),
-
       !isNative &&
         isProd &&
         new MiniCssExtractPlugin({
@@ -549,34 +505,6 @@ export default async function (env: Environment, argv: Arguments = {}): Promise<
             };
           },
         }),
-
-      // Replace the Metro specific HMR code in `react-native` with
-      // a shim.
-      isNative &&
-        isDev &&
-        new webpack.NormalModuleReplacementPlugin(/react-error-overlay$/, function (resource) {
-          const request = require.resolve('./runtime/react-error-overlay-shim');
-          const context = path.dirname(request);
-          resource.request = request;
-          resource.context = context;
-          resource.createData.resource = request;
-          resource.createData.context = context;
-        }),
-      isNative &&
-        isDev &&
-        new webpack.NormalModuleReplacementPlugin(
-          /webpack\/runtime\/location-polyfill.js$/,
-          function (resource) {
-            const request = require.resolve('./runtime/location-polyfill');
-            const context = path.dirname(request);
-            resource.request = request;
-            resource.context = context;
-            resource.createData.resource = request;
-            resource.createData.context = context;
-          }
-        ),
-
-      new HMRPlugin({ isNative, isDev }),
 
       new ExpectedErrorsPlugin(),
       // Skip using a progress bar in CI
@@ -647,20 +575,6 @@ export default async function (env: Environment, argv: Arguments = {}): Promise<
 
   if (!isNative) {
     webpackConfig = withAlias(webpackConfig, getAliases(env.projectRoot));
-  } else {
-    webpackConfig = withAlias(webpackConfig, {
-      'react-native$': resolveFrom(env.projectRoot, 'react-native'),
-      'react-native/Libraries/Network/RCTNetworking': resolveFrom(
-        env.projectRoot,
-        `react-native/Libraries/Network/RCTNetworking.${env.platform}.js`
-      ),
-      'react-native': path.dirname(resolveFrom(env.projectRoot, 'react-native/package.json')),
-      react$: resolveFrom(env.projectRoot, 'react'),
-
-      'react-refresh': path.dirname(require.resolve('react-refresh/package.json')),
-      'react-refresh/runtime': require.resolve('react-refresh/runtime'),
-      'react-is$': resolveFrom(env.projectRoot, 'react-is'),
-    });
   }
 
   return webpackConfig;

@@ -4,14 +4,7 @@ import semver from 'semver';
 import webpack from 'webpack';
 
 import { getConfig, getMode, getPublicPaths } from '../env';
-import {
-  EXPO_DEBUG,
-  host,
-  isFastRefreshEnabled,
-  sockHost,
-  sockPath,
-  sockPort,
-} from '../env/defaults';
+import { EXPO_DEBUG, sockPath } from '../env/defaults';
 import { Environment, ExpoPlatform, Mode } from '../types';
 
 const RESTRICTED_MANIFEST_FIELDS = [
@@ -115,9 +108,6 @@ export function createClientEnvironment(
 
         [`${prefix}EXPO_DEBUG`]: EXPO_DEBUG,
         [`${prefix}PLATFORM`]: JSON.stringify(platform),
-        // Whether or not react-refresh is enabled.
-        // It is defined here so it is available in the webpackHotDevClient.
-        [`${prefix}FAST_REFRESH`]: isFastRefreshEnabled,
         // [`${prefix}WDS_SOCKET_HOST`]: process.env.WDS_SOCKET_HOST,
         // [`${prefix}WDS_SOCKET_PORT`]: process.env.WDS_SOCKET_PORT,
         [`${prefix}WDS_SOCKET_PATH`]: sockPath ? JSON.stringify(sockPath) : undefined,
