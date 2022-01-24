@@ -17,7 +17,6 @@ export function getFileFromCompilerAsync(
 ): Promise<string> {
   const platformCompiler = getCompilerForPlatform(compiler, platform);
 
-  console.log(platformCompiler.records);
   return new Promise<string>((resolve, reject) =>
     (platformCompiler.outputFileSystem as any).readFile(
       fileName,
@@ -32,6 +31,7 @@ export function getFileFromCompilerAsync(
   );
 }
 
+/** Extract a runtime platform from the request headers. Also uses UA sniffing to search for the platform. */
 export function getPlatformFromRequest(request: IncomingMessage): string | null {
   // Use the expo updates spec to check the platform.
   if (typeof request.headers['expo-platform'] === 'string') {
