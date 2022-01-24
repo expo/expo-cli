@@ -272,7 +272,6 @@ export async function startAsync(
   }
 
   const configs: Record<string, WebpackConfiguration> = {};
-
   // for (const platform of ['web', 'ios']) {
   for (const platform of isTargetingNative() ? ['ios', 'android', 'web'] : ['web']) {
     env.platform = platform;
@@ -283,10 +282,10 @@ export async function startAsync(
     configs[platform] = config;
   }
 
-  // Create a basic webpack compiler
-  const compiler = webpack(Object.values(configs));
+  const configArray = Object.values(configs);
+  // Create a webpack compiler
+  const compiler = configArray.length === 1 ? webpack(configArray[0]) : webpack(configArray);
 
-  // console.log(config);
   // Create the middleware required for interacting with a native runtime (Expo Go, or Expo Dev Client).
   const nativeMiddleware = createNativeDevServerMiddleware(projectRoot, {
     port,
@@ -294,14 +293,14 @@ export async function startAsync(
     forceManifestType: options.forceManifestType,
   });
 
-  const firstConfig = Object.values(configs)[0];
-  // @ts-ignore: untyped
+  const firstConfig = configArray[0];
+
+  // Won't be defined if using an older version of Webpack.
   if (firstConfig.devServer?.setupMiddlewares) {
-    // @ts-ignore: untyped
     const func = firstConfig.devServer?.setupMiddlewares ?? function () {};
     // Inject the native manifest middleware.
     const originalSetupMiddlewares = func.bind(func);
-    // @ts-ignore: untyped
+
     firstConfig.devServer!.setupMiddlewares = (middlewares, devServer) => {
       const nextMiddlewares = originalSetupMiddlewares(middlewares, devServer);
       if (nativeMiddleware?.middleware) {
@@ -487,7 +486,6 @@ export async function bundleAsync(projectRoot: string, options?: BundlingOptions
     await clearWebCacheAsync(projectRoot, env.mode);
   }
 
-  console.log('use:', env);
   const config = await loadConfigAsync(env);
   await bundleWebAppAsync(projectRoot, config);
 }
@@ -654,11 +652,9 @@ function applyEnvironmentVariables(config: WebpackConfiguration): WebpackConfigu
     // This will make it easier to debug.
     output.pathinfo = true;
     // Readable ids for better debugging.
-    // @ts-ignore Property 'moduleIds' does not exist.
     optimization.moduleIds = 'named';
     // if optimization.namedChunks is enabled optimization.chunkIds is set to 'named'.
     // This will manually enable it just to be safe.
-    // @ts-ignore Property 'chunkIds' does not exist.
     optimization.chunkIds = 'named';
 
     Object.assign(config, { output, optimization });
