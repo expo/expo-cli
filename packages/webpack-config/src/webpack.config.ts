@@ -138,11 +138,8 @@ function getPlatformsExtensions(platform: string): string[] {
   return getModuleFileExtensions(platform);
 }
 
-function createEnvironmentHash(env: any) {
-  const hash = createHash('md5');
-  hash.update(JSON.stringify(env));
-
-  return hash.digest('hex');
+function createEnvironmentHash(env: typeof process.env) {
+  return createHash('md5').update(JSON.stringify(env)).digest('hex');
 }
 
 export default async function (env: Environment, argv: Arguments = {}): Promise<Configuration> {
