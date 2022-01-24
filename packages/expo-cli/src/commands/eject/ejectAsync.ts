@@ -1,5 +1,5 @@
+import { Versions } from '@expo/api';
 import { getConfig } from '@expo/config';
-import { Versions } from 'xdl';
 
 import CommandError from '../../CommandError';
 import Log from '../../log';
@@ -57,7 +57,7 @@ export async function actionAsync(
   }
 
   // Set EXPO_VIEW_DIR to universe/exponent to pull expo view code locally instead of from S3 for ExpoKit
-  if (Versions.lteSdkVersion(exp, '36.0.0')) {
+  if (Versions.lte(exp.sdkVersion, '36.0.0')) {
     if (options.force || (await userWantsToEjectWithoutUpgradingAsync())) {
       throw new CommandError(
         `Ejecting to ExpoKit is now deprecated. Upgrade to Expo SDK +37 or downgrade to expo-cli@4.1.3`

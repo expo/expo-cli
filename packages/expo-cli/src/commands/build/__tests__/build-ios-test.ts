@@ -1,6 +1,6 @@
 import { vol } from 'memfs';
 
-import { mockExpoXDL } from '../../../__tests__/mock-utils';
+import { mockExpoAPI, mockExpoXDL } from '../../../__tests__/mock-utils';
 import {
   jester,
   testAppJson,
@@ -47,11 +47,6 @@ jest.mock('commander', () => {
 jest.mock('../../../credentials/api/IosApiV2Wrapper', () => {
   return jest.fn(() => mockIosCredentialsApi);
 });
-jest.mock('../findReusableBuildAsync', () => {
-  return {
-    findReusableBuildAsync: jest.fn(() => ({})),
-  };
-});
 jest.mock('../getLatestReleaseAsync', () => {
   return {
     getLatestReleaseAsync: jest.fn(() => ({ publicationId: 'test-publication-id' })),
@@ -86,8 +81,17 @@ function mockBuildApis() {
 }
 
 const mockedXDLModules = {
+  IosCodeSigning: {
+    validateProvisioningProfile: jest.fn(),
+  },
+  PKCS12Utils: { getP12CertFingerprint: jest.fn(), findP12CertSerialNumber: jest.fn() },
+};
+const mockedAPIModules = {
+  StandaloneBuild: {
+    getLegacyReusableBuildAsync: jest.fn(() => ({})),
+  },
   UserManager: {
-    getProjectOwner: jest.fn(jest.requireActual('xdl').UserManager.getProjectOwner),
+    getProjectOwner: jest.fn(jest.requireActual('@expo/api').UserManager.getProjectOwner),
     ensureLoggedInAsync: jest.fn(() => jester),
     getCurrentUserAsync: jest.fn(() => jester),
     getCurrentUsernameAsync: jest.fn(() => jester.username),
@@ -95,40 +99,30 @@ const mockedXDLModules = {
   ApiV2: {
     clientForUser: jest.fn(),
   },
-  IosCodeSigning: {
-    validateProvisioningProfile: jest.fn(),
-  },
-  PKCS12Utils: { getP12CertFingerprint: jest.fn(), findP12CertSerialNumber: jest.fn() },
 };
 mockExpoXDL(mockedXDLModules);
+mockExpoAPI(mockedAPIModules);
 
 beforeEach(() => {
   mockIosCredentialsApi = getApiV2WrapperMock();
 });
 
 describe('build ios', () => {
-  const projectRootNoBundleId = '/test-project-no-bundle-id';
   const projectRoot = '/test-project';
-  const packageJson = JSON.stringify(
-    {
-      name: 'testing123',
-      version: '0.1.0',
-      description: 'fake description',
-      main: 'index.js',
-    },
-    null,
-    2
-  );
-  const appJson = JSON.stringify(testAppJson);
 
   beforeAll(() => {
-    vol.fromJSON({
-      [projectRoot + '/package.json']: packageJson,
-      [projectRoot + '/app.json']: appJson,
-      // no bundle id
-      [projectRootNoBundleId + '/package.json']: packageJson,
-      [projectRootNoBundleId + '/app.config.json']: JSON.stringify({ sdkVersion: '38.0.0' }),
-    });
+    vol.fromJSON(
+      {
+        'package.json': JSON.stringify({
+          name: 'testing123',
+          version: '0.1.0',
+          description: 'fake description',
+          main: 'index.js',
+        }),
+        'app.json': JSON.stringify(testAppJson),
+      },
+      projectRoot
+    );
   });
 
   afterAll(() => {
@@ -136,7 +130,9 @@ describe('build ios', () => {
   });
 
   afterEach(() => {
-    const mockedXDLModuleObjects = Object.values(mockedXDLModules);
+    const mockedXDLModuleObjects = Object.values(mockedXDLModules).concat(
+      Object.values(mockedAPIModules)
+    );
     for (const module of mockedXDLModuleObjects) {
       const xdlFunctions = Object.values(module);
       for (const xdlFunction of xdlFunctions) {
@@ -153,6 +149,16 @@ describe('build ios', () => {
 
   it('fails if no bundle-id is used in non-interactive mode', async () => {
     const projectRoot = '/test-project-no-bundle-id';
+    vol.fromJSON(
+      {
+        'package.json': JSON.stringify({}),
+        'app.config.json': JSON.stringify({
+          // no ios.bundleIdentifier
+          sdkVersion: '44.0.0',
+        }),
+      },
+      projectRoot
+    );
 
     const builderOptions: BuilderOptions = {
       type: 'archive',
@@ -168,6 +174,7 @@ describe('build ios', () => {
     // expect(getLatestReleaseAsync.mock.calls.length).toBe(1);
     // expect(mockedXDLModules.Project.startBuildAsync.mock.calls.length).toBe(1);
   });
+
   it('archive build: basic case', async () => {
     mockBuildApis();
     const projectRoot = '/test-project';

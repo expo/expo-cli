@@ -1,25 +1,20 @@
+import {
+  Analytics,
+  Manifest,
+  ProcessSettings,
+  Projects,
+  UserManager,
+  UserSettings,
+} from '@expo/api';
 import { ExpoUpdatesManifest, getConfig } from '@expo/config';
 import { Updates } from '@expo/config-plugins';
-import { JSONObject } from '@expo/json-file';
 import express from 'express';
 import http from 'http';
 import nullthrows from 'nullthrows';
 import { parse } from 'url';
 import { v4 as uuidv4 } from 'uuid';
 
-import {
-  Analytics,
-  ANONYMOUS_USERNAME,
-  ApiV2,
-  Config,
-  ConnectionStatus,
-  ProjectAssets,
-  ProjectUtils,
-  resolveEntryPoint,
-  UrlUtils,
-  UserManager,
-  UserSettings,
-} from '../internal';
+import { ProjectAssets, ProjectUtils, resolveEntryPoint, UrlUtils } from '../internal';
 import {
   getBundleUrlAsync,
   getExpoGoConfig,
@@ -50,32 +45,22 @@ function getPlatformFromRequest(req: express.Request | http.IncomingMessage): 'a
 async function shouldUseAnonymousManifestAsync(
   easProjectId: string | undefined | null
 ): Promise<boolean> {
-  if (!easProjectId || ConnectionStatus.isOffline()) {
+  if (!easProjectId || ProcessSettings.isOffline) {
     return true;
   }
-
   const currentSession = await UserManager.getSessionAsync();
-  if (!currentSession) {
-    return true;
-  }
-
-  return false;
+  return !currentSession;
 }
 
 async function getScopeKeyForProjectIdAsync(projectId: string): Promise<string> {
   const user = await UserManager.ensureLoggedInAsync();
-  const project = await ApiV2.clientForUser(user).getAsync(
-    `projects/${encodeURIComponent(projectId)}`
-  );
-  return project.scopeKey;
+  const { scopeKey } = await Projects.getAsync(user, { id: projectId });
+  return scopeKey;
 }
 
 async function signManifestAsync(manifest: ExpoUpdatesManifest): Promise<string> {
   const user = await UserManager.ensureLoggedInAsync();
-  const { signature } = await ApiV2.clientForUser(user).postAsync('manifest/eas/sign', {
-    manifest: (manifest as any) as JSONObject,
-  });
-  return signature;
+  return Manifest.signAsync(user, manifest as any);
 }
 
 export async function getManifestResponseAsync({
@@ -140,7 +125,7 @@ export async function getManifestResponseAsync({
   const shouldUseAnonymousManifest = await shouldUseAnonymousManifestAsync(easProjectId);
   const userAnonymousIdentifier = await UserSettings.getAnonymousIdentifierAsync();
   const scopeKey = shouldUseAnonymousManifest
-    ? `@${ANONYMOUS_USERNAME}/${expoConfig.slug}-${userAnonymousIdentifier}`
+    ? `@${UserManager.ANONYMOUS_USERNAME}/${expoConfig.slug}-${userAnonymousIdentifier}`
     : await getScopeKeyForProjectIdAsync(nullthrows(easProjectId));
 
   const expoUpdatesManifest = {
@@ -209,10 +194,10 @@ export function getManifestHandler(projectRoot: string) {
       res.end(JSON.stringify(body));
 
       Analytics.logEvent('Serve Expo Updates Manifest', {
-        developerTool: Config.developerTool,
+        developerTool: ProcessSettings.developerTool,
         runtimeVersion: (body as any).runtimeVersion,
       });
-    } catch (e) {
+    } catch (e: any) {
       ProjectUtils.logError(projectRoot, 'expo', e.stack);
       res.statusCode = 520;
       res.end(

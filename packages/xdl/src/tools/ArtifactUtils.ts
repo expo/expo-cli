@@ -1,4 +1,4 @@
-import fs from 'fs-extra';
+import fs from 'fs';
 import path from 'path';
 
 import { Logger as logger } from '../internal';
@@ -16,6 +16,6 @@ export async function writeArtifactSafelyAsync(
       : `app.json specifies ${keyName}: ${pathToWrite}, but that directory does not exist.`;
     logger.global.warn(errorMsg);
   } else {
-    await fs.writeFile(pathToWrite, artifact);
+    await fs.promises.writeFile(pathToWrite, artifact);
   }
 }

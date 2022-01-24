@@ -1,13 +1,14 @@
+import { UserSettings } from '@expo/api';
 import fs from 'fs-extra';
 import hasbin from 'hasbin';
 import path from 'path';
 
-import { UserSettings, XDLError } from './internal';
+import { XDLError } from './internal';
 
 export const OSX_SOURCE_PATH = path.join(__dirname, '..', 'binaries', 'osx');
 
 function _hasbinAsync(name: string) {
-  return new Promise((resolve, reject) => {
+  return new Promise(resolve => {
     hasbin(name, result => {
       resolve(result);
     });
@@ -58,7 +59,7 @@ export async function writePathToUserSettingsAsync(): Promise<void> {
   await UserSettings.setAsync('PATH', process.env.PATH);
 
   // Used in detach app
-  const pathFile = path.join(UserSettings.dotExpoHomeDirectory(), 'PATH');
+  const pathFile = path.join(UserSettings.getDirectory(), 'PATH');
   await fs.writeFile(pathFile, process.env.PATH);
 }
 

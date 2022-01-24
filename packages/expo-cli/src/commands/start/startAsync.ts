@@ -1,8 +1,9 @@
+import { UnifiedAnalytics, Versions } from '@expo/api';
 import { ConfigError, ExpoConfig, getConfig, isLegacyImportsEnabled } from '@expo/config';
 import chalk from 'chalk';
 import path from 'path';
 import resolveFrom from 'resolve-from';
-import { LoadingPageHandler, Project, UnifiedAnalytics, UrlUtils, Versions } from 'xdl';
+import { LoadingPageHandler, Project, UrlUtils } from 'xdl';
 
 import StatusEventEmitter from '../../analytics/StatusEventEmitter';
 import getDevClientProperties from '../../analytics/getDevClientProperties';
@@ -62,7 +63,7 @@ export async function actionAsync(projectRoot: string, options: NormalizedOption
     options,
   });
 
-  if (Versions.gteSdkVersion(exp, '34.0.0')) {
+  if (Versions.gte(exp.sdkVersion, '34.0.0')) {
     await profileMethod(ensureTypeScriptSetupAsync)(projectRoot);
   }
 

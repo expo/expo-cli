@@ -1,6 +1,7 @@
+import { StandaloneBuild, Versions } from '@expo/api';
 import chalk from 'chalk';
 import program from 'commander';
-import { UrlUtils, Versions } from 'xdl';
+import { UrlUtils } from 'xdl';
 
 import CommandError from '../../CommandError';
 import Log from '../../log';
@@ -59,14 +60,28 @@ export function assertPublicUrl(publicUrl: any) {
   }
 }
 
+export async function canTurtleBuildSdkVersion(
+  sdkVersion: string,
+  platform: 'ios' | 'android'
+): Promise<boolean> {
+  if (sdkVersion === 'UNVERSIONED') {
+    return true;
+  }
+  Versions.assertValid(sdkVersion);
+
+  const supportedVersions = await StandaloneBuild.getSupportedSDKVersionsAsync();
+  const supportedVersionsForPlatform: string[] = supportedVersions[platform] ?? [];
+  return supportedVersionsForPlatform.includes(sdkVersion);
+}
+
 export async function checkIfSdkIsSupported(
   sdkVersion: string,
   platform: 'android' | 'ios'
 ): Promise<void> {
-  const isSupported = await Versions.canTurtleBuildSdkVersion(sdkVersion, platform);
-  const minimumSdkVersionSupported = await Versions.oldestSupportedMajorVersionAsync();
+  const isSupported = await canTurtleBuildSdkVersion(sdkVersion, platform);
+  const minimumSdkVersionSupported = await Versions.getLastSupportedMajorVersionAsync();
   const majorSdkVersion = Number(sdkVersion.split('.')[0]);
-  const { version: latestSDKVersion } = await Versions.newestReleasedSdkVersionAsync();
+  const { version: latestSDKVersion } = await Versions.getLatestVersionAsync();
 
   if (!isSupported) {
     Log.error(

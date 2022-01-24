@@ -1,5 +1,5 @@
+import { UnifiedAnalytics, UserSettings } from '@expo/api';
 import program, { Command } from 'commander';
-import { UnifiedAnalytics, UserSettings } from 'xdl';
 
 import { registerCommands } from '../../build/commands';
 import { bootstrapAnalyticsAsync, trackUsage } from '../../build/exp';

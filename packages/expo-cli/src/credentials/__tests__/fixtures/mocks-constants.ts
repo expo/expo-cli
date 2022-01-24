@@ -1,4 +1,4 @@
-import { User } from 'xdl';
+import { User } from '@expo/api';
 
 export const jester: User = {
   kind: 'user',

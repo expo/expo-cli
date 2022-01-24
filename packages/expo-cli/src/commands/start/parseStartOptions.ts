@@ -1,6 +1,7 @@
+import { ProjectSettings, Versions } from '@expo/api';
 import { ExpoConfig, isLegacyImportsEnabled } from '@expo/config';
 import chalk from 'chalk';
-import { Project, ProjectSettings, Versions, Webpack } from 'xdl';
+import { Project, Webpack } from 'xdl';
 import * as WebpackEnvironment from 'xdl/build/webpack-utils/WebpackEnvironment';
 
 import { AbortCommandError } from '../../CommandError';
@@ -214,7 +215,7 @@ export function parseStartOptions(
   }
 
   // The SDK 41 client has web socket support.
-  if (Versions.gteSdkVersion(exp, '41.0.0')) {
+  if (Versions.gte(exp.sdkVersion, '41.0.0')) {
     startOpts.isRemoteReloadingEnabled = true;
     if (!startOpts.webOnly || Webpack.isTargetingNative()) {
       startOpts.isWebSocketsEnabled = true;

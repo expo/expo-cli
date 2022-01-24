@@ -1,7 +1,7 @@
 import program from 'commander';
 import { vol } from 'memfs';
 
-import { mockExpoXDL } from '../../../__tests__/mock-utils';
+import { mockExpoAPI, mockExpoXDL } from '../../../__tests__/mock-utils';
 import { jester } from '../../../credentials/__tests__/fixtures/mocks-constants';
 import Log from '../../../log';
 import {
@@ -24,7 +24,7 @@ jest.mock('../../utils/Tar', () => ({
   },
 }));
 
-mockExpoXDL({
+mockExpoAPI({
   UserManager: {
     ensureLoggedInAsync: jest.fn(() => jester),
     getCurrentUserAsync: jest.fn(() => jester),
@@ -32,6 +32,8 @@ mockExpoXDL({
   ApiV2: {
     clientForUser: jest.fn(),
   },
+});
+mockExpoXDL({
   Doctor: {
     validateWithoutNetworkAsync: jest.fn(() => 0),
   },

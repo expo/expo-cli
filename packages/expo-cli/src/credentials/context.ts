@@ -1,5 +1,5 @@
+import { ApiV2, Auth, Publish, UserManager } from '@expo/api';
 import { ExpoConfig, getConfig } from '@expo/config';
-import { ApiV2, RobotUser, User, UserManager } from 'xdl';
 
 import { AppleCtx, authenticateAsync } from '../appleApi';
 import Log from '../log';
@@ -24,7 +24,7 @@ interface CtxOptions extends AppleCtxOptions {
 export class Context {
   _hasProjectContext: boolean = false;
   _projectDir?: string;
-  _user?: User | RobotUser;
+  _user?: Auth.User | Auth.RobotUser;
   _manifest?: ExpoConfig;
   _apiClient?: ApiV2;
   _iosApiClient?: IosApi;
@@ -37,8 +37,8 @@ export class Context {
     return this._nonInteractive === true;
   }
 
-  get user(): User | RobotUser {
-    return this._user as User | RobotUser;
+  get user(): Auth.User | Auth.RobotUser {
+    return this._user as Auth.User | Auth.RobotUser;
   }
   get hasProjectContext(): boolean {
     return this._hasProjectContext;
@@ -47,7 +47,7 @@ export class Context {
     return this._projectDir as string;
   }
   get projectOwner(): string {
-    return UserManager.getProjectOwner(this.user, this.manifest);
+    return Publish.getProjectOwner(this.user, this.manifest);
   }
   get manifest(): ExpoConfig {
     if (!this._manifest) {
@@ -100,7 +100,7 @@ export class Context {
 
     // User isn't signed it, but needs to be signed in
     if (!this._user && !allowAnonymous) {
-      this._user = (await UserManager.ensureLoggedInAsync()) as User;
+      this._user = (await UserManager.ensureLoggedInAsync()) as Auth.User;
     }
 
     this._projectDir = projectDir;
