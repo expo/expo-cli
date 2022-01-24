@@ -27,6 +27,11 @@ export default function withOptimizations(webpackConfig: Configuration): Configu
 
   webpackConfig.optimization = {
     ...(webpackConfig.optimization || {}),
+
+    // https://github.com/facebook/create-react-app/discussions/11278#discussioncomment-1808511
+    splitChunks: {
+      chunks: 'all',
+    },
     nodeEnv: false,
     minimize: true,
     minimizer: [
