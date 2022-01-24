@@ -1,6 +1,7 @@
+import { Versions } from '@expo/api';
 import axios, { AxiosRequestConfig } from 'axios';
 
-import { Versions, XDLError } from './internal';
+import { XDLError } from './internal';
 
 export async function getManifest(
   publicUrl: string,
@@ -40,7 +41,7 @@ async function _extractManifest(expOrArray: any, publicUrl: string) {
     return expOrArray;
   }
 
-  const { sdkVersions } = await Versions.versionsAsync();
+  const { sdkVersions } = await Versions.getVersionsAsync();
   for (let i = 0; i < expOrArray.length; i++) {
     const manifestCandidate = expOrArray[i];
     const sdkVersion = manifestCandidate.sdkVersion;

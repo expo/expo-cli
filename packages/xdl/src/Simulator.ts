@@ -1,3 +1,4 @@
+import { Analytics, UserSettings, Versions } from '@expo/api';
 import { ExpoConfig, getConfig } from '@expo/config';
 import { IOSConfig } from '@expo/config-plugins';
 import * as osascript from '@expo/osascript';
@@ -13,11 +14,9 @@ import semver from 'semver';
 import { ensureSimulatorAppRunningAsync } from './apple/utils/ensureSimulatorAppRunningAsync';
 import { TimeoutError } from './apple/utils/waitForActionAsync';
 import {
-  Analytics,
   BundleIdentifier,
   CoreSimulator,
   delayAsync,
-  downloadAppAsync,
   isDevClientPackageInstalled,
   learnMore,
   LoadingEvent,
@@ -26,11 +25,10 @@ import {
   SimControl,
   SimControlLogs,
   UrlUtils,
-  UserSettings,
-  Versions,
   Webpack,
   Xcode,
 } from './internal';
+import { downloadAppAsync } from './utils/downloadAppAsync';
 import { profileMethod } from './utils/profileMethod';
 
 let _lastUrl: string | null = null;
@@ -427,7 +425,7 @@ export async function doesExpoClientNeedUpdatedAsync(
 ): Promise<boolean> {
   // Test that upgrading works by returning true
   // return true;
-  const versions = await profileMethod(Versions.versionsAsync)();
+  const versions = await profileMethod(Versions.getVersionsAsync)();
   const clientForSdk = await profileMethod(getClientForSDK)(sdkVersion);
   const latestVersionForSdk = clientForSdk?.version ?? versions.iosVersion;
 
@@ -444,7 +442,7 @@ export async function _downloadSimulatorAppAsync(
   downloadProgressCallback?: (roundedProgress: number) => void
 ) {
   if (!url) {
-    const versions = await Versions.versionsAsync();
+    const versions = await Versions.getVersionsAsync();
     url = versions.iosUrl;
   }
 
@@ -533,10 +531,9 @@ export async function uninstallExpoAppFromSimulatorAsync({ udid }: { udid?: stri
 }
 
 function simulatorCacheDirectory() {
-  const dotExpoHomeDirectory = UserSettings.dotExpoHomeDirectory();
-  const dir = path.join(dotExpoHomeDirectory, 'ios-simulator-app-cache');
-  fs.mkdirpSync(dir);
-  return dir;
+  const directory = path.join(UserSettings.getDirectory(), 'ios-simulator-app-cache');
+  fs.mkdirpSync(directory);
+  return directory;
 }
 
 export async function upgradeExpoAsync(
@@ -735,7 +732,8 @@ async function getClientForSDK(sdkVersionString?: string) {
     return null;
   }
 
-  const sdkVersion = (await Versions.sdkVersionsAsync())[sdkVersionString];
+  const { sdkVersions } = await Versions.getVersionsAsync();
+  const sdkVersion = sdkVersions[sdkVersionString];
   if (!sdkVersion) {
     return null;
   }

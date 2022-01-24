@@ -1,26 +1,25 @@
+import { Cache } from '@expo/api';
 import latestVersionAsync from 'latest-version';
 import pTimeout from 'p-timeout';
 import npmPackageJson from 'package-json';
 import semver from 'semver';
 
-import { FsCache } from '../internal';
-
 /** @deprecated just use the update-check npm package */
 function createModuleVersionChecker(name: string, currentVersion: string) {
-  const UpdateCacher = new FsCache.Cacher(
-    async () => {
+  const cliVersionCache = new Cache({
+    async getAsync() {
       const pkgJson = await pTimeout(npmPackageJson(name, { version: currentVersion }), 2000);
       return {
         latestVersion: await pTimeout(latestVersionAsync(name), 2000),
         deprecated: pkgJson.deprecated,
       };
     },
-    `${name}-updates.json`,
-    24 * 60 * 60 * 1000 // one day
-  );
+    filename: `${name}-updates.json`,
+    ttlMilliseconds: 24 * 60 * 60 * 1000, // one day
+  });
 
   async function checkAsync() {
-    const { latestVersion, deprecated } = await UpdateCacher.getAsync();
+    const { latestVersion, deprecated } = await cliVersionCache.getAsync();
     return {
       updateIsAvailable: semver.gt(latestVersion, currentVersion),
       latest: latestVersion,

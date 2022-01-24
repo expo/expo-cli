@@ -1,5 +1,11 @@
 import { getNamedPlugins } from '../autoAddConfigPluginsAsync';
 
+jest.unmock('fs');
+
+afterAll(() => {
+  jest.mock('fs');
+});
+
 describe(getNamedPlugins, () => {
   it('gets named plugins', () => {
     expect(

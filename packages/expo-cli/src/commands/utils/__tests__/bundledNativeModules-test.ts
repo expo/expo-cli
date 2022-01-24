@@ -1,22 +1,16 @@
+import { ApiV2 } from '@expo/api';
 import { vol } from 'memfs';
 import path from 'path';
-import { ApiV2 } from 'xdl';
 
-import { mockExpoXDL } from '../../../__tests__/mock-utils';
 import { getBundledNativeModulesAsync } from '../bundledNativeModules';
 
 jest.mock('fs');
-mockExpoXDL({
-  ApiV2: {
-    clientForUser: jest.fn(),
-  },
-});
 
 describe(getBundledNativeModulesAsync, () => {
   const projectRoot = '/test-project';
 
   beforeEach(() => {
-    (ApiV2.clientForUser as jest.Mock).mockReset();
+    ApiV2.clientForUser = jest.fn();
     (ApiV2.clientForUser as jest.Mock).mockImplementation(() => {
       throw new Error('Should not be called');
     });
@@ -38,6 +32,7 @@ describe(getBundledNativeModulesAsync, () => {
     }));
 
     const bundledNativeModules = await getBundledNativeModulesAsync(projectRoot, '66.0.0');
+    expect(ApiV2.clientForUser).toHaveBeenCalledTimes(1);
     expect(bundledNativeModules).toEqual({
       'expo-abc': '~1.3.3',
       'expo-def': '~0.2.2',
@@ -58,6 +53,7 @@ describe(getBundledNativeModulesAsync, () => {
     }));
 
     const bundledNativeModules = await getBundledNativeModulesAsync(projectRoot, '66.0.0');
+    expect(ApiV2.clientForUser).toHaveBeenCalledTimes(1);
     expect(bundledNativeModules).toEqual({
       'expo-abc': '~1.2.3',
       'expo-def': '~0.1.2',

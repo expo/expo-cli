@@ -1,4 +1,4 @@
-import { ApiV2, UserManager } from 'xdl';
+import { ApiV2, UserManager } from '@expo/api';
 
 import { getExpAsync, GetExpConfigOptions, validateOptions } from './startBuildAsync';
 

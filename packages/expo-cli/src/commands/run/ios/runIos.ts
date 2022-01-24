@@ -1,8 +1,9 @@
+import { UnifiedAnalytics } from '@expo/api';
 import { ExpoConfig, getConfig } from '@expo/config';
 import chalk from 'chalk';
 import fs from 'fs-extra';
 import * as path from 'path';
-import { AppleDevice, SimControl, Simulator, UnifiedAnalytics } from 'xdl';
+import { AppleDevice, SimControl, Simulator } from 'xdl';
 
 import CommandError from '../../../CommandError';
 import StatusEventEmitter from '../../../analytics/StatusEventEmitter';

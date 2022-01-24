@@ -1,3 +1,4 @@
+import { Publish, UserManager } from '@expo/api';
 import {
   ExpoConfig,
   getConfig,
@@ -10,7 +11,7 @@ import chalk from 'chalk';
 import fs from 'fs';
 import { Ora } from 'ora';
 import path from 'path';
-import { Project, UserManager } from 'xdl';
+import { Project } from 'xdl';
 
 import CommandError, { ErrorCodes } from '../../CommandError';
 import Log from '../../log';
@@ -56,7 +57,7 @@ export async function actionAsync(
 
   // note: this validates the exp.owner when the user is a robot
   const user = await UserManager.ensureLoggedInAsync();
-  const owner = UserManager.getProjectOwner(user, exp);
+  const owner = Publish.getProjectOwner(user, exp);
 
   Log.addNewLineIfNone();
 

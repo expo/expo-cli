@@ -1,7 +1,8 @@
+import { Analytics, ApiV2, ProcessSettings, UserManager } from '@expo/api';
 import { configFilename, getConfig } from '@expo/config';
 import Joi from 'joi';
 import slug from 'slugify';
-import { Analytics, ApiV2, Config, ThirdParty, UserManager, XDLError } from 'xdl';
+import { ThirdParty, XDLError } from 'xdl';
 
 export type BuildCreatedResult = {
   id: string;
@@ -107,7 +108,7 @@ export async function startBuildAsync(
 
   Analytics.logEvent('Build Shell App', {
     projectRoot,
-    developerTool: Config.developerTool,
+    developerTool: ProcessSettings.developerTool,
     platform: options.platform,
   });
 

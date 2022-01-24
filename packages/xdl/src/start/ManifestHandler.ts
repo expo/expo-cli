@@ -1,5 +1,13 @@
+import {
+  Analytics,
+  Manifest,
+  ProcessSettings,
+  ProjectSettings,
+  UserManager,
+  UserSettings,
+  Versions,
+} from '@expo/api';
 import { ExpoAppManifest, ExpoConfig, ExpoGoConfig, getConfig } from '@expo/config';
-import { JSONObject } from '@expo/json-file';
 import chalk from 'chalk';
 import express from 'express';
 import http from 'http';
@@ -7,21 +15,12 @@ import os from 'os';
 import { parse, resolve, URL } from 'url';
 
 import {
-  Analytics,
-  ANONYMOUS_USERNAME,
-  ApiV2,
-  Config,
-  ConnectionStatus,
   Doctor,
   learnMore,
   ProjectAssets,
-  ProjectSettings,
   ProjectUtils,
   resolveEntryPoint,
   UrlUtils,
-  UserManager,
-  UserSettings,
-  Versions,
   Webpack,
 } from '../internal';
 
@@ -161,10 +160,10 @@ export function getManifestHandler(projectRoot: string) {
 
       // Log analytics
       Analytics.logEvent('Serve Manifest', {
-        developerTool: Config.developerTool,
+        developerTool: ProcessSettings.developerTool,
         sdkVersion,
       });
-    } catch (e) {
+    } catch (e: any) {
       ProjectUtils.logError(projectRoot, 'expo', e.stack);
       // 5xx = Server Error HTTP code
       res.statusCode = 520;
@@ -180,7 +179,7 @@ export function getManifestHandler(projectRoot: string) {
       if (deviceIds) {
         await ProjectSettings.saveDevicesAsync(projectRoot, deviceIds);
       }
-    } catch (e) {
+    } catch (e: any) {
       ProjectUtils.logError(projectRoot, 'expo', e.stack);
     }
   };
@@ -216,7 +215,7 @@ export async function getExpoGoConfig({
   ]);
   return {
     developer: {
-      tool: Config.developerTool,
+      tool: ProcessSettings.developerTool,
       projectRoot,
     },
     packagerOpts: projectSettings,
@@ -279,7 +278,7 @@ export async function getManifestResponseAsync({
   };
   // Adding the env variables to the Expo manifest is unsafe.
   // This feature is deprecated in SDK 41 forward.
-  if (manifest.sdkVersion && Versions.lteSdkVersion(manifest, '40.0.0')) {
+  if (manifest.sdkVersion && Versions.lte(manifest.sdkVersion, '40.0.0')) {
     manifest.env = getManifestEnvironment();
   }
 
@@ -313,7 +312,7 @@ export async function getManifestResponseAsync({
   let manifestString;
   try {
     manifestString = await getManifestStringAsync(manifest, hostInfo.host, acceptSignature);
-  } catch (error) {
+  } catch (error: any) {
     if (error.code === 'UNAUTHORIZED_ERROR' && manifest.owner) {
       // Don't have permissions for siging, warn and enable offline mode.
       addSigningDisabledWarning(
@@ -324,7 +323,7 @@ export async function getManifestResponseAsync({
           `Please request access from an admin of @${manifest.owner} or change the "owner" field to an account you belong to.\n` +
           learnMore('https://docs.expo.dev/versions/latest/config/app/#owner')
       );
-      ConnectionStatus.setIsOffline(true);
+      ProcessSettings.isOffline = true;
       manifestString = await getManifestStringAsync(manifest, hostInfo.host, acceptSignature);
     } else if (error.code === 'ENOTFOUND') {
       // Got a DNS error, i.e. can't access exp.host, warn and enable offline mode.
@@ -334,7 +333,7 @@ export async function getManifestResponseAsync({
           error.hostname || 'exp.host'
         }.`
       );
-      ConnectionStatus.setIsOffline(true);
+      ProcessSettings.isOffline = true;
       manifestString = await getManifestStringAsync(manifest, hostInfo.host, acceptSignature);
     } else {
       throw error;
@@ -378,12 +377,12 @@ async function getManifestStringAsync(
   acceptSignature?: string | string[]
 ): Promise<string> {
   const currentSession = await UserManager.getSessionAsync();
-  if (!currentSession || ConnectionStatus.isOffline()) {
-    manifest.id = `@${ANONYMOUS_USERNAME}/${manifest.slug}-${hostUUID}`;
+  if (!currentSession || ProcessSettings.isOffline) {
+    manifest.id = `@${UserManager.ANONYMOUS_USERNAME}/${manifest.slug}-${hostUUID}`;
   }
   if (!acceptSignature) {
     return JSON.stringify(manifest);
-  } else if (!currentSession || ConnectionStatus.isOffline()) {
+  } else if (!currentSession || ProcessSettings.isOffline) {
     return getUnsignedManifestString(manifest);
   } else {
     return await getSignedManifestStringAsync(manifest, currentSession);
@@ -397,7 +396,7 @@ async function createHostInfoAsync(): Promise<HostInfo> {
     host,
     server: 'xdl',
     serverVersion: require('xdl/package.json').version,
-    serverDriver: Config.developerTool,
+    serverDriver: ProcessSettings.developerTool,
     serverOS: os.platform(),
     serverOSVersion: os.release(),
   };
@@ -415,13 +414,7 @@ export async function getSignedManifestStringAsync(
   // WARNING: Removing the following line will regress analytics, see: https://github.com/expo/expo-cli/pull/2357
   // TODO: make this more obvious from code
   const user = await UserManager.ensureLoggedInAsync();
-  const { response } = await ApiV2.clientForUser(user).postAsync('manifest/sign', {
-    args: {
-      remoteUsername: manifest.owner ?? (await UserManager.getCurrentUsernameAsync()),
-      remotePackageName: manifest.slug,
-    },
-    manifest: manifest as JSONObject,
-  });
+  const response = await Manifest.signLegacyAsync(user, manifest as any);
   _cachedSignedManifest.manifestString = manifestString;
   _cachedSignedManifest.signedManifest = response;
   return response;
