@@ -1,6 +1,6 @@
 import getenv from 'getenv';
 
-export const HOST = getenv.string('WEB_HOST', '0.0.0.0');
+export const WEB_HOST = getenv.string('WEB_HOST', '0.0.0.0');
 
 export const DEFAULT_PORT = getenv.int('WEB_PORT', 19006);
 

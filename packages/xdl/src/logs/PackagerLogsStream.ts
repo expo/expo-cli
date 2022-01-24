@@ -321,8 +321,6 @@ export default class PackagerLogsStream {
         break;
       // Ignored events.
       case 'client_log':
-        chunk.msg = msg.data;
-        break;
       case 'dep_graph_loading':
       case 'dep_graph_loaded':
       case 'global_cache_error':
@@ -415,9 +413,7 @@ export default class PackagerLogsStream {
       progressChunk.msg = `Building JavaScript bundle: error`;
       progressChunk.level = Logger.ERROR;
     } else if (msg.type === 'bundle_transform_progressed') {
-      // @ts-ignore: webpack
       if (msg.percentage) {
-        // @ts-ignore
         percentProgress = msg.percentage * 100;
       } else {
         percentProgress = (msg.transformedFileCount / msg.totalFileCount) * 100;

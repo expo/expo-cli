@@ -317,7 +317,7 @@ export async function startAsync(
     {
       ...firstConfig.devServer!,
       port,
-      host: WebpackEnvironment.HOST,
+      host: WebpackEnvironment.WEB_HOST,
     },
     compiler
   );
@@ -524,7 +524,7 @@ async function getAvailablePortAsync(options: {
         : WebpackEnvironment.DEFAULT_PORT;
     const port = await choosePortAsync(options.projectRoot, {
       defaultPort,
-      host: 'host' in options && options.host ? options.host : WebpackEnvironment.HOST,
+      host: 'host' in options && options.host ? options.host : WebpackEnvironment.WEB_HOST,
     });
     if (!port) {
       throw new Error(`Port ${defaultPort} not available.`);
