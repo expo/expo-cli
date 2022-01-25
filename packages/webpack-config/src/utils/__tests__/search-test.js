@@ -26,7 +26,7 @@ it(`getPluginsByName gets a known plugin`, async () => {
     platform: 'web',
   });
 
-  const plugins = LoaderUtils.getPluginsByName(config, 'ManifestPlugin');
+  const plugins = LoaderUtils.getPluginsByName(config, 'WebpackManifestPlugin');
   expect(plugins.length).toBe(1);
   const expectedPlugin = plugins[0];
   expect(config.plugins[expectedPlugin.index]).toBe(expectedPlugin.plugin);

@@ -8,13 +8,15 @@
  * Based on https://github.com/facebook/create-react-app/blob/a422bf2/packages/react-dev-utils/ignoredFiles.js
  * But with Node LTS support.
  */
-
-import escape from 'escape-string-regexp';
 import path from 'path';
+
+import { escapeStringRegexp } from './escapeStringRegexp';
 
 export function ignoredFiles(appSrc: string) {
   return new RegExp(
-    `^(?!${escape(path.normalize(appSrc + '/').replace(/[\\]+/g, '/'))}).+/node_modules/`,
+    `^(?!${escapeStringRegexp(
+      path.normalize(appSrc + '/').replace(/[\\]+/g, '/')
+    )}).+/node_modules/`,
     'g'
   );
 }
