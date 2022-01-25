@@ -1,4 +1,4 @@
-import { ProjectSettings } from '@expo/api';
+import { ProjectSettings } from '@expo/dev-api';
 import spawnAsync from '@expo/spawn-async';
 import path from 'path';
 import temporary from 'tempy';

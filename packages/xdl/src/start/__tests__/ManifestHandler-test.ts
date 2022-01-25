@@ -1,5 +1,5 @@
-import { UserSettings } from '@expo/api';
 import { ExpoConfig } from '@expo/config';
+import { UserSettings } from '@expo/dev-api';
 import axios from 'axios';
 import fs from 'fs-extra';
 import { vol } from 'memfs';
@@ -11,8 +11,8 @@ const actualFs = jest.requireActual('fs') as typeof fs;
 jest.mock('fs');
 jest.mock('axios');
 
-jest.mock('@expo/api', () => {
-  const api = jest.requireActual('@expo/api');
+jest.mock('@expo/dev-api', () => {
+  const api = jest.requireActual('@expo/dev-api');
   return {
     ...api,
     Manifest: {

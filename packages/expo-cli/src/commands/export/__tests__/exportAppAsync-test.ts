@@ -77,7 +77,7 @@ jest.mock('xdl', () => {
   };
 });
 
-jest.mock('@expo/api', () => {
+jest.mock('@expo/dev-api', () => {
   return {
     UserManager: {
       getCurrentUsernameAsync() {

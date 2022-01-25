@@ -31,7 +31,7 @@
   },
   "homepage": "https://github.com/expo/expo-cli/tree/main/packages/xdl#readme",
   "dependencies": {
-    "@expo/api": "1.0.0",
+    "@expo/dev-api": "1.0.0",
     "@expo/bunyan": "4.0.0",
     "@expo/config": "6.0.16",
     "@expo/config-plugins": "4.0.16",

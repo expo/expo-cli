@@ -1,4 +1,4 @@
-import { Publish } from '@expo/api';
+import { Publish } from '@expo/dev-api';
 import { vol } from 'memfs';
 
 import { mockExpoAPI } from '../../../__tests__/mock-utils';
@@ -17,10 +17,12 @@ jest.mock('@expo/image-utils', () => ({
 mockExpoAPI({
   Publish: {
     getPublicationDetailAsync: jest.fn(
-      jest.requireActual('@expo/api').Publish.getPublicationDetailAsync
+      jest.requireActual('@expo/dev-api').Publish.getPublicationDetailAsync
     ),
-    getPublishHistoryAsync: jest.fn(jest.requireActual('@expo/api').Publish.getPublishHistoryAsync),
-    getProjectOwner: jest.fn(jest.requireActual('@expo/api').Publish.getProjectOwner),
+    getPublishHistoryAsync: jest.fn(
+      jest.requireActual('@expo/dev-api').Publish.getPublishHistoryAsync
+    ),
+    getProjectOwner: jest.fn(jest.requireActual('@expo/dev-api').Publish.getProjectOwner),
   },
   UserManager: {
     ensureLoggedInAsync: jest.fn(() => jester),

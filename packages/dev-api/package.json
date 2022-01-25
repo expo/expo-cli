@@ -1,5 +1,5 @@
 {
-  "name": "@expo/api",
+  "name": "@expo/dev-api",
   "version": "1.0.0",
   "description": "A module for interacting with the expo.io API",
   "main": "build/index.js",

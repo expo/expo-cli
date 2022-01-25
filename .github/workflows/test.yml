@@ -46,7 +46,7 @@ jobs:
         node: ['12', '14']
         package:
           [
-            api,
+            dev-api,
             dev-tools,
             babel-preset-cli,
             config,

@@ -1,4 +1,4 @@
-import { User } from '@expo/api';
+import { User } from '@expo/dev-api';
 
 export const jester: User = {
   kind: 'user',

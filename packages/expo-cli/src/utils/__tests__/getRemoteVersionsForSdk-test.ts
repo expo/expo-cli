@@ -2,7 +2,7 @@ import { getRemoteVersionsForSdk } from '../getRemoteVersionsForSdk';
 
 jest.mock('os');
 jest.mock('fs');
-jest.unmock('@expo/api');
+jest.unmock('@expo/dev-api');
 
 describe(getRemoteVersionsForSdk, () => {
   it(`returns results for a valid SDK version`, async () => {

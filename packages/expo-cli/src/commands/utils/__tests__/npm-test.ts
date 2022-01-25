@@ -1,6 +1,6 @@
 import { sanitizeNpmPackageName } from '../npm';
 
-jest.mock('@expo/api', () => {
+jest.mock('@expo/dev-api', () => {
   return {
     UserSettings: {
       getDirectory() {

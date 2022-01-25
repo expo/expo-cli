@@ -11,7 +11,7 @@ jest.mock('axios');
 
 mockExpoAPI({
   UserManager: {
-    sendSmsOtpAsync: jest.requireActual('@expo/api').UserManager.sendSmsOtpAsync,
+    sendSmsOtpAsync: jest.requireActual('@expo/dev-api').UserManager.sendSmsOtpAsync,
     initialize: () => {},
     loginAsync: () => jester,
   },

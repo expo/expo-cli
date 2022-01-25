@@ -1,4 +1,4 @@
-import { UserManager } from '@expo/api';
+import { UserManager } from '@expo/dev-api';
 import spawnAsync from '@expo/spawn-async';
 import { AxiosRequestConfig, AxiosResponse } from 'axios';
 import { copyFileSync, ensureDirSync } from 'fs-extra';

@@ -9,7 +9,7 @@ https://paper.dropbox.com/doc/Expo-Schema-Validation-Library-mQU07rRejSnEe4Vf5dk
 ### Usage with XDL
 
 ```javascript
-import { ExpoConfigSchema } from '@expo/api';
+import { ExpoConfigSchema } from '@expo/dev-api';
 import { getConfig } from '@expo/config';
 import Schemer from '@expo/schemer';
 const { exp } = getConfig(projectRoot);

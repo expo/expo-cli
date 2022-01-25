@@ -1,4 +1,4 @@
-import { ProjectSettings } from '@expo/api';
+import { ProjectSettings } from '@expo/dev-api';
 import base64url from 'base64url';
 import crypto from 'crypto';
 import express from 'express';

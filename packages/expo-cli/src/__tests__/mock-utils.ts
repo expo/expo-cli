@@ -1,5 +1,5 @@
 type MockedXDLModules = Partial<Record<keyof typeof import('xdl'), object>>;
-type MockedAPIModules = Partial<Record<keyof typeof import('@expo/api'), object>>;
+type MockedAPIModules = Partial<Record<keyof typeof import('@expo/dev-api'), object>>;
 
 export function mockExpoXDL(mockedXDLModules: MockedXDLModules): void {
   jest.mock('xdl', () => {
@@ -22,8 +22,8 @@ export function mockExpoXDL(mockedXDLModules: MockedXDLModules): void {
 }
 
 export function mockExpoAPI(mocked: MockedAPIModules): void {
-  jest.mock('@expo/api', () => {
-    const pkg = jest.requireActual('@expo/api');
+  jest.mock('@expo/dev-api', () => {
+    const pkg = jest.requireActual('@expo/dev-api');
     const custom = { ...pkg };
     const isFunction = (obj: any): obj is Function => typeof obj === 'function';
     for (const [name, value] of Object.entries(mocked)) {

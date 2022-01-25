@@ -1,4 +1,4 @@
-import { UnifiedAnalytics, UserSettings } from '@expo/api';
+import { UnifiedAnalytics, UserSettings } from '@expo/dev-api';
 import program, { Command } from 'commander';
 
 import { registerCommands } from '../../build/commands';

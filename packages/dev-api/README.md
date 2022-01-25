@@ -1,4 +1,4 @@
-# @expo/api
+# @expo/dev-api
 
 A module for interacting with the expo.io API.
 
@@ -17,7 +17,7 @@ Implements different scoped settings:
 This package exports the analytics API for other Expo dev tools.
 
 ```ts
-import { Analytics, UnifiedAnalytics } from '@expo/api';
+import { Analytics, UnifiedAnalytics } from '@expo/dev-api';
 ```
 
 ### API
@@ -36,5 +36,5 @@ import {
   SendProject,
   Auth,
   Versions,
-} from '@expo/api';
+} from '@expo/dev-api';
 ```

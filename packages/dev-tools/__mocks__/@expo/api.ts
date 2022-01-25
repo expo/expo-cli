@@ -1,4 +1,4 @@
-const api = jest.genMockFromModule('@expo/api') as typeof import('@expo/api');
+const api = jest.genMockFromModule('@expo/dev-api') as typeof import('@expo/dev-api');
 
 api.ProjectSettings = {
   ...api.ProjectSettings,

@@ -91,7 +91,7 @@ const mockedAPIModules = {
     getLegacyReusableBuildAsync: jest.fn(() => ({})),
   },
   UserManager: {
-    getProjectOwner: jest.fn(jest.requireActual('@expo/api').UserManager.getProjectOwner),
+    getProjectOwner: jest.fn(jest.requireActual('@expo/dev-api').UserManager.getProjectOwner),
     ensureLoggedInAsync: jest.fn(() => jester),
     getCurrentUserAsync: jest.fn(() => jester),
     getCurrentUsernameAsync: jest.fn(() => jester.username),

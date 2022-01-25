@@ -29,7 +29,7 @@
     "subscriptions-transport-ws": "0.9.8"
   },
   "peerDependencies": {
-    "@expo/api": "1.0.0",
+    "@expo/dev-api": "1.0.0",
     "xdl": "*"
   },
   "devDependencies": {

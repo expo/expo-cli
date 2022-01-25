@@ -1,4 +1,4 @@
-import { UserSettings } from '@expo/api';
+import { UserSettings } from '@expo/dev-api';
 import fs from 'fs-extra';
 import { vol } from 'memfs';
 import path from 'path';

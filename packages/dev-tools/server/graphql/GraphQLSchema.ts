@@ -1,11 +1,11 @@
+import { getConfig, writeConfigJsonAsync } from '@expo/config';
 import {
   ProcessSettings,
   ProjectSettings,
   SendProject,
   UserManager,
   UserSettings,
-} from '@expo/api';
-import { getConfig, writeConfigJsonAsync } from '@expo/config';
+} from '@expo/dev-api';
 import spawnAsync from '@expo/spawn-async';
 import { makeExecutableSchema } from 'graphql-tools';
 import { $$asyncIterator } from 'iterall';

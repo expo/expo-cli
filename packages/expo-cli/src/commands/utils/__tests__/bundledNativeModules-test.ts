@@ -1,4 +1,4 @@
-import { ApiV2 } from '@expo/api';
+import { ApiV2 } from '@expo/dev-api';
 import { vol } from 'memfs';
 import path from 'path';
 
