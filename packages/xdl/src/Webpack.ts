@@ -395,12 +395,16 @@ async function compileWebAppAsync(projectRoot: string, compiler: webpack.Compile
   // We generate the stats.json file in the webpack-config
   const { warnings } = await new Promise((resolve, reject) =>
     compiler.run((error, stats) => {
-      let messages;
+      let messages: {
+        errors?: string[];
+        warnings?: string[];
+      };
       if (error) {
         if (!error.message) {
           return reject(error);
         }
         messages = formatWebpackMessages({
+          // @ts-ignore: TODO
           errors: [error.message],
           warnings: [],
           _showErrors: true,
@@ -412,7 +416,7 @@ async function compileWebAppAsync(projectRoot: string, compiler: webpack.Compile
         );
       }
 
-      if (messages.errors.length) {
+      if (messages?.errors?.length) {
         // Only keep the first error. Others are often indicative
         // of the same problem, but confuse the reader with noise.
         if (messages.errors.length > 1) {
@@ -423,7 +427,7 @@ async function compileWebAppAsync(projectRoot: string, compiler: webpack.Compile
       if (
         getenv.boolish('EXPO_WEB_BUILD_STRICT', false) &&
         getenv.boolish('CI', false) &&
-        messages.warnings.length
+        messages?.warnings?.length
       ) {
         ProjectUtils.logWarning(
           projectRoot,
