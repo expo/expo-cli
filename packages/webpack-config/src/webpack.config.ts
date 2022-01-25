@@ -15,7 +15,6 @@ import { readFileSync } from 'fs-extra';
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 import { parse } from 'node-html-parser';
 import path from 'path';
-import ModuleNotFoundPlugin from 'react-dev-utils/ModuleNotFoundPlugin';
 import resolveFrom from 'resolve-from';
 import webpack, { Configuration } from 'webpack';
 import { WebpackManifestPlugin } from 'webpack-manifest-plugin';
@@ -45,6 +44,7 @@ import {
   NativeAssetsPlugin,
 } from './plugins';
 import { HTMLLinkNode } from './plugins/ModifyHtmlWebpackPlugin';
+import { ModuleNotFoundPlugin } from './plugins/ModuleNotFoundPlugin';
 import { Arguments, Environment, FilePaths, Mode } from './types';
 
 function getDevtool(

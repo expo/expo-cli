@@ -14,7 +14,6 @@ import fs from 'fs-extra';
 import getenv from 'getenv';
 import http from 'http';
 import * as path from 'path';
-import formatWebpackMessages from 'react-dev-utils/formatWebpackMessages';
 import webpack from 'webpack';
 import WebpackDevServer from 'webpack-dev-server';
 
@@ -29,6 +28,7 @@ import {
   WebpackEnvironment,
   XDLError,
 } from './internal';
+import { formatWebpackMessages } from './webpack-utils/formatWebpackMessages';
 
 const WEBPACK_LOG_TAG = 'expo';
 

@@ -3,13 +3,8 @@ import chalk from 'chalk';
 import crypto from 'crypto';
 import fs from 'fs-extra';
 import * as path from 'path';
-// @ts-ignore
-import evalSourceMapMiddleware from 'react-dev-utils/evalSourceMapMiddleware';
-import ignoredFiles from 'react-dev-utils/ignoredFiles';
-import noopServiceWorkerMiddleware from 'react-dev-utils/noopServiceWorkerMiddleware';
-import redirectServedPath from 'react-dev-utils/redirectServedPathMiddleware';
-import type { Configuration } from 'webpack';
-import type {
+import { Configuration } from 'webpack';
+import {
   ProxyConfigArray,
   ProxyConfigMap,
   Configuration as WebpackDevServerConfiguration,
@@ -18,6 +13,10 @@ import type {
 import { getPaths, getPublicPaths } from '../env';
 import { host, sockHost, sockPath, sockPort } from '../env/defaults';
 import { Environment } from '../types';
+import { createEvalSourceMapMiddleware } from '../utils/evalSourceMapMiddleware';
+import { ignoredFiles } from '../utils/ignoredFiles';
+import { createNoopServiceWorkerMiddleware } from '../utils/noopServiceWorkerMiddleware';
+import { createRedirectServedPathMiddleware } from '../utils/redirectServedPathMiddleware';
 
 // Ensure the certificate and key provided are valid and if not
 // throw an easy to debug error
@@ -237,15 +236,15 @@ export function createDevServer(
         // Keep `evalSourceMapMiddleware`
         // middlewares before `redirectServedPath` otherwise will not have any effect
         // This lets us fetch source contents from webpack for the error overlay
-        evalSourceMapMiddleware(devServer),
+        createEvalSourceMapMiddleware(devServer),
         // Redirect to `PUBLIC_URL` or `homepage` from `package.json` if url not match
-        redirectServedPath(publicUrlOrPath),
+        createRedirectServedPathMiddleware(publicUrlOrPath),
         // This service worker file is effectively a 'no-op' that will reset any
         // previous service worker registered for the same host:port combination.
         // We do this in development to avoid hitting the production cache if
         // it used the same host and port.
         // https://github.com/facebook/create-react-app/issues/2272#issuecomment-302832432
-        noopServiceWorkerMiddleware(publicUrlOrPath)
+        createNoopServiceWorkerMiddleware(publicUrlOrPath)
       );
 
       return middlewares;
