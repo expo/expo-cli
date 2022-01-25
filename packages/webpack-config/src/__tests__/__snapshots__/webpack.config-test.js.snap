@@ -3,74 +3,100 @@
 exports[`ios ios development 1`] = `
 Object {
   "bail": false,
+  "cache": Object {
+    "buildDependencies": Object {
+      "config": Array [
+        "packages/webpack-config/src/webpack.config.ts",
+      ],
+      "defaultWebpack": Array [
+        "node_modules/webpack/lib/",
+      ],
+      "tsconfig": Array [],
+    },
+    "cacheDirectory": "packages/webpack-config/e2e/basic/node_modules/.cache/ios",
+    "store": "pack",
+    "type": "filesystem",
+    "version": "8b31d2f789fd59dfcaa6f52d7df63ee9",
+  },
   "context": "packages/webpack-config/e2e/basic",
   "devServer": Object {
-    "after": [Function],
-    "before": [Function],
-    "clientLogLevel": "silent",
+    "allowedHosts": Array [
+      "all",
+    ],
+    "client": Object {
+      "overlay": false,
+      "webSocketURL": Object {
+        "hostname": undefined,
+        "pathname": "/_expo/ws",
+        "port": undefined,
+      },
+    },
     "compress": true,
-    "contentBase": "packages/webpack-config/web-default",
-    "contentBasePublicPath": "/",
-    "disableHostCheck": true,
+    "devMiddleware": Object {
+      "index": true,
+      "mimeTypes": Object {
+        "bundle": "text/javascript",
+      },
+      "publicPath": "",
+    },
     "historyApiFallback": Object {
       "disableDotRule": true,
       "index": "/",
+      "rewrites": Array [
+        Object {
+          "from": /\\^\\\\/assets\\\\/\\.\\*\\$/,
+          "to": [Function],
+        },
+      ],
     },
     "host": "0.0.0.0",
-    "hot": true,
     "https": false,
-    "injectClient": false,
-    "inline": false,
-    "mimeTypes": Object {
-      "force": true,
-      "typeMap": Object {
-        "application/javascript": Array [
-          "bundle",
-        ],
+    "proxy": undefined,
+    "setupMiddlewares": [Function],
+    "static": Object {
+      "directory": "packages/webpack-config/web-default",
+      "publicPath": Array [
+        "/",
+      ],
+      "watch": Object {
+        "ignored": /\\^\\(\\?!\\\\/Users\\\\/evanbacon\\\\/Documents\\\\/GitHub\\\\/cli\\\\/packages\\\\/webpack\\\\x2dconfig\\\\/e2e\\\\/basic\\\\/\\)\\.\\+\\\\/node_modules\\\\//g,
       },
     },
-    "noInfo": true,
-    "overlay": false,
-    "proxy": undefined,
-    "public": undefined,
-    "publicPath": "/",
-    "sockHost": undefined,
-    "sockPath": undefined,
-    "sockPort": undefined,
-    "stats": "none",
-    "transportMode": "ws",
-    "watchContentBase": true,
+    "webSocketServer": Object {
+      "options": Object {
+        "host": undefined,
+        "path": "/_expo/ws",
+        "port": undefined,
+      },
+      "type": "ws",
+    },
   },
   "devtool": false,
-  "entry": Object {
-    "app": Array [
-      "node_modules/@react-native/polyfills/console.js",
-      "node_modules/@react-native/polyfills/error-guard.js",
-      "node_modules/@react-native/polyfills/Object.es7.js",
-      "node_modules/react-native/Libraries/Core/InitializeCore.js",
-      "packages/webpack-config/e2e/basic/index.js",
-    ],
+  "entry": Array [
+    "node_modules/@react-native/polyfills/console.js",
+    "node_modules/@react-native/polyfills/error-guard.js",
+    "node_modules/@react-native/polyfills/Object.es7.js",
+    "node_modules/react-native/Libraries/Core/InitializeCore.js",
+    "packages/webpack-config/e2e/basic/index.js",
+  ],
+  "infrastructureLogging": Object {
+    "debug": false,
+    "level": "none",
   },
   "mode": "development",
   "module": Object {
     "rules": Array [
       Object {
-        "parser": Object {
-          "requireEnsure": false,
-        },
+        "enforce": "pre",
+        "exclude": /@babel\\(\\?:\\\\/\\|\\\\\\\\\\{1,2\\}\\)runtime/,
+        "test": /\\\\\\.\\(js\\|mjs\\|jsx\\|ts\\|tsx\\|css\\)\\$/,
+        "use": "node_modules/source-map-loader/dist/cjs.js",
       },
       Object {
         "oneOf": Array [
           Object {
-            "exclude": "packages/webpack-config/web-default",
-            "test": /\\\\\\.html\\$/,
-            "use": Array [
-              "node_modules/html-loader/dist/cjs.js",
-            ],
-          },
-          Object {
             "include": [Function],
-            "test": /\\\\\\.\\(mjs\\|\\[jt\\]sx\\?\\)\\$/,
+            "test": /\\\\\\.\\(js\\|mjs\\|jsx\\|ts\\|tsx\\)\\$/,
             "use": Object {
               "loader": "node_modules/babel-loader/lib/index.js",
               "options": Object {
@@ -98,23 +124,26 @@ Object {
     ],
     "strictExportPresence": false,
   },
+  "name": "ios",
   "output": Object {
+    "assetModuleFilename": "static/media/[name].[hash][ext]",
     "chunkFilename": "static/js/[name].chunk.js",
+    "chunkFormat": "array-push",
+    "chunkLoading": "jsonp",
+    "chunkLoadingGlobal": "exLoadChunk",
     "devtoolModuleFilenameTemplate": [Function],
     "filename": "index.bundle",
     "globalObject": "this",
     "path": "packages/webpack-config/e2e/basic/web-build",
     "pathinfo": true,
-    "publicPath": "/",
+    "publicPath": "http://localhost:8081/",
+    "uniqueName": "ios",
   },
   "plugins": Array [
     "NativeAssetsPlugin",
-    "ExpoAppManifestWebpackPlugin",
     "ModuleNotFoundPlugin",
     "DefinePlugin",
-    "LimitChunkCountPlugin",
     "NormalModuleReplacementPlugin",
-    "WatchMissingNodeModulesPlugin",
     "ExpectedErrorsPlugin",
     "SourceMapDevToolPlugin",
   ],
@@ -144,67 +173,121 @@ Object {
       "browser",
       "main",
     ],
-    "plugins": Array [
-      Object {
-        "apply": [Function],
-        "bind": [Function],
-        "forkTsCheckerOptions": [Function],
-        "makePlugin": [Function],
-        "moduleLoader": [Function],
-        "topLevelLoader": Object {
-          "apply": [Function],
-        },
-        "tsLoaderOptions": [Function],
-      },
-    ],
     "symlinks": false,
   },
-  "resolveLoader": Object {
-    "plugins": Array [
-      Object {
-        "apply": [Function],
-      },
+  "stats": "errors-warnings",
+  "target": false,
+  "watchOptions": Object {
+    "aggregateTimeout": 5,
+    "ignored": Array [
+      "**/.git/**",
+      "**/node_modules/**",
+      "**/.expo/**",
+      "**/.expo-shared/**",
+      "**/web-build/**",
+      "**/.#*",
     ],
   },
-  "stats": "none",
-  "target": "webworker",
 }
 `;
 
 exports[`ios ios production 1`] = `
 Object {
   "bail": true,
+  "cache": Object {
+    "buildDependencies": Object {
+      "config": Array [
+        "packages/webpack-config/src/webpack.config.ts",
+      ],
+      "defaultWebpack": Array [
+        "node_modules/webpack/lib/",
+      ],
+      "tsconfig": Array [],
+    },
+    "cacheDirectory": "packages/webpack-config/e2e/basic/node_modules/.cache/ios",
+    "store": "pack",
+    "type": "filesystem",
+    "version": "8b31d2f789fd59dfcaa6f52d7df63ee9",
+  },
   "context": "packages/webpack-config/e2e/basic",
-  "devtool": false,
-  "entry": Object {
-    "app": Array [
-      "node_modules/@react-native/polyfills/console.js",
-      "node_modules/@react-native/polyfills/error-guard.js",
-      "node_modules/@react-native/polyfills/Object.es7.js",
-      "node_modules/react-native/Libraries/Core/InitializeCore.js",
-      "packages/webpack-config/e2e/basic/index.js",
+  "devServer": Object {
+    "allowedHosts": Array [
+      "all",
     ],
+    "client": Object {
+      "overlay": false,
+      "webSocketURL": Object {
+        "hostname": undefined,
+        "pathname": "/_expo/ws",
+        "port": undefined,
+      },
+    },
+    "compress": true,
+    "devMiddleware": Object {
+      "index": true,
+      "mimeTypes": Object {
+        "bundle": "text/javascript",
+      },
+      "publicPath": "",
+    },
+    "historyApiFallback": Object {
+      "disableDotRule": true,
+      "index": "/",
+      "rewrites": Array [
+        Object {
+          "from": /\\^\\\\/assets\\\\/\\.\\*\\$/,
+          "to": [Function],
+        },
+      ],
+    },
+    "host": "0.0.0.0",
+    "https": false,
+    "proxy": undefined,
+    "setupMiddlewares": [Function],
+    "static": Object {
+      "directory": "packages/webpack-config/web-default",
+      "publicPath": Array [
+        "/",
+      ],
+      "watch": Object {
+        "ignored": /\\^\\(\\?!\\\\/Users\\\\/evanbacon\\\\/Documents\\\\/GitHub\\\\/cli\\\\/packages\\\\/webpack\\\\x2dconfig\\\\/e2e\\\\/basic\\\\/\\)\\.\\+\\\\/node_modules\\\\//g,
+      },
+    },
+    "webSocketServer": Object {
+      "options": Object {
+        "host": undefined,
+        "path": "/_expo/ws",
+        "port": undefined,
+      },
+      "type": "ws",
+    },
+  },
+  "devtool": false,
+  "entry": Array [
+    "node_modules/@react-native/polyfills/console.js",
+    "node_modules/@react-native/polyfills/error-guard.js",
+    "node_modules/@react-native/polyfills/Object.es7.js",
+    "node_modules/react-native/Libraries/Core/InitializeCore.js",
+    "packages/webpack-config/e2e/basic/index.js",
+  ],
+  "infrastructureLogging": Object {
+    "debug": false,
+    "level": "none",
   },
   "mode": "production",
   "module": Object {
     "rules": Array [
       Object {
-        "parser": Object {
-          "requireEnsure": false,
-        },
+        "enforce": "pre",
+        "exclude": /@babel\\(\\?:\\\\/\\|\\\\\\\\\\{1,2\\}\\)runtime/,
+        "test": /\\\\\\.\\(js\\|mjs\\|jsx\\|ts\\|tsx\\|css\\)\\$/,
+        "use": "node_modules/source-map-loader/dist/cjs.js",
       },
       Object {
         "oneOf": Array [
           Object {
-            "exclude": "packages/webpack-config/web-default",
-            "test": /\\\\\\.html\\$/,
-            "use": Array [
-              "node_modules/html-loader/dist/cjs.js",
-            ],
-          },
-          Object {
             "include": [Function],
-            "test": /\\\\\\.\\(mjs\\|\\[jt\\]sx\\?\\)\\$/,
+            "test": /\\\\\\.\\(js\\|mjs\\|jsx\\|ts\\|tsx\\)\\$/,
             "use": Object {
               "loader": "node_modules/babel-loader/lib/index.js",
               "options": Object {
@@ -232,96 +315,79 @@ Object {
     ],
     "strictExportPresence": false,
   },
+  "name": "ios",
   "optimization": Object {
+    "emitOnErrors": false,
     "minimize": true,
     "minimizer": Array [
       Object {
         "options": Object {
-          "cache": true,
-          "cacheKeys": [Function],
           "exclude": undefined,
           "extractComments": true,
           "include": undefined,
-          "minify": undefined,
-          "parallel": true,
-          "sourceMap": false,
-          "terserOptions": Object {
-            "compress": Object {
-              "comparisons": false,
-              "inline": 2,
-              "warnings": false,
-            },
-            "mangle": Object {
-              "safari10": true,
-            },
-            "output": Object {
-              "ascii_only": true,
-              "comments": false,
-              "ecma": 5,
-            },
-            "parse": Object {
-              "ecma": 8,
+          "minimizer": Object {
+            "implementation": [Function],
+            "options": Object {
+              "compress": Object {
+                "comparisons": false,
+                "ecma": 5,
+                "inline": 2,
+                "warnings": false,
+              },
+              "keep_classnames": false,
+              "keep_fnames": false,
+              "mangle": Object {
+                "safari10": true,
+              },
+              "output": Object {
+                "ascii_only": true,
+                "comments": false,
+                "ecma": 5,
+              },
+              "parse": Object {
+                "ecma": 2018,
+              },
             },
           },
-          "test": /\\\\\\.m\\?js\\(\\\\\\?\\.\\*\\)\\?\\$/i,
-          "warningsFilter": [Function],
+          "parallel": true,
+          "test": /\\\\\\.\\[cm\\]\\?js\\(\\\\\\?\\.\\*\\)\\?\\$/i,
         },
       },
       Object {
-        "deleteAssetsMap": Object {},
         "options": Object {
-          "assetNameRegExp": /\\\\\\.css\\(\\\\\\?\\.\\*\\)\\?\\$/i,
-          "assetProcessors": Array [
-            Object {
-              "phase": "compilation.optimize-chunk-assets",
-              "processor": [Function],
-              "regExp": /\\\\\\.css\\(\\\\\\?\\.\\*\\)\\?\\$/i,
-            },
-          ],
-          "canPrint": undefined,
-          "cssProcessor": [Function],
-          "cssProcessorOptions": Object {
-            "map": false,
-            "parser": [Function],
+          "exclude": undefined,
+          "include": undefined,
+          "minimizer": Object {
+            "implementation": [Function],
+            "options": Object {},
           },
-          "cssProcessorPluginOptions": Object {},
-        },
-        "phaseAssetProcessors": Object {
-          "compilation.optimize-assets": Array [],
-          "compilation.optimize-chunk-assets": Array [
-            Object {
-              "phase": "compilation.optimize-chunk-assets",
-              "processor": [Function],
-              "regExp": /\\\\\\.css\\(\\\\\\?\\.\\*\\)\\?\\$/i,
-            },
-          ],
-          "emit": Array [],
-        },
-        "pluginDescriptor": Object {
-          "name": "OptimizeCssAssetsWebpackPlugin",
+          "parallel": true,
+          "test": /\\\\\\.css\\(\\\\\\?\\.\\*\\)\\?\\$/i,
+          "warningsFilter": [Function],
         },
       },
     ],
-    "noEmitOnErrors": true,
     "nodeEnv": false,
-    "runtimeChunk": true,
     "splitChunks": Object {
       "chunks": "all",
-      "name": false,
     },
   },
   "output": Object {
+    "assetModuleFilename": "static/media/[name].[hash][ext]",
     "chunkFilename": "static/js/[name].[contenthash:8].chunk.js",
+    "chunkFormat": "array-push",
+    "chunkLoading": "jsonp",
+    "chunkLoadingGlobal": "exLoadChunk",
     "devtoolModuleFilenameTemplate": [Function],
-    "filename": "index.bundle",
+    "filename": "main.jsbundle",
     "globalObject": "this",
     "path": "packages/webpack-config/e2e/basic/web-build",
-    "publicPath": "/",
+    "publicPath": "http://localhost:8081/",
+    "uniqueName": "ios",
   },
   "plugins": Array [
     "CleanWebpackPlugin",
     "NativeAssetsPlugin",
-    "ExpoAppManifestWebpackPlugin",
     "ModuleNotFoundPlugin",
     "DefinePlugin",
     "LimitChunkCountPlugin",
@@ -355,105 +421,140 @@ Object {
       "browser",
       "main",
     ],
-    "plugins": Array [
-      Object {
-        "apply": [Function],
-        "bind": [Function],
-        "forkTsCheckerOptions": [Function],
-        "makePlugin": [Function],
-        "moduleLoader": [Function],
-        "topLevelLoader": Object {
-          "apply": [Function],
-        },
-        "tsLoaderOptions": [Function],
-      },
-    ],
     "symlinks": false,
   },
-  "resolveLoader": Object {
-    "plugins": Array [
-      Object {
-        "apply": [Function],
-      },
+  "stats": "errors-warnings",
+  "target": false,
+  "watchOptions": Object {
+    "aggregateTimeout": 5,
+    "ignored": Array [
+      "**/.git/**",
+      "**/node_modules/**",
+      "**/.expo/**",
+      "**/.expo-shared/**",
+      "**/web-build/**",
+      "**/.#*",
     ],
   },
-  "stats": "none",
-  "target": "webworker",
 }
 `;
 
 exports[`web web development 1`] = `
 Object {
   "bail": false,
+  "cache": Object {
+    "buildDependencies": Object {
+      "config": Array [
+        "packages/webpack-config/src/webpack.config.ts",
+      ],
+      "defaultWebpack": Array [
+        "node_modules/webpack/lib/",
+      ],
+      "tsconfig": Array [],
+    },
+    "cacheDirectory": "packages/webpack-config/e2e/basic/node_modules/.cache/web",
+    "store": "pack",
+    "type": "filesystem",
+    "version": "8b31d2f789fd59dfcaa6f52d7df63ee9",
+  },
   "context": "packages/webpack-config/e2e/basic",
   "devServer": Object {
-    "after": [Function],
-    "before": [Function],
-    "clientLogLevel": "silent",
+    "allowedHosts": Array [
+      "all",
+    ],
+    "client": Object {
+      "overlay": false,
+      "webSocketURL": Object {
+        "hostname": undefined,
+        "pathname": "/_expo/ws",
+        "port": undefined,
+      },
+    },
     "compress": true,
-    "contentBase": "packages/webpack-config/web-default",
-    "contentBasePublicPath": "/",
-    "disableHostCheck": true,
+    "devMiddleware": Object {
+      "index": true,
+      "mimeTypes": Object {
+        "bundle": "text/javascript",
+      },
+      "publicPath": "",
+    },
     "historyApiFallback": Object {
       "disableDotRule": true,
       "index": "/",
+      "rewrites": Array [],
     },
     "host": "0.0.0.0",
-    "hot": true,
     "https": false,
-    "injectClient": false,
-    "inline": true,
-    "mimeTypes": undefined,
-    "noInfo": true,
-    "overlay": false,
     "proxy": undefined,
-    "public": undefined,
-    "publicPath": "/",
-    "sockHost": undefined,
-    "sockPath": undefined,
-    "sockPort": undefined,
-    "stats": "none",
-    "transportMode": "ws",
-    "watchContentBase": true,
+    "setupMiddlewares": [Function],
+    "static": Object {
+      "directory": "packages/webpack-config/web-default",
+      "publicPath": Array [
+        "/",
+      ],
+      "watch": Object {
+        "ignored": /\\^\\(\\?!\\\\/Users\\\\/evanbacon\\\\/Documents\\\\/GitHub\\\\/cli\\\\/packages\\\\/webpack\\\\x2dconfig\\\\/e2e\\\\/basic\\\\/\\)\\.\\+\\\\/node_modules\\\\//g,
+      },
+    },
+    "webSocketServer": Object {
+      "options": Object {
+        "host": undefined,
+        "path": "/_expo/ws",
+        "port": undefined,
+      },
+      "type": "ws",
+    },
   },
   "devtool": "cheap-module-source-map",
-  "entry": Object {
-    "app": Array [
-      "node_modules/react-dev-utils/webpackHotDevClient.js",
-      "packages/webpack-config/e2e/basic/index.js",
-    ],
+  "entry": Array [
+    "packages/webpack-config/e2e/basic/node_modules/resize-observer-polyfill/dist/ResizeObserver.global.js",
+    "packages/webpack-config/e2e/basic/index.js",
+  ],
+  "infrastructureLogging": Object {
+    "debug": false,
+    "level": "none",
   },
   "mode": "development",
   "module": Object {
     "rules": Array [
       Object {
-        "parser": Object {
-          "requireEnsure": false,
-        },
+        "enforce": "pre",
+        "exclude": /@babel\\(\\?:\\\\/\\|\\\\\\\\\\{1,2\\}\\)runtime/,
+        "test": /\\\\\\.\\(js\\|mjs\\|jsx\\|ts\\|tsx\\|css\\)\\$/,
+        "use": "node_modules/source-map-loader/dist/cjs.js",
       },
       Object {
         "oneOf": Array [
           Object {
-            "exclude": "packages/webpack-config/web-default",
-            "test": /\\\\\\.html\\$/,
-            "use": Array [
-              "node_modules/html-loader/dist/cjs.js",
-            ],
-          },
-          Object {
-            "test": /\\\\\\.\\(gif\\|jpe\\?g\\|png\\|svg\\)\\$/,
-            "use": Object {
-              "loader": "node_modules/url-loader/dist/cjs.js",
-              "options": Object {
-                "esModule": false,
-                "limit": 1000,
-                "name": "static/media/[name].[hash:8].[ext]",
+            "mimetype": "image/avif",
+            "parser": Object {
+              "dataUrlCondition": Object {
+                "maxSize": 1000,
               },
             },
+            "test": Array [
+              /\\\\\\.avif\\$/,
+            ],
+            "type": "asset",
+          },
+          Object {
+            "parser": Object {
+              "dataUrlCondition": Object {
+                "maxSize": 1000,
+              },
+            },
+            "test": Array [
+              /\\\\\\.bmp\\$/,
+              /\\\\\\.gif\\$/,
+              /\\\\\\.jpe\\?g\\$/,
+              /\\\\\\.png\\$/,
+              /\\\\\\.svg\\$/,
+            ],
+            "type": "asset",
           },
           Object {
             "include": [Function],
-            "test": /\\\\\\.\\(mjs\\|\\[jt\\]sx\\?\\)\\$/,
+            "test": /\\\\\\.\\(js\\|mjs\\|jsx\\|ts\\|tsx\\)\\$/,
             "use": Object {
               "loader": "node_modules/babel-loader/lib/index.js",
               "options": Object {
@@ -477,65 +578,46 @@ Object {
             },
           },
           Object {
-            "include": Array [
-              "packages/webpack-config/e2e/basic",
-              "packages/webpack-config/e2e/basic/node_modules/react-native-vector-icons",
-              "packages/webpack-config/e2e/basic/node_modules/@expo/vector-icons",
-            ],
-            "test": /\\\\\\.\\(woff2\\?\\|eot\\|ttf\\|otf\\)\\$/,
+            "sideEffects": true,
+            "test": /\\\\\\.\\(css\\)\\$/,
             "use": Array [
+              "node_modules/style-loader/dist/cjs.js",
               Object {
-                "loader": "node_modules/url-loader/dist/cjs.js",
+                "loader": "node_modules/css-loader/dist/cjs.js",
                 "options": Object {
-                  "esModule": false,
-                  "limit": 50000,
-                  "name": "./fonts/[name].[ext]",
+                  "importLoaders": 1,
+                  "modules": Object {
+                    "mode": "icss",
+                  },
+                  "sourceMap": true,
                 },
               },
             ],
           },
           Object {
-            "test": /\\\\\\.\\(css\\)\\$/,
-            "use": Array [
-              "node_modules/style-loader/dist/cjs.js",
-              "node_modules/css-loader/dist/cjs.js",
-            ],
-          },
-          Object {
             "exclude": Array [
-              /\\\\\\.\\(mjs\\|\\[jt\\]sx\\?\\)\\$/,
+              /\\^\\$/,
+              /\\\\\\.\\(js\\|mjs\\|jsx\\|ts\\|tsx\\)\\$/,
               /\\\\\\.html\\$/,
               /\\\\\\.json\\$/,
             ],
-            "loader": "node_modules/file-loader/dist/cjs.js",
-            "options": Object {
-              "esModule": false,
-              "name": "static/media/[name].[hash:8].[ext]",
-            },
+            "type": "asset/resource",
           },
         ],
       },
     ],
     "strictExportPresence": false,
   },
-  "node": Object {
-    "child_process": "empty",
-    "dgram": "empty",
-    "dns": "mock",
-    "fs": "empty",
-    "http2": "empty",
-    "module": "empty",
-    "net": "empty",
-    "tls": "empty",
-  },
+  "name": "web",
   "output": Object {
+    "assetModuleFilename": "static/media/[name].[hash][ext]",
     "chunkFilename": "static/js/[name].chunk.js",
     "devtoolModuleFilenameTemplate": [Function],
     "filename": "static/js/bundle.js",
-    "globalObject": "this",
     "path": "packages/webpack-config/e2e/basic/web-build",
     "pathinfo": true,
     "publicPath": "/",
+    "uniqueName": "web",
   },
   "plugins": Array [
     "HtmlWebpackPlugin",
@@ -543,9 +625,7 @@ Object {
     "FaviconWebpackPlugin",
     "ModuleNotFoundPlugin",
     "DefinePlugin",
-    "HotModuleReplacementPlugin",
-    "WatchMissingNodeModulesPlugin",
-    "ManifestPlugin",
+    "WebpackManifestPlugin",
     "ExpectedErrorsPlugin",
   ],
   "resolve": Object {
@@ -557,7 +637,11 @@ Object {
       "react-native/Libraries/vendor/emitter/EventEmitter$": "react-native-web/dist/vendor/react-native/emitter/EventEmitter",
       "react-native/Libraries/vendor/emitter/EventSubscriptionVendor$": "react-native-web/dist/vendor/react-native/emitter/EventSubscriptionVendor",
     },
-    "aliasFields": undefined,
+    "aliasFields": Array [
+      "browser",
+      "module",
+      "main",
+    ],
     "extensions": Array [
       ".web.ts",
       ".web.tsx",
@@ -572,74 +656,147 @@ Object {
       ".json",
       ".wasm",
     ],
-    "mainFields": undefined,
-    "plugins": Array [
-      Object {
-        "apply": [Function],
-        "bind": [Function],
-        "forkTsCheckerOptions": [Function],
-        "makePlugin": [Function],
-        "moduleLoader": [Function],
-        "topLevelLoader": Object {
-          "apply": [Function],
-        },
-        "tsLoaderOptions": [Function],
-      },
+    "mainFields": Array [
+      "browser",
+      "module",
+      "main",
     ],
     "symlinks": false,
   },
-  "resolveLoader": Object {
-    "plugins": Array [
-      Object {
-        "apply": [Function],
-      },
+  "stats": "errors-warnings",
+  "target": Array [
+    "web",
+  ],
+  "watchOptions": Object {
+    "aggregateTimeout": 5,
+    "ignored": Array [
+      "**/.git/**",
+      "**/node_modules/**",
+      "**/.expo/**",
+      "**/.expo-shared/**",
+      "**/web-build/**",
+      "**/.#*",
     ],
   },
-  "stats": "none",
 }
 `;
 
 exports[`web web production 1`] = `
 Object {
   "bail": true,
+  "cache": Object {
+    "buildDependencies": Object {
+      "config": Array [
+        "packages/webpack-config/src/webpack.config.ts",
+      ],
+      "defaultWebpack": Array [
+        "node_modules/webpack/lib/",
+      ],
+      "tsconfig": Array [],
+    },
+    "cacheDirectory": "packages/webpack-config/e2e/basic/node_modules/.cache/web",
+    "store": "pack",
+    "type": "filesystem",
+    "version": "8b31d2f789fd59dfcaa6f52d7df63ee9",
+  },
   "context": "packages/webpack-config/e2e/basic",
-  "devtool": "source-map",
-  "entry": Object {
-    "app": Array [
-      "packages/webpack-config/e2e/basic/index.js",
+  "devServer": Object {
+    "allowedHosts": Array [
+      "all",
     ],
+    "client": Object {
+      "overlay": false,
+      "webSocketURL": Object {
+        "hostname": undefined,
+        "pathname": "/_expo/ws",
+        "port": undefined,
+      },
+    },
+    "compress": true,
+    "devMiddleware": Object {
+      "index": true,
+      "mimeTypes": Object {
+        "bundle": "text/javascript",
+      },
+      "publicPath": "",
+    },
+    "historyApiFallback": Object {
+      "disableDotRule": true,
+      "index": "/",
+      "rewrites": Array [],
+    },
+    "host": "0.0.0.0",
+    "https": false,
+    "proxy": undefined,
+    "setupMiddlewares": [Function],
+    "static": Object {
+      "directory": "packages/webpack-config/web-default",
+      "publicPath": Array [
+        "/",
+      ],
+      "watch": Object {
+        "ignored": /\\^\\(\\?!\\\\/Users\\\\/evanbacon\\\\/Documents\\\\/GitHub\\\\/cli\\\\/packages\\\\/webpack\\\\x2dconfig\\\\/e2e\\\\/basic\\\\/\\)\\.\\+\\\\/node_modules\\\\//g,
+      },
+    },
+    "webSocketServer": Object {
+      "options": Object {
+        "host": undefined,
+        "path": "/_expo/ws",
+        "port": undefined,
+      },
+      "type": "ws",
+    },
+  },
+  "devtool": "source-map",
+  "entry": Array [
+    "packages/webpack-config/e2e/basic/node_modules/resize-observer-polyfill/dist/ResizeObserver.global.js",
+    "packages/webpack-config/e2e/basic/index.js",
+  ],
+  "infrastructureLogging": Object {
+    "debug": false,
+    "level": "none",
   },
   "mode": "production",
   "module": Object {
     "rules": Array [
       Object {
-        "parser": Object {
-          "requireEnsure": false,
-        },
+        "enforce": "pre",
+        "exclude": /@babel\\(\\?:\\\\/\\|\\\\\\\\\\{1,2\\}\\)runtime/,
+        "test": /\\\\\\.\\(js\\|mjs\\|jsx\\|ts\\|tsx\\|css\\)\\$/,
+        "use": "node_modules/source-map-loader/dist/cjs.js",
       },
       Object {
         "oneOf": Array [
           Object {
-            "exclude": "packages/webpack-config/web-default",
-            "test": /\\\\\\.html\\$/,
-            "use": Array [
-              "node_modules/html-loader/dist/cjs.js",
-            ],
-          },
-          Object {
-            "test": /\\\\\\.\\(gif\\|jpe\\?g\\|png\\|svg\\)\\$/,
-            "use": Object {
-              "loader": "node_modules/url-loader/dist/cjs.js",
-              "options": Object {
-                "esModule": false,
-                "limit": 1000,
-                "name": "static/media/[name].[hash:8].[ext]",
+            "mimetype": "image/avif",
+            "parser": Object {
+              "dataUrlCondition": Object {
+                "maxSize": 1000,
               },
             },
+            "test": Array [
+              /\\\\\\.avif\\$/,
+            ],
+            "type": "asset",
+          },
+          Object {
+            "parser": Object {
+              "dataUrlCondition": Object {
+                "maxSize": 1000,
+              },
+            },
+            "test": Array [
+              /\\\\\\.bmp\\$/,
+              /\\\\\\.gif\\$/,
+              /\\\\\\.jpe\\?g\\$/,
+              /\\\\\\.png\\$/,
+              /\\\\\\.svg\\$/,
+            ],
+            "type": "asset",
           },
           Object {
             "include": [Function],
-            "test": /\\\\\\.\\(mjs\\|\\[jt\\]sx\\?\\)\\$/,
+            "test": /\\\\\\.\\(js\\|mjs\\|jsx\\|ts\\|tsx\\)\\$/,
             "use": Object {
               "loader": "node_modules/babel-loader/lib/index.js",
               "options": Object {
@@ -663,145 +820,104 @@ Object {
             },
           },
           Object {
-            "include": Array [
-              "packages/webpack-config/e2e/basic",
-              "packages/webpack-config/e2e/basic/node_modules/react-native-vector-icons",
-              "packages/webpack-config/e2e/basic/node_modules/@expo/vector-icons",
-            ],
-            "test": /\\\\\\.\\(woff2\\?\\|eot\\|ttf\\|otf\\)\\$/,
+            "sideEffects": true,
+            "test": /\\\\\\.\\(css\\)\\$/,
             "use": Array [
               Object {
-                "loader": "node_modules/url-loader/dist/cjs.js",
+                "loader": "node_modules/mini-css-extract-plugin/dist/loader.js",
+                "options": Object {},
+              },
+              Object {
+                "loader": "node_modules/css-loader/dist/cjs.js",
                 "options": Object {
-                  "esModule": false,
-                  "limit": 50000,
-                  "name": "./fonts/[name].[ext]",
+                  "importLoaders": 1,
+                  "modules": Object {
+                    "mode": "icss",
+                  },
+                  "sourceMap": true,
                 },
               },
             ],
           },
           Object {
-            "test": /\\\\\\.\\(css\\)\\$/,
-            "use": Array [
-              "node_modules/style-loader/dist/cjs.js",
-              "node_modules/css-loader/dist/cjs.js",
-            ],
-          },
-          Object {
             "exclude": Array [
-              /\\\\\\.\\(mjs\\|\\[jt\\]sx\\?\\)\\$/,
+              /\\^\\$/,
+              /\\\\\\.\\(js\\|mjs\\|jsx\\|ts\\|tsx\\)\\$/,
               /\\\\\\.html\\$/,
               /\\\\\\.json\\$/,
             ],
-            "loader": "node_modules/file-loader/dist/cjs.js",
-            "options": Object {
-              "esModule": false,
-              "name": "static/media/[name].[hash:8].[ext]",
-            },
+            "type": "asset/resource",
           },
         ],
       },
     ],
     "strictExportPresence": false,
   },
-  "node": Object {
-    "child_process": "empty",
-    "dgram": "empty",
-    "dns": "mock",
-    "fs": "empty",
-    "http2": "empty",
-    "module": "empty",
-    "net": "empty",
-    "tls": "empty",
-  },
+  "name": "web",
   "optimization": Object {
+    "emitOnErrors": false,
     "minimize": true,
     "minimizer": Array [
       Object {
         "options": Object {
-          "cache": true,
-          "cacheKeys": [Function],
           "exclude": undefined,
           "extractComments": true,
           "include": undefined,
-          "minify": undefined,
-          "parallel": true,
-          "sourceMap": true,
-          "terserOptions": Object {
-            "compress": Object {
-              "comparisons": false,
-              "inline": 2,
-              "warnings": false,
-            },
-            "mangle": Object {
-              "safari10": true,
-            },
-            "output": Object {
-              "ascii_only": true,
-              "comments": false,
-              "ecma": 5,
-            },
-            "parse": Object {
-              "ecma": 8,
+          "minimizer": Object {
+            "implementation": [Function],
+            "options": Object {
+              "compress": Object {
+                "comparisons": false,
+                "ecma": 5,
+                "inline": 2,
+                "warnings": false,
+              },
+              "keep_classnames": false,
+              "keep_fnames": false,
+              "mangle": Object {
+                "safari10": true,
+              },
+              "output": Object {
+                "ascii_only": true,
+                "comments": false,
+                "ecma": 5,
+              },
+              "parse": Object {
+                "ecma": 2018,
+              },
             },
           },
-          "test": /\\\\\\.m\\?js\\(\\\\\\?\\.\\*\\)\\?\\$/i,
-          "warningsFilter": [Function],
+          "parallel": true,
+          "test": /\\\\\\.\\[cm\\]\\?js\\(\\\\\\?\\.\\*\\)\\?\\$/i,
         },
       },
       Object {
-        "deleteAssetsMap": Object {},
         "options": Object {
-          "assetNameRegExp": /\\\\\\.css\\(\\\\\\?\\.\\*\\)\\?\\$/i,
-          "assetProcessors": Array [
-            Object {
-              "phase": "compilation.optimize-chunk-assets",
-              "processor": [Function],
-              "regExp": /\\\\\\.css\\(\\\\\\?\\.\\*\\)\\?\\$/i,
-            },
-          ],
-          "canPrint": undefined,
-          "cssProcessor": [Function],
-          "cssProcessorOptions": Object {
-            "map": Object {
-              "annotation": true,
-              "inline": false,
-            },
-            "parser": [Function],
+          "exclude": undefined,
+          "include": undefined,
+          "minimizer": Object {
+            "implementation": [Function],
+            "options": Object {},
           },
-          "cssProcessorPluginOptions": Object {},
-        },
-        "phaseAssetProcessors": Object {
-          "compilation.optimize-assets": Array [],
-          "compilation.optimize-chunk-assets": Array [
-            Object {
-              "phase": "compilation.optimize-chunk-assets",
-              "processor": [Function],
-              "regExp": /\\\\\\.css\\(\\\\\\?\\.\\*\\)\\?\\$/i,
-            },
-          ],
-          "emit": Array [],
-        },
-        "pluginDescriptor": Object {
-          "name": "OptimizeCssAssetsWebpackPlugin",
+          "parallel": true,
+          "test": /\\\\\\.css\\(\\\\\\?\\.\\*\\)\\?\\$/i,
+          "warningsFilter": [Function],
         },
       },
     ],
-    "noEmitOnErrors": true,
     "nodeEnv": false,
-    "runtimeChunk": true,
     "splitChunks": Object {
       "chunks": "all",
-      "name": false,
     },
   },
   "output": Object {
+    "assetModuleFilename": "static/media/[name].[hash][ext]",
     "chunkFilename": "static/js/[name].[contenthash:8].chunk.js",
     "devtoolModuleFilenameTemplate": [Function],
     "filename": "static/js/[name].[contenthash:8].js",
-    "globalObject": "this",
     "path": "packages/webpack-config/e2e/basic/web-build",
     "publicPath": "/",
+    "uniqueName": "web",
   },
   "plugins": Array [
     "CleanWebpackPlugin",
@@ -814,7 +930,7 @@ Object {
     "ModuleNotFoundPlugin",
     "DefinePlugin",
     "MiniCssExtractPlugin",
-    "ManifestPlugin",
+    "WebpackManifestPlugin",
     "ExpectedErrorsPlugin",
   ],
   "resolve": Object {
@@ -826,7 +942,11 @@ Object {
       "react-native/Libraries/vendor/emitter/EventEmitter$": "react-native-web/dist/vendor/react-native/emitter/EventEmitter",
       "react-native/Libraries/vendor/emitter/EventSubscriptionVendor$": "react-native-web/dist/vendor/react-native/emitter/EventSubscriptionVendor",
     },
-    "aliasFields": undefined,
+    "aliasFields": Array [
+      "browser",
+      "module",
+      "main",
+    ],
     "extensions": Array [
       ".web.ts",
       ".web.tsx",
@@ -841,29 +961,27 @@ Object {
       ".json",
       ".wasm",
     ],
-    "mainFields": undefined,
-    "plugins": Array [
-      Object {
-        "apply": [Function],
-        "bind": [Function],
-        "forkTsCheckerOptions": [Function],
-        "makePlugin": [Function],
-        "moduleLoader": [Function],
-        "topLevelLoader": Object {
-          "apply": [Function],
-        },
-        "tsLoaderOptions": [Function],
-      },
+    "mainFields": Array [
+      "browser",
+      "module",
+      "main",
     ],
     "symlinks": false,
   },
-  "resolveLoader": Object {
-    "plugins": Array [
-      Object {
-        "apply": [Function],
-      },
+  "stats": "errors-warnings",
+  "target": Array [
+    "web",
+  ],
+  "watchOptions": Object {
+    "aggregateTimeout": 5,
+    "ignored": Array [
+      "**/.git/**",
+      "**/node_modules/**",
+      "**/.expo/**",
+      "**/.expo-shared/**",
+      "**/web-build/**",
+      "**/.#*",
     ],
   },
-  "stats": "none",
 }
 `;
