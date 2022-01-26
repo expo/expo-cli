@@ -1,8 +1,8 @@
-import { UserSettings } from '@expo/api';
 import fs from 'fs-extra';
 import { vol } from 'memfs';
 import path from 'path';
 
+import UserSettings from '../../UserSettings';
 import { ExpoUpdatesManifestHandler } from '../../internal';
 import { getManifestResponseAsync } from '../ManifestHandler';
 

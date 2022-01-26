@@ -1,11 +1,10 @@
-import { UserManager } from '@expo/api';
 import { ExpoAppManifest, getDefaultTarget, HookArguments } from '@expo/config';
 import fs from 'fs-extra';
 import HashIds from 'hashids';
 import path from 'path';
 import semver from 'semver';
 import { v1 as uuidv1, v4 as uuidv4 } from 'uuid';
-import { EmbeddedAssets, Env, printBundleSizes, Project, ProjectAssets } from 'xdl';
+import { EmbeddedAssets, Env, printBundleSizes, Project, ProjectAssets, UserManager } from 'xdl';
 
 import Log from '../../log';
 import { BundlePlatform } from './createMetadataJson';
@@ -19,6 +18,8 @@ import {
   writePlatformManifestsAsync,
   writeSourceMapsAsync,
 } from './writeContents';
+
+export const ANONYMOUS_USERNAME = 'anonymous';
 
 /**
  * If the `experimentalBundle` flag is true, the structure of the outputDir will be:
@@ -84,7 +85,7 @@ export async function exportAppAsync(
   const bundles = await Project.createBundlesAsync(projectRoot, options.publishOptions, {
     platforms: options.platforms,
     dev: options.isDev,
-    useDevServer: Env.shouldUseDevServer(exp.sdkVersion),
+    useDevServer: Env.shouldUseDevServer(exp),
     // TODO: Disable source map generation if we aren't outputting them.
   });
 
@@ -226,7 +227,7 @@ function mutateExpoConfigWithManifestValues(
   }
 
   if (!username) {
-    username = UserManager.ANONYMOUS_USERNAME;
+    username = ANONYMOUS_USERNAME;
   }
 
   exp.id = `@${username}/${exp.slug}`;

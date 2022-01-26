@@ -1,11 +1,10 @@
-import { UserManager } from '@expo/api';
 import spawnAsync from '@expo/spawn-async';
 import { AxiosRequestConfig, AxiosResponse } from 'axios';
 import { copyFileSync, ensureDirSync } from 'fs-extra';
 import path from 'path';
 import temporary from 'tempy';
 
-import { LogRecord, ProjectUtils, publishAsync } from '../internal';
+import { LogRecord, ProjectUtils, publishAsync, UserManager } from '../internal';
 
 jest.dontMock('fs');
 jest.dontMock('resolve-from');

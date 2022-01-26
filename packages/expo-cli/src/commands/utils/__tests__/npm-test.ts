@@ -1,15 +1,5 @@
 import { sanitizeNpmPackageName } from '../npm';
 
-jest.mock('@expo/api', () => {
-  return {
-    UserSettings: {
-      getDirectory() {
-        return '/';
-      },
-    },
-  };
-});
-
 describe(sanitizeNpmPackageName, () => {
   it(`leaves valid names`, () => {
     for (const name of ['@bacon/app', 'my-app', 'my-a.pp']) {

@@ -1,9 +1,9 @@
-import { Versions } from '@expo/api';
 import { getConfig } from '@expo/config';
 import * as PackageManager from '@expo/package-manager';
 import chalk from 'chalk';
 import npmPackageArg from 'npm-package-arg';
 import resolveFrom from 'resolve-from';
+import { Versions } from 'xdl';
 
 import CommandError, { SilentError } from '../CommandError';
 import Log from '../log';
@@ -16,7 +16,7 @@ async function resolveExpoProjectRootAsync() {
   try {
     const info = await findProjectRootAsync(process.cwd());
     return info.projectRoot;
-  } catch (error: any) {
+  } catch (error) {
     if (error.code !== 'NO_PROJECT') {
       // An unknown error occurred.
       throw error;
@@ -68,7 +68,7 @@ export async function actionAsync(
     );
   }
 
-  if (!Versions.gte(exp.sdkVersion, '33.0.0')) {
+  if (!Versions.gteSdkVersion(exp, '33.0.0')) {
     const message = `${chalk.bold(
       `expo install`
     )} is only available for Expo SDK version 33 or higher.`;

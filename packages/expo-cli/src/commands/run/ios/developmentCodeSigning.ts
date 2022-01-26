@@ -1,8 +1,8 @@
-import { UserSettings } from '@expo/api';
 import { IOSConfig } from '@expo/config-plugins';
 import chalk from 'chalk';
 import program from 'commander';
 import * as fs from 'fs-extra';
+import { UserSettings } from 'xdl';
 
 import CommandError from '../../../CommandError';
 import Log from '../../../log';

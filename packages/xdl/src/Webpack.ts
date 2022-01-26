@@ -1,4 +1,3 @@
-import { ProjectSettings } from '@expo/api';
 import type Log from '@expo/bunyan';
 import {
   attachInspectorProxy,
@@ -24,6 +23,7 @@ import {
   ip,
   Logger,
   ManifestHandler,
+  ProjectSettings,
   ProjectUtils,
   UrlUtils,
   WebpackEnvironment,

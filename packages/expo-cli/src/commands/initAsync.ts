@@ -1,4 +1,3 @@
-import { UserManager, Versions } from '@expo/api';
 import { getConfig } from '@expo/config';
 import { AndroidConfig, IOSConfig } from '@expo/config-plugins';
 import plist from '@expo/plist';
@@ -10,6 +9,7 @@ import npmPackageArg from 'npm-package-arg';
 import path from 'path';
 import stripAnsi from 'strip-ansi';
 import terminalLink from 'terminal-link';
+import { UserManager, Versions } from 'xdl';
 
 import CommandError, { SilentError } from '../CommandError';
 import Log from '../log';
@@ -166,7 +166,7 @@ async function resolveTemplateAsync(resolvedTemplate?: string | null) {
   const {
     version: newestSdkVersion,
     data: newestSdkReleaseData,
-  } = await Versions.getLatestVersionAsync();
+  } = await Versions.newestReleasedSdkVersionAsync();
 
   // If the user is opting into a beta then we need to append the template tag explicitly
   // in order to not fall back to the latest tag for templates.

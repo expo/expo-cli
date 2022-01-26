@@ -1,7 +1,6 @@
-import { ProjectSettings } from '@expo/api';
 import chalk from 'chalk';
-import { Command } from 'commander';
-import { UrlUtils } from 'xdl';
+import type { Command } from 'commander';
+import { ProjectSettings, UrlUtils } from 'xdl';
 
 import CommandError from '../../CommandError';
 import Log from '../../log';

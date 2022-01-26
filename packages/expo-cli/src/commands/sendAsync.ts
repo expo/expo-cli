@@ -1,6 +1,5 @@
-import { UserSettings } from '@expo/api';
 import chalk from 'chalk';
-import { UrlUtils } from 'xdl';
+import { UrlUtils, UserSettings } from 'xdl';
 
 import Log from '../log';
 import * as sendTo from './utils/sendTo';

@@ -1,9 +1,19 @@
-import { Analytics, Auth, ProcessSettings, Publish, UserManager } from '@expo/api';
-import { ExpoAppManifest, getDefaultTarget, HookArguments } from '@expo/config';
+import {
+  ExpoAppManifest,
+  ExpoConfig,
+  getDefaultTarget,
+  HookArguments,
+  PackageJSONConfig,
+} from '@expo/config';
+import FormData from 'form-data';
 import fs from 'fs-extra';
 import path from 'path';
 
+import { RobotUser } from '../User';
 import {
+  Analytics,
+  ApiV2,
+  Config,
   createBundlesAsync,
   Doctor,
   EmbeddedAssets,
@@ -17,6 +27,8 @@ import {
   ProjectAssets,
   PublishOptions,
   runHook,
+  User,
+  UserManager,
   XDLError,
 } from '../internal';
 
@@ -28,7 +40,7 @@ export interface PublishedProjectResult {
   /**
    * Project page URL
    */
-  projectPageUrl: string | null;
+  projectPageUrl: string;
   /**
    * TODO: What is this?
    */
@@ -55,7 +67,7 @@ export async function publishAsync(
   }
 
   Analytics.logEvent('Publish', {
-    developerTool: ProcessSettings.developerTool,
+    developerTool: Config.developerTool,
   });
 
   const validationStatus = await Doctor.validateWithNetworkAsync(projectRoot);
@@ -73,7 +85,7 @@ export async function publishAsync(
   const validPostPublishHooks: LoadedHook[] = prepareHooks(hooks, 'postPublish', projectRoot);
   const bundles = await createBundlesAsync(projectRoot, options, {
     platforms: ['ios', 'android'],
-    useDevServer: Env.shouldUseDevServer(exp.sdkVersion),
+    useDevServer: Env.shouldUseDevServer(exp),
   });
 
   printBundleSizes(bundles);
@@ -92,10 +104,7 @@ export async function publishAsync(
 
   let response;
   try {
-    logger.global.info('');
-    logger.global.info('Uploading JavaScript bundles');
-    const user = await UserManager.ensureLoggedInAsync();
-    response = await Publish.uploadArtifactsAsync(user, {
+    response = await _uploadArtifactsAsync({
       pkg,
       exp,
       iosBundle,
@@ -163,7 +172,7 @@ export async function publishAsync(
       logger.global.info(`Running postPublish hook: ${hook.file}`);
       try {
         runHook(hook, hookOptions);
-      } catch (e: any) {
+      } catch (e) {
         logger.global.warn(`Warning: postPublish hook '${hook.file}' failed: ${e.stack}`);
       }
     }
@@ -213,6 +222,35 @@ export async function publishAsync(
   };
 }
 
+async function _uploadArtifactsAsync({
+  exp,
+  iosBundle,
+  androidBundle,
+  options,
+  pkg,
+}: {
+  exp: ExpoConfig;
+  iosBundle: string | Uint8Array;
+  androidBundle: string | Uint8Array;
+  options: PublishOptions;
+  pkg: PackageJSONConfig;
+}) {
+  logger.global.info('');
+  logger.global.info('Uploading JavaScript bundles');
+  const formData = new FormData();
+
+  formData.append('expJson', JSON.stringify(exp));
+  formData.append('packageJson', JSON.stringify(pkg));
+  formData.append('iosBundle', iosBundle, 'iosBundle');
+  formData.append('androidBundle', androidBundle, 'androidBundle');
+  formData.append('options', JSON.stringify(options));
+
+  const user = await UserManager.ensureLoggedInAsync();
+  const api = ApiV2.clientForUser(user);
+
+  return await api.uploadFormDataAsync('publish/new', formData);
+}
+
 async function _handleKernelPublishedAsync({
   projectRoot,
   user,
@@ -220,7 +258,7 @@ async function _handleKernelPublishedAsync({
   url,
 }: {
   projectRoot: string;
-  user: Auth.User | Auth.RobotUser;
+  user: User | RobotUser;
   exp: ExpoAppManifest;
   url: string;
 }) {
@@ -235,9 +273,9 @@ async function _handleKernelPublishedAsync({
     owner = user.username;
   }
 
-  let kernelBundleUrl = `${ProcessSettings.api.scheme}://${ProcessSettings.api.host}`;
-  if (ProcessSettings.api.port) {
-    kernelBundleUrl = `${kernelBundleUrl}:${ProcessSettings.api.port}`;
+  let kernelBundleUrl = `${Config.api.scheme}://${Config.api.host}`;
+  if (Config.api.port) {
+    kernelBundleUrl = `${kernelBundleUrl}:${Config.api.port}`;
   }
   kernelBundleUrl = `${kernelBundleUrl}/@${owner}/${exp.slug}/bundle`;
   const sdkOrRuntimeVersion = exp.runtimeVersion

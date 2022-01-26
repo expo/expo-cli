@@ -1,13 +1,16 @@
-import { Analytics, ProcessSettings, ProjectSettings } from '@expo/api';
 import { ExpoConfig, getConfig } from '@expo/config';
 import { closeJsInspector, MessageSocket } from '@expo/dev-server';
 import { Server } from 'http';
 
 import {
+  Analytics,
   Android,
   assertValidProjectRoot,
+  Config,
+  ConnectionStatus,
   DevSession,
   Env,
+  ProjectSettings,
   ProjectUtils,
   startDevServerAsync,
   StartDevServerOptions,
@@ -51,7 +54,7 @@ export async function startAsync(
   assertValidProjectRoot(projectRoot);
 
   Analytics.logEvent('Start Project', {
-    developerTool: ProcessSettings.developerTool,
+    developerTool: Config.developerTool,
     sdkVersion: exp.sdkVersion ?? null,
   });
 
@@ -62,7 +65,7 @@ export async function startAsync(
       ...options,
       port: options.webpackPort,
     });
-  } else if (Env.shouldUseDevServer(exp.sdkVersion) || options.devClient) {
+  } else if (Env.shouldUseDevServer(exp) || options.devClient) {
     [serverInstance, , messageSocket] = await startDevServerAsync(projectRoot, options);
   } else {
     await startExpoServerAsync(projectRoot);
@@ -71,7 +74,7 @@ export async function startAsync(
 
   const { hostType } = await ProjectSettings.readAsync(projectRoot);
 
-  if (!ProcessSettings.isOffline && hostType === 'tunnel') {
+  if (!ConnectionStatus.isOffline() && hostType === 'tunnel') {
     try {
       await startTunnelsAsync(projectRoot);
     } catch (e: any) {
@@ -110,7 +113,7 @@ async function stopInternalAsync(projectRoot: string): Promise<void> {
     stopExpoServerAsync(projectRoot),
     stopReactNativeServerAsync(projectRoot),
     async () => {
-      if (!ProcessSettings.isOffline) {
+      if (!ConnectionStatus.isOffline()) {
         try {
           await stopTunnelsAsync(projectRoot);
         } catch (e: any) {
@@ -128,12 +131,12 @@ async function forceQuitAsync(projectRoot: string) {
   if (packagerPid) {
     try {
       process.kill(packagerPid);
-    } catch {}
+    } catch (e) {}
   }
   if (ngrokPid) {
     try {
       process.kill(ngrokPid);
-    } catch {}
+    } catch (e) {}
   }
   await ProjectSettings.setPackagerInfoAsync(projectRoot, {
     expoServerPort: null,
