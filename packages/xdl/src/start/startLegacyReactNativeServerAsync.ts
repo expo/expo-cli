@@ -1,4 +1,3 @@
-import { ProjectSettings, Versions } from '@expo/api';
 import { ExpoConfig, getConfig } from '@expo/config';
 import { getBareExtensions, getManagedExtensions } from '@expo/config/paths';
 import axios from 'axios';
@@ -14,9 +13,11 @@ import {
   assertValidProjectRoot,
   delayAsync,
   getFreePortAsync,
+  ProjectSettings,
   ProjectUtils,
   StartDevServerOptions,
   UrlUtils,
+  Versions,
   Watchman,
 } from '../internal';
 
@@ -152,12 +153,12 @@ export async function startReactNativeServerAsync({
     sourceExts,
   };
 
-  if (options.nonPersistent && !Versions.gte(exp.sdkVersion, '33.0.0')) {
+  if (options.nonPersistent && !Versions.gteSdkVersion(exp, '33.0.0')) {
     // Expo SDK -32 | React Native -57
     packagerOpts.nonPersistent = true;
   }
 
-  if (!Versions.lte(exp.sdkVersion, '32.0.0')) {
+  if (!Versions.lteSdkVersion(exp, '32.0.0')) {
     // Expo SDK +33 | React Native +59.8 (hooks): Add asset plugins
 
     // starting with SDK 37, we bundle this plugin with the expo-asset package instead of expo,
@@ -177,7 +178,7 @@ export async function startReactNativeServerAsync({
     packagerOpts['max-workers'] = options.maxWorkers;
   }
 
-  if (Versions.lte(exp.sdkVersion, '15.0.0')) {
+  if (Versions.lteSdkVersion(exp, '15.0.0')) {
     // Expo SDK -15 | React Native -42: customLogReporterPath is not supported
     delete packagerOpts.customLogReporterPath;
   }

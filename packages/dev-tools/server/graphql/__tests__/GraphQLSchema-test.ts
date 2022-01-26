@@ -6,7 +6,6 @@ import Issues from '../Issues';
 import createContext from '../createContext';
 
 jest.mock('xdl');
-jest.mock('@expo/api');
 
 const MOCK_LOGS = [
   {

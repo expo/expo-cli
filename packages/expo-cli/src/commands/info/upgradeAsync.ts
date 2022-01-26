@@ -1,4 +1,3 @@
-import { ProjectSettings, Versions } from '@expo/api';
 import {
   getConfig,
   isLegacyImportsEnabled,
@@ -17,7 +16,8 @@ import pickBy from 'lodash/pickBy';
 import resolveFrom from 'resolve-from';
 import semver from 'semver';
 import terminalLink from 'terminal-link';
-import { Project } from 'xdl';
+import { Project, ProjectSettings, Versions } from 'xdl';
+import { SDKVersion } from 'xdl/build/Versions';
 
 import CommandError from '../../CommandError';
 import Log from '../../log';
@@ -78,7 +78,7 @@ async function getExactInstalledModuleVersionAsync(moduleName: string, projectRo
 export async function getUpdatedDependenciesAsync(
   projectRoot: string,
   workflow: ExpoWorkflow,
-  targetSdkVersion: Versions.SDKVersion | null,
+  targetSdkVersion: SDKVersion | null,
   targetSdkVersionString: string
 ): Promise<{ dependencies: DependencyList; removed: string[] }> {
   // Get the updated version for any bundled modules
@@ -132,7 +132,7 @@ export type UpgradeDependenciesOptions = {
   bundledNativeModules: DependencyList;
   sdkVersion?: string;
   workflow: ExpoWorkflow;
-  targetSdkVersion: Versions.SDKVersion | null;
+  targetSdkVersion: SDKVersion | null;
   targetSdkVersionString: string | null;
 };
 
@@ -292,7 +292,7 @@ async function maybeBailOnUnsafeFunctionalityAsync(
   exp: Pick<ExpoConfig, 'sdkVersion'>
 ): Promise<boolean> {
   // Give people a chance to bail out if they're updating from a super old version because YMMV
-  if (!Versions.gte(exp.sdkVersion, '33.0.0')) {
+  if (!Versions.gteSdkVersion(exp, '33.0.0')) {
     if (program.nonInteractive) {
       Log.warn(
         `This command works best on SDK 33 and higher. Because the command is running in nonInteractive mode it'll continue regardless.`
@@ -361,7 +361,7 @@ async function promptSelectSDKVersionAsync(
   exp: Pick<ExpoConfig, 'sdkVersion'>
 ): Promise<string> {
   const sdkVersionStringOptions = sdkVersions.filter(
-    v => semver.lte('33.0.0', v) && !Versions.gte(exp.sdkVersion, v)
+    v => semver.lte('33.0.0', v) && !Versions.gteSdkVersion(exp, v)
   );
 
   return await selectAsync({
@@ -387,7 +387,7 @@ export async function upgradeAsync(
   options: Options
 ) {
   // Force updating the versions cache
-  await Versions.getVersionsAsync({ skipCache: true });
+  await Versions.versionsAsync({ skipCache: true });
 
   const { exp, pkg } = await getConfig(projectRoot);
 
@@ -398,8 +398,8 @@ export async function upgradeAsync(
   await stopExpoServerAsync(projectRoot);
 
   const currentSdkVersionString = exp.sdkVersion!;
-  const sdkVersions = await Versions.getReleasedVersionsAsync();
-  const latestSdkVersion = await Versions.getLatestVersionAsync();
+  const sdkVersions = await Versions.releasedSdkVersionsAsync();
+  const latestSdkVersion = await Versions.newestReleasedSdkVersionAsync();
   const latestSdkVersionString = latestSdkVersion.version;
   let targetSdkVersionString =
     maybeFormatSdkVersion(requestedSdkVersion) || latestSdkVersion.version;
@@ -438,11 +438,11 @@ export async function upgradeAsync(
   } else if (!targetSdkVersion) {
     // This is useful when testing the beta internally, before actually
     // releasing it as a public beta. At this point, we won't have "beta" set on
-    // the versions endpoint and so Versions.getReleasedVersionsAsync will not
+    // the versions endpoint and so Versions.releasedSdkVersionsAsync will not
     // return the beta version, even with the EXPO_BETA flag set.
     if (getenv.boolish('EXPO_BETA', false)) {
-      const { sdkVersions } = await Versions.getVersionsAsync();
-      targetSdkVersion = sdkVersions[targetSdkVersionString];
+      const allSdkVersions = await Versions.sdkVersionsAsync();
+      targetSdkVersion = allSdkVersions[targetSdkVersionString];
     }
 
     // If we still don't have a version, even after searching through unreleased versions
@@ -508,7 +508,7 @@ export async function upgradeAsync(
 
   if (dynamicConfigPath) {
     if (
-      !Versions.gte(currentExp.sdkVersion, targetSdkVersionString) &&
+      !Versions.gteSdkVersion(currentExp, targetSdkVersionString) &&
       currentExp.sdkVersion !== 'UNVERSIONED'
     ) {
       Log.addNewLineIfNone();

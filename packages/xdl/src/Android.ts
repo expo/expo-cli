@@ -1,4 +1,3 @@
-import { Analytics, ProjectSettings, Versions } from '@expo/api';
 import { ExpoConfig, getConfig, readExpRcAsync } from '@expo/config';
 import { AndroidConfig } from '@expo/config-plugins';
 import * as osascript from '@expo/osascript';
@@ -11,6 +10,7 @@ import prompts from 'prompts';
 import semver from 'semver';
 
 import {
+  Analytics,
   Binaries,
   downloadApkAsync,
   Env,
@@ -19,8 +19,10 @@ import {
   learnMore,
   LoadingEvent,
   Logger,
+  ProjectSettings,
   Prompts,
   UrlUtils,
+  Versions,
   Webpack,
   XDLError,
 } from './internal';
@@ -390,7 +392,7 @@ async function getExpoVersionAsync(device: Device): Promise<string | null> {
 }
 
 async function isClientOutdatedAsync(device: Device, sdkVersion?: string): Promise<boolean> {
-  const versions = await Versions.getVersionsAsync();
+  const versions = await Versions.versionsAsync();
   const clientForSdk = await getClientForSDK(sdkVersion);
   const latestVersionForSdk = clientForSdk?.version ?? versions.androidVersion;
   const installedVersion = await getExpoVersionAsync(device);
@@ -764,7 +766,7 @@ async function openUrlAsync({
 
     try {
       await _openUrlAsync({ pid: device.pid!, url, applicationId: clientApplicationId });
-    } catch (e: any) {
+    } catch (e) {
       if (isDetached) {
         e.message = `Error running app. Have you installed the app already using Android Studio? Since you are detached you must build manually. ${e.message}`;
       } else {
@@ -793,8 +795,7 @@ async function getClientForSDK(sdkVersionString?: string) {
     return null;
   }
 
-  const { sdkVersions } = await Versions.getVersionsAsync();
-  const sdkVersion = sdkVersions[sdkVersionString];
+  const sdkVersion = (await Versions.sdkVersionsAsync())[sdkVersionString];
   if (!sdkVersion) {
     return null;
   }
@@ -1109,7 +1110,7 @@ export async function checkSplashScreenImages(projectRoot: string): Promise<void
   const { exp } = getConfig(projectRoot);
 
   // return before SDK33
-  if (!Versions.gte(exp.sdkVersion, '33.0.0')) {
+  if (!Versions.gteSdkVersion(exp, '33.0.0')) {
     return;
   }
 

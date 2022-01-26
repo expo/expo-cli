@@ -1,8 +1,8 @@
-import { Auth, Publish, StandaloneBuild, UserManager, Versions } from '@expo/api';
 import { ExpoConfig, getConfig, ProjectConfig } from '@expo/config';
 import chalk from 'chalk';
 import ora from 'ora';
 import semver from 'semver';
+import { RobotUser, User, UserManager, Versions } from 'xdl';
 
 import Log from '../../log';
 import { actionAsync as publishAction } from '../publish/publishAsync';
@@ -11,6 +11,7 @@ import * as UrlUtils from '../utils/url';
 import { BuilderOptions } from './BaseBuilder.types';
 import BuildError from './BuildError';
 import { Platform, PLATFORMS } from './constants';
+import { findReusableBuildAsync } from './findReusableBuildAsync';
 import { BuildJobFields, getBuildStatusAsync } from './getBuildStatusAsync';
 import { getLatestReleaseAsync } from './getLatestReleaseAsync';
 import { startBuildAsync } from './startBuildAsync';
@@ -20,7 +21,7 @@ export default class BaseBuilder {
   protected projectConfig: ProjectConfig;
   manifest: ExpoConfig;
 
-  async getUserAsync(): Promise<Auth.User | Auth.RobotUser> {
+  async getUserAsync(): Promise<User | RobotUser> {
     return await UserManager.ensureLoggedInAsync();
   }
 
@@ -71,7 +72,7 @@ export default class BaseBuilder {
     await this.checkProjectConfig();
     // note: this validates if a robot user is used without "owner" in the manifest
     // without this check, build/status returns "robots not allowed".
-    Publish.getProjectOwner(
+    UserManager.getProjectOwner(
       // TODO: Move this since it can add delay
       await this.getUserAsync(),
       this.projectConfig.exp
@@ -85,9 +86,9 @@ export default class BaseBuilder {
     }
 
     // Warn user if building a project using the next deprecated SDK version
-    const oldestSupportedMajorVersion = await Versions.getLastSupportedMajorVersionAsync();
+    const oldestSupportedMajorVersion = await Versions.oldestSupportedMajorVersionAsync();
     if (semver.major(this.manifest.sdkVersion!) === oldestSupportedMajorVersion) {
-      const { version } = await Versions.getLatestVersionAsync();
+      const { version } = await Versions.newestReleasedSdkVersionAsync();
       Log.warn(
         `\nSDK${oldestSupportedMajorVersion} will be ${chalk.bold(
           'deprecated'
@@ -142,13 +143,13 @@ export default class BaseBuilder {
   async checkStatusBeforeBuild(): Promise<void> {
     Log.log('Checking if this build already exists...\n');
 
-    const reuseStatus = await StandaloneBuild.getLegacyReusableBuildAsync(null, {
-      releaseChannel: this.options.releaseChannel!,
-      platform: this.platform(),
-      sdkVersion: this.manifest.sdkVersion!,
-      slug: this.manifest.slug!,
-      owner: this.manifest.owner,
-    });
+    const reuseStatus = await findReusableBuildAsync(
+      this.options.releaseChannel!,
+      this.platform(),
+      this.manifest.sdkVersion!,
+      this.manifest.slug!,
+      this.manifest.owner
+    );
     if (reuseStatus.canReuse) {
       Log.warn(`Did you know that Expo provides over-the-air updates?
 Please see the docs (${chalk.underline(

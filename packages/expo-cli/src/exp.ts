@@ -1,11 +1,3 @@
-import {
-  Analytics,
-  ApiV2,
-  ProcessSettings,
-  ProjectSettings,
-  UnifiedAnalytics,
-  UserManager,
-} from '@expo/api';
 import bunyan from '@expo/bunyan';
 import { setCustomConfigPath } from '@expo/config';
 import boxen from 'boxen';
@@ -21,14 +13,20 @@ import stripAnsi from 'strip-ansi';
 import url from 'url';
 import wrapAnsi from 'wrap-ansi';
 import {
+  Analytics,
+  ApiV2,
   Binaries,
+  Config,
   Env,
   LoadingEvent,
   Logger,
   LogRecord,
   LogUpdater,
   PackagerLogsStream,
+  ProjectSettings,
   ProjectUtils,
+  UnifiedAnalytics,
+  UserManager,
 } from 'xdl';
 
 import StatusEventEmitter from './analytics/StatusEventEmitter';
@@ -342,7 +340,8 @@ Command.prototype.asyncAction = function (asyncFn: Action) {
     try {
       const options = args[args.length - 1];
       if (options.offline) {
-        ProcessSettings.isOffline = true;
+        const { ConnectionStatus } = await import('xdl');
+        ConnectionStatus.setIsOffline(true);
       }
 
       await asyncFn(...args);
@@ -691,8 +690,8 @@ async function runAsync(programName: string) {
       const parsedUrl = url.parse(serverUrl);
       const port = parseInt(parsedUrl.port || '', 10);
       if (parsedUrl.hostname && port) {
-        ProcessSettings.api.host = parsedUrl.hostname;
-        ProcessSettings.api.port = port;
+        Config.api.host = parsedUrl.hostname;
+        Config.api.port = port;
       } else {
         throw new Error('Environment variable SERVER_URL is not a valid url');
       }

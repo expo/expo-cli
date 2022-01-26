@@ -1,4 +1,3 @@
-import { Versions } from '@expo/api';
 import { getConfig } from '@expo/config';
 import * as PackageManager from '@expo/package-manager';
 import chalk from 'chalk';
@@ -6,6 +5,7 @@ import program from 'commander';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import wrapAnsi from 'wrap-ansi';
+import { Versions } from 'xdl';
 
 import CommandError from '../../../CommandError';
 import Log from '../../../log';
@@ -72,7 +72,7 @@ async function getSDKVersionsAsync(projectRoot: string): Promise<Versions.SDKVer
   try {
     const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
     if (exp.sdkVersion) {
-      const sdkVersions = await Versions.getReleasedVersionsAsync();
+      const sdkVersions = await Versions.releasedSdkVersionsAsync();
       return sdkVersions[exp.sdkVersion] ?? null;
     }
   } catch {

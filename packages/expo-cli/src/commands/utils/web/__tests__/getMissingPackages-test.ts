@@ -1,7 +1,7 @@
 import { vol } from 'memfs';
 import path from 'path';
 
-import { mockExpoAPI } from '../../../../__tests__/mock-utils';
+import { mockExpoXDL } from '../../../../__tests__/mock-utils';
 import { getMissingPackagesAsync } from '../getMissingPackages';
 
 jest.mock('fs');
@@ -14,9 +14,9 @@ describe(getMissingPackagesAsync, () => {
   });
 
   it('gets missing packages', async () => {
-    mockExpoAPI({
+    mockExpoXDL({
       Versions: {
-        getReleasedVersionsAsync: jest.fn(() => ({
+        releasedSdkVersionsAsync: jest.fn(() => ({
           '43.0.0': {
             relatedPackages: {
               'react-dom': '420.0.0',

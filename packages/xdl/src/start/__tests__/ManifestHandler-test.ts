@@ -1,39 +1,33 @@
-import { UserSettings } from '@expo/api';
 import { ExpoConfig } from '@expo/config';
 import axios from 'axios';
 import fs from 'fs-extra';
 import { vol } from 'memfs';
 import path from 'path';
 
-import { ManifestHandler } from '../../internal';
+import { ManifestHandler, UserSettings } from '../../internal';
 
 const actualFs = jest.requireActual('fs') as typeof fs;
 jest.mock('fs');
 jest.mock('axios');
 
-jest.mock('@expo/api', () => {
-  const api = jest.requireActual('@expo/api');
+jest.mock('../../User', () => {
+  // const user = jest.requireActual('../../User');
   return {
-    ...api,
-    Manifest: {
-      ...api.Manifest,
-      signLegacyAsync: jest.fn(api.Manifest.signLegacyAsync),
+    // ...user,
+    ANONYMOUS_USERNAME: 'anonymous',
+    getSessionAsync() {
+      return null;
     },
-    UserManager: {
-      ...api.UserManager,
-      // ...user,
-      ANONYMOUS_USERNAME: 'anonymous',
-      getSessionAsync() {
-        return null;
-      },
-      ensureLoggedInAsync: jest.fn(() => ({
-        sessionSecret: 'SECRET',
-      })),
-    },
-    ExpoConfigSchema: {
-      getAssetSchemasAsync() {
-        return ['icon', 'splash.image'];
-      },
+    ensureLoggedInAsync: () => ({
+      sessionSecret: 'SECRET',
+    }),
+  };
+});
+jest.mock('../../project/ExpSchema', () => {
+  // const user = jest.requireActual('../../User');
+  return {
+    getAssetSchemasAsync() {
+      return ['icon', 'splash.image'];
     },
   };
 });

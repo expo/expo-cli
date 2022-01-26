@@ -1,13 +1,22 @@
-import { Versions } from '@expo/api';
 import { ExpoConfig } from '@expo/config';
-import { boolish, string } from 'getenv';
+import getenv from 'getenv';
+
+import { Versions } from './internal';
 
 export function isDebug(): boolean {
-  return boolish('EXPO_DEBUG', false);
+  return getenv.boolish('EXPO_DEBUG', false);
+}
+
+export function isStaging(): boolean {
+  return getenv.boolish('EXPO_STAGING', false);
+}
+
+export function isLocal(): boolean {
+  return getenv.boolish('EXPO_LOCAL', false);
 }
 
 export function maySkipManifestValidation(): boolean {
-  return !!string('EXPO_SKIP_MANIFEST_VALIDATION_TOKEN');
+  return !!getenv.string('EXPO_SKIP_MANIFEST_VALIDATION_TOKEN');
 }
 
 /**
@@ -15,11 +24,11 @@ export function maySkipManifestValidation(): boolean {
  * way), false if we should fall back to spawning it as a subprocess (supported for backwards
  * compatibility with SDK39 and older).
  */
-export function shouldUseDevServer(sdkVersion: ExpoConfig['sdkVersion']) {
-  return !Versions.lte(sdkVersion, '39.0.0') || boolish('EXPO_USE_DEV_SERVER', false);
+export function shouldUseDevServer(exp: Pick<ExpoConfig, 'sdkVersion'>) {
+  return !Versions.lteSdkVersion(exp, '39.0.0') || getenv.boolish('EXPO_USE_DEV_SERVER', false);
 }
 
 // do not allow E2E to fire events
 export function shouldEnableAnalytics() {
-  return !boolish('E2E', false) && !boolish('CI', false);
+  return !getenv.boolish('E2E', false) && !getenv.boolish('CI', false);
 }

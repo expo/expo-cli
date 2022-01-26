@@ -1,10 +1,9 @@
-import { UnifiedAnalytics } from '@expo/api';
 import { ExpoConfig, getConfig } from '@expo/config';
 import { AndroidConfig } from '@expo/config-plugins';
 import chalk from 'chalk';
 import fs from 'fs';
 import path from 'path';
-import { Android } from 'xdl';
+import { Android, UnifiedAnalytics } from 'xdl';
 
 import CommandError from '../../../CommandError';
 import StatusEventEmitter from '../../../analytics/StatusEventEmitter';

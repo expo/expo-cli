@@ -1,4 +1,4 @@
-import { UserManager } from '@expo/api';
+import { UserManager } from 'xdl';
 
 import CommandError from '../../CommandError';
 import Log from '../../log';

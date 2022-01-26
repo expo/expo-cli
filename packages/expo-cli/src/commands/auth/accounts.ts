@@ -1,8 +1,9 @@
-import { Auth, UserManager } from '@expo/api';
 import assert from 'assert';
 import openBrowserAsync from 'better-opn';
 import chalk from 'chalk';
 import program from 'commander';
+import { ApiV2, User, UserManager } from 'xdl';
+import { ApiV2Error } from 'xdl/build/ApiV2';
 
 import CommandError, { SilentError } from '../../CommandError';
 import Log from '../../log';
@@ -33,7 +34,7 @@ export type SecondFactorDevice = {
   is_primary: boolean;
 };
 
-export async function loginOrRegisterAsync(): Promise<Auth.User> {
+export async function loginOrRegisterAsync(): Promise<User> {
   Log.warn('An Expo user account is required to proceed.');
 
   // Always try to auto-login when these variables are set, even in non-interactive mode
@@ -89,7 +90,7 @@ export async function loginOrRegisterAsync(): Promise<Auth.User> {
   }
 }
 
-export async function loginOrRegisterIfLoggedOutAsync(): Promise<Auth.User> {
+export async function loginOrRegisterIfLoggedOutAsync(): Promise<User> {
   const user = await UserManager.getCurrentUserOnlyAsync();
   if (user) {
     return user;
@@ -97,7 +98,7 @@ export async function loginOrRegisterIfLoggedOutAsync(): Promise<Auth.User> {
   return await loginOrRegisterAsync();
 }
 
-export async function login(options: CommandOptions): Promise<Auth.User> {
+export async function login(options: CommandOptions): Promise<User> {
   const user = await UserManager.getCurrentUserAsync({ silent: true });
   if (user?.accessToken) {
     throw new CommandError(
@@ -114,7 +115,7 @@ export async function login(options: CommandOptions): Promise<Auth.User> {
       });
       if (!action) {
         // If user chooses to stay logged in, return
-        return user as Auth.User;
+        return user as User;
       }
     }
     return _usernamePasswordAuth(options.username, options.password, options.otp);
@@ -212,7 +213,8 @@ async function _promptForBackupOTPAsync(
 
   const device = smsNonPrimarySecondFactorDevices[selectedValue];
 
-  await Auth.sendSmsOtpAsync(null, {
+  const apiAnonymous = ApiV2.clientForUser();
+  await apiAnonymous.postAsync('auth/send-sms-otp', {
     username,
     password,
     secondFactorDeviceID: device.id,
@@ -243,7 +245,7 @@ export async function _retryUsernamePasswordAuthWithOTPAsync(
     secondFactorDevices?: SecondFactorDevice[];
     smsAutomaticallySent?: boolean;
   }
-): Promise<Auth.User> {
+): Promise<User> {
   const { secondFactorDevices, smsAutomaticallySent } = metadata;
   assert(
     secondFactorDevices !== undefined && smsAutomaticallySent !== undefined,
@@ -286,7 +288,7 @@ async function _usernamePasswordAuth(
   username?: string,
   password?: string,
   otp?: string
-): Promise<Auth.User> {
+): Promise<User> {
   const questions: NewQuestion[] = [];
   if (!username) {
     questions.push({
@@ -316,11 +318,11 @@ async function _usernamePasswordAuth(
     otp: otp || answers.otp,
   };
 
-  let user: Auth.User;
+  let user: User;
   try {
     user = await UserManager.loginAsync('user-pass', data);
-  } catch (e: any) {
-    if (e.code === 'ONE_TIME_PASSWORD_REQUIRED') {
+  } catch (e) {
+    if (e instanceof ApiV2Error && e.code === 'ONE_TIME_PASSWORD_REQUIRED') {
       user = await _retryUsernamePasswordAuthWithOTPAsync(
         data.username,
         data.password,

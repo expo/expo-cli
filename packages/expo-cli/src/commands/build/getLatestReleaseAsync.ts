@@ -1,6 +1,5 @@
-import { Publish, UserManager } from '@expo/api';
 import { getConfig } from '@expo/config';
-import assert from 'assert';
+import { ApiV2, UserManager } from 'xdl';
 
 type Release = {
   fullName: string;
@@ -13,10 +12,6 @@ type Release = {
   platform: string;
 };
 
-function assertPlatform(platform: string): asserts platform is 'ios' | 'android' {
-  assert(['ios', 'android'].includes(platform), `platform "${platform}" is invalid`);
-}
-
 export async function getLatestReleaseAsync(
   projectRoot: string,
   options: {
@@ -25,20 +20,20 @@ export async function getLatestReleaseAsync(
     owner?: string;
   }
 ): Promise<Release | null> {
-  assertPlatform(options.platform);
-
   const user = await UserManager.ensureLoggedInAsync();
+  const api = ApiV2.clientForUser(user);
   const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
-
-  const publications = await Publish.getPublishHistoryAsync(user, {
-    exp,
-    options: {
-      releaseChannel: options.releaseChannel,
-      count: 1,
-      platform: options.platform,
-    },
+  const result = await api.postAsync('publish/history', {
     owner: options.owner,
+    slug: exp.slug,
+    releaseChannel: options.releaseChannel,
+    count: 1,
+    platform: options.platform,
   });
-
-  return publications?.[0] ?? null;
+  const { queryResult } = result;
+  if (queryResult && queryResult.length > 0) {
+    return queryResult[0];
+  } else {
+    return null;
+  }
 }
