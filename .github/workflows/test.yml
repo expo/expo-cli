@@ -38,6 +38,7 @@ jobs:
           [
             dev-tools,
             babel-preset-cli,
+            code-signing-certificates,
             config,
             config-plugins,
             dev-server,

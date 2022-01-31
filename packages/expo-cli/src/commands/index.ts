@@ -6,6 +6,8 @@ const COMMANDS = [
   require('./auth/register'),
   require('./auth/whoami'),
   require('./build'),
+  require('./codesigning/configure'),
+  require('./codesigning/generate'),
   require('./credentials'),
   require('./eject/customize'),
   require('./eject/eject'),
