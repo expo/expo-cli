@@ -15,6 +15,10 @@ export function isLocal(): boolean {
   return getenv.boolish('EXPO_LOCAL', false);
 }
 
+export function isInterstitiaLPageEnabled(): boolean {
+  return getenv.boolish('EXPO_ENABLE_INTERSTITIAL_PAGE', false);
+}
+
 export function maySkipManifestValidation(): boolean {
   return !!getenv.string('EXPO_SKIP_MANIFEST_VALIDATION_TOKEN');
 }

@@ -377,6 +377,10 @@ async function ensureDevClientInstalledAsync(device: Device, applicationId: stri
   }
 }
 
+async function isDevClientInstalledAsync(device: Device, applicationId: string): Promise<boolean> {
+  return await isInstalledAsync(device, applicationId);
+}
+
 async function getExpoVersionAsync(device: Device): Promise<string | null> {
   const info = await getAdbOutputAsync(
     adbPidArgs(device.pid, 'shell', 'dumpsys', 'package', 'host.exp.exponent')
@@ -711,55 +715,100 @@ async function openUrlAsync({
   let installedExpo = false;
   let clientApplicationId = 'host.exp.exponent';
 
+  const installExpoIfNeeded = async (device: Device) => {
+    let shouldInstall = !(await _isExpoInstalledAsync(device));
+    const promptKey = device.pid ?? 'unknown';
+    if (
+      !shouldInstall &&
+      !hasPromptedToUpgrade[promptKey] &&
+      (await isClientOutdatedAsync(device, sdkVersion))
+    ) {
+      // Only prompt once per device, per run.
+      hasPromptedToUpgrade[promptKey] = true;
+      const confirm = await Prompts.confirmAsync({
+        initial: true,
+        message: `Expo Go on ${device.name} (${device.type}) is outdated, would you like to upgrade?`,
+      });
+      if (confirm) {
+        await uninstallExpoAsync(device);
+        shouldInstall = true;
+      }
+    }
+
+    if (shouldInstall) {
+      const androidClient = await getClientForSDK(sdkVersion);
+      await installExpoAsync({ device, ...androidClient });
+      installedExpo = true;
+    }
+  };
+
+  const getClientApplicationId = async () => {
+    let applicationId;
+    const isManaged = await isManagedProjectAsync(projectRoot);
+    if (isManaged) {
+      applicationId = exp?.android?.package;
+      if (!applicationId) {
+        throw new Error(
+          `Could not find property android.package in app.config.js/app.json. This setting is required to launch the app.`
+        );
+      }
+    } else {
+      applicationId = await resolveApplicationIdAsync(projectRoot);
+      if (!applicationId) {
+        throw new Error(
+          `Could not find applicationId in ${AndroidConfig.Paths.getAppBuildGradleFilePath(
+            projectRoot
+          )}`
+        );
+      }
+    }
+    return applicationId;
+  };
+
   try {
     if (devClient) {
-      let applicationId;
-      const isManaged = await isManagedProjectAsync(projectRoot);
-      if (isManaged) {
-        applicationId = exp?.android?.package;
-        if (!applicationId) {
-          throw new Error(
-            `Could not find property android.package in app.config.js/app.json. This setting is required to launch the app.`
-          );
-        }
-      } else {
-        applicationId = await resolveApplicationIdAsync(projectRoot);
-        if (!applicationId) {
-          throw new Error(
-            `Could not find applicationId in ${AndroidConfig.Paths.getAppBuildGradleFilePath(
-              projectRoot
-            )}`
-          );
-        }
-      }
-      clientApplicationId = applicationId;
+      clientApplicationId = await getClientApplicationId();
       await ensureDevClientInstalledAsync(device, clientApplicationId);
-    } else if (!isDetached) {
-      let shouldInstall = !(await _isExpoInstalledAsync(device));
-      const promptKey = device.pid ?? 'unknown';
-      if (
-        !shouldInstall &&
-        !hasPromptedToUpgrade[promptKey] &&
-        (await isClientOutdatedAsync(device, sdkVersion))
-      ) {
-        // Only prompt once per device, per run.
-        hasPromptedToUpgrade[promptKey] = true;
-        const confirm = await Prompts.confirmAsync({
-          initial: true,
-          message: `Expo Go on ${device.name} (${device.type}) is outdated, would you like to upgrade?`,
-        });
-        if (confirm) {
-          await uninstallExpoAsync(device);
-          shouldInstall = true;
+    } else if (
+      Env.isInterstitiaLPageEnabled() &&
+      !devClient &&
+      isDevClientPackageInstalled(projectRoot)
+    ) {
+      await installExpoIfNeeded(device);
+
+      let applicationId: string | undefined;
+      try {
+        applicationId = await getClientApplicationId();
+      } catch (e) {
+        Logger.global.warn(e);
+      }
+
+      const isDevClientInstalled = applicationId
+        ? await isDevClientInstalledAsync(device, applicationId)
+        : false;
+
+      if (isDevClientInstalled) {
+        // Everything is installed, we can present the interstitial page.
+        clientApplicationId = ''; // it will open browser
+      } else {
+        // The development build isn't available. So let's fall back to Expo Go.
+        Logger.global.warn(
+          `\u203A The 'expo-dev-client' package is installed, but a development build isn't available.\nYour app will open in Expo Go instead. If you want to use the development build, please install it on the simulator first.\n${learnMore(
+            'https://docs.expo.dev/clients/distribution-for-ios/#building-for-ios'
+          )}`
+        );
+
+        const newProjectUrl = await constructDeepLinkAsync(projectRoot, undefined, false, false);
+        if (!newProjectUrl) {
+          // This shouldn't happen.
+          throw Error('Could not generate a deep link for your project.');
         }
+        url = newProjectUrl;
+        Logger.global.debug(`iOS project url: ${url}`);
+        _lastUrl = url;
       }
-
-      if (shouldInstall) {
-        const androidClient = await getClientForSDK(sdkVersion);
-        await installExpoAsync({ device, ...androidClient });
-        installedExpo = true;
-      }
-
+    } else if (!isDetached) {
+      await installExpoIfNeeded(device);
       _lastUrl = url;
       // _checkExpoUpToDateAsync(); // let this run in background
     }
@@ -831,12 +880,14 @@ export async function resolveApplicationIdAsync(projectRoot: string): Promise<st
 async function constructDeepLinkAsync(
   projectRoot: string,
   scheme?: string,
-  devClient?: boolean
+  devClient?: boolean,
+  shouldGenerateInterstitialPage: boolean = true
 ): Promise<string | null> {
   if (
-    process.env['EXPO_ENABLE_INTERSTITIAL_PAGE'] &&
+    Env.isInterstitiaLPageEnabled() &&
     !devClient &&
-    isDevClientPackageInstalled(projectRoot)
+    isDevClientPackageInstalled(projectRoot) &&
+    shouldGenerateInterstitialPage
   ) {
     return UrlUtils.constructLoadingUrlAsync(projectRoot, 'android');
   } else {

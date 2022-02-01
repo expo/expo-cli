@@ -18,6 +18,7 @@ import {
   CoreSimulator,
   delayAsync,
   downloadAppAsync,
+  Env,
   isDevClientPackageInstalled,
   learnMore,
   LoadingEvent,
@@ -617,18 +618,52 @@ async function openUrlInSimulatorSafeAsync({
     if (devClient) {
       bundleIdentifier = await profileMethod(BundleIdentifier.configureBundleIdentifierAsync)(
         projectRoot,
-        exp
+        exp as ExpoConfig
       );
       await profileMethod(assertDevClientInstalledAsync)(simulator, bundleIdentifier);
       if (!skipNativeLogs) {
         // stream logs before opening the client.
         await streamLogsAsync({ udid: simulator.udid, bundleIdentifier });
       }
+    } else if (
+      Env.isInterstitiaLPageEnabled() &&
+      !devClient &&
+      isDevClientPackageInstalled(projectRoot)
+    ) {
+      await profileMethod(ensureExpoClientInstalledAsync)(simulator, sdkVersion);
+
+      const devClientBundlerIdentifier = await profileMethod(
+        BundleIdentifier.configureBundleIdentifierAsync
+      )(projectRoot, exp as ExpoConfig);
+
+      const isDevClientInstalled = await isDevClientInstalledAsync(
+        simulator,
+        devClientBundlerIdentifier
+      );
+      if (isDevClientInstalled) {
+        // Everything is installed, we can present the interstitial page.
+        bundleIdentifier = ''; // it will open browser.
+      } else {
+        // The development build isn't available. So let's fall back to Expo Go.
+        Logger.global.warn(
+          `\u203A The 'expo-dev-client' package is installed, but a development build isn't available.\nYour app will open in Expo Go instead. If you want to use the development build, please install it on the simulator first.\n${learnMore(
+            'https://docs.expo.dev/clients/distribution-for-ios/#building-for-ios'
+          )}`
+        );
+
+        // Generate a new deep link into Expo Go.
+        const newProjectUrl = await constructDeepLinkAsync(projectRoot, undefined, false, false);
+        if (!newProjectUrl) {
+          // This shouldn't happen.
+          throw Error('Could not generate a deep link for your project.');
+        }
+        url = newProjectUrl;
+        Logger.global.debug(`iOS project url: ${url}`);
+        _lastUrl = url;
+      }
     } else if (!isDetached) {
       await profileMethod(ensureExpoClientInstalledAsync)(simulator, sdkVersion);
       _lastUrl = url;
-    } else if (!devClient && isDevClientPackageInstalled(projectRoot)) {
-      bundleIdentifier = ''; // it will open browser.
     }
 
     await Promise.all([
@@ -694,6 +729,18 @@ async function assertDevClientInstalledAsync(
         )}`
     );
   }
+}
+
+async function isDevClientInstalledAsync(
+  simulator: Pick<SimControl.SimulatorDevice, 'udid' | 'name'>,
+  bundleIdentifier: string
+): Promise<boolean> {
+  try {
+    await assertDevClientInstalledAsync(simulator, bundleIdentifier);
+  } catch (e) {
+    return false;
+  }
+  return true;
 }
 
 // Keep a list of simulator UDIDs so we can prevent asking multiple times if a user wants to upgrade.
@@ -772,12 +819,14 @@ export async function resolveApplicationIdAsync(projectRoot: string) {
 async function constructDeepLinkAsync(
   projectRoot: string,
   scheme?: string,
-  devClient?: boolean
+  devClient?: boolean,
+  shouldGenerateInterstitialPage: boolean = true
 ): Promise<string | null> {
   if (
-    process.env['EXPO_ENABLE_INTERSTITIAL_PAGE'] &&
+    Env.isInterstitiaLPageEnabled() &&
     !devClient &&
-    isDevClientPackageInstalled(projectRoot)
+    isDevClientPackageInstalled(projectRoot) &&
+    shouldGenerateInterstitialPage
   ) {
     return UrlUtils.constructLoadingUrlAsync(projectRoot, 'ios', 'localhost');
   } else {
