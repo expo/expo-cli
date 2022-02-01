@@ -880,9 +880,15 @@ export async function resolveApplicationIdAsync(projectRoot: string): Promise<st
 async function constructDeepLinkAsync(
   projectRoot: string,
   scheme?: string,
-  devClient?: boolean
+  devClient?: boolean,
+  shouldGenerateInterstitialPage: boolean = true
 ): Promise<string | null> {
-  if (Env.isInterstitiaLPageEnabled() && !devClient && isDevClientPackageInstalled(projectRoot)) {
+  if (
+    Env.isInterstitiaLPageEnabled() &&
+    !devClient &&
+    isDevClientPackageInstalled(projectRoot) &&
+    shouldGenerateInterstitialPage
+  ) {
     return UrlUtils.constructLoadingUrlAsync(projectRoot, 'android');
   } else {
     return await UrlUtils.constructDeepLinkAsync(projectRoot, {
