@@ -18,6 +18,7 @@ import {
   CoreSimulator,
   delayAsync,
   downloadAppAsync,
+  Env,
   isDevClientPackageInstalled,
   learnMore,
   LoadingEvent,
@@ -625,7 +626,7 @@ async function openUrlInSimulatorSafeAsync({
         await streamLogsAsync({ udid: simulator.udid, bundleIdentifier });
       }
     } else if (
-      process.env['EXPO_ENABLE_INTERSTITIAL_PAGE'] &&
+      Env.isInterstitiaLPageEnabled() &&
       !devClient &&
       isDevClientPackageInstalled(projectRoot)
     ) {
@@ -643,9 +644,9 @@ async function openUrlInSimulatorSafeAsync({
         // Everything is installed, we can present the interstitial page.
         bundleIdentifier = ''; // it will open browser.
       } else {
-        // The development build ins't available. So let's fallback to Expo Go.
+        // The development build isn't available. So let's fall back to Expo Go.
         Logger.global.warn(
-          `\u203A The 'expo-dev-client' package is installed, but the development build isn't available.\nYour app will be open in Expo Go instead. If you want to use the development build, please install it on the simulator first.\n${learnMore(
+          `\u203A The 'expo-dev-client' package is installed, but a development build isn't available.\nYour app will open in Expo Go instead. If you want to use the development build, please install it on the simulator first.\n${learnMore(
             'https://docs.expo.dev/clients/distribution-for-ios/#building-for-ios'
           )}`
         );
@@ -735,7 +736,7 @@ async function isDevClientInstalledAsync(
   bundleIdentifier: string
 ): Promise<boolean> {
   try {
-    await profileMethod(assertDevClientInstalledAsync)(simulator, bundleIdentifier);
+    await assertDevClientInstalledAsync(simulator, bundleIdentifier);
   } catch (e) {
     return false;
   }
@@ -820,11 +821,7 @@ async function constructDeepLinkAsync(
   scheme?: string,
   devClient?: boolean
 ): Promise<string | null> {
-  if (
-    process.env['EXPO_ENABLE_INTERSTITIAL_PAGE'] &&
-    !devClient &&
-    isDevClientPackageInstalled(projectRoot)
-  ) {
+  if (Env.isInterstitiaLPageEnabled() && !devClient && isDevClientPackageInstalled(projectRoot)) {
     return UrlUtils.constructLoadingUrlAsync(projectRoot, 'ios', 'localhost');
   } else {
     try {

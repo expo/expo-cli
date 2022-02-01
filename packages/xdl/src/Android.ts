@@ -378,13 +378,7 @@ async function ensureDevClientInstalledAsync(device: Device, applicationId: stri
 }
 
 async function isDevClientInstalledAsync(device: Device, applicationId: string): Promise<boolean> {
-  try {
-    await ensureDevClientInstalledAsync(device, applicationId);
-  } catch (e) {
-    return false;
-  }
-
-  return true;
+  return await isInstalledAsync(device, applicationId);
 }
 
 async function getExpoVersionAsync(device: Device): Promise<string | null> {
@@ -776,7 +770,7 @@ async function openUrlAsync({
       clientApplicationId = await getClientApplicationId();
       await ensureDevClientInstalledAsync(device, clientApplicationId);
     } else if (
-      process.env['EXPO_ENABLE_INTERSTITIAL_PAGE'] &&
+      Env.isInterstitiaLPageEnabled() &&
       !devClient &&
       isDevClientPackageInstalled(projectRoot)
     ) {
@@ -797,9 +791,9 @@ async function openUrlAsync({
         // Everything is installed, we can present the interstitial page.
         clientApplicationId = ''; // it will open browser
       } else {
-        // The development build ins't available. So let's fallback to Expo Go.
+        // The development build isn't available. So let's fall back to Expo Go.
         Logger.global.warn(
-          `\u203A The 'expo-dev-client' package is installed, but the development build isn't available.\nYour app will be open in Expo Go instead. If you want to use the development build, please install it on the simulator first.\n${learnMore(
+          `\u203A The 'expo-dev-client' package is installed, but a development build isn't available.\nYour app will open in Expo Go instead. If you want to use the development build, please install it on the simulator first.\n${learnMore(
             'https://docs.expo.dev/clients/distribution-for-ios/#building-for-ios'
           )}`
         );
@@ -888,11 +882,7 @@ async function constructDeepLinkAsync(
   scheme?: string,
   devClient?: boolean
 ): Promise<string | null> {
-  if (
-    process.env['EXPO_ENABLE_INTERSTITIAL_PAGE'] &&
-    !devClient &&
-    isDevClientPackageInstalled(projectRoot)
-  ) {
+  if (Env.isInterstitiaLPageEnabled() && !devClient && isDevClientPackageInstalled(projectRoot)) {
     return UrlUtils.constructLoadingUrlAsync(projectRoot, 'android');
   } else {
     return await UrlUtils.constructDeepLinkAsync(projectRoot, {
