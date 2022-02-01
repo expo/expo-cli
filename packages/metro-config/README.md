@@ -1,6 +1,19 @@
-# expo-metro-config
+<!-- Title -->
+<h1 align="center">
+👋 Welcome to <br><code>@expo/metro-config</code>
+</h1>
 
-A Metro config for running React Native projects with the Metro bundler.
+<p align="center">A Metro config for running React Native projects with the Metro bundler.</p>
+
+<p align="center">
+  <img src="https://flat.badgen.net/packagephobia/install/@expo/metro-config">
+
+  <a href="https://www.npmjs.com/package/@expo/metro-config">
+    <img src="https://flat.badgen.net/npm/dw/@expo/metro-config" target="_blank" />
+  </a>
+</p>
+
+<!-- Body -->
 
 ## Exotic
 
