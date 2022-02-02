@@ -491,7 +491,7 @@ async function addBareUpdatesWarningsAsync(projectRoot: string) {
     Log.nested(
       `🚀 ${terminalLink(
         'expo-updates',
-        'https://github.com/expo/expo/blob/master/packages/expo-updates/README.md'
+        'https://github.com/expo/expo/blob/main/packages/expo-updates/README.md'
       )} has been configured in your project. Before you do a release build, make sure you run ${chalk.bold(
         'expo publish'
       )}. ${terminalLink('Learn more.', 'https://expo.fyi/release-builds-with-expo-updates')}`
@@ -512,7 +512,7 @@ async function addBareUpdatesWarningsAsync(projectRoot: string) {
     Log.nested(
       `🚀 ${terminalLink(
         'expo-updates',
-        'https://github.com/expo/expo/blob/master/packages/expo-updates/README.md'
+        'https://github.com/expo/expo/blob/main/packages/expo-updates/README.md'
       )} has been configured in your project. If you publish this project under a different user account than ${chalk.bold(
         username
       )}, you'll need to update the configuration in Expo.plist and AndroidManifest.xml before making a release build.`
@@ -521,7 +521,7 @@ async function addBareUpdatesWarningsAsync(projectRoot: string) {
     Log.nested(
       `🚀 ${terminalLink(
         'expo-updates',
-        'https://github.com/expo/expo/blob/master/packages/expo-updates/README.md'
+        'https://github.com/expo/expo/blob/main/packages/expo-updates/README.md'
       )} has been installed in your project. Before you do a release build, you'll need to configure a few values in Expo.plist and AndroidManifest.xml in order for updates to work.`
     );
   }
