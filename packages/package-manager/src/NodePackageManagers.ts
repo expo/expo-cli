@@ -87,8 +87,8 @@ export class NpmPackageManager implements PackageManager {
     return 'npm';
   }
 
-  async installAsync() {
-    await this._runAsync(['install']);
+  async installAsync(parameters: string[] = []) {
+    await this._runAsync(['install', ...parameters]);
   }
 
   async addGlobalAsync(...names: string[]) {
@@ -97,12 +97,12 @@ export class NpmPackageManager implements PackageManager {
   }
 
   async addWithParametersAsync(names: string[], parameters: string[] = []) {
-    if (!names.length) return this.installAsync();
+    if (!names.length) return this.installAsync(parameters);
 
     const { versioned, unversioned } = this._parseSpecs(names);
     if (versioned.length) {
       await this._patchAsync(versioned, 'dependencies');
-      await this._runAsync(['install', ...parameters]);
+      await this.installAsync(parameters);
     }
     if (unversioned.length) {
       await this._runAsync([
