@@ -8,10 +8,10 @@ This is the log of notable changes to Expo CLI and related packages.
 
 - [config-plugins] Add code signing configuration to updates config plugin  ([#4122](https://github.com/expo/expo-cli/issues/4122))
 
-
 ### 🎉 New features
 
 - [expo-cli] New `--fix-dependencies` option for `doctor` ([#4153](https://github.com/expo/expo-cli/issues/4153))
+- [expo-cli][package-manager] Pass parameters to `npm install` or `yarn add` command when using `expo install` ([#4174](https://github.com/expo/expo-cli/pull/4174))
 
 ### 🧹 Chores
 
