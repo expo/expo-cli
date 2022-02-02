@@ -96,7 +96,7 @@ export class NpmPackageManager implements PackageManager {
     await this._runAsync(['install', '--global', ...names]);
   }
 
-  async addWithParametersAsync(names: string[], parameters: string[]) {
+  async addWithParametersAsync(names: string[], parameters: string[] = []) {
     if (!names.length) return this.installAsync();
 
     const { versioned, unversioned } = this._parseSpecs(names);
