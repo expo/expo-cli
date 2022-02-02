@@ -16,7 +16,7 @@ async function resolveExpoProjectRootAsync() {
   try {
     const info = await findProjectRootAsync(process.cwd());
     return info.projectRoot;
-  } catch (error) {
+  } catch (error: any) {
     if (error.code !== 'NO_PROJECT') {
       // An unknown error occurred.
       throw error;
@@ -107,7 +107,11 @@ export async function actionAsync(
       return `${name}@${versionsForSdk[name]}`;
     } else {
       // Other packages are passed through unmodified.
-      othersCount++;
+      // As commanders supports using double-dash, we don't count any 'package' passed in that starts with a dash,
+      // because that acts as a command line option for npm or yarn.
+      if (!arg.startsWith('-')) {
+        othersCount++;
+      }
       return raw;
     }
   });
@@ -132,7 +136,7 @@ export async function actionAsync(
       exp,
       versionedPackages.map(pkg => pkg.split('@')[0]).filter(Boolean)
     );
-  } catch (error) {
+  } catch (error: any) {
     if (error.isPluginError) {
       Log.warn(`Skipping config plugin check: ` + error.message);
       return;
