@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`ProvisioningProfile module setProvisioningProfileForPbxproj configures the project.pbxproj file for multitarget projects 1`] = `
+exports[`ProvisioningProfile module setProvisioningProfileForPbxproj multitarget configures the project.pbxproj file for multitarget projects 1`] = `
 "// !$*UTF8*$!
 {
 	archiveVersion = 1;
@@ -660,7 +660,7 @@ exports[`ProvisioningProfile module setProvisioningProfileForPbxproj configures 
 "
 `;
 
-exports[`ProvisioningProfile module setProvisioningProfileForPbxproj configures the project.pbxproj file for multitarget projects without existing target attributes 1`] = `
+exports[`ProvisioningProfile module setProvisioningProfileForPbxproj multitarget configures the project.pbxproj file for multitarget projects without existing target attributes 1`] = `
 "// !$*UTF8*$!
 {
 	archiveVersion = 1;
@@ -1314,7 +1314,7 @@ exports[`ProvisioningProfile module setProvisioningProfileForPbxproj configures 
 "
 `;
 
-exports[`ProvisioningProfile module setProvisioningProfileForPbxproj configures the project.pbxproj file with the profile name and apple team id 1`] = `
+exports[`ProvisioningProfile module setProvisioningProfileForPbxproj single target configures the project.pbxproj file with the profile name and apple team id 1`] = `
 "// !$*UTF8*$!
 {
 	archiveVersion = 1;
