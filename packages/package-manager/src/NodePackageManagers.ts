@@ -96,17 +96,26 @@ export class NpmPackageManager implements PackageManager {
     await this._runAsync(['install', '--global', ...names]);
   }
 
-  async addAsync(...names: string[]) {
+  async addWithParametersAsync(names: string[], parameters: string[]) {
     if (!names.length) return this.installAsync();
 
     const { versioned, unversioned } = this._parseSpecs(names);
     if (versioned.length) {
       await this._patchAsync(versioned, 'dependencies');
-      await this._runAsync(['install']);
+      await this._runAsync(['install', ...parameters]);
     }
     if (unversioned.length) {
-      await this._runAsync(['install', '--save', ...unversioned.map(spec => spec.raw)]);
+      await this._runAsync([
+        'install',
+        '--save',
+        ...unversioned.map(spec => spec.raw),
+        ...parameters,
+      ]);
     }
+  }
+
+  async addAsync(...names: string[]) {
+    await this.addWithParametersAsync(names, []);
   }
 
   async addDevAsync(...names: string[]) {
@@ -250,12 +259,17 @@ export class YarnPackageManager implements PackageManager {
     await this._runAsync(args);
   }
 
-  async addAsync(...names: string[]) {
+  async addWithParametersAsync(names: string[], parameters: string[] = []) {
     if (!names.length) return this.installAsync();
     const args = await this.withOfflineSupportAsync('add');
     args.push(...names);
+    args.push(...parameters);
 
     await this._runAsync(args);
+  }
+
+  async addAsync(...names: string[]) {
+    await this.addWithParametersAsync(names, []);
   }
 
   async addDevAsync(...names: string[]) {
