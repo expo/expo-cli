@@ -3,16 +3,6 @@
 👋 Welcome to the <br>Expo Environment Info package.
 </h1>
 
-<!-- Header -->
-
-TODO
-
----
-
-<!-- Body -->
-
-TODO
-
 ## 🚀 Usage
 
 ### CLI
@@ -24,11 +14,12 @@ npx expo-env-info [options] [path]
 
 ## ⚙️ Options
 
-For more information run `npx expo-diag --help` (or `-h`)
+For more information run `npx expo-env-info --help` (or `-h`)
 
 | Options       | Description               |
 | ------------- | ------------------------- |
 | -h, --help    | output usage information  |
+| -v, --version | output the version number |
 
 ## License
 
