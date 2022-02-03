@@ -1,6 +1,6 @@
 <!-- Title -->
 <h1 align="center">
-👋 Welcome to <br><code>expo-diag</code>
+👋 Welcome to the <br>Expo Environment Info package.
 </h1>
 
 <!-- Header -->
@@ -19,7 +19,7 @@ TODO
 
 ```sh
 # Usage
-npx expo-diag [options] [path]
+npx expo-env-info [options] [path]
 ```
 
 ## ⚙️ Options
@@ -42,7 +42,7 @@ The Expo source code is made available under the [MIT license](LICENSE). Some of
     <a aria-label="sponsored by expo" href="http://expo.dev">
         <img src="https://img.shields.io/badge/Sponsored_by-Expo-4630EB.svg?style=for-the-badge&logo=EXPO&labelColor=000&logoColor=fff" target="_blank" />
     </a>
-    <a aria-label="expo-diag is free to use" href="/LICENSE" target="_blank">
+    <a aria-label="expo-enf-info is free to use" href="/LICENSE" target="_blank">
         <img align="right" alt="License: MIT" src="https://img.shields.io/badge/License-MIT-success.svg?style=for-the-badge&color=33CC12" target="_blank" />
     </a>
 </p>

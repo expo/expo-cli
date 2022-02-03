@@ -1,19 +1,19 @@
 {
-  "name": "expo-diag",
+  "name": "expo-env-info",
   "version": "1.0.0",
   "main": "build",
   "preferGlobal": true,
   "keywords": [
     "expo",
     "ios",
-    "expo-diag",
+    "expo-env-info",
     "android"
   ],
-  "description": "Diagnose environment",
+  "description": "Expo Environment Information Collector",
   "repository": {
     "type": "git",
     "url": "https://github.com/expo/expo-cli.git",
-    "directory": "packages/expo-diag"
+    "directory": "packages/expo-env-info"
   },
   "author": "Expo <support@expo.dev>",
   "license": "MIT",
