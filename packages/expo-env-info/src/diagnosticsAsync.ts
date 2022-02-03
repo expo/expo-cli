@@ -1,7 +1,9 @@
-import { getDefaultTarget } from '@expo/config';
 import envinfo from 'envinfo';
+import path from 'path';
 
-const packageJSON = require('../../../package.json');
+import { findFile } from './helpers';
+
+const packageJSON = require('../package.json');
 
 function getEnvironmentInfoAsync(): Promise<string> {
   return envinfo.run(
@@ -27,8 +29,15 @@ function getEnvironmentInfoAsync(): Promise<string> {
     },
     {
       yaml: true,
-      title: `Expo CLI ${packageJSON.version} environment info`,
+      title: `expo-env-info ${packageJSON.version} environment info`,
     }
+  );
+}
+
+async function isBareWorkflowProject(projectRoot: string): Promise<boolean> {
+  return (
+    (await findFile(path.join(projectRoot, 'ios'), '.xcodeproj')) ||
+    (await findFile(path.join(projectRoot, 'android'), '.gradle'))
   );
 }
 
@@ -41,7 +50,7 @@ export async function actionAsync(projectRoot: string): Promise<void> {
   const info = await getEnvironmentInfoAsync();
   const lines = info.split('\n');
 
-  const workflow = getDefaultTarget(projectRoot ?? process.cwd());
+  const workflow = (await isBareWorkflowProject(projectRoot)) ? 'bare' : 'managed';
   lines.pop();
   lines.push(`    Expo Workflow: ${workflow}`);
 
