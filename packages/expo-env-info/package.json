@@ -36,5 +36,5 @@
     "commander": "9.0.0",
     "@expo/config": "6.0.16",
     "envinfo": "7.8.1"
-    }
+  }
 }
