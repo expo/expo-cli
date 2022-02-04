@@ -5,6 +5,8 @@ import chalk from 'chalk';
 import wrapAnsi from 'wrap-ansi';
 import {
   Android,
+  Env,
+  isDevClientPackageInstalled,
   Project,
   ProjectSettings,
   Prompts,
@@ -180,7 +182,20 @@ const printServerInfo = async (
     try {
       const url = await UrlUtils.constructDeepLinkAsync(projectRoot);
 
-      urlOpts.printQRCode(url);
+      const getURLForQR = async () => {
+        const { devClient } = await ProjectSettings.readAsync(projectRoot);
+        if (
+          Env.isInterstitiaLPageEnabled() &&
+          !devClient &&
+          (await isDevClientPackageInstalled(projectRoot))
+        ) {
+          return await UrlUtils.constructLoadingUrlAsync(projectRoot, null);
+        } else {
+          return url;
+        }
+      };
+
+      urlOpts.printQRCode(await getURLForQR());
       Log.nested(item(`Metro waiting on ${u(url)}`));
       // Log.newLine();
       // TODO: if development build, change this message!
