@@ -99,6 +99,7 @@ export async function actionAsync(
   const result = await Project.publishAsync(projectRoot, {
     releaseChannel: options.releaseChannel,
     quiet: options.quiet,
+    maxWorkers: options.maxWorkers,
     target,
     resetCache: options.clear,
   });
