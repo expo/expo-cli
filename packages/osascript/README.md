@@ -3,7 +3,7 @@
 👋 Welcome to <br><code>@expo/osascript</code>
 </h1>
 
-<p align="center">A library for reading and writing JSON files.</p>
+<p align="center">Tools for running an osascripts in Node.</p>
 
 <p align="center">
   <img src="https://flat.badgen.net/packagephobia/install/@expo/osascript">
@@ -15,10 +15,7 @@
 
 <!-- Body -->
 
-
-# 
-
-Tools for running an osascripts in Node
+## Example
 
 ```sh
   ccheever@Charless-MacBook-Air:~/projects/osascript$nesh -y
