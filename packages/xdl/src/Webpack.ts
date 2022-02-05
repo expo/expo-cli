@@ -264,20 +264,24 @@ export async function startAsync(
   const compiler = webpack(config);
 
   // Create the middleware required for interacting with a native runtime (Expo Go, or a development build).
-  const nativeMiddleware = createNativeDevServerMiddleware(projectRoot, {
-    port,
-    compiler,
-    forceManifestType: options.forceManifestType,
-  });
-  // Inject the native manifest middleware.
-  const originalBefore = config.devServer!.before!.bind(config.devServer!.before);
-  config.devServer!.before = (app, server, compiler) => {
-    originalBefore(app, server, compiler);
+  let nativeMiddleware: ReturnType<typeof createNativeDevServerMiddleware> | null = null;
 
-    if (nativeMiddleware?.middleware) {
-      app.use(nativeMiddleware.middleware);
-    }
-  };
+  if (config.devServer?.before) {
+    nativeMiddleware = createNativeDevServerMiddleware(projectRoot, {
+      port,
+      compiler,
+      forceManifestType: options.forceManifestType,
+    });
+    // Inject the native manifest middleware.
+    const originalBefore = config.devServer.before.bind(config.devServer.before);
+    config.devServer.before = (app, server, compiler) => {
+      originalBefore(app, server, compiler);
+
+      if (nativeMiddleware?.middleware) {
+        app.use(nativeMiddleware.middleware);
+      }
+    };
+  }
 
   const server = new WebpackDevServer(compiler, config.devServer);
   // Launch WebpackDevServer.
