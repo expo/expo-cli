@@ -17,7 +17,7 @@ import { logNewSection } from '../utils/ora';
 import prompts, { selectAsync } from '../utils/prompts';
 import { directoryExistsAsync } from './eject/clearNativeFolder';
 import * as CreateApp from './utils/CreateApp';
-import { usesOldExpoUpdatesAsync } from './utils/ProjectUtils';
+import { hasExpoUpdatesInstalledAsync, usesOldExpoUpdatesAsync } from './utils/ProjectUtils';
 import { extractAndPrepareTemplateAppAsync } from './utils/extractTemplateAppAsync';
 
 type Options = {
@@ -306,35 +306,16 @@ export async function actionAsync(incomingProjectRoot: string, command: Partial<
     }
   }
 
-  // Configure updates (?)
-
   const cdPath = CreateApp.getChangeDirectoryPath(projectRoot);
-
-  let showPublishBeforeBuildWarning: boolean | undefined;
-  let didConfigureUpdatesProjectFiles: boolean = false;
-  let username: string | null = null;
-
-  if (isBare) {
-    username = await UserManager.getCurrentUsernameAsync();
-    if (username) {
-      try {
-        await configureUpdatesProjectFilesAsync(projectPath, username);
-        didConfigureUpdatesProjectFiles = true;
-      } catch {}
-    }
-    showPublishBeforeBuildWarning = await usesOldExpoUpdatesAsync(projectPath);
-  }
 
   // Log info
 
   Log.addNewLineIfNone();
-  await logProjectReadyAsync({
+
+  await logProjectReadyAsync(projectRoot, {
     cdPath,
     packageManager,
     workflow,
-    showPublishBeforeBuildWarning,
-    didConfigureUpdatesProjectFiles,
-    username,
   });
 
   // Log a warning about needing to install node modules
@@ -434,21 +415,18 @@ function logCocoaPodsWarning(cdPath: string): void {
   Log.nested('');
 }
 
-function logProjectReadyAsync({
-  cdPath,
-  packageManager,
-  workflow,
-  showPublishBeforeBuildWarning,
-  didConfigureUpdatesProjectFiles,
-  username,
-}: {
-  cdPath: string;
-  packageManager: string;
-  workflow: 'managed' | 'bare';
-  showPublishBeforeBuildWarning?: boolean;
-  didConfigureUpdatesProjectFiles?: boolean;
-  username?: string | null;
-}) {
+async function logProjectReadyAsync(
+  projectRoot: string,
+  {
+    cdPath,
+    packageManager,
+    workflow,
+  }: {
+    cdPath: string;
+    packageManager: string;
+    workflow: 'managed' | 'bare';
+  }
+) {
   Log.nested(chalk.bold(`✅ Your project is ready!`));
   Log.newLine();
 
@@ -494,37 +472,58 @@ function logProjectReadyAsync({
       )} directories with their respective IDEs.`
     );
 
-    if (showPublishBeforeBuildWarning) {
-      Log.nested(
-        `🚀 ${terminalLink(
-          'expo-updates',
-          'https://github.com/expo/expo/blob/master/packages/expo-updates/README.md'
-        )} has been configured in your project. Before you do a release build, make sure you run ${chalk.bold(
-          'expo publish'
-        )}. ${terminalLink('Learn more.', 'https://expo.fyi/release-builds-with-expo-updates')}`
-      );
-    } else if (didConfigureUpdatesProjectFiles) {
-      Log.nested(
-        `🚀 ${terminalLink(
-          'expo-updates',
-          'https://github.com/expo/expo/blob/master/packages/expo-updates/README.md'
-        )} has been configured in your project. If you publish this project under a different user account than ${chalk.bold(
-          username
-        )}, you'll need to update the configuration in Expo.plist and AndroidManifest.xml before making a release build.`
-      );
-    } else {
-      Log.nested(
-        `🚀 ${terminalLink(
-          'expo-updates',
-          'https://github.com/expo/expo/blob/master/packages/expo-updates/README.md'
-        )} has been installed in your project. Before you do a release build, you'll need to configure a few values in Expo.plist and AndroidManifest.xml in order for updates to work.`
-      );
-    }
+    await addBareUpdatesWarningsAsync(projectRoot);
+
     // TODO: add equivalent of this or some command to wrap it:
     // # ios
     // $ open -a Xcode ./ios/{PROJECT_NAME}.xcworkspace
     // # android
     // $ open -a /Applications/Android\\ Studio.app ./android
+  }
+}
+
+async function addBareUpdatesWarningsAsync(projectRoot: string) {
+  if (!(await hasExpoUpdatesInstalledAsync(projectRoot))) {
+    return;
+  }
+
+  if (await usesOldExpoUpdatesAsync(projectRoot)) {
+    Log.nested(
+      `🚀 ${terminalLink(
+        'expo-updates',
+        'https://github.com/expo/expo/blob/main/packages/expo-updates/README.md'
+      )} has been configured in your project. Before you do a release build, make sure you run ${chalk.bold(
+        'expo publish'
+      )}. ${terminalLink('Learn more.', 'https://expo.fyi/release-builds-with-expo-updates')}`
+    );
+    return;
+  }
+
+  let didConfigureUpdatesProjectFiles: boolean = false;
+  const username = await UserManager.getCurrentUsernameAsync();
+  if (username) {
+    try {
+      await configureUpdatesProjectFilesAsync(projectRoot, username);
+      didConfigureUpdatesProjectFiles = true;
+    } catch {}
+  }
+
+  if (didConfigureUpdatesProjectFiles) {
+    Log.nested(
+      `🚀 ${terminalLink(
+        'expo-updates',
+        'https://github.com/expo/expo/blob/main/packages/expo-updates/README.md'
+      )} has been configured in your project. If you publish this project under a different user account than ${chalk.bold(
+        username
+      )}, you'll need to update the configuration in Expo.plist and AndroidManifest.xml before making a release build.`
+    );
+  } else {
+    Log.nested(
+      `🚀 ${terminalLink(
+        'expo-updates',
+        'https://github.com/expo/expo/blob/main/packages/expo-updates/README.md'
+      )} has been installed in your project. Before you do a release build, you'll need to configure a few values in Expo.plist and AndroidManifest.xml in order for updates to work.`
+    );
   }
 }
 
