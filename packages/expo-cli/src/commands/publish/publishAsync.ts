@@ -163,7 +163,7 @@ function assertUpdateURLCorrectlyConfigured(exp: ExpoConfig): void {
   if (isMaybeAnEASUrl(configuredURL)) {
     throw new CommandError(
       ErrorCodes.INVALID_UPDATE_URL,
-      `It seems like your project is configured for EAS Update. Please use 'eas branch:publish' instead.`
+      `It seems like your project is configured for EAS Update. Please use 'eas update' instead.`
     );
   }
 }
