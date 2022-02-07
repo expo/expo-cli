@@ -208,12 +208,10 @@ export async function publishAsync(
       ? `${response.url}?release-channel=${options.releaseChannel}`
       : response.url;
 
-  // Create project page URL
-  const projectPageUrl = response.projectPageUrl
-    ? options.releaseChannel && options.releaseChannel !== 'default'
-      ? `${response.projectPageUrl}?release-channel=${options.releaseChannel}`
-      : response.projectPageUrl
-    : null;
+  const projectPageUrl = createProjectPageURL({
+    projectPageUrl: response.projectPageUrl,
+    releaseChannel: options.releaseChannel,
+  });
 
   return {
     ...response,
@@ -310,5 +308,24 @@ async function _handleKernelPublishedAsync({
       path.resolve(projectRoot, exp.kernel.iosManifestPath),
       JSON.stringify(manifest)
     );
+  }
+}
+
+function createProjectPageURL({
+  projectPageUrl,
+  releaseChannel,
+}: {
+  projectPageUrl: string;
+  releaseChannel?: string;
+}): string | null {
+  if (!projectPageUrl) {
+    return null;
+  }
+
+  const formattedProjectUrl = `${projectPageUrl}?serviceType=eas&distribution=expo-go`;
+  if (releaseChannel && releaseChannel !== 'default') {
+    return `${formattedProjectUrl}?release-channel=${releaseChannel}`;
+  } else {
+    return formattedProjectUrl;
   }
 }
