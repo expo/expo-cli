@@ -8,6 +8,7 @@
     "!**/__integration_tests__/**",
     "binaries",
     "caches",
+    "static",
     "scripts"
   ],
   "scripts": {
