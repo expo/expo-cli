@@ -12,6 +12,18 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+## [Tue, 8 Feb 2022 14:47:23 -0800](https://github.com/expo/expo-cli/commit/e68ec76f84d1ffe7691dbaf3d13de8cf1b7a264e)
+
+### 🐛 Bug fixes
+
+- [xdl] Add static directory to files
+
+### 📦 Packages updated
+
+- @expo/dev-tools@0.13.142
+- expo-cli@5.1.1
+- xdl@59.2.26
+
 ## [Tue, 8 Feb 2022 14:03:05 -0800](https://github.com/expo/expo-cli/commit/79e403db6d4a34cae02fca2f2e6baecc5bc4e709)
 
 ### 🛠 Breaking changes
