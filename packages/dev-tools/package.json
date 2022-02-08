@@ -1,6 +1,6 @@
 {
   "name": "@expo/dev-tools",
-  "version": "0.13.140",
+  "version": "0.13.141",
   "main": "build/server/index.js",
   "scripts": {
     "dev": "cross-env NODE_ENV=development ts-node -T ./server/dev-server",
@@ -17,7 +17,7 @@
     "build"
   ],
   "dependencies": {
-    "@expo/config": "6.0.16",
+    "@expo/config": "6.0.17",
     "base64url": "3.0.1",
     "better-opn": "^3.0.1",
     "express": "4.16.4",
@@ -64,7 +64,7 @@
     "slugify": "^1.0.2",
     "ts-node": "^9.1.1",
     "velocity-react": "^1.4.1",
-    "xdl": "59.2.24"
+    "xdl": "59.2.25"
   },
   "license": "MIT",
   "repository": {

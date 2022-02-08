@@ -1,6 +1,6 @@
 {
   "name": "expo-pwa",
-  "version": "0.0.111",
+  "version": "0.0.112",
   "main": "build",
   "preferGlobal": true,
   "keywords": [
@@ -32,7 +32,7 @@
     "clean": "rimraf build ./tsconfig.tsbuildinfo"
   },
   "dependencies": {
-    "@expo/config": "6.0.16",
+    "@expo/config": "6.0.17",
     "@expo/image-utils": "0.3.18",
     "chalk": "^4.0.0",
     "commander": "2.20.0",

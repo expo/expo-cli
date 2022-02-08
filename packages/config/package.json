@@ -1,6 +1,6 @@
 {
   "name": "@expo/config",
-  "version": "6.0.16",
+  "version": "6.0.17",
   "description": "A library for interacting with the app.json",
   "main": "build/index.js",
   "scripts": {
@@ -33,7 +33,7 @@
   ],
   "dependencies": {
     "@babel/code-frame": "~7.10.4",
-    "@expo/config-plugins": "4.0.16",
+    "@expo/config-plugins": "4.0.17",
     "@expo/config-types": "^43.0.1",
     "@expo/json-file": "8.2.34",
     "getenv": "^1.0.0",
