@@ -12,6 +12,38 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+## [Thu, 10 Feb 2022 12:37:31 -0800](https://github.com/expo/expo-cli/commit/82904c9641b22fdf0cc2b24b1cfd4ed33c4dfc33)
+
+### 🎉 New features
+
+- [cli] check expo-updates is installed before a publish ([#4179](https://github.com/expo/expo-cli/issues/4179))
+
+### 🧹 Chores
+
+- Publish @expo/config-types@44.0.0
+
+### 🐛 Bug fixes
+
+- [cli] Skip parsing font files on init ([#4202](https://github.com/expo/expo-cli/issues/4202))
+- [cli] fix project page param typo ([#4204](https://github.com/expo/expo-cli/issues/4204))
+
+### 📦 Packages updated
+
+- @expo/config-plugins@4.0.18
+- @expo/config@6.0.18
+- @expo/dev-server@0.1.105
+- @expo/dev-tools@0.13.143
+- expo-cli@5.1.2
+- expo-optimize@0.2.10
+- install-expo-modules@0.2.4
+- @expo/metro-config@0.3.11
+- @expo/next-adapter@3.1.19
+- @expo/prebuild-config@3.0.18
+- expo-pwa@0.0.113
+- uri-scheme@1.0.114
+- @expo/webpack-config@0.16.18
+- xdl@59.2.27
+
 ## [Tue, 8 Feb 2022 14:47:23 -0800](https://github.com/expo/expo-cli/commit/e68ec76f84d1ffe7691dbaf3d13de8cf1b7a264e)
 
 ### 🐛 Bug fixes
