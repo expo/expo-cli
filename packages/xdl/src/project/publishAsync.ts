@@ -322,9 +322,9 @@ function createProjectPageURL({
     return null;
   }
 
-  const formattedProjectUrl = `${projectPageUrl}?serviceType=eas&distribution=expo-go`;
+  const formattedProjectUrl = `${projectPageUrl}?serviceType=classic&distribution=expo-go`;
   if (releaseChannel && releaseChannel !== 'default') {
-    return `${formattedProjectUrl}?release-channel=${releaseChannel}`;
+    return `${formattedProjectUrl}&release-channel=${releaseChannel}`;
   } else {
     return formattedProjectUrl;
   }
