@@ -75,6 +75,52 @@ This is the log of notable changes to Expo CLI and related packages.
 - @expo/webpack-config@0.16.17
 - xdl@59.2.25
 
+## [Wed, 12 Jan 2022 13:56:55 +0100](https://github.com/expo/expo-cli/commit/9e79e507e3de51dbc48db762f36d680b845760e8)
+
+### 🎉 New features
+
+- [cli][init] Skip git init in monorepo ([#4121](https://github.com/expo/expo-cli/issues/4121))
+
+### 🧹 Chores
+
+- [cli] Remove instance of got ([#4112](https://github.com/expo/expo-cli/issues/4112))
+- [cli] Remove instances of xdl ([#4113](https://github.com/expo/expo-cli/issues/4113))
+- [cli] Remove pacote ([#4088](https://github.com/expo/expo-cli/issues/4088))
+- [cli] deprecate unused `expo start` options ([#4092](https://github.com/expo/expo-cli/issues/4092))
+- [cli] suppress unauthorized warning on login and logout after logging out of all sessions on website ([#4120](https://github.com/expo/expo-cli/issues/4120))
+- [install-expo-modules] Add begin-rescue to Podfile ([#4131](https://github.com/expo/expo-cli/issues/4131))
+- [install-expo-modules] Fix invalid installation for yarn 2 ([#4130](https://github.com/expo/expo-cli/issues/4130))
+- [repo] Refactor chalk imports ([#4111](https://github.com/expo/expo-cli/issues/4111))
+- [repo] lerna version bump and config update ([#4117](https://github.com/expo/expo-cli/issues/4117))
+- [xdl] switch cloudfront domain to classic-assets.eascdn.net ([#4115](https://github.com/expo/expo-cli/issues/4115))
+
+### 🐛 Bug fixes
+
+- [cli] Refactor NotificationCode to LoadingEvent ([#4136](https://github.com/expo/expo-cli/issues/4136))
+- [package-manager] Fix `pod repo update` not automatically running ([#4084](https://github.com/expo/expo-cli/issues/4084))
+- [plist] Skip plist keys if value is undefined ([#4109](https://github.com/expo/expo-cli/issues/4109))
+- [xdl] Fix various ngrok bugs ([#4132](https://github.com/expo/expo-cli/issues/4132))
+
+### 📦 Packages updated
+
+- @expo/config-plugins@4.0.16
+- @expo/config@6.0.16
+- @expo/dev-server@0.1.103
+- @expo/dev-tools@0.13.140
+- expo-cli@5.0.5
+- expo-optimize@0.2.8
+- install-expo-modules@0.2.2
+- @expo/metro-config@0.3.9
+- @expo/next-adapter@3.1.17
+- @expo/package-manager@0.0.49
+- @expo/plist@0.0.17
+- pod-install@0.1.31
+- @expo/prebuild-config@3.0.16
+- expo-pwa@0.0.111
+- uri-scheme@1.0.112
+- @expo/webpack-config@0.16.16
+- xdl@59.2.24
+
 ## [Wed, 22 Dec 2021 14:05:44 +0800](https://github.com/expo/expo-cli/commit/de947a91dfc3aa5c4b92330c3c03ec6649e0129f)
 
 ### 🐛 Bug fixes
