@@ -2,7 +2,7 @@ import { sanitizeNpmPackageName } from '../npm';
 
 describe(sanitizeNpmPackageName, () => {
   it(`leaves valid names`, () => {
-    for (const name of ['@bacon/app', 'my-app', 'my-a.pp']) {
+    for (const name of ['@bacon/app', 'my-app', 'my-a.pp', 'test123']) {
       expect(sanitizeNpmPackageName(name)).toBe(name);
     }
   });
