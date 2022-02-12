@@ -208,7 +208,7 @@ project.ext.react = [
   });
 
   it('should throw if "enableHermes: false" in app/build.gradle and "jsEngine: \'hermes\'" in app.json', async () => {
-    const appBuildGradlePath = '/expo/android/app/build.gradle';
+    const appBuildGradlePath = path.join('/expo', 'android', 'app', 'build.gradle');
     const mockFsExistSync = fs.existsSync as jest.MockedFunction<typeof fs.existsSync>;
     mockFsExistSync.mockImplementation((file: string) => file === appBuildGradlePath);
 
@@ -267,7 +267,7 @@ project.ext.react = [
   });
 
   it('should resolve if "expo.jsEngine=hermes" in gradle.properties but no "jsEngine: \'hermes\'" in app.json', async () => {
-    const appBuildGradlePath = '/expo/android/app/build.gradle';
+    const appBuildGradlePath = path.join('/expo', 'android', 'app', 'build.gradle');
     const mockFsExistSync = fs.existsSync as jest.MockedFunction<typeof fs.existsSync>;
     mockFsExistSync.mockImplementation((file: string) => file === appBuildGradlePath);
 
@@ -317,8 +317,8 @@ project.ext.react = [
   });
 
   it('should handle the inconsistency between app/build.gradle and gradle.properties', async () => {
-    const appBuildGradlePath = '/expo/android/app/build.gradle';
-    const gradlePropertiesPath = '/expo/android/gradle.properties';
+    const appBuildGradlePath = path.join('/expo', 'android', 'app', 'build.gradle');
+    const gradlePropertiesPath = path.join('/expo', 'android', 'gradle.properties');
     const mockFsExistSync = fs.existsSync as jest.MockedFunction<typeof fs.existsSync>;
     mockFsExistSync.mockImplementation(
       (file: string) => file === appBuildGradlePath || file === gradlePropertiesPath
@@ -405,7 +405,7 @@ describe('maybeThrowFromInconsistentEngineAsync - ios', () => {
   });
 
   it('should throw if ":hermes_enabled => true" in Podfile but no "jsEngine: \'hermes\'" in app.json', async () => {
-    const podfilePath = '/expo/ios/Podfile';
+    const podfilePath = path.join('/expo', 'ios', 'Podfile');
     const mockFsExistSync = fs.existsSync as jest.MockedFunction<typeof fs.existsSync>;
     mockFsExistSync.mockImplementation((file: string) => file === podfilePath);
 
@@ -429,7 +429,7 @@ describe('maybeThrowFromInconsistentEngineAsync - ios', () => {
   });
 
   it('should throw if (":hermes_enabled => false" or not existed in Podfile) and "jsEngine: \'hermes\'" in app.json', async () => {
-    const podfilePath = '/expo/ios/Podfile';
+    const podfilePath = path.join('/expo', 'ios', 'Podfile');
     const mockFsExistSync = fs.existsSync as jest.MockedFunction<typeof fs.existsSync>;
     mockFsExistSync.mockImplementation((file: string) => file === podfilePath);
 
@@ -482,8 +482,8 @@ describe('maybeThrowFromInconsistentEngineAsync - ios', () => {
   });
 
   it('should handle the inconsistency between Podfile and Podfile.properties.json', async () => {
-    const podfilePath = '/expo/ios/Podfile';
-    const podfilePropertiesPath = '/expo/ios/Podfile.properties.json';
+    const podfilePath = path.join('/expo', 'ios', 'Podfile');
+    const podfilePropertiesPath = path.join('/expo', 'ios', 'Podfile.properties.json');
     const mockFsExistSync = fs.existsSync as jest.MockedFunction<typeof fs.existsSync>;
     mockFsExistSync.mockImplementation(
       (file: string) => file === podfilePath || file === podfilePropertiesPath
