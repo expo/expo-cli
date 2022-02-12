@@ -60,7 +60,15 @@ describe(getConfig, () => {
       getConfig(projectRoot, {
         skipSDKVersionRequirement: true,
       })
-    ).toThrowErrorMatchingSnapshot();
+    ).toThrowErrorMatchingInlineSnapshot(`
+    "Error reading Expo config at ${projectRoot}/app.config.js:
+    
+    Cannot use import statement outside a module
+    ${projectRoot}/other.js:2
+    import 'fs';
+    ^^^^^^
+    "
+    `);
   });
 
   it('resolves plugins', () => {
