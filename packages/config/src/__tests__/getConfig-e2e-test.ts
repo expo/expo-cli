@@ -1,5 +1,5 @@
 // Tests that require physical fixtures due to their complex nature.
-import { join, resolve } from 'path';
+import path, { join, resolve } from 'path';
 
 import { getConfig, setCustomConfigPath } from '../Config';
 import { getDynamicConfig } from '../getConfig';
@@ -61,10 +61,10 @@ describe(getConfig, () => {
         skipSDKVersionRequirement: true,
       })
     ).toThrowErrorMatchingInlineSnapshot(`
-    "Error reading Expo config at ${projectRoot}/app.config.js:
+    "Error reading Expo config at ${projectRoot}${path.sep}app.config.js:
     
     Cannot use import statement outside a module
-    ${projectRoot}/other.js:2
+    ${projectRoot}${path.sep}other.js:2
     import 'fs';
     ^^^^^^
     "
