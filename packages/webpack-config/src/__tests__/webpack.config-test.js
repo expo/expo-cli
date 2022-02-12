@@ -4,6 +4,7 @@ import createConfig from '..';
 import normalizePaths from '../utils/normalizePaths';
 
 jest.unmock('resolve-from');
+jest.mock('is-wsl');
 
 const projectRoot = dirname(require.resolve('@expo/webpack-config/e2e/basic'));
 
