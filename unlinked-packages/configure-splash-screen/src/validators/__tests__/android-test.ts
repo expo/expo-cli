@@ -55,13 +55,13 @@ describe('validateAndroidConfig', () => {
         backgroundColor: [255, 0, 0, 1],
         darkMode: {
           backgroundColor: [40, 80, 120, 0.5],
-          image: '/assets/background.png',
+          image: path.resolve('/assets/background.png'),
           statusBar: {
             backgroundColor: [64, 47, 70, 1],
             style: 'light-content',
           },
         },
-        image: '/assets/background.png',
+        image: path.resolve('/assets/background.png'),
         imageResizeMode: 'contain',
         statusBar: {
           backgroundColor: [255, 255, 0, 1],

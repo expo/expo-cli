@@ -49,9 +49,9 @@ describe('validateIosConfig', () => {
         backgroundColor: [255, 0, 0, 1],
         darkMode: {
           backgroundColor: [40, 80, 120, 0.5],
-          image: '/assets/background.png',
+          image: path.resolve('/assets/background.png'),
         },
-        image: '/assets/background.png',
+        image: path.resolve('/assets/background.png'),
         imageResizeMode: 'contain',
         statusBar: {
           hidden: false,

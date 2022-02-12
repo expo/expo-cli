@@ -1,4 +1,5 @@
 import { vol } from 'memfs';
+import path from 'path';
 
 import { SplashScreenImageResizeMode } from '../../constants';
 import configureStoryboard from '../Storyboard';
@@ -19,8 +20,8 @@ describe('Storyboard', () => {
       vol.reset();
     });
 
-    const iosProjectPath = `/app/ios`;
-    const filePath = `${iosProjectPath}/ReactNativeProject/SplashScreen.storyboard`;
+    const iosProjectPath = path.resolve(`/app/ios`);
+    const filePath = path.resolve('/app/ios/ReactNativeProject/SplashScreen.storyboard');
 
     it('creates .storyboard file', async () => {
       const iosProject = await readPbxProject(iosProjectPath);

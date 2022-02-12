@@ -14,7 +14,10 @@ const STORYBOARD_FILE_PATH = './SplashScreen.storyboard';
 function updatePbxProject({ projectName, pbxProject, applicationNativeTarget }: IosProject): void {
   // Check if `${projectName}/SplashScreen.storyboard` already exists
   // Path relative to `ios` directory
-  const storyboardFilePath = path.join(projectName, STORYBOARD_FILE_PATH);
+  // xcode package is hardcoded to use posix paths. See https://github.com/apache/cordova-node-xcode/issues/116
+  const storyboardFilePath = path
+    .join(projectName, STORYBOARD_FILE_PATH)
+    .replace(path.sep, path.posix.sep);
   if (!pbxProject.hasFile(storyboardFilePath)) {
     const group = pbxProject.findPBXGroupKey({ name: projectName });
     if (!group) {
