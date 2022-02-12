@@ -41,7 +41,7 @@ it(`reads JSON5 from a file`, async () => {
 it(`has useful error messages for JSON parsing errors`, async () => {
   await expect(
     JsonFile.readAsync(path.join(__dirname, 'files/syntax-error.json'))
-  ).rejects.toThrowError(/Cause: SyntaxError: Unexpected string in JSON at position 602/);
+  ).rejects.toThrowError(/Cause: SyntaxError: Unexpected string in JSON at position 6/);
 });
 
 it(`has useful error messages for JSON5 parsing errors`, async () => {
