@@ -59,7 +59,7 @@ describe(getMissingPackagesAsync, () => {
         },
       ],
       resolutions: {
-        'react-native-web': '/test-project/node_modules/react-native-web/package.json',
+        'react-native-web': `${path.sep}test-project${path.sep}node_modules${path.sep}react-native-web${path.sep}package.json`,
       },
     });
   });

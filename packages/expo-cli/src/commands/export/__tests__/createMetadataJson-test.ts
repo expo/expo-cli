@@ -1,3 +1,5 @@
+import path from 'path';
+
 import { createMetadataJson } from '../createMetadataJson';
 
 describe(createMetadataJson, () => {
@@ -20,14 +22,14 @@ describe(createMetadataJson, () => {
           assets: [
             {
               ext: 'image',
-              path: 'assets/foobar',
+              path: `assets${path.sep}foobar`,
             },
             {
               ext: 'image',
-              path: 'assets/other',
+              path: `assets${path.sep}other`,
             },
           ],
-          bundle: 'bundles/ios-xxfooxxbarxx.js',
+          bundle: `bundles${path.sep}ios-xxfooxxbarxx.js`,
         },
       },
       version: expect.any(Number),

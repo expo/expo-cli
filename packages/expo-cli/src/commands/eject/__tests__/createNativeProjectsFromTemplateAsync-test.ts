@@ -1,4 +1,5 @@
 import { vol } from 'memfs';
+import path from 'path';
 
 import { resolveBareEntryFile } from '../createNativeProjectsFromTemplateAsync';
 
@@ -35,14 +36,20 @@ describe(resolveBareEntryFile, () => {
     expect(resolveBareEntryFile('/noop', 'expo/AppEntry.js')).toEqual(null);
   });
   it(`resolves to the provided main field`, () => {
-    expect(resolveBareEntryFile(projectRoot, './src/index')).toEqual('/alpha/src/index.js');
-    expect(resolveBareEntryFile(projectRoot, './index')).toEqual('/alpha/index.js');
+    expect(resolveBareEntryFile(projectRoot, './src/index')).toEqual(
+      `${path.sep}alpha${path.sep}src${path.sep}index.js`
+    );
+    expect(resolveBareEntryFile(projectRoot, './index')).toEqual(
+      `${path.sep}alpha${path.sep}index.js`
+    );
     // Test that the "node_modules" aren't searched.
-    expect(resolveBareEntryFile(projectRootBeta, 'App')).toEqual('/beta/App.js');
+    expect(resolveBareEntryFile(projectRootBeta, 'App')).toEqual(
+      `${path.sep}beta${path.sep}App.js`
+    );
   });
   // Uses the default file if it exists and isn't defined in the package.json.
   it(`resolves to the existing default main file when no field is defined`, () => {
-    expect(resolveBareEntryFile(projectRoot, null)).toEqual('/alpha/index.js');
+    expect(resolveBareEntryFile(projectRoot, null)).toEqual(`${path.sep}alpha${path.sep}index.js`);
   });
   // support crna blank template -- https://github.com/expo/expo-cli/issues/2873
   // no package.json main, but has a file that expo managed would resolve as the entry.
@@ -81,12 +88,18 @@ describe(resolveBareEntryFile, () => {
     expect(resolveBareEntryFile('/noop', 'expo/AppEntry.js')).toEqual(null);
   });
   it(`resolves to the provided main field`, () => {
-    expect(resolveBareEntryFile(projectRoot, './src/index')).toEqual('/alpha/src/index.js');
-    expect(resolveBareEntryFile(projectRoot, './index')).toEqual('/alpha/index.js');
-    expect(resolveBareEntryFile(projectRootBeta, 'App')).toEqual('/beta/App.ios.js');
+    expect(resolveBareEntryFile(projectRoot, './src/index')).toEqual(
+      `${path.sep}alpha${path.sep}src${path.sep}index.js`
+    );
+    expect(resolveBareEntryFile(projectRoot, './index')).toEqual(
+      `${path.sep}alpha${path.sep}index.js`
+    );
+    expect(resolveBareEntryFile(projectRootBeta, 'App')).toEqual(
+      `${path.sep}beta${path.sep}App.ios.js`
+    );
   });
   it(`resolves to the existing default main file when no field is defined`, () => {
-    expect(resolveBareEntryFile(projectRoot, null)).toEqual('/alpha/index.js');
+    expect(resolveBareEntryFile(projectRoot, null)).toEqual(`${path.sep}alpha${path.sep}index.js`);
   });
   it(`resolves to null when the default file doesn't exist`, () => {
     expect(resolveBareEntryFile(projectRootBeta, null)).toEqual(null);

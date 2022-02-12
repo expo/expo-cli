@@ -86,7 +86,7 @@ describe('collectMergeSourceUrlsAsync', () => {
     const directories = await collectMergeSourceUrlsAsync(projectRoot, ['expo.dev/app.tar.gz']);
     expect(directories.length).toBe(1);
     // Ensure the file was downloaded with the expected name
-    expect(directories[0]).toMatch(/\/alpha\/\.tmp\/app_/);
+    expect(directories[0]).toMatch(/[\/\\]alpha[\/\\]\.tmp[\/\\]app_/);
 
     // Ensure the tmp directory was created and the file was added
     expect(vol.existsSync(directories[0])).toBe(true);

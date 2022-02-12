@@ -1,5 +1,6 @@
 import { getConfig } from '@expo/config';
 import { vol } from 'memfs';
+import path from 'path';
 
 import { ensureConfigExistsAsync } from '../ensureConfigAsync';
 
@@ -43,7 +44,7 @@ describe(ensureConfigExistsAsync, () => {
     const config = getConfig(projectRoot);
 
     // Writes a static config
-    expect(config.staticConfigPath).toBe('/alpha/app.json');
+    expect(config.staticConfigPath).toBe(`${path.sep}alpha${path.sep}app.json`);
     expect(config.dynamicConfigPath).toBe(null);
 
     expect(config.exp.sdkVersion).toBe('40.0.0');
