@@ -1,4 +1,5 @@
 import { mkdirSync } from 'fs';
+import path from 'path';
 
 import { getAccountUsername } from '../getFullName';
 import { getExpoHomeDirectory, getUserState } from '../getUserState';
@@ -31,12 +32,12 @@ describe(getAccountUsername, () => {
   });
   it(`uses anonymous name`, () => {
     // Ensure the test doesn't interact with the developer's state.json
-    expect(getExpoHomeDirectory()).toBe('/home/.expo');
+    expect(getExpoHomeDirectory()).toBe(`${path.sep}home${path.sep}.expo`);
     expect(getAccountUsername()).toBe('anonymous');
   });
   it(`uses previously authenticated username`, async () => {
     // Ensure the test doesn't interact with the developer's state.json
-    expect(getExpoHomeDirectory()).toBe('/home/.expo');
+    expect(getExpoHomeDirectory()).toBe(`${path.sep}home${path.sep}.expo`);
     // Ensure the dir exists
     await mkdirSync(getExpoHomeDirectory(), { recursive: true });
     // Set a username...

@@ -1,3 +1,5 @@
+import path from 'path';
+
 import { ensureSlash, getEntryPointWithExtensions } from '../paths';
 
 // TODO: Bacon: Add test for resolving entry point
@@ -20,7 +22,7 @@ describe(getEntryPointWithExtensions, () => {
     // Test that it throws the error after the config error.
     // This error is thrown because the mock FS isn't implemented.
     expect(() => getEntryPointWithExtensions('/', [], [])).toThrow(
-      `The expected package.json path: /package.json does not exist`
+      `The expected package.json path: ${path.sep}package.json does not exist`
     );
   });
 });

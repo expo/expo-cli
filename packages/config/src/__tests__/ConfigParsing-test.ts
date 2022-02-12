@@ -136,9 +136,9 @@ describe(getConfig, () => {
       expect(exp.foo).toBe('bar+value');
       expect(exp.name).toBe('rewrote+ts-config-test');
       expect(exp._internal).toStrictEqual({
-        dynamicConfigPath: 'ts/app.config.ts',
+        dynamicConfigPath: `ts${path.sep}app.config.ts`,
         isDebug: false,
-        packageJsonPath: 'ts/package.json',
+        packageJsonPath: `ts${path.sep}package.json`,
         projectRoot: 'ts',
         staticConfigPath: null,
       });
@@ -159,11 +159,11 @@ describe(getConfig, () => {
       // Ensures that the app.json is read and passed to the method
       expect(exp.slug).toBe('someslug+config');
       expect(exp._internal).toStrictEqual({
-        dynamicConfigPath: 'js/app.config.js',
+        dynamicConfigPath: `js${path.sep}app.config.js`,
         isDebug: false,
-        packageJsonPath: 'js/package.json',
+        packageJsonPath: `js${path.sep}package.json`,
         projectRoot: 'js',
-        staticConfigPath: 'js/app.json',
+        staticConfigPath: `js${path.sep}app.json`,
       });
     });
     it('parses a js config with export default', () => {
@@ -273,9 +273,9 @@ describe(getConfig, () => {
       expect(exp._internal).toStrictEqual({
         dynamicConfigPath: null,
         isDebug: false,
-        packageJsonPath: 'custom-location-json/package.json',
+        packageJsonPath: `custom-location-json${path.sep}package.json`,
         projectRoot: 'custom-location-json',
-        staticConfigPath: 'custom-location-json/src/app.staging.json',
+        staticConfigPath: `custom-location-json${path.sep}src${path.sep}app.staging.json`,
       });
     });
   });

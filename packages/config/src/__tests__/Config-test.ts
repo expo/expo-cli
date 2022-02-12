@@ -207,7 +207,7 @@ describe('readConfigJson', () => {
 
     it(`will throw if the app.json is missing`, () => {
       expect(() => readConfigJson('/no-config')).toThrow(
-        /Project at path \/no-config does not contain a valid Expo config/
+        /Project at path .*no-config does not contain a valid Expo config/
       );
       // No config is required for new method
       expect(() => getConfig('/no-config')).not.toThrow();
