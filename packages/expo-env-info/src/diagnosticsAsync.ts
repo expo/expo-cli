@@ -34,11 +34,11 @@ function getEnvironmentInfoAsync(): Promise<string> {
   );
 }
 
-async function isBareWorkflowProject(projectRoot: string): Promise<boolean> {
-  return (
-    (await findFile(path.join(projectRoot, 'ios'), '.xcodeproj')) ||
-    (await findFile(path.join(projectRoot, 'android'), '.gradle'))
-  );
+export async function isBareWorkflowProject(projectRoot: string): Promise<boolean> {
+  const iosFound = await findFile(path.join(projectRoot, 'ios'), '.xcodeproj');
+  const androidFound = await findFile(path.join(projectRoot, 'android'), '.gradle');
+
+  return iosFound || androidFound;
 }
 
 export async function actionAsync(projectRoot: string): Promise<void> {

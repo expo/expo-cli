@@ -6,6 +6,7 @@ module.exports = {
     require('./packages/dev-tools/jest.config'),
     require('./packages/expo-cli/jest.config'),
     require('./packages/expo-codemod/jest.config'),
+    require('./packages/expo-env-info/jest.config'),
     require('./packages/json-file/jest.config'),
     require('./packages/metro-config/jest.config'),
     require('./packages/package-manager/jest.config'),

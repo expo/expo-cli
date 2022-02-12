@@ -1,10 +1,10 @@
-import fs from 'fs';
+import { constants, promises as fs } from 'fs';
 import path from 'path';
 
 async function* walk(dir: string): AsyncGenerator<string, void, void> {
-  for await (const d of await fs.promises.readdir(dir, { withFileTypes: true })) {
+  for await (const d of await fs.readdir(dir, { withFileTypes: true })) {
     const entry = path.join(dir, d.name);
-    if (d.isDirectory()) {
+    if (d.isDirectory() || d.isSymbolicLink()) {
       yield entry;
       yield* walk(entry);
     } else if (d.isFile()) {
@@ -13,11 +13,11 @@ async function* walk(dir: string): AsyncGenerator<string, void, void> {
   }
 }
 
-export async function findFile(dir: string, ext: string) {
-  return fs.promises
-    .access(dir, fs.constants.F_OK)
+export async function findFile(dir: string, ext: string): Promise<boolean> {
+  return fs
+    .access(dir, constants.F_OK)
     .then(async () => {
-      for await (const file of await walk(dir)) {
+      for await (const file of walk(dir)) {
         if (path.extname(file) === ext) return true;
       }
       return false;

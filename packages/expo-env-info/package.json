@@ -9,7 +9,7 @@
     "expo-env-info",
     "android"
   ],
-  "description": "Expo Environment Information Collector",
+  "description": "Fetch Expo project information for GitHub issue diagnostics",
   "repository": {
     "type": "git",
     "url": "https://github.com/expo/expo-cli.git",
@@ -18,7 +18,7 @@
   "author": "Expo <support@expo.dev>",
   "license": "MIT",
   "bin": {
-    "expo-diag": "./build/index.js"
+    "expo-env-info": "./build/index.js"
   },
   "files": [
     "build"

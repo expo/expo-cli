@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import fs from 'fs';
+import { constants, promises as fs } from 'fs';
 import path from 'path';
 
 import { actionAsync } from './diagnosticsAsync';
@@ -13,23 +13,20 @@ async function run() {
     logVersionAndExit();
   }
 
-  if (args.some(arg => ['-H', '-h', '--help'].includes(arg))) {
+  if (args.some(arg => ['-h', '--help'].includes(arg))) {
     logHelpAndExit();
   }
 
   const projectRoot = path.resolve(process.cwd(), args[0] ?? process.cwd());
 
-  fs.promises
-    .access(projectRoot, fs.constants.F_OK)
-    .then(async () => {
-      await actionAsync(projectRoot);
-    })
-    .catch(err => {
-      if (err) {
-        console.error(`\x1b[31mProject directory ${projectRoot} does not exist\x1b[0m`);
-        process.exit(1);
-      }
-    });
+  await fs.access(projectRoot, constants.F_OK).catch((err: any) => {
+    if (err) {
+      console.error(`\x1b[31mProject directory ${projectRoot} does not exist\x1b[0m`);
+      process.exit(1);
+    }
+  });
+
+  await actionAsync(projectRoot);
 }
 
 function logVersionAndExit() {
