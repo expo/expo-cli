@@ -41,7 +41,7 @@ describe('joinUrlPath', () => {
 
     it(`simple`, () => {
       const got = joinUrlPath('/pwa', filePath);
-      expect(got).toBe('/pwa/index.html');
+      expect(got).toBe(`${path.sep}pwa${path.sep}index.html`);
       expect(spy).toHaveBeenCalledTimes(2);
     });
 
@@ -53,19 +53,19 @@ describe('joinUrlPath', () => {
 
     it(`raw segment`, () => {
       const got = joinUrlPath('pwa', filePath);
-      expect(got).toBe('pwa/index.html');
+      expect(got).toBe(`pwa${path.sep}index.html`);
       expect(spy).toHaveBeenCalledTimes(2);
     });
 
     it(`separator`, () => {
       const got = joinUrlPath('/', filePath);
-      expect(got).toBe('/index.html');
+      expect(got).toBe(`${path.sep}index.html`);
       expect(spy).toHaveBeenCalledTimes(2);
     });
 
     it(`many segments`, () => {
       const got = joinUrlPath('/', '', 'one', '/two', 'three/', filePath);
-      expect(got).toBe('/one/two/three/index.html');
+      expect(got).toBe(`${path.sep}one${path.sep}two${path.sep}three${path.sep}index.html`);
       expect(spy).toHaveBeenCalledTimes(2);
     });
   });
