@@ -27,7 +27,7 @@ describe('preset', () => {
 
       const babelLoader = getBabelLoaderRule(env);
       expect(babelLoader.use.options.cacheDirectory).toMatch(
-        `.expo/${platform}/cache/development/babel-loader`
+        `.expo${path.sep}${platform}${path.sep}cache${path.sep}development${path.sep}babel-loader`
       );
     });
   }

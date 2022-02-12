@@ -1,3 +1,5 @@
+import path from 'path';
+
 import { ignoreExternalModules } from '../withUnimodules';
 
 describe('ignoreExternalModules', () => {
@@ -48,7 +50,7 @@ describe('ignoreExternalModules', () => {
     // mock execute externals for non-expo modules
     executionCallback = jest.fn();
     config.externals[0]({}, 'other-package', executionCallback);
-    expect(inputExternal).toBeCalledWith('node_modules/other-package');
+    expect(inputExternal).toBeCalledWith(`node_modules${path.sep}other-package`);
     expect(executionCallback).not.toBeCalled();
     expect(incomingExternal).toBeCalled();
   });
