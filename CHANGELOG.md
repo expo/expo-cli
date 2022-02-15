@@ -12,6 +12,22 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+## [Tue, 15 Feb 2022 10:13:55 -0800](https://github.com/expo/expo-cli/commit/f1d2413db3374a425561cbf71c7f20a6bb697b55)
+
+### 🧹 Chores
+
+- [docs] outdated docs link in contributing guidelines ([#4211](https://github.com/expo/expo-cli/issues/4211))
+
+### 🐛 Bug fixes
+
+- [cli] fix typo in settings validation logic ([#4215](https://github.com/expo/expo-cli/issues/4215))
+
+### 📦 Packages updated
+
+- @expo/dev-tools@0.13.144
+- expo-cli@5.1.3
+- xdl@59.2.28
+
 ## [Thu, 10 Feb 2022 12:37:31 -0800](https://github.com/expo/expo-cli/commit/82904c9641b22fdf0cc2b24b1cfd4ed33c4dfc33)
 
 ### 🎉 New features
