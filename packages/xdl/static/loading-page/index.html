@@ -270,10 +270,10 @@
 
   const showAlert = (isExpoGo) => {
     if (isExpoGo) {
-      alertElement.innerHTML = 'It seems that deep-link into your application failed. Make sure that you have the <b>Expo Go</b> installed.' + 
-      '<br><a href="https://docs.expo.dev/get-started/installation/#2-expo-go-app-for-ios-and">Learn more.</a>';
+      alertElement.innerHTML = 'Unable to open in Expo Go. Please install <b>Expo Go</b> to continue.' + 
+      '<br><a href="https://expo.dev/client">Learn more.</a>';
     } else {
-      alertElement.innerHTML = 'It seems that deep-link into your application failed. Make sure that you have the <b>Development Build</b> installed.' + 
+      alertElement.innerHTML = 'Unable to open in Development Build with the <b>{{ Scheme }}</b> scheme. Please build and install a compatible <b>Development Build</b> to continue.' + 
       '<br><a href="https://docs.expo.dev/development/build/">Learn more.</a>';
     }
 
