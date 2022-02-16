@@ -647,7 +647,7 @@ async function openUrlInSimulatorSafeAsync({
         // The development build isn't available. So let's fall back to Expo Go.
         Logger.global.warn(
           `\u203A The 'expo-dev-client' package is installed, but a development build isn't available.\nYour app will open in Expo Go instead. If you want to use the development build, please install it on the simulator first.\n${learnMore(
-            'https://docs.expo.dev/clients/distribution-for-ios/#building-for-ios'
+            'https://docs.expo.dev/development/build/'
           )}`
         );
 

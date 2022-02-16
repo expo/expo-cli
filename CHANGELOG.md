@@ -6,21 +6,172 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🛠 Breaking changes
 
-- [config-plugins] Add code signing configuration to updates config plugin  ([#4122](https://github.com/expo/expo-cli/issues/4122))
-
 ### 🎉 New features
 
-- [expo-cli] New `--fix-dependencies` option for `doctor` ([#4153](https://github.com/expo/expo-cli/issues/4153))
 - [expo-cli][package-manager] Pass parameters to `npm install` or `yarn add` command when using `expo install` ([#4174](https://github.com/expo/expo-cli/pull/4174))
 
 ### 🧹 Chores
 
-- [expo-cli] updated markdown formatting in introspection script ([#4141)(https://github.com/expo/expo-cli/pull/4141))
+### 🐛 Bug fixes
+
+- [cli] don't sanitize numbers from project name for npm package name ([#4208])(https://github.com/expo/expo-cli/pull/4208))
+
+## [Tue, 15 Feb 2022 10:13:55 -0800](https://github.com/expo/expo-cli/commit/f1d2413db3374a425561cbf71c7f20a6bb697b55)
+
+### 🧹 Chores
+
+- [docs] outdated docs link in contributing guidelines ([#4211](https://github.com/expo/expo-cli/issues/4211))
 
 ### 🐛 Bug fixes
 
-- [cli] suppress unauthorized warning on login and logout commands after logging out of all sessions on the website ([#4120](https://github.com/expo/expo-cli/issues/4120))
-- [cli] fix reading EAS project ID from app.json during start ([#4155](https://github.com/expo/expo-cli/issues/4155))
+- [cli] fix typo in settings validation logic ([#4215](https://github.com/expo/expo-cli/issues/4215))
+
+### 📦 Packages updated
+
+- @expo/dev-tools@0.13.144
+- expo-cli@5.1.3
+- xdl@59.2.28
+
+## [Thu, 10 Feb 2022 12:37:31 -0800](https://github.com/expo/expo-cli/commit/82904c9641b22fdf0cc2b24b1cfd4ed33c4dfc33)
+
+### 🎉 New features
+
+- [cli] check expo-updates is installed before a publish ([#4179](https://github.com/expo/expo-cli/issues/4179))
+
+### 🧹 Chores
+
+- Publish @expo/config-types@44.0.0
+
+### 🐛 Bug fixes
+
+- [cli] Skip parsing font files on init ([#4202](https://github.com/expo/expo-cli/issues/4202))
+- [cli] fix project page param typo ([#4204](https://github.com/expo/expo-cli/issues/4204))
+
+### 📦 Packages updated
+
+- @expo/config-plugins@4.0.18
+- @expo/config@6.0.18
+- @expo/dev-server@0.1.105
+- @expo/dev-tools@0.13.143
+- expo-cli@5.1.2
+- expo-optimize@0.2.10
+- install-expo-modules@0.2.4
+- @expo/metro-config@0.3.11
+- @expo/next-adapter@3.1.19
+- @expo/prebuild-config@3.0.18
+- expo-pwa@0.0.113
+- uri-scheme@1.0.114
+- @expo/webpack-config@0.16.18
+- xdl@59.2.27
+
+## [Tue, 8 Feb 2022 14:47:23 -0800](https://github.com/expo/expo-cli/commit/e68ec76f84d1ffe7691dbaf3d13de8cf1b7a264e)
+
+### 🐛 Bug fixes
+
+- [xdl] Add static directory to files
+
+### 📦 Packages updated
+
+- @expo/dev-tools@0.13.142
+- expo-cli@5.1.1
+- xdl@59.2.26
+
+## [Tue, 8 Feb 2022 14:03:05 -0800](https://github.com/expo/expo-cli/commit/79e403db6d4a34cae02fca2f2e6baecc5bc4e709)
+
+### 🛠 Breaking changes
+
+### 🎉 New features
+
+- [Interstitial page] Add missing information about project ([#4143](https://github.com/expo/expo-cli/issues/4143))
+- [Interstitial page] Ensure that development build is installed ([#4144](https://github.com/expo/expo-cli/issues/4144))
+- [Interstitial page] Improving user experience ([#4183](https://github.com/expo/expo-cli/issues/4183))
+- [cli] add new query params to project URL ([#4178](https://github.com/expo/expo-cli/issues/4178))
+- [cli] fix reading EAS project ID from app.json during start ([#4156](https://github.com/expo/expo-cli/issues/4156))
+- [cli] new `--fix-dependencies` option for `doctor` ([#4153](https://github.com/expo/expo-cli/issues/4153))
+- [cli] update error message when publish is misconfigured ([#4177](https://github.com/expo/expo-cli/issues/4177))
+- [config-plugins] Add code signing configuration to updates config plugin ([#4122](https://github.com/expo/expo-cli/issues/4122))
+- [xdl] persist dev client ids locally, use to start dev sessions ([#4087](https://github.com/expo/expo-cli/issues/4087))
+
+### 🧹 Chores
+
+- [cli] Skip updates warning in bare projects when expo-updates isn't in the package.json ([#4173](https://github.com/expo/expo-cli/issues/4173))
+- [pkcs12] upgrade node-forge ([#4162](https://github.com/expo/expo-cli/issues/4162))
+- [xdl] Drop sentry from xdl ([#4135](https://github.com/expo/expo-cli/issues/4135))
+- [xdl] drop IP from track context ([#4146](https://github.com/expo/expo-cli/issues/4146))
+- [xdl] refactor UrlUtils to not use Joi ([#4166](https://github.com/expo/expo-cli/issues/4166))
+
+### 🐛 Bug fixes
+
+- [cli] Fix running `expo web --no-dev` ([#4188](https://github.com/expo/expo-cli/issues/4188))
+- [cli][docs] update broken flags in docs generation ([#4141](https://github.com/expo/expo-cli/issues/4141))
+- [config-plugins] avoid duplicate CFBundleURLTypes ([#4164](https://github.com/expo/expo-cli/issues/4164))
+- [config-plugins] handle missing targetattributes edge case when setting provisioning profile for multitarget projects ([#4175](https://github.com/expo/expo-cli/issues/4175))
+- [metro-config] Add missing resolve-from dependency ([#4182](https://github.com/expo/expo-cli/issues/4182))
+
+
+### 📦 Packages updated
+
+- @expo/config-plugins@4.0.17
+- @expo/config@6.0.17
+- @expo/dev-server@0.1.104
+- @expo/dev-tools@0.13.141
+- expo-cli@5.1.0
+- expo-optimize@0.2.9
+- install-expo-modules@0.2.3
+- @expo/metro-config@0.3.10
+- @expo/next-adapter@3.1.18
+- @expo/pkcs12@0.0.7
+- @expo/prebuild-config@3.0.17
+- expo-pwa@0.0.112
+- uri-scheme@1.0.113
+- @expo/webpack-config@0.16.17
+- xdl@59.2.25
+
+## [Wed, 12 Jan 2022 13:56:55 +0100](https://github.com/expo/expo-cli/commit/9e79e507e3de51dbc48db762f36d680b845760e8)
+
+### 🎉 New features
+
+- [cli][init] Skip git init in monorepo ([#4121](https://github.com/expo/expo-cli/issues/4121))
+
+### 🧹 Chores
+
+- [cli] Remove instance of got ([#4112](https://github.com/expo/expo-cli/issues/4112))
+- [cli] Remove instances of xdl ([#4113](https://github.com/expo/expo-cli/issues/4113))
+- [cli] Remove pacote ([#4088](https://github.com/expo/expo-cli/issues/4088))
+- [cli] deprecate unused `expo start` options ([#4092](https://github.com/expo/expo-cli/issues/4092))
+- [cli] suppress unauthorized warning on login and logout after logging out of all sessions on website ([#4120](https://github.com/expo/expo-cli/issues/4120))
+- [install-expo-modules] Add begin-rescue to Podfile ([#4131](https://github.com/expo/expo-cli/issues/4131))
+- [install-expo-modules] Fix invalid installation for yarn 2 ([#4130](https://github.com/expo/expo-cli/issues/4130))
+- [repo] Refactor chalk imports ([#4111](https://github.com/expo/expo-cli/issues/4111))
+- [repo] lerna version bump and config update ([#4117](https://github.com/expo/expo-cli/issues/4117))
+- [xdl] switch cloudfront domain to classic-assets.eascdn.net ([#4115](https://github.com/expo/expo-cli/issues/4115))
+
+### 🐛 Bug fixes
+
+- [cli] Refactor NotificationCode to LoadingEvent ([#4136](https://github.com/expo/expo-cli/issues/4136))
+- [package-manager] Fix `pod repo update` not automatically running ([#4084](https://github.com/expo/expo-cli/issues/4084))
+- [plist] Skip plist keys if value is undefined ([#4109](https://github.com/expo/expo-cli/issues/4109))
+- [xdl] Fix various ngrok bugs ([#4132](https://github.com/expo/expo-cli/issues/4132))
+
+### 📦 Packages updated
+
+- @expo/config-plugins@4.0.16
+- @expo/config@6.0.16
+- @expo/dev-server@0.1.103
+- @expo/dev-tools@0.13.140
+- expo-cli@5.0.5
+- expo-optimize@0.2.8
+- install-expo-modules@0.2.2
+- @expo/metro-config@0.3.9
+- @expo/next-adapter@3.1.17
+- @expo/package-manager@0.0.49
+- @expo/plist@0.0.17
+- pod-install@0.1.31
+- @expo/prebuild-config@3.0.16
+- expo-pwa@0.0.111
+- uri-scheme@1.0.112
+- @expo/webpack-config@0.16.16
+- xdl@59.2.24
 
 ## [Wed, 22 Dec 2021 14:05:44 +0800](https://github.com/expo/expo-cli/commit/de947a91dfc3aa5c4b92330c3c03ec6649e0129f)
 
