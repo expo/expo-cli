@@ -5,7 +5,6 @@ import chalk from 'chalk';
 import wrapAnsi from 'wrap-ansi';
 import {
   Android,
-  Env,
   isDevClientPackageInstalled,
   Project,
   ProjectSettings,

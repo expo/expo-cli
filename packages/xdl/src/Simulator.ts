@@ -18,7 +18,6 @@ import {
   CoreSimulator,
   delayAsync,
   downloadAppAsync,
-  Env,
   isDevClientPackageInstalled,
   learnMore,
   LoadingEvent,
