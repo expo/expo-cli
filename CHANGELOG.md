@@ -12,6 +12,8 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+- [cli] don't sanitize numbers from project name for npm package name ([#4208])(https://github.com/expo/expo-cli/pull/4208))
+
 ## [Tue, 15 Feb 2022 10:13:55 -0800](https://github.com/expo/expo-cli/commit/f1d2413db3374a425561cbf71c7f20a6bb697b55)
 
 ### 🧹 Chores
