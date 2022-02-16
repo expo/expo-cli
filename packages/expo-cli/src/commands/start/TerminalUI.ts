@@ -5,6 +5,7 @@ import chalk from 'chalk';
 import wrapAnsi from 'wrap-ansi';
 import {
   Android,
+  Env,
   isDevClientPackageInstalled,
   Project,
   ProjectSettings,
@@ -183,7 +184,11 @@ const printServerInfo = async (
 
       const getURLForQR = async () => {
         const { devClient } = await ProjectSettings.readAsync(projectRoot);
-        if (!devClient && (await isDevClientPackageInstalled(projectRoot))) {
+        if (
+          Env.isInterstitiaLPageEnabled() &&
+          !devClient &&
+          (await isDevClientPackageInstalled(projectRoot))
+        ) {
           return await UrlUtils.constructLoadingUrlAsync(projectRoot, null);
         } else {
           return url;

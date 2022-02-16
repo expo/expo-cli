@@ -769,7 +769,11 @@ async function openUrlAsync({
     if (devClient) {
       clientApplicationId = await getClientApplicationId();
       await ensureDevClientInstalledAsync(device, clientApplicationId);
-    } else if (!devClient && isDevClientPackageInstalled(projectRoot)) {
+    } else if (
+      Env.isInterstitiaLPageEnabled() &&
+      !devClient &&
+      isDevClientPackageInstalled(projectRoot)
+    ) {
       await installExpoIfNeeded(device);
 
       let applicationId: string | undefined;
@@ -879,7 +883,12 @@ async function constructDeepLinkAsync(
   devClient?: boolean,
   shouldGenerateInterstitialPage: boolean = true
 ): Promise<string | null> {
-  if (!devClient && isDevClientPackageInstalled(projectRoot) && shouldGenerateInterstitialPage) {
+  if (
+    Env.isInterstitiaLPageEnabled() &&
+    !devClient &&
+    isDevClientPackageInstalled(projectRoot) &&
+    shouldGenerateInterstitialPage
+  ) {
     return UrlUtils.constructLoadingUrlAsync(projectRoot, 'android');
   } else {
     return await UrlUtils.constructDeepLinkAsync(projectRoot, {

@@ -18,6 +18,7 @@ import {
   CoreSimulator,
   delayAsync,
   downloadAppAsync,
+  Env,
   isDevClientPackageInstalled,
   learnMore,
   LoadingEvent,
@@ -624,7 +625,11 @@ async function openUrlInSimulatorSafeAsync({
         // stream logs before opening the client.
         await streamLogsAsync({ udid: simulator.udid, bundleIdentifier });
       }
-    } else if (!devClient && isDevClientPackageInstalled(projectRoot)) {
+    } else if (
+      Env.isInterstitiaLPageEnabled() &&
+      !devClient &&
+      isDevClientPackageInstalled(projectRoot)
+    ) {
       await profileMethod(ensureExpoClientInstalledAsync)(simulator, sdkVersion);
 
       const devClientBundlerIdentifier = await profileMethod(
@@ -817,7 +822,12 @@ async function constructDeepLinkAsync(
   devClient?: boolean,
   shouldGenerateInterstitialPage: boolean = true
 ): Promise<string | null> {
-  if (!devClient && isDevClientPackageInstalled(projectRoot) && shouldGenerateInterstitialPage) {
+  if (
+    Env.isInterstitiaLPageEnabled() &&
+    !devClient &&
+    isDevClientPackageInstalled(projectRoot) &&
+    shouldGenerateInterstitialPage
+  ) {
     return UrlUtils.constructLoadingUrlAsync(projectRoot, 'ios', 'localhost');
   } else {
     try {
