@@ -6,7 +6,7 @@ import http from 'http';
 import { resolve } from 'path';
 import { parse } from 'url';
 
-import { UrlUtils } from './../internal';
+import { ProjectSettings, UrlUtils } from './../internal';
 
 export const LoadingEndpoint = '/_expo/loading';
 export const DeepLinkEndpoint = '/_expo/link';
@@ -71,6 +71,7 @@ async function loadingEndpointHandler(
   ).toString('utf-8');
 
   const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
+  const { scheme } = await ProjectSettings.readAsync(projectRoot);
   const { appName } = getNameFromConfig(exp);
   const { query } = parse(req.url!, true);
   const platform = getPlatform(query, req.headers['user-agent']);
@@ -79,6 +80,7 @@ async function loadingEndpointHandler(
   content = content.replace(/{{\s*AppName\s*}}/, appName ?? 'App');
   content = content.replace(/{{\s*RuntimeVersion\s*}}/, runtimeVersion);
   content = content.replace(/{{\s*Path\s*}}/, projectRoot);
+  content = content.replace(/{{\s*Scheme\s*}}/, scheme ?? 'Unknown');
 
   res.end(content);
 }
