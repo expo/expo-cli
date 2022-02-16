@@ -59,6 +59,7 @@ const query = gql`
           lastCursor
         }
       }
+      interstitialPageUrl
     }
     userSettings {
       id
