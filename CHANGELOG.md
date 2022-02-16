@@ -8,13 +8,35 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🎉 New features
 
-- [expo-cli][package-manager] Pass parameters to `npm install` or `yarn add` command when using `expo install` ([#4174](https://github.com/expo/expo-cli/pull/4174))
-
 ### 🧹 Chores
 
 ### 🐛 Bug fixes
 
-- [cli] don't sanitize numbers from project name for npm package name ([#4208])(https://github.com/expo/expo-cli/pull/4208))
+## [Wed, 16 Feb 2022 12:20:14 -0800](https://github.com/expo/expo-cli/commit/11f518d24c070ef6b82b6eb5f9da22f1648f2665)
+
+### 🎉 New features
+
+- [expo-cli][package-manager] Pass parameters to `npm install` or `yarn add` command when using `expo install` ([#4174](https://github.com/expo/expo-cli/pull/4174))
+- [expo-cli][xdl] remove env flag for interstitial page ([#4218](https://github.com/expo/expo-cli/issues/4218))
+- [expo-cli] fix: pass max-workers option to metro on publish command ([#4187](https://github.com/expo/expo-cli/issues/4187))
+- [Interstitial page] Try to detect if a deep link succeed ([#4209](https://github.com/expo/expo-cli/issues/4209))
+- [cli] new expo-env-info package ([#4167](https://github.com/expo/expo-cli/issues/4167))
+
+### 🐛 Bug fixes
+
+- [Interstitial page] Fix QR on web UI & fallback to SDK version if the runtime version wasn't defined ([#4214](https://github.com/expo/expo-cli/issues/4214))
+- [expo-cli] don't sanitize numbers from project names for npm package name on init ([#4208](https://github.com/expo/expo-cli/issues/4208))
+
+### 📦 Packages updated
+
+- @expo/dev-tools@0.13.145
+- expo-cli@5.2.0
+- expo-env-info@1.0.2
+- install-expo-modules@0.2.5
+- @expo/next-adapter@3.1.20
+- @expo/package-manager@0.0.50
+- pod-install@0.1.32
+- xdl@59.2.29
 
 ## [Tue, 15 Feb 2022 10:13:55 -0800](https://github.com/expo/expo-cli/commit/f1d2413db3374a425561cbf71c7f20a6bb697b55)
 
