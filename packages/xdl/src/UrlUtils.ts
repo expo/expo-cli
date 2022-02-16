@@ -284,11 +284,11 @@ function assertValidOptions(opts: Partial<URLOptions>): URLOptions {
     throw new XDLError('INVALID_OPTIONS', `"strict" must be a boolean if specified`);
   }
 
-  if (opts.minify && typeof opts.strict !== 'boolean') {
+  if (opts.minify && typeof opts.minify !== 'boolean') {
     throw new XDLError('INVALID_OPTIONS', `"minify" must be a boolean if specified`);
   }
 
-  if (opts.https && typeof opts.strict !== 'boolean') {
+  if (opts.https && typeof opts.https !== 'boolean') {
     throw new XDLError('INVALID_OPTIONS', `"https" must be a boolean if specified`);
   }
 
