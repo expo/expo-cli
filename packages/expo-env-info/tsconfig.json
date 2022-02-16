@@ -1,11 +1,16 @@
 {
   "extends": "../../tsconfig.base",
-  "include": ["src/**/*.ts"],
+  "include": [
+    "src/**/*.ts"
+  ],
   "compilerOptions": {
     "resolveJsonModule": true,
     "rootDir": "src",
-    "declaration": true,
+    "declaration": false,
     "composite": false
   },
-  "exclude": ["**/__mocks__/*", "**/__tests__/*"]
+  "exclude": [
+    "**/__mocks__/*",
+    "**/__tests__/*"
+  ]
 }
