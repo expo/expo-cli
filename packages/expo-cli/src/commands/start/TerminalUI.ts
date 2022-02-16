@@ -184,11 +184,7 @@ const printServerInfo = async (
 
       const getURLForQR = async () => {
         const { devClient } = await ProjectSettings.readAsync(projectRoot);
-        if (
-          Env.isInterstitiaLPageEnabled() &&
-          !devClient &&
-          (await isDevClientPackageInstalled(projectRoot))
-        ) {
+        if (!devClient && (await isDevClientPackageInstalled(projectRoot))) {
           return await UrlUtils.constructLoadingUrlAsync(projectRoot, null);
         } else {
           return url;
