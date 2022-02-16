@@ -8,6 +8,8 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🎉 New features
 
+- [expo-cli][package-manager] Pass parameters to `npm install` or `yarn add` command when using `expo install` ([#4174](https://github.com/expo/expo-cli/pull/4174))
+
 ### 🧹 Chores
 
 ### 🐛 Bug fixes

@@ -16,7 +16,7 @@ async function resolveExpoProjectRootAsync() {
   try {
     const info = await findProjectRootAsync(process.cwd());
     return info.projectRoot;
-  } catch (error) {
+  } catch (error: any) {
     if (error.code !== 'NO_PROJECT') {
       // An unknown error occurred.
       throw error;
@@ -94,23 +94,40 @@ export async function actionAsync(
 
   let nativeModulesCount = 0;
   let othersCount = 0;
+  let unparsedParameterFound = false;
+  const parameters: string[] = [];
 
-  const versionedPackages = packages.map(arg => {
-    const { name, type, raw } = npmPackageArg(arg);
-    if (['tag', 'version', 'range'].includes(type) && name && bundledNativeModules[name]) {
-      // Unimodule packages from npm registry are modified to use the bundled version.
-      nativeModulesCount++;
-      return `${name}@${bundledNativeModules[name]}`;
-    } else if (name && versionsForSdk[name]) {
-      // Some packages have the recommended version listed in https://exp.host/--/api/v2/versions.
-      othersCount++;
-      return `${name}@${versionsForSdk[name]}`;
-    } else {
-      // Other packages are passed through unmodified.
-      othersCount++;
-      return raw;
+  // Detect unparsed parameters that are passed in
+  // Assume anything after the first one to be a parameter (to support cases like `-- --loglevel verbose`)
+  packages.forEach(packageName => {
+    if (packageName.startsWith('-')) {
+      unparsedParameterFound = true;
+    }
+
+    if (unparsedParameterFound) {
+      parameters.push(packageName);
     }
   });
+
+  const versionedPackages = packages
+    .filter(arg => !parameters.includes(arg))
+    .map(arg => {
+      const { name, type, raw } = npmPackageArg(arg);
+
+      if (['tag', 'version', 'range'].includes(type) && name && bundledNativeModules[name]) {
+        // Unimodule packages from npm registry are modified to use the bundled version.
+        nativeModulesCount++;
+        return `${name}@${bundledNativeModules[name]}`;
+      } else if (name && versionsForSdk[name]) {
+        // Some packages have the recommended version listed in https://exp.host/--/api/v2/versions.
+        othersCount++;
+        return `${name}@${versionsForSdk[name]}`;
+      } else {
+        // Other packages are passed through unmodified.
+        othersCount++;
+        return raw;
+      }
+    });
 
   const messages = [
     nativeModulesCount > 0 &&
@@ -121,7 +138,7 @@ export async function actionAsync(
   ].filter(Boolean);
   Log.log(`Installing ${messages.join(' and ')} using ${packageManager.name}.`);
 
-  await packageManager.addAsync(...versionedPackages);
+  await packageManager.addWithParametersAsync(versionedPackages, parameters);
 
   try {
     exp = getConfig(projectRoot, { skipSDKVersionRequirement: true, skipPlugins: true }).exp;
@@ -132,7 +149,7 @@ export async function actionAsync(
       exp,
       versionedPackages.map(pkg => pkg.split('@')[0]).filter(Boolean)
     );
-  } catch (error) {
+  } catch (error: any) {
     if (error.isPluginError) {
       Log.warn(`Skipping config plugin check: ` + error.message);
       return;
