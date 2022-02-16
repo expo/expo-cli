@@ -8,12 +8,14 @@ import { Versions } from 'xdl';
 
 import CommandError from '../../CommandError';
 import Log from '../../log';
+import { actionAsync } from '../installAsync';
 import { BundledNativeModules, getBundledNativeModulesAsync } from './bundledNativeModules';
 
 export async function validateDependenciesVersionsAsync(
   projectRoot: string,
   exp: Pick<ExpoConfig, 'sdkVersion'>,
-  pkg: PackageJSONConfig
+  pkg: PackageJSONConfig,
+  fixDependencies: boolean = false
 ): Promise<boolean> {
   // expo package for SDK < 33.0.0 does not have bundledNativeModules.json
   if (!Versions.gteSdkVersion(exp, '33.0.0')) {
@@ -53,12 +55,23 @@ export async function validateDependenciesVersionsAsync(
         )} - actual version installed: ${chalk.underline(actualVersion)}`
       );
     });
-    Log.warn(
-      'Your project may not work correctly until you install the correct versions of the packages.\n' +
-        `To install the correct versions of these packages, please run: ${chalk.inverse(
-          'expo install [package-name ...]'
-        )}`
-    );
+    if (fixDependencies) {
+      await actionAsync(
+        incorrectDeps.map(dep => dep.packageName),
+        {}
+      );
+    } else {
+      Log.warn(
+        'Your project may not work correctly until you install the correct versions of the packages.\n' +
+          `To install the correct versions of these packages, please run: ${chalk.inverse(
+            'expo doctor --fix-dependencies'
+          )},\n` +
+          `or install individual packages by running ${chalk.inverse(
+            'expo install [package-name ...]'
+          )}`
+      );
+    }
+
     return false;
   }
   return true;

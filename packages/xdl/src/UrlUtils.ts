@@ -1,6 +1,5 @@
 import { ExpoConfig, getConfig } from '@expo/config';
 import assert from 'assert';
-import Joi from 'joi';
 import os from 'os';
 import QueryString from 'querystring';
 import resolveFrom from 'resolve-from';
@@ -15,7 +14,7 @@ import {
   XDLError,
 } from './internal';
 
-interface URLOptions extends Omit<ProjectSettings.ProjectSettings, 'urlRandomness'> {
+interface URLOptions extends ProjectSettings.ProjectSettings {
   urlType: null | 'exp' | 'http' | 'no-protocol' | 'redirect' | 'custom';
 }
 
@@ -101,11 +100,12 @@ export async function constructLogUrlAsync(
 
 export async function constructLoadingUrlAsync(
   projectRoot: string,
-  platform: 'ios' | 'android',
+  platform: 'ios' | 'android' | null,
   requestHostname?: string
 ): Promise<string> {
   const baseUrl = await constructUrlAsync(projectRoot, { urlType: 'http' }, false, requestHostname);
-  return `${baseUrl}/_expo/loading?platform=${platform}`;
+  const query = platform ? `?platform=${platform}` : '';
+  return `${baseUrl}/_expo/loading${query}`;
 }
 
 export async function constructUrlWithExtensionAsync(
@@ -247,24 +247,73 @@ export async function constructWebAppUrlAsync(
 }
 
 function assertValidOptions(opts: Partial<URLOptions>): URLOptions {
-  const schema = Joi.object().keys({
-    devClient: Joi.boolean().optional(),
-    scheme: Joi.string().optional().allow(null),
-    // Replaced by `scheme`
-    urlType: Joi.any().valid('exp', 'http', 'redirect', 'no-protocol').allow(null),
-    lanType: Joi.any().valid('ip', 'hostname'),
-    hostType: Joi.any().valid('localhost', 'lan', 'tunnel'),
-    dev: Joi.boolean(),
-    strict: Joi.boolean(),
-    minify: Joi.boolean(),
-    https: Joi.boolean().optional(),
-    urlRandomness: Joi.string().optional().allow(null),
-  });
-
-  const { error } = schema.validate(opts);
-  if (error) {
-    throw new XDLError('INVALID_OPTIONS', error.toString());
+  if (opts.devClient && typeof opts.devClient !== 'boolean') {
+    throw new XDLError('INVALID_OPTIONS', `"devClient" must be a boolean if specified`);
   }
+
+  if (opts.scheme && typeof opts.scheme !== 'string') {
+    throw new XDLError('INVALID_OPTIONS', `"scheme" must be a string if specified`);
+  }
+
+  if (![undefined, null, 'exp', 'http', 'redirect', 'no-protocol'].includes(opts.urlType)) {
+    throw new XDLError(
+      'INVALID_OPTIONS',
+      `"urlType" must be one of: "exp", "http", "redirect", "no-protocol" if specified`
+    );
+  }
+
+  if (![undefined, 'ip', 'hostname'].includes(opts.lanType)) {
+    throw new XDLError(
+      'INVALID_OPTIONS',
+      `"lanType" must be one of: "ip", "hostname" if specified`
+    );
+  }
+
+  if (![undefined, 'localhost', 'lan', 'tunnel'].includes(opts.hostType)) {
+    throw new XDLError(
+      'INVALID_OPTIONS',
+      `"hostType" must be one of: "localhost", "lan", "tunnel" if specified`
+    );
+  }
+
+  if (opts.dev && typeof opts.dev !== 'boolean') {
+    throw new XDLError('INVALID_OPTIONS', `"dev" must be a boolean if specified`);
+  }
+
+  if (opts.strict && typeof opts.strict !== 'boolean') {
+    throw new XDLError('INVALID_OPTIONS', `"strict" must be a boolean if specified`);
+  }
+
+  if (opts.minify && typeof opts.minify !== 'boolean') {
+    throw new XDLError('INVALID_OPTIONS', `"minify" must be a boolean if specified`);
+  }
+
+  if (opts.https && typeof opts.https !== 'boolean') {
+    throw new XDLError('INVALID_OPTIONS', `"https" must be a boolean if specified`);
+  }
+
+  if (opts.urlRandomness && typeof opts.urlRandomness !== 'string') {
+    throw new XDLError('INVALID_OPTIONS', `"urlRandomness" must be a string if specified`);
+  }
+
+  Object.keys(opts).forEach(key => {
+    if (
+      ![
+        'devClient',
+        'scheme',
+        'urlType',
+        'lanType',
+        'hostType',
+        'dev',
+        'strict',
+        'minify',
+        'https',
+        'urlRandomness',
+      ].includes(key)
+    ) {
+      throw new XDLError('INVALID_OPTIONS', `"${key}" is not a valid option`);
+    }
+  });
 
   return opts as URLOptions;
 }

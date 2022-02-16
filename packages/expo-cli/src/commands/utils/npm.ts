@@ -41,7 +41,7 @@ function applyKnownNpmPackageNameRules(name: string): string | null {
     name = name.substring(1);
   }
 
-  name = name.toLowerCase().replace(/[^a-zA-Z._\-/@]/g, '');
+  name = name.toLowerCase().replace(/[^a-zA-Z0-9._\-/@]/g, '');
 
   return (
     name

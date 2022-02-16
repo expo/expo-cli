@@ -1,4 +1,11 @@
-import { getScheme, getSchemesFromPlist, hasScheme, removeScheme, setScheme } from '../Scheme';
+import {
+  appendScheme,
+  getScheme,
+  getSchemesFromPlist,
+  hasScheme,
+  removeScheme,
+  setScheme,
+} from '../Scheme';
 
 describe('scheme', () => {
   it(`returns empty array if no scheme is provided`, () => {
@@ -53,6 +60,28 @@ describe('scheme', () => {
       ],
     };
     expect(getSchemesFromPlist(infoPlist).length).toBe(3);
+  });
+
+  it(`append a scheme`, () => {
+    const infoPlist = {
+      CFBundleURLTypes: [
+        { CFBundleURLSchemes: ['myapp1', 'myapp2'] },
+        { CFBundleURLSchemes: ['myapp3'] },
+      ],
+    };
+    expect(appendScheme('myapp3', infoPlist)).toStrictEqual({
+      CFBundleURLTypes: [
+        { CFBundleURLSchemes: ['myapp1', 'myapp2'] },
+        { CFBundleURLSchemes: ['myapp3'] },
+      ],
+    });
+    expect(appendScheme('myapp4', infoPlist)).toStrictEqual({
+      CFBundleURLTypes: [
+        { CFBundleURLSchemes: ['myapp1', 'myapp2'] },
+        { CFBundleURLSchemes: ['myapp3'] },
+        { CFBundleURLSchemes: ['myapp4'] },
+      ],
+    });
   });
 
   it(`removes a scheme`, () => {

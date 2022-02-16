@@ -23,9 +23,20 @@ export function setOnDeepLink(listener: OnDeepLinkListener) {
   onDeepLink = listener;
 }
 
-function getPlatform(query: { [x: string]: string | string[] | null }): 'android' | 'ios' | null {
+function getPlatform(
+  query: { [x: string]: string | string[] | null },
+  userAgent: string | null = null
+): 'android' | 'ios' | null {
   if (query['platform'] === 'android' || query['platform'] === 'ios') {
     return query['platform'];
+  }
+
+  if (userAgent?.match(/Android/i)) {
+    return 'android';
+  }
+
+  if (userAgent?.match(/iPhone|iPad/i)) {
+    return 'ios';
   }
 
   return null;
@@ -62,7 +73,7 @@ async function loadingEndpointHandler(
   const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
   const { appName } = getNameFromConfig(exp);
   const { query } = parse(req.url!, true);
-  const platform = getPlatform(query);
+  const platform = getPlatform(query, req.headers['user-agent']);
   const runtimeVersion = getRuntimeVersion(exp, platform);
 
   content = content.replace(/{{\s*AppName\s*}}/, appName ?? 'App');
@@ -79,19 +90,13 @@ async function deeplinkEndpointHandler(
 ) {
   const { query } = parse(req.url!, true);
   const isDevClient = query['choice'] === 'expo-dev-client';
-  if (isDevClient) {
-    const projectUrl = await UrlUtils.constructDevClientUrlAsync(projectRoot, {
-      hostType: 'localhost',
-    });
-    res.setHeader('Location', projectUrl);
-  } else {
-    const projectUrl = await UrlUtils.constructManifestUrlAsync(projectRoot, {
-      hostType: 'localhost',
-    });
-    res.setHeader('Location', projectUrl);
-  }
+  const projectUrl = isDevClient
+    ? await UrlUtils.constructDevClientUrlAsync(projectRoot)
+    : await UrlUtils.constructManifestUrlAsync(projectRoot);
 
-  onDeepLink(projectRoot, isDevClient, getPlatform(query));
+  res.setHeader('Location', projectUrl);
+
+  onDeepLink(projectRoot, isDevClient, getPlatform(query, req.headers['user-agent']));
 
   res.setHeader('Cache-Control', 'private, no-cache, no-store, must-revalidate');
   res.setHeader('Expires', '-1');

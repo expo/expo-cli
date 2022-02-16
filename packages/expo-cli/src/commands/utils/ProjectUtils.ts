@@ -38,6 +38,19 @@ export async function findProjectRootAsync(
   );
 }
 
+/** Returns true if `expo-updates` is in the `package.json` dependencies. */
+export async function hasExpoUpdatesInstalledAsync(projectRoot: string): Promise<boolean> {
+  const pkgPath = path.join(projectRoot, 'package.json');
+  const pkgExists = fs.existsSync(pkgPath);
+
+  if (!pkgExists) {
+    return false;
+  }
+
+  const dependencies = await JsonFile.getAsync(pkgPath, 'dependencies', {});
+  return !!dependencies['expo-updates'];
+}
+
 // If we get here and can't find expo-updates or package.json we just assume
 // that we are not using the old expo-updates
 export async function usesOldExpoUpdatesAsync(projectRoot: string): Promise<boolean> {
