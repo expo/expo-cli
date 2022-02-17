@@ -15,7 +15,7 @@ const COMMANDS = [
   require('./export/export'),
   require('./fetch'),
   require('./info/config/config'),
-  require('./info/diagnostics'),
+  // require('./info/diagnostics'),
   require('./info/doctor'),
   require('./info/upgrade'),
   require('./init'),
