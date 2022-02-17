@@ -67,20 +67,20 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
       - name: Test ${{ matrix.package }}
-        run: cd packages/${{ matrix.package }} && yarn test
-        # run: cd packages/${{ matrix.package }} && yarn test --coverage
+        # run: cd packages/${{ matrix.package }} && yarn test
+        run: cd packages/${{ matrix.package }} && yarn test --coverage
         env:
           CI: true
           EXPO_DEBUG: true
-      # - name: Get Test Flag Name
-      #   id: cov-flag-name
-      #   run: echo "::set-output name=flag::$(echo ${{ matrix.package }} | perl -pe 's/[^a-z]+([a-z])/\U\1/gi;s/^([A-Z])/\l\1/')"
-      # - uses: codecov/codecov-action@v1
-      #   with:
-      #     token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
-      #     file: ./packages/${{ matrix.package }}/coverage/clover.xml # optional
-      #     flags: ${{ steps.cov-flag-name.outputs.flag }} # optional
-      #     fail_ci_if_error: true # optional (default = false)
+      - name: Get Test Flag Name
+        id: cov-flag-name
+        run: echo "::set-output name=flag::$(echo ${{ matrix.package }} | perl -pe 's/[^a-z]+([a-z])/\U\1/gi;s/^([A-Z])/\l\1/')"
+      - uses: codecov/codecov-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
+          file: ./packages/${{ matrix.package }}/coverage/clover.xml # optional
+          flags: ${{ steps.cov-flag-name.outputs.flag }} # optional
+          fail_ci_if_error: false # optional (default = false)
 
   puppeteer:
     runs-on: ubuntu-latest
