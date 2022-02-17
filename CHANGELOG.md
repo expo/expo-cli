@@ -6,6 +6,7 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🛠 Breaking changes
 
+- [expo-cli] deprecate `diagnostics` command ([#4221](https://github.com/expo/expo-cli/pull/4221))
 ### 🎉 New features
 
 ### 🧹 Chores
