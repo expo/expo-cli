@@ -12,6 +12,8 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+- [expo-cli] use `npm pack` for template downloading to be compatible with private npm registries ([#4233](https://github.com/expo/expo-cli/pull/4223))
+
 ## [Wed, 16 Feb 2022 12:20:14 -0800](https://github.com/expo/expo-cli/commit/11f518d24c070ef6b82b6eb5f9da22f1648f2665)
 
 ### 🎉 New features
