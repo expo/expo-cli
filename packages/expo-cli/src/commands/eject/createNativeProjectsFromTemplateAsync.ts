@@ -114,7 +114,6 @@ async function cloneNativeDirectoriesAsync({
       await resolveTemplateArgAsync(tempDir, creatingNativeProjectStep, exp.name, template);
     } else {
       const templatePackageName = await getTemplateNpmPackageName(exp.sdkVersion);
-      await getNpmUrlAsync(templatePackageName);
       await downloadAndExtractNpmModuleAsync(templatePackageName, {
         cwd: tempDir,
         name: exp.name,

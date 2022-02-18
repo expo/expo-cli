@@ -1,5 +1,5 @@
-import { JSONValue } from '@expo/json-file';
-import spawnAsync from '@expo/spawn-async';
+import { JSONArray, JSONObject, JSONValue } from '@expo/json-file';
+import spawnAsync, { SpawnOptions } from '@expo/spawn-async';
 import assert from 'assert';
 import fs from 'fs-extra';
 import path from 'path';
@@ -53,10 +53,22 @@ function applyKnownNpmPackageNameRules(name: string): string | null {
 }
 
 export async function npmViewAsync(...props: string[]): Promise<JSONValue> {
-  const cmd = ['view', ...props, '--json'];
-  const results = (await spawnAsync('npm', cmd)).stdout?.trim();
+  return npmCommandAsync(['view', ...props, '--json']);
+}
+
+export async function npmPackAsync(
+  packageName: string,
+  cwd: string | undefined = undefined,
+  ...props: string[]
+): Promise<JSONValue> {
+  return npmCommandAsync(['pack', packageName, ...props, '--json'], { cwd });
+}
+
+async function npmCommandAsync(cmd: string[], spawnOpts: SpawnOptions = {}): Promise<JSONValue> {
   const cmdString = `npm ${cmd.join(' ')}`;
   Log.debug('Run:', cmdString);
+  const results = (await spawnAsync('npm', cmd, spawnOpts)).stdout?.trim();
+
   if (!results) {
     return null;
   }
@@ -101,10 +113,30 @@ export async function downloadAndExtractNpmModuleAsync(
   npmName: string,
   props: ExtractProps
 ): Promise<void> {
-  const url = await getNpmUrlAsync(npmName);
+  Log.debug(`Looking for tarball for ${npmName} in ${getCacheFilePath()}...`);
+  try {
+    const cachePath = getCacheFilePath();
+    // Perform dry-run to get actual filename for resolved version
+    const filename = (((await npmPackAsync(
+      npmName,
+      cachePath,
+      '--dry-run'
+    )) as JSONArray)[0] as JSONObject).filename as string;
 
-  Log.debug('Fetch from URL:', url);
-  await extractNpmTarballFromUrlAsync(url, props);
+    const cacheFilename = path.join(cachePath, filename);
+
+    // TODO: This cache does not expire, but neither does the FileCache at the top of this file.
+    if (!(await fs.stat(cacheFilename).catch(() => null))?.isFile() ?? false) {
+      Log.debug(`Downloading tarball for ${npmName} to ${cachePath}...`);
+      await npmPackAsync(npmName, cachePath);
+    }
+    await extractLocalNpmTarballAsync(cacheFilename, {
+      cwd: props.cwd,
+      name: npmName,
+    });
+  } catch (error) {
+    Log.error('Error downloading and extracting template package');
+  }
 }
 
 export async function extractLocalNpmTarballAsync(
