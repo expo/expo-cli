@@ -1,6 +1,5 @@
 import { JSONArray, JSONObject, JSONValue } from '@expo/json-file';
-import spawnAsync, { SpawnOptions } from '@expo/spawn-async';
-import assert from 'assert';
+import spawnAsync from '@expo/spawn-async';
 import fs from 'fs-extra';
 import path from 'path';
 import slugify from 'slugify';
@@ -9,7 +8,6 @@ import tar from 'tar';
 import { promisify } from 'util';
 import { UserSettings } from 'xdl';
 
-import CommandError from '../../CommandError';
 import Log from '../../log';
 import { createEntryResolver, createFileTransform } from './createFileTransform';
 import { FileSystemCache } from './fetch-cache/FileSystemCache';
@@ -52,22 +50,16 @@ function applyKnownNpmPackageNameRules(name: string): string | null {
   );
 }
 
-export async function npmViewAsync(...props: string[]): Promise<JSONValue> {
-  return npmCommandAsync(['view', ...props, '--json']);
-}
-
 export async function npmPackAsync(
   packageName: string,
   cwd: string | undefined = undefined,
   ...props: string[]
 ): Promise<JSONValue> {
-  return npmCommandAsync(['pack', packageName, ...props, '--json'], { cwd });
-}
+  const cmd = ['pack', packageName, ...props];
 
-async function npmCommandAsync(cmd: string[], spawnOpts: SpawnOptions = {}): Promise<JSONValue> {
   const cmdString = `npm ${cmd.join(' ')}`;
   Log.debug('Run:', cmdString);
-  const results = (await spawnAsync('npm', cmd, spawnOpts)).stdout?.trim();
+  const results = (await spawnAsync('npm', [...cmd, '--json'], { cwd })).stdout?.trim();
 
   if (!results) {
     return null;
@@ -79,31 +71,6 @@ async function npmCommandAsync(cmd: string[], spawnOpts: SpawnOptions = {}): Pro
       `Could not parse JSON returned from "${cmdString}".\n\n${results}\n\nError: ${error.message}`
     );
   }
-}
-
-/** Given a package name like `expo` or `expo@beta`, return the registry URL if it exists. */
-export async function getNpmUrlAsync(packageName: string): Promise<string> {
-  const results = await npmViewAsync(packageName, 'dist.tarball');
-
-  assert(results, `Could not get npm url for package "${packageName}"`);
-
-  // Fully qualified url returns a string.
-  // Example:
-  // 𝝠 npm view expo-template-bare-minimum@sdk-33 dist.tarball --json
-  if (typeof results === 'string') {
-    return results;
-  }
-
-  // When the tag is arbitrary, the tarball url is an array, return the last value as it's the most recent.
-  // Example:
-  // 𝝠 npm view expo-template-bare-minimum@33 dist.tarball --json
-  if (Array.isArray(results)) {
-    return results[results.length - 1] as string;
-  }
-
-  throw new CommandError(
-    'Expected results of `npm view ...` to be an array or string. Instead found: ' + results
-  );
 }
 
 // @ts-ignore
