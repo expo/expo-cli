@@ -7,7 +7,7 @@ Array [
   "dist/assets (dir)",
   "dist/bundles (dir)",
   "dist/bundles/android-XXX.js (838 kB)",
-  "dist/bundles/ios-XXX.js (837 kB)",
+  "dist/bundles/ios-XXX.js (836 kB)",
   "dist/ios-index.json (658 B)",
 ]
 `;
@@ -56,7 +56,7 @@ Array [
   "dist/assets (dir)",
   "dist/bundles (dir)",
   "dist/bundles/android-XXX.js (838 kB)",
-  "dist/bundles/ios-XXX.js (837 kB)",
+  "dist/bundles/ios-XXX.js (836 kB)",
   "dist/ios-index.json (658 B)",
 ]
 `;
