@@ -10,7 +10,7 @@ const projectRoot = path.join(tempDir, 'my-app');
 
 beforeAll(async () => {
   // jest.setTimeout(60000);
-  // await runAsync(['init', projectDir, '--template', 'blank', '--name', 'My App'], {
+  // await runAsync(['init', projectDir, '--template', 'blank'], {
   //   env: { ...process.env, YARN_CACHE_FOLDER: path.join(tempDir, 'yarn-cache') },
   // });
 });
