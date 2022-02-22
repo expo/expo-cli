@@ -99,7 +99,7 @@ export async function downloadAndExtractNpmModuleAsync(
     }
     await extractLocalNpmTarballAsync(cacheFilename, {
       cwd: props.cwd,
-      name: npmName,
+      name: props.name,
     });
   } catch (error) {
     Log.error('Error downloading and extracting template package');
