@@ -102,7 +102,7 @@ export async function downloadAndExtractNpmModuleAsync(
       name: props.name,
     });
   } catch (error) {
-    Log.error('Error downloading and extracting template package');
+    Log.error('Error downloading and extracting template package:', error);
   }
 }
 
