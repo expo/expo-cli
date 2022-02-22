@@ -86,7 +86,7 @@ function propertiesFromIntentFilter(intentFilter: any): IntentFilterProps {
         scheme: data?.$?.['android:scheme'],
         host: data?.$?.['android:host'],
       }))
-      ?.filter(v => v !== undefined) ?? [];
+      ?.filter((v: any) => v !== undefined) ?? [];
   return {
     actions,
     categories,
