@@ -54,7 +54,7 @@ test('init react-native should exit', async () => {
 
   expect(stripAnsi(stderr)).toEqual(
     expect.stringMatching(
-      /Cannot create an app named \"react-native\" because it would conflict with a dependency of the same name/
+      /Cannot create an app named "react-native" because it would conflict with a dependency of the same name/
     )
   );
 });
