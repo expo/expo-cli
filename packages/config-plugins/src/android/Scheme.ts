@@ -7,8 +7,10 @@ import { AndroidManifest, ManifestActivity } from './Manifest';
 export type IntentFilterProps = {
   actions: string[];
   categories: string[];
-  schemes: string[];
-  hosts: string[];
+  data: {
+    scheme: string;
+    host?: string;
+  }[];
 };
 
 export const withScheme = createAndroidManifestPlugin(setScheme, 'withScheme');
@@ -68,7 +70,7 @@ export function setScheme(
   return androidManifest;
 }
 
-function isValidRedirectIntentFilter({ actions, categories, schemes }: IntentFilterProps): boolean {
+function isValidRedirectIntentFilter({ actions, categories }: IntentFilterProps): boolean {
   return (
     actions.includes('android.intent.action.VIEW') &&
     !categories.includes('android.intent.category.LAUNCHER')
@@ -78,13 +80,17 @@ function isValidRedirectIntentFilter({ actions, categories, schemes }: IntentFil
 function propertiesFromIntentFilter(intentFilter: any): IntentFilterProps {
   const actions = intentFilter?.action?.map((data: any) => data?.$?.['android:name']) ?? [];
   const categories = intentFilter?.category?.map((data: any) => data?.$?.['android:name']) ?? [];
-  const schemes = intentFilter?.data?.map((data: any) => data?.$?.['android:scheme']) ?? [];
-  const hosts = intentFilter?.data?.map((data: any) => data?.$?.['android:host']) ?? [];
+  const data =
+    intentFilter?.data
+      ?.map((data: any) => ({
+        scheme: data?.$?.['android:scheme'],
+        host: data?.$?.['android:host'],
+      }))
+      ?.filter(v => v !== undefined) ?? [];
   return {
-    schemes,
     actions,
     categories,
-    hosts,
+    data,
   };
 }
 
@@ -109,22 +115,23 @@ function getSingleTaskIntentFilters(androidManifest: AndroidManifest): any[] {
 
 export function getSchemesFromManifest(
   androidManifest: AndroidManifest,
-  host: string | null = null
+  requestedHost: string | null = null
 ): string[] {
-  const outputSchemes: IntentFilterProps[] = [];
+  const outputSchemes: string[] = [];
 
   const singleTaskIntentFilters = getSingleTaskIntentFilters(androidManifest);
   for (const intentFilter of singleTaskIntentFilters) {
     const properties = propertiesFromIntentFilter(intentFilter);
-    if (
-      isValidRedirectIntentFilter(properties) &&
-      (host === null || properties.hosts.length === 0 || properties.hosts.includes(host))
-    ) {
-      outputSchemes.push(properties);
+    if (isValidRedirectIntentFilter(properties) && properties.data) {
+      for (const { scheme, host } of properties.data) {
+        if (!requestedHost || !host || host === requestedHost) {
+          outputSchemes.push(scheme);
+        }
+      }
     }
   }
 
-  return outputSchemes.reduce<string[]>((prev, { schemes }) => [...prev, ...schemes], []);
+  return outputSchemes;
 }
 
 export function ensureManifestHasValidIntentFilter(androidManifest: AndroidManifest): boolean {
