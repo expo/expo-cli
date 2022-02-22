@@ -8,6 +8,7 @@ export type IntentFilterProps = {
   actions: string[];
   categories: string[];
   schemes: string[];
+  hosts: string[];
 };
 
 export const withScheme = createAndroidManifestPlugin(setScheme, 'withScheme');
@@ -78,10 +79,12 @@ function propertiesFromIntentFilter(intentFilter: any): IntentFilterProps {
   const actions = intentFilter?.action?.map((data: any) => data?.$?.['android:name']) ?? [];
   const categories = intentFilter?.category?.map((data: any) => data?.$?.['android:name']) ?? [];
   const schemes = intentFilter?.data?.map((data: any) => data?.$?.['android:scheme']) ?? [];
+  const hosts = intentFilter?.data?.map((data: any) => data?.$?.['android:host']) ?? [];
   return {
     schemes,
     actions,
     categories,
+    hosts,
   };
 }
 
@@ -104,13 +107,19 @@ function getSingleTaskIntentFilters(androidManifest: AndroidManifest): any[] {
   return outputSchemes;
 }
 
-export function getSchemesFromManifest(androidManifest: AndroidManifest): string[] {
+export function getSchemesFromManifest(
+  androidManifest: AndroidManifest,
+  host: string | null = null
+): string[] {
   const outputSchemes: IntentFilterProps[] = [];
 
   const singleTaskIntentFilters = getSingleTaskIntentFilters(androidManifest);
   for (const intentFilter of singleTaskIntentFilters) {
     const properties = propertiesFromIntentFilter(intentFilter);
-    if (isValidRedirectIntentFilter(properties)) {
+    if (
+      isValidRedirectIntentFilter(properties) &&
+      (host === null || properties.hosts.length === 0 || properties.hosts.includes(host))
+    ) {
       outputSchemes.push(properties);
     }
   }
