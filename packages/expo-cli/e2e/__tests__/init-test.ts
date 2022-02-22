@@ -18,7 +18,7 @@ test('init (no dir name)', async () => {
   expect(stderr).toMatch(/Pass the project name using the first argument/);
 });
 
-test('init', async () => {
+test('binit', async () => {
   jest.setTimeout(60000);
 
   if (process.env.CI) {
@@ -27,7 +27,7 @@ test('init', async () => {
 
   const cwd = temporary.directory();
   const { stdout } = await runAsync(
-    ['init', 'hello-world', '--template', 'blank', '--name', 'hello-world', '--no-install'],
+    ['init', 'hello-world', '--template', 'blank', '--no-install'],
     { cwd, env: { ...process.env, YARN_CACHE_FOLDER: path.join(cwd, 'yarn-cache') } }
   );
   expect(stdout).toMatch(`Your project is ready!`);
@@ -48,7 +48,7 @@ test('init', async () => {
 test('init react-native should exit', async () => {
   const cwd = temporary.directory();
   const { stdout } = await tryRunAsync(
-    ['init', 'react-native', '--template', 'blank', '--name', 'react-native', '--no-install'],
+    ['init', 'react-native', '--template', 'blank', '--no-install'],
     { cwd, env: { ...process.env, YARN_CACHE_FOLDER: path.join(cwd, 'yarn-cache') } }
   );
 
