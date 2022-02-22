@@ -82,11 +82,11 @@ function propertiesFromIntentFilter(intentFilter: any): IntentFilterProps {
   const categories = intentFilter?.category?.map((data: any) => data?.$?.['android:name']) ?? [];
   const data =
     intentFilter?.data
+      ?.filter((data: any) => data?.$?.['android:scheme'])
       ?.map((data: any) => ({
         scheme: data?.$?.['android:scheme'],
         host: data?.$?.['android:host'],
-      }))
-      ?.filter((v: any) => v !== undefined) ?? [];
+      })) ?? [];
   return {
     actions,
     categories,
