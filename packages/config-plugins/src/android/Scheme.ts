@@ -124,7 +124,7 @@ export function getSchemesFromManifest(
     const properties = propertiesFromIntentFilter(intentFilter);
     if (isValidRedirectIntentFilter(properties) && properties.data) {
       for (const { scheme, host } of properties.data) {
-        if (!requestedHost || !host || host === requestedHost) {
+        if (requestedHost === null || !host || host === requestedHost) {
           outputSchemes.push(scheme);
         }
       }

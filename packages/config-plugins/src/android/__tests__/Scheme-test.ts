@@ -115,12 +115,12 @@ describe('Schemes', () => {
   it(`get all schemes for the host`, async () => {
     const manifest = await readAndroidManifestAsync(sampleManifestWithHostPath);
     ensureManifestHasValidIntentFilter(manifest);
+    expect(hasScheme('longestschemewiththehost', manifest)).toBe(true);
 
     const modifiedManifest = appendScheme('myapp.test', manifest);
     let schemes = getSchemesFromManifest(modifiedManifest, 'any-host');
     expect(schemes).toContain('myapp.test');
     expect(schemes).not.toContain('longestschemewiththehost');
-    expect(hasScheme('longestschemewiththehost', manifest)).toBe(true);
 
     schemes = getSchemesFromManifest(modifiedManifest, 'expo-development-client');
     expect(schemes).toContain('myapp.test');
