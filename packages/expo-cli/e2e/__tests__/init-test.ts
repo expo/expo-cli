@@ -18,7 +18,7 @@ test('init (no dir name)', async () => {
   expect(stderr).toMatch(/Pass the project name using the first argument/);
 });
 
-test('binit', async () => {
+test('init', async () => {
   jest.setTimeout(60000);
 
   if (process.env.CI) {
