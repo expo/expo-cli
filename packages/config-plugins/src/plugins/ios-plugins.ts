@@ -2,15 +2,14 @@ import type { ExpoConfig } from '@expo/config-types';
 import type { JSONObject, JSONValue } from '@expo/json-file';
 import type { XcodeProject } from 'xcode';
 
-import type { ConfigPlugin, Mod, ModProps } from '../Plugin.types';
+import type { ConfigPlugin, Mod } from '../Plugin.types';
 import type { ExpoPlist, InfoPlist } from '../ios/IosConfig.types';
 import type { AppDelegateProjectFile } from '../ios/Paths';
 import { withMod } from './withMod';
 
 type MutateInfoPlistAction = (
   expo: ExpoConfig,
-  infoPlist: InfoPlist,
-  modRequest: ModProps<InfoPlist>
+  infoPlist: InfoPlist
 ) => Promise<InfoPlist> | InfoPlist;
 
 /**
@@ -21,7 +20,7 @@ type MutateInfoPlistAction = (
 export function createInfoPlistPlugin(action: MutateInfoPlistAction, name?: string): ConfigPlugin {
   const withUnknown: ConfigPlugin = config =>
     withInfoPlist(config, async config => {
-      config.modResults = await action(config, config.modResults, config.modRequest);
+      config.modResults = await action(config, config.modResults);
       return config;
     });
   if (name) {
