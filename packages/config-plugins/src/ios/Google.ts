@@ -43,7 +43,7 @@ function readGoogleServicesInfoPlist(
 
 export function getGoogleSignInReservedClientId(
   config: Pick<ExpoConfig, 'ios'>,
-  { introspect, projectRoot }: { introspect: boolean; projectRoot: string }
+  modRequest: Pick<ModProps<InfoPlist>, 'projectRoot' | 'introspect'>
 ): string | null {
   const reservedClientId = config.ios?.config?.googleSignIn?.reservedClientId ?? null;
   if (reservedClientId) {
@@ -55,10 +55,7 @@ export function getGoogleSignInReservedClientId(
     return null;
   }
 
-  const infoPlist = readGoogleServicesInfoPlist(googleServicesFileRelativePath, {
-    introspect,
-    projectRoot,
-  });
+  const infoPlist = readGoogleServicesInfoPlist(googleServicesFileRelativePath, modRequest);
 
   return infoPlist.REVERSED_CLIENT_ID ?? null;
 }
