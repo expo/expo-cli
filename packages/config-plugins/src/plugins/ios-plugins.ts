@@ -2,12 +2,16 @@ import type { ExpoConfig } from '@expo/config-types';
 import type { JSONObject, JSONValue } from '@expo/json-file';
 import type { XcodeProject } from 'xcode';
 
-import type { ConfigPlugin, Mod } from '../Plugin.types';
+import type { ConfigPlugin, Mod, ModProps } from '../Plugin.types';
 import type { ExpoPlist, InfoPlist } from '../ios/IosConfig.types';
 import type { AppDelegateProjectFile } from '../ios/Paths';
 import { withMod } from './withMod';
 
-type MutateInfoPlistAction = (expo: ExpoConfig, infoPlist: InfoPlist) => InfoPlist;
+type MutateInfoPlistAction = (
+  expo: ExpoConfig,
+  infoPlist: InfoPlist,
+  modRequest: ModProps<InfoPlist>
+) => Promise<InfoPlist> | InfoPlist;
 
 /**
  * Helper method for creating mods from existing config functions.
@@ -17,7 +21,7 @@ type MutateInfoPlistAction = (expo: ExpoConfig, infoPlist: InfoPlist) => InfoPli
 export function createInfoPlistPlugin(action: MutateInfoPlistAction, name?: string): ConfigPlugin {
   const withUnknown: ConfigPlugin = config =>
     withInfoPlist(config, async config => {
-      config.modResults = await action(config, config.modResults);
+      config.modResults = await action(config, config.modResults, config.modRequest);
       return config;
     });
   if (name) {
