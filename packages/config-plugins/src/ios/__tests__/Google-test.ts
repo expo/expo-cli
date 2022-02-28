@@ -19,15 +19,7 @@ describe('ios google config', () => {
   afterEach(() => vol.reset());
 
   it(`returns null from all getters if no value provided`, () => {
-    expect(
-      getGoogleSignInReservedClientId(
-        {},
-        {
-          introspect: false,
-          projectRoot: null,
-        }
-      )
-    ).toBe(null);
+    expect(getGoogleSignInReservedClientId({}, { projectRoot: null })).toBe(null);
     expect(getGoogleServicesFile({})).toBe(null);
   });
 
@@ -37,10 +29,7 @@ describe('ios google config', () => {
         {
           ios: { config: { googleSignIn: { reservedClientId: '000' } } },
         },
-        {
-          introspect: false,
-          projectRoot: null,
-        }
+        { projectRoot: null }
       )
     ).toBe('000');
     expect(
@@ -68,10 +57,7 @@ describe('ios google config', () => {
         },
       },
       infoPlist,
-      {
-        introspect: false,
-        projectRoot: null,
-      }
+      { projectRoot }
     );
 
     expect(appendScheme).toHaveBeenCalledWith('client-id-scheme', infoPlist);
@@ -94,10 +80,7 @@ describe('ios google config', () => {
         ios: { googleServicesFile: './path/to/GoogleService-Info.plist' },
       },
       infoPlist,
-      {
-        introspect: false,
-        projectRoot,
-      }
+      { projectRoot }
     );
 
     expect(appendScheme).toHaveBeenCalledWith(

@@ -31,7 +31,7 @@ export const withGoogleServicesFile: ConfigPlugin = config => {
 
 function readGoogleServicesInfoPlist(
   relativePath: string,
-  { introspect, projectRoot }: { introspect: boolean; projectRoot: string }
+  { projectRoot }: { projectRoot: string }
 ) {
   try {
     const googleServiceFilePath = path.resolve(projectRoot, relativePath);
@@ -39,16 +39,13 @@ function readGoogleServicesInfoPlist(
     assert(contents, 'GoogleService-Info.plist is empty');
     return plist.parse(contents);
   } catch (error) {
-    if (introspect) {
-      return {};
-    }
     throw error;
   }
 }
 
 export function getGoogleSignInReservedClientId(
   config: Pick<ExpoConfig, 'ios'>,
-  modRequest: Pick<ModProps<InfoPlist>, 'projectRoot' | 'introspect'>
+  modRequest: Pick<ModProps<InfoPlist>, 'projectRoot'>
 ): string | null {
   const reservedClientId = config.ios?.config?.googleSignIn?.reservedClientId ?? null;
   if (reservedClientId) {
@@ -72,7 +69,7 @@ export function getGoogleServicesFile(config: Pick<ExpoConfig, 'ios'>) {
 export function setGoogleSignInReservedClientId(
   config: Pick<ExpoConfig, 'ios'>,
   infoPlist: InfoPlist,
-  modRequest: Pick<ModProps<InfoPlist>, 'projectRoot' | 'introspect'>
+  modRequest: Pick<ModProps<InfoPlist>, 'projectRoot'>
 ): InfoPlist {
   const reservedClientId = getGoogleSignInReservedClientId(config, modRequest);
 
