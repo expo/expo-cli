@@ -33,14 +33,10 @@ function readGoogleServicesInfoPlist(
   relativePath: string,
   { projectRoot }: { projectRoot: string }
 ) {
-  try {
-    const googleServiceFilePath = path.resolve(projectRoot, relativePath);
-    const contents = fs.readFileSync(googleServiceFilePath, 'utf8');
-    assert(contents, 'GoogleService-Info.plist is empty');
-    return plist.parse(contents);
-  } catch (error) {
-    throw error;
-  }
+  const googleServiceFilePath = path.resolve(projectRoot, relativePath);
+  const contents = fs.readFileSync(googleServiceFilePath, 'utf8');
+  assert(contents, 'GoogleService-Info.plist is empty');
+  return plist.parse(contents);
 }
 
 export function getGoogleSignInReservedClientId(
