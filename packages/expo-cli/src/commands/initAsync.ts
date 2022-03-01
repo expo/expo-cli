@@ -11,7 +11,7 @@ import stripAnsi from 'strip-ansi';
 import terminalLink from 'terminal-link';
 import { UserManager, Versions } from 'xdl';
 
-import CommandError, { SilentError } from '../CommandError';
+import CommandError, { AbortCommandError, SilentError } from '../CommandError';
 import Log from '../log';
 import { logNewSection } from '../utils/ora';
 import prompts, { selectAsync } from '../utils/prompts';
@@ -26,7 +26,6 @@ type Options = {
   npm: boolean;
   yarn: boolean;
   yes: boolean;
-  name?: string;
 };
 
 const FEATURED_TEMPLATES = [
@@ -80,9 +79,6 @@ function parseOptions(command: Partial<Options>): Options {
     npm: !!command.npm,
     install: !!command.install,
     template: command.template,
-    /// XXX(ville): this is necessary because with Commander.js, when the --name
-    // option is not set, `command.name` will point to `Command.prototype.name`.
-    name: typeof command.name === 'string' ? ((command.name as unknown) as string) : undefined,
   };
 }
 
@@ -232,6 +228,16 @@ async function resolveTemplateAsync(resolvedTemplate?: string | null) {
 export async function actionAsync(incomingProjectRoot: string, command: Partial<Options>) {
   const options = parseOptions(command);
 
+  const deprecatedNameArgument =
+    typeof (command as any).name === 'string' ? (command as any).name : undefined;
+  if (deprecatedNameArgument) {
+    // Commander doesn't support using the `--name` argument so it shouldn't have been implemented in the first place.
+    // Using `--name` will cause other parts of commander to break since it expects a function and `this.name` would be a string.
+
+    Log.error(chalk`Deprecated: Use {bold expo init [name]} instead of {bold --name [name]}.`);
+    throw new AbortCommandError();
+  }
+
   // Resolve the name, and projectRoot
   let projectRoot: string;
   if (!incomingProjectRoot && options.yes) {
@@ -240,7 +246,7 @@ export async function actionAsync(incomingProjectRoot: string, command: Partial<
     assertValidName(folderName);
     await assertFolderEmptyAsync(projectRoot, folderName);
   } else {
-    projectRoot = await resolveProjectRootAsync(incomingProjectRoot || options.name);
+    projectRoot = await resolveProjectRootAsync(incomingProjectRoot);
   }
 
   let resolvedTemplate: string | null = options.template ?? null;

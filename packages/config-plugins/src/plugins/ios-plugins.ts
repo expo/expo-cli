@@ -7,7 +7,10 @@ import type { ExpoPlist, InfoPlist } from '../ios/IosConfig.types';
 import type { AppDelegateProjectFile } from '../ios/Paths';
 import { withMod } from './withMod';
 
-type MutateInfoPlistAction = (expo: ExpoConfig, infoPlist: InfoPlist) => InfoPlist;
+type MutateInfoPlistAction = (
+  expo: ExpoConfig,
+  infoPlist: InfoPlist
+) => Promise<InfoPlist> | InfoPlist;
 
 /**
  * Helper method for creating mods from existing config functions.

@@ -6,7 +6,6 @@ import klawSync from 'klaw-sync';
 import os from 'os';
 import path from 'path';
 import prettyBytes from 'pretty-bytes';
-import temporary from 'tempy';
 
 import { createMinimalProjectAsync, runAsync } from '../TestUtils';
 
@@ -40,6 +39,7 @@ for (const isExotic of [false, true]) {
           cwd: projectRoot,
           env: {
             ...process.env,
+            YARN_CACHE_FOLDER: path.join(projectRoot, 'yarn-cache'),
             // Isolate the test from global state such as the currently signed in user.
             __UNSAFE_EXPO_HOME_DIRECTORY: dotExpoHomeDirectory,
           },
@@ -89,54 +89,51 @@ for (const isExotic of [false, true]) {
 
 it('should export hbc bundle if jsEngine is hermes', async () => {
   jest.setTimeout(5 * 60e3);
-  const tempDir = temporary.directory();
-  try {
-    // Require sdk 40+ to use @expo/dev-server for generating hbc
-    const projectRoot = await createMinimalProjectAsync(
-      tempDir,
-      'export-test-app',
-      {
-        android: {
-          jsEngine: 'hermes',
-        },
+
+  // Require sdk 40+ to use @expo/dev-server for generating hbc
+  const projectRoot = await createMinimalProjectAsync(
+    os.tmpdir(),
+    'export-test-app',
+    {
+      android: {
+        jsEngine: 'hermes',
       },
-      {
-        expo: '43.0.0',
-        'react-native': '0.64.3',
-      }
-    );
-    await fs.writeFile(
-      path.join(projectRoot, 'babel.config.js'),
-      fs.readFileSync(path.join(__dirname, '../fixtures/basic/babel.config.js'), 'utf8')
-    );
+    },
+    {
+      expo: '43.0.0',
+      'react-native': '0.64.3',
+    }
+  );
+  await fs.writeFile(
+    path.join(projectRoot, 'babel.config.js'),
+    fs.readFileSync(path.join(__dirname, '../fixtures/basic/babel.config.js'), 'utf8')
+  );
 
-    const dotExpoHomeDirectory = path.join(projectRoot, '../.expo');
-    await runAsync(
-      [
-        'export',
-        '--public-url',
-        'https://example.com/export-test-app/',
-        '--dump-assetmap',
-        '--max-workers',
-        '1',
-      ],
-      {
-        cwd: projectRoot,
-        env: {
-          ...process.env,
-          // Isolate the test from global state such as the currently signed in user.
-          __UNSAFE_EXPO_HOME_DIRECTORY: dotExpoHomeDirectory,
-        },
-      }
-    );
-    const distPath = path.join(projectRoot, 'dist');
+  const dotExpoHomeDirectory = path.join(projectRoot, '../.expo');
+  await runAsync(
+    [
+      'export',
+      '--public-url',
+      'https://example.com/export-test-app/',
+      '--dump-assetmap',
+      '--max-workers',
+      '1',
+    ],
+    {
+      cwd: projectRoot,
+      env: {
+        ...process.env,
+        YARN_CACHE_FOLDER: path.join(projectRoot, 'yarn-cache'),
+        // Isolate the test from global state such as the currently signed in user.
+        __UNSAFE_EXPO_HOME_DIRECTORY: dotExpoHomeDirectory,
+      },
+    }
+  );
+  const distPath = path.join(projectRoot, 'dist');
 
-    const bundleFile = globSync('bundles/android-*.js', { absolute: true, cwd: distPath })[0];
-    const isHermesBytecodeBundle = await isHermesBytecodeBundleAsync(bundleFile);
-    expect(isHermesBytecodeBundle).toBe(true);
-  } finally {
-    await fs.remove(tempDir);
-  }
+  const bundleFile = globSync('bundles/android-*.js', { absolute: true, cwd: distPath })[0];
+  const isHermesBytecodeBundle = await isHermesBytecodeBundleAsync(bundleFile);
+  expect(isHermesBytecodeBundle).toBe(true);
 });
 
 function formatFileSize(item: klawSync.Item) {
@@ -146,8 +143,12 @@ function formatFileSize(item: klawSync.Item) {
     // ignore the file size of assetmap.json
     return 'size ignored';
   } else {
-    return prettyBytes(item.stats.size);
+    return prettyBytes(roundToNearest(item.stats.size, 16), { locale: false });
   }
+}
+
+function roundToNearest(numToRound: number, numToRoundTo: number): number {
+  return Math.round(numToRound / numToRoundTo) * numToRoundTo;
 }
 
 function deepRelativizePaths(root: string, data: any) {

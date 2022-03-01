@@ -349,7 +349,9 @@ Command.prototype.asyncAction = function (asyncFn: Action) {
       // This allows node js to exit immediately
       await Promise.all([Analytics.flush(), UnifiedAnalytics.flush()]);
     } catch (err) {
-      await handleErrorsAsync(err, { command: this.name() });
+      // If the `--name` property is being used then we can be sure that the error is coming from `expo init`.
+      const commandName = typeof this.name === 'string' ? 'init (probably)' : this.name();
+      await handleErrorsAsync(err, { command: commandName });
       process.exit(1);
     }
   });
