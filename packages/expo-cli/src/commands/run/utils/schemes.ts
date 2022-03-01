@@ -26,7 +26,9 @@ export async function getSchemesForAndroidAsync(projectRoot: string) {
   try {
     const configPath = await AndroidConfig.Paths.getAndroidManifestAsync(projectRoot);
     const manifest = await AndroidConfig.Manifest.readAndroidManifestAsync(configPath);
-    return sortLongest(await AndroidConfig.Scheme.getSchemesFromManifest(manifest));
+    return sortLongest(
+      await AndroidConfig.Scheme.getSchemesFromManifest(manifest, 'expo-development-client')
+    );
   } catch {
     // No android folder or some other error
     return [];
