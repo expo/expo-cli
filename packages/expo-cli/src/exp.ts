@@ -715,6 +715,11 @@ async function runAsync(programName: string) {
       process.exit(0);
     });
 
+    program.on('command:diagnostics', () => {
+      Log.warn('The `expo diagnostics` command is deprecated, use `npx expo-env-info` instead.');
+      process.exit(0);
+    });
+
     program.on('command:*', subCommand => {
       let msg = `"${subCommand}" is not an expo command. See "expo --help" for the full list of commands.`;
       const availableCommands = program.commands.map((cmd: Command) => cmd._name);
