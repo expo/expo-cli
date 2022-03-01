@@ -29,6 +29,17 @@ export async function readXMLAsync(options: {
   }
   const parser = new Parser();
   const manifest = await parser.parseStringPromise(contents || options.fallback || '');
+
+  // For strings.xml
+  if (Array.isArray(manifest?.resources?.string)) {
+    for (const string of manifest?.resources?.string) {
+      if (string.$.translatable === 'false' || string.$.translatable === false) {
+        continue;
+      }
+      string._ = unescapeAndroidString(string._);
+    }
+  }
+
   return manifest;
 }
 
@@ -121,4 +132,8 @@ export function escapeAndroidString(value: string): string {
     value = '"' + value + '"';
   }
   return value;
+}
+
+export function unescapeAndroidString(value: string): string {
+  return value.replace(/\\(.)/g, '$1');
 }

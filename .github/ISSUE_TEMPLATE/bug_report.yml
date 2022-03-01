@@ -26,7 +26,7 @@ body:
       required: true
     attributes:
       label: Environment
-      placeholder: Run `expo diagnostics` and paste the output here
+      placeholder: Run `npx expo-env-info` and paste the output here
   - type: input
     validations:
       required: true

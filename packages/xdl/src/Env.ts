@@ -15,8 +15,9 @@ export function isLocal(): boolean {
   return getenv.boolish('EXPO_LOCAL', false);
 }
 
+// TODO: remove this function once all related PRs have landed and there's no chance for conflict
 export function isInterstitiaLPageEnabled(): boolean {
-  return getenv.boolish('EXPO_ENABLE_INTERSTITIAL_PAGE', false);
+  return true;
 }
 
 export function maySkipManifestValidation(): boolean {

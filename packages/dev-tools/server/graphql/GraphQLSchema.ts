@@ -5,7 +5,9 @@ import { $$asyncIterator } from 'iterall';
 import {
   Android,
   ConnectionStatus,
+  Env,
   Exp,
+  isDevClientPackageInstalled,
   Logger,
   Project,
   ProjectSettings,
@@ -52,6 +54,8 @@ const typeDefs = graphql`
     sources: [Source]
     # All messages from all sources
     messages: MessageConnection!
+    # Link to the loding page if available.
+    interstitialPageUrl: String
   }
 
   type ProjectSettings {
@@ -455,6 +459,17 @@ const resolvers = {
     },
     messages(project, args, context) {
       return context.getMessageConnection();
+    },
+    async interstitialPageUrl(project) {
+      const { devClient } = await ProjectSettings.readAsync(project.projectDir);
+      if (
+        Env.isInterstitiaLPageEnabled() &&
+        !devClient &&
+        isDevClientPackageInstalled(project.projectDir)
+      ) {
+        return UrlUtils.constructLoadingUrlAsync(project.projectDir, null);
+      }
+      return null;
     },
   },
   ProjectSettings: {

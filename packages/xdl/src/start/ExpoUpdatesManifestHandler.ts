@@ -119,6 +119,10 @@ export async function getManifestResponseAsync({
     platform
   );
 
+  if (!runtimeVersion) {
+    throw new Error(`Unable to determine runtime version for ${platform}`);
+  }
+
   const bundleUrl = await getBundleUrlAsync({
     projectRoot,
     platform,

@@ -1,0 +1,38 @@
+{
+  "name": "expo-env-info",
+  "version": "1.0.2",
+  "main": "build",
+  "preferGlobal": true,
+  "keywords": [
+    "expo",
+    "ios",
+    "expo-env-info",
+    "android"
+  ],
+  "description": "Fetch Expo project information for GitHub issue diagnostics",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/expo/expo-cli.git",
+    "directory": "packages/expo-env-info"
+  },
+  "author": "Expo <support@expo.dev>",
+  "license": "MIT",
+  "bin": {
+    "expo-env-info": "./build/index.js"
+  },
+  "files": [
+    "build"
+  ],
+  "scripts": {
+    "prepare": "yarn run clean && yarn run build:prod",
+    "lint": "eslint .",
+    "watch": "yarn run build -w",
+    "test": "jest",
+    "build": "ncc build ./src/index.ts -o build/",
+    "build:prod": "ncc build ./src/index.ts -o build/ --minify --no-cache --no-source-map-register",
+    "clean": "rimraf ./build/"
+  },
+  "devDependencies": {
+    "envinfo": "7.8.1"
+  }
+}

@@ -315,6 +315,10 @@ export class CocoaPodsPackageManager implements PackageManager {
     }
   }
 
+  async addWithParametersAsync(names: string[], parameters: string[]) {
+    throw new Error('Unimplemented');
+  }
+
   async addAsync(...names: string[]) {
     throw new Error('Unimplemented');
   }

@@ -237,7 +237,7 @@ export default class ProjectManagerSidebarOptions extends React.Component {
           </div>
 
           <div className={STYLES_QR_SECTION}>
-            <QRCode url={this.props.url} />
+            <QRCode url={this.props.interstitialPageUrl ?? this.props.url} />
           </div>
         </div>
       </div>

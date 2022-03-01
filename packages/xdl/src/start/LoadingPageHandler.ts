@@ -1,12 +1,12 @@
 import { ExpoConfig, getConfig, getNameFromConfig } from '@expo/config';
-import { getRuntimeVersionNullable } from '@expo/config-plugins/build/utils/Updates';
+import { getRuntimeVersionNullable, getSDKVersion } from '@expo/config-plugins/build/utils/Updates';
 import express from 'express';
 import { readFile } from 'fs-extra';
 import http from 'http';
 import { resolve } from 'path';
 import { parse } from 'url';
 
-import { UrlUtils } from './../internal';
+import { ProjectSettings, UrlUtils } from './../internal';
 
 export const LoadingEndpoint = '/_expo/loading';
 export const DeepLinkEndpoint = '/_expo/link';
@@ -44,10 +44,10 @@ function getPlatform(
 
 function getRuntimeVersion(exp: ExpoConfig, platform: 'android' | 'ios' | null) {
   if (!platform) {
-    return 'Undetected';
+    return null;
   }
 
-  return getRuntimeVersionNullable(exp, platform) ?? 'Undetected';
+  return getRuntimeVersionNullable(exp, platform);
 }
 
 export function noCacheMiddleware(
@@ -71,14 +71,26 @@ async function loadingEndpointHandler(
   ).toString('utf-8');
 
   const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
+  const { scheme } = await ProjectSettings.readAsync(projectRoot);
   const { appName } = getNameFromConfig(exp);
   const { query } = parse(req.url!, true);
   const platform = getPlatform(query, req.headers['user-agent']);
   const runtimeVersion = getRuntimeVersion(exp, platform);
 
   content = content.replace(/{{\s*AppName\s*}}/, appName ?? 'App');
-  content = content.replace(/{{\s*RuntimeVersion\s*}}/, runtimeVersion);
+
+  content = content.replace(
+    /{{\s*ProjectVersionType\s*}}/,
+    runtimeVersion ? 'Runtime version' : 'SDK version'
+  );
+
+  content = content.replace(
+    /{{\s*ProjectVersion\s*}}/,
+    runtimeVersion ? runtimeVersion : getSDKVersion(exp) ?? 'Undetected'
+  );
+
   content = content.replace(/{{\s*Path\s*}}/, projectRoot);
+  content = content.replace(/{{\s*Scheme\s*}}/, scheme ?? 'Unknown');
 
   res.end(content);
 }
