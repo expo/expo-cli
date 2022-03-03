@@ -398,11 +398,11 @@ export interface IOS {
      */
     googleMobileAdsAutoInit?: boolean;
     /**
-     * [Google Sign-In iOS SDK](https://developers.google.com/identity/sign-in/ios/start-integrating) keys for your standalone app.
+     * @deprecated Use `ios.googleServicesFile` instead.
      */
     googleSignIn?: {
       /**
-       * The reserved client ID URL scheme. Can be found in `GoogleService-Info.plist`.
+       * @deprecated Use `ios.googleServicesFile` instead.
        */
       reservedClientId?: string;
     };
