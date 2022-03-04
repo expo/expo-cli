@@ -180,7 +180,7 @@ const withMapsCocoaPods: ConfigPlugin<{ useGoogleMaps: boolean }> = (config, { u
 
 const withGoogleMapsAppDelegate: ConfigPlugin<{ apiKey: string | null }> = (config, { apiKey }) => {
   return withAppDelegate(config, config => {
-    if (['objc', 'cxx'].includes(config.modResults.language)) {
+    if (['objc', 'objcpp'].includes(config.modResults.language)) {
       if (
         apiKey &&
         isReactNativeMapsAutolinked(config) &&

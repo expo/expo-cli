@@ -118,7 +118,7 @@ describe(getAppDelegate, () => {
     });
   });
 
-  it(`returns C++ (cxx) path`, () => {
+  it(`returns C++ (objcpp) path`, () => {
     vol.fromJSON(
       {
         'ios/testproject.xcodeproj/project.pbxproj': fsReal.readFileSync(
@@ -136,7 +136,7 @@ describe(getAppDelegate, () => {
     expect(getAppDelegate('/')).toStrictEqual({
       contents: '',
       path: '/ios/testproject/AppDelegate.mm',
-      language: 'cxx',
+      language: 'objcpp',
     });
   });
 

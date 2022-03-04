@@ -13,7 +13,7 @@ interface ProjectFile<L extends string = string> {
   contents: string;
 }
 
-type AppleLanguage = 'objc' | 'cxx' | 'swift';
+type AppleLanguage = 'objc' | 'objcpp' | 'swift';
 
 export type AppDelegateProjectFile = ProjectFile<AppleLanguage>;
 
@@ -95,7 +95,7 @@ function getLanguage(filePath: string): AppleLanguage {
   const extension = path.extname(filePath);
   switch (extension) {
     case '.mm':
-      return 'cxx';
+      return 'objcpp';
     case '.m':
     case '.h':
       return 'objc';
