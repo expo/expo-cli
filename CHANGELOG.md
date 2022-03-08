@@ -6,12 +6,53 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🛠 Breaking changes
 
-- [expo-cli] deprecate `diagnostics` command ([#4221](https://github.com/expo/expo-cli/pull/4221))
 ### 🎉 New features
 
 ### 🧹 Chores
 
 ### 🐛 Bug fixes
+
+## [Tue, 8 Mar 2022 12:30:47 -0700](https://github.com/expo/expo-cli/commit/82dcf7ce6669e277eafe5bca0440e925dcbc6e08)
+
+### 🛠 Breaking changes
+
+- [expo-cli] Deprecate the `--name` argument of the init command. ([#4225](https://github.com/expo/expo-cli/issues/4225))
+- [expo-cli] Deprecate `expo diagnostics` command in favor of `npx expo-env-info`. ([#4221](https://github.com/expo/expo-cli/issues/4221))
+
+### 🎉 New features
+
+- [config-plugins] Added support for `AppDelegate.mm`. ([#4243](https://github.com/expo/expo-cli/issues/4243))
+- [config-plugin] Append scheme `REVERSED_CLIENT_ID` from `GoogleService-Info.plist`. ([#4238](https://github.com/expo/expo-cli/issues/4238))
+
+### 🧹 Chores
+
+- [expo-cli] Move `expo eject` to the deprecated help group ([#4249](https://github.com/expo/expo-cli/issues/4249))
+- [config-plugins] update `AndroidManifest.xml` template for introspect ([#4245](https://github.com/expo/expo-cli/issues/4245))
+- [chore] Switch issue template to `expo-env-info` ([#4233](https://github.com/expo/expo-cli/issues/4233))
+
+### 🐛 Bug fixes
+
+- [config-types] Deprecated `reservedClientId` ([#4241](https://github.com/expo/expo-cli/issues/4241))
+- [expo-cli] Pick correct scheme for open android app ([#4228](https://github.com/expo/expo-cli/issues/4228))
+- [config-plugins] Unescape values when reading strings.xml ([#4229](https://github.com/expo/expo-cli/issues/4229))
+- Round file results to fix E2E tests ([#4226](https://github.com/expo/expo-cli/issues/4226))
+
+### 📦 Packages updated
+
+- @expo/config-plugins@4.1.0
+- @expo/config@6.0.19
+- @expo/dev-server@0.1.106
+- @expo/dev-tools@0.13.146
+- expo-cli@5.3.0
+- expo-optimize@0.2.11
+- install-expo-modules@0.2.6
+- @expo/metro-config@0.3.12
+- @expo/next-adapter@3.1.21
+- @expo/prebuild-config@3.1.0
+- expo-pwa@0.0.114
+- uri-scheme@1.0.115
+- @expo/webpack-config@0.16.19
+- xdl@59.2.30
 
 ## [Wed, 16 Feb 2022 12:20:14 -0800](https://github.com/expo/expo-cli/commit/11f518d24c070ef6b82b6eb5f9da22f1648f2665)
 
@@ -130,7 +171,6 @@ This is the log of notable changes to Expo CLI and related packages.
 - [config-plugins] avoid duplicate CFBundleURLTypes ([#4164](https://github.com/expo/expo-cli/issues/4164))
 - [config-plugins] handle missing targetattributes edge case when setting provisioning profile for multitarget projects ([#4175](https://github.com/expo/expo-cli/issues/4175))
 - [metro-config] Add missing resolve-from dependency ([#4182](https://github.com/expo/expo-cli/issues/4182))
-
 
 ### 📦 Packages updated
 
