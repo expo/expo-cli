@@ -1,6 +1,6 @@
 {
   "name": "@expo/next-adapter",
-  "version": "3.1.20",
+  "version": "3.1.21",
   "description": "Adapter for using Next.js with Expo modules",
   "main": "build/index.js",
   "types": "build/index.d.ts",
@@ -57,7 +57,7 @@
   },
   "dependencies": {
     "@expo/package-manager": "0.0.50",
-    "@expo/webpack-config": "0.16.18",
+    "@expo/webpack-config": "0.16.19",
     "babel-preset-expo": "^8.4.1",
     "chalk": "^4.0.0",
     "commander": "^4.0.1",
