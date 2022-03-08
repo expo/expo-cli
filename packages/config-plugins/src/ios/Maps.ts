@@ -180,7 +180,7 @@ const withMapsCocoaPods: ConfigPlugin<{ useGoogleMaps: boolean }> = (config, { u
 
 const withGoogleMapsAppDelegate: ConfigPlugin<{ apiKey: string | null }> = (config, { apiKey }) => {
   return withAppDelegate(config, config => {
-    if (config.modResults.language === 'objc') {
+    if (['objc', 'objcpp'].includes(config.modResults.language)) {
       if (
         apiKey &&
         isReactNativeMapsAutolinked(config) &&
@@ -194,7 +194,7 @@ const withGoogleMapsAppDelegate: ConfigPlugin<{ apiKey: string | null }> = (conf
             config.modResults.contents,
             apiKey
           ).contents;
-        } catch (error) {
+        } catch (error: any) {
           if (error.code === 'ERR_NO_MATCH') {
             throw new Error(
               `Cannot add Google Maps to the project's AppDelegate because it's malformed. Please report this with a copy of your project AppDelegate.`
@@ -211,7 +211,9 @@ const withGoogleMapsAppDelegate: ConfigPlugin<{ apiKey: string | null }> = (conf
         ).contents;
       }
     } else {
-      throw new Error('Cannot setup Google Maps because the AppDelegate is not Objective C');
+      throw new Error(
+        `Cannot setup Google Maps because the project AppDelegate is not a supported language: ${config.modResults.language}`
+      );
     }
     return config;
   });

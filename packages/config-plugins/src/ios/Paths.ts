@@ -13,7 +13,9 @@ interface ProjectFile<L extends string = string> {
   contents: string;
 }
 
-export type AppDelegateProjectFile = ProjectFile<'objc' | 'swift'>;
+type AppleLanguage = 'objc' | 'objcpp' | 'swift';
+
+export type AppDelegateProjectFile = ProjectFile<AppleLanguage>;
 
 export function getAppDelegateHeaderFilePath(projectRoot: string): string {
   const [using, ...extra] = globSync('ios/*/AppDelegate.h', {
@@ -42,7 +44,7 @@ export function getAppDelegateHeaderFilePath(projectRoot: string): string {
 }
 
 export function getAppDelegateFilePath(projectRoot: string): string {
-  const [using, ...extra] = globSync('ios/*/AppDelegate.@(m|swift)', {
+  const [using, ...extra] = globSync('ios/*/AppDelegate.@(m|mm|swift)', {
     absolute: true,
     cwd: projectRoot,
     ignore: ignoredPaths,
@@ -89,9 +91,11 @@ export function getAppDelegateObjcHeaderFilePath(projectRoot: string): string {
   return using;
 }
 
-function getLanguage(filePath: string): 'objc' | 'swift' {
+function getLanguage(filePath: string): AppleLanguage {
   const extension = path.extname(filePath);
   switch (extension) {
+    case '.mm':
+      return 'objcpp';
     case '.m':
     case '.h':
       return 'objc';
