@@ -224,7 +224,9 @@ export function getDefaultConfig(
     resolver: {
       resolverMainFields,
       platforms: ['ios', 'android', 'native', 'testing'],
-      assetExts: [...metroDefaultValues.resolver.assetExts.filter(assetExt => assetExt !== 'json')],
+      assetExts: metroDefaultValues.resolver.assetExts.filter(
+        assetExt => !sourceExts.includes(assetExt)
+      ),
       sourceExts,
       nodeModulesPaths,
     },

@@ -6,6 +6,21 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🛠 Breaking changes
 
+- [metro-config] Removes duplicate `json` extensions in metro `assetExts` and `sourceExts`. ([#4255](https://github.com/expo/expo-cli/issues/4255))
+
+  - If a project requires `json` assets as discreet assets, include a **metro.config.js** file at the root of the project and add `json` to the `assetExts` array. Example:
+
+  ```js
+  const { getDefaultConfig } = require('expo/metro-config');
+  const defaultConfig = getDefaultConfig(__dirname);
+
+  module.exports = {
+    resolver: {
+      assetExts: [...defaultConfig.resolver.assetExts, 'json'],
+    },
+  };
+  ```
+
 ### 🎉 New features
 
 ### 🧹 Chores
