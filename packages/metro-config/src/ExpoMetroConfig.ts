@@ -223,7 +223,10 @@ export function getDefaultConfig(
     watchFolders,
     resolver: {
       resolverMainFields,
-      platforms: ['ios', 'android', 'native'],
+      platforms: ['ios', 'android', 'native', 'testing'],
+      assetExts: metroDefaultValues.resolver.assetExts.filter(
+        assetExt => !sourceExts.includes(assetExt)
+      ),
       sourceExts,
       nodeModulesPaths,
     },
