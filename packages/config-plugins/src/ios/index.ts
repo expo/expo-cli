@@ -1,11 +1,11 @@
 import * as Bitcode from './Bitcode';
+import * as BuildProperties from './BuildProperties';
 import * as BuildScheme from './BuildScheme';
 import * as BundleIdentifier from './BundleIdentifier';
 import * as DeviceFamily from './DeviceFamily';
 import * as Entitlements from './Entitlements';
 import * as Google from './Google';
 import { ExpoPlist, InfoPlist } from './IosConfig.types';
-import * as JsEngine from './JsEngine';
 import * as Locales from './Locales';
 import * as Maps from './Maps';
 import * as Name from './Name';
@@ -31,12 +31,12 @@ export { InfoPlist, ExpoPlist, Entitlements, Paths, Permissions, XcodeUtils };
 export {
   Bitcode,
   BundleIdentifier,
+  BuildProperties,
   BuildScheme,
   DeviceFamily,
   Google,
   Maps,
   Locales,
-  JsEngine,
   Name,
   Orientation,
   ProvisioningProfile,
