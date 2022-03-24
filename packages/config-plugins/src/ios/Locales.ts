@@ -1,7 +1,7 @@
 import { ExpoConfig } from '@expo/config-types';
 import JsonFile from '@expo/json-file';
 import * as fs from 'fs-extra';
-import { join } from 'path';
+import { join, relative } from 'path';
 import { XcodeProject } from 'xcode';
 
 import { ConfigPlugin } from '../Plugin.types';
@@ -57,15 +57,16 @@ export async function setLocalesAsync(
     // Write the file to the file system.
     await fs.writeFile(strings, buffer.join('\n'));
 
+    const groupName = `${projectName}/Supporting/${lang}.lproj`;
     // deep find the correct folder
-    const group = ensureGroupRecursively(project, `${projectName}/Supporting/${lang}.lproj`);
+    const group = ensureGroupRecursively(project, groupName);
 
     // Ensure the file doesn't already exist
     if (!group?.children.some(({ comment }) => comment === stringName)) {
       // Only write the file if it doesn't already exist.
       project = addResourceFileToGroup({
-        filepath: strings,
-        groupName: `${projectName}/Supporting/${lang}.lproj`,
+        filepath: relative(supportingDirectory, strings),
+        groupName,
         project,
         isBuildFile: true,
         verbose: true,
