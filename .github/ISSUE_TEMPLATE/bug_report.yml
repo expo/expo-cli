@@ -1,5 +1,5 @@
 name: "\U0001F41B Bug Report in Expo CLI"
-labels: 'bug'
+labels: 'needs review'
 description: 'You want to report a reproducible bug or regression in Expo CLI or related tooling.'
 body:
   - type: markdown
