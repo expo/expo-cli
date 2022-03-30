@@ -24,6 +24,7 @@ This is the log of notable changes to Expo CLI and related packages.
 ### 🎉 New features
 
 ### 🧹 Chores
+- [expo-cli] update supported Node version warning to reflect current LTS schema ([#4261](https://github.com/expo/expo-cli/pull/4261))
 
 ### 🐛 Bug fixes
 

@@ -13,9 +13,8 @@ const minor = parseInt(match[2], 10);
 
 const supportedVersions =
   'expo-cli supports following Node.js versions:\n' +
-  '* >=12.13.0 <13.0.0 (Maintenance LTS)\n' +
-  '* >=14.0.0 <15.0.0 (Active LTS)\n' +
-  '* >=15.0.0 <17.0.0 (Current Release)\n';
+  '* >=12.13.0 <15.0.0 (Maintenance LTS)\n' +
+  '* >=16.0.0 <17.0.0 (Active LTS)\n';
 
 // If newer than the current release
 if (major > 16) {
