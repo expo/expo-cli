@@ -1,10 +1,10 @@
 import { ExpoConfig } from '@expo/config-types';
-import fs from 'fs';
 import path from 'path';
 
 import { ConfigPlugin } from '../Plugin.types';
 import { withAppBuildGradle, withProjectBuildGradle } from '../plugins/android-plugins';
 import { withDangerousMod } from '../plugins/withDangerousMod';
+import { copyFilePathToPathAsync } from '../utils/fs';
 import { addWarningAndroid } from '../utils/warnings';
 
 const DEFAULT_TARGET_PATH = './android/app/google-services.json';
@@ -74,21 +74,14 @@ export async function setGoogleServicesFile(
   const destinationPath = path.resolve(projectRoot, targetPath);
 
   try {
-    await copyFilePathToPath(completeSourcePath, destinationPath);
+    await copyFilePathToPathAsync(completeSourcePath, destinationPath);
   } catch (e) {
+    console.log(e);
     throw new Error(
       `Cannot copy google-services.json from ${completeSourcePath} to ${destinationPath}. Please make sure the source and destination paths exist.`
     );
   }
   return true;
-}
-
-/** A basic function that copies a single file to another file location. */
-async function copyFilePathToPath(src: string, dest: string): Promise<void> {
-  const srcFile = await fs.promises.readFile(src);
-
-  await fs.promises.mkdir(path.dirname(dest), { recursive: true });
-  await fs.promises.writeFile(dest, srcFile);
 }
 
 /**

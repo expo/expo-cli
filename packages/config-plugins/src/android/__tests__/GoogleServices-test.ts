@@ -1,6 +1,7 @@
-import fs from 'fs-extra';
+import { vol } from 'memfs';
 import { resolve } from 'path';
 
+import { copyFilePathToPathAsync } from '../../utils/fs';
 import {
   applyPlugin,
   getGoogleServicesFilePath,
@@ -9,13 +10,13 @@ import {
 } from '../GoogleServices';
 
 jest.mock('fs');
-const fixturesPath = resolve(__dirname, 'fixtures');
+jest.mock('fs/promises');
 
-describe('google services file', () => {
-  afterAll(async () => {
-    await fs.remove(resolve(fixturesPath, 'not/'));
-  });
+jest.mock('../../utils/fs', () => ({
+  copyFilePathToPathAsync: jest.fn(),
+}));
 
+describe(getGoogleServicesFilePath, () => {
   it(`returns null if no googleServicesFile is provided`, () => {
     expect(getGoogleServicesFilePath({})).toBe(null);
   });
@@ -29,6 +30,22 @@ describe('google services file', () => {
       })
     ).toBe('path/to/google-services.json');
   });
+});
+
+describe(setGoogleServicesFile, () => {
+  afterAll(() => {
+    vol.reset();
+  });
+
+  const projectRoot = '/';
+  beforeEach(() => {
+    vol.fromJSON(
+      {
+        'google-services.json': '{}',
+      },
+      projectRoot
+    );
+  });
 
   it(`copies google services file to android/app`, async () => {
     expect(
@@ -38,13 +55,13 @@ describe('google services file', () => {
             googleServicesFile: './google-services.json',
           },
         },
-        fixturesPath
+        projectRoot
       )
     ).toBe(true);
 
-    expect(fs.copy).toHaveBeenCalledWith(
-      resolve(fixturesPath, 'google-services.json'),
-      resolve(fixturesPath, 'android/app/google-services.json')
+    expect(copyFilePathToPathAsync).toHaveBeenLastCalledWith(
+      '/google-services.json',
+      '/android/app/google-services.json'
     );
   });
 
@@ -57,20 +74,21 @@ describe('google services file', () => {
             googleServicesFile: './google-services.json',
           },
         },
-        fixturesPath,
+        projectRoot,
         customTargetPath
       )
     ).toBe(true);
 
-    expect(fs.copy).toHaveBeenCalledWith(
-      resolve(fixturesPath, 'google-services.json'),
-      resolve(fixturesPath, customTargetPath)
+    expect(copyFilePathToPathAsync).toHaveBeenCalledWith(
+      resolve(projectRoot, 'google-services.json'),
+      resolve(projectRoot, customTargetPath)
     );
   });
+});
 
-  describe('setting classpath', () => {
-    const validConfig = { android: { googleServicesFile: 'g.json' } };
-    const EXAMPLE_BUILD_GRADLE = `
+describe(setClassPath, () => {
+  const validConfig = { android: { googleServicesFile: 'g.json' } };
+  const EXAMPLE_BUILD_GRADLE = `
 buildscript {
     ext {
         buildToolsVersion = "28.0.3"
@@ -84,9 +102,9 @@ buildscript {
 
     }
 }
-  `;
+`;
 
-    const EXPECTED_BUILD_GRADLE = `
+  const EXPECTED_BUILD_GRADLE = `
 buildscript {
     ext {
         buildToolsVersion = "28.0.3"
@@ -101,19 +119,19 @@ buildscript {
 
     }
 }
-  `;
-    it(`sets classpath in build.gradle if needed`, () => {
-      expect(setClassPath(validConfig, EXAMPLE_BUILD_GRADLE)).toEqual(EXPECTED_BUILD_GRADLE);
-    });
-
-    it(`does not set classpath in build.gradle multiple times`, () => {
-      expect(setClassPath(validConfig, EXPECTED_BUILD_GRADLE)).toEqual(EXPECTED_BUILD_GRADLE);
-    });
+`;
+  it(`sets classpath in build.gradle if needed`, () => {
+    expect(setClassPath(validConfig, EXAMPLE_BUILD_GRADLE)).toEqual(EXPECTED_BUILD_GRADLE);
   });
 
-  describe('applying plugin', () => {
-    const validConfig = { android: { googleServicesFile: 'g.json' } };
-    const EXAMPLE_APP_BUILD_GRADLE = `
+  it(`does not set classpath in build.gradle multiple times`, () => {
+    expect(setClassPath(validConfig, EXPECTED_BUILD_GRADLE)).toEqual(EXPECTED_BUILD_GRADLE);
+  });
+});
+
+describe(applyPlugin, () => {
+  const validConfig = { android: { googleServicesFile: 'g.json' } };
+  const EXAMPLE_APP_BUILD_GRADLE = `
 // Blah blah blah
 task copyDownloadableDepsToLibs(type: Copy) {
     from configurations.compile
@@ -123,7 +141,7 @@ task copyDownloadableDepsToLibs(type: Copy) {
 apply from: file("../../node_modules/@react-native-community/cli-platform-android/native_modules.gradle");
 applyNativeModulesAppBuildGradle(project)`;
 
-    const EXPECTED_APP_BUILD_GRADLE = `
+  const EXPECTED_APP_BUILD_GRADLE = `
 // Blah blah blah
 task copyDownloadableDepsToLibs(type: Copy) {
     from configurations.compile
@@ -134,14 +152,11 @@ apply from: file("../../node_modules/@react-native-community/cli-platform-androi
 applyNativeModulesAppBuildGradle(project)
 apply plugin: 'com.google.gms.google-services'`;
 
-    it(`applies the plugin in app/build.gradle if needed`, () => {
-      expect(applyPlugin(validConfig, EXAMPLE_APP_BUILD_GRADLE)).toEqual(EXPECTED_APP_BUILD_GRADLE);
-    });
+  it(`applies the plugin in app/build.gradle if needed`, () => {
+    expect(applyPlugin(validConfig, EXAMPLE_APP_BUILD_GRADLE)).toEqual(EXPECTED_APP_BUILD_GRADLE);
+  });
 
-    it(`does not apply the plugin multiple times`, () => {
-      expect(applyPlugin(validConfig, EXPECTED_APP_BUILD_GRADLE)).toEqual(
-        EXPECTED_APP_BUILD_GRADLE
-      );
-    });
+  it(`does not apply the plugin multiple times`, () => {
+    expect(applyPlugin(validConfig, EXPECTED_APP_BUILD_GRADLE)).toEqual(EXPECTED_APP_BUILD_GRADLE);
   });
 });
