@@ -1,4 +1,4 @@
-import fs from 'fs-extra';
+import fs from 'fs';
 import { vol } from 'memfs';
 
 import { buildResourceItem, readResourcesXMLAsync } from '../../android/Resources';
@@ -69,7 +69,7 @@ describe('read and write', () => {
     const stringsJSON = await readResourcesXMLAsync({ path: stringsPath });
     console.log(stringsJSON);
     await writeXMLAsync({ path: stringsPath, xml: stringsJSON });
-    expect(await fs.readFile(stringsPath, 'utf-8')).toBe(example);
+    expect(await fs.promises.readFile(stringsPath, 'utf-8')).toBe(example);
   });
 });
 

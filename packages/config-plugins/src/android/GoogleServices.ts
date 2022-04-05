@@ -1,6 +1,6 @@
 import { ExpoConfig } from '@expo/config-types';
-import fs from 'fs-extra';
-import { resolve } from 'path';
+import fs from 'fs';
+import path from 'path';
 
 import { ConfigPlugin } from '../Plugin.types';
 import { withAppBuildGradle, withProjectBuildGradle } from '../plugins/android-plugins';
@@ -70,17 +70,25 @@ export async function setGoogleServicesFile(
     return false;
   }
 
-  const completeSourcePath = resolve(projectRoot, partialSourcePath);
-  const destinationPath = resolve(projectRoot, targetPath);
+  const completeSourcePath = path.resolve(projectRoot, partialSourcePath);
+  const destinationPath = path.resolve(projectRoot, targetPath);
 
   try {
-    await fs.copy(completeSourcePath, destinationPath);
+    await copyFilePathToPath(completeSourcePath, destinationPath);
   } catch (e) {
     throw new Error(
       `Cannot copy google-services.json from ${completeSourcePath} to ${destinationPath}. Please make sure the source and destination paths exist.`
     );
   }
   return true;
+}
+
+/** A basic function that copies a single file to another file location. */
+async function copyFilePathToPath(src: string, dest: string): Promise<void> {
+  const srcFile = await fs.promises.readFile(src);
+
+  await fs.promises.mkdir(path.dirname(dest), { recursive: true });
+  await fs.promises.writeFile(dest, srcFile);
 }
 
 /**

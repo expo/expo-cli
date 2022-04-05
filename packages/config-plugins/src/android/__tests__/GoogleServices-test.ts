@@ -8,7 +8,7 @@ import {
   setGoogleServicesFile,
 } from '../GoogleServices';
 
-jest.mock('fs-extra');
+jest.mock('fs');
 const fixturesPath = resolve(__dirname, 'fixtures');
 
 describe('google services file', () => {

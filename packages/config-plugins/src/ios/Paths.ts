@@ -1,4 +1,4 @@
-import { pathExistsSync, readFileSync } from 'fs-extra';
+import { existsSync, readFileSync } from 'fs';
 import { sync as globSync } from 'glob';
 import * as path from 'path';
 
@@ -176,7 +176,7 @@ export function getAllPBXProjectPaths(projectRoot: string): string[] {
   const projectPaths = getAllXcodeProjectPaths(projectRoot);
   const paths = projectPaths
     .map(value => path.join(value, 'project.pbxproj'))
-    .filter(value => pathExistsSync(value));
+    .filter(value => existsSync(value));
 
   if (!paths.length) {
     throw new UnexpectedError(

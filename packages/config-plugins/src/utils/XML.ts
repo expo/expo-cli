@@ -1,4 +1,4 @@
-import fs from 'fs-extra';
+import fs from 'fs';
 import { EOL } from 'os';
 import path from 'path';
 import { Builder, Parser } from 'xml2js';
@@ -13,8 +13,8 @@ export interface XMLObject {
 
 export async function writeXMLAsync(options: { path: string; xml: any }): Promise<void> {
   const xml = format(options.xml);
-  await fs.ensureDir(path.dirname(options.path));
-  await fs.writeFile(options.path, xml);
+  await fs.promises.mkdir(path.dirname(options.path), { recursive: true });
+  await fs.promises.writeFile(options.path, xml);
 }
 
 export async function readXMLAsync(options: {
@@ -23,7 +23,7 @@ export async function readXMLAsync(options: {
 }): Promise<XMLObject> {
   let contents: string = '';
   try {
-    contents = await fs.readFile(options.path, { encoding: 'utf8', flag: 'r' });
+    contents = await fs.promises.readFile(options.path, { encoding: 'utf8', flag: 'r' });
   } catch {
     // catch and use fallback
   }

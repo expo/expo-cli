@@ -1,6 +1,6 @@
 import { ExpoConfig } from '@expo/config-types';
 import { JSONObject } from '@expo/json-file';
-import fs from 'fs-extra';
+import fs from 'fs';
 import path from 'path';
 import slash from 'slash';
 
@@ -76,7 +76,7 @@ export function getEntitlementsPath(projectRoot: string): string {
       template = fs.readFileSync(last, 'utf8');
     }
 
-    fs.ensureDirSync(path.dirname(entitlementsPath));
+    fs.mkdirSync(path.dirname(entitlementsPath), { recursive: true });
     fs.writeFileSync(entitlementsPath, template);
 
     Object.entries(project.pbxXCBuildConfigurationSection())
@@ -97,7 +97,8 @@ export function getEntitlementsPath(projectRoot: string): string {
 
 function deleteEntitlementsFiles(entitlementsPaths: string[]) {
   for (const path of entitlementsPaths) {
-    fs.removeSync(path);
+    // fs.removeSync(path);
+    fs.rmdirSync(path, { recursive: true });
   }
 }
 
