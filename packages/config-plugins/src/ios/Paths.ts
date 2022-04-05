@@ -143,7 +143,15 @@ export function getAllXcodeProjectPaths(projectRoot: string): string[] {
     .filter(project => !/test|example|sample/i.test(project) || path.dirname(project) === iosFolder)
     // sort alphabetically to ensure this works the same across different devices (Fail in CI (linux) without this)
     .sort()
-    .sort(project => (path.dirname(project) === iosFolder ? -1 : 1));
+    .sort((a, b) => {
+      const isAInIos = path.dirname(a) === iosFolder;
+      const isBInIos = path.dirname(b) === iosFolder;
+      // preserve previous sort order
+      if ((isAInIos && isBInIos) || (!isAInIos && !isBInIos)) {
+        return 0;
+      }
+      return isAInIos ? -1 : 1;
+    });
 
   if (!pbxprojPaths.length) {
     throw new UnexpectedError(
