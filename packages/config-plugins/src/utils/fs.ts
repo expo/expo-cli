@@ -7,3 +7,17 @@ export async function copyFilePathToPathAsync(src: string, dest: string): Promis
   await fs.promises.mkdir(path.dirname(dest), { recursive: true });
   await fs.promises.writeFile(dest, srcFile);
 }
+
+/** Remove a single file (not directory). Returns `true` if a file was actually deleted. */
+export function removeFile(filePath: string): boolean {
+  try {
+    fs.unlinkSync(filePath);
+    return true;
+  } catch (error: any) {
+    // Skip if the remove did nothing.
+    if (error.code === 'ENOENT') {
+      return false;
+    }
+    throw error;
+  }
+}

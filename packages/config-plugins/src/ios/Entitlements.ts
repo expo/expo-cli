@@ -5,6 +5,7 @@ import path from 'path';
 import slash from 'slash';
 
 import { createEntitlementsPlugin } from '../plugins/ios-plugins';
+import { removeFile } from '../utils/fs';
 import * as Paths from './Paths';
 import {
   getPbxproj,
@@ -97,8 +98,7 @@ export function getEntitlementsPath(projectRoot: string): string {
 
 function deleteEntitlementsFiles(entitlementsPaths: string[]) {
   for (const path of entitlementsPaths) {
-    // fs.removeSync(path);
-    fs.rmdirSync(path, { recursive: true });
+    removeFile(path);
   }
 }
 
