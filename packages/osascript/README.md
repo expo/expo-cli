@@ -3,7 +3,7 @@
 👋 Welcome to <br><code>@expo/osascript</code>
 </h1>
 
-<p align="center">Tools for running an osascripts in Node.</p>
+<p align="center">Tools for running osascripts in Node.</p>
 
 <p align="center">
   <img src="https://flat.badgen.net/packagephobia/install/@expo/osascript">
