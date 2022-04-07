@@ -1,10 +1,23 @@
-# Expo Developer Tools
+<!-- Title -->
+<h1 align="center">
+👋 Welcome to <br><code>@expo/dev-tools</code>
+</h1>
 
-Expo Dev Tools is a web browser based control panel included in Expo CLI.
+<p align="center">Expo Developer Tools - Web browser based control panel included in Expo CLI.</p>
 
-Expo Developer Tools supports:
+<p align="center">
+  <img src="https://flat.badgen.net/packagephobia/install/@expo/dev-tools">
 
-- viewing logs from supporting services, (Metro and Webpack bundlers)
+  <a href="https://www.npmjs.com/package/@expo/dev-tools">
+    <img src="https://flat.badgen.net/npm/dw/@expo/dev-tools" target="_blank" />
+  </a>
+</p>
+
+<!-- Body -->
+
+## Features
+
+- viewing logs from supporting services: Metro and Webpack bundlers
 - viewing logs from your device
 - publishing your project
 - debugging connectivity
