@@ -1,6 +1,5 @@
 import { ExpoConfig } from '@expo/config-types';
 import fs from 'fs';
-import fsExtra from 'fs-extra';
 import { vol } from 'memfs';
 import path from 'path';
 
@@ -16,7 +15,7 @@ jest.mock('resolve-from');
 
 const { silent } = require('resolve-from');
 
-const fsReal = jest.requireActual('fs') as typeof fs;
+const fsReal = jest.requireActual('fs') as typeof import('fs');
 
 describe('Android Updates config', () => {
   beforeEach(() => {
@@ -119,7 +118,7 @@ describe('Android Updates config', () => {
         '/app'
       );
 
-      const contents = await fsExtra.readFile('/app/android/app/build.gradle', 'utf-8');
+      const contents = await fs.promises.readFile('/app/android/app/build.gradle', 'utf-8');
       const newContents = Updates.ensureBuildGradleContainsConfigurationScript('/app', contents);
       expect(newContents).toMatchSnapshot();
     });
@@ -146,7 +145,10 @@ describe('Android Updates config', () => {
         '/app'
       );
 
-      const contents = await fsExtra.readFile('/app/workspace/android/app/build.gradle', 'utf-8');
+      const contents = await fs.promises.readFile(
+        '/app/workspace/android/app/build.gradle',
+        'utf-8'
+      );
       const newContents = Updates.ensureBuildGradleContainsConfigurationScript(
         '/app/workspace',
         contents

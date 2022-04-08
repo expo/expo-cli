@@ -1,6 +1,6 @@
 import { ExpoConfig } from '@expo/config-types';
 import JsonFile from '@expo/json-file';
-import * as fs from 'fs-extra';
+import fs from 'fs';
 import { join, relative } from 'path';
 import { XcodeProject } from 'xcode';
 
@@ -48,14 +48,16 @@ export async function setLocalesAsync(
 
   for (const [lang, localizationObj] of Object.entries(localesMap)) {
     const dir = join(supportingDirectory, `${lang}.lproj`);
-    await fs.ensureDir(dir);
+    // await fs.ensureDir(dir);
+    await fs.promises.mkdir(dir, { recursive: true });
+
     const strings = join(dir, stringName);
     const buffer = [];
     for (const [plistKey, localVersion] of Object.entries(localizationObj)) {
       buffer.push(`${plistKey} = "${localVersion}";`);
     }
     // Write the file to the file system.
-    await fs.writeFile(strings, buffer.join('\n'));
+    await fs.promises.writeFile(strings, buffer.join('\n'));
 
     const groupName = `${projectName}/Supporting/${lang}.lproj`;
     // deep find the correct folder

@@ -1,7 +1,7 @@
 import { ExpoConfig } from '@expo/config-types';
 import plist from '@expo/plist';
 import assert from 'assert';
-import fs from 'fs-extra';
+import fs from 'fs';
 import path from 'path';
 import { XcodeProject } from 'xcode';
 
