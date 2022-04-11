@@ -6,27 +6,63 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🛠 Breaking changes
 
-- [metro-config] Removes duplicate `json` extensions in metro `assetExts` and `sourceExts`. ([#4255](https://github.com/expo/expo-cli/pull/4255))
-
-  - If a project requires `json` assets as discrete assets, include a **metro.config.js** file at the root of the project and add `json` to the `assetExts` array. Example:
-
-  ```js
-  const { getDefaultConfig } = require('expo/metro-config');
-  const defaultConfig = getDefaultConfig(__dirname);
-
-  module.exports = {
-    resolver: {
-      assetExts: [...defaultConfig.resolver.assetExts, 'json'],
-    },
-  };
-  ```
-
 ### 🎉 New features
 
 ### 🧹 Chores
-- [expo-cli] update supported Node version warning to reflect current LTS schema ([#4261](https://github.com/expo/expo-cli/pull/4261))
 
 ### 🐛 Bug fixes
+
+## [Mon, 11 Apr 2022 13:14:18 -0700](https://github.com/expo/expo-cli/commit/f163652768ae987280307275b0a02cfd4b3cc403)
+
+### 🛠 Breaking changes
+
+- [next-adapter] revert webpack5 detection ([#4254](https://github.com/expo/expo-cli/issues/4254))
+- [metro-config] Removes duplicate `json` extensions in metro `assetExts` and `sourceExts`. ([#4255](https://github.com/expo/expo-cli/pull/4255))
+
+
+### 🎉 New features
+
+- [cli] update supported Node version warning to reflect current LTS schema ([#4261](https://github.com/expo/expo-cli/pull/4261))
+- [cli] Cap Expo CLI at Node 16 ([#4281](https://github.com/expo/expo-cli/issues/4281))
+
+### 🧹 Chores
+
+- update packages readme files ([#4170](https://github.com/expo/expo-cli/issues/4170))
+- add webpack-dev-server dependency to expo/webpack-config ([#4282](https://github.com/expo/expo-cli/issues/4282))
+- chore(config plugins): drop fs-extra ([#4290](https://github.com/expo/expo-cli/issues/4290))
+- update bugreport template label ([#4272](https://github.com/expo/expo-cli/issues/4272))
+- re-enable codecov ([#4222](https://github.com/expo/expo-cli/issues/4222))
+
+### 🐛 Bug fixes
+
+- [config-plugins] use relative path for locales ([#4260](https://github.com/expo/expo-cli/issues/4260))
+- [config-plugins] match `xcodeproj` in ios directory only ([#4288](https://github.com/expo/expo-cli/issues/4288))
+
+### 📦 Packages updated
+
+- @expo/babel-preset-cli@0.2.24
+- @expo/config-plugins@4.1.1
+- @expo/config@6.0.20
+- @expo/dev-server@0.1.107
+- @expo/dev-tools@0.13.147
+- expo-cli@5.3.1
+- expo-optimize@0.2.12
+- @expo/image-utils@0.3.19
+- install-expo-modules@0.2.7
+- @expo/json-file@8.2.35
+- @expo/metro-config@0.3.13
+- @expo/next-adapter@4.0.0
+- @expo/osascript@2.0.32
+- @expo/package-manager@0.0.51
+- @expo/pkcs12@0.0.8
+- @expo/plist@0.0.18
+- pod-install@0.1.33
+- @expo/prebuild-config@3.1.1
+- expo-pwa@0.0.115
+- @expo/schemer@1.3.34
+- uri-scheme@1.0.116
+- @expo/webpack-config@0.16.20
+- xdl@59.2.31
 
 ## [Tue, 8 Mar 2022 12:30:47 -0700](https://github.com/expo/expo-cli/commit/82dcf7ce6669e277eafe5bca0440e925dcbc6e08)
 
