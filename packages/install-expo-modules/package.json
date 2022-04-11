@@ -1,6 +1,6 @@
 {
   "name": "install-expo-modules",
-  "version": "0.2.6",
+  "version": "0.2.7",
   "description": "Tools to install expo-modules for existing react-native projects",
   "main": "build",
   "scripts": {
@@ -38,9 +38,9 @@
     "!*/__tests__/*"
   ],
   "dependencies": {
-    "@expo/config": "6.0.19",
-    "@expo/config-plugins": "4.1.0",
-    "@expo/package-manager": "0.0.50",
+    "@expo/config": "6.0.20",
+    "@expo/config-plugins": "4.1.1",
+    "@expo/package-manager": "0.0.51",
     "chalk": "^4.1.2",
     "commander": "2.20.0",
     "find-up": "^5.0.0",
