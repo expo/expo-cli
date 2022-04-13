@@ -65,7 +65,7 @@
   },
   "dependencies": {
     "@babel/runtime": "7.9.0",
-    "@expo/apple-utils": "0.0.0-alpha.26",
+    "@expo/apple-utils": "0.0.0-alpha.31",
     "@expo/bunyan": "4.0.0",
     "@expo/config": "6.0.20",
     "@expo/config-plugins": "4.1.1",
