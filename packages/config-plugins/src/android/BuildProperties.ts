@@ -1,25 +1,29 @@
-import type { ExpoConfig } from '@expo/config-types';
-
 import type { ConfigPlugin } from '../Plugin.types';
 import { withGradleProperties } from '../plugins/android-plugins';
-import { ConfigToPropertyRuleType, findFirstMatchedField } from '../utils/BuildPropertiesCommon';
+import {
+  BuildPropertiesConfig,
+  ConfigToPropertyRuleType,
+  findFirstMatchedField,
+} from '../utils/BuildPropertiesCommon';
 import type { PropertiesItem } from './Properties';
 
 /**
- * A config-plugin to update `android/gradle.properties` based on expo config.
+ * A config-plugin to update `android/gradle.properties` based on config.
  *
  * @param config expo config
- * @param ConfigToPropertyRules rules to transform from expo config to gradle properties
+ * @param props parameters as following:
+ *   - `configToPropertyRules`: rules to transform from source config to gradle properties.
+ *   - `sourceConfig`: [OPTIONAL] transform source config. when this parameter is null, the source config will be the expo config.
  */
-export const withBuildGradleProps: ConfigPlugin<ConfigToPropertyRuleType[]> = (
-  config,
-  ConfigToPropertyRules
-) => {
+export const withBuildGradleProps: ConfigPlugin<{
+  configToPropertyRules: ConfigToPropertyRuleType[];
+  sourceConfig?: BuildPropertiesConfig;
+}> = (config, props) => {
   return withGradleProperties(config, config => {
     config.modResults = updateAndroidBuildPropertiesFromConfig(
-      config,
+      props.sourceConfig ?? config,
       config.modResults,
-      ConfigToPropertyRules
+      props.configToPropertyRules
     );
     return config;
   });
@@ -29,17 +33,18 @@ export const withBuildGradleProps: ConfigPlugin<ConfigToPropertyRuleType[]> = (
  * A config-plugin to update `android/gradle.properties` from the `jsEngine` in expo config
  */
 export const withJsEngineGradleProps: ConfigPlugin = config => {
-  return withBuildGradleProps(config, [
+  const configToPropertyRules = [
     {
       propName: 'expo.jsEngine',
       configFields: ['android.jsEngine', 'jsEngine'],
       defaultValue: 'jsc',
     },
-  ]);
+  ];
+  return withBuildGradleProps(config, { configToPropertyRules });
 };
 
 export function updateAndroidBuildPropertiesFromConfig(
-  config: Partial<ExpoConfig>,
+  config: BuildPropertiesConfig,
   gradleProperties: PropertiesItem[],
   ConfigToPropertyRules: ConfigToPropertyRuleType[]
 ) {

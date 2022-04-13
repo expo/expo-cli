@@ -1,7 +1,7 @@
-import type { ExpoConfig } from '@expo/config-types';
+import type { ExpoConfig } from '@expo/config';
 
 /**
- * Rule to transform from expo config to build properties
+ * Rule to transform from config to build properties
  *
  * @example
  * ```
@@ -14,25 +14,31 @@ import type { ExpoConfig } from '@expo/config-types';
  * Will first lookup the `{ android: { jsEngine: 'XXX' } }` then the `{ jsEngine: 'XXX' }`
  * and update to `android/gradle.properties` / `ios/Podfile.properties.json`
  * with the `expo.jsEngine` name and the matched `XXX` value.
- * If no value matched in expo config, will use the `jsc` default value in build properties.
+ * If no value matched in the source config, will use the `jsc` default value in build properties.
  *
  */
+
 export interface ConfigToPropertyRuleType {
   // Property name in `android/gradle.properties` or `ios/Podfile.properties.json`
   propName: string;
 
-  // Query fields from expo config, using dot notation for nested field and first matched precedence.
+  // Query fields from the source config, using dot notation for nested field and first matched precedence.
   configFields: string[];
 
-  // Default property value when no matched value from expo config
+  // Default property value when no matched value from the source config
   defaultValue?: string;
 }
+
+/**
+ * Source config can be either expo config or generic config
+ */
+export type BuildPropertiesConfig = Partial<ExpoConfig> | Record<string, any>;
 
 /**
  * Find first matched field value from the `ConfigToPropertyRuleType.configFields`
  */
 export function findFirstMatchedField(
-  config: Partial<ExpoConfig>,
+  config: Record<string, any>,
   fields: string[]
 ): string | null {
   for (const field of fields) {
@@ -47,7 +53,7 @@ export function findFirstMatchedField(
 /**
  * Get config value from given field, using dot notation for nested object is supported.
  */
-export function getConfigFieldValue(config: Partial<ExpoConfig>, field: string): string | null {
+export function getConfigFieldValue(config: Record<string, any>, field: string): string | null {
   const value = field.split('.').reduce((acc: Record<string, any>, key) => acc?.[key], config);
   if (value == null) {
     return null;

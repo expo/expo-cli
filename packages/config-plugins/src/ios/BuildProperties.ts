@@ -1,24 +1,28 @@
-import type { ExpoConfig } from '@expo/config-types';
-
 import type { ConfigPlugin } from '../Plugin.types';
 import { withPodfileProperties } from '../plugins/ios-plugins';
-import { ConfigToPropertyRuleType, findFirstMatchedField } from '../utils/BuildPropertiesCommon';
+import {
+  BuildPropertiesConfig,
+  ConfigToPropertyRuleType,
+  findFirstMatchedField,
+} from '../utils/BuildPropertiesCommon';
 
 /**
- * A config-plugin to update `ios/Podfile.properties.json` based on expo config.
+ * A config-plugin to update `ios/Podfile.properties.json` based on config.
  *
  * @param config expo config
- * @param ConfigToPropertyRules rules to transform from expo config to Podfile.properties.json
+ * @param props parameters as following:
+ *   - `configToPropertyRules`: rules to transform from source config to Podfile.properties.json
+ *   - `sourceConfig`: [OPTIONAL] transform source config. when this parameter is null, the source config will be the expo config.
  */
-export const withBuildPodfileProps: ConfigPlugin<ConfigToPropertyRuleType[]> = (
-  config,
-  ConfigToPropertyRules
-) => {
+export const withBuildPodfileProps: ConfigPlugin<{
+  configToPropertyRules: ConfigToPropertyRuleType[];
+  sourceConfig?: BuildPropertiesConfig;
+}> = (config, props) => {
   return withPodfileProperties(config, config => {
     config.modResults = updateIosBuildPropertiesFromConfig(
-      config,
+      props.sourceConfig ?? config,
       config.modResults,
-      ConfigToPropertyRules
+      props.configToPropertyRules
     );
     return config;
   });
@@ -28,17 +32,18 @@ export const withBuildPodfileProps: ConfigPlugin<ConfigToPropertyRuleType[]> = (
  * A config-plugin to update `ios/Podfile.properties.json` from the `jsEngine` in expo config
  */
 export const withJsEnginePodfileProps: ConfigPlugin = config => {
-  return withBuildPodfileProps(config, [
+  const configToPropertyRules = [
     {
       propName: 'expo.jsEngine',
       configFields: ['ios.jsEngine', 'jsEngine'],
       defaultValue: 'jsc',
     },
-  ]);
+  ];
+  return withBuildPodfileProps(config, { configToPropertyRules });
 };
 
 export function updateIosBuildPropertiesFromConfig(
-  config: Partial<ExpoConfig>,
+  config: BuildPropertiesConfig,
   podfileProperties: Record<string, string>,
   ConfigToPropertyRules: ConfigToPropertyRuleType[]
 ) {
