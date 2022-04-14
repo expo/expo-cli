@@ -1,4 +1,5 @@
 name: Test Packages Windows
+
 on:
   push:
     branches: [main]
@@ -20,6 +21,8 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node }}
+      - run: yarn config list
+      - run: echo "intentionally failing run"; exit 1
       - run: yarn install --frozen-lockfile --check-files
       - run: yarn lerna run prepare --stream
       - run: yarn lint --max-warnings=0
