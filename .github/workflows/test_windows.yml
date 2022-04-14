@@ -18,17 +18,23 @@ jobs:
         node: ['14', '16']
     name: Build with Node ${{ matrix.node }}
     steps:
-      - uses: actions/checkout@v2
+      - name: 🏗 Setup repository
+        uses: actions/checkout@v3
         with:
           fetch-depth: 1
-      - name: Setup node
-        uses: actions/setup-node@v1
+      - name: 🏗 Setup node
+        uses: actions/setup-node@v2
         with:
           node-version: ${{ matrix.node }}
-      - run: yarn install --frozen-lockfile --network-timeout 120000
-      - run: yarn lerna run prepare --stream
-      - run: yarn lint --max-warnings=0
-      - uses: actions/cache@v2
+          cache: yarn
+      - name: 📦 Install dependencies
+        run: yarn install --frozen-lockfile --network-timeout 120000
+      - name: 👷 Build packages
+        run: yarn lerna run prepare --stream
+      - name: ✅ Lint packages
+        run: yarn lint --max-warnings=0
+      - name: 🗂 Upload builds
+        uses: actions/cache@v3
         with:
           path: '*'
           key: v2-${{ github.sha }}-${{ matrix.node }}
@@ -62,15 +68,16 @@ jobs:
           ]
     name: Test ${{ matrix.package }} on Node ${{ matrix.node }}
     steps:
-      - uses: actions/cache@v2
+      - name: 🗂 Download builds
+        uses: actions/cache@v3
         with:
           path: '*'
           key: v2-${{ github.sha }}-${{ matrix.node }}
-      - name: Set up Node
-        uses: actions/setup-node@v1
+      - name: 🏗 Setup node
+        uses: actions/setup-node@v2
         with:
           node-version: ${{ matrix.node }}
-      - name: Test ${{ matrix.package }}
+      - name: 🧪 Test ${{ matrix.package }}
         run: cd packages/${{ matrix.package }} && yarn test
         # run: cd packages/${{ matrix.package }} && yarn test --coverage
         env:

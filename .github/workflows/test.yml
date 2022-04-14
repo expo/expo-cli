@@ -18,17 +18,23 @@ jobs:
         node: ['14', '16']
     name: Build with Node ${{ matrix.node }}
     steps:
-      - uses: actions/checkout@v2
+      - name: 🏗 Setup repository
+        uses: actions/checkout@v3
         with:
           fetch-depth: 1
-      - name: Setup node
-        uses: actions/setup-node@v1
+      - name: 🏗 Setup node
+        uses: actions/setup-node@v2
         with:
           node-version: ${{ matrix.node }}
-      - run: yarn install --frozen-lockfile --check-files
-      - run: yarn lerna run prepare --stream
-      - run: yarn lint --max-warnings=0
-      - uses: actions/cache@v2
+          cache: yarn
+      - name: 📦 Install dependencies
+        run: yarn install --frozen-lockfile --check-files
+      - name: 👷 Build packages
+        run: yarn lerna run prepare --stream
+      - name: ✅ Lint packages
+        run: yarn lint --max-warnings=0
+      - name: 🗂 Upload builds
+        uses: actions/cache@v3
         with:
           path: '*'
           key: v2-${{ github.sha }}-${{ matrix.node }}
@@ -63,24 +69,26 @@ jobs:
           ]
     name: Test ${{ matrix.package }} on Node ${{ matrix.node }}
     steps:
-      - uses: actions/cache@v2
+      - name: 🗂 Download builds
+        uses: actions/cache@v3
         with:
           path: '*'
           key: v2-${{ github.sha }}-${{ matrix.node }}
-      - name: Set up Node
-        uses: actions/setup-node@v1
+      - name: 🏗 Setup node
+        uses: actions/setup-node@v2
         with:
           node-version: ${{ matrix.node }}
-      - name: Test ${{ matrix.package }}
+      - name: 🧪 Test ${{ matrix.package }}
         # run: cd packages/${{ matrix.package }} && yarn test
         run: cd packages/${{ matrix.package }} && yarn test --coverage
         env:
           CI: true
           EXPO_DEBUG: true
-      - name: Get Test Flag Name
+      - name: 🔍 Find test flag
         id: cov-flag-name
         run: echo "::set-output name=flag::$(echo ${{ matrix.package }} | perl -pe 's/[^a-z]+([a-z])/\U\1/gi;s/^([A-Z])/\l\1/')"
-      - uses: codecov/codecov-action@v2
+      - name: 🕵️ Analyze test coverage
+        uses: codecov/codecov-action@v2
         with:
           token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
           file: ./packages/${{ matrix.package }}/coverage/clover.xml # optional
@@ -94,28 +102,30 @@ jobs:
       fail-fast: false
     name: Expo Webpack
     steps:
-      - uses: actions/cache@v2
+      - name: 🗂 Download builds
+        uses: actions/cache@v2
         with:
           path: '*'
           key: v2-${{ github.sha }}-${{ matrix.node }}
-      - name: Setup Node
+      - name: 🏗 Setup node
         uses: actions/setup-node@v1
         with:
           node-version: 16.x
-      - name: Install puppeteer
+          cache: yarn
+      - name: 📦 Install puppeteer
         working-directory: packages/webpack-config
         run: yarn add -D puppeteer@3.1.0
-      - name: Install test project dependencies
+      - name: 📦 Install dependencies
         working-directory: packages/webpack-config/e2e/basic
         run: yarn
       # Test starting an Expo web project
-      - name: Test starting Webpack
+      - name: 🧪 Test starting Webpack
         working-directory: packages/webpack-config
         run: yarn test:e2e:start
         env:
           CI: true
       # Test building an Expo web project
-      - name: Test building Webpack
+      - name: 🧪 Test building Webpack
         working-directory: packages/webpack-config
         run: yarn test:e2e:build
         env:
