@@ -1,9 +1,14 @@
 name: Test Packages
+
 on:
   push:
     branches: [main]
   pull_request:
     types: [opened, synchronize]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
