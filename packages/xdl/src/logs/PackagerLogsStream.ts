@@ -147,6 +147,12 @@ type ReportableEvent =
       chunk: string;
     }
   | {
+      type: 'transformer_load_started';
+    }
+  | {
+      type: 'transformer_load_done';
+    }
+  | {
       type: 'hmr_client_error';
       error: MetroError;
     };
@@ -324,6 +330,8 @@ export default class PackagerLogsStream {
       case 'dep_graph_loading':
       case 'dep_graph_loaded':
       case 'global_cache_error':
+      case 'transformer_load_started':
+      case 'transformer_load_done':
         return;
       default:
         chunk.msg = `Unrecognized event: ${JSON.stringify(msg)}`;
