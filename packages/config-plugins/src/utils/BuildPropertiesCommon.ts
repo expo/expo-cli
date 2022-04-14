@@ -1,4 +1,4 @@
-import type { ExpoConfig } from '@expo/config';
+import type { ExpoConfig } from '@expo/config-types';
 
 /**
  * Rule to transform from config to build properties
