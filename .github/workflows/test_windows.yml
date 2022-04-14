@@ -1,11 +1,9 @@
 name: Test Packages Windows
-
 on:
   push:
     branches: [main]
   pull_request:
     types: [opened, synchronize]
-
 jobs:
   build:
     runs-on: windows-latest
@@ -21,9 +19,7 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node }}
-      - run: yarn config list
-      - run: echo "intentionally failing run"; exit 1
-      - run: yarn install --frozen-lockfile --check-files
+      - run: yarn install --frozen-lockfile --network-timeout 120000
       - run: yarn lerna run prepare --stream
       - run: yarn lint --max-warnings=0
       - uses: actions/cache@v2
