@@ -55,12 +55,12 @@ describe(withJsEnginePodfileProps, () => {
 });
 
 describe(updateIosBuildPropertiesFromConfig, () => {
-  it('should respect `configFields` order', () => {
+  it('should respect `propValueGetter` order', () => {
     const podfileProperties = {};
-    const ConfigToPropertyRules = [
+    const configToPropertyRules = [
       {
         propName: 'expo.jsEngine',
-        configFields: ['ios.jsEngine', 'jsEngine'],
+        propValueGetter: config => config.ios?.jsEngine ?? config.jsEngine ?? 'NOTFOUND',
       },
     ];
 
@@ -68,7 +68,7 @@ describe(updateIosBuildPropertiesFromConfig, () => {
       updateIosBuildPropertiesFromConfig(
         { jsEngine: 'hermes', ios: { jsEngine: 'jsc' } },
         podfileProperties,
-        ConfigToPropertyRules
+        configToPropertyRules
       )
     ).toMatchObject({
       'expo.jsEngine': 'jsc',
@@ -76,12 +76,18 @@ describe(updateIosBuildPropertiesFromConfig, () => {
 
     expect(
       updateIosBuildPropertiesFromConfig(
-        { jsEngine: 'jsc', ios: { jsEngine: 'hermes' } },
+        { jsEngine: 'jsc' },
         podfileProperties,
-        ConfigToPropertyRules
+        configToPropertyRules
       )
     ).toMatchObject({
-      'expo.jsEngine': 'hermes',
+      'expo.jsEngine': 'jsc',
+    });
+
+    expect(
+      updateIosBuildPropertiesFromConfig({}, podfileProperties, configToPropertyRules)
+    ).toMatchObject({
+      'expo.jsEngine': 'NOTFOUND',
     });
   });
 });

@@ -68,20 +68,20 @@ expo.jsEngine=jsc
 });
 
 describe(updateAndroidBuildPropertiesFromConfig, () => {
-  it('should respect `configFields` order', () => {
+  it('should respect `propValueGetter` order', () => {
     const gradleProperties = [];
-    const ConfigToPropertyRules = [
+    const configToPropertyRules = [
       {
         propName: 'expo.jsEngine',
-        configFields: ['ios.jsEngine', 'jsEngine'],
+        propValueGetter: config => config.android?.jsEngine ?? config.jsEngine ?? 'NOTFOUND',
       },
     ];
 
     expect(
       updateAndroidBuildPropertiesFromConfig(
-        { jsEngine: 'hermes', ios: { jsEngine: 'jsc' } },
+        { jsEngine: 'hermes', android: { jsEngine: 'jsc' } },
         gradleProperties,
-        ConfigToPropertyRules
+        configToPropertyRules
       )
     ).toContainEqual({
       type: 'property',
@@ -91,14 +91,22 @@ describe(updateAndroidBuildPropertiesFromConfig, () => {
 
     expect(
       updateAndroidBuildPropertiesFromConfig(
-        { jsEngine: 'jsc', ios: { jsEngine: 'hermes' } },
+        { jsEngine: 'jsc' },
         gradleProperties,
-        ConfigToPropertyRules
+        configToPropertyRules
       )
     ).toContainEqual({
       type: 'property',
       key: 'expo.jsEngine',
-      value: 'hermes',
+      value: 'jsc',
+    });
+
+    expect(
+      updateAndroidBuildPropertiesFromConfig({}, gradleProperties, configToPropertyRules)
+    ).toContainEqual({
+      type: 'property',
+      key: 'expo.jsEngine',
+      value: 'NOTFOUND',
     });
   });
 });

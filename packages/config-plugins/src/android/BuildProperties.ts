@@ -1,10 +1,6 @@
 import type { ConfigPlugin } from '../Plugin.types';
 import { withGradleProperties } from '../plugins/android-plugins';
-import {
-  BuildPropertiesConfig,
-  ConfigToPropertyRuleType,
-  findFirstMatchedField,
-} from '../utils/BuildPropertiesCommon';
+import { BuildPropertiesConfig, ConfigToPropertyRuleType } from '../utils/BuildProperties.types';
 import type { PropertiesItem } from './Properties';
 
 /**
@@ -33,27 +29,24 @@ export const withBuildGradleProps: ConfigPlugin<{
  * A config-plugin to update `android/gradle.properties` from the `jsEngine` in expo config
  */
 export const withJsEngineGradleProps: ConfigPlugin = config => {
-  const configToPropertyRules = [
+  const configToPropertyRules: ConfigToPropertyRuleType[] = [
     {
       propName: 'expo.jsEngine',
-      configFields: ['android.jsEngine', 'jsEngine'],
-      defaultValue: 'jsc',
+      propValueGetter: config => config.android?.jsEngine ?? config.jsEngine ?? 'jsc',
     },
   ];
-  return withBuildGradleProps(config, { configToPropertyRules });
+  return withBuildGradleProps(config, {
+    configToPropertyRules,
+  });
 };
 
 export function updateAndroidBuildPropertiesFromConfig(
   config: BuildPropertiesConfig,
   gradleProperties: PropertiesItem[],
-  ConfigToPropertyRules: ConfigToPropertyRuleType[]
+  configToPropertyRules: ConfigToPropertyRuleType[]
 ) {
-  for (const configToProperty of ConfigToPropertyRules) {
-    const value =
-      findFirstMatchedField(config, configToProperty.configFields) ??
-      configToProperty.defaultValue ??
-      null;
-
+  for (const configToProperty of configToPropertyRules) {
+    const value = configToProperty.propValueGetter(config);
     updateAndroidBuildProperty(gradleProperties, configToProperty.propName, value);
   }
 
