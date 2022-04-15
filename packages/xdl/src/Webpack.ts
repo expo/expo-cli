@@ -179,17 +179,21 @@ function attachNativeDevServerMiddlewareToDevServer(
   {
     server,
     middleware,
-    attachToServer,
+    debuggerProxyEndpoint,
+    messageSocketEndpoint,
+    eventsSocketEndpoint,
     logger,
   }: { server: http.Server } & ReturnType<typeof createNativeDevServerMiddleware>
 ) {
   // Hook up the React Native WebSockets to the Webpack dev server.
-  const { messageSocket, debuggerProxy, eventsSocket } = attachToServer(server);
+  // const { messageSocket, debuggerProxy, eventsSocket } = attachToServer(server);
 
-  customMessageSocketBroadcaster = messageSocket.broadcast;
+  // @ts-ignore
+  customMessageSocketBroadcaster = messageSocketEndpoint.broadcast;
 
   const logReporter = new LogReporter(logger);
-  logReporter.reportEvent = eventsSocket.reportEvent;
+  // @ts-ignore
+  logReporter.reportEvent = eventsSocketEndpoint.reportEvent;
 
   const { inspectorProxy } = attachInspectorProxy(projectRoot, {
     middleware,
@@ -197,9 +201,12 @@ function attachNativeDevServerMiddlewareToDevServer(
   });
 
   return {
-    messageSocket,
-    eventsSocket,
-    debuggerProxy,
+    //@ts-ignore
+    messageSocket: messageSocketEndpoint,
+    //@ts-ignore
+    eventsSocket: eventsSocketEndpoint,
+    //@ts-ignore
+    debuggerProxy: debuggerProxyEndpoint,
     logReporter,
     inspectorProxy,
   };

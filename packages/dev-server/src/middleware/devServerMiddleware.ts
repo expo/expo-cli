@@ -13,9 +13,9 @@ import { remoteDevtoolsCorsMiddleware } from './remoteDevtoolsCorsMiddleware';
 import { remoteDevtoolsSecurityHeadersMiddleware } from './remoteDevtoolsSecurityHeadersMiddleware';
 import { suppressRemoteDebuggingErrorMiddleware } from './suppressErrorMiddleware';
 
-export type AttachToServerFunction = ReturnType<
-  typeof createReactNativeDevServerMiddleware
->['attachToServer'];
+// export type AttachToServerFunction = ReturnType<
+//   typeof createReactNativeDevServerMiddleware
+// >['attachToServer'];
 
 /**
  * Extends the default `createDevServerMiddleware` and adds some Expo CLI-specific dev middleware
@@ -41,8 +41,21 @@ export function createDevServerMiddleware({
   watchFolders: readonly string[];
   port: number;
   logger: Log;
-}): { middleware: ConnectServer; attachToServer: AttachToServerFunction; logger: Log } {
-  const { middleware, attachToServer } = createReactNativeDevServerMiddleware({
+}): {
+  middleware: ConnectServer;
+  debuggerProxyEndpoint: object;
+  messageSocketEndpoint: object;
+  eventsSocketEndpoint: object;
+  websocketEndpoints: object;
+  logger: Log;
+} {
+  const {
+    middleware,
+    debuggerProxyEndpoint,
+    messageSocketEndpoint,
+    eventsSocketEndpoint,
+    websocketEndpoints,
+  } = createReactNativeDevServerMiddleware({
     port,
     watchFolders,
   });
@@ -61,5 +74,13 @@ export function createDevServerMiddleware({
   middleware.use('/logs', clientLogsMiddleware(logger));
   middleware.use('/inspector', createJsInspectorMiddleware());
 
-  return { middleware, attachToServer, logger };
+  console.log(middleware);
+  return {
+    middleware,
+    debuggerProxyEndpoint,
+    messageSocketEndpoint,
+    eventsSocketEndpoint,
+    websocketEndpoints,
+    logger,
+  };
 }

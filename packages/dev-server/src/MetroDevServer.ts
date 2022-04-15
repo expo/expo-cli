@@ -76,6 +76,7 @@ export async function runMetroDevServerAsync(
   server: http.Server;
   middleware: any;
   messageSocket: MessageSocket;
+  debuggerProxyEndpoint: MessageSocket;
 }> {
   const Metro = importMetroFromProject(projectRoot);
 
@@ -85,7 +86,13 @@ export async function runMetroDevServerAsync(
 
   const metroConfig = await ExpoMetroConfig.loadAsync(projectRoot, { reporter, ...options });
 
-  const { middleware, attachToServer } = createDevServerMiddleware({
+  const {
+    middleware,
+    debuggerProxyEndpoint,
+    messageSocketEndpoint,
+    eventsSocketEndpoint,
+    websocketEndpoints,
+  } = createDevServerMiddleware({
     port: metroConfig.server.port,
     watchFolders: metroConfig.watchFolders,
     logger: options.logger,
@@ -100,15 +107,20 @@ export async function runMetroDevServerAsync(
     return middleware.use(metroMiddleware);
   };
 
-  const server = await Metro.runServer(metroConfig, { hmrEnabled: true });
+  // @ts-ignore
+  const server = await Metro.runServer(metroConfig, { hmrEnabled: true, websocketEndpoints });
 
-  const { messageSocket, eventsSocket } = attachToServer(server);
-  reporter.reportEvent = eventsSocket.reportEvent;
+  // const { messageSocket, eventsSocket } = attachToServer(server);
+  // @ts-ignore
+  reporter.reportEvent = eventsSocketEndpoint.reportEvent;
 
   return {
     server,
     middleware,
-    messageSocket,
+    // @ts-ignore
+    messageSocket: messageSocketEndpoint,
+    // @ts-ignore
+    debuggerProxyEndpoint,
   };
 }
 
