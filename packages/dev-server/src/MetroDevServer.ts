@@ -90,7 +90,6 @@ export async function runMetroDevServerAsync(
     attachToServer,
 
     // RN +68 -- Expo SDK +45
-    debuggerProxyEndpoint,
     messageSocketEndpoint,
     eventsSocketEndpoint,
     websocketEndpoints,
@@ -111,7 +110,6 @@ export async function runMetroDevServerAsync(
 
   const server = await Metro.runServer(metroConfig, {
     hmrEnabled: true,
-    // @ts-expect-error: we know this is defined in newer version of metro.
     websocketEndpoints,
   });
 
