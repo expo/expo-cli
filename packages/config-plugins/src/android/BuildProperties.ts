@@ -1,6 +1,12 @@
+import type { ExpoConfig } from '@expo/config-types';
+
 import type { ConfigPlugin } from '../Plugin.types';
 import { withGradleProperties } from '../plugins/android-plugins';
-import { BuildPropertiesConfig, ConfigToPropertyRuleType } from '../utils/BuildProperties.types';
+import {
+  BuildPropertiesConfig,
+  BuildPropertiesConfigPlugin,
+  ConfigToPropertyRuleType,
+} from '../utils/BuildProperties.types';
 import type { PropertiesItem } from './Properties';
 
 /**
@@ -11,13 +17,11 @@ import type { PropertiesItem } from './Properties';
  *   - `configToPropertyRules`: rules to transform from source config to gradle properties.
  *   - `sourceConfig`: [OPTIONAL] transform source config. when this parameter is null, the source config will be the expo config.
  */
-export const withBuildGradleProps: ConfigPlugin<{
-  configToPropertyRules: ConfigToPropertyRuleType[];
-  sourceConfig?: BuildPropertiesConfig;
-}> = (config, props) => {
+export const withBuildGradleProps: BuildPropertiesConfigPlugin = (config, props) => {
+  const _config = (props.sourceConfig ?? config) as NonNullable<typeof props.sourceConfig>;
   return withGradleProperties(config, config => {
     config.modResults = updateAndroidBuildPropertiesFromConfig(
-      props.sourceConfig ?? config,
+      _config,
       config.modResults,
       props.configToPropertyRules
     );
@@ -29,21 +33,22 @@ export const withBuildGradleProps: ConfigPlugin<{
  * A config-plugin to update `android/gradle.properties` from the `jsEngine` in expo config
  */
 export const withJsEngineGradleProps: ConfigPlugin = config => {
-  const configToPropertyRules: ConfigToPropertyRuleType[] = [
-    {
-      propName: 'expo.jsEngine',
-      propValueGetter: config => config.android?.jsEngine ?? config.jsEngine ?? 'jsc',
-    },
-  ];
-  return withBuildGradleProps(config, {
-    configToPropertyRules,
+  return withBuildGradleProps<ExpoConfig>(config, {
+    configToPropertyRules: [
+      {
+        propName: 'expo.jsEngine',
+        propValueGetter: config => config.android?.jsEngine ?? config.jsEngine ?? 'jsc',
+      },
+    ],
   });
 };
 
-export function updateAndroidBuildPropertiesFromConfig(
-  config: BuildPropertiesConfig,
+export function updateAndroidBuildPropertiesFromConfig<
+  SourceConfigType extends BuildPropertiesConfig
+>(
+  config: SourceConfigType,
   gradleProperties: PropertiesItem[],
-  configToPropertyRules: ConfigToPropertyRuleType[]
+  configToPropertyRules: ConfigToPropertyRuleType<SourceConfigType>[]
 ) {
   for (const configToProperty of configToPropertyRules) {
     const value = configToProperty.propValueGetter(config);
@@ -56,7 +61,7 @@ export function updateAndroidBuildPropertiesFromConfig(
 export function updateAndroidBuildProperty(
   gradleProperties: PropertiesItem[],
   name: string,
-  value: string | null,
+  value: string | null | undefined,
   options?: { removePropWhenValueIsNull?: boolean }
 ) {
   const oldPropIndex = gradleProperties.findIndex(

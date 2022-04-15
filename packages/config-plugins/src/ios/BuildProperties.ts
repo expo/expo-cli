@@ -1,6 +1,12 @@
+import type { ExpoConfig } from '@expo/config-types';
+
 import type { ConfigPlugin } from '../Plugin.types';
 import { withPodfileProperties } from '../plugins/ios-plugins';
-import { BuildPropertiesConfig, ConfigToPropertyRuleType } from '../utils/BuildProperties.types';
+import {
+  BuildPropertiesConfig,
+  BuildPropertiesConfigPlugin,
+  ConfigToPropertyRuleType,
+} from '../utils/BuildProperties.types';
 
 /**
  * A config-plugin to update `ios/Podfile.properties.json` based on config.
@@ -10,13 +16,11 @@ import { BuildPropertiesConfig, ConfigToPropertyRuleType } from '../utils/BuildP
  *   - `configToPropertyRules`: rules to transform from source config to Podfile.properties.json
  *   - `sourceConfig`: [OPTIONAL] transform source config. when this parameter is null, the source config will be the expo config.
  */
-export const withBuildPodfileProps: ConfigPlugin<{
-  configToPropertyRules: ConfigToPropertyRuleType[];
-  sourceConfig?: BuildPropertiesConfig;
-}> = (config, props) => {
+export const withBuildPodfileProps: BuildPropertiesConfigPlugin = (config, props) => {
   return withPodfileProperties(config, config => {
+    const _config = (props.sourceConfig ?? config) as NonNullable<typeof props.sourceConfig>;
     config.modResults = updateIosBuildPropertiesFromConfig(
-      props.sourceConfig ?? config,
+      _config,
       config.modResults,
       props.configToPropertyRules
     );
@@ -28,21 +32,20 @@ export const withBuildPodfileProps: ConfigPlugin<{
  * A config-plugin to update `ios/Podfile.properties.json` from the `jsEngine` in expo config
  */
 export const withJsEnginePodfileProps: ConfigPlugin = config => {
-  const configToPropertyRules: ConfigToPropertyRuleType[] = [
-    {
-      propName: 'expo.jsEngine',
-      propValueGetter: config => config.ios?.jsEngine ?? config.jsEngine ?? 'jsc',
-    },
-  ];
-  return withBuildPodfileProps(config, {
-    configToPropertyRules,
+  return withBuildPodfileProps<ExpoConfig>(config, {
+    configToPropertyRules: [
+      {
+        propName: 'expo.jsEngine',
+        propValueGetter: config => config.ios?.jsEngine ?? config.jsEngine ?? 'jsc',
+      },
+    ],
   });
 };
 
-export function updateIosBuildPropertiesFromConfig(
-  config: BuildPropertiesConfig,
+export function updateIosBuildPropertiesFromConfig<SourceConfigType extends BuildPropertiesConfig>(
+  config: SourceConfigType,
   podfileProperties: Record<string, string>,
-  configToPropertyRules: ConfigToPropertyRuleType[]
+  configToPropertyRules: ConfigToPropertyRuleType<SourceConfigType>[]
 ) {
   for (const configToProperty of configToPropertyRules) {
     const value = configToProperty.propValueGetter(config);
@@ -54,7 +57,7 @@ export function updateIosBuildPropertiesFromConfig(
 export function updateIosBuildProperty(
   podfileProperties: Record<string, string>,
   name: string,
-  value: string | null,
+  value: string | null | undefined,
   options?: { removePropWhenValueIsNull?: boolean }
 ) {
   if (value) {
