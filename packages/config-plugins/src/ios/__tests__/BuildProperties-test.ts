@@ -92,7 +92,7 @@ describe(updateIosBuildPropertiesFromConfig, () => {
   });
 });
 
-describe(updateIosBuildPropertiesFromConfig, () => {
+describe(updateIosBuildProperty, () => {
   it('should merge properties', () => {
     const podfileProperties = {
       foo: 'foo',
