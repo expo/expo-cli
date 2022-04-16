@@ -29,10 +29,7 @@ import { getBundledNativeModulesAsync } from '../utils/bundledNativeModules';
 import { assertProjectHasExpoExtensionFilesAsync } from '../utils/deprecatedExtensionWarnings';
 import maybeBailOnGitStatusAsync from '../utils/maybeBailOnGitStatusAsync';
 
-type Options = {
-  npm?: boolean;
-  yarn?: boolean;
-};
+type Options = Partial<Record<PackageManager.NodePackageManager, boolean>>;
 
 export type ExpoWorkflow = 'managed' | 'bare';
 
@@ -468,6 +465,7 @@ export async function upgradeAsync(
   const packageManager = PackageManager.createForProject(projectRoot, {
     npm: options.npm,
     yarn: options.yarn,
+    pnpm: options.pnpm,
     log: Log.log,
     silent: !getenv.boolish('EXPO_DEBUG', false),
   });
