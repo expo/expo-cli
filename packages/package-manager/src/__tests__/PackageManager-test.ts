@@ -1,7 +1,7 @@
 import spawnAsync from '@expo/spawn-async';
 import { vol } from 'memfs';
 
-import { createForProject, getModulesPath, getPossibleProjectRoot, isUsingYarn } from '../index';
+import { createForProject, getModulesPath, getPossibleProjectRoot } from '../index';
 
 jest.mock('fs');
 
@@ -48,12 +48,6 @@ describe('getPossibleProjectRoot', () => {
 describe('getModulesPath', () => {
   it(`returns a string ending in node_modules`, () => {
     expect(getModulesPath(__dirname).endsWith('node_modules')).toBe(true);
-  });
-});
-
-describe('isUsingYarn', () => {
-  it(`returns a boolean`, () => {
-    expect(typeof isUsingYarn(__dirname)).toBe('boolean');
   });
 });
 
