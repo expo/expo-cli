@@ -31,11 +31,6 @@ const yarnPeerDependencyWarningPattern = new RegExp(
   'g'
 );
 
-// TODO
-const pnpmPeerDependencyWarningPattern = new RegExp(
-  `${ansi}warning${ansi} "[^"]+" has (?:unmet|incorrect) peer dependency "[^"]+"\\.\n`,
-  'g'
-);
 class NpmStderrTransform extends Transform {
   _transform(
     chunk: Buffer,
@@ -54,17 +49,6 @@ class YarnStderrTransform extends Transform {
     callback: (error?: Error | null, data?: any) => void
   ) {
     this.push(chunk.toString().replace(yarnPeerDependencyWarningPattern, ''));
-    callback();
-  }
-}
-
-class PnpmStderrTransform extends Transform {
-  _transform(
-    chunk: Buffer,
-    encoding: string,
-    callback: (error?: Error | null, data?: any) => void
-  ) {
-    this.push(chunk.toString().replace(pnpmPeerDependencyWarningPattern, ''));
     callback();
   }
 }
@@ -423,7 +407,7 @@ export class PnpmPackageManager implements PackageManager {
     if (promise.child.stderr && !this.options.ignoreStdio) {
       promise.child.stderr
         .pipe(split(/\r?\n/, (line: string) => line + '\n'))
-        .pipe(new PnpmStderrTransform())
+        .pipe(new NpmStderrTransform())
         .pipe(process.stderr);
     }
     return promise;
