@@ -86,25 +86,30 @@ export async function assertFolderEmptyAsync({
   return true;
 }
 
-export type PackageManagerName = 'npm' | 'yarn';
+export type PackageManagerName = PackageManager.NodePackageManager;
 
 export function resolvePackageManager(options: {
   yarn?: boolean;
   npm?: boolean;
+  pnpm?: boolean;
   install?: boolean;
 }): PackageManagerName {
   let packageManager: PackageManagerName = 'npm';
-  if (options.yarn || (!options.npm && PackageManager.shouldUseYarn())) {
+  if (options.pnpm) {
+    packageManager = 'pnpm';
+  } else if (options.yarn || (!options.npm && PackageManager.shouldUseYarn())) {
     packageManager = 'yarn';
   } else {
     packageManager = 'npm';
   }
   if (options.install) {
-    Log.log(
-      packageManager === 'yarn'
-        ? `🧶 Using Yarn to install packages. ${chalk.dim('Pass --npm to use npm instead.')}`
-        : '📦 Using npm to install packages.'
-    );
+    const messages = {
+      yarn: `🧶 Using Yarn to install packages. ${chalk.dim('Pass --npm to use npm instead.')}`,
+      npm: '📦 Using npm to install packages.',
+      pnpm: '⚡ Using pnpm to install packages.',
+    };
+
+    Log.log(messages[packageManager]);
   }
 
   return packageManager;
@@ -145,6 +150,8 @@ export async function installNodeDependenciesAsync(
       fs.writeFileSync(yarnRc, yaml.safeDump(config));
     }
     await yarn.installAsync();
+  } else if (packageManager === 'pnpm') {
+    await new PackageManager.PnpmPackageManager(options).installAsync();
   } else {
     await new PackageManager.NpmPackageManager(options).installAsync();
   }
