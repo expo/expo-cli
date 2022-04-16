@@ -365,7 +365,7 @@ export class PnpmPackageManager implements PackageManager {
 
   async addWithParametersAsync(names: string[], parameters: string[]) {
     if (!names.length) return this.installAsync();
-    await this._runAsync([...parameters, ...names]);
+    await this._runAsync(['add', ...parameters, ...names]);
   }
 
   async addAsync(...names: string[]) {
