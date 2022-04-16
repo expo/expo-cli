@@ -18,8 +18,9 @@ export default function (program: Command) {
       .option('--no-install', 'Skip installing npm packages or CocoaPods.')
       .option('--name <name>', chalk`{yellow Deprecated}: Use {bold expo init [name]} instead.`)
       .option('--yes', 'Use default options. Same as "expo init . --template blank')
-      .option('--yarn', 'Use Yarn to install dependencies. (default when Yarn is installed)')
-      .option('--pnpm', 'Use pnpm to install dependencies.'),
+      .option('--yarn', 'Use Yarn to install dependencies. (default when Yarn is installed)'),
+    // pnpm requires some manual setup, including defining a `.npmrc` file with `node-linker=hoisted` and using `index.js` as entrypoint
+    // .option('--pnpm', 'Use pnpm to install dependencies.'),
     () => import('./initAsync')
   );
 }
