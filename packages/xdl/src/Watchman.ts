@@ -32,7 +32,7 @@ export async function unblockAndGetVersionAsync(projectRoot?: string): Promise<s
     const result = await _unblockAndVersionAsync(projectRoot);
     const watchmanVersion = JSON.parse(result.stdout.trim()).version;
     return watchmanVersion;
-  } catch (e) {
+  } catch (e: any) {
     // TODO: Maybe check to make sure this is ENOENT (which means watchman isn't installed)
     // We might want to report other errors
     return null;
@@ -42,7 +42,7 @@ export async function unblockAndGetVersionAsync(projectRoot?: string): Promise<s
 async function _unblockAndVersionAsync(projectRoot?: string): Promise<SpawnResult> {
   try {
     return await pTimeout(_versionAsync(), WAIT_FOR_WATCHMAN_VERSION_MS);
-  } catch (error) {
+  } catch (error: any) {
     await _unblockAsync(projectRoot);
     return await pTimeout(
       _versionAsync(),

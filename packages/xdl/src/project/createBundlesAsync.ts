@@ -198,13 +198,13 @@ async function _getForPlatformAsync(
         'Exponent-Platform': platform,
       },
     });
-  } catch (error) {
+  } catch (error: any) {
     if (error.response) {
       if (error.response.data) {
         let body;
         try {
           body = JSON.parse(error.response.data);
-        } catch (e) {
+        } catch (e: any) {
           ProjectUtils.logError(projectRoot, 'expo', error.response.data);
         }
 

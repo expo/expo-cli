@@ -231,7 +231,7 @@ export default class ApiV2Client {
     try {
       response = await axios.request(reqOptions);
       result = response.data;
-    } catch (e) {
+    } catch (e: any) {
       if (e?.response?.data?.errors?.length) {
         result = e.response.data;
       } else {

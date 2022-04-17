@@ -424,7 +424,7 @@ async function bundleWebAppAsync(projectRoot: string, config: WebpackConfigurati
     } else {
       ProjectUtils.logInfo(projectRoot, WEBPACK_LOG_TAG, chalk.green('Compiled successfully.\n'));
     }
-  } catch (error) {
+  } catch (error: any) {
     ProjectUtils.logError(projectRoot, WEBPACK_LOG_TAG, chalk.red('Failed to compile.\n'));
     throw error;
   }
@@ -494,7 +494,7 @@ async function getAvailablePortAsync(options: {
       throw new Error(`Port ${defaultPort} not available.`);
     }
     return port;
-  } catch (error) {
+  } catch (error: any) {
     throw new XDLError('NO_PORT_FOUND', error.message);
   }
 }
@@ -596,7 +596,7 @@ async function getSSLCertAsync({
       };
     }
     return result;
-  } catch (error) {
+  } catch (error: any) {
     console.log(`Error creating SSL certificates: ${error}`);
   }
 
@@ -677,7 +677,7 @@ async function openProjectAsync(
     }
     openBrowserAsync(url);
     return { success: true, url };
-  } catch (e) {
+  } catch (e: any) {
     Logger.global.error(`Couldn't start project on web: ${e.message}`);
     return { success: false, error: e };
   }

@@ -188,7 +188,7 @@ export async function getBootedDeviceAsync(): Promise<{ UDID: string } | null> {
       if (!complete) {
         resolve(null);
       }
-    } catch (error) {
+    } catch (error: any) {
       if (!complete) {
         reject(error);
       }
@@ -256,7 +256,7 @@ export async function getContainerPathAsync({
       if (!complete) {
         resolve(null);
       }
-    } catch (error) {
+    } catch (error: any) {
       if (!complete) {
         reject(error);
       }

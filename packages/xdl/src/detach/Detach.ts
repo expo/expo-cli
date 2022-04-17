@@ -41,7 +41,7 @@ async function _getIosExpoKitVersionThrowErrorAsync(iosProjectDirectory: string)
       throw new Error('ExpoKit/Core not found');
     }
     expoKitVersion = match[1];
-  } catch (e) {
+  } catch (e: any) {
     throw new Error(
       `Unable to read ExpoKit version from Podfile.lock. Make sure your project depends on ExpoKit. (${e})`
     );
@@ -233,7 +233,7 @@ export async function bundleAssetsAsync(projectDir: string, args: any) {
   let manifest;
   try {
     manifest = JSON.parse(await fs.readFile(bundledManifestPath, 'utf8'));
-  } catch (ex) {
+  } catch (ex: any) {
     throw new Error(
       `Error reading the manifest file. Make sure the path '${bundledManifestPath}' is correct.\n\nError: ${ex.message}`
     );
@@ -260,7 +260,7 @@ function getExportUrl(manifest: any) {
   try {
     const bundleUrlParts = bundleUrl.split('/');
     return bundleUrlParts.slice(0, bundleUrlParts.length - 2).join('/');
-  } catch (e) {
+  } catch (e: any) {
     throw Error(
       `Expected bundleUrl to be of the format https://domain/bundles/bundle-hash-id, ${bundleUrl} does not follow this format.`
     );

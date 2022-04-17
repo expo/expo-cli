@@ -181,7 +181,7 @@ export class UserManagerInstance {
       });
 
       return registeredUser;
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
       throw new XDLError('REGISTRATION_ERROR', 'Error registering user: ' + e.message);
     }
@@ -249,7 +249,7 @@ export class UserManagerInstance {
       }
 
       return userData;
-    } catch (e) {
+    } catch (e: any) {
       Logger.global.warn(e);
       return null;
     } finally {
@@ -296,7 +296,7 @@ export class UserManagerInstance {
           currentConnection: data?.currentConnection,
           sessionSecret: data?.sessionSecret,
         });
-      } catch (e) {
+      } catch (e: any) {
         if (!(options && options.silent)) {
           Logger.global.warn('Fetching the user profile failed');
           Logger.global.warn(e);

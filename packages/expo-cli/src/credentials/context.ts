@@ -116,7 +116,7 @@ export class Context {
       this._manifest = exp;
       this._hasProjectContext = true;
       this.logOwnerAndProject();
-    } catch (error) {
+    } catch (error: any) {
       // ignore error
       // startcredentials manager without project context
     }

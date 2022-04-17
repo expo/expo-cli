@@ -52,7 +52,7 @@ class Cacher<T> {
     try {
       const stats = await fs.stat(this.filename);
       mtime = stats.mtime;
-    } catch (e) {
+    } catch (e: any) {
       try {
         await fs.mkdirp(getCacheDir());
 
@@ -61,7 +61,7 @@ class Cacher<T> {
 
           await fs.writeFile(this.filename, bootstrapContents, 'utf8');
         }
-      } catch (e) {
+      } catch (e: any) {
         // intentional no-op
       }
       mtime = new Date(1989, 10, 19);
@@ -82,11 +82,11 @@ class Cacher<T> {
 
         try {
           await fs.writeFile(this.filename, JSON.stringify(fromCache), 'utf8');
-        } catch (e) {
+        } catch (e: any) {
           this.writeError = e;
           // do nothing, if the refresh succeeded it'll be returned, if the persist failed we don't care
         }
-      } catch (e) {
+      } catch (e: any) {
         failedRefresh = e;
       }
     }
@@ -94,7 +94,7 @@ class Cacher<T> {
     if (!fromCache) {
       try {
         fromCache = JSON.parse(await fs.readFile(this.filename, 'utf8'));
-      } catch (e) {
+      } catch (e: any) {
         this.readError = e;
         // if this fails then we've exhausted our options and it should remain null
       }
@@ -114,7 +114,7 @@ class Cacher<T> {
   async clearAsync(): Promise<void> {
     try {
       await fs.unlink(this.filename);
-    } catch (e) {
+    } catch (e: any) {
       this.writeError = e;
     }
   }

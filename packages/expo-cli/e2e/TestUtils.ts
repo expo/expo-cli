@@ -18,7 +18,7 @@ export async function runAsync(args: string[], options?: SpawnOptions): Promise<
   promise.child.stderr.pipe(process.stderr);
   try {
     return await promise;
-  } catch (error) {
+  } catch (error: any) {
     if (isSpawnResult(error)) {
       if (error.stdout) error.message += `\n------\nSTDOUT:\n${error.stdout}`;
       if (error.stderr) error.message += `\n------\nSTDERR:\n${error.stderr}`;
@@ -30,7 +30,7 @@ export async function runAsync(args: string[], options?: SpawnOptions): Promise<
 export async function tryRunAsync(args: string[], options?: SpawnOptions): Promise<SpawnResult> {
   try {
     return await runAsync(args, options);
-  } catch (error) {
+  } catch (error: any) {
     if (isSpawnResult(error)) {
       return error;
     }

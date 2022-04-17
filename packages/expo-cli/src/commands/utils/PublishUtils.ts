@@ -185,7 +185,7 @@ export async function rollbackPublicationFromChannelAsync(
       );
       completedPlatforms.push(platform);
     }
-  } catch (e) {
+  } catch (e: any) {
     if (completedPlatforms.length > 0) {
       Log.error(
         `The platforms ${platforms.filter(

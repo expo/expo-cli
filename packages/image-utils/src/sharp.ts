@@ -57,7 +57,7 @@ export async function sharpAsync(
     ]);
     const outputFilePaths = stdout.trim().split('\n');
     return outputFilePaths;
-  } catch (error) {
+  } catch (error: any) {
     if (error.stderr) {
       throw new Error(
         '\nProcessing images using sharp-cli failed: ' +

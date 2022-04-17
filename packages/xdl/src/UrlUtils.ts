@@ -503,7 +503,7 @@ export function isURL(
         ? protocols.map(x => `${x.toLowerCase()}:`).includes(parsed.protocol)
         : false
       : true;
-  } catch (err) {
+  } catch (err: any) {
     return false;
   }
 }

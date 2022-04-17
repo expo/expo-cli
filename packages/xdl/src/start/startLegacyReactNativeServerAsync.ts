@@ -281,7 +281,7 @@ export async function startReactNativeServerAsync({
           packagerPort: null,
           packagerPid: null,
         });
-      } catch (e) {}
+      } catch (e: any) {}
     });
   });
   const packagerUrl = await UrlUtils.constructBundleUrlAsync(projectRoot, {
@@ -305,7 +305,7 @@ export async function stopReactNativeServerAsync(projectRoot: string): Promise<v
   );
   try {
     await treekillAsync(packagerInfo.packagerPid, 'SIGKILL');
-  } catch (e) {
+  } catch (e: any) {
     ProjectUtils.logDebug(projectRoot, 'expo', `Error stopping packager process: ${e.toString()}`);
   }
   await ProjectSettings.setPackagerInfoAsync(projectRoot, {
@@ -334,7 +334,7 @@ async function _waitForRunningAsync(
         `Could not get status from Metro bundler. Server response: ${response.data}`
       );
     }
-  } catch (e) {
+  } catch (e: any) {
     if (retries === 0) {
       ProjectUtils.logError(
         projectRoot,

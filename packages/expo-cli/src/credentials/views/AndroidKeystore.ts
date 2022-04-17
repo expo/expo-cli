@@ -24,7 +24,7 @@ async function keytoolCommandExists(): Promise<boolean> {
   try {
     await commandExists('keytool');
     return true;
-  } catch (err) {
+  } catch (err: any) {
     return false;
   }
 }
@@ -75,7 +75,7 @@ class UpdateKeystore implements IView {
         ...omit(keystoreData, 'keystorePath'),
         keystore: await fs.readFile(tmpKeystoreName, 'base64'),
       };
-    } catch (error) {
+    } catch (error: any) {
       Log.warn(
         'Failed to generate Android Keystore, it will be generated on Expo servers during the build'
       );
@@ -243,7 +243,7 @@ async function getKeystoreFromParams(options: {
       keystorePassword,
       keyPassword,
     };
-  } catch (err) {
+  } catch (err: any) {
     Log.error(`Error while reading file ${keystorePath}`);
     throw err;
   }

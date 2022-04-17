@@ -321,7 +321,7 @@ async function _usernamePasswordAuth(
   let user: User;
   try {
     user = await UserManager.loginAsync('user-pass', data);
-  } catch (e) {
+  } catch (e: any) {
     if (e instanceof ApiV2Error && e.code === 'ONE_TIME_PASSWORD_REQUIRED') {
       user = await _retryUsernamePasswordAuthWithOTPAsync(
         data.username,
@@ -343,9 +343,9 @@ async function _usernamePasswordAuth(
 
 export const REGISTRATION_URL = `https://expo.dev/signup`;
 
-export function openRegistrationInBrowser() {
+export async function openRegistrationInBrowser() {
   const spinner = ora(`Opening ${REGISTRATION_URL}...`).start();
-  const opened = openBrowserAsync(REGISTRATION_URL);
+  const opened = await openBrowserAsync(REGISTRATION_URL);
 
   if (opened) {
     spinner.succeed(`Opened ${REGISTRATION_URL} in your web browser.`);

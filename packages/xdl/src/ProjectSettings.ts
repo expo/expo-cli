@@ -75,7 +75,7 @@ export async function readAsync(projectRoot: string): Promise<ProjectSettings> {
   let projectSettings;
   try {
     projectSettings = await projectSettingsJsonFile(projectRoot).readAsync();
-  } catch (e) {
+  } catch (e: any) {
     projectSettings = await projectSettingsJsonFile(projectRoot).writeAsync(
       projectSettingsDefaults
     );
@@ -110,7 +110,7 @@ export async function setAsync(
     return await projectSettingsJsonFile(projectRoot).mergeAsync(json, {
       cantReadFileDefault: projectSettingsDefaults,
     });
-  } catch (e) {
+  } catch (e: any) {
     return await projectSettingsJsonFile(projectRoot).writeAsync({
       ...projectSettingsDefaults,
       ...json,
@@ -123,7 +123,7 @@ export async function readPackagerInfoAsync(projectRoot: string): Promise<Packag
     return await packagerInfoJsonFile(projectRoot).readAsync({
       cantReadFileDefault: {},
     });
-  } catch (e) {
+  } catch (e: any) {
     return await packagerInfoJsonFile(projectRoot).writeAsync({});
   }
 }
@@ -147,7 +147,7 @@ export async function setPackagerInfoAsync(
     return await packagerInfoJsonFile(projectRoot).mergeAsync(json, {
       cantReadFileDefault: {},
     });
-  } catch (e) {
+  } catch (e: any) {
     return await packagerInfoJsonFile(projectRoot).writeAsync(json);
   }
 }
@@ -247,7 +247,7 @@ export function dotExpoProjectDirectory(projectRoot: string): string {
     if (fs.statSync(oldDirPath).isDirectory()) {
       fs.renameSync(oldDirPath, dirPath);
     }
-  } catch (e) {
+  } catch (e: any) {
     // no old directory, continue
   }
 
@@ -284,7 +284,7 @@ export function dotExpoProjectDirectoryExists(projectRoot: string): boolean {
     if (fs.statSync(dirPath).isDirectory()) {
       return true;
     }
-  } catch (e) {
+  } catch (e: any) {
     // file doesn't exist
   }
 

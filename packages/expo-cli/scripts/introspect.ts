@@ -646,7 +646,7 @@ if (['markdown', 'md'].includes(process.argv[2])) {
               name: item.package.name,
               description: item.package.description,
             })) as Fig.Suggestion[];
-          } catch (e) {
+          } catch (e: any) {
             return [];
           }
         },
@@ -702,7 +702,7 @@ if (['markdown', 'md'].includes(process.argv[2])) {
 
   try {
     runFig();
-  } catch (error) {
+  } catch (error: any) {
     // eslint-disable-next-line no-console
     console.error(error);
     process.exit(1);

@@ -45,7 +45,7 @@ async function listPushKeysAsync(authCtx: AppleCtx): Promise<PushKeyInfo[]> {
     const keys = await Keys.getKeysAsync(context);
     spinner.succeed(`Fetched Apple push keys`);
     return keys;
-  } catch (error) {
+  } catch (error: any) {
     spinner.fail(`Failed to fetch Apple push keys`);
     throw error;
   }
@@ -67,7 +67,7 @@ async function createPushKeyAsync(
       teamId: authCtx.team.id,
       teamName: authCtx.team.name,
     };
-  } catch (err) {
+  } catch (err: any) {
     spinner.fail('Failed to create Apple push key');
     const resultString = err.rawDump?.resultString;
     if (
@@ -89,7 +89,7 @@ async function revokePushKeyAsync(authCtx: AppleCtx, ids: string[]): Promise<voi
     await Promise.all(ids.map(id => Keys.revokeKeyAsync(context, { id })));
 
     spinner.succeed(`Revoked ${name}`);
-  } catch (error) {
+  } catch (error: any) {
     Log.error(error);
     spinner.fail(`Failed to revoke ${name}`);
     throw error;

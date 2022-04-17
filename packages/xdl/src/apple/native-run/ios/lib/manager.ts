@@ -139,7 +139,7 @@ export class ClientManager {
       // may already be closed
       try {
         socket.end();
-      } catch (err) {
+      } catch (err: any) {
         // ignore
       }
     }

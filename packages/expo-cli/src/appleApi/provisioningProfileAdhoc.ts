@@ -252,7 +252,7 @@ async function createOrReuseAdhocProvisioningProfileAsync(
       teamId: authCtx.team.id,
       teamName: authCtx.team.name,
     };
-  } catch (error) {
+  } catch (error: any) {
     spinner.fail(`Failed to handle Apple profiles`);
     throw error;
   }

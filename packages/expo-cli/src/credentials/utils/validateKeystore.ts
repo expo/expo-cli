@@ -16,7 +16,7 @@ export default async function validateKeystoreAsync({
 }) {
   try {
     await commandExists('keytool');
-  } catch (e) {
+  } catch (e: any) {
     Log.warn(
       `Couldn't validate the provided Android keystore because the 'keytool' command is not available. Make sure that you have a Java Development Kit installed. See ${terminalLink(
         'https://openjdk.java.net',
@@ -38,7 +38,7 @@ export default async function validateKeystoreAsync({
         keyAlias,
       ]);
     });
-  } catch (e) {
+  } catch (e: any) {
     throw new Error(
       `An error occurred when validating the Android keystore: ${
         e.stdout || e.message

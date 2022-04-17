@@ -402,7 +402,7 @@ function formatDistCert(
       serialNumber =
         PKCS12Utils.findP12CertSerialNumber(distCert.certP12, distCert.certPassword) ?? undefined;
     }
-  } catch (error) {
+  } catch (error: any) {
     serialNumber = chalk.red('invalid serial number');
   }
 
@@ -426,7 +426,7 @@ async function generateDistCert(ctx: Context, accountName: string): Promise<Dist
   const manager = new DistCertManager(ctx.appleCtx);
   try {
     return await manager.create();
-  } catch (e) {
+  } catch (e: any) {
     if (e.code === 'APPLE_DIST_CERTS_TOO_MANY_GENERATED_ERROR') {
       const certs = await manager.list();
       Log.warn('Maximum number of Distribution Certificates generated on Apple Developer Portal.');
@@ -516,7 +516,7 @@ async function _getDistCertWithSerial(distCert: DistCert): Promise<DistCert> {
   try {
     distCert.distCertSerialNumber =
       PKCS12Utils.findP12CertSerialNumber(distCert.certP12, distCert.certPassword) ?? undefined;
-  } catch (error) {
+  } catch (error: any) {
     Log.warn('Unable to access certificate serial number.');
     Log.warn('Make sure that certificate and password are correct.');
     Log.warn(error);

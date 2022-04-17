@@ -74,7 +74,7 @@ export async function startSession(
           },
         },
       });
-    } catch (e) {
+    } catch (e: any) {
       logger.global.debug(e, `Error updating dev session: ${e}`);
     }
 

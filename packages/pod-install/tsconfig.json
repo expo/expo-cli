@@ -6,7 +6,8 @@
     "resolveJsonModule": true,
     "rootDir": "src",
     "declaration": false,
-    "composite": false
+    "composite": false,
+    "typeRoots": ["../../ts-declarations", "node_modules/@types"],
   },
   "exclude": ["**/__mocks__/*", "**/__tests__/*"]
 }

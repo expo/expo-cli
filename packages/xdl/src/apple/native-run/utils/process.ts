@@ -49,7 +49,7 @@ const beforeExitHandlerWrapper = (signal: NodeJS.Signals) =>
     for (const [i, fn] of exitQueue.entries()) {
       try {
         await fn();
-      } catch (e) {
+      } catch (e: any) {
         debug('Error from function %d in exit queue: %O', i, e);
       }
     }

@@ -77,7 +77,7 @@ Push P12 password:         ${
       pushPassword ? chalk.bold(pushPassword) : chalk.yellow('(not available)')
     }
 `);
-  } catch (e) {
+  } catch (e: any) {
     throw new CommandError(
       'Unable to fetch credentials for this project. Are you sure they exist?'
     );

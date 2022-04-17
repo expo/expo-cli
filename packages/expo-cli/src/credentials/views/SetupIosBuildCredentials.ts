@@ -25,7 +25,7 @@ export class SetupIosBuildCredentials implements IView {
     }
     try {
       await runCredentialsManager(ctx, new SetupIosDist(this.app));
-    } catch (error) {
+    } catch (error: any) {
       Log.error('Failed to set up Distribution Certificate');
       throw error;
     }
@@ -40,7 +40,7 @@ export class SetupIosBuildCredentials implements IView {
 
     try {
       await runCredentialsManager(ctx, new SetupIosProvisioningProfile(this.app));
-    } catch (error) {
+    } catch (error: any) {
       Log.error('Failed to set up Provisioning Profile');
       throw error;
     }
@@ -82,7 +82,7 @@ export class SetupIosBuildCredentialsFromLocal implements IView {
     let localCredentials;
     try {
       localCredentials = await credentialsJsonReader.readIosCredentialsAsync(ctx.projectDir);
-    } catch (error) {
+    } catch (error: any) {
       Log.error(
         'Reading credentials from credentials.json failed. Make sure this file is correct and all credentials are present there.'
       );

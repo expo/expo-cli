@@ -36,7 +36,7 @@ async function _checkNpmVersionAsync(projectRoot: string) {
       if (yarnVersionResponse.status === 0) {
         return NO_ISSUES;
       }
-    } catch (e) {}
+    } catch (e: any) {}
 
     const npmVersion = execSync('npm --version', { stdio: 'pipe' }).toString().trim();
 
@@ -61,7 +61,7 @@ async function _checkNpmVersionAsync(projectRoot: string) {
     } else {
       ProjectUtils.clearNotification(projectRoot, 'doctor-npm-version');
     }
-  } catch (e) {
+  } catch (e: any) {
     ProjectUtils.logWarning(
       projectRoot,
       'expo',
@@ -131,7 +131,7 @@ async function validateWithSchema(
   // Validate the schema itself
   try {
     await validator.validateSchemaAsync(exp);
-  } catch (e) {
+  } catch (e: any) {
     if (e instanceof SchemerError) {
       schemaErrorMessage = `Error: Problem${
         e.errors.length > 1 ? 's' : ''
@@ -145,7 +145,7 @@ async function validateWithSchema(
   if (validateAssets) {
     try {
       await validator.validateAssetsAsync(exp);
-    } catch (e) {
+    } catch (e: any) {
       if (e instanceof SchemerError) {
         assetsErrorMessage = `Error: Problem${
           e.errors.length > 1 ? '' : 's'
@@ -177,7 +177,7 @@ async function _validateExpJsonAsync(
 
   try {
     await _checkWatchmanVersionAsync(projectRoot);
-  } catch (e) {
+  } catch (e: any) {
     ProjectUtils.logWarning(
       projectRoot,
       'expo',
@@ -253,7 +253,7 @@ async function _validateExpJsonAsync(
       }
       ProjectUtils.clearNotification(projectRoot, 'doctor-schema-validation-exception');
       if (schemaErrorMessage || assetsErrorMessage) return ERROR;
-    } catch (e) {
+    } catch (e: any) {
       ProjectUtils.logWarning(
         projectRoot,
         'expo',
@@ -394,7 +394,7 @@ async function _validateReactNativeVersionAsync(
       ProjectUtils.clearNotification(projectRoot, 'doctor-invalid-version-of-react-native');
 
       ProjectUtils.clearNotification(projectRoot, 'doctor-malformed-version-of-react-native');
-    } catch (e) {
+    } catch (e: any) {
       ProjectUtils.logWarning(
         projectRoot,
         'expo',

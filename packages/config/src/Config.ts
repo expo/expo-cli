@@ -254,7 +254,6 @@ export function readConfigJson(
       packageJsonPath,
     }),
     mods: null,
-    dynamicConfigPath: null,
     dynamicConfigObjectType: null,
     rootConfig: { ...outputRootConfig } as AppJSONConfig,
     ...paths,
@@ -518,7 +517,6 @@ export async function writeConfigJsonAsync(
     exp,
     pkg,
     rootConfig,
-    staticConfigPath,
     dynamicConfigObjectType,
     ...paths,
   };

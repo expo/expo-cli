@@ -96,7 +96,7 @@ describe('RemoveKeystore', () => {
 
       try {
         await view.open(ctx);
-      } catch (e) {
+      } catch (e: any) {
         expect(e.message).toMatch('Deleting build credentials is a destructive operation');
       }
 

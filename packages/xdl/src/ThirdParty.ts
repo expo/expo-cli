@@ -16,7 +16,7 @@ export async function getManifest(
   try {
     const resp = await axios.request(req);
     exp = resp.data;
-  } catch (e) {
+  } catch (e: any) {
     throw new XDLError(
       'INVALID_MANIFEST',
       `Unable to fetch manifest from ${publicUrl}. ` + e.toString()
