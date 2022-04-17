@@ -501,9 +501,7 @@ export async function writeConfigJsonAsync(
   options: object
 ): Promise<ProjectConfig> {
   const paths = getConfigFilePaths(projectRoot);
-  let { exp, pkg, rootConfig, dynamicConfigObjectType, staticConfigPath } = readConfigJson(
-    projectRoot
-  );
+  let { exp, pkg, rootConfig, dynamicConfigObjectType } = readConfigJson(projectRoot);
   exp = { ...rootConfig.expo, ...options };
   rootConfig = { ...rootConfig, expo: exp };
 
