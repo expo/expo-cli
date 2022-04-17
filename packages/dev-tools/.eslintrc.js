@@ -3,4 +3,5 @@ module.exports = {
   rules: {
     'react/jsx-fragments': 'off',
   },
+  ignorePatterns: ['**/*.js'],
 };
