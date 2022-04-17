@@ -14,4 +14,5 @@ module.exports = {
   displayName: require('./package').name,
   roots,
   setupFilesAfterEnv: ['<rootDir>/jest/setup.ts'],
+  testTimeout: 10000,
 };
