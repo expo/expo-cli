@@ -8,30 +8,37 @@ import type { PropertiesItem } from './Properties';
 /**
  * Creates a `withGradleProperties` config-plugin based on given config to property mapping rules.
  *
+ * The factory supports two modes from generic type inference
+ * ```ts
+ * // config-plugin without `props`, it will implicitly use the expo config as source config.
+ * createBuildGradlePropsConfigPlugin<ExpoConfig>(): ConfigPlugin<void>;
+ *
+ * // config-plugin with a parameter `props: CustomType`, it will use the `props` as source config.
+ * createBuildGradlePropsConfigPlugin<CustomType>(): ConfigPlugin<CustomType>;
+ * ```
+ *
  * @param configToPropertyRules config to property mapping rules
- * @param options
- *   - `sourceConfig` custom source config, or use the expo config if unspecified.
- *   - `name` config plugin name
+ * @param name the config plugin name
  */
 export function createBuildGradlePropsConfigPlugin<SourceConfigType extends BuildPropertiesConfig>(
   configToPropertyRules: ConfigToPropertyRuleType<SourceConfigType>[],
-  options?: {
-    sourceConfig?: SourceConfigType;
-    name?: string;
-  }
-): ConfigPlugin {
-  const withUnknown: ConfigPlugin = config =>
+  name?: string
+) {
+  const withUnknown: ConfigPlugin<SourceConfigType extends ExpoConfig ? void : SourceConfigType> = (
+    config,
+    sourceConfig
+  ) =>
     withGradleProperties(config, config => {
       config.modResults = updateAndroidBuildPropertiesFromConfig(
-        (options?.sourceConfig ?? config) as SourceConfigType,
+        (sourceConfig ?? config) as SourceConfigType,
         config.modResults,
         configToPropertyRules
       );
       return config;
     });
-  if (options?.name) {
+  if (name) {
     Object.defineProperty(withUnknown, 'name', {
-      value: options.name,
+      value: name,
     });
   }
   return withUnknown;
@@ -47,9 +54,7 @@ export const withJsEngineGradleProps = createBuildGradlePropsConfigPlugin<ExpoCo
       propValueGetter: config => config.android?.jsEngine ?? config.jsEngine ?? 'jsc',
     },
   ],
-  {
-    name: 'withJsEngineGradleProps',
-  }
+  'withJsEngineGradleProps'
 );
 
 export function updateAndroidBuildPropertiesFromConfig<
