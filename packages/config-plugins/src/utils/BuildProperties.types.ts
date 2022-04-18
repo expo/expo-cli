@@ -4,7 +4,7 @@ import type { ExpoConfig } from '@expo/config-types';
  * Rule to transform from config to build properties
  *
  * @example
- * ```
+ * ```ts
  * {
  *   propName: 'expo.jsEngine',
  *   propValueGetter: (config) => config.android?.jsEngine ?? config.jsEngine ?? 'jsc',
@@ -21,9 +21,9 @@ import type { ExpoConfig } from '@expo/config-types';
 export type BuildPropertiesConfig = ExpoConfig | Record<string, any>;
 
 export interface ConfigToPropertyRuleType<SourceConfigType extends BuildPropertiesConfig> {
-  // Property name in `android/gradle.properties` or `ios/Podfile.properties.json`
+  /** Property name in `android/gradle.properties` or `ios/Podfile.properties.json` */
   propName: string;
 
-  // Passing config and get the property value
+  /** Passing config and get the property value */
   propValueGetter: (config: SourceConfigType) => string | null | undefined;
 }
