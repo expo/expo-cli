@@ -2,45 +2,54 @@ import type { ExpoConfig } from '@expo/config-types';
 
 import type { ConfigPlugin } from '../Plugin.types';
 import { withPodfileProperties } from '../plugins/ios-plugins';
-import {
-  BuildPropertiesConfig,
-  BuildPropertiesConfigPlugin,
-  ConfigToPropertyRuleType,
-} from '../utils/BuildProperties.types';
+import { BuildPropertiesConfig, ConfigToPropertyRuleType } from '../utils/BuildProperties.types';
 
 /**
- * A config-plugin to update `ios/Podfile.properties.json` based on config.
+ * Creates a `withPodfileProperties` config-plugin based on given config to property mapping rules.
  *
- * @param config expo config
- * @param props parameters as following:
- *   - `configToPropertyRules`: rules to transform from source config to Podfile.properties.json
- *   - `sourceConfig`: [OPTIONAL] transform source config. when this parameter is null, the source config will be the expo config.
+ * @param configToPropertyRules config to property mapping rules
+ * @param options
+ *   - `sourceConfig` custom source config, or use the expo config if unspecified.
+ *   - `name` config plugin name
  */
-export const withBuildPodfileProps: BuildPropertiesConfigPlugin = (config, props) => {
-  return withPodfileProperties(config, config => {
-    const _config = (props.sourceConfig ?? config) as NonNullable<typeof props.sourceConfig>;
-    config.modResults = updateIosBuildPropertiesFromConfig(
-      _config,
-      config.modResults,
-      props.configToPropertyRules
-    );
-    return config;
-  });
-};
+export function createBuildPodfilePropsConfigPlugin<SourceConfigType extends BuildPropertiesConfig>(
+  configToPropertyRules: ConfigToPropertyRuleType<SourceConfigType>[],
+  options?: {
+    sourceConfig?: SourceConfigType;
+    name?: string;
+  }
+): ConfigPlugin {
+  const withUnknown: ConfigPlugin = config =>
+    withPodfileProperties(config, config => {
+      config.modResults = updateIosBuildPropertiesFromConfig(
+        (options?.sourceConfig ?? config) as SourceConfigType,
+        config.modResults,
+        configToPropertyRules
+      );
+      return config;
+    });
+  if (options?.name) {
+    Object.defineProperty(withUnknown, 'name', {
+      value: options.name,
+    });
+  }
+  return withUnknown;
+}
 
 /**
  * A config-plugin to update `ios/Podfile.properties.json` from the `jsEngine` in expo config
  */
-export const withJsEnginePodfileProps: ConfigPlugin = config => {
-  return withBuildPodfileProps<ExpoConfig>(config, {
-    configToPropertyRules: [
-      {
-        propName: 'expo.jsEngine',
-        propValueGetter: config => config.ios?.jsEngine ?? config.jsEngine ?? 'jsc',
-      },
-    ],
-  });
-};
+export const withJsEnginePodfileProps = createBuildPodfilePropsConfigPlugin<ExpoConfig>(
+  [
+    {
+      propName: 'expo.jsEngine',
+      propValueGetter: config => config.ios?.jsEngine ?? config.jsEngine ?? 'jsc',
+    },
+  ],
+  {
+    name: 'withJsEnginePodfileProps',
+  }
+);
 
 export function updateIosBuildPropertiesFromConfig<SourceConfigType extends BuildPropertiesConfig>(
   config: SourceConfigType,

@@ -2,46 +2,55 @@ import type { ExpoConfig } from '@expo/config-types';
 
 import type { ConfigPlugin } from '../Plugin.types';
 import { withGradleProperties } from '../plugins/android-plugins';
-import {
-  BuildPropertiesConfig,
-  BuildPropertiesConfigPlugin,
-  ConfigToPropertyRuleType,
-} from '../utils/BuildProperties.types';
+import { BuildPropertiesConfig, ConfigToPropertyRuleType } from '../utils/BuildProperties.types';
 import type { PropertiesItem } from './Properties';
 
 /**
- * A config-plugin to update `android/gradle.properties` based on config.
+ * Creates a `withGradleProperties` config-plugin based on given config to property mapping rules.
  *
- * @param config expo config
- * @param props parameters as following:
- *   - `configToPropertyRules`: rules to transform from source config to gradle properties.
- *   - `sourceConfig`: [OPTIONAL] transform source config. when this parameter is null, the source config will be the expo config.
+ * @param configToPropertyRules config to property mapping rules
+ * @param options
+ *   - `sourceConfig` custom source config, or use the expo config if unspecified.
+ *   - `name` config plugin name
  */
-export const withBuildGradleProps: BuildPropertiesConfigPlugin = (config, props) => {
-  const _config = (props.sourceConfig ?? config) as NonNullable<typeof props.sourceConfig>;
-  return withGradleProperties(config, config => {
-    config.modResults = updateAndroidBuildPropertiesFromConfig(
-      _config,
-      config.modResults,
-      props.configToPropertyRules
-    );
-    return config;
-  });
-};
+export function createBuildGradlePropsConfigPlugin<SourceConfigType extends BuildPropertiesConfig>(
+  configToPropertyRules: ConfigToPropertyRuleType<SourceConfigType>[],
+  options?: {
+    sourceConfig?: SourceConfigType;
+    name?: string;
+  }
+): ConfigPlugin {
+  const withUnknown: ConfigPlugin = config =>
+    withGradleProperties(config, config => {
+      config.modResults = updateAndroidBuildPropertiesFromConfig(
+        (options?.sourceConfig ?? config) as SourceConfigType,
+        config.modResults,
+        configToPropertyRules
+      );
+      return config;
+    });
+  if (options?.name) {
+    Object.defineProperty(withUnknown, 'name', {
+      value: options.name,
+    });
+  }
+  return withUnknown;
+}
 
 /**
  * A config-plugin to update `android/gradle.properties` from the `jsEngine` in expo config
  */
-export const withJsEngineGradleProps: ConfigPlugin = config => {
-  return withBuildGradleProps<ExpoConfig>(config, {
-    configToPropertyRules: [
-      {
-        propName: 'expo.jsEngine',
-        propValueGetter: config => config.android?.jsEngine ?? config.jsEngine ?? 'jsc',
-      },
-    ],
-  });
-};
+export const withJsEngineGradleProps = createBuildGradlePropsConfigPlugin<ExpoConfig>(
+  [
+    {
+      propName: 'expo.jsEngine',
+      propValueGetter: config => config.android?.jsEngine ?? config.jsEngine ?? 'jsc',
+    },
+  ],
+  {
+    name: 'withJsEngineGradleProps',
+  }
+);
 
 export function updateAndroidBuildPropertiesFromConfig<
   SourceConfigType extends BuildPropertiesConfig

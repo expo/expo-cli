@@ -27,14 +27,3 @@ export interface ConfigToPropertyRuleType<SourceConfigType extends BuildProperti
   // Passing config and get the property value
   propValueGetter: (config: SourceConfigType) => string | null | undefined;
 }
-
-/**
- * ConfigPlugin extended type for `withBuildPodfileProps` or `withBuildGradleProps` which accepting SourceConfigType generics
- */
-export type BuildPropertiesConfigPlugin = <SourceConfigType extends BuildPropertiesConfig>(
-  config: ExpoConfig,
-  props: {
-    configToPropertyRules: ConfigToPropertyRuleType<SourceConfigType>[];
-    sourceConfig?: SourceConfigType;
-  }
-) => ExpoConfig;
