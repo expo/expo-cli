@@ -50,5 +50,8 @@
   "resolutions": {
     "@types/webpack": "4.41.18",
     "hermes-engine": "0.0.0"
+  },
+  "volta": {
+    "node": "16.14.2"
   }
 }

@@ -41,6 +41,9 @@
   "engines": {
     "node": ">=12 <=16"
   },
+  "volta": {
+    "extends": "../../package.json"
+  },
   "devDependencies": {
     "@babel/core": "^7.9.0",
     "@types/cacache": "^15.0.1",
