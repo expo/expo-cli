@@ -897,7 +897,7 @@
               "pattern": "^\\d+\\.\\d*0$"
             },
             "meta": {
-              "notHuman": "A decimal ending in a 0."
+              "notHuman": "Not a decimal ending in a 0."
             }
           }
         ]

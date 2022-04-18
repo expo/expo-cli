@@ -65,11 +65,11 @@ exports[`Holistic Unit Test bad example app.json schema with field with not 1`] 
 Array [
   Object {
     "data": "1.0",
-    "errorCode": "SCHEMA_INVALID_PATTERN",
+    "errorCode": "SCHEMA_INVALID_NOT",
     "fieldPath": "runtimeVersion",
-    "message": "'runtimeVersion' should NOT be a decimal ending in a 0.",
+    "message": "'runtimeVersion' should be not a decimal ending in a 0.",
     "meta": Object {
-      "notHuman": "A decimal ending in a 0.",
+      "notHuman": "Not a decimal ending in a 0.",
     },
     "name": "ValidationError",
   },
