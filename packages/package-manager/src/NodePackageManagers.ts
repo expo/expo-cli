@@ -344,7 +344,7 @@ export class PnpmPackageManager implements PackageManager {
   }
 
   async installAsync() {
-    await this._runAsync(['install', '--shamefully-hoist']);
+    await this._runAsync(['install']);
   }
 
   async addWithParametersAsync(names: string[], parameters: string[]) {
@@ -353,12 +353,12 @@ export class PnpmPackageManager implements PackageManager {
   }
 
   async addAsync(...names: string[]) {
-    await this.addWithParametersAsync(names, ['--shamefully-hoist']);
+    await this.addWithParametersAsync(names, []);
   }
 
   async addDevAsync(...names: string[]) {
     if (!names.length) return this.installAsync();
-    await this._runAsync(['add', '--shamefully-hoist', '--save-dev', ...names]);
+    await this._runAsync(['add', '--save-dev', ...names]);
   }
 
   async addGlobalAsync(...names: string[]) {
