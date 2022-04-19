@@ -490,7 +490,6 @@ describe('built-in plugins', () => {
       'ios/ReactNativeProject/Base.lproj/LaunchScreen.xib',
       'ios/ReactNativeProject/Images.xcassets/AppIcon.appiconset/Contents.json',
       'ios/ReactNativeProject/Images.xcassets/Contents.json',
-      'ios/ReactNativeProject/ReactNativeProject.entitlements',
       'ios/ReactNativeProject.xcodeproj/project.pbxproj',
       'ios/Podfile.properties.json',
       'ios/Podfile',
@@ -508,10 +507,6 @@ describe('built-in plugins', () => {
     ]);
 
     // unmodified
-    expect(after['ios/ReactNativeProject/ReactNativeProject.entitlements']).not.toMatch(
-      'com.apple.developer.associated-domains'
-    );
-
     expect(after['ios/ReactNativeProject/Info.plist']).toBe(
       rnFixture['ios/ReactNativeProject/Info.plist']
     );
