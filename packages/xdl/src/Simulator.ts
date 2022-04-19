@@ -130,7 +130,7 @@ export async function ensureXcodeCommandLineToolsInstalledAsync(): Promise<boole
       // Most likely the user will cancel the process, but if they don't this will continue checking until the CLI is available.
       await pendingAsync();
       return true;
-    } catch (error: any) {
+    } catch {
       // TODO: Figure out why this might get called (cancel early, network issues, server problems)
       // TODO: Handle me
     }
@@ -344,7 +344,7 @@ function _getDefaultSimulatorDeviceUDID() {
       { stdio: 'pipe' }
     ).toString();
     return defaultDeviceUDID.trim();
-  } catch (e: any) {
+  } catch {
     return null;
   }
 }
@@ -737,7 +737,7 @@ async function isDevClientInstalledAsync(
 ): Promise<boolean> {
   try {
     await assertDevClientInstalledAsync(simulator, bundleIdentifier);
-  } catch (e: any) {
+  } catch {
     return false;
   }
   return true;

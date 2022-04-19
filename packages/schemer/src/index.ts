@@ -217,7 +217,7 @@ export default class Schemer {
             })
           );
         }
-      } catch (e) {
+      } catch {
         this.manualValidationErrors.push(
           new ValidationError({
             errorCode: 'INVALID_ASSET_URI',

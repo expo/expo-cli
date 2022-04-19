@@ -402,7 +402,7 @@ function formatDistCert(
       serialNumber =
         PKCS12Utils.findP12CertSerialNumber(distCert.certP12, distCert.certPassword) ?? undefined;
     }
-  } catch (error: any) {
+  } catch {
     serialNumber = chalk.red('invalid serial number');
   }
 

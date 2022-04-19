@@ -200,7 +200,7 @@ export const openBrowser = async props => {
     if (result.data.openWeb.error) {
       hasError = true;
     }
-  } catch (e) {
+  } catch {
     hasError = true;
   }
 
@@ -254,7 +254,7 @@ export const openSimulator = async (platform, props) => {
       variables: { platform },
     });
     hasError = result.data.openSimulator.__typename === 'OpenSimulatorError';
-  } catch (e) {
+  } catch {
     hasError = true;
   }
 

@@ -53,7 +53,7 @@ function _handleDeviceLogs(projectRoot: string, deviceId: string, deviceName: st
       }
       try {
         return JSON.stringify(obj);
-      } catch (e: any) {
+      } catch {
         return obj.toString();
       }
     });
@@ -143,7 +143,7 @@ export async function stopExpoServerAsync(projectRoot: string): Promise<void> {
         method: 'post',
         url: `http://127.0.0.1:${packagerInfo.expoServerPort}/shutdown`,
       });
-    } catch (e: any) {}
+    } catch {}
   }
   await ProjectSettings.setPackagerInfoAsync(projectRoot, {
     expoServerPort: null,

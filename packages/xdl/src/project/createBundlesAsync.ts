@@ -204,7 +204,7 @@ async function _getForPlatformAsync(
         let body;
         try {
           body = JSON.parse(error.response.data);
-        } catch (e: any) {
+        } catch {
           ProjectUtils.logError(projectRoot, 'expo', error.response.data);
         }
 

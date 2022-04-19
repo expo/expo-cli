@@ -36,7 +36,7 @@ async function _checkNpmVersionAsync(projectRoot: string) {
       if (yarnVersionResponse.status === 0) {
         return NO_ISSUES;
       }
-    } catch (e: any) {}
+    } catch {}
 
     const npmVersion = execSync('npm --version', { stdio: 'pipe' }).toString().trim();
 
@@ -61,7 +61,7 @@ async function _checkNpmVersionAsync(projectRoot: string) {
     } else {
       ProjectUtils.clearNotification(projectRoot, 'doctor-npm-version');
     }
-  } catch (e: any) {
+  } catch {
     ProjectUtils.logWarning(
       projectRoot,
       'expo',
@@ -394,7 +394,7 @@ async function _validateReactNativeVersionAsync(
       ProjectUtils.clearNotification(projectRoot, 'doctor-invalid-version-of-react-native');
 
       ProjectUtils.clearNotification(projectRoot, 'doctor-malformed-version-of-react-native');
-    } catch (e: any) {
+    } catch {
       ProjectUtils.logWarning(
         projectRoot,
         'expo',

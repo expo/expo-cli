@@ -107,7 +107,7 @@ function handleDeviceLogs(
       }
       try {
         return JSON.stringify(obj);
-      } catch (e) {
+      } catch {
         return obj.toString();
       }
     });

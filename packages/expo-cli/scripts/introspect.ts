@@ -646,7 +646,7 @@ if (['markdown', 'md'].includes(process.argv[2])) {
               name: item.package.name,
               description: item.package.description,
             })) as Fig.Suggestion[];
-          } catch (e: any) {
+          } catch (e) {
             return [];
           }
         },

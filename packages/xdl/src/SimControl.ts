@@ -97,7 +97,7 @@ export async function getDefaultSimulatorDeviceUDIDAsync() {
       'CurrentDeviceUDID',
     ]);
     return defaultDeviceUDID.trim();
-  } catch (e: any) {
+  } catch {
     return null;
   }
 }

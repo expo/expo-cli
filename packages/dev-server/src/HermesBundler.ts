@@ -237,7 +237,7 @@ function gteSdkVersion(expJson: Pick<ExpoConfig, 'sdkVersion'>, sdkVersion: stri
 
   try {
     return semver.gte(expJson.sdkVersion, sdkVersion);
-  } catch (e) {
+  } catch {
     throw new Error(`${expJson.sdkVersion} is not a valid version. Must be in the form of x.y.z`);
   }
 }
@@ -247,7 +247,7 @@ async function parsePodfilePropertiesAsync(
 ): Promise<Record<string, string>> {
   try {
     return JSON.parse(await fs.readFile(podfilePropertiesPath, 'utf8'));
-  } catch (e) {
+  } catch {
     return {};
   }
 }

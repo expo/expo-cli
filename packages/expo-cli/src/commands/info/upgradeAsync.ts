@@ -67,7 +67,7 @@ async function getExactInstalledModuleVersionAsync(moduleName: string, projectRo
   try {
     const pkg = await JsonFile.readAsync(resolveFrom(projectRoot, `${moduleName}/package.json`));
     return pkg.version as string;
-  } catch (e: any) {
+  } catch {
     return null;
   }
 }
@@ -568,7 +568,7 @@ export async function upgradeAsync(
   if (devDependenciesAsStringArray.length) {
     try {
       await packageManager.addDevAsync(...devDependenciesAsStringArray);
-    } catch (e: any) {
+    } catch {
       updatingPackagesStep.fail(
         `Failed to upgrade JavaScript devDependencies: ${devDependenciesAsStringArray.join(' ')}`
       );
@@ -579,7 +579,7 @@ export async function upgradeAsync(
   if (dependenciesAsStringArray.length) {
     try {
       await packageManager.addAsync(...dependenciesAsStringArray);
-    } catch (e: any) {
+    } catch {
       updatingPackagesStep.fail(
         `Failed to upgrade JavaScript dependencies: ${dependenciesAsStringArray.join(' ')}`
       );
@@ -589,7 +589,7 @@ export async function upgradeAsync(
   if (removed.length) {
     try {
       await packageManager.removeAsync(...removed);
-    } catch (e: any) {
+    } catch {
       updatingPackagesStep.fail(`Failed to remove JavaScript dependencies: ${removed.join(' ')}`);
     }
   }

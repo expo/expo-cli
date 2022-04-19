@@ -78,7 +78,7 @@ function parseMessageJson(data: Buffer) {
   const stringData = data.toString();
   try {
     return JSON.parse(stringData) as SimControlLog;
-  } catch (e: any) {
+  } catch {
     Logger.global.debug('Failed to parse simctl JSON message:\n' + stringData);
   }
   return null;

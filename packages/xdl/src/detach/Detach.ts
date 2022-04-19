@@ -260,7 +260,7 @@ function getExportUrl(manifest: any) {
   try {
     const bundleUrlParts = bundleUrl.split('/');
     return bundleUrlParts.slice(0, bundleUrlParts.length - 2).join('/');
-  } catch (e: any) {
+  } catch {
     throw Error(
       `Expected bundleUrl to be of the format https://domain/bundles/bundle-hash-id, ${bundleUrl} does not follow this format.`
     );

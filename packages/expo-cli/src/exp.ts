@@ -334,7 +334,7 @@ Command.prototype.asyncAction = function (asyncFn: Action) {
     if (!getenv.boolish('EAS_BUILD', false) && !program.nonInteractive) {
       try {
         await profileMethod(checkCliVersionAsync)();
-      } catch (e: any) {}
+      } catch {}
     }
 
     try {
@@ -444,7 +444,7 @@ Command.prototype.asyncActionProjectDir = function (
       let traceInfo;
       try {
         traceInfo = JSON.parse(chunk.msg);
-      } catch (e: any) {
+      } catch {
         return logFn(chunk.msg);
       }
 

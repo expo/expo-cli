@@ -270,7 +270,7 @@ const defaultProviders = {
       let results: Record<string, JSONValue> = {};
       try {
         results = await JsonFile.readAsync(filePath);
-      } catch (e) {}
+      } catch {}
       return results;
     },
     async write(filePath, { modResults, modRequest: { introspect } }) {

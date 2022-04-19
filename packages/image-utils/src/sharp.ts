@@ -121,14 +121,14 @@ async function findSharpBinAsync(): Promise<string> {
       _sharpBin = require.resolve(`sharp-cli/${sharpCliPackage.bin.sharp}`);
       return _sharpBin;
     }
-  } catch (e) {
+  } catch {
     // fall back to global sharp-cli
   }
 
   let installedCliVersion;
   try {
     installedCliVersion = (await spawnAsync('sharp', ['--version'])).stdout.toString().trim();
-  } catch (e) {
+  } catch {
     throw notFoundError(SHARP_REQUIRED_VERSION);
   }
 

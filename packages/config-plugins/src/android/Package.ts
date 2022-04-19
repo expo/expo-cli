@@ -176,7 +176,7 @@ export async function renamePackageOnDiskForType({
         contents = contents.replace(new RegExp(currentPackageName!, 'g'), packageName);
         fs.writeFileSync(filepath, contents);
       }
-    } catch (e) {
+    } catch {
       debug(`Error updating "${filepath}" for type "${type}"`);
     }
   });

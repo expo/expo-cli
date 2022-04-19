@@ -131,12 +131,12 @@ async function forceQuitAsync(projectRoot: string) {
   if (packagerPid) {
     try {
       process.kill(packagerPid);
-    } catch (e: any) {}
+    } catch {}
   }
   if (ngrokPid) {
     try {
       process.kill(ngrokPid);
-    } catch (e: any) {}
+    } catch {}
   }
   await ProjectSettings.setPackagerInfoAsync(projectRoot, {
     expoServerPort: null,

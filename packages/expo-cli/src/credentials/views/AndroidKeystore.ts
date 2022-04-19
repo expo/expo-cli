@@ -24,7 +24,7 @@ async function keytoolCommandExists(): Promise<boolean> {
   try {
     await commandExists('keytool');
     return true;
-  } catch (err: any) {
+  } catch {
     return false;
   }
 }

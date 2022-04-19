@@ -52,7 +52,7 @@ class Cacher<T> {
     try {
       const stats = await fs.stat(this.filename);
       mtime = stats.mtime;
-    } catch (e: any) {
+    } catch {
       try {
         await fs.mkdirp(getCacheDir());
 
@@ -61,7 +61,7 @@ class Cacher<T> {
 
           await fs.writeFile(this.filename, bootstrapContents, 'utf8');
         }
-      } catch (e: any) {
+      } catch {
         // intentional no-op
       }
       mtime = new Date(1989, 10, 19);

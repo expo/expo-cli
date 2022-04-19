@@ -67,7 +67,7 @@ function configurationFromOptions({
   let resolvedPlatform: PlatformType = Platform.ALL;
   try {
     resolvedPlatform = (platform && validateEnumValue(platform, Platform)) || Platform.ALL;
-  } catch (e) {
+  } catch (e: any) {
     throw new Error(`'platform': ${e.message}`);
   }
 

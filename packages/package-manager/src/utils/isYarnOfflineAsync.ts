@@ -10,7 +10,7 @@ export function getNpmProxy(): string | null {
   try {
     const httpsProxy = execSync('npm config get https-proxy').toString().trim();
     return httpsProxy !== 'null' ? httpsProxy : null;
-  } catch (e) {
+  } catch {
     return null;
   }
 }

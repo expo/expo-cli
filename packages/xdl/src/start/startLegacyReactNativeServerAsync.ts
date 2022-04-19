@@ -281,7 +281,7 @@ export async function startReactNativeServerAsync({
           packagerPort: null,
           packagerPid: null,
         });
-      } catch (e: any) {}
+      } catch {}
     });
   });
   const packagerUrl = await UrlUtils.constructBundleUrlAsync(projectRoot, {
