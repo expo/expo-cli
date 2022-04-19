@@ -253,27 +253,6 @@ export function getAllEntitlementsPaths(projectRoot: string): string[] {
   return paths;
 }
 
-/**
- * Get the entitlements file path if it exists.
- *
- * @param projectRoot
- */
-export function getEntitlementsPath(projectRoot: string): string | null {
-  const [using, ...extra] = getAllEntitlementsPaths(projectRoot);
-
-  if (extra.length) {
-    warnMultipleFiles({
-      tag: 'entitlements',
-      fileName: '*.entitlements',
-      projectRoot,
-      using,
-      extra,
-    });
-  }
-
-  return using ?? null;
-}
-
 export function getSupportingPath(projectRoot: string): string {
   return path.resolve(projectRoot, 'ios', path.basename(getSourceRoot(projectRoot)), 'Supporting');
 }
