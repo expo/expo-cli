@@ -1,21 +1,14 @@
-import type Log from '@expo/bunyan';
-import {
-  createDevServerMiddleware as createReactNativeDevServerMiddleware,
-  securityHeadersMiddleware,
-} from '@react-native-community/cli-server-api';
+import Log from '@expo/bunyan';
 import bodyParser from 'body-parser';
-import type { Server as ConnectServer } from 'connect';
+import { Server as ConnectServer } from 'connect';
 
+import { importCliServerApiFromProject } from '../metro/importMetroFromProject';
 import { prependMiddleware, replaceMiddlewareWith } from '../middlwareMutations';
 import clientLogsMiddleware from './clientLogsMiddleware';
 import createJsInspectorMiddleware from './createJsInspectorMiddleware';
 import { remoteDevtoolsCorsMiddleware } from './remoteDevtoolsCorsMiddleware';
 import { remoteDevtoolsSecurityHeadersMiddleware } from './remoteDevtoolsSecurityHeadersMiddleware';
 import { suppressRemoteDebuggingErrorMiddleware } from './suppressErrorMiddleware';
-
-export type AttachToServerFunction = ReturnType<
-  typeof createReactNativeDevServerMiddleware
->['attachToServer'];
 
 /**
  * Extends the default `createDevServerMiddleware` and adds some Expo CLI-specific dev middleware
@@ -33,16 +26,32 @@ export type AttachToServerFunction = ReturnType<
  *
  * @returns
  */
-export function createDevServerMiddleware({
-  watchFolders,
-  port,
-  logger,
-}: {
-  watchFolders: readonly string[];
-  port: number;
-  logger: Log;
-}): { middleware: ConnectServer; attachToServer: AttachToServerFunction; logger: Log } {
-  const { middleware, attachToServer } = createReactNativeDevServerMiddleware({
+export function createDevServerMiddleware(
+  projectRoot: string,
+  {
+    watchFolders,
+    port,
+    logger,
+  }: {
+    watchFolders: readonly string[];
+    port: number;
+    logger: Log;
+  }
+) {
+  const { createDevServerMiddleware, securityHeadersMiddleware } = importCliServerApiFromProject(
+    projectRoot
+  );
+  const {
+    middleware,
+    // @ts-expect-error: Old API
+    attachToServer,
+
+    // New
+    debuggerProxyEndpoint,
+    messageSocketEndpoint,
+    eventsSocketEndpoint,
+    websocketEndpoints,
+  } = createDevServerMiddleware({
     port,
     watchFolders,
   });
@@ -61,5 +70,15 @@ export function createDevServerMiddleware({
   middleware.use('/logs', clientLogsMiddleware(logger));
   middleware.use('/inspector', createJsInspectorMiddleware());
 
-  return { middleware, attachToServer, logger };
+  return {
+    logger,
+    middleware,
+    // Old
+    attachToServer,
+    // New
+    debuggerProxyEndpoint,
+    messageSocketEndpoint,
+    eventsSocketEndpoint,
+    websocketEndpoints,
+  };
 }
