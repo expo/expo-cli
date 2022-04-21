@@ -205,10 +205,8 @@ const defaultProviders = {
 
     async getFilePath(config) {
       try {
-        return (
-          Entitlements.getEntitlementsPath(config.modRequest.projectRoot) ??
-          Entitlements.getDefaultEntitlementsPath(config.modRequest.projectRoot)
-        );
+        ensureApplicationTargetEntitlementsFileConfigured(config.modRequest.projectRoot);
+        return Entitlements.getEntitlementsPath(config.modRequest.projectRoot) ?? '';
       } catch (error: any) {
         if (config.modRequest.introspect) {
           // fallback to an empty string in introspection mode.
@@ -262,7 +260,6 @@ const defaultProviders = {
         return;
       }
 
-      ensureApplicationTargetEntitlementsFileConfigured(config.modRequest.projectRoot);
       await writeFile(filePath, plist.build(sortObject(config.modResults)));
     },
   }),

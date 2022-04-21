@@ -4,6 +4,7 @@ import * as path from 'path';
 
 import { UnexpectedError } from '../utils/errors';
 import { addWarningIOS } from '../utils/warnings';
+import * as Entitlements from './Entitlements';
 
 const ignoredPaths = ['**/@(Carthage|Pods|vendor|node_modules)/**'];
 
@@ -251,6 +252,13 @@ export function getAllEntitlementsPaths(projectRoot: string): string[] {
     ignore: ignoredPaths,
   });
   return paths;
+}
+
+/**
+ * @deprecated: use Entitlements.getEntitlementsPath instead
+ */
+export function getEntitlementsPath(projectRoot: string): string | null {
+  return Entitlements.getEntitlementsPath(projectRoot);
 }
 
 export function getSupportingPath(projectRoot: string): string {

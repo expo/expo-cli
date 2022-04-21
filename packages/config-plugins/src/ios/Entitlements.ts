@@ -56,13 +56,6 @@ export function getEntitlementsPath(
   return entitlementsPath && fs.existsSync(entitlementsPath) ? entitlementsPath : null;
 }
 
-export function getDefaultEntitlementsPath(projectRoot: string) {
-  const project = getPbxproj(projectRoot);
-  const projectName = getProjectName(projectRoot);
-  const productName = getProductName(project);
-  return path.normalize(path.join(projectRoot, 'ios', projectName, `${productName}.entitlements`));
-}
-
 function getEntitlementsPathFromBuildConfiguration(
   projectRoot: string,
   xcBuildConfiguration: XCBuildConfiguration
@@ -82,13 +75,13 @@ export function ensureApplicationTargetEntitlementsFileConfigured(projectRoot: s
   const projectName = getProjectName(projectRoot);
   const productName = getProductName(project);
 
-  const [, nativeTarget] = findFirstNativeTarget(project);
+  const [, applicationTarget] = findFirstNativeTarget(project);
   const buildConfigurations = getBuildConfigurationsForListId(
     project,
-    nativeTarget.buildConfigurationList
+    applicationTarget.buildConfigurationList
   );
   let hasChangesToWrite = false;
-  buildConfigurations.forEach(([, xcBuildConfiguration]) => {
+  for (const [, xcBuildConfiguration] of buildConfigurations) {
     const oldEntitlementPath = getEntitlementsPathFromBuildConfiguration(
       projectRoot,
       xcBuildConfiguration
@@ -107,7 +100,7 @@ export function ensureApplicationTargetEntitlementsFileConfigured(projectRoot: s
       fs.writeFileSync(entitlementsPath, ENTITLEMENTS_TEMPLATE);
     }
     xcBuildConfiguration.buildSettings.CODE_SIGN_ENTITLEMENTS = entitlementsRelativePath;
-  });
+  }
   if (hasChangesToWrite) {
     fs.writeFileSync(project.filepath, project.writeSync());
   }
