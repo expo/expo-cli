@@ -105,9 +105,8 @@ async function stopDevServerAsync() {
 }
 
 async function stopInternalAsync(projectRoot: string): Promise<void> {
-  DevSession.stopSession();
-
   await Promise.all([
+    DevSession.stopSession(projectRoot),
     Webpack.stopAsync(projectRoot),
     stopDevServerAsync(),
     stopExpoServerAsync(projectRoot),
@@ -153,7 +152,7 @@ export async function stopAsync(projectRoot: string): Promise<void> {
   try {
     const result = await Promise.race([
       stopInternalAsync(projectRoot),
-      new Promise(resolve => setTimeout(resolve, 2000, 'stopFailed')),
+      new Promise(resolve => setTimeout(resolve, 5000, 'stopFailed')),
     ]);
     if (result === 'stopFailed') {
       await forceQuitAsync(projectRoot);

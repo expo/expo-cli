@@ -82,6 +82,49 @@ export async function startSession(
   }
 }
 
-export function stopSession() {
+export async function stopSession(projectRoot: string) {
   keepUpdating = false;
+
+  const authSession = await UserManager.getSessionAsync();
+  const { devices } = await ProjectSettings.getDevicesInfoAsync(projectRoot);
+
+  if (!authSession && !devices?.length) {
+    // NOTE(brentvatne) let's just bail out in this case for now
+    // throw new Error('development sessions can only be initiated for logged in users or with a device ID');
+    return;
+  }
+
+  try {
+    const nativeUrl = await UrlUtils.constructDeepLinkAsync(projectRoot);
+    const webUrl: string | null = await UrlUtils.constructWebAppUrlAsync(projectRoot);
+
+    let queryString = '';
+    if (devices) {
+      const searchParams = new URLSearchParams();
+      devices.forEach(device => {
+        searchParams.append('deviceId', device.installationId);
+      });
+      queryString = `?${searchParams.toString()}`;
+    }
+
+    const apiClient = ApiV2Client.clientForUser(authSession);
+
+    await Promise.all([
+      apiClient.postAsync(`development-sessions/notify-close${queryString}`, {
+        session: {
+          url: nativeUrl,
+        },
+      }),
+      // close the web session if it exists
+      webUrl
+        ? apiClient.postAsync(`development-sessions/notify-close${queryString}`, {
+            session: {
+              url: webUrl,
+            },
+          })
+        : Promise.resolve<null>(null),
+    ]);
+  } catch (e) {
+    logger.global.debug(e, `Error stopping dev session: ${e}`);
+  }
 }
