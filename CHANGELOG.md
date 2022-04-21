@@ -10,8 +10,6 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🧹 Chores
 
-- [expo-env-info] convert from CJS to ESM module. ([#4312](https://github.com/expo/expo-cli/pull/4312))
-
 ### 🐛 Bug fixes
 
 ## [Mon, 11 Apr 2022 13:14:18 -0700](https://github.com/expo/expo-cli/commit/f163652768ae987280307275b0a02cfd4b3cc403)
