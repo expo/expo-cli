@@ -12,6 +12,31 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+## [Tue, 19 Apr 2022 14:19:30 -0700](https://github.com/expo/expo-cli/commit/a61ddb4dcd27da86f74de9c7e9bd18570d8c2684)
+
+### 🛠 Breaking changes
+
+### 🎉 New features
+
+### 🧹 Chores
+
+- [ci] Set timeout to 2 minutes and remove check files on windows ([#4302](https://github.com/expo/expo-cli/issues/4302))
+- chore(xdl): add new metro logging events ([#4304](https://github.com/expo/expo-cli/issues/4304))
+- chore: sync stale config with other repo ([#4297](https://github.com/expo/expo-cli/issues/4297))
+- Bump @expo/apple-utils@0.0.0-alpha.31 ([#4300](https://github.com/expo/expo-cli/issues/4300))
+- ci: add stale bot from expo/expo ([#4295](https://github.com/expo/expo-cli/issues/4295))
+
+### 🐛 Bug fixes
+
+- [schemer] Update user-facing error message for `not` fields ([#4308](https://github.com/expo/expo-cli/issues/4308))
+
+### 📦 Packages updated
+
+- @expo/dev-tools@0.13.148
+- expo-cli@5.3.2
+- @expo/schemer@1.4.0
+- xdl@59.2.32
+
 ## [Mon, 11 Apr 2022 13:14:18 -0700](https://github.com/expo/expo-cli/commit/f163652768ae987280307275b0a02cfd4b3cc403)
 
 ### 🛠 Breaking changes

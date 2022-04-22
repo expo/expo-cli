@@ -1,6 +1,6 @@
 /* eslint-disable import/order */
 
-import { ErrorCodes } from '../src/Error';
+import { ErrorCodes, SchemerError } from '../src/Error';
 import Schemer from '../src/index';
 
 describe('Sanity Tests', () => {
@@ -22,6 +22,7 @@ const schema = require('./files/schema.json').schema;
 const S = new Schemer(schema, { rootDir: './__tests__' });
 const good = require('./files/app.json');
 const bad = require('./files/bad.json');
+const badWithNot = require('./files/badwithnot.json');
 
 describe('Holistic Unit Test', () => {
   it('good example app.json all', async () => {
@@ -36,9 +37,33 @@ describe('Holistic Unit Test', () => {
     try {
       await S.validateSchemaAsync(bad);
     } catch (e) {
-      console.log(e);
-      expect(e).toBeTruthy();
-      expect(e.errors.length).toBe(4);
+      expect(e).toBeInstanceOf(SchemerError);
+      const errors = e.errors;
+      expect(errors.length).toBe(4);
+      expect(
+        errors.map(validationError => {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const { stack, ...rest } = validationError;
+          return rest;
+        })
+      ).toMatchSnapshot();
+    }
+  });
+
+  it('bad example app.json schema with field with not', async () => {
+    try {
+      await S.validateSchemaAsync(badWithNot);
+    } catch (e) {
+      expect(e).toBeInstanceOf(SchemerError);
+      const errors = e.errors;
+      expect(errors.length).toBe(1);
+      expect(
+        errors.map(validationError => {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const { stack, ...rest } = validationError;
+          return rest;
+        })
+      ).toMatchSnapshot();
     }
   });
 });

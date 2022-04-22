@@ -214,7 +214,7 @@ export function parseStartOptions(
   }
 
   // The SDK 41 client has web socket support.
-  if (Versions.gteSdkVersion(exp, '41.0.0')) {
+  if (!Versions.lteSdkVersion(exp, '40.0.0')) {
     startOpts.isRemoteReloadingEnabled = true;
     if (!startOpts.webOnly || Webpack.isTargetingNative()) {
       startOpts.isWebSocketsEnabled = true;

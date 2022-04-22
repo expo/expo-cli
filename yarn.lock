@@ -2944,6 +2944,13 @@
   dependencies:
     serve-static "^1.13.1"
 
+"@react-native-community/cli-debugger-ui@^7.0.3":
+  version "7.0.3"
+  resolved "https://registry.yarnpkg.com/@react-native-community/cli-debugger-ui/-/cli-debugger-ui-7.0.3.tgz#3eeeacc5a43513cbcae56e5e965d77726361bcb4"
+  integrity sha512-G4SA6jFI0j22o+j+kYP8/7sxzbCDqSp2QiHA/X5E0lsGEd2o9qN2zbIjiFr8b8k+VVAYSUONhoC0+uKuINvmkA==
+  dependencies:
+    serve-static "^1.13.1"
+
 "@react-native-community/cli-hermes@^5.0.1":
   version "5.0.1"
   resolved "https://registry.yarnpkg.com/@react-native-community/cli-hermes/-/cli-hermes-5.0.1.tgz#039d064bf2dcd5043beb7dcd6cdf5f5cdd51e7fc"
@@ -2999,6 +3006,21 @@
     serve-static "^1.13.1"
     ws "^1.1.0"
 
+"@react-native-community/cli-server-api@^7.0.3":
+  version "7.0.3"
+  resolved "https://registry.yarnpkg.com/@react-native-community/cli-server-api/-/cli-server-api-7.0.3.tgz#ba9695a2fdfef22750d141153efd94baf641129b"
+  integrity sha512-JDrLsrkBgNxbG2u3fouoVGL9tKrXUrTsaNwr+oCV+3XyMwbVe42r/OaQ681/iW/7mHXjuVkDnMcp7BMg7e2yJg==
+  dependencies:
+    "@react-native-community/cli-debugger-ui" "^7.0.3"
+    "@react-native-community/cli-tools" "^6.2.0"
+    compression "^1.7.1"
+    connect "^3.6.5"
+    errorhandler "^1.5.0"
+    nocache "^2.1.0"
+    pretty-format "^26.6.2"
+    serve-static "^1.13.1"
+    ws "^7.5.1"
+
 "@react-native-community/cli-tools@^5.0.1":
   version "5.0.1"
   resolved "https://registry.yarnpkg.com/@react-native-community/cli-tools/-/cli-tools-5.0.1.tgz#9ee564dbe20448becd6bce9fbea1b59aa5797919"
@@ -3009,6 +3031,20 @@
     mime "^2.4.1"
     node-fetch "^2.6.0"
     open "^6.2.0"
+    shell-quote "1.6.1"
+
+"@react-native-community/cli-tools@^6.2.0":
+  version "6.2.0"
+  resolved "https://registry.yarnpkg.com/@react-native-community/cli-tools/-/cli-tools-6.2.0.tgz#8f4adc2d83ab96e5654348533c8fa602742c4fce"
+  integrity sha512-08ssz4GMEnRxC/1FgTTN/Ud7mExQi5xMphItPjfHiTxpZPhrFn+IMx6mya0ncFEhhxQ207wYlJMRLPRRdBZ8oA==
+  dependencies:
+    appdirsjs "^1.2.4"
+    chalk "^4.1.2"
+    lodash "^4.17.15"
+    mime "^2.4.1"
+    node-fetch "^2.6.0"
+    open "^6.2.0"
+    semver "^6.3.0"
     shell-quote "1.6.1"
 
 "@react-native-community/cli-types@^5.0.1":
@@ -18855,7 +18891,7 @@ ws@^6.1.4, ws@^6.2.1:
   dependencies:
     async-limiter "~1.0.0"
 
-ws@^7, ws@^7.4.6:
+ws@^7, ws@^7.2.3, ws@^7.5.1:
   version "7.5.7"
   resolved "https://registry.yarnpkg.com/ws/-/ws-7.5.7.tgz#9e0ac77ee50af70d58326ecff7e85eb3fa375e67"
   integrity sha512-KMvVuFzpKBuiIXW3E4u3mySRO2/mCHSyZDJQM5NQ9Q9KHWHWh0NHgfbRMLLrceUK5qAL4ytALJbpRMjixFZh8A==
