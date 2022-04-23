@@ -92,11 +92,3 @@ export function resolvePackageManager(
 
   return null;
 }
-
-/**
- * Check if the project, or workspace root, is using Yarn.
- * @deprecated Please use `resolvePackageManager` instead to resolve either npm, yarn, or pnpm.
- */
-export function isUsingYarn(projectRoot: string) {
-  return resolvePackageManager(projectRoot, 'yarn') === 'yarn';
-}
