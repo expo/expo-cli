@@ -40,18 +40,20 @@ export function setScheme(
   };
 }
 
-// TODO: update this to be idempotent!
 export function appendScheme(scheme: string | null, infoPlist: InfoPlist): InfoPlist {
   if (!scheme) {
     return infoPlist;
   }
 
-  const existingSchemes = infoPlist.CFBundleURLTypes;
+  const existingSchemes = infoPlist.CFBundleURLTypes ?? [];
+  if (existingSchemes.some(({ CFBundleURLSchemes }) => CFBundleURLSchemes.includes(scheme))) {
+    return infoPlist;
+  }
 
   return {
     ...infoPlist,
     CFBundleURLTypes: [
-      ...(existingSchemes ?? []),
+      ...existingSchemes,
       {
         CFBundleURLSchemes: [scheme],
       },

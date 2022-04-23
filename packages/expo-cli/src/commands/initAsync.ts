@@ -1,4 +1,3 @@
-import { UserManager, Versions } from '@expo/api';
 import { getConfig } from '@expo/config';
 import { AndroidConfig, IOSConfig } from '@expo/config-plugins';
 import plist from '@expo/plist';
@@ -10,14 +9,15 @@ import npmPackageArg from 'npm-package-arg';
 import path from 'path';
 import stripAnsi from 'strip-ansi';
 import terminalLink from 'terminal-link';
+import { UserManager, Versions } from 'xdl';
 
-import CommandError, { SilentError } from '../CommandError';
+import CommandError, { AbortCommandError, SilentError } from '../CommandError';
 import Log from '../log';
 import { logNewSection } from '../utils/ora';
 import prompts, { selectAsync } from '../utils/prompts';
 import { directoryExistsAsync } from './eject/clearNativeFolder';
 import * as CreateApp from './utils/CreateApp';
-import { usesOldExpoUpdatesAsync } from './utils/ProjectUtils';
+import { hasExpoUpdatesInstalledAsync, usesOldExpoUpdatesAsync } from './utils/ProjectUtils';
 import { extractAndPrepareTemplateAppAsync } from './utils/extractTemplateAppAsync';
 
 type Options = {
@@ -26,7 +26,6 @@ type Options = {
   npm: boolean;
   yarn: boolean;
   yes: boolean;
-  name?: string;
 };
 
 const FEATURED_TEMPLATES = [
@@ -80,9 +79,6 @@ function parseOptions(command: Partial<Options>): Options {
     npm: !!command.npm,
     install: !!command.install,
     template: command.template,
-    /// XXX(ville): this is necessary because with Commander.js, when the --name
-    // option is not set, `command.name` will point to `Command.prototype.name`.
-    name: typeof command.name === 'string' ? ((command.name as unknown) as string) : undefined,
   };
 }
 
@@ -166,7 +162,7 @@ async function resolveTemplateAsync(resolvedTemplate?: string | null) {
   const {
     version: newestSdkVersion,
     data: newestSdkReleaseData,
-  } = await Versions.getLatestVersionAsync();
+  } = await Versions.newestReleasedSdkVersionAsync();
 
   // If the user is opting into a beta then we need to append the template tag explicitly
   // in order to not fall back to the latest tag for templates.
@@ -232,6 +228,16 @@ async function resolveTemplateAsync(resolvedTemplate?: string | null) {
 export async function actionAsync(incomingProjectRoot: string, command: Partial<Options>) {
   const options = parseOptions(command);
 
+  const deprecatedNameArgument =
+    typeof (command as any).name === 'string' ? (command as any).name : undefined;
+  if (deprecatedNameArgument) {
+    // Commander doesn't support using the `--name` argument so it shouldn't have been implemented in the first place.
+    // Using `--name` will cause other parts of commander to break since it expects a function and `this.name` would be a string.
+
+    Log.error(chalk`Deprecated: Use {bold expo init [name]} instead of {bold --name [name]}.`);
+    throw new AbortCommandError();
+  }
+
   // Resolve the name, and projectRoot
   let projectRoot: string;
   if (!incomingProjectRoot && options.yes) {
@@ -240,7 +246,7 @@ export async function actionAsync(incomingProjectRoot: string, command: Partial<
     assertValidName(folderName);
     await assertFolderEmptyAsync(projectRoot, folderName);
   } else {
-    projectRoot = await resolveProjectRootAsync(incomingProjectRoot || options.name);
+    projectRoot = await resolveProjectRootAsync(incomingProjectRoot);
   }
 
   let resolvedTemplate: string | null = options.template ?? null;
@@ -284,7 +290,7 @@ export async function actionAsync(incomingProjectRoot: string, command: Partial<
       initialConfig
     );
     extractTemplateStep.succeed('Downloaded template.');
-  } catch (e) {
+  } catch (e: any) {
     extractTemplateStep.fail('Something went wrong while downloading and extracting the template.');
     throw e;
   }
@@ -306,35 +312,16 @@ export async function actionAsync(incomingProjectRoot: string, command: Partial<
     }
   }
 
-  // Configure updates (?)
-
   const cdPath = CreateApp.getChangeDirectoryPath(projectRoot);
-
-  let showPublishBeforeBuildWarning: boolean | undefined;
-  let didConfigureUpdatesProjectFiles: boolean = false;
-  let username: string | null = null;
-
-  if (isBare) {
-    username = await UserManager.getCurrentUsernameAsync();
-    if (username) {
-      try {
-        await configureUpdatesProjectFilesAsync(projectPath, username);
-        didConfigureUpdatesProjectFiles = true;
-      } catch {}
-    }
-    showPublishBeforeBuildWarning = await usesOldExpoUpdatesAsync(projectPath);
-  }
 
   // Log info
 
   Log.addNewLineIfNone();
-  await logProjectReadyAsync({
+
+  await logProjectReadyAsync(projectRoot, {
     cdPath,
     packageManager,
     workflow,
-    showPublishBeforeBuildWarning,
-    didConfigureUpdatesProjectFiles,
-    username,
   });
 
   // Log a warning about needing to install node modules
@@ -434,21 +421,18 @@ function logCocoaPodsWarning(cdPath: string): void {
   Log.nested('');
 }
 
-function logProjectReadyAsync({
-  cdPath,
-  packageManager,
-  workflow,
-  showPublishBeforeBuildWarning,
-  didConfigureUpdatesProjectFiles,
-  username,
-}: {
-  cdPath: string;
-  packageManager: string;
-  workflow: 'managed' | 'bare';
-  showPublishBeforeBuildWarning?: boolean;
-  didConfigureUpdatesProjectFiles?: boolean;
-  username?: string | null;
-}) {
+async function logProjectReadyAsync(
+  projectRoot: string,
+  {
+    cdPath,
+    packageManager,
+    workflow,
+  }: {
+    cdPath: string;
+    packageManager: string;
+    workflow: 'managed' | 'bare';
+  }
+) {
   Log.nested(chalk.bold(`✅ Your project is ready!`));
   Log.newLine();
 
@@ -494,37 +478,58 @@ function logProjectReadyAsync({
       )} directories with their respective IDEs.`
     );
 
-    if (showPublishBeforeBuildWarning) {
-      Log.nested(
-        `🚀 ${terminalLink(
-          'expo-updates',
-          'https://github.com/expo/expo/blob/master/packages/expo-updates/README.md'
-        )} has been configured in your project. Before you do a release build, make sure you run ${chalk.bold(
-          'expo publish'
-        )}. ${terminalLink('Learn more.', 'https://expo.fyi/release-builds-with-expo-updates')}`
-      );
-    } else if (didConfigureUpdatesProjectFiles) {
-      Log.nested(
-        `🚀 ${terminalLink(
-          'expo-updates',
-          'https://github.com/expo/expo/blob/master/packages/expo-updates/README.md'
-        )} has been configured in your project. If you publish this project under a different user account than ${chalk.bold(
-          username
-        )}, you'll need to update the configuration in Expo.plist and AndroidManifest.xml before making a release build.`
-      );
-    } else {
-      Log.nested(
-        `🚀 ${terminalLink(
-          'expo-updates',
-          'https://github.com/expo/expo/blob/master/packages/expo-updates/README.md'
-        )} has been installed in your project. Before you do a release build, you'll need to configure a few values in Expo.plist and AndroidManifest.xml in order for updates to work.`
-      );
-    }
+    await addBareUpdatesWarningsAsync(projectRoot);
+
     // TODO: add equivalent of this or some command to wrap it:
     // # ios
     // $ open -a Xcode ./ios/{PROJECT_NAME}.xcworkspace
     // # android
     // $ open -a /Applications/Android\\ Studio.app ./android
+  }
+}
+
+async function addBareUpdatesWarningsAsync(projectRoot: string) {
+  if (!(await hasExpoUpdatesInstalledAsync(projectRoot))) {
+    return;
+  }
+
+  if (await usesOldExpoUpdatesAsync(projectRoot)) {
+    Log.nested(
+      `🚀 ${terminalLink(
+        'expo-updates',
+        'https://github.com/expo/expo/blob/main/packages/expo-updates/README.md'
+      )} has been configured in your project. Before you do a release build, make sure you run ${chalk.bold(
+        'expo publish'
+      )}. ${terminalLink('Learn more.', 'https://expo.fyi/release-builds-with-expo-updates')}`
+    );
+    return;
+  }
+
+  let didConfigureUpdatesProjectFiles: boolean = false;
+  const username = await UserManager.getCurrentUsernameAsync();
+  if (username) {
+    try {
+      await configureUpdatesProjectFilesAsync(projectRoot, username);
+      didConfigureUpdatesProjectFiles = true;
+    } catch {}
+  }
+
+  if (didConfigureUpdatesProjectFiles) {
+    Log.nested(
+      `🚀 ${terminalLink(
+        'expo-updates',
+        'https://github.com/expo/expo/blob/main/packages/expo-updates/README.md'
+      )} has been configured in your project. If you publish this project under a different user account than ${chalk.bold(
+        username
+      )}, you'll need to update the configuration in Expo.plist and AndroidManifest.xml before making a release build.`
+    );
+  } else {
+    Log.nested(
+      `🚀 ${terminalLink(
+        'expo-updates',
+        'https://github.com/expo/expo/blob/main/packages/expo-updates/README.md'
+      )} has been installed in your project. Before you do a release build, you'll need to configure a few values in Expo.plist and AndroidManifest.xml in order for updates to work.`
+    );
   }
 }
 

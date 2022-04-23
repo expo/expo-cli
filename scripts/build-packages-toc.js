@@ -73,7 +73,7 @@ async function run() {
         `[**\`${pkgJson.name}\`**](${repoLink})`,
         `[![badges](${npmIcon})](${npmLink})`,
       ]);
-    } catch (e) {
+    } catch {
       console.log(`Skipping ${pkg}`);
     }
   }

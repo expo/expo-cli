@@ -1,7 +1,7 @@
-import { Publish } from '@expo/api';
 import { vol } from 'memfs';
+import { ApiV2 } from 'xdl';
 
-import { mockExpoAPI } from '../../../__tests__/mock-utils';
+import { mockExpoXDL } from '../../../__tests__/mock-utils';
 import { jester } from '../../../credentials/__tests__/fixtures/mocks-constants';
 import { getPublicationDetailAsync, getPublishHistoryAsync } from '../../utils/PublishUtils';
 
@@ -14,15 +14,9 @@ jest.mock('@expo/image-utils', () => ({
   },
 }));
 
-mockExpoAPI({
-  Publish: {
-    getPublicationDetailAsync: jest.fn(
-      jest.requireActual('@expo/api').Publish.getPublicationDetailAsync
-    ),
-    getPublishHistoryAsync: jest.fn(jest.requireActual('@expo/api').Publish.getPublishHistoryAsync),
-    getProjectOwner: jest.fn(jest.requireActual('@expo/api').Publish.getProjectOwner),
-  },
+mockExpoXDL({
   UserManager: {
+    getProjectOwner: jest.fn(jest.requireActual('xdl').UserManager.getProjectOwner),
     ensureLoggedInAsync: jest.fn(() => jester),
     getCurrentUserAsync: jest.fn(() => jester),
   },
@@ -33,31 +27,29 @@ mockExpoAPI({
 
 describe('publish details', () => {
   const projectRoot = '/test-project';
-
-  beforeAll(() => {
-    vol.fromJSON(
-      {
-        'package.json': JSON.stringify({
-          name: 'testing123',
-          version: '0.1.0',
-          description: 'fake description',
-          main: 'index.js',
-        }),
-        'app.json': JSON.stringify({
-          name: 'testing 123',
-          version: '0.1.0',
-          slug: 'testing-123',
-          sdkVersion: '33.0.0',
-          owner: jester.username,
-        }),
-      },
-      projectRoot
-    );
+  const packageJson = JSON.stringify(
+    {
+      name: 'testing123',
+      version: '0.1.0',
+      description: 'fake description',
+      main: 'index.js',
+    },
+    null,
+    2
+  );
+  const appJson = JSON.stringify({
+    name: 'testing 123',
+    version: '0.1.0',
+    slug: 'testing-123',
+    sdkVersion: '33.0.0',
+    owner: jester.username,
   });
 
-  beforeEach(() => {
-    (Publish.getPublishHistoryAsync as jest.Mock).mockReset();
-    (Publish.getPublicationDetailAsync as jest.Mock).mockReset();
+  beforeAll(() => {
+    vol.fromJSON({
+      [projectRoot + '/package.json']: packageJson,
+      [projectRoot + '/app.json']: appJson,
+    });
   });
 
   afterAll(() => {
@@ -68,16 +60,18 @@ describe('publish details', () => {
     const detailOptions = {
       publishId: 'test-uuid',
     };
-    (Publish.getPublicationDetailAsync as jest.Mock).mockReturnValue({});
+    const postAsync = jest.fn(() => {
+      return { queryResult: {} };
+    });
+    (ApiV2.clientForUser as jest.Mock).mockReturnValue({ postAsync });
 
     await getPublicationDetailAsync(projectRoot, detailOptions);
 
-    expect(Publish.getPublicationDetailAsync).toHaveBeenCalledTimes(1);
-    expect(Publish.getPublicationDetailAsync).toHaveBeenCalledWith(jester, {
-      exp: expect.anything(),
-      options: {
-        publishId: 'test-uuid',
-      },
+    expect(postAsync.mock.calls.length).toBe(1);
+    expect(postAsync).toHaveBeenCalledWith('publish/details', {
+      owner: jester.username,
+      publishId: 'test-uuid',
+      slug: 'testing-123',
     });
   });
 
@@ -88,20 +82,21 @@ describe('publish details', () => {
       platform: 'ios' as 'ios',
       sdkVersion: '35.0.0',
     };
-
-    (Publish.getPublishHistoryAsync as jest.Mock).mockReturnValue({});
+    const postAsync = jest.fn((methodName, data) => {
+      return {};
+    });
+    (ApiV2.clientForUser as jest.Mock).mockReturnValue({ postAsync });
 
     await getPublishHistoryAsync(projectRoot, historyOptions);
 
-    expect(Publish.getPublishHistoryAsync).toHaveBeenCalledTimes(1);
-    expect(Publish.getPublishHistoryAsync).toHaveBeenCalledWith(jester, {
-      exp: expect.anything(),
-      options: {
-        count: 9,
-        platform: 'ios',
-        releaseChannel: 'test-channel',
-        sdkVersion: '35.0.0',
-      },
+    expect(postAsync.mock.calls.length).toBe(1);
+    expect(postAsync).toHaveBeenCalledWith('publish/history', {
+      count: 9,
+      platform: 'ios',
+      releaseChannel: 'test-channel',
+      sdkVersion: '35.0.0',
+      owner: jester.username,
+      slug: 'testing-123',
       version: 2,
     });
   });

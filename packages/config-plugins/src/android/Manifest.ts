@@ -1,5 +1,5 @@
 import assert from 'assert';
-import fs from 'fs-extra';
+import fs from 'fs';
 import path from 'path';
 
 import * as XML from '../utils/XML';
@@ -155,8 +155,8 @@ export async function writeAndroidManifestAsync(
   androidManifest: AndroidManifest
 ): Promise<void> {
   const manifestXml = XML.format(androidManifest);
-  await fs.ensureDir(path.dirname(manifestPath));
-  await fs.writeFile(manifestPath, manifestXml);
+  await fs.promises.mkdir(path.dirname(manifestPath), { recursive: true });
+  await fs.promises.writeFile(manifestPath, manifestXml);
 }
 
 export async function readAndroidManifestAsync(manifestPath: string): Promise<AndroidManifest> {

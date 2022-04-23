@@ -1,13 +1,13 @@
-import { UserSettings, Versions } from '@expo/api';
 import fs from 'fs-extra';
 import path from 'path';
 
-import { downloadAppAsync } from './downloadAppAsync';
+import { downloadAppAsync, UserSettings, Versions } from '../internal';
 
 function _apkCacheDirectory() {
-  const directory = path.join(UserSettings.getDirectory(), 'android-apk-cache');
-  fs.mkdirpSync(directory);
-  return directory;
+  const dotExpoHomeDirectory = UserSettings.dotExpoHomeDirectory();
+  const dir = path.join(dotExpoHomeDirectory, 'android-apk-cache');
+  fs.mkdirpSync(dir);
+  return dir;
 }
 
 export async function downloadApkAsync(
@@ -15,7 +15,7 @@ export async function downloadApkAsync(
   downloadProgressCallback?: (roundedProgress: number) => void
 ) {
   if (!url) {
-    const versions = await Versions.getVersionsAsync();
+    const versions = await Versions.versionsAsync();
     url = versions.androidUrl;
   }
 

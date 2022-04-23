@@ -2,13 +2,13 @@
 
 exports[`EXPO_USE_EXOTIC=false exports the project for a self-hosted production deployment 1`] = `
 Array [
-  "dist/android-index.json (666 B)",
+  "dist/android-index.json (672 B)",
   "dist/assetmap.json (size ignored)",
   "dist/assets (dir)",
   "dist/bundles (dir)",
-  "dist/bundles/android-XXX.js (837 kB)",
-  "dist/bundles/ios-XXX.js (836 kB)",
-  "dist/ios-index.json (658 B)",
+  "dist/bundles/android-XXX.js (838 kB)",
+  "dist/bundles/ios-XXX.js (837 kB)",
+  "dist/ios-index.json (656 B)",
 ]
 `;
 
@@ -51,13 +51,13 @@ exports[`EXPO_USE_EXOTIC=false exports the project for a self-hosted production 
 
 exports[`EXPO_USE_EXOTIC=true exports the project for a self-hosted production deployment 1`] = `
 Array [
-  "dist/android-index.json (666 B)",
+  "dist/android-index.json (672 B)",
   "dist/assetmap.json (size ignored)",
   "dist/assets (dir)",
   "dist/bundles (dir)",
-  "dist/bundles/android-XXX.js (837 kB)",
-  "dist/bundles/ios-XXX.js (836 kB)",
-  "dist/ios-index.json (658 B)",
+  "dist/bundles/android-XXX.js (838 kB)",
+  "dist/bundles/ios-XXX.js (837 kB)",
+  "dist/ios-index.json (656 B)",
 ]
 `;
 

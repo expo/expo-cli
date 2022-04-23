@@ -5,7 +5,7 @@
 You can contribute to Expo development tools in various ways, including:
 
 - [Reporting bugs or issues](https://github.com/expo/expo-cli/issues/new) on GitHub. Please make sure to include fill in all the details in the issue template to make sure the issue can be addressed as quickly as possible.
-- [Submitting improvements to the documentation](https://github.com/expo/expo-docs). Updates, enhancements, new guides, spelling fixes...
+- [Submitting improvements to the documentation](https://github.com/expo/expo/tree/main/docs). Updates, enhancements, new guides, spelling fixes...
 - Helping other people on the [forums](https://forums.expo.dev).
 - Looking at existing [issues](https://github.com/expo/expo-cli/issues) and adding more information, particularly helping to reproduce the issues.
 - [Submitting a pull request](#submitting-a-pull-request) with a bug fix or an improvement.

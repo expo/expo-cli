@@ -18,7 +18,7 @@ export default class ExpectedErrorsPlugin {
         try {
           const parsed = await getModuleBuildError(compilation, error);
           return parsed === false ? error : parsed;
-        } catch (e) {
+        } catch (e: any) {
           console.log(e);
           return error;
         }

@@ -1,6 +1,6 @@
 {
   "name": "expo-cli",
-  "version": "5.0.5",
+  "version": "5.3.2",
   "description": "The command-line tool for creating and publishing Expo apps",
   "preferGlobal": true,
   "main": "build/exp.js",
@@ -17,7 +17,7 @@
     "clean": "rimraf build ./tsconfig.tsbuildinfo",
     "preversion": "node ./scripts/preversion.js",
     "test": "jest",
-    "test:e2e": "jest --config ./e2e/jest.config.js",
+    "test:e2e": "cross-env E2E=1 jest",
     "test:watch": "jest --watch"
   },
   "bin": {
@@ -39,7 +39,10 @@
   },
   "homepage": "https://github.com/expo/expo-cli/tree/main/packages/expo-cli#readme",
   "engines": {
-    "node": ">=12"
+    "node": ">=12 <=16"
+  },
+  "volta": {
+    "extends": "../../package.json"
   },
   "devDependencies": {
     "@babel/core": "^7.9.0",
@@ -65,18 +68,17 @@
   },
   "dependencies": {
     "@babel/runtime": "7.9.0",
-    "@expo/apple-utils": "0.0.0-alpha.26",
-    "@expo/api": "1.0.0",
+    "@expo/apple-utils": "0.0.0-alpha.31",
     "@expo/bunyan": "4.0.0",
-    "@expo/config": "6.0.16",
-    "@expo/config-plugins": "4.0.16",
-    "@expo/dev-server": "0.1.103",
-    "@expo/dev-tools": "0.13.140",
-    "@expo/json-file": "8.2.34",
-    "@expo/osascript": "2.0.31",
-    "@expo/package-manager": "0.0.49",
-    "@expo/plist": "0.0.17",
-    "@expo/prebuild-config": "3.0.16",
+    "@expo/config": "6.0.20",
+    "@expo/config-plugins": "4.1.1",
+    "@expo/dev-server": "0.1.107",
+    "@expo/dev-tools": "0.13.148",
+    "@expo/json-file": "8.2.35",
+    "@expo/osascript": "2.0.32",
+    "@expo/package-manager": "0.0.51",
+    "@expo/plist": "0.0.18",
+    "@expo/prebuild-config": "3.1.1",
     "@expo/spawn-async": "1.5.0",
     "@expo/xcpretty": "^4.1.0",
     "better-opn": "^3.0.1",
@@ -89,7 +91,6 @@
     "commander": "2.17.1",
     "dateformat": "3.0.3",
     "env-editor": "^0.4.1",
-    "envinfo": "^7.8.1",
     "find-up": "^5.0.0",
     "find-yarn-workspace-root": "~2.0.0",
     "fs-extra": "9.0.0",
@@ -122,7 +123,7 @@
     "url-join": "4.0.0",
     "uuid": "^8.0.0",
     "wrap-ansi": "^7.0.0",
-    "xdl": "59.2.24"
+    "xdl": "59.2.32"
   },
   "resolutions": {
     "hermes-engine": "0.0.0"

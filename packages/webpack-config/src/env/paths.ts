@@ -136,7 +136,7 @@ export async function getPathsAsync(
   let exp;
   try {
     exp = getConfig(projectRoot, { skipSDKVersionRequirement: true }).exp;
-  } catch (error) {}
+  } catch {}
   return parsePaths(projectRoot, exp, env);
 }
 

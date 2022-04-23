@@ -1,4 +1,4 @@
-import type { User } from '@expo/api';
+import { User } from 'xdl';
 
 interface MockProject {
   projectRoot: string;
@@ -44,7 +44,6 @@ function createTestProject(
     expo: {
       name: 'testing 123',
       version: '0.1.0',
-      platforms: [],
       slug: 'testing-123',
       sdkVersion: '33.0.0',
       owner: user.username,

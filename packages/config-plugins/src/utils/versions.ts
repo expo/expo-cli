@@ -12,7 +12,7 @@ export function gteSdkVersion(exp: Pick<ExpoConfig, 'sdkVersion'>, sdkVersion: s
 
   try {
     return semver.gte(exp.sdkVersion, sdkVersion);
-  } catch (e) {
+  } catch {
     throw new Error(`${exp.sdkVersion} is not a valid version. Must be in the form of x.y.z`);
   }
 }
@@ -28,7 +28,7 @@ export function lteSdkVersion(exp: Pick<ExpoConfig, 'sdkVersion'>, sdkVersion: s
 
   try {
     return semver.lte(exp.sdkVersion, sdkVersion);
-  } catch (e) {
+  } catch {
     throw new Error(`${exp.sdkVersion} is not a valid version. Must be in the form of x.y.z`);
   }
 }

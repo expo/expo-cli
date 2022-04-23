@@ -1,7 +1,6 @@
-import { Analytics } from '@expo/api';
 import path from 'path';
 
-import { Log, Logger, LogStream } from '../internal';
+import { Analytics, Log, Logger, LogStream } from '../internal';
 
 const MAX_MESSAGE_LENGTH = 200;
 const _projectRootToLogger: { [projectRoot: string]: Log } = {};

@@ -1,4 +1,3 @@
-import { Analytics, UserSettings, Versions } from '@expo/api';
 import { ExpoConfig, getConfig } from '@expo/config';
 import { IOSConfig } from '@expo/config-plugins';
 import * as osascript from '@expo/osascript';
@@ -14,9 +13,12 @@ import semver from 'semver';
 import { ensureSimulatorAppRunningAsync } from './apple/utils/ensureSimulatorAppRunningAsync';
 import { TimeoutError } from './apple/utils/waitForActionAsync';
 import {
+  Analytics,
   BundleIdentifier,
   CoreSimulator,
   delayAsync,
+  downloadAppAsync,
+  Env,
   isDevClientPackageInstalled,
   learnMore,
   LoadingEvent,
@@ -25,10 +27,11 @@ import {
   SimControl,
   SimControlLogs,
   UrlUtils,
+  UserSettings,
+  Versions,
   Webpack,
   Xcode,
 } from './internal';
-import { downloadAppAsync } from './utils/downloadAppAsync';
 import { profileMethod } from './utils/profileMethod';
 
 let _lastUrl: string | null = null;
@@ -127,7 +130,7 @@ export async function ensureXcodeCommandLineToolsInstalledAsync(): Promise<boole
       // Most likely the user will cancel the process, but if they don't this will continue checking until the CLI is available.
       await pendingAsync();
       return true;
-    } catch (error) {
+    } catch {
       // TODO: Figure out why this might get called (cancel early, network issues, server problems)
       // TODO: Handle me
     }
@@ -189,7 +192,7 @@ export async function isSimulatorInstalledAsync(): Promise<boolean> {
     // make sure we can run simctl
     try {
       await SimControl.simctlAsync(['help']);
-    } catch (e) {
+    } catch (e: any) {
       if (e.isXDLError) {
         Logger.global.error(e.toString());
       } else {
@@ -341,7 +344,7 @@ function _getDefaultSimulatorDeviceUDID() {
       { stdio: 'pipe' }
     ).toString();
     return defaultDeviceUDID.trim();
-  } catch (e) {
+  } catch {
     return null;
   }
 }
@@ -425,7 +428,7 @@ export async function doesExpoClientNeedUpdatedAsync(
 ): Promise<boolean> {
   // Test that upgrading works by returning true
   // return true;
-  const versions = await profileMethod(Versions.getVersionsAsync)();
+  const versions = await profileMethod(Versions.versionsAsync)();
   const clientForSdk = await profileMethod(getClientForSDK)(sdkVersion);
   const latestVersionForSdk = clientForSdk?.version ?? versions.iosVersion;
 
@@ -442,7 +445,7 @@ export async function _downloadSimulatorAppAsync(
   downloadProgressCallback?: (roundedProgress: number) => void
 ) {
   if (!url) {
-    const versions = await Versions.getVersionsAsync();
+    const versions = await Versions.versionsAsync();
     url = versions.iosUrl;
   }
 
@@ -461,7 +464,7 @@ export async function _downloadSimulatorAppAsync(
   fs.mkdirpSync(dir);
   try {
     await downloadAppAsync(url, dir, { extract: true }, downloadProgressCallback);
-  } catch (e) {
+  } catch (e: any) {
     fs.removeSync(dir);
     throw e;
   }
@@ -522,7 +525,7 @@ export async function uninstallExpoAppFromSimulatorAsync({ udid }: { udid?: stri
   try {
     Logger.global.info('Uninstalling Expo Go from iOS simulator.');
     await SimControl.uninstallAsync({ udid, bundleIdentifier: EXPO_GO_BUNDLE_IDENTIFIER });
-  } catch (e) {
+  } catch (e: any) {
     if (!e.message?.includes('No devices are booted.')) {
       Logger.global.error(e);
       throw e;
@@ -531,9 +534,10 @@ export async function uninstallExpoAppFromSimulatorAsync({ udid }: { udid?: stri
 }
 
 function simulatorCacheDirectory() {
-  const directory = path.join(UserSettings.getDirectory(), 'ios-simulator-app-cache');
-  fs.mkdirpSync(directory);
-  return directory;
+  const dotExpoHomeDirectory = UserSettings.dotExpoHomeDirectory();
+  const dir = path.join(dotExpoHomeDirectory, 'ios-simulator-app-cache');
+  fs.mkdirpSync(dir);
+  return dir;
 }
 
 export async function upgradeExpoAsync(
@@ -601,7 +605,7 @@ async function openUrlInSimulatorSafeAsync({
   let simulator: SimControl.SimulatorDevice | null = null;
   try {
     simulator = await profileMethod(ensureSimulatorOpenAsync)({ udid });
-  } catch (error) {
+  } catch (error: any) {
     return {
       success: false,
       msg: error.message,
@@ -614,18 +618,52 @@ async function openUrlInSimulatorSafeAsync({
     if (devClient) {
       bundleIdentifier = await profileMethod(BundleIdentifier.configureBundleIdentifierAsync)(
         projectRoot,
-        exp
+        exp as ExpoConfig
       );
       await profileMethod(assertDevClientInstalledAsync)(simulator, bundleIdentifier);
       if (!skipNativeLogs) {
         // stream logs before opening the client.
         await streamLogsAsync({ udid: simulator.udid, bundleIdentifier });
       }
+    } else if (
+      Env.isInterstitiaLPageEnabled() &&
+      !devClient &&
+      isDevClientPackageInstalled(projectRoot)
+    ) {
+      await profileMethod(ensureExpoClientInstalledAsync)(simulator, sdkVersion);
+
+      const devClientBundlerIdentifier = await profileMethod(
+        BundleIdentifier.configureBundleIdentifierAsync
+      )(projectRoot, exp as ExpoConfig);
+
+      const isDevClientInstalled = await isDevClientInstalledAsync(
+        simulator,
+        devClientBundlerIdentifier
+      );
+      if (isDevClientInstalled) {
+        // Everything is installed, we can present the interstitial page.
+        bundleIdentifier = ''; // it will open browser.
+      } else {
+        // The development build isn't available. So let's fall back to Expo Go.
+        Logger.global.warn(
+          `\u203A The 'expo-dev-client' package is installed, but a development build isn't available.\nYour app will open in Expo Go instead. If you want to use the development build, please install it on the simulator first.\n${learnMore(
+            'https://docs.expo.dev/development/build/'
+          )}`
+        );
+
+        // Generate a new deep link into Expo Go.
+        const newProjectUrl = await constructDeepLinkAsync(projectRoot, undefined, false, false);
+        if (!newProjectUrl) {
+          // This shouldn't happen.
+          throw Error('Could not generate a deep link for your project.');
+        }
+        url = newProjectUrl;
+        Logger.global.debug(`iOS project url: ${url}`);
+        _lastUrl = url;
+      }
     } else if (!isDetached) {
       await profileMethod(ensureExpoClientInstalledAsync)(simulator, sdkVersion);
       _lastUrl = url;
-    } else if (!devClient && isDevClientPackageInstalled(projectRoot)) {
-      bundleIdentifier = ''; // it will open browser.
     }
 
     await Promise.all([
@@ -640,7 +678,7 @@ async function openUrlInSimulatorSafeAsync({
         'parallel: openURLAsync'
       )({ udid: simulator.udid, url }),
     ]);
-  } catch (e) {
+  } catch (e: any) {
     if (e.status === 194) {
       // An error was encountered processing the command (domain=NSOSStatusErrorDomain, code=-10814):
       // The operation couldn’t be completed. (OSStatus error -10814.)
@@ -693,6 +731,18 @@ async function assertDevClientInstalledAsync(
   }
 }
 
+async function isDevClientInstalledAsync(
+  simulator: Pick<SimControl.SimulatorDevice, 'udid' | 'name'>,
+  bundleIdentifier: string
+): Promise<boolean> {
+  try {
+    await assertDevClientInstalledAsync(simulator, bundleIdentifier);
+  } catch {
+    return false;
+  }
+  return true;
+}
+
 // Keep a list of simulator UDIDs so we can prevent asking multiple times if a user wants to upgrade.
 // This can prevent annoying interactions when they don't want to upgrade for whatever reason.
 const hasPromptedToUpgrade: Record<string, boolean> = {};
@@ -732,8 +782,7 @@ async function getClientForSDK(sdkVersionString?: string) {
     return null;
   }
 
-  const { sdkVersions } = await Versions.getVersionsAsync();
-  const sdkVersion = sdkVersions[sdkVersionString];
+  const sdkVersion = (await Versions.sdkVersionsAsync())[sdkVersionString];
   if (!sdkVersion) {
     return null;
   }
@@ -770,12 +819,14 @@ export async function resolveApplicationIdAsync(projectRoot: string) {
 async function constructDeepLinkAsync(
   projectRoot: string,
   scheme?: string,
-  devClient?: boolean
+  devClient?: boolean,
+  shouldGenerateInterstitialPage: boolean = true
 ): Promise<string | null> {
   if (
-    process.env['EXPO_ENABLE_INTERSTITIAL_PAGE'] &&
+    Env.isInterstitiaLPageEnabled() &&
     !devClient &&
-    isDevClientPackageInstalled(projectRoot)
+    isDevClientPackageInstalled(projectRoot) &&
+    shouldGenerateInterstitialPage
   ) {
     return UrlUtils.constructLoadingUrlAsync(projectRoot, 'ios', 'localhost');
   } else {
@@ -784,7 +835,7 @@ async function constructDeepLinkAsync(
         // Don't pass a `hostType` or ngrok will break.
         scheme,
       });
-    } catch (e) {
+    } catch (e: any) {
       if (devClient) {
         return null;
       }

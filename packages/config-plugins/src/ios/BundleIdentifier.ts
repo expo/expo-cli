@@ -1,7 +1,7 @@
 import { ExpoConfig } from '@expo/config-types';
 import plist, { PlistObject } from '@expo/plist';
 import assert from 'assert';
-import fs from 'fs-extra';
+import fs from 'fs';
 import xcode, { XCBuildConfiguration } from 'xcode';
 
 import { ConfigPlugin } from '../Plugin.types';

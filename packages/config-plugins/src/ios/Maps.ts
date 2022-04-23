@@ -1,5 +1,5 @@
 import { ExpoConfig } from '@expo/config-types';
-import fs from 'fs-extra';
+import fs from 'fs';
 import path from 'path';
 import resolveFrom from 'resolve-from';
 
@@ -147,7 +147,7 @@ const withMapsCocoaPods: ConfigPlugin<{ useGoogleMaps: boolean }> = (config, { u
     'ios',
     async config => {
       const filePath = path.join(config.modRequest.platformProjectRoot, 'Podfile');
-      const contents = await fs.readFile(filePath, 'utf-8');
+      const contents = await fs.promises.readFile(filePath, 'utf-8');
       let results: MergeResults;
       // Only add the block if react-native-maps is installed in the project (best effort).
       // Generally prebuild runs after a yarn install so this should always work as expected.
@@ -171,7 +171,7 @@ const withMapsCocoaPods: ConfigPlugin<{ useGoogleMaps: boolean }> = (config, { u
         results = removeMapsCocoaPods(contents);
       }
       if (results.didMerge || results.didClear) {
-        await fs.writeFile(filePath, results.contents);
+        await fs.promises.writeFile(filePath, results.contents);
       }
       return config;
     },
@@ -180,7 +180,7 @@ const withMapsCocoaPods: ConfigPlugin<{ useGoogleMaps: boolean }> = (config, { u
 
 const withGoogleMapsAppDelegate: ConfigPlugin<{ apiKey: string | null }> = (config, { apiKey }) => {
   return withAppDelegate(config, config => {
-    if (config.modResults.language === 'objc') {
+    if (['objc', 'objcpp'].includes(config.modResults.language)) {
       if (
         apiKey &&
         isReactNativeMapsAutolinked(config) &&
@@ -194,7 +194,7 @@ const withGoogleMapsAppDelegate: ConfigPlugin<{ apiKey: string | null }> = (conf
             config.modResults.contents,
             apiKey
           ).contents;
-        } catch (error) {
+        } catch (error: any) {
           if (error.code === 'ERR_NO_MATCH') {
             throw new Error(
               `Cannot add Google Maps to the project's AppDelegate because it's malformed. Please report this with a copy of your project AppDelegate.`
@@ -211,7 +211,9 @@ const withGoogleMapsAppDelegate: ConfigPlugin<{ apiKey: string | null }> = (conf
         ).contents;
       }
     } else {
-      throw new Error('Cannot setup Google Maps because the AppDelegate is not Objective C');
+      throw new Error(
+        `Cannot setup Google Maps because the project AppDelegate is not a supported language: ${config.modResults.language}`
+      );
     }
     return config;
   });

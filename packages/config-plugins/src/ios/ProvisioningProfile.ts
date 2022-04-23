@@ -1,4 +1,4 @@
-import fs from 'fs-extra';
+import fs from 'fs';
 
 import { findFirstNativeTarget, findNativeTargetByName } from './Target';
 import {
@@ -47,6 +47,9 @@ export function setProvisioningProfileForPbxproj(
   Object.entries(getProjectSection(project))
     .filter(isNotComment)
     .forEach(([, item]: ProjectSectionEntry) => {
+      if (!item.attributes.TargetAttributes[nativeTargetId]) {
+        item.attributes.TargetAttributes[nativeTargetId] = {};
+      }
       item.attributes.TargetAttributes[nativeTargetId].DevelopmentTeam = quotedAppleTeamId;
       item.attributes.TargetAttributes[nativeTargetId].ProvisioningStyle = 'Manual';
     });

@@ -1,6 +1,6 @@
 import { ExpoConfig, getConfig } from '@expo/config';
 
-import { mockExpoAPI } from '../../__tests__/mock-utils';
+import { mockExpoXDL } from '../../__tests__/mock-utils';
 import { setupAsync } from '../webhooks/utils';
 import { actionAsync as updateAsync } from '../webhooks/webhooksUpdateAsync';
 
@@ -11,7 +11,7 @@ const mockApiClient = {
   patchAsync: jest.fn(),
 };
 
-mockExpoAPI({
+mockExpoXDL({
   ApiV2: {
     clientForUser: () => {
       return mockApiClient;

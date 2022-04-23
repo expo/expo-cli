@@ -1,4 +1,3 @@
-import { ProjectSettings } from '@expo/api';
 import { ExpoConfig, getConfig, ProjectTarget } from '@expo/config';
 import {
   MessageSocket,
@@ -14,6 +13,7 @@ import {
   getFreePortAsync,
   LoadingPageHandler,
   ManifestHandler,
+  ProjectSettings,
   ProjectUtils,
 } from '../internal';
 

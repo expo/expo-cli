@@ -8,6 +8,6 @@
     "noImplicitReturns": true,
     "resolveJsonModule": true,
     "sourceMap": true,
-    "typeRoots": ["./ts-declarations", "node_modules/@types", "../../node_modules/@types"]
+    "typeRoots": ["./ts-declarations", "./node_modules/@types", "../../node_modules/@types", "../../ts-declarations"]
   }
 }

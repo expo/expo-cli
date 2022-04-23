@@ -1,5 +1,5 @@
 import plist from '@expo/plist';
-import * as fs from 'fs-extra';
+import * as fs from 'fs';
 import { vol } from 'memfs';
 import * as path from 'path';
 
@@ -52,7 +52,7 @@ describe(getEntitlementsPath, () => {
     expect(entitlementsPath).toBe('/no-config/ios/testproject/testproject.entitlements');
 
     // New file has the contents of the old entitlements file
-    const data = plist.parse(await fs.readFile(entitlementsPath, 'utf8'));
+    const data = plist.parse(await fs.promises.readFile(entitlementsPath, 'utf8'));
     expect(data).toStrictEqual({
       // No entitlements enabled by default
     });
@@ -63,10 +63,10 @@ describe(getEntitlementsPath, () => {
     expect(entitlementsPath).toBe('/app/ios/testproject/testproject.entitlements');
 
     // New file has the contents of the old entitlements file
-    const data = plist.parse(await fs.readFile(entitlementsPath, 'utf8'));
+    const data = plist.parse(await fs.promises.readFile(entitlementsPath, 'utf8'));
     expect(data).toStrictEqual({ special: true });
 
     // Old file is deleted
-    expect(await fs.pathExists('/app/ios/testproject/old.entitlements')).toBe(false);
+    expect(fs.existsSync('/app/ios/testproject/old.entitlements')).toBe(false);
   });
 });

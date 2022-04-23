@@ -59,6 +59,7 @@ const query = gql`
           lastCursor
         }
       }
+      interstitialPageUrl
     }
     userSettings {
       id
@@ -271,7 +272,7 @@ class IndexPageContents extends React.Component {
     let existingSource;
     try {
       existingSource = this.props.client.readFragment({ id, fragment });
-    } catch (e) {
+    } catch {
       // XXX(@fson): refetching all data
       this.props.refetch();
       return;
@@ -316,7 +317,7 @@ class IndexPageContents extends React.Component {
     let existingSource;
     try {
       existingSource = this.props.client.readFragment({ id, fragment });
-    } catch (e) {
+    } catch {
       // XXX(@fson): refetching all data
       this.props.refetch();
       return;

@@ -1,10 +1,21 @@
-import { ProjectSettings, UserManager, UserSettings } from '@expo/api';
 import { ExpoConfig } from '@expo/config-types';
 import { openJsInspector, queryAllInspectorAppsAsync } from '@expo/dev-server';
 import openBrowserAsync from 'better-opn';
 import chalk from 'chalk';
 import wrapAnsi from 'wrap-ansi';
-import { Android, Project, Prompts, Simulator, UrlUtils, Webpack } from 'xdl';
+import {
+  Android,
+  Env,
+  isDevClientPackageInstalled,
+  Project,
+  ProjectSettings,
+  Prompts,
+  Simulator,
+  UrlUtils,
+  UserManager,
+  UserSettings,
+  Webpack,
+} from 'xdl';
 
 import Log from '../../log';
 import { handleErrorsAsync } from '../../utils/handleErrors';
@@ -171,12 +182,25 @@ const printServerInfo = async (
     try {
       const url = await UrlUtils.constructDeepLinkAsync(projectRoot);
 
-      urlOpts.printQRCode(url);
+      const getURLForQR = async () => {
+        const { devClient } = await ProjectSettings.readAsync(projectRoot);
+        if (
+          Env.isInterstitiaLPageEnabled() &&
+          !devClient &&
+          (await isDevClientPackageInstalled(projectRoot))
+        ) {
+          return await UrlUtils.constructLoadingUrlAsync(projectRoot, null);
+        } else {
+          return url;
+        }
+      };
+
+      urlOpts.printQRCode(await getURLForQR());
       Log.nested(item(`Metro waiting on ${u(url)}`));
       // Log.newLine();
       // TODO: if development build, change this message!
       Log.nested(item(`Scan the QR code above with Expo Go (Android) or the Camera app (iOS)`));
-    } catch (error) {
+    } catch (error: any) {
       // @ts-ignore: If there is no development build scheme, then skip the QR code.
       if (error.code !== 'NO_DEV_CLIENT_SCHEME') {
         throw error;
@@ -278,7 +302,7 @@ export async function startAsync(projectRoot: string, options: StartOptions) {
   async function handleKeypress(key: string) {
     try {
       await handleKeypressAsync(key);
-    } catch (err) {
+    } catch (err: any) {
       await handleErrorsAsync(err, {});
       process.exit(1);
     }

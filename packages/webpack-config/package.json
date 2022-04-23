@@ -1,6 +1,6 @@
 {
   "name": "@expo/webpack-config",
-  "version": "0.16.16",
+  "version": "0.16.20",
   "description": "The default Webpack configuration used to build Expo apps targeting the web.",
   "main": "webpack.config.js",
   "types": "webpack.config.d.ts",
@@ -41,7 +41,7 @@
   },
   "dependencies": {
     "@babel/core": "7.14.2",
-    "@expo/config": "6.0.16",
+    "@expo/config": "6.0.20",
     "babel-loader": "^8.2.3",
     "chalk": "^4.0.0",
     "find-up": "^6.2.0",

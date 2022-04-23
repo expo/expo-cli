@@ -96,6 +96,19 @@ export default class Schemer {
           meta,
         });
       }
+      case 'not': {
+        const notHuman = meta?.notHuman;
+        const notHumanErrorMessage = notHuman
+          ? `'${dataPath}' should be ${notHuman[0].toLowerCase() + notHuman.slice(1)}`
+          : `'${dataPath}' ${message}`;
+        return new ValidationError({
+          errorCode: 'SCHEMA_INVALID_NOT',
+          fieldPath: dataPath,
+          message: notHumanErrorMessage,
+          data,
+          meta,
+        });
+      }
       default:
         return new ValidationError({
           errorCode: 'SCHEMA_VALIDATION_ERROR',
@@ -217,7 +230,7 @@ export default class Schemer {
             })
           );
         }
-      } catch (e) {
+      } catch {
         this.manualValidationErrors.push(
           new ValidationError({
             errorCode: 'INVALID_ASSET_URI',

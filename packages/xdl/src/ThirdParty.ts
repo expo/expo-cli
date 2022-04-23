@@ -1,7 +1,6 @@
-import { Versions } from '@expo/api';
 import axios, { AxiosRequestConfig } from 'axios';
 
-import { XDLError } from './internal';
+import { Versions, XDLError } from './internal';
 
 export async function getManifest(
   publicUrl: string,
@@ -17,7 +16,7 @@ export async function getManifest(
   try {
     const resp = await axios.request(req);
     exp = resp.data;
-  } catch (e) {
+  } catch (e: any) {
     throw new XDLError(
       'INVALID_MANIFEST',
       `Unable to fetch manifest from ${publicUrl}. ` + e.toString()
@@ -41,7 +40,7 @@ async function _extractManifest(expOrArray: any, publicUrl: string) {
     return expOrArray;
   }
 
-  const { sdkVersions } = await Versions.getVersionsAsync();
+  const { sdkVersions } = await Versions.versionsAsync();
   for (let i = 0; i < expOrArray.length; i++) {
     const manifestCandidate = expOrArray[i];
     const sdkVersion = manifestCandidate.sdkVersion;

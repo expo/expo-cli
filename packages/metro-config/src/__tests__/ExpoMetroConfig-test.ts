@@ -3,13 +3,13 @@ import path from 'path';
 import { getDefaultConfig, loadAsync } from '../ExpoMetroConfig';
 
 const projectRoot = path.join(__dirname, '__fixtures__', 'hello-world');
-
 const consoleError = console.error;
 
 beforeEach(() => {
   delete process.env.EXPO_TARGET;
   delete process.env.EXPO_USE_EXOTIC;
 });
+
 describe('getDefaultConfig', () => {
   afterAll(() => {
     console.error = consoleError;
@@ -21,17 +21,15 @@ describe('getDefaultConfig', () => {
         projectRoot,
         resolver: expect.objectContaining({
           resolverMainFields: expect.arrayContaining(['react-native', 'browser', 'main']),
-          sourceExts: expect.not.arrayContaining([
-            'expo.ts',
-            'expo.tsx',
-            'expo.js',
-            'expo.jsx',
-            'jsx',
-          ]),
+          sourceExts:
+            expect.not.arrayContaining(['expo.ts', 'expo.tsx', 'expo.js', 'expo.jsx', 'jsx']) &&
+            expect.arrayContaining(['json']),
+          assetExts: expect.not.arrayContaining(['json']),
         }),
       })
     );
   });
+
   it('loads exotic configuration', () => {
     expect(getDefaultConfig(projectRoot, { mode: 'exotic' })).toEqual(
       expect.objectContaining({
@@ -58,6 +56,7 @@ describe('getDefaultConfig', () => {
       getDefaultConfig(projectRoot, { target: 'blooper' })
     ).not.toThrow();
   });
+
   it('logs an error if the environment variable is used', () => {
     console.error = jest.fn();
     process.env.EXPO_TARGET = 'bare';
@@ -73,14 +72,17 @@ describe('loadAsync', () => {
       resetCache: true,
       reporter: { update() {} },
       sourceExts: ['yml', 'toml', 'json'],
+      assetExts: ['json'],
     };
     const config = await loadAsync(projectRoot, options);
+
     expect(config).toMatchObject({
       maxWorkers: options.maxWorkers,
       resetCache: options.resetCache,
       reporter: options.reporter,
       resolver: {
         sourceExts: options.sourceExts,
+        assetExts: options.assetExts,
       },
     });
   });

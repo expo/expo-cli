@@ -1,6 +1,5 @@
-import { Versions } from '@expo/api';
 import chalk from 'chalk';
-import { Android } from 'xdl';
+import { Android, Versions } from 'xdl';
 
 import Log from '../../log';
 import { confirmAsync } from '../../utils/prompts';
@@ -17,8 +16,8 @@ export async function actionAsync(options: Options) {
   const forceLatest = !!options.latest;
   const currentSdkConfig = await ClientUpgradeUtils.getExpoSdkConfig(process.cwd());
   const currentSdkVersion = currentSdkConfig ? currentSdkConfig.sdkVersion : undefined;
-  const { sdkVersions } = await Versions.getVersionsAsync();
-  const latestSdk = await Versions.getLatestVersionAsync();
+  const sdkVersions = await Versions.sdkVersionsAsync();
+  const latestSdk = await Versions.newestReleasedSdkVersionAsync();
   const currentSdk = sdkVersions[currentSdkVersion!];
   const recommendedClient = ClientUpgradeUtils.getClient('android', currentSdk);
   const latestClient = ClientUpgradeUtils.getClient('android', latestSdk.data);

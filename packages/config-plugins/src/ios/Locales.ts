@@ -1,7 +1,7 @@
 import { ExpoConfig } from '@expo/config-types';
 import JsonFile from '@expo/json-file';
-import * as fs from 'fs-extra';
-import { join } from 'path';
+import fs from 'fs';
+import { join, relative } from 'path';
 import { XcodeProject } from 'xcode';
 
 import { ConfigPlugin } from '../Plugin.types';
@@ -48,24 +48,27 @@ export async function setLocalesAsync(
 
   for (const [lang, localizationObj] of Object.entries(localesMap)) {
     const dir = join(supportingDirectory, `${lang}.lproj`);
-    await fs.ensureDir(dir);
+    // await fs.ensureDir(dir);
+    await fs.promises.mkdir(dir, { recursive: true });
+
     const strings = join(dir, stringName);
     const buffer = [];
     for (const [plistKey, localVersion] of Object.entries(localizationObj)) {
       buffer.push(`${plistKey} = "${localVersion}";`);
     }
     // Write the file to the file system.
-    await fs.writeFile(strings, buffer.join('\n'));
+    await fs.promises.writeFile(strings, buffer.join('\n'));
 
+    const groupName = `${projectName}/Supporting/${lang}.lproj`;
     // deep find the correct folder
-    const group = ensureGroupRecursively(project, `${projectName}/Supporting/${lang}.lproj`);
+    const group = ensureGroupRecursively(project, groupName);
 
     // Ensure the file doesn't already exist
     if (!group?.children.some(({ comment }) => comment === stringName)) {
       // Only write the file if it doesn't already exist.
       project = addResourceFileToGroup({
-        filepath: strings,
-        groupName: `${projectName}/Supporting/${lang}.lproj`,
+        filepath: relative(supportingDirectory, strings),
+        groupName,
         project,
         isBuildFile: true,
         verbose: true,
@@ -85,7 +88,7 @@ export async function getResolvedLocalesAsync(
     if (typeof localeJsonPath === 'string') {
       try {
         locales[lang] = await JsonFile.readAsync(join(projectRoot, localeJsonPath));
-      } catch (e) {
+      } catch {
         // Add a warning when a json file cannot be parsed.
         addWarningIOS(
           `locales.${lang}`,

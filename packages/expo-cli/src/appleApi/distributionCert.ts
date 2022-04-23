@@ -98,7 +98,7 @@ export async function listDistributionCertificatesAsync(
     ).map(transformCertificate);
     spinner.succeed(`Fetched Apple distribution certificates`);
     return certs;
-  } catch (error) {
+  } catch (error: any) {
     spinner.fail(`Failed to fetch Apple distribution certificates`);
     throw error;
   }
@@ -124,7 +124,7 @@ export async function createDistributionCertificateAsync(authCtx: AppleCtx): Pro
       teamId: authCtx.team.id,
       teamName: authCtx.team.name,
     };
-  } catch (error) {
+  } catch (error: any) {
     spinner.fail('Failed to create Apple distribution certificate');
     // TODO: Move check into apple-utils
     if (
@@ -152,7 +152,7 @@ export async function revokeDistributionCertificateAsync(
     await Promise.all(ids.map(id => Certificate.deleteAsync(context, { id })));
 
     spinner.succeed(`Revoked ${name}`);
-  } catch (error) {
+  } catch (error: any) {
     spinner.fail(`Failed to revoke ${name}`);
     throw error;
   }

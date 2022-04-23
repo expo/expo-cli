@@ -17,5 +17,3 @@ afterAll(() => {
 });
 
 jest.mock('@expo/rudder-sdk-node');
-jest.mock('os');
-jest.mock('fs');

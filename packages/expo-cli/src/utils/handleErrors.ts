@@ -10,7 +10,7 @@ export async function handleErrorsAsync(err: any, { command = '[unknown]' }: { c
     // Do nothing when a prompt is cancelled or the error is logged in a pretty way.
   } else if (err.isCommandError || err.isPluginError || err instanceof AssertionError) {
     Log.error(err.message);
-  } else if (err.isApiError) {
+  } else if (err._isApiError) {
     Log.error(err.message);
   } else if (err.isXDLError || err.isConfigError) {
     Log.error(err.message);

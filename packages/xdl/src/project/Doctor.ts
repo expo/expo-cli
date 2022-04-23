@@ -1,4 +1,3 @@
-import { ExpoConfigSchema, Versions } from '@expo/api';
 import { configFilename, ExpoConfig, getConfig, PackageJSONConfig } from '@expo/config';
 import Schemer, { SchemerError, ValidationError } from '@expo/schemer';
 import spawnAsync from '@expo/spawn-async';
@@ -9,7 +8,7 @@ import memoize from 'lodash/memoize';
 import resolveFrom from 'resolve-from';
 import semver from 'semver';
 
-import { ProjectUtils, Watchman } from '../internal';
+import { ExpSchema, ProjectUtils, Versions, Watchman } from '../internal';
 import { learnMore } from '../logs/TerminalLink';
 import { profileMethod } from '../utils/profileMethod';
 
@@ -30,14 +29,6 @@ function _isNpmVersionWithinRanges(npmVersion: string, ranges: string[]) {
   return ranges.some(range => semver.satisfies(npmVersion, range));
 }
 
-function parseSdkVersionFromTag(tag: string): string {
-  if (tag.startsWith('sdk-')) {
-    return tag.substring(4);
-  }
-
-  return tag;
-}
-
 async function _checkNpmVersionAsync(projectRoot: string) {
   try {
     try {
@@ -45,7 +36,7 @@ async function _checkNpmVersionAsync(projectRoot: string) {
       if (yarnVersionResponse.status === 0) {
         return NO_ISSUES;
       }
-    } catch (e) {}
+    } catch {}
 
     const npmVersion = execSync('npm --version', { stdio: 'pipe' }).toString().trim();
 
@@ -70,7 +61,7 @@ async function _checkNpmVersionAsync(projectRoot: string) {
     } else {
       ProjectUtils.clearNotification(projectRoot, 'doctor-npm-version');
     }
-  } catch (e) {
+  } catch {
     ProjectUtils.logWarning(
       projectRoot,
       'expo',
@@ -140,7 +131,7 @@ async function validateWithSchema(
   // Validate the schema itself
   try {
     await validator.validateSchemaAsync(exp);
-  } catch (e) {
+  } catch (e: any) {
     if (e instanceof SchemerError) {
       schemaErrorMessage = `Error: Problem${
         e.errors.length > 1 ? 's' : ''
@@ -154,7 +145,7 @@ async function validateWithSchema(
   if (validateAssets) {
     try {
       await validator.validateAssetsAsync(exp);
-    } catch (e) {
+    } catch (e: any) {
       if (e instanceof SchemerError) {
         assetsErrorMessage = `Error: Problem${
           e.errors.length > 1 ? '' : 's'
@@ -186,7 +177,7 @@ async function _validateExpJsonAsync(
 
   try {
     await _checkWatchmanVersionAsync(projectRoot);
-  } catch (e) {
+  } catch (e: any) {
     ProjectUtils.logWarning(
       projectRoot,
       'expo',
@@ -210,7 +201,7 @@ async function _validateExpJsonAsync(
     return ERROR;
   }
   ProjectUtils.clearNotification(projectRoot, 'doctor-unversioned');
-  const { sdkVersions } = await Versions.getVersionsAsync();
+  const sdkVersions = await Versions.sdkVersionsAsync();
   if (!sdkVersions) {
     ProjectUtils.logError(
       projectRoot,
@@ -236,7 +227,7 @@ async function _validateExpJsonAsync(
   // Skip validation if the correct token is set in env
   if (sdkVersion && sdkVersion !== 'UNVERSIONED') {
     try {
-      const schema = await ExpoConfigSchema.getSchemaAsync(sdkVersion);
+      const schema = await ExpSchema.getSchemaAsync(sdkVersion);
       const { schemaErrorMessage, assetsErrorMessage } = await validateWithSchema(
         projectRoot,
         exp,
@@ -262,7 +253,7 @@ async function _validateExpJsonAsync(
       }
       ProjectUtils.clearNotification(projectRoot, 'doctor-schema-validation-exception');
       if (schemaErrorMessage || assetsErrorMessage) return ERROR;
-    } catch (e) {
+    } catch (e: any) {
       ProjectUtils.logWarning(
         projectRoot,
         'expo',
@@ -329,7 +320,7 @@ async function _validateReactNativeVersionAsync(
   ProjectUtils.clearNotification(projectRoot, 'doctor-no-react-native-in-package-json');
 
   if (
-    Versions.gte(exp.sdkVersion, '41.0.0') &&
+    Versions.gteSdkVersion(exp, '41.0.0') &&
     pkg.dependencies?.['@react-native-community/async-storage']
   ) {
     ProjectUtils.logWarning(
@@ -389,8 +380,8 @@ async function _validateReactNativeVersionAsync(
 
       // TODO: Want to be smarter about this. Maybe warn if there's a newer version.
       if (
-        semver.major(parseSdkVersionFromTag(reactNativeTag)) !==
-        semver.major(parseSdkVersionFromTag(sdkVersionObject['expoReactNativeTag']))
+        semver.major(Versions.parseSdkVersionFromTag(reactNativeTag)) !==
+        semver.major(Versions.parseSdkVersionFromTag(sdkVersionObject['expoReactNativeTag']))
       ) {
         ProjectUtils.logWarning(
           projectRoot,
@@ -403,7 +394,7 @@ async function _validateReactNativeVersionAsync(
       ProjectUtils.clearNotification(projectRoot, 'doctor-invalid-version-of-react-native');
 
       ProjectUtils.clearNotification(projectRoot, 'doctor-malformed-version-of-react-native');
-    } catch (e) {
+    } catch {
       ProjectUtils.logWarning(
         projectRoot,
         'expo',

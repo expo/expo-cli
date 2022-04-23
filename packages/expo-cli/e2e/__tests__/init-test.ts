@@ -27,7 +27,7 @@ test('init', async () => {
 
   const cwd = temporary.directory();
   const { stdout } = await runAsync(
-    ['init', 'hello-world', '--template', 'blank', '--name', 'hello-world', '--no-install'],
+    ['init', 'hello-world', '--template', 'blank', '--no-install'],
     { cwd, env: { ...process.env, YARN_CACHE_FOLDER: path.join(cwd, 'yarn-cache') } }
   );
   expect(stdout).toMatch(`Your project is ready!`);
@@ -47,10 +47,26 @@ test('init', async () => {
 
 test('init react-native should exit', async () => {
   const cwd = temporary.directory();
-  const { stdout } = await tryRunAsync(
-    ['init', 'react-native', '--template', 'blank', '--name', 'react-native', '--no-install'],
+  const { stderr } = await tryRunAsync(
+    ['init', 'react-native', '--template', 'blank', '--no-install'],
     { cwd, env: { ...process.env, YARN_CACHE_FOLDER: path.join(cwd, 'yarn-cache') } }
   );
 
-  expect(stdout).toBe('');
+  expect(stripAnsi(stderr)).toEqual(
+    expect.stringMatching(
+      /Cannot create an app named "react-native" because it would conflict with a dependency of the same name/
+    )
+  );
+});
+
+test('init with the deprecated --name argument should exit', async () => {
+  const cwd = temporary.directory();
+  const { stderr } = await tryRunAsync(['init', 'foobar', '--name', 'foobar-name'], {
+    cwd,
+    env: { ...process.env, YARN_CACHE_FOLDER: path.join(cwd, 'yarn-cache') },
+  });
+
+  expect(stripAnsi(stderr)).toEqual(
+    expect.stringMatching(/Deprecated: Use expo init \[name\] instead of --name \[name\]/)
+  );
 });

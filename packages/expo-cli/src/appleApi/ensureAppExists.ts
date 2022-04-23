@@ -52,7 +52,7 @@ export async function ensureBundleIdExistsWithNameAsync(
       });
     }
     spinner.succeed(`Bundle identifier registered ${chalk.dim(bundleIdentifier)}`);
-  } catch (err) {
+  } catch (err: any) {
     if (err.message.match(/An App ID with Identifier '(.*)' is not available/)) {
       spinner.fail(
         `The bundle identifier ${chalk.bold(bundleIdentifier)} is not available to team "${
@@ -84,7 +84,7 @@ export async function ensureBundleIdExistsWithNameAsync(
         // TODO: Add more capabilities
       });
       spinner.succeed(`Synced capabilities`);
-    } catch (err) {
+    } catch (err: any) {
       spinner.fail(`Failed to sync capabilities ${chalk.dim(bundleIdentifier)}`);
 
       throw err;

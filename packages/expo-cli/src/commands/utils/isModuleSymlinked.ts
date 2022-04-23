@@ -72,7 +72,7 @@ export function isModuleSymlinked({
     // resolve the root folder for the node module
     const moduleRootPath = getModuleRootPathForFile(modulePath);
     return !isModuleRootPathInNodeModulesFolder(moduleRootPath);
-  } catch (error) {
+  } catch (error: any) {
     if (!isSilent) {
       throw error;
     }

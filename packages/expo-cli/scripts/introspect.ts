@@ -226,7 +226,6 @@ if (['markdown', 'md'].includes(process.argv[2])) {
       eject: `https://raw.githubusercontent.com/expo/expo-cli/${branch}/assets/fig/eject.png`,
       doctor: `https://raw.githubusercontent.com/expo/expo-cli/${branch}/assets/fig/doctor.png`,
       customize: `https://raw.githubusercontent.com/expo/expo-cli/${branch}/assets/fig/customize.png`,
-      diagnostics: `https://raw.githubusercontent.com/expo/expo-cli/${branch}/assets/fig/diagnostics.png`,
       status: `https://raw.githubusercontent.com/expo/expo-cli/${branch}/assets/fig/info.png`,
       number: `https://raw.githubusercontent.com/expo/expo-cli/${branch}/assets/fig/number.png`,
       config: `https://raw.githubusercontent.com/expo/expo-cli/${branch}/assets/fig/config.png`,
@@ -271,7 +270,6 @@ if (['markdown', 'md'].includes(process.argv[2])) {
       config: ICON.config,
       'credentials:manager': ICON.credentials,
       'customize:web': ICON.customize,
-      diagnostics: ICON.diagnostics,
       doctor: ICON.doctor,
       eject: ICON.eject,
       export: ICON.export,
@@ -704,7 +702,7 @@ if (['markdown', 'md'].includes(process.argv[2])) {
 
   try {
     runFig();
-  } catch (error) {
+  } catch (error: any) {
     // eslint-disable-next-line no-console
     console.error(error);
     process.exit(1);

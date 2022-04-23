@@ -1,12 +1,12 @@
 import { ExpoConfig, getConfig, getNameFromConfig } from '@expo/config';
-import { getRuntimeVersionNullable } from '@expo/config-plugins/build/utils/Updates';
+import { getRuntimeVersionNullable, getSDKVersion } from '@expo/config-plugins/build/utils/Updates';
 import express from 'express';
 import { readFile } from 'fs-extra';
 import http from 'http';
 import { resolve } from 'path';
 import { parse } from 'url';
 
-import { UrlUtils } from './../internal';
+import { ProjectSettings, UrlUtils } from './../internal';
 
 export const LoadingEndpoint = '/_expo/loading';
 export const DeepLinkEndpoint = '/_expo/link';
@@ -23,9 +23,20 @@ export function setOnDeepLink(listener: OnDeepLinkListener) {
   onDeepLink = listener;
 }
 
-function getPlatform(query: { [x: string]: string | string[] | null }): 'android' | 'ios' | null {
+function getPlatform(
+  query: { [x: string]: string | string[] | null },
+  userAgent: string | null = null
+): 'android' | 'ios' | null {
   if (query['platform'] === 'android' || query['platform'] === 'ios') {
     return query['platform'];
+  }
+
+  if (userAgent?.match(/Android/i)) {
+    return 'android';
+  }
+
+  if (userAgent?.match(/iPhone|iPad/i)) {
+    return 'ios';
   }
 
   return null;
@@ -33,10 +44,10 @@ function getPlatform(query: { [x: string]: string | string[] | null }): 'android
 
 function getRuntimeVersion(exp: ExpoConfig, platform: 'android' | 'ios' | null) {
   if (!platform) {
-    return 'Undetected';
+    return null;
   }
 
-  return getRuntimeVersionNullable(exp, platform) ?? 'Undetected';
+  return getRuntimeVersionNullable(exp, platform);
 }
 
 export function noCacheMiddleware(
@@ -60,14 +71,26 @@ async function loadingEndpointHandler(
   ).toString('utf-8');
 
   const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
+  const { scheme } = await ProjectSettings.readAsync(projectRoot);
   const { appName } = getNameFromConfig(exp);
   const { query } = parse(req.url!, true);
-  const platform = getPlatform(query);
+  const platform = getPlatform(query, req.headers['user-agent']);
   const runtimeVersion = getRuntimeVersion(exp, platform);
 
   content = content.replace(/{{\s*AppName\s*}}/, appName ?? 'App');
-  content = content.replace(/{{\s*RuntimeVersion\s*}}/, runtimeVersion);
+
+  content = content.replace(
+    /{{\s*ProjectVersionType\s*}}/,
+    runtimeVersion ? 'Runtime version' : 'SDK version'
+  );
+
+  content = content.replace(
+    /{{\s*ProjectVersion\s*}}/,
+    runtimeVersion ? runtimeVersion : getSDKVersion(exp) ?? 'Undetected'
+  );
+
   content = content.replace(/{{\s*Path\s*}}/, projectRoot);
+  content = content.replace(/{{\s*Scheme\s*}}/, scheme ?? 'Unknown');
 
   res.end(content);
 }
@@ -79,19 +102,13 @@ async function deeplinkEndpointHandler(
 ) {
   const { query } = parse(req.url!, true);
   const isDevClient = query['choice'] === 'expo-dev-client';
-  if (isDevClient) {
-    const projectUrl = await UrlUtils.constructDevClientUrlAsync(projectRoot, {
-      hostType: 'localhost',
-    });
-    res.setHeader('Location', projectUrl);
-  } else {
-    const projectUrl = await UrlUtils.constructManifestUrlAsync(projectRoot, {
-      hostType: 'localhost',
-    });
-    res.setHeader('Location', projectUrl);
-  }
+  const projectUrl = isDevClient
+    ? await UrlUtils.constructDevClientUrlAsync(projectRoot)
+    : await UrlUtils.constructManifestUrlAsync(projectRoot);
 
-  onDeepLink(projectRoot, isDevClient, getPlatform(query));
+  res.setHeader('Location', projectUrl);
+
+  onDeepLink(projectRoot, isDevClient, getPlatform(query, req.headers['user-agent']));
 
   res.setHeader('Cache-Control', 'private, no-cache, no-store, must-revalidate');
   res.setHeader('Expires', '-1');

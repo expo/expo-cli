@@ -1,30 +1,35 @@
 import uniqBy from 'lodash/uniqBy';
 
 import Log from '../../log';
-import { getPublicationDetailAsync, getPublishHistoryAsync } from '../utils/PublishUtils';
+import {
+  getPublicationDetailAsync,
+  getPublishHistoryAsync,
+  Publication,
+} from '../utils/PublishUtils';
 
 export async function getUsageAsync(projectRoot: string): Promise<string> {
   try {
     return await _getUsageAsync(projectRoot);
-  } catch (e) {
+  } catch (e: any) {
     Log.warn(e);
     // couldn't print out warning for some reason
-    return getGenericUsage();
+    return _getGenericUsage();
   }
 }
 
 async function _getUsageAsync(projectRoot: string): Promise<string> {
   const allPlatforms = ['ios', 'android'];
-  const publishes = await getPublishHistoryAsync(projectRoot, {
+  const publishesResult = await getPublishHistoryAsync(projectRoot, {
     releaseChannel: 'default', // not specifying a channel will return most recent publishes but this is not neccesarily the most recent entry in a channel (user could have set an older publish to top of the channel)
     count: allPlatforms.length,
   });
+  const publishes = publishesResult.queryResult as Publication[];
 
   // If the user published normally, there would be a publish for each platform with the same revisionId
   const uniquePlatforms = uniqBy(publishes, publish => publish.platform);
   if (uniquePlatforms.length !== allPlatforms.length) {
     // User probably applied some custom `publish:set` or `publish:rollback` command
-    return getGenericUsage();
+    return _getGenericUsage();
   }
 
   const details = await Promise.all(
@@ -39,12 +44,12 @@ async function _getUsageAsync(projectRoot: string): Promise<string> {
   const uniqueRevisionIds = uniqBy(details, detail => detail.revisionId);
   if (uniqueRevisionIds.length !== 1) {
     // User probably applied some custom `publish:set` or `publish:rollback` command
-    return getGenericUsage();
+    return _getGenericUsage();
   }
 
   const { channel } = publishes[0];
   const { revisionId, publishedTime, sdkVersion } = details[0];
-  const timeDifferenceString = getTimeDifferenceString(new Date(), new Date(publishedTime));
+  const timeDifferenceString = _getTimeDifferenceString(new Date(), new Date(publishedTime));
 
   return (
     `--release-channel and either --sdk-version or --runtime-version arguments are required. \n` +
@@ -53,7 +58,7 @@ async function _getUsageAsync(projectRoot: string): Promise<string> {
   );
 }
 
-function getTimeDifferenceString(t0: Date, t1: Date): string {
+function _getTimeDifferenceString(t0: Date, t1: Date): string {
   const minutesInMs = 60 * 1000;
   const hourInMs = 60 * minutesInMs;
   const dayInMs = 24 * hourInMs; // hours*minutes*seconds*milliseconds
@@ -77,7 +82,7 @@ function getTimeDifferenceString(t0: Date, t1: Date): string {
   return 'recently';
 }
 
-function getGenericUsage(): string {
+function _getGenericUsage(): string {
   return (
     `--release-channel and either --sdk-version or --runtime-version arguments are required. \n` +
     `For example, to roll back the latest publishes on the default channel for sdk 37.0.0, \n` +

@@ -6,6 +6,7 @@ export type Logger = (...args: any[]) => void;
 
 export interface PackageManager {
   installAsync(): Promise<void>;
+  addWithParametersAsync(names: string[], parameters: string[]): Promise<void>;
   addAsync(...names: string[]): Promise<void>;
   addDevAsync(...names: string[]): Promise<void>;
   versionAsync(): Promise<string>;

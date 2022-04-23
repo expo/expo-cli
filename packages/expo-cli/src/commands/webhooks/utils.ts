@@ -1,8 +1,8 @@
-import { ApiV2, UserManager } from '@expo/api';
 import { findConfigFile, getConfig } from '@expo/config';
 import assert from 'assert';
 import chalk from 'chalk';
 import crypto from 'crypto';
+import { ApiV2, UserManager } from 'xdl';
 
 import CommandError, { ErrorCodes } from '../../CommandError';
 import Log from '../../log';
@@ -52,7 +52,7 @@ export async function setupAsync(projectRoot: string) {
     }
     const project = projects[0];
     return { experienceName, project, client };
-  } catch (error) {
+  } catch (error: any) {
     if (error.code === 'EXPERIENCE_NOT_FOUND') {
       throw projectNotFoundError(experienceName);
     } else {

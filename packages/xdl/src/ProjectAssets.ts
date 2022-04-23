@@ -1,4 +1,3 @@
-import { Assets, ExpoConfigSchema, UserManager } from '@expo/api';
 import { ExpoAppManifest, ExpoConfig } from '@expo/config';
 import { BundleAssetWithFileHashes, BundleOutput } from '@expo/dev-server';
 import assert from 'assert';
@@ -13,7 +12,7 @@ import minimatch from 'minimatch';
 import path from 'path';
 import urljoin from 'url-join';
 
-import { Logger as logger, ProjectUtils } from './internal';
+import { ApiV2, ExpSchema, Logger as logger, ProjectUtils, UserManager } from './internal';
 
 const EXPO_CDN = 'https://classic-assets.eascdn.net';
 
@@ -63,7 +62,7 @@ export async function resolveGoogleServicesFile(projectRoot: string, manifest: E
  */
 async function getAssetFieldPathsForManifestAsync(manifest: ExpoConfig): Promise<string[]> {
   // String array like ["icon", "notification.icon", "loading.icon", "loading.backgroundImage", "ios.icon", ...]
-  const sdkAssetFieldPaths = await ExpoConfigSchema.getAssetSchemasAsync(manifest.sdkVersion);
+  const sdkAssetFieldPaths = await ExpSchema.getAssetSchemasAsync(manifest.sdkVersion);
   return sdkAssetFieldPaths.filter(assetSchema => get(manifest, assetSchema));
 }
 
@@ -239,7 +238,10 @@ export async function exportAssetsAsync({
  */
 async function fetchMissingAssetsAsync(paths: string[]): Promise<string[]> {
   const user = await UserManager.ensureLoggedInAsync();
-  const metas = await Assets.getMetadataAsync(user, { keys: paths });
+  const api = ApiV2.clientForUser(user);
+  const result = await api.postAsync('assets/metadata', { keys: paths });
+
+  const metas = result.metadata;
   const missing = paths.filter(key => !metas[key].exists);
   return missing;
 }
@@ -262,7 +264,6 @@ async function uploadAssetsAsync(projectRoot: string, assets: Asset[]) {
     logger.global.info({ quiet: true }, `No assets changed, skipped.`);
     return;
   }
-  const user = await UserManager.ensureLoggedInAsync();
 
   const keyChunks = chunk(missing, 5);
 
@@ -277,7 +278,10 @@ async function uploadAssetsAsync(projectRoot: string, assets: Asset[]) {
       formData.append(key, fs.createReadStream(pathName), pathName);
     }
 
-    await Assets.uploadAsync(user, formData);
+    // TODO: Document what's going on
+    const user = await UserManager.ensureLoggedInAsync();
+    const api = ApiV2.clientForUser(user);
+    await api.uploadFormDataAsync('assets/upload', formData);
   }
 }
 

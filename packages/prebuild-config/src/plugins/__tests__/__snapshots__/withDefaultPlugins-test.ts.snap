@@ -1639,21 +1639,6 @@ Object {
               },
               Object {
                 "$": Object {
-                  "android:name": "android.permission.READ_PHONE_STATE",
-                },
-              },
-              Object {
-                "$": Object {
-                  "android:name": "android.permission.VIBRATE",
-                },
-              },
-              Object {
-                "$": Object {
-                  "android:name": "android.permission.MODIFY_AUDIO_SETTINGS",
-                },
-              },
-              Object {
-                "$": Object {
                   "android:name": "android.permission.READ_EXTERNAL_STORAGE",
                 },
               },

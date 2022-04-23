@@ -1,16 +1,14 @@
-import { Publish } from '@expo/api';
 import dateFormat from 'dateformat';
 
-import CommandError from '../../CommandError';
 import Log from '../../log';
-import { getPublishHistoryAsync } from '../utils/PublishUtils';
+import { getPublishHistoryAsync, HistoryOptions, Publication } from '../utils/PublishUtils';
 import * as table from '../utils/cli-table';
 
 const HORIZ_CELL_WIDTH_SMALL = 15;
 const HORIZ_CELL_WIDTH_MEDIUM = 20;
 const HORIZ_CELL_WIDTH_BIG = 40;
 
-export async function actionAsync(projectRoot: string, options: Publish.HistoryOptions) {
+export async function actionAsync(projectRoot: string, options: HistoryOptions) {
   const result = await getPublishHistoryAsync(projectRoot, options);
 
   if (options.raw) {
@@ -18,9 +16,9 @@ export async function actionAsync(projectRoot: string, options: Publish.HistoryO
     return;
   }
 
-  if (result.length > 0) {
+  if (result.queryResult && result.queryResult.length > 0) {
     // Print general publication info
-    const sampleItem = result[0]; // get a sample item
+    const sampleItem = result.queryResult[0]; // get a sample item
     const generalTableString = table.printTableJson(
       {
         fullName: sampleItem.fullName,
@@ -29,11 +27,11 @@ export async function actionAsync(projectRoot: string, options: Publish.HistoryO
     );
     Log.log(generalTableString);
 
-    const hasRuntimeVersion = result.some(
-      (publication: Publish.Publication) => !!publication.runtimeVersion
+    const hasRuntimeVersion = result.queryResult.some(
+      (publication: Publication) => !!publication.runtimeVersion
     );
-    const hasSdkVersion = result.some(
-      (publication: Publish.Publication) => !!publication.sdkVersion
+    const hasSdkVersion = result.queryResult.some(
+      (publication: Publication) => !!publication.sdkVersion
     );
 
     // Print info specific to each publication
@@ -60,13 +58,13 @@ export async function actionAsync(projectRoot: string, options: Publish.HistoryO
         colWidths.push(HORIZ_CELL_WIDTH_SMALL);
       }
     });
-    const resultRows: Publish.Publication[] = result.map((publication: Publish.Publication) => ({
+    const resultRows: Publication[] = result.queryResult.map((publication: Publication) => ({
       ...publication,
       publishedTime: dateFormat(publication.publishedTime, 'ddd mmm dd yyyy HH:MM:ss Z'),
     }));
     const tableString = table.printTableJsonArray(headers, resultRows, colWidths);
     Log.log(tableString);
   } else {
-    throw new CommandError('No records found matching your query.');
+    throw new Error('No records found matching your query.');
   }
 }

@@ -104,6 +104,7 @@ export async function createBundlesAsync(
       // If not legacy, ignore the target option to prevent warnings from being thrown.
       target: !isLegacy ? undefined : publishOptions.target,
       resetCache: publishOptions.resetCache,
+      maxWorkers: publishOptions.maxWorkers,
       logger: ProjectUtils.getLogger(projectRoot),
       quiet: publishOptions.quiet,
       unversioned: !config.exp.sdkVersion || config.exp.sdkVersion === 'UNVERSIONED',
@@ -197,13 +198,13 @@ async function _getForPlatformAsync(
         'Exponent-Platform': platform,
       },
     });
-  } catch (error) {
+  } catch (error: any) {
     if (error.response) {
       if (error.response.data) {
         let body;
         try {
           body = JSON.parse(error.response.data);
-        } catch (e) {
+        } catch {
           ProjectUtils.logError(projectRoot, 'expo', error.response.data);
         }
 

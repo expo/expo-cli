@@ -47,7 +47,7 @@ export class SetupAndroidBuildCredentialsFromLocal implements IView {
     let localCredentials;
     try {
       localCredentials = await credentialsJsonReader.readAndroidCredentialsAsync(ctx.projectDir);
-    } catch (error) {
+    } catch (error: any) {
       Log.error(
         'Reading credentials from credentials.json failed. Make sure this file is correct and all credentials are present there.'
       );

@@ -14,7 +14,7 @@ const previousRelease = process.argv[2];
 
 if (!previousRelease) {
   console.error('Pass in the commit hash for the first commit after the previous release.');
-  return;
+  process.exit();
 }
 
 async function getCommitsAsync() {

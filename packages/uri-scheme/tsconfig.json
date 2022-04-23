@@ -5,7 +5,7 @@
     "resolveJsonModule": true,
     "rootDir": "src",
     "declaration": false,
-    "composite": false
+    "composite": false,
   },
   "exclude": ["**/__mocks__/*", "**/__tests__/*"]
 }

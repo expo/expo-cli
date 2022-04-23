@@ -1,10 +1,10 @@
-import { Versions } from '@expo/api';
 import { ExpoConfig, PackageJSONConfig } from '@expo/config';
 import JsonFile from '@expo/json-file';
 import assert from 'assert';
 import chalk from 'chalk';
 import resolveFrom from 'resolve-from';
 import semver from 'semver';
+import { Versions } from 'xdl';
 
 import CommandError from '../../CommandError';
 import Log from '../../log';
@@ -18,7 +18,7 @@ export async function validateDependenciesVersionsAsync(
   fixDependencies: boolean = false
 ): Promise<boolean> {
   // expo package for SDK < 33.0.0 does not have bundledNativeModules.json
-  if (!Versions.gte(exp.sdkVersion, '33.0.0')) {
+  if (!Versions.gteSdkVersion(exp, '33.0.0')) {
     return false;
   }
 

@@ -1,11 +1,3 @@
-import {
-  Analytics,
-  ApiV2,
-  ProcessSettings,
-  ProjectSettings,
-  UnifiedAnalytics,
-  UserManager,
-} from '@expo/api';
 import bunyan from '@expo/bunyan';
 import { setCustomConfigPath } from '@expo/config';
 import boxen from 'boxen';
@@ -21,14 +13,20 @@ import stripAnsi from 'strip-ansi';
 import url from 'url';
 import wrapAnsi from 'wrap-ansi';
 import {
+  Analytics,
+  ApiV2,
   Binaries,
+  Config,
   Env,
   LoadingEvent,
   Logger,
   LogRecord,
   LogUpdater,
   PackagerLogsStream,
+  ProjectSettings,
   ProjectUtils,
+  UnifiedAnalytics,
+  UserManager,
 } from 'xdl';
 
 import StatusEventEmitter from './analytics/StatusEventEmitter';
@@ -336,21 +334,24 @@ Command.prototype.asyncAction = function (asyncFn: Action) {
     if (!getenv.boolish('EAS_BUILD', false) && !program.nonInteractive) {
       try {
         await profileMethod(checkCliVersionAsync)();
-      } catch (e) {}
+      } catch {}
     }
 
     try {
       const options = args[args.length - 1];
       if (options.offline) {
-        ProcessSettings.isOffline = true;
+        const { ConnectionStatus } = await import('xdl');
+        ConnectionStatus.setIsOffline(true);
       }
 
       await asyncFn(...args);
       // After a command, flush the analytics queue so the program will not have any active timers
       // This allows node js to exit immediately
       await Promise.all([Analytics.flush(), UnifiedAnalytics.flush()]);
-    } catch (err) {
-      await handleErrorsAsync(err, { command: this.name() });
+    } catch (err: any) {
+      // If the `--name` property is being used then we can be sure that the error is coming from `expo init`.
+      const commandName = typeof this.name === 'string' ? 'init (probably)' : this.name();
+      await handleErrorsAsync(err, { command: commandName });
       process.exit(1);
     }
   });
@@ -443,7 +444,7 @@ Command.prototype.asyncActionProjectDir = function (
       let traceInfo;
       try {
         traceInfo = JSON.parse(chunk.msg);
-      } catch (e) {
+      } catch {
         return logFn(chunk.msg);
       }
 
@@ -691,8 +692,8 @@ async function runAsync(programName: string) {
       const parsedUrl = url.parse(serverUrl);
       const port = parseInt(parsedUrl.port || '', 10);
       if (parsedUrl.hostname && port) {
-        ProcessSettings.api.host = parsedUrl.hostname;
-        ProcessSettings.api.port = port;
+        Config.api.host = parsedUrl.hostname;
+        Config.api.port = port;
       } else {
         throw new Error('Environment variable SERVER_URL is not a valid url');
       }
@@ -711,6 +712,11 @@ async function runAsync(programName: string) {
 
     program.on('command:detach', () => {
       Log.warn('To eject your project to ExpoKit (previously "detach"), use `expo eject`.');
+      process.exit(0);
+    });
+
+    program.on('command:diagnostics', () => {
+      Log.warn('The `expo diagnostics` command is deprecated, use `npx expo-env-info` instead.');
       process.exit(0);
     });
 
@@ -738,7 +744,7 @@ async function runAsync(programName: string) {
     if (program.args.length === 0) {
       program.help();
     }
-  } catch (e) {
+  } catch (e: any) {
     Log.error(e);
     throw e;
   }

@@ -1,7 +1,7 @@
-import { ProjectSettings } from '@expo/api';
 import spawnAsync from '@expo/spawn-async';
 import path from 'path';
 import temporary from 'tempy';
+import { ProjectSettings } from 'xdl';
 
 import { EXPO_CLI } from '../TestUtils';
 
@@ -10,7 +10,7 @@ const projectRoot = path.join(tempDir, 'my-app');
 
 beforeAll(async () => {
   // jest.setTimeout(60000);
-  // await runAsync(['init', projectDir, '--template', 'blank', '--name', 'My App'], {
+  // await runAsync(['init', projectDir, '--template', 'blank'], {
   //   env: { ...process.env, YARN_CACHE_FOLDER: path.join(tempDir, 'yarn-cache') },
   // });
 });

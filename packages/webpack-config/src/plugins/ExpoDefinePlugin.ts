@@ -183,7 +183,7 @@ function lteSdkVersion(exp: Pick<ExpoConfig, 'sdkVersion'>, sdkVersion: string):
 
   try {
     return semver.lte(exp.sdkVersion, sdkVersion);
-  } catch (e) {
+  } catch {
     return false;
   }
 }

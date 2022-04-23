@@ -5,7 +5,7 @@ const silent = (fromDirectory, request) => {
   const path = require('path');
   try {
     fromDirectory = fs.realpathSync(fromDirectory);
-  } catch (error) {
+  } catch (error: any) {
     if (error.code === 'ENOENT') {
       fromDirectory = path.resolve(fromDirectory);
     } else {

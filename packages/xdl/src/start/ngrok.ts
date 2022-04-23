@@ -1,14 +1,17 @@
-import { ProjectSettings, UserManager, UserSettings } from '@expo/api';
 import { readExpRcAsync } from '@expo/config';
 import * as path from 'path';
 
 import {
   Android,
+  ANONYMOUS_USERNAME,
   assertValidProjectRoot,
   delayAsync,
   NgrokOptions,
+  ProjectSettings,
   ProjectUtils,
   resolveNgrokAsync,
+  UserManager,
+  UserSettings,
   XDLError,
 } from '../internal';
 import * as UrlUtils from './ngrokUrl';
@@ -20,7 +23,7 @@ const NGROK_CONFIG = {
 };
 
 function getNgrokConfigPath() {
-  return path.join(UserSettings.getDirectory(), 'ngrok.yml');
+  return path.join(UserSettings.dotExpoHomeDirectory(), 'ngrok.yml');
 }
 
 async function getProjectRandomnessAsync(projectRoot: string) {
@@ -75,7 +78,7 @@ async function connectToNgrokAsync(
         if (ngrokPid) {
           try {
             process.kill(ngrokPid, 'SIGKILL');
-          } catch (e) {
+          } catch {
             ProjectUtils.logDebug(projectRoot, 'expo', `Couldn't kill ngrok with PID ${ngrokPid}`);
           }
         } else {
@@ -98,7 +101,7 @@ export async function startTunnelsAsync(
   options: { autoInstall?: boolean } = {}
 ): Promise<void> {
   const ngrok = await resolveNgrokAsync(projectRoot, options);
-  const username = (await UserManager.getCurrentUsernameAsync()) || UserManager.ANONYMOUS_USERNAME;
+  const username = (await UserManager.getCurrentUsernameAsync()) || ANONYMOUS_USERNAME;
   assertValidProjectRoot(projectRoot);
   const packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
   if (!packagerInfo.packagerPort) {
@@ -226,7 +229,7 @@ export async function stopTunnelsAsync(projectRoot: string): Promise<void> {
     // Ngrok is running in some other process. Kill at the os level.
     try {
       process.kill(packagerInfo.ngrokPid);
-    } catch (e) {
+    } catch {
       ProjectUtils.logDebug(
         projectRoot,
         'expo',

@@ -1,4 +1,3 @@
-import { UserSettings } from '@expo/api';
 import { JSONValue } from '@expo/json-file';
 import spawnAsync from '@expo/spawn-async';
 import assert from 'assert';
@@ -8,6 +7,7 @@ import slugify from 'slugify';
 import { Stream } from 'stream';
 import tar from 'tar';
 import { promisify } from 'util';
+import { UserSettings } from 'xdl';
 
 import CommandError from '../../CommandError';
 import Log from '../../log';
@@ -41,7 +41,7 @@ function applyKnownNpmPackageNameRules(name: string): string | null {
     name = name.substring(1);
   }
 
-  name = name.toLowerCase().replace(/[^a-zA-Z._\-/@]/g, '');
+  name = name.toLowerCase().replace(/[^a-zA-Z0-9._\-/@]/g, '');
 
   return (
     name
@@ -123,7 +123,7 @@ type ExtractProps = {
 };
 
 function getCacheFilePath() {
-  return path.join(UserSettings.getDirectory(), 'template-cache');
+  return path.join(UserSettings.dotExpoHomeDirectory(), 'template-cache');
 }
 
 async function createUrlStreamAsync(url: string) {

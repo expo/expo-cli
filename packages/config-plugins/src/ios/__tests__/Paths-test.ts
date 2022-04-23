@@ -36,7 +36,11 @@ describe(findSchemeNames, () => {
 });
 
 describe(getXcodeProjectPath, () => {
-  beforeAll(async () => {
+  afterEach(() => {
+    vol.reset();
+  });
+
+  it(`returns project path`, () => {
     vol.fromJSON(
       {
         'ios/testproject.xcodeproj/project.pbxproj': fsReal.readFileSync(
@@ -49,8 +53,14 @@ describe(getXcodeProjectPath, () => {
       },
       '/app'
     );
+    expect(getXcodeProjectPath('/app')).toBe('/app/ios/testproject.xcodeproj');
+  });
 
-    // More than one
+  it(`throws when no paths are found`, () => {
+    expect(() => getXcodeProjectPath('/none')).toThrow(UnexpectedError);
+  });
+
+  it(`warns when multiple paths are found`, () => {
     vol.fromJSON(
       {
         'ios/otherproject.xcodeproj/project.pbxproj': fsReal.readFileSync(
@@ -63,33 +73,92 @@ describe(getXcodeProjectPath, () => {
         ),
         'ios/testproject/AppDelegate.m': '',
       },
-      '/multiple'
+      '/app'
     );
-  });
 
-  afterAll(() => {
-    vol.reset();
-  });
-
-  it(`returns project path`, () => {
-    expect(getXcodeProjectPath('/app')).toBe('/app/ios/testproject.xcodeproj');
-  });
-
-  it(`throws when no paths are found`, () => {
-    expect(() => getXcodeProjectPath('/none')).toThrow(UnexpectedError);
-  });
-
-  it(`warns when multiple paths are found`, () => {
-    expect(getXcodeProjectPath('/multiple')).toBe('/multiple/ios/otherproject.xcodeproj');
+    expect(getXcodeProjectPath('/app')).toBe('/app/ios/otherproject.xcodeproj');
     expect(WarningAggregator.addWarningIOS).toHaveBeenLastCalledWith(
       'paths-xcodeproj',
       'Found multiple *.xcodeproj file paths, using "ios/otherproject.xcodeproj". Ignored paths: ["ios/testproject.xcodeproj"]'
     );
   });
+
+  it(`selects xcodeproj based on alphabetical order, but picks direct children of ios directory first`, () => {
+    vol.fromJSON(
+      {
+        'ios/otherproject.xcodeproj/project.pbxproj': fsReal.readFileSync(
+          path.join(__dirname, 'fixtures/project.pbxproj'),
+          'utf-8'
+        ),
+        'ios/aa/otherproject.xcodeproj/project.pbxproj': fsReal.readFileSync(
+          path.join(__dirname, 'fixtures/project.pbxproj'),
+          'utf-8'
+        ),
+        'ios/botherproject.xcodeproj/project.pbxproj': fsReal.readFileSync(
+          path.join(__dirname, 'fixtures/project.pbxproj'),
+          'utf-8'
+        ),
+        'ios/testproject.xcodeproj/project.pbxproj': fsReal.readFileSync(
+          path.join(__dirname, 'fixtures/project.pbxproj'),
+          'utf-8'
+        ),
+        'ios/testproject/AppDelegate.m': '',
+      },
+      '/app'
+    );
+
+    expect(getXcodeProjectPath('/app')).toBe('/app/ios/botherproject.xcodeproj');
+    expect(WarningAggregator.addWarningIOS).toHaveBeenLastCalledWith(
+      'paths-xcodeproj',
+      'Found multiple *.xcodeproj file paths, using "ios/botherproject.xcodeproj". Ignored paths: ["ios/otherproject.xcodeproj","ios/testproject.xcodeproj","ios/aa/otherproject.xcodeproj"]'
+    );
+  });
+
+  it(`warns when multiple paths are found`, () => {
+    vol.fromJSON(
+      {
+        'ios/otherproject.xcodeproj/project.pbxproj': fsReal.readFileSync(
+          path.join(__dirname, 'fixtures/project.pbxproj'),
+          'utf-8'
+        ),
+        'ios/testproject.xcodeproj/project.pbxproj': fsReal.readFileSync(
+          path.join(__dirname, 'fixtures/project.pbxproj'),
+          'utf-8'
+        ),
+        'ios/testproject/AppDelegate.m': '',
+      },
+      '/app'
+    );
+
+    expect(getXcodeProjectPath('/app')).toBe('/app/ios/otherproject.xcodeproj');
+    expect(WarningAggregator.addWarningIOS).toHaveBeenLastCalledWith(
+      'paths-xcodeproj',
+      'Found multiple *.xcodeproj file paths, using "ios/otherproject.xcodeproj". Ignored paths: ["ios/testproject.xcodeproj"]'
+    );
+  });
+  it(`ignores xcodeproj outside of the ios directory`, () => {
+    vol.fromJSON(
+      {
+        'lib/testproject.xcodeproj/project.pbxproj': fsReal.readFileSync(
+          path.join(__dirname, 'fixtures/project.pbxproj'),
+          'utf-8'
+        ),
+      },
+      '/app'
+    );
+    expect(() => getXcodeProjectPath('/app')).toThrow(UnexpectedError);
+  });
 });
 
 describe(getAppDelegate, () => {
-  beforeAll(async () => {
+  beforeEach(() => {
+    vol.reset();
+  });
+  afterAll(() => {
+    vol.reset();
+  });
+
+  it(`returns objc path`, () => {
     vol.fromJSON(
       {
         'ios/testproject.xcodeproj/project.pbxproj': fsReal.readFileSync(
@@ -104,6 +173,36 @@ describe(getAppDelegate, () => {
       '/objc'
     );
 
+    expect(getAppDelegate('/objc')).toStrictEqual({
+      contents: '',
+      path: '/objc/ios/testproject/AppDelegate.m',
+      language: 'objc',
+    });
+  });
+
+  it(`returns C++ (objcpp) path`, () => {
+    vol.fromJSON(
+      {
+        'ios/testproject.xcodeproj/project.pbxproj': fsReal.readFileSync(
+          path.join(__dirname, 'fixtures/project.pbxproj'),
+          'utf-8'
+        ) as string,
+        'ios/Podfile': 'content',
+        'ios/TestPod.podspec': 'noop',
+        'ios/testproject/AppDelegate.mm': '',
+        'ios/testproject/AppDelegate.h': '',
+      },
+      '/'
+    );
+
+    expect(getAppDelegate('/')).toStrictEqual({
+      contents: '',
+      path: '/ios/testproject/AppDelegate.mm',
+      language: 'objcpp',
+    });
+  });
+
+  it(`returns swift path`, () => {
     vol.fromJSON(
       {
         'ios/testproject.xcodeproj/project.pbxproj': fsReal.readFileSync(
@@ -117,6 +216,14 @@ describe(getAppDelegate, () => {
       '/swift'
     );
 
+    expect(getAppDelegate('/swift')).toStrictEqual({
+      contents: '',
+      path: '/swift/ios/testproject/AppDelegate.swift',
+      language: 'swift',
+    });
+  });
+
+  it(`throws on invalid project`, () => {
     vol.fromJSON(
       {
         'ios/testproject.xcodeproj/project.pbxproj': fsReal.readFileSync(
@@ -129,6 +236,11 @@ describe(getAppDelegate, () => {
       '/invalid'
     );
 
+    expect(() => getAppDelegate('/invalid')).toThrow(UnexpectedError);
+    expect(() => getAppDelegate('/invalid')).toThrow(/AppDelegate/);
+  });
+
+  it(`warns when multiple paths are found`, () => {
     vol.fromJSON(
       {
         'ios/testproject.xcodeproj/project.pbxproj': fsReal.readFileSync(
@@ -143,33 +255,7 @@ describe(getAppDelegate, () => {
       },
       '/confusing'
     );
-  });
 
-  afterAll(() => {
-    vol.reset();
-  });
-
-  it(`returns objc path`, () => {
-    expect(getAppDelegate('/objc')).toStrictEqual({
-      contents: '',
-      path: '/objc/ios/testproject/AppDelegate.m',
-      language: 'objc',
-    });
-  });
-  it(`returns swift path`, () => {
-    expect(getAppDelegate('/swift')).toStrictEqual({
-      contents: '',
-      path: '/swift/ios/testproject/AppDelegate.swift',
-      language: 'swift',
-    });
-  });
-
-  it(`throws on invalid project`, () => {
-    expect(() => getAppDelegate('/invalid')).toThrow(UnexpectedError);
-    expect(() => getAppDelegate('/invalid')).toThrow(/AppDelegate/);
-  });
-
-  it(`warns when multiple paths are found`, () => {
     expect(getAppDelegate('/confusing')).toStrictEqual({
       contents: '',
       path: '/confusing/ios/testproject/AppDelegate.m',

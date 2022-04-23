@@ -16,9 +16,9 @@ export async function actionAsync(projectRoot: string, options: Options): Promis
       projectRoot,
       options as { releaseChannel: string; publishId: string }
     );
-    const tableString = table.printTableJson(result, 'Channel Set Status ', 'SUCCESS');
+    const tableString = table.printTableJson(result.queryResult, 'Channel Set Status ', 'SUCCESS');
     Log.log(tableString);
-  } catch (e) {
+  } catch (e: any) {
     Log.error(e);
   }
 }

@@ -1,9 +1,23 @@
-# xdl
+<!-- Title -->
+<h1 align="center">
+👋 Welcome to <br><code>xdl</code>
+</h1>
 
-The Expo Development Library.
-[Documentation](https://docs.expo.dev/workflow/expo-cli/)
+<p align="center">The Expo Development Library.</p>
 
-If you have problems with the code in this repository, please file issues & bug reports
+<p align="center">
+  <img src="https://flat.badgen.net/packagephobia/install/xdl">
+
+  <a href="https://www.npmjs.com/package/xdl">
+    <img src="https://flat.badgen.net/npm/dw/xdl" target="_blank" />
+  </a>
+</p>
+
+<!-- Body -->
+
+## [Documentation](https://docs.expo.dev/workflow/expo-cli/)
+
+> If you have problems with the code in this repository, please file issues & bug reports
 at https://github.com/expo/expo. Thanks!
 
 ## Building Watchman

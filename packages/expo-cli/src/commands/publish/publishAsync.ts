@@ -1,4 +1,3 @@
-import { Publish, UserManager } from '@expo/api';
 import {
   ExpoConfig,
   getConfig,
@@ -7,15 +6,18 @@ import {
   PackageJSONConfig,
   ProjectTarget,
 } from '@expo/config';
+import spawnAsync from '@expo/spawn-async';
 import chalk from 'chalk';
 import fs from 'fs';
 import { Ora } from 'ora';
 import path from 'path';
-import { Project } from 'xdl';
+import resolveFrom from 'resolve-from';
+import { Project, UserManager } from 'xdl';
 
 import CommandError, { ErrorCodes } from '../../CommandError';
 import Log from '../../log';
 import { logNewSection } from '../../utils/ora';
+import { confirmAsync } from '../../utils/prompts';
 import * as TerminalLink from '../utils/TerminalLink';
 import { formatNamedWarning } from '../utils/logConfigWarnings';
 import * as sendTo from '../utils/sendTo';
@@ -42,6 +44,7 @@ export async function actionAsync(
   const { exp, pkg } = getConfig(projectRoot, {
     skipSDKVersionRequirement: true,
   });
+  await confirmExpoUpdatesInstalledAsync(projectRoot);
   assertUpdateURLCorrectlyConfigured(exp);
   const { sdkVersion, runtimeVersion } = exp;
 
@@ -57,7 +60,7 @@ export async function actionAsync(
 
   // note: this validates the exp.owner when the user is a robot
   const user = await UserManager.ensureLoggedInAsync();
-  const owner = Publish.getProjectOwner(user, exp);
+  const owner = UserManager.getProjectOwner(user, exp);
 
   Log.addNewLineIfNone();
 
@@ -100,6 +103,7 @@ export async function actionAsync(
   const result = await Project.publishAsync(projectRoot, {
     releaseChannel: options.releaseChannel,
     quiet: options.quiet,
+    maxWorkers: options.maxWorkers,
     target,
     resetCache: options.clear,
   });
@@ -151,6 +155,59 @@ function assertValidReleaseChannel(releaseChannel?: string): void {
   }
 }
 
+async function isExpoUpdatesInstalledAsync(projectDir: string): Promise<boolean> {
+  try {
+    resolveFrom(projectDir, 'expo-updates/package.json');
+    return true;
+  } catch (err: any) {
+    Log.debug(err);
+    return false;
+  }
+}
+
+async function installExpoUpdatesAsync(projectDir: string): Promise<void> {
+  const expoCliPath = resolveFrom(projectDir, 'expo/bin/cli.js');
+
+  Log.newLine();
+  Log.log(`Running ${chalk.bold('expo install expo-updates')}`);
+  Log.newLine();
+  await spawnAsync(expoCliPath, ['install', 'expo-updates']);
+  Log.newLine();
+}
+
+async function confirmExpoUpdatesInstalledAsync(projectDir: string): Promise<void> {
+  if (await isExpoUpdatesInstalledAsync(projectDir)) {
+    return;
+  }
+
+  const isBare = getDefaultTarget(projectDir) === 'bare';
+  if (isBare) {
+    throw new CommandError(
+      `This project is missing ${chalk.bold(
+        'expo-updates'
+      )}. Please install it in order to publish an update. ${chalk.dim(
+        TerminalLink.learnMore('https://docs.expo.dev/bare/installing-updates/')
+      )}`
+    );
+  }
+
+  const install = await confirmAsync({
+    message: `In order to publish an update, ${chalk.bold(
+      'expo-updates'
+    )} needs to be installed. Do you want to install it now?`,
+  });
+
+  if (install) {
+    await installExpoUpdatesAsync(projectDir);
+  } else {
+    throw new CommandError(
+      `This project is missing ${chalk.bold(
+        'expo-updates'
+      )}. Please install it in order to publish an update.`
+    );
+  }
+}
+
 function isMaybeAnEASUrl(url: string): boolean {
   return url.includes(EAS_UPDATE_URL);
 }
@@ -164,7 +221,7 @@ function assertUpdateURLCorrectlyConfigured(exp: ExpoConfig): void {
   if (isMaybeAnEASUrl(configuredURL)) {
     throw new CommandError(
       ErrorCodes.INVALID_UPDATE_URL,
-      `It seems like your project is configured for EAS Update. Please use 'eas branch:publish' instead.`
+      `It seems like your project is configured for EAS Update. Please use 'eas update' instead.`
     );
   }
 }

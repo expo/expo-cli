@@ -106,7 +106,7 @@ export async function getAdbOutputAsync(args: string[]): Promise<string> {
   try {
     const result = await spawnAsync(adb, args);
     return result.stdout;
-  } catch (e) {
+  } catch (e: any) {
     const err: string = e.stderr || e.stdout || '';
     let errorMessage = err.trim();
     if (errorMessage.startsWith(BEGINNING_OF_ADB_ERROR_MESSAGE)) {

@@ -1,15 +1,23 @@
-import {
-  ProcessSettings,
-  ProjectSettings,
-  SendProject,
-  UserManager,
-  UserSettings,
-} from '@expo/api';
 import { getConfig, writeConfigJsonAsync } from '@expo/config';
 import spawnAsync from '@expo/spawn-async';
 import { makeExecutableSchema } from 'graphql-tools';
 import { $$asyncIterator } from 'iterall';
-import { Android, Logger, Project, ProjectUtils, Simulator, UrlUtils, Webpack } from 'xdl';
+import {
+  Android,
+  ConnectionStatus,
+  Env,
+  Exp,
+  isDevClientPackageInstalled,
+  Logger,
+  Project,
+  ProjectSettings,
+  ProjectUtils,
+  Simulator,
+  UrlUtils,
+  UserManager,
+  UserSettings,
+  Webpack,
+} from 'xdl';
 
 import mergeAsyncIterators from '../asynciterators/mergeAsyncIterators';
 
@@ -46,6 +54,8 @@ const typeDefs = graphql`
     sources: [Source]
     # All messages from all sources
     messages: MessageConnection!
+    # Link to the loding page if available.
+    interstitialPageUrl: String
   }
 
   type ProjectSettings {
@@ -439,7 +449,7 @@ const resolvers = {
       try {
         const { exp } = getConfig(project.projectDir);
         return exp;
-      } catch (error) {
+      } catch (error: any) {
         ProjectUtils.logError(project.projectDir, 'expo', error.message);
         return null;
       }
@@ -450,10 +460,21 @@ const resolvers = {
     messages(project, args, context) {
       return context.getMessageConnection();
     },
+    async interstitialPageUrl(project) {
+      const { devClient } = await ProjectSettings.readAsync(project.projectDir);
+      if (
+        Env.isInterstitiaLPageEnabled() &&
+        !devClient &&
+        isDevClientPackageInstalled(project.projectDir)
+      ) {
+        return UrlUtils.constructLoadingUrlAsync(project.projectDir, null);
+      }
+      return null;
+    },
   },
   ProjectSettings: {
     hostType(projectSettings) {
-      if (ProcessSettings.isOffline && projectSettings.hostType === 'tunnel') {
+      if (ConnectionStatus.isOffline() && projectSettings.hostType === 'tunnel') {
         return 'lan';
       } else {
         return projectSettings.hostType;
@@ -536,7 +557,7 @@ const resolvers = {
           success: true,
           error: null,
         };
-      } catch (error) {
+      } catch (error: any) {
         return {
           success: false,
           error: error.toString(),
@@ -571,7 +592,7 @@ const resolvers = {
       try {
         const result = await Project.publishAsync(projectDir, { releaseChannel });
         return result;
-      } catch (error) {
+      } catch (error: any) {
         ProjectUtils.logError(projectDir, 'expo', error.message);
         throw error;
       }
@@ -585,7 +606,7 @@ const resolvers = {
       if (previousSettings.hostType !== 'tunnel' && updatedSettings.hostType === 'tunnel') {
         try {
           await Project.startTunnelsAsync(currentProject.projectDir, { autoInstall: true });
-        } catch (e) {
+        } catch (e: any) {
           ProjectUtils.logWarning(
             currentProject.projectDir,
             'expo',
@@ -624,8 +645,7 @@ const resolvers = {
     async sendProjectUrl(parent, { recipient }, context) {
       const currentProject = context.getCurrentProject();
       const url = await UrlUtils.constructManifestUrlAsync(currentProject.projectDir);
-      const user = await UserManager.ensureLoggedInAsync();
-      const result = await SendProject.sendProjectAsync(user, { recipient, url });
+      const result = await Exp.sendAsync(recipient, url);
       await UserSettings.setAsync('sendTo', recipient);
       return { medium: result.medium, url }; // medium can be a phone number or email
     },

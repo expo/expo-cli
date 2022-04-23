@@ -25,7 +25,7 @@ async function getManifestAsync(url: string, headers: any, options: any = {}) {
   let response;
   try {
     response = await _retryPromise(() => axios.get(url.replace('exp://', 'http://'), { headers }));
-  } catch (err) {
+  } catch (err: any) {
     buildPhaseLogger.error(err);
     throw new Error('Failed to fetch manifest from www');
   }
@@ -37,7 +37,7 @@ async function getManifestAsync(url: string, headers: any, options: any = {}) {
 async function _retryPromise<T>(fn: (...args: any[]) => T, retries = 5): Promise<T> {
   try {
     return await fn();
-  } catch (err) {
+  } catch (err: any) {
     if (retries-- > 0) {
       return await _retryPromise(fn, retries);
     } else {
@@ -87,7 +87,7 @@ async function spawnAsync(
 ): Promise<SpawnResult | void> {
   try {
     return await spawnAsyncThrowError(command, args, options);
-  } catch (e) {
+  } catch (e: any) {
     LoggerDetach.error(e.message);
   }
 }
@@ -99,7 +99,7 @@ function isDirectory(dir: string) {
     }
 
     return false;
-  } catch (e) {
+  } catch {
     return false;
   }
 }
@@ -113,7 +113,7 @@ async function getResolvedLocalesAsync(projectRoot: string, exp: ExpoConfig): Pr
       const s = await fs.readFile(path.resolve(projectRoot, localePath as string), 'utf8');
       try {
         locales[lang] = JSON.parse(s);
-      } catch (e) {
+      } catch (e: any) {
         throw new XDLError('INVALID_JSON', JSON.stringify(e));
       }
     }

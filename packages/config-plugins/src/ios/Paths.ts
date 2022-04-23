@@ -1,4 +1,4 @@
-import { pathExistsSync, readFileSync } from 'fs-extra';
+import { existsSync, readFileSync } from 'fs';
 import { sync as globSync } from 'glob';
 import * as path from 'path';
 
@@ -13,7 +13,9 @@ interface ProjectFile<L extends string = string> {
   contents: string;
 }
 
-export type AppDelegateProjectFile = ProjectFile<'objc' | 'swift'>;
+type AppleLanguage = 'objc' | 'objcpp' | 'swift';
+
+export type AppDelegateProjectFile = ProjectFile<AppleLanguage>;
 
 export function getAppDelegateHeaderFilePath(projectRoot: string): string {
   const [using, ...extra] = globSync('ios/*/AppDelegate.h', {
@@ -42,7 +44,7 @@ export function getAppDelegateHeaderFilePath(projectRoot: string): string {
 }
 
 export function getAppDelegateFilePath(projectRoot: string): string {
-  const [using, ...extra] = globSync('ios/*/AppDelegate.@(m|swift)', {
+  const [using, ...extra] = globSync('ios/*/AppDelegate.@(m|mm|swift)', {
     absolute: true,
     cwd: projectRoot,
     ignore: ignoredPaths,
@@ -89,9 +91,11 @@ export function getAppDelegateObjcHeaderFilePath(projectRoot: string): string {
   return using;
 }
 
-function getLanguage(filePath: string): 'objc' | 'swift' {
+function getLanguage(filePath: string): AppleLanguage {
   const extension = path.extname(filePath);
   switch (extension) {
+    case '.mm':
+      return 'objcpp';
     case '.m':
     case '.h':
       return 'objc';
@@ -135,11 +139,19 @@ export function findSchemeNames(projectRoot: string): string[] {
 
 export function getAllXcodeProjectPaths(projectRoot: string): string[] {
   const iosFolder = 'ios';
-  const pbxprojPaths = globSync('**/*.xcodeproj', { cwd: projectRoot, ignore: ignoredPaths })
+  const pbxprojPaths = globSync('ios/**/*.xcodeproj', { cwd: projectRoot, ignore: ignoredPaths })
     .filter(project => !/test|example|sample/i.test(project) || path.dirname(project) === iosFolder)
-    .sort(project => (path.dirname(project) === iosFolder ? -1 : 1))
     // sort alphabetically to ensure this works the same across different devices (Fail in CI (linux) without this)
-    .sort();
+    .sort()
+    .sort((a, b) => {
+      const isAInIos = path.dirname(a) === iosFolder;
+      const isBInIos = path.dirname(b) === iosFolder;
+      // preserve previous sort order
+      if ((isAInIos && isBInIos) || (!isAInIos && !isBInIos)) {
+        return 0;
+      }
+      return isAInIos ? -1 : 1;
+    });
 
   if (!pbxprojPaths.length) {
     throw new UnexpectedError(
@@ -172,7 +184,7 @@ export function getAllPBXProjectPaths(projectRoot: string): string[] {
   const projectPaths = getAllXcodeProjectPaths(projectRoot);
   const paths = projectPaths
     .map(value => path.join(value, 'project.pbxproj'))
-    .filter(value => pathExistsSync(value));
+    .filter(value => existsSync(value));
 
   if (!paths.length) {
     throw new UnexpectedError(

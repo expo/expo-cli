@@ -63,7 +63,7 @@ export default class JsonWebpackPlugin {
     };
     try {
       result = await JsonWebpackPlugin.getHooks(compilation).beforeEmit.promise(result);
-    } catch (error) {
+    } catch (error: any) {
       compilation.errors.push(error);
     }
 

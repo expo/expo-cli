@@ -84,7 +84,7 @@ export async function jimpAsync(
 export async function isFolderAsync(path: string): Promise<boolean> {
   try {
     return (await fs.stat(path)).isDirectory();
-  } catch (e) {
+  } catch {
     return false;
   }
 }

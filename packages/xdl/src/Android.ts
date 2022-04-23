@@ -1,4 +1,3 @@
-import { Analytics, ProjectSettings, Versions } from '@expo/api';
 import { ExpoConfig, getConfig, readExpRcAsync } from '@expo/config';
 import { AndroidConfig } from '@expo/config-plugins';
 import * as osascript from '@expo/osascript';
@@ -11,6 +10,7 @@ import prompts from 'prompts';
 import semver from 'semver';
 
 import {
+  Analytics,
   Binaries,
   downloadApkAsync,
   Env,
@@ -19,8 +19,10 @@ import {
   learnMore,
   LoadingEvent,
   Logger,
+  ProjectSettings,
   Prompts,
   UrlUtils,
+  Versions,
   Webpack,
   XDLError,
 } from './internal';
@@ -275,7 +277,7 @@ async function adbAlreadyRunning(adb: string): Promise<boolean> {
     const result = await spawnAsync(adb, ['start-server']);
     const lines = trim(result.stderr).split(/\r?\n/);
     return lines.includes('* daemon started successfully') === false;
-  } catch (e) {
+  } catch (e: any) {
     let errorMessage = trim(e.stderr || e.stdout);
     if (errorMessage.startsWith(BEGINNING_OF_ADB_ERROR_MESSAGE)) {
       errorMessage = errorMessage.substring(BEGINNING_OF_ADB_ERROR_MESSAGE.length);
@@ -300,7 +302,7 @@ export async function getAdbOutputAsync(args: string[]): Promise<string> {
   try {
     const result = await spawnAsync(adb, args);
     return result.output.join('\n');
-  } catch (e) {
+  } catch (e: any) {
     // User pressed ctrl+c to cancel the process...
     if (e.signal === 'SIGINT') {
       e.isAbortError = true;
@@ -329,7 +331,7 @@ export async function getAdbFileOutputAsync(args: string[], encoding?: 'latin1')
       encoding,
       stdio: 'pipe',
     });
-  } catch (e) {
+  } catch (e: any) {
     let errorMessage = (e.stderr || e.stdout || e.message).trim();
     if (errorMessage.startsWith(BEGINNING_OF_ADB_ERROR_MESSAGE)) {
       errorMessage = errorMessage.substring(BEGINNING_OF_ADB_ERROR_MESSAGE.length);
@@ -375,6 +377,10 @@ async function ensureDevClientInstalledAsync(device: Device, applicationId: stri
   }
 }
 
+async function isDevClientInstalledAsync(device: Device, applicationId: string): Promise<boolean> {
+  return await isInstalledAsync(device, applicationId);
+}
+
 async function getExpoVersionAsync(device: Device): Promise<string | null> {
   const info = await getAdbOutputAsync(
     adbPidArgs(device.pid, 'shell', 'dumpsys', 'package', 'host.exp.exponent')
@@ -390,7 +396,7 @@ async function getExpoVersionAsync(device: Device): Promise<string | null> {
 }
 
 async function isClientOutdatedAsync(device: Device, sdkVersion?: string): Promise<boolean> {
-  const versions = await Versions.getVersionsAsync();
+  const versions = await Versions.versionsAsync();
   const clientForSdk = await getClientForSDK(sdkVersion);
   const latestVersionForSdk = clientForSdk?.version ?? versions.androidVersion;
   const installedVersion = await getExpoVersionAsync(device);
@@ -474,7 +480,7 @@ export async function uninstallExpoAsync(device: Device): Promise<string | undef
 
   try {
     return await getAdbOutputAsync(adbPidArgs(device.pid, 'uninstall', 'host.exp.exponent'));
-  } catch (e) {
+  } catch (e: any) {
     Logger.global.error(
       'Could not uninstall Expo Go from your device, please uninstall Expo Go manually and try again.'
     );
@@ -520,7 +526,7 @@ export async function upgradeExpoAsync({
     }
 
     return true;
-  } catch (e) {
+  } catch (e: any) {
     Logger.global.error(e.message);
     return false;
   }
@@ -709,55 +715,100 @@ async function openUrlAsync({
   let installedExpo = false;
   let clientApplicationId = 'host.exp.exponent';
 
+  const installExpoIfNeeded = async (device: Device) => {
+    let shouldInstall = !(await _isExpoInstalledAsync(device));
+    const promptKey = device.pid ?? 'unknown';
+    if (
+      !shouldInstall &&
+      !hasPromptedToUpgrade[promptKey] &&
+      (await isClientOutdatedAsync(device, sdkVersion))
+    ) {
+      // Only prompt once per device, per run.
+      hasPromptedToUpgrade[promptKey] = true;
+      const confirm = await Prompts.confirmAsync({
+        initial: true,
+        message: `Expo Go on ${device.name} (${device.type}) is outdated, would you like to upgrade?`,
+      });
+      if (confirm) {
+        await uninstallExpoAsync(device);
+        shouldInstall = true;
+      }
+    }
+
+    if (shouldInstall) {
+      const androidClient = await getClientForSDK(sdkVersion);
+      await installExpoAsync({ device, ...androidClient });
+      installedExpo = true;
+    }
+  };
+
+  const getClientApplicationId = async () => {
+    let applicationId;
+    const isManaged = await isManagedProjectAsync(projectRoot);
+    if (isManaged) {
+      applicationId = exp?.android?.package;
+      if (!applicationId) {
+        throw new Error(
+          `Could not find property android.package in app.config.js/app.json. This setting is required to launch the app.`
+        );
+      }
+    } else {
+      applicationId = await resolveApplicationIdAsync(projectRoot);
+      if (!applicationId) {
+        throw new Error(
+          `Could not find applicationId in ${AndroidConfig.Paths.getAppBuildGradleFilePath(
+            projectRoot
+          )}`
+        );
+      }
+    }
+    return applicationId;
+  };
+
   try {
     if (devClient) {
-      let applicationId;
-      const isManaged = await isManagedProjectAsync(projectRoot);
-      if (isManaged) {
-        applicationId = exp?.android?.package;
-        if (!applicationId) {
-          throw new Error(
-            `Could not find property android.package in app.config.js/app.json. This setting is required to launch the app.`
-          );
-        }
-      } else {
-        applicationId = await resolveApplicationIdAsync(projectRoot);
-        if (!applicationId) {
-          throw new Error(
-            `Could not find applicationId in ${AndroidConfig.Paths.getAppBuildGradleFilePath(
-              projectRoot
-            )}`
-          );
-        }
-      }
-      clientApplicationId = applicationId;
+      clientApplicationId = await getClientApplicationId();
       await ensureDevClientInstalledAsync(device, clientApplicationId);
-    } else if (!isDetached) {
-      let shouldInstall = !(await _isExpoInstalledAsync(device));
-      const promptKey = device.pid ?? 'unknown';
-      if (
-        !shouldInstall &&
-        !hasPromptedToUpgrade[promptKey] &&
-        (await isClientOutdatedAsync(device, sdkVersion))
-      ) {
-        // Only prompt once per device, per run.
-        hasPromptedToUpgrade[promptKey] = true;
-        const confirm = await Prompts.confirmAsync({
-          initial: true,
-          message: `Expo Go on ${device.name} (${device.type}) is outdated, would you like to upgrade?`,
-        });
-        if (confirm) {
-          await uninstallExpoAsync(device);
-          shouldInstall = true;
+    } else if (
+      Env.isInterstitiaLPageEnabled() &&
+      !devClient &&
+      isDevClientPackageInstalled(projectRoot)
+    ) {
+      await installExpoIfNeeded(device);
+
+      let applicationId: string | undefined;
+      try {
+        applicationId = await getClientApplicationId();
+      } catch (e: any) {
+        Logger.global.warn(e);
+      }
+
+      const isDevClientInstalled = applicationId
+        ? await isDevClientInstalledAsync(device, applicationId)
+        : false;
+
+      if (isDevClientInstalled) {
+        // Everything is installed, we can present the interstitial page.
+        clientApplicationId = ''; // it will open browser
+      } else {
+        // The development build isn't available. So let's fall back to Expo Go.
+        Logger.global.warn(
+          `\u203A The 'expo-dev-client' package is installed, but a development build isn't available.\nYour app will open in Expo Go instead. If you want to use the development build, please install it on the simulator first.\n${learnMore(
+            'https://docs.expo.dev/development/build/'
+          )}`
+        );
+
+        const newProjectUrl = await constructDeepLinkAsync(projectRoot, undefined, false, false);
+        if (!newProjectUrl) {
+          // This shouldn't happen.
+          throw Error('Could not generate a deep link for your project.');
         }
+        url = newProjectUrl;
+        Logger.global.debug(`iOS project url: ${url}`);
+        _lastUrl = url;
       }
-
-      if (shouldInstall) {
-        const androidClient = await getClientForSDK(sdkVersion);
-        await installExpoAsync({ device, ...androidClient });
-        installedExpo = true;
-      }
-
+    } else if (!isDetached) {
+      await installExpoIfNeeded(device);
       _lastUrl = url;
       // _checkExpoUpToDateAsync(); // let this run in background
     }
@@ -782,7 +833,7 @@ async function openUrlAsync({
       platform: 'android',
       installedExpo,
     });
-  } catch (e) {
+  } catch (e: any) {
     e.message = `Error running adb: ${e.message}`;
     throw e;
   }
@@ -793,8 +844,7 @@ async function getClientForSDK(sdkVersionString?: string) {
     return null;
   }
 
-  const { sdkVersions } = await Versions.getVersionsAsync();
-  const sdkVersion = sdkVersions[sdkVersionString];
+  const sdkVersion = (await Versions.sdkVersionsAsync())[sdkVersionString];
   if (!sdkVersion) {
     return null;
   }
@@ -830,12 +880,14 @@ export async function resolveApplicationIdAsync(projectRoot: string): Promise<st
 async function constructDeepLinkAsync(
   projectRoot: string,
   scheme?: string,
-  devClient?: boolean
+  devClient?: boolean,
+  shouldGenerateInterstitialPage: boolean = true
 ): Promise<string | null> {
   if (
-    process.env['EXPO_ENABLE_INTERSTITIAL_PAGE'] &&
+    Env.isInterstitiaLPageEnabled() &&
     !devClient &&
-    isDevClientPackageInstalled(projectRoot)
+    isDevClientPackageInstalled(projectRoot) &&
+    shouldGenerateInterstitialPage
   ) {
     return UrlUtils.constructLoadingUrlAsync(projectRoot, 'android');
   } else {
@@ -912,7 +964,7 @@ export async function openProjectAsync({
       await openAppAsync(device, {
         launchActivity,
       });
-    } catch (error) {
+    } catch (error: any) {
       let errorMessage = `Couldn't open Android app with activity "${launchActivity}" on device "${device.name}".`;
       if (error instanceof XDLError && error.code === 'APP_NOT_INSTALLED') {
         errorMessage += `\nThe app might not be installed, try installing it with: ${chalk.bold(
@@ -941,7 +993,7 @@ export async function openProjectAsync({
       projectRoot,
     });
     return { success: true, url: projectUrl };
-  } catch (e) {
+  } catch (e: any) {
     if (e.isAbortError) {
       // Don't log anything when the user cancelled the process
       return { success: false, error: 'escaped' };
@@ -980,7 +1032,7 @@ export async function openWebProjectAsync({
 
     await openUrlAsync({ url: projectUrl, device, isDetached: true, projectRoot });
     return { success: true, url: projectUrl };
-  } catch (e) {
+  } catch (e: any) {
     return { success: false, error: `Couldn't open the web project on Android: ${e.message}` };
   }
 }
@@ -1036,7 +1088,7 @@ async function adbReverse({ device, port }: { device: Device; port: number }): P
   try {
     await getAdbOutputAsync(adbPidArgs(device.pid, 'reverse', `tcp:${port}`, `tcp:${port}`));
     return true;
-  } catch (e) {
+  } catch (e: any) {
     Logger.global.warn(`Couldn't adb reverse: ${e.message}`);
     return false;
   }
@@ -1056,7 +1108,7 @@ async function adbReverseRemove({
   try {
     await getAdbOutputAsync(adbPidArgs(device.pid, 'reverse', '--remove', `tcp:${port}`));
     return true;
-  } catch (e) {
+  } catch (e: any) {
     // Don't send this to warn because we call this preemptively sometimes
     Logger.global.debug(`Couldn't adb reverse remove: ${e.message}`);
     return false;
@@ -1109,7 +1161,7 @@ export async function checkSplashScreenImages(projectRoot: string): Promise<void
   const { exp } = getConfig(projectRoot);
 
   // return before SDK33
-  if (!Versions.gte(exp.sdkVersion, '33.0.0')) {
+  if (!Versions.gteSdkVersion(exp, '33.0.0')) {
     return;
   }
 
@@ -1331,7 +1383,7 @@ export async function getPropertyForDeviceAsync(
   if (deviceProperties[device.name] == null) {
     try {
       deviceProperties[device.name] = await getPropertyDataForDeviceAsync(device);
-    } catch (error) {
+    } catch (error: any) {
       // TODO: Ensure error has message and not stderr
       Logger.global.error(
         `Failed to get properties for device "${device.name}" (${device.pid}): ${error.message}`
@@ -1360,7 +1412,7 @@ async function getPropertyDataForDeviceAsync(
       };
     }
     return parseAdbDeviceProperties(results);
-  } catch (error) {
+  } catch (error: any) {
     // TODO: Ensure error has message and not stderr
     throw new Error(`Failed to get properties for device (${device.pid}): ${error.message}`);
   }
