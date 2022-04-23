@@ -15,7 +15,7 @@ export async function actionAsync() {
   try {
     await UserManager.logoutAsync();
     Log.log('Logged out');
-  } catch (e) {
+  } catch (e: any) {
     throw new CommandError(`Couldn't logout: ${e.message}`);
   }
 }

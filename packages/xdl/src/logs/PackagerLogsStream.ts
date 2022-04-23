@@ -566,7 +566,7 @@ export default class PackagerLogsStream {
     try {
       const parsedMsg = JSON.parse(chunk.msg);
       chunk.msg = parsedMsg;
-    } catch (e) {
+    } catch {
       // non-JSON message
     }
 

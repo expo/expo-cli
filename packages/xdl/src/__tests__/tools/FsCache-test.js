@@ -17,7 +17,7 @@ describe('Cacher', () => {
 
     try {
       await dateCacher.clearAsync();
-    } catch (e) {
+    } catch {
       // this is ok
     }
 
@@ -49,7 +49,7 @@ describe('Cacher', () => {
     // since we don't mock the fs here (.cache is transient), need to make sure it's empty
     try {
       await failCacher.clearAsync();
-    } catch (e) {
+    } catch {
       // noop
     }
 

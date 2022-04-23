@@ -2,7 +2,7 @@ import chalk from 'chalk';
 import checkForUpdate from 'update-check';
 
 export default async function shouldUpdate() {
-  const packageJson = () => require('expo-optimize/package.json');
+  const packageJson = () => require('../package.json');
 
   const update = checkForUpdate(packageJson()).catch(() => null);
 

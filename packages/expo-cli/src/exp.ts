@@ -334,7 +334,7 @@ Command.prototype.asyncAction = function (asyncFn: Action) {
     if (!getenv.boolish('EAS_BUILD', false) && !program.nonInteractive) {
       try {
         await profileMethod(checkCliVersionAsync)();
-      } catch (e) {}
+      } catch {}
     }
 
     try {
@@ -348,7 +348,7 @@ Command.prototype.asyncAction = function (asyncFn: Action) {
       // After a command, flush the analytics queue so the program will not have any active timers
       // This allows node js to exit immediately
       await Promise.all([Analytics.flush(), UnifiedAnalytics.flush()]);
-    } catch (err) {
+    } catch (err: any) {
       // If the `--name` property is being used then we can be sure that the error is coming from `expo init`.
       const commandName = typeof this.name === 'string' ? 'init (probably)' : this.name();
       await handleErrorsAsync(err, { command: commandName });
@@ -444,7 +444,7 @@ Command.prototype.asyncActionProjectDir = function (
       let traceInfo;
       try {
         traceInfo = JSON.parse(chunk.msg);
-      } catch (e) {
+      } catch {
         return logFn(chunk.msg);
       }
 
@@ -744,7 +744,7 @@ async function runAsync(programName: string) {
     if (program.args.length === 0) {
       program.help();
     }
-  } catch (e) {
+  } catch (e: any) {
     Log.error(e);
     throw e;
   }

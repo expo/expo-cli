@@ -31,7 +31,7 @@ function lteSdkVersion(expJson: Pick<ExpoConfig, 'sdkVersion'>, sdkVersion: stri
 
   try {
     return semver.lte(expJson.sdkVersion, sdkVersion);
-  } catch (e) {
+  } catch {
     throw new Error(`${expJson.sdkVersion} is not a valid version. Must be in the form of x.y.z`);
   }
 }

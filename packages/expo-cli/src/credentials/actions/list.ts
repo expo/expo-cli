@@ -160,7 +160,7 @@ export async function displayAndroidAppCredentials(credentials: AndroidCredentia
     Log.log(chalk.bold('  Push Notifications credentials'));
     Log.log('    FCM Api Key: ', credentials.pushCredentials?.fcmApiKey ?? '---------------------');
     Log.log('\n');
-  } catch (error) {
+  } catch (error: any) {
     Log.error('  Failed to parse the Keystore', error);
     Log.log('\n');
   } finally {

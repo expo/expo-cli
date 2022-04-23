@@ -434,7 +434,7 @@ async function bundleWebAppAsync(projectRoot: string, config: WebpackConfigurati
     } else {
       ProjectUtils.logInfo(projectRoot, WEBPACK_LOG_TAG, chalk.green('Compiled successfully.\n'));
     }
-  } catch (error) {
+  } catch (error: any) {
     ProjectUtils.logError(projectRoot, WEBPACK_LOG_TAG, chalk.red('Failed to compile.\n'));
     throw error;
   }
@@ -606,7 +606,7 @@ async function getSSLCertAsync({
       };
     }
     return result;
-  } catch (error) {
+  } catch (error: any) {
     console.log(`Error creating SSL certificates: ${error}`);
   }
 

@@ -130,7 +130,7 @@ export async function ensureXcodeCommandLineToolsInstalledAsync(): Promise<boole
       // Most likely the user will cancel the process, but if they don't this will continue checking until the CLI is available.
       await pendingAsync();
       return true;
-    } catch (error) {
+    } catch {
       // TODO: Figure out why this might get called (cancel early, network issues, server problems)
       // TODO: Handle me
     }
@@ -192,7 +192,7 @@ export async function isSimulatorInstalledAsync(): Promise<boolean> {
     // make sure we can run simctl
     try {
       await SimControl.simctlAsync(['help']);
-    } catch (e) {
+    } catch (e: any) {
       if (e.isXDLError) {
         Logger.global.error(e.toString());
       } else {
@@ -344,7 +344,7 @@ function _getDefaultSimulatorDeviceUDID() {
       { stdio: 'pipe' }
     ).toString();
     return defaultDeviceUDID.trim();
-  } catch (e) {
+  } catch {
     return null;
   }
 }
@@ -464,7 +464,7 @@ export async function _downloadSimulatorAppAsync(
   fs.mkdirpSync(dir);
   try {
     await downloadAppAsync(url, dir, { extract: true }, downloadProgressCallback);
-  } catch (e) {
+  } catch (e: any) {
     fs.removeSync(dir);
     throw e;
   }
@@ -525,7 +525,7 @@ export async function uninstallExpoAppFromSimulatorAsync({ udid }: { udid?: stri
   try {
     Logger.global.info('Uninstalling Expo Go from iOS simulator.');
     await SimControl.uninstallAsync({ udid, bundleIdentifier: EXPO_GO_BUNDLE_IDENTIFIER });
-  } catch (e) {
+  } catch (e: any) {
     if (!e.message?.includes('No devices are booted.')) {
       Logger.global.error(e);
       throw e;
@@ -605,7 +605,7 @@ async function openUrlInSimulatorSafeAsync({
   let simulator: SimControl.SimulatorDevice | null = null;
   try {
     simulator = await profileMethod(ensureSimulatorOpenAsync)({ udid });
-  } catch (error) {
+  } catch (error: any) {
     return {
       success: false,
       msg: error.message,
@@ -678,7 +678,7 @@ async function openUrlInSimulatorSafeAsync({
         'parallel: openURLAsync'
       )({ udid: simulator.udid, url }),
     ]);
-  } catch (e) {
+  } catch (e: any) {
     if (e.status === 194) {
       // An error was encountered processing the command (domain=NSOSStatusErrorDomain, code=-10814):
       // The operation couldn’t be completed. (OSStatus error -10814.)
@@ -737,7 +737,7 @@ async function isDevClientInstalledAsync(
 ): Promise<boolean> {
   try {
     await assertDevClientInstalledAsync(simulator, bundleIdentifier);
-  } catch (e) {
+  } catch {
     return false;
   }
   return true;
@@ -835,7 +835,7 @@ async function constructDeepLinkAsync(
         // Don't pass a `hostType` or ngrok will break.
         scheme,
       });
-    } catch (e) {
+    } catch (e: any) {
       if (devClient) {
         return null;
       }

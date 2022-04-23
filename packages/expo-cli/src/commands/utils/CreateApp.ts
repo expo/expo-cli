@@ -130,7 +130,7 @@ export async function installNodeDependenciesAsync(
       let yamlString = '';
       try {
         yamlString = fs.readFileSync(yarnRc, 'utf8');
-      } catch (error) {
+      } catch (error: any) {
         if (error.code !== 'ENOENT') {
           throw error;
         }
@@ -185,7 +185,7 @@ export async function installCocoaPodsAsync(projectRoot: string) {
       });
       step.succeed('Installed CocoaPods CLI.');
       step = logNewSection('Running `pod install` in the `ios` directory.');
-    } catch (e) {
+    } catch (e: any) {
       step.stopAndPersist({
         symbol: '⚠️ ',
         text: chalk.red('Unable to install the CocoaPods CLI.'),
@@ -205,7 +205,7 @@ export async function installCocoaPodsAsync(projectRoot: string) {
     await hasPackageJsonDependencyListChangedAsync(projectRoot).catch(() => null);
     step.succeed('Installed pods and initialized Xcode workspace.');
     return true;
-  } catch (e) {
+  } catch (e: any) {
     step.stopAndPersist({
       symbol: '⚠️ ',
       text: chalk.red('Something went wrong running `pod install` in the `ios` directory.'),

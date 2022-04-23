@@ -1,7 +1,6 @@
 {
   "name": "expo-env-info",
   "version": "1.0.2",
-  "main": "build",
   "preferGlobal": true,
   "keywords": [
     "expo",
@@ -33,6 +32,12 @@
     "clean": "rimraf ./build/"
   },
   "devDependencies": {
-    "envinfo": "7.8.1"
+    "@types/envinfo": "^7.8.1"
+  },
+  "engines": {
+    "node": "^12.20.0 || ^14.13.1 || >=16.0.0"
+  },
+  "dependencies": {
+    "envinfo": "^7.8.1"
   }
 }

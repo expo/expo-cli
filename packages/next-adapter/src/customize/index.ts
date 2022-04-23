@@ -19,7 +19,7 @@ function logReady() {
 async function runNonInteractiveFlowAsync(projectRoot: string): Promise<void> {
   const customizations = manifest.filter(({ type }) => type === 'required');
   for (const customization of customizations) {
-    if (customization.onEnabledAsync({ projectRoot, force: false })) {
+    if (await customization.onEnabledAsync({ projectRoot, force: false })) {
       await customization.onSelectAsync({ projectRoot, force: true });
     }
   }

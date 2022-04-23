@@ -103,7 +103,7 @@ async function promptToInstallPodsAsync(projectRoot: string, missingPods?: strin
     if (!(await installCocoaPodsAsync(projectRoot))) {
       throw new AbortCommandError();
     }
-  } catch (error) {
+  } catch (error: any) {
     fs.removeSync(path.join(getTempPrebuildFolder(projectRoot), 'cached-packages.json'));
     throw error;
   }

@@ -51,7 +51,7 @@ export function writeMetroConfig({
 
     fs.copySync(sourceConfigPath, targetConfigPath);
     updatingMetroConfigStep.succeed('Added Metro config');
-  } catch (e) {
+  } catch (e: any) {
     updatingMetroConfigStep.stopAndPersist({
       symbol: '⚠️ ',
       text: chalk.yellow('Skipped Metro config updates:'),

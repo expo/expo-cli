@@ -42,7 +42,7 @@ export async function sendUrlAsync(url: string, recipient: string) {
     const result = await Exp.sendAsync(recipient, url);
     spinner.succeed(`Sent URL to ${email}`);
     return result;
-  } catch (e) {
+  } catch (e: any) {
     spinner.fail(`Failed to email ${email}: ${e.message}`);
   }
 }

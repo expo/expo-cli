@@ -509,7 +509,7 @@ async function generatePushKey(ctx: Context, accountName: string): Promise<PushK
   const manager = new PushKeyManager(ctx.appleCtx);
   try {
     return await manager.create();
-  } catch (e) {
+  } catch (e: any) {
     if (e.code === 'APPLE_PUSH_KEYS_TOO_MANY_GENERATED_ERROR') {
       const keys = await manager.list();
       Log.warn('Maximum number of Push Notifications Keys generated on Apple Developer Portal.');

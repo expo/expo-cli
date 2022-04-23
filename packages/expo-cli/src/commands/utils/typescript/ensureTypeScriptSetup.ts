@@ -183,7 +183,7 @@ async function installPackagesAsync(
   const installingPackageStep = logNewSection(`Installing ${packagesStr}`);
   try {
     await packageManager.addDevAsync(...devPackages);
-  } catch (e) {
+  } catch (e: any) {
     installingPackageStep.fail(`Failed to install ${packagesStr} with error: ${e.message}`);
     throw e;
   }

@@ -67,7 +67,7 @@ async function getExactInstalledModuleVersionAsync(moduleName: string, projectRo
   try {
     const pkg = await JsonFile.readAsync(resolveFrom(projectRoot, `${moduleName}/package.json`));
     return pkg.version as string;
-  } catch (e) {
+  } catch {
     return null;
   }
 }
@@ -281,7 +281,7 @@ async function makeBreakingChangesToConfigAsync(
       default:
         step.succeed('No additional changes necessary to app.json config.');
     }
-  } catch (e) {
+  } catch (e: any) {
     step.fail(
       `Something went wrong when attempting to update app.json configuration: ${e.message}`
     );
@@ -494,7 +494,7 @@ export async function upgradeAsync(
     Log.addNewLineIfNone();
     try {
       await packageManager.addAsync(expoPackageToInstall);
-    } catch (e) {
+    } catch (e: any) {
       installingPackageStep.fail(`Failed to install expo package with error: ${e.message}`);
       throw e;
     }
@@ -568,7 +568,7 @@ export async function upgradeAsync(
   if (devDependenciesAsStringArray.length) {
     try {
       await packageManager.addDevAsync(...devDependenciesAsStringArray);
-    } catch (e) {
+    } catch {
       updatingPackagesStep.fail(
         `Failed to upgrade JavaScript devDependencies: ${devDependenciesAsStringArray.join(' ')}`
       );
@@ -579,7 +579,7 @@ export async function upgradeAsync(
   if (dependenciesAsStringArray.length) {
     try {
       await packageManager.addAsync(...dependenciesAsStringArray);
-    } catch (e) {
+    } catch {
       updatingPackagesStep.fail(
         `Failed to upgrade JavaScript dependencies: ${dependenciesAsStringArray.join(' ')}`
       );
@@ -589,7 +589,7 @@ export async function upgradeAsync(
   if (removed.length) {
     try {
       await packageManager.removeAsync(...removed);
-    } catch (e) {
+    } catch {
       updatingPackagesStep.fail(`Failed to remove JavaScript dependencies: ${removed.join(' ')}`);
     }
   }
@@ -606,7 +606,7 @@ export async function upgradeAsync(
       projectRoot,
       options: { reset: true, nonPersistent: true },
     });
-  } catch (e) {
+  } catch (e: any) {
     clearingCacheStep.fail(`Failed to clear packager cache with error: ${e.message}`);
   } finally {
     try {

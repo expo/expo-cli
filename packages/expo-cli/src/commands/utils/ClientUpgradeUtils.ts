@@ -13,7 +13,7 @@ export async function getExpoSdkConfig(path: string) {
       skipSDKVersionRequirement: true,
     });
     return exp;
-  } catch (error) {
+  } catch (error: any) {
     if (error.code !== 'NO_PROJECT') {
       throw error;
     }

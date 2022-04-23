@@ -51,7 +51,7 @@ describe.skip('UserManager', () => {
     const api = ApiV2Client.clientForUser(userForTest);
     try {
       await api.postAsync('auth/deleteUser');
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
     }
   });
@@ -66,7 +66,7 @@ describe.skip('UserManager', () => {
     const UserManager = _newTestUserManager();
     try {
       await UserManager.ensureLoggedInAsync();
-    } catch (e) {
+    } catch (e: any) {
       expect(e.message).toEqual('Not logged in');
     }
   });

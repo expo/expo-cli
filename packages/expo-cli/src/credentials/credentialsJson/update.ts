@@ -13,7 +13,7 @@ export async function updateAndroidCredentialsAsync(ctx: Context) {
     try {
       const rawFile = await fs.readFile(credentialsJsonFilePath, 'utf-8');
       rawCredentialsJsonObject = JSON.parse(rawFile);
-    } catch (error) {
+    } catch (error: any) {
       Log.error(`There was an error while reading credentials.json [${error}]`);
       Log.error('Make sure that file is correct (or remove it) and rerun this command.');
       throw error;
@@ -76,7 +76,7 @@ export async function updateIosCredentialsAsync(ctx: Context, bundleIdentifier: 
     try {
       const rawFile = await fs.readFile(credentialsJsonFilePath, 'utf-8');
       rawCredentialsJsonObject = JSON.parse(rawFile);
-    } catch (error) {
+    } catch (error: any) {
       Log.error(`There was an error while reading credentials.json [${error}]`);
       Log.error('Make sure that file is correct (or remove it) and rerun this command.');
       throw error;

@@ -184,7 +184,7 @@ export default function createBabelLoader({
   if (!cacheIdentifier) {
     try {
       cacheIdentifier = generateCacheIdentifier(ensuredProjectRoot);
-    } catch (error) {
+    } catch (error: any) {
       console.log(chalk.black.bgRed(`The project's Babel config is invalid: ${error.message}`));
 
       throw error;

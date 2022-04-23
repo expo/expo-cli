@@ -53,7 +53,7 @@ function _handleDeviceLogs(projectRoot: string, deviceId: string, deviceName: st
       }
       try {
         return JSON.stringify(obj);
-      } catch (e) {
+      } catch {
         return obj.toString();
       }
     });
@@ -112,7 +112,7 @@ export async function startExpoServerAsync(projectRoot: string): Promise<void> {
       if (deviceId && deviceName && req.body) {
         _handleDeviceLogs(projectRoot, deviceId, deviceName, req.body);
       }
-    } catch (e) {
+    } catch (e: any) {
       ProjectUtils.logError(projectRoot, 'expo', `Error getting device logs: ${e} ${e.stack}`);
     }
     res.send('Success');
@@ -143,7 +143,7 @@ export async function stopExpoServerAsync(projectRoot: string): Promise<void> {
         method: 'post',
         url: `http://127.0.0.1:${packagerInfo.expoServerPort}/shutdown`,
       });
-    } catch (e) {}
+    } catch {}
   }
   await ProjectSettings.setPackagerInfoAsync(projectRoot, {
     expoServerPort: null,

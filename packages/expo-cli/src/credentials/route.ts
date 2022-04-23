@@ -40,7 +40,7 @@ export class CredentialsManager {
       try {
         this._currentView =
           (await this._currentView.open(this._ctx)) || (await this._quit.runAsync(this._mainView));
-      } catch (error) {
+      } catch (error: any) {
         // View quit normally, exit normally
         if (error instanceof QuitError) {
           return null;

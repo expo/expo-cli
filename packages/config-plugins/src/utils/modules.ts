@@ -24,7 +24,7 @@ export async function directoryExistsAsync(file: string): Promise<boolean> {
 export function fileExists(file: string): boolean {
   try {
     return fs.statSync(file).isFile();
-  } catch (e) {
+  } catch {
     return false;
   }
 }

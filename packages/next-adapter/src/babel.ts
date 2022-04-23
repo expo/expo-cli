@@ -45,7 +45,7 @@ module.exports = function (api: any) {
 function hasModule(name: string): boolean {
   try {
     return !!require.resolve(name);
-  } catch (error) {
+  } catch (error: any) {
     if (error.code === 'MODULE_NOT_FOUND' && error.message.includes(name)) {
       return false;
     }

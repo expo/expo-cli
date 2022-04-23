@@ -702,7 +702,7 @@ if (['markdown', 'md'].includes(process.argv[2])) {
 
   try {
     runFig();
-  } catch (error) {
+  } catch (error: any) {
     // eslint-disable-next-line no-console
     console.error(error);
     process.exit(1);

@@ -164,7 +164,7 @@ export function getManifestHandler(projectRoot: string) {
         developerTool: Config.developerTool,
         sdkVersion,
       });
-    } catch (e) {
+    } catch (e: any) {
       ProjectUtils.logError(projectRoot, 'expo', e.stack);
       // 5xx = Server Error HTTP code
       res.statusCode = 520;
@@ -180,7 +180,7 @@ export function getManifestHandler(projectRoot: string) {
       if (deviceIds) {
         await ProjectSettings.saveDevicesAsync(projectRoot, deviceIds);
       }
-    } catch (e) {
+    } catch (e: any) {
       ProjectUtils.logError(projectRoot, 'expo', e.stack);
     }
   };
@@ -313,7 +313,7 @@ export async function getManifestResponseAsync({
   let manifestString;
   try {
     manifestString = await getManifestStringAsync(manifest, hostInfo.host, acceptSignature);
-  } catch (error) {
+  } catch (error: any) {
     if (error.code === 'UNAUTHORIZED_ERROR' && manifest.owner) {
       // Don't have permissions for siging, warn and enable offline mode.
       addSigningDisabledWarning(

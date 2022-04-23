@@ -38,7 +38,7 @@ async function modifyAsync(plistPath: string, plistName: string, transform: (con
 
     try {
       config = JSON.parse(configContents);
-    } catch (e) {
+    } catch (e: any) {
       logger.info(`Error parsing ${configFilename}`, e);
       logger.info('The erroneous file contents was:', configContents);
       config = {};

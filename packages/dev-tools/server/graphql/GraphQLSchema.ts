@@ -449,7 +449,7 @@ const resolvers = {
       try {
         const { exp } = getConfig(project.projectDir);
         return exp;
-      } catch (error) {
+      } catch (error: any) {
         ProjectUtils.logError(project.projectDir, 'expo', error.message);
         return null;
       }
@@ -556,7 +556,7 @@ const resolvers = {
           success: true,
           error: null,
         };
-      } catch (error) {
+      } catch (error: any) {
         return {
           success: false,
           error: error.toString(),
@@ -591,7 +591,7 @@ const resolvers = {
       try {
         const result = await Project.publishAsync(projectDir, { releaseChannel });
         return result;
-      } catch (error) {
+      } catch (error: any) {
         ProjectUtils.logError(projectDir, 'expo', error.message);
         throw error;
       }
@@ -605,7 +605,7 @@ const resolvers = {
       if (previousSettings.hostType !== 'tunnel' && updatedSettings.hostType === 'tunnel') {
         try {
           await Project.startTunnelsAsync(currentProject.projectDir, { autoInstall: true });
-        } catch (e) {
+        } catch (e: any) {
           ProjectUtils.logWarning(
             currentProject.projectDir,
             'expo',

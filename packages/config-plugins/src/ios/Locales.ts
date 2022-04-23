@@ -88,7 +88,7 @@ export async function getResolvedLocalesAsync(
     if (typeof localeJsonPath === 'string') {
       try {
         locales[lang] = await JsonFile.readAsync(join(projectRoot, localeJsonPath));
-      } catch (e) {
+      } catch {
         // Add a warning when a json file cannot be parsed.
         addWarningIOS(
           `locales.${lang}`,

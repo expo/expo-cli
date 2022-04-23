@@ -304,7 +304,7 @@ export async function validateProfileWithoutApple(
       distCertFingerprint,
       bundleIdentifier,
     });
-  } catch (e) {
+  } catch (e: any) {
     spinner.fail(`Provisioning profile is invalid: ${e.toString()}`);
     return false;
   }

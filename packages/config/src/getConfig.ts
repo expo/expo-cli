@@ -14,7 +14,7 @@ function readConfigFile(configFile: string, context: ConfigContext): null | Dyna
   }
   try {
     return evalConfig(configFile, context);
-  } catch (error) {
+  } catch (error: any) {
     // @ts-ignore
     error.isConfigError = true;
     error.message = `Error reading Expo config at ${configFile}:\n\n${error.message}`;
