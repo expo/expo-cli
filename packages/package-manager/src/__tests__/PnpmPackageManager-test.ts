@@ -3,7 +3,7 @@ import spawnAsync from '@expo/spawn-async';
 import { vol } from 'memfs';
 import path from 'path';
 import split from 'split';
-import { PassThrough, Readable } from 'stream';
+import { PassThrough } from 'stream';
 
 import { PnpmPackageManager, PnpmStdoutTransform } from '../PnpmPackageManager';
 

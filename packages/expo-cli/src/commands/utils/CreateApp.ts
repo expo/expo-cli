@@ -91,7 +91,6 @@ export type PackageManagerName = 'npm' | 'yarn';
 export function resolvePackageManager(options: {
   yarn?: boolean;
   npm?: boolean;
-  pnpm?: boolean;
   install?: boolean;
 }): PackageManagerName {
   let packageManager: PackageManagerName = 'npm';

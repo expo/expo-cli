@@ -400,7 +400,7 @@ function logNodeInstallWarning(cdPath: string, packageManager: 'yarn' | 'npm'): 
     // In the case of --yes the project can be created in place so there would be no need to change directories.
     Log.nested(`  cd ${cdPath}/`);
   }
-  Log.nested(` ${packageManager === 'npm' ? 'npm install' : 'yarn'}`);
+  Log.nested(`  ${packageManager === 'npm' ? 'npm install' : 'yarn'}`);
   Log.nested('');
 }
 
