@@ -62,6 +62,10 @@ Object {
     },
     "allowBackup": true,
     "backgroundColor": "#ff0000",
+    "blockedPermissions": Array [
+      "android.permission.RECORD_AUDIO",
+      "android.permission.ACCESS_FINE_LOCATION",
+    ],
     "config": Object {
       "branch": Object {
         "apiKey": "MY_BRANCH_ANDROID_KEY",
@@ -92,7 +96,6 @@ Object {
       "CAMERA",
       "com.sec.android.provider.badge.permission.WRITE",
       "android.permission.ACCESS_COARSE_LOCATION",
-      "android.permission.ACCESS_FINE_LOCATION",
     ],
     "softwareKeyboardLayoutMode": "pan",
     "splash": Object {
@@ -474,6 +477,7 @@ Object {
             "$": Object {
               "package": "com.bacon.todo",
               "xmlns:android": "http://schemas.android.com/apk/res/android",
+              "xmlns:tools": "http://schemas.android.com/tools",
             },
             "application": Array [
               Object {
@@ -774,7 +778,14 @@ Object {
               },
               Object {
                 "$": Object {
+                  "android:name": "android.permission.RECORD_AUDIO",
+                  "tools:node": "remove",
+                },
+              },
+              Object {
+                "$": Object {
                   "android:name": "android.permission.ACCESS_FINE_LOCATION",
+                  "tools:node": "remove",
                 },
               },
             ],
@@ -1048,6 +1059,10 @@ Object {
     },
     "allowBackup": true,
     "backgroundColor": "#ff0000",
+    "blockedPermissions": Array [
+      "android.permission.RECORD_AUDIO",
+      "android.permission.ACCESS_FINE_LOCATION",
+    ],
     "config": Object {
       "branch": Object {
         "apiKey": "MY_BRANCH_ANDROID_KEY",
@@ -1078,7 +1093,6 @@ Object {
       "CAMERA",
       "com.sec.android.provider.badge.permission.WRITE",
       "android.permission.ACCESS_COARSE_LOCATION",
-      "android.permission.ACCESS_FINE_LOCATION",
     ],
     "softwareKeyboardLayoutMode": "pan",
     "splash": Object {
@@ -1345,6 +1359,7 @@ Object {
             "$": Object {
               "package": "com.bacon.todo",
               "xmlns:android": "http://schemas.android.com/apk/res/android",
+              "xmlns:tools": "http://schemas.android.com/tools",
             },
             "application": Array [
               Object {
@@ -1664,7 +1679,14 @@ Object {
               },
               Object {
                 "$": Object {
+                  "android:name": "android.permission.RECORD_AUDIO",
+                  "tools:node": "remove",
+                },
+              },
+              Object {
+                "$": Object {
                   "android:name": "android.permission.ACCESS_FINE_LOCATION",
+                  "tools:node": "remove",
                 },
               },
             ],
@@ -1933,6 +1955,10 @@ Object {
     },
     "allowBackup": true,
     "backgroundColor": "#ff0000",
+    "blockedPermissions": Array [
+      "android.permission.RECORD_AUDIO",
+      "android.permission.ACCESS_FINE_LOCATION",
+    ],
     "config": Object {
       "branch": Object {
         "apiKey": "MY_BRANCH_ANDROID_KEY",
@@ -1963,7 +1989,6 @@ Object {
       "CAMERA",
       "com.sec.android.provider.badge.permission.WRITE",
       "android.permission.ACCESS_COARSE_LOCATION",
-      "android.permission.ACCESS_FINE_LOCATION",
     ],
     "softwareKeyboardLayoutMode": "pan",
     "splash": Object {
