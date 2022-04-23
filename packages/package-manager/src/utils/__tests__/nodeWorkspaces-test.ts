@@ -3,7 +3,6 @@ import path from 'path';
 
 import {
   findWorkspaceRoot,
-  isUsingYarn,
   NPM_LOCK_FILE,
   PNPM_LOCK_FILE,
   PNPM_WORKSPACE_FILE,
@@ -124,26 +123,5 @@ describe(resolvePackageManager, () => {
 
     expect(resolvePackageManager(projectRoot)).toBe('pnpm');
     expect(resolvePackageManager(projectRoot, 'pnpm')).toBe('pnpm');
-  });
-});
-
-describe(isUsingYarn, () => {
-  const projectRoot = '/foo/';
-
-  afterEach(() => vol.reset());
-
-  it('returns true for yarn projects', () => {
-    vol.fromJSON({ 'package.json': '{}', [YARN_LOCK_FILE]: '' }, projectRoot);
-    expect(isUsingYarn(projectRoot)).toBe(true);
-  });
-
-  it('returns false for npm projects', () => {
-    vol.fromJSON({ 'package.json': '{}', [NPM_LOCK_FILE]: '' }, projectRoot);
-    expect(isUsingYarn(projectRoot)).toBe(false);
-  });
-
-  it('returns false for pnpm projects', () => {
-    vol.fromJSON({ 'package.json': '{}', [PNPM_LOCK_FILE]: '' }, projectRoot);
-    expect(isUsingYarn(projectRoot)).toBe(false);
   });
 });
