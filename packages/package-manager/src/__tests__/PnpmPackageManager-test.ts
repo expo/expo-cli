@@ -290,6 +290,7 @@ Already up-to-date
 Progress: resolved 35, reused 24, downloaded 0, added 0, done  
   `;
 
+  /* eslint-disable no-irregular-whitespace */
   const installPeerDepsWarning = `
 Progress: resolved 0, reused 1, downloaded 0, added 0
 
@@ -312,6 +313,7 @@ Peer dependencies that should be installed:
 
 Progress: resolved 340, reused 340, downloaded 0, added 0, done
   `;
+  /* eslint-enable no-irregular-whitespace */
 
   it('does not filter normal output', () => {
     const stream = new PassThrough()
