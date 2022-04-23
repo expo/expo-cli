@@ -1,6 +1,6 @@
 export * from './PackageManager';
 export * from './NodePackageManagers';
-export * from './PnpmPackageManager';
+export { PnpmPackageManager } from './PnpmPackageManager';
 export * from './CocoaPodsPackageManager';
 export { default as shouldUseYarn } from './utils/shouldUseYarn';
 export { default as isYarnOfflineAsync } from './utils/isYarnOfflineAsync';

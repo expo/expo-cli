@@ -11,18 +11,32 @@ import { DISABLE_ADS_ENV } from './NodePackageManagers';
 import { Logger } from './PackageManager';
 
 const ansi = `(?:${ansiRegex().source})*`;
-const pnpmPeerDependencyWarningPattern = new RegExp(
-  `${ansi}npm${ansi} ${ansi}WARN${ansi}.+You must install peer dependencies yourself\\.\n`,
+const startPnpmPeerDependencyWarningPattern = new RegExp(
+  `${ansi}WARN${ansi}.*Issues with peer dependencies found`,
   'g'
 );
 
-class PnpmStderrTransform extends Transform {
+/** Exposed for testing */
+export class PnpmStdoutTransform extends Transform {
+  private isPeerDepsWarning = false;
+
   _transform(
     chunk: Buffer,
     encoding: string,
     callback: (error?: Error | null, data?: any) => void
   ) {
-    this.push(chunk.toString().replace(pnpmPeerDependencyWarningPattern, ''));
+    const line = chunk.toString();
+
+    if (!this.isPeerDepsWarning && startPnpmPeerDependencyWarningPattern.test(line)) {
+      this.isPeerDepsWarning = true;
+    } else if (this.isPeerDepsWarning && !line) {
+      this.isPeerDepsWarning = false;
+    }
+
+    if (!this.isPeerDepsWarning) {
+      this.push(line);
+    }
+
     callback();
   }
 }
@@ -112,11 +126,11 @@ export class PnpmPackageManager {
 
     // Have spawnAsync consume stdio but we don't actually do anything with it if it's ignored
     const promise = spawnAsync('pnpm', args, { ...this.options, ignoreStdio: false });
-    if (promise.child.stderr && !this.options.ignoreStdio) {
-      promise.child.stderr
+    if (promise.child.stdout && !this.options.ignoreStdio) {
+      promise.child.stdout
         .pipe(split(/\r?\n/, (line: string) => line + '\n'))
-        .pipe(new PnpmStderrTransform())
-        .pipe(process.stderr);
+        .pipe(new PnpmStdoutTransform())
+        .pipe(process.stdout);
     }
     return promise;
   }
