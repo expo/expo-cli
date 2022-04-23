@@ -102,6 +102,7 @@ export const withAndroidExpoPlugins: ConfigPlugin<{
     AndroidConfig.IntentFilters.withAndroidIntentFilters,
     AndroidConfig.Scheme.withScheme,
     AndroidConfig.Orientation.withOrientation,
+    AndroidConfig.Permissions.withInternalBlockedPermissions,
     AndroidConfig.Permissions.withPermissions,
 
     // strings.xml

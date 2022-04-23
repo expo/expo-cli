@@ -42,11 +42,14 @@ export interface ExpoConfig {
    * The runtime version associated with this manifest.
    * Set this to `{"policy": "nativeVersion"}` to generate it automatically.
    */
-  runtimeVersion?:
+  runtimeVersion?: (
     | string
     | {
         policy: 'nativeVersion' | 'sdkVersion';
-      };
+      }
+  ) & {
+    [k: string]: any;
+  };
   /**
    * Your app version. In addition to this field, you'll also use `ios.buildNumber` and `android.versionCode` — read more about how to version your app [here](https://docs.expo.dev/distribution/app-stores/#versioning-your-app). On iOS this corresponds to `CFBundleShortVersionString`, and on Android, this corresponds to `versionName`. The required format can be found [here](https://developer.apple.com/documentation/bundleresources/information_property_list/cfbundleshortversionstring).
    */
@@ -491,11 +494,14 @@ export interface IOS {
    * The runtime version associated with this manifest for the iOS platform. If provided, this will override the top level runtimeVersion key.
    * Set this to `{"policy": "nativeVersion"}` to generate it automatically.
    */
-  runtimeVersion?:
+  runtimeVersion?: (
     | string
     | {
         policy: 'nativeVersion' | 'sdkVersion';
-      };
+      }
+  ) & {
+    [k: string]: any;
+  };
 }
 /**
  * Configuration that is specific to the Android platform.
@@ -588,6 +594,8 @@ export interface Android {
    * - `WRITE_SETTINGS`
    * - `VIBRATE`
    * - `READ_PHONE_STATE`
+   * - `FOREGROUND_SERVICE`
+   * - `WAKE_LOCK`
    * - `com.anddoes.launcher.permission.UPDATE_COUNT`
    * - `com.android.launcher.permission.INSTALL_SHORTCUT`
    * - `com.google.android.c2dm.permission.RECEIVE`
@@ -602,6 +610,10 @@ export interface Android {
    *
    */
   permissions?: string[];
+  /**
+   * List of permissions to block in the final `AndroidManifest.xml`. This is useful for removing permissions that are added by native package `AndroidManifest.xml` files which are merged into the final manifest. Not available in the classic `expo build:android` or Expo Go.
+   */
+  blockedPermissions?: string[];
   /**
    * [Firebase Configuration File](https://support.google.com/firebase/answer/7015592) Location of the `GoogleService-Info.plist` file for configuring Firebase. Including this key automatically enables FCM in your standalone app.
    */
@@ -703,7 +715,7 @@ export interface Android {
    */
   intentFilters?: {
     /**
-     * You may also use an intent filter to set your app as the default handler for links (without showing the user a dialog with options). To do so use `true` and then configure your server to serve a JSON file verifying that you own the domain. [Learn more](developer.android.com/training/app-links)
+     * You may also use an intent filter to set your app as the default handler for links (without showing the user a dialog with options). To do so use `true` and then configure your server to serve a JSON file verifying that you own the domain. [Learn more](https://developer.android.com/training/app-links)
      */
     autoVerify?: boolean;
     action: string;
@@ -728,11 +740,14 @@ export interface Android {
    * The runtime version associated with this manifest for the Android platform. If provided, this will override the top level runtimeVersion key.
    * Set this to `{"policy": "nativeVersion"}` to generate it automatically.
    */
-  runtimeVersion?:
+  runtimeVersion?: (
     | string
     | {
         policy: 'nativeVersion' | 'sdkVersion';
-      };
+      }
+  ) & {
+    [k: string]: any;
+  };
 }
 export interface AndroidIntentFiltersData {
   /**
