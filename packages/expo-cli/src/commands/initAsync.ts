@@ -1,6 +1,5 @@
 import { getConfig } from '@expo/config';
 import { AndroidConfig, IOSConfig } from '@expo/config-plugins';
-import { NodePackageManager } from '@expo/package-manager';
 import plist from '@expo/plist';
 import spawnAsync from '@expo/spawn-async';
 import chalk from 'chalk';
@@ -21,9 +20,11 @@ import * as CreateApp from './utils/CreateApp';
 import { hasExpoUpdatesInstalledAsync, usesOldExpoUpdatesAsync } from './utils/ProjectUtils';
 import { extractAndPrepareTemplateAppAsync } from './utils/extractTemplateAppAsync';
 
-type Options = Partial<Record<NodePackageManager, boolean>> & {
+type Options = {
   template?: string;
   install: boolean;
+  npm: boolean;
+  yarn: boolean;
   yes: boolean;
 };
 
@@ -76,7 +77,6 @@ function parseOptions(command: Partial<Options>): Options {
     yes: !!command.yes,
     yarn: !!command.yarn,
     npm: !!command.npm,
-    pnpm: !!command.pnpm,
     install: !!command.install,
     template: command.template,
   };
@@ -336,10 +336,7 @@ export async function actionAsync(incomingProjectRoot: string, command: Partial<
   await initGitRepoAsync(projectPath);
 }
 
-async function installNodeDependenciesAsync(
-  projectRoot: string,
-  packageManager: NodePackageManager
-) {
+async function installNodeDependenciesAsync(projectRoot: string, packageManager: 'yarn' | 'npm') {
   const installJsDepsStep = logNewSection('Installing JavaScript dependencies.');
   try {
     await CreateApp.installNodeDependenciesAsync(projectRoot, packageManager);
@@ -395,7 +392,7 @@ async function initGitRepoAsync(root: string): Promise<boolean> {
   }
 }
 
-function logNodeInstallWarning(cdPath: string, packageManager: NodePackageManager): void {
+function logNodeInstallWarning(cdPath: string, packageManager: 'yarn' | 'npm'): void {
   Log.newLine();
   Log.nested(`⚠️  Before running your app, make sure you have node modules installed:`);
   Log.nested('');
@@ -403,9 +400,7 @@ function logNodeInstallWarning(cdPath: string, packageManager: NodePackageManage
     // In the case of --yes the project can be created in place so there would be no need to change directories.
     Log.nested(`  cd ${cdPath}/`);
   }
-  Log.nested(
-    `  ${['npm', 'pnpm'].includes(packageManager) ? `${packageManager} install` : 'yarn'}`
-  );
+  Log.nested(` ${packageManager === 'npm' ? 'npm install' : 'yarn'}`);
   Log.nested('');
 }
 

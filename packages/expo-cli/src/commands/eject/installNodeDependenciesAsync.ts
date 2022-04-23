@@ -1,4 +1,3 @@
-import { NodePackageManager } from '@expo/package-manager';
 import chalk from 'chalk';
 import fs from 'fs-extra';
 
@@ -13,7 +12,7 @@ import * as CreateApp from '../utils/CreateApp';
  */
 export async function installNodeDependenciesAsync(
   projectRoot: string,
-  packageManager: NodePackageManager,
+  packageManager: 'yarn' | 'npm',
   { clean = true }: { clean: boolean }
 ) {
   if (clean && packageManager !== 'yarn') {

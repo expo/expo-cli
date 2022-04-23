@@ -12,7 +12,6 @@ export async function actionAsync(
     ...options
   }: EjectAsyncOptions & {
     npm?: boolean;
-    pnpm?: boolean;
     platform?: string;
     clean?: boolean;
     skipDependencyUpdate?: string;
@@ -20,8 +19,6 @@ export async function actionAsync(
 ) {
   if (options.npm) {
     options.packageManager = 'npm';
-  } else if (options.pnpm) {
-    options.packageManager = 'pnpm';
   }
 
   const platforms = platformsFromPlatform(platform);

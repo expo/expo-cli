@@ -14,7 +14,6 @@ export default function (program: Command) {
       .helpGroup('deprecated')
       .option('--no-install', 'Skip installing npm packages and CocoaPods.')
       .option('--npm', 'Use npm to install dependencies. (default when Yarn is not installed)')
-      .option('--pnpm', 'Use pnpm to install dependencies.')
       .option(
         '-p, --platform <all|android|ios>',
         'Platforms to sync: ios, android, all. Default: all'

@@ -10,8 +10,7 @@ export default function (program: Command) {
       .description('Upgrade the project packages and config for the given SDK version')
       .helpGroup('info')
       .option('--npm', 'Use npm to install dependencies. (default when package-lock.json exists)')
-      .option('--yarn', 'Use Yarn to install dependencies. (default when yarn.lock exists)')
-      .option('--pnpm', 'Use pnpm to install dependencies. (default when pnpm-lock.yaml exists)'),
+      .option('--yarn', 'Use Yarn to install dependencies. (default when yarn.lock exists)'),
     () => import('./upgradeAsync')
   );
 }

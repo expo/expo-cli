@@ -12,7 +12,6 @@ export default function (program: Command) {
       .helpGroup('core')
       .option('--npm', 'Use npm to install dependencies. (default when package-lock.json exists)')
       .option('--yarn', 'Use Yarn to install dependencies. (default when yarn.lock exists)')
-      .option('--pnpm', 'Use pnpm to install dependencies. (default when pnpm-lock.yaml exists)')
       .description('Install a module or other package to a project')
       .on('--help', () => {
         Log.log(

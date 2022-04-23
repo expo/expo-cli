@@ -40,7 +40,6 @@ export async function actionAsync(
   const packageManager = PackageManager.createForProject(projectRoot, {
     npm: options.npm,
     yarn: options.yarn,
-    pnpm: options.pnpm,
     log: Log.log,
   });
 

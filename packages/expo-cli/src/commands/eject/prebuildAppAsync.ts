@@ -1,6 +1,5 @@
 import { ExpoConfig } from '@expo/config';
 import { ModPlatform } from '@expo/config-plugins';
-import { NodePackageManager } from '@expo/package-manager';
 import temporary from 'tempy';
 
 import Log from '../../log';
@@ -19,7 +18,7 @@ export type EjectAsyncOptions = {
   force?: boolean;
   template?: string;
   install?: boolean;
-  packageManager?: NodePackageManager;
+  packageManager?: 'npm' | 'yarn';
   platforms: ModPlatform[];
   skipDependencyUpdate?: string[];
 };
@@ -72,7 +71,6 @@ export async function prebuildAsync(
     install: shouldInstall,
     npm: options?.packageManager === 'npm',
     yarn: options?.packageManager === 'yarn',
-    pnpm: options?.packageManager === 'pnpm',
   });
 
   if (shouldInstall) {
