@@ -28,6 +28,7 @@
   },
   "homepage": "https://docs.expo.dev/guides/config-plugins/",
   "files": [
+    "android",
     "build",
     "paths"
   ],

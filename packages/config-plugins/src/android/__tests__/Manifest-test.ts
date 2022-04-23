@@ -1,8 +1,10 @@
 import { resolve } from 'path';
 
+import * as XML from '../../utils/XML';
 import {
   addMetaDataItemToMainApplication,
   addUsesLibraryItemToMainApplication,
+  ensureToolsAvailable,
   findMetaDataItem,
   findUsesLibraryItem,
   getMainActivity,
@@ -83,5 +85,24 @@ describe(prefixAndroidKeys, () => {
       'android:bacon': 'pancake',
       'android:required': true,
     });
+  });
+});
+
+describe(ensureToolsAvailable, () => {
+  it(`ensures tools are available`, async () => {
+    const manifest = await readAndroidManifestAsync(sampleManifestPath);
+    expect(XML.format(manifest)).not.toMatch(/xmlns:tools="http:\/\/schemas\.android\.com\/tools"/);
+
+    // ensure idempotent
+    for (let i = 0; i < 2; i++) {
+      const firstFewLines = XML.format(ensureToolsAvailable(manifest))
+        .split('\n')
+        .splice(0, 1)
+        .join('\n');
+      expect(firstFewLines).toMatchInlineSnapshot(
+        `"<manifest xmlns:android=\\"http://schemas.android.com/apk/res/android\\" package=\\"com.expo.mycoolapp\\" xmlns:tools=\\"http://schemas.android.com/tools\\">"`
+      );
+      expect(firstFewLines).toMatch(/xmlns:tools="http:\/\/schemas\.android\.com\/tools"/);
+    }
   });
 });
