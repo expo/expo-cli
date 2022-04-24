@@ -99,18 +99,21 @@ export function addResourceFileToGroup({
   isBuildFile,
   project,
   verbose,
+  targetUuid,
 }: {
   filepath: string;
   groupName: string;
   isBuildFile?: boolean;
   project: XcodeProject;
   verbose?: boolean;
+  targetUuid?: string;
 }): XcodeProject {
   return addFileToGroupAndLink({
     filepath,
     groupName,
     project,
     verbose,
+    targetUuid,
     addFileToProject({ project, file }) {
       project.addToPbxFileReferenceSection(file);
       if (isBuildFile) {
@@ -143,6 +146,7 @@ export function addBuildSourceFileToGroup({
     groupName,
     project,
     verbose,
+    targetUuid,
     addFileToProject({ project, file }) {
       project.addToPbxFileReferenceSection(file);
       project.addToPbxBuildFileSection(file);
