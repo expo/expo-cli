@@ -10,15 +10,46 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🧹 Chores
 
-[expo-env-info] convert from CJS to ESM module. ([#4320](https://github.com/expo/expo-cli/pull/4320))
-
-### 🐛 Bug fixes
-
-## [Tue, 19 Apr 2022 14:19:30 -0700](https://github.com/expo/expo-cli/commit/a61ddb4dcd27da86f74de9c7e9bd18570d8c2684)
-
-### 🛠 Breaking changes
+## [Mon, 25 Apr 2022 09:39:36 -0700](https://github.com/expo/expo-cli/commit/3b877aba82399512ca583a972effcd09c6f43f26)
 
 ### 🎉 New features
+
+- [config-plugins] Introduce rule-based build properties config-plugin ([#4270](https://github.com/expo/expo-cli/issues/4270))
+- [config-plugins] add initial app clip support ([#4327](https://github.com/expo/expo-cli/issues/4327))
+- [config-plugins] resolve target specific entitlements files ([#4313](https://github.com/expo/expo-cli/issues/4313))
+- [expo-env-info] prepare repo to convert expo-env-info to esm ([#4312](https://github.com/expo/expo-cli/issues/4312))
+- [dev-server] support new API for Expo SDK 45 ([#4306](https://github.com/expo/expo-cli/issues/4306))
+
+### 🧹 Chores
+
+- [expo-env-info] convert expo-env-info from CJS to ESM ([#4320](https://github.com/expo/expo-cli/issues/4320))
+
+### 📦 Packages updated
+
+- @expo/config-plugins@4.1.2
+- @expo/config@6.0.21
+- @expo/dev-server@0.1.108
+- @expo/dev-tools@0.13.149
+- expo-cli@5.4.0
+- expo-codemod@1.1.6
+- expo-env-info@1.0.3
+- expo-optimize@0.2.13
+- @expo/image-utils@0.3.20
+- install-expo-modules@0.2.8
+- @expo/json-file@8.2.36
+- @expo/metro-config@0.3.14
+- @expo/next-adapter@4.0.1
+- @expo/osascript@2.0.33
+- @expo/package-manager@0.0.52
+- pod-install@0.1.34
+- @expo/prebuild-config@3.1.2
+- expo-pwa@0.0.116
+- @expo/schemer@1.4.1
+- uri-scheme@1.0.117
+- @expo/webpack-config@0.16.21
+- xdl@59.2.33
+
+## [Tue, 19 Apr 2022 14:19:30 -0700](https://github.com/expo/expo-cli/commit/a61ddb4dcd27da86f74de9c7e9bd18570d8c2684)
 
 ### 🧹 Chores
 
