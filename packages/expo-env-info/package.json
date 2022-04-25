@@ -1,6 +1,6 @@
 {
   "name": "expo-env-info",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "preferGlobal": true,
   "type": "module",
   "keywords": [
