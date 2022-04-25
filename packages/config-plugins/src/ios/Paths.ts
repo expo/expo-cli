@@ -4,6 +4,7 @@ import * as path from 'path';
 
 import { UnexpectedError } from '../utils/errors';
 import { addWarningIOS } from '../utils/warnings';
+import * as Entitlements from './Entitlements';
 
 const ignoredPaths = ['**/@(Carthage|Pods|vendor|node_modules)/**'];
 
@@ -254,24 +255,10 @@ export function getAllEntitlementsPaths(projectRoot: string): string[] {
 }
 
 /**
- * Get the entitlements file path if it exists.
- *
- * @param projectRoot
+ * @deprecated: use Entitlements.getEntitlementsPath instead
  */
 export function getEntitlementsPath(projectRoot: string): string | null {
-  const [using, ...extra] = getAllEntitlementsPaths(projectRoot);
-
-  if (extra.length) {
-    warnMultipleFiles({
-      tag: 'entitlements',
-      fileName: '*.entitlements',
-      projectRoot,
-      using,
-      extra,
-    });
-  }
-
-  return using ?? null;
+  return Entitlements.getEntitlementsPath(projectRoot);
 }
 
 export function getSupportingPath(projectRoot: string): string {
