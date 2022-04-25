@@ -11,6 +11,12 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v2
+      - name: Get version
+        id: expo-version
+        env: 
+          FULL_VERSION: ${{ github.ref_name }}
+        run: |
+          echo "::set-output name=version::$(echo "$FULL_VERSION" | cut -f2 -d@)"
       - name: Generate the spec
         run: |
           yarn
@@ -24,4 +30,4 @@ jobs:
           autocomplete-spec-name: expo
           spec-path: packages/expo-cli/new-spec.ts
           diff-based-versioning: true
-          new-spec-version: ${{ github.ref_name }}
+          new-spec-version: ${{ steps.echo-version.outputs.version }}
