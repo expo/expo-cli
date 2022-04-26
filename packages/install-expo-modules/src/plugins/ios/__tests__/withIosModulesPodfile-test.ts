@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 
-import { getDefaultVersion } from '../../../utils/expoVersionMappings';
+import { getLatestSdkVersion } from '../../../utils/expoVersionMappings';
 import { updatePodfile } from '../withIosModulesPodfile';
 
 describe(updatePodfile, () => {
@@ -87,7 +87,8 @@ target 'HelloWorld-tvOS' do
 end
 `;
 
-    expect(updatePodfile(contents, 'HelloWorld', getDefaultVersion())).toEqual(expectContents);
+    const sdkVersion = getLatestSdkVersion().expoSdkVersion;
+    expect(updatePodfile(contents, 'HelloWorld', sdkVersion)).toEqual(expectContents);
   });
 
   it('minimum support for existing post_integrate hook', () => {
@@ -122,7 +123,8 @@ target 'HelloWorld' do
 end
 `;
 
-    expect(updatePodfile(contents, 'HelloWorld', getDefaultVersion())).toEqual(expectContents);
+    const sdkVersion = getLatestSdkVersion().expoSdkVersion;
+    expect(updatePodfile(contents, 'HelloWorld', sdkVersion)).toEqual(expectContents);
   });
 });
 

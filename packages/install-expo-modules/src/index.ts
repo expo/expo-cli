@@ -12,11 +12,7 @@ import semver from 'semver';
 import { withAndroidModules } from './plugins/android/withAndroidModules';
 import { withIosDeploymentTarget } from './plugins/ios/withIosDeploymentTarget';
 import { withIosModules } from './plugins/ios/withIosModules';
-import {
-  getDefaultVersion,
-  getIosDeploymentTarget,
-  isSupportedVersion,
-} from './utils/expoVersionMappings';
+import { getDefaultSdkVersion, getVersionInfo, VersionInfo } from './utils/expoVersionMappings';
 import { normalizeProjectRoot } from './utils/projectRoot';
 
 const packageJSON = require('../package.json');
@@ -33,23 +29,22 @@ const program = new Command(packageJSON.name)
   .action((inputProjectRoot: string) => (projectRoot = inputProjectRoot))
   .parse(process.argv);
 
-function getSdkVersion(): string {
+function getSdkVersionInfo(): VersionInfo {
   const { sdkVersion } = program;
   if (sdkVersion) {
-    if (!isSupportedVersion(sdkVersion)) {
+    const versionInfo = getVersionInfo(sdkVersion);
+    if (!versionInfo) {
       throw new Error(`Unsupported sdkVersion: ${sdkVersion}`);
     }
-    return sdkVersion;
+    return versionInfo;
   }
-  return getDefaultVersion();
+  return getDefaultSdkVersion(projectRoot);
 }
 
 async function runAsync(programName: string) {
   projectRoot = normalizeProjectRoot(projectRoot);
 
-  const sdkVersion = getSdkVersion();
-
-  const iosDeploymentTarget = getIosDeploymentTarget(sdkVersion);
+  const { expoSdkVersion: sdkVersion, iosDeploymentTarget } = getSdkVersionInfo();
   const deploymentTargetMessage = `Expo modules minimum iOS requirement is ${iosDeploymentTarget}. This tool will change your iOS deployment target to ${iosDeploymentTarget}.`;
   if (program.nonInteractive) {
     console.log(chalk.yellow(`⚠️  ${deploymentTargetMessage}`));

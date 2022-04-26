@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 
-import { getDefaultVersion } from '../../../utils/expoVersionMappings';
+import { getLatestSdkVersion } from '../../../utils/expoVersionMappings';
 import {
   updateModulesAppDelegateObjcHeader,
   updateModulesAppDelegateObjcImpl,
@@ -31,15 +31,12 @@ describe(updateModulesAppDelegateObjcHeader, () => {
 
 @end`;
 
-    const contents = updateModulesAppDelegateObjcHeader(rawContents, getDefaultVersion());
-    expect(updateModulesAppDelegateObjcHeader(contents, getDefaultVersion())).toEqual(
-      expectContents
-    );
+    const sdkVersion = getLatestSdkVersion().expoSdkVersion;
+    const contents = updateModulesAppDelegateObjcHeader(rawContents, sdkVersion);
+    expect(updateModulesAppDelegateObjcHeader(contents, sdkVersion)).toEqual(expectContents);
     // Try it twice...
-    const nextContents = updateModulesAppDelegateObjcHeader(contents, getDefaultVersion());
-    expect(updateModulesAppDelegateObjcHeader(nextContents, getDefaultVersion())).toEqual(
-      expectContents
-    );
+    const nextContents = updateModulesAppDelegateObjcHeader(contents, sdkVersion);
+    expect(updateModulesAppDelegateObjcHeader(nextContents, sdkVersion)).toEqual(expectContents);
   });
 });
 
@@ -128,10 +125,11 @@ describe(updateModulesAppDelegateObjcImpl, () => {
 
 @end`;
 
-    const contents = updateModulesAppDelegateObjcImpl(rawContents, getDefaultVersion());
+    const sdkVersion = getLatestSdkVersion().expoSdkVersion;
+    const contents = updateModulesAppDelegateObjcImpl(rawContents, sdkVersion);
     expect(contents).toEqual(expectContents);
     // Try it twice...
-    const nextContents = updateModulesAppDelegateObjcImpl(contents, getDefaultVersion());
+    const nextContents = updateModulesAppDelegateObjcImpl(contents, sdkVersion);
     expect(nextContents).toEqual(expectContents);
   });
 });
@@ -209,7 +207,8 @@ class AppDelegate: AppDelegateWrapper, RCTBridgeDelegate {
 }
 `;
 
-    expect(updateModulesAppDelegateSwift(contents, getDefaultVersion())).toEqual(expectContents);
+    const sdkVersion = getLatestSdkVersion().expoSdkVersion;
+    expect(updateModulesAppDelegateSwift(contents, sdkVersion)).toEqual(expectContents);
   });
 });
 
