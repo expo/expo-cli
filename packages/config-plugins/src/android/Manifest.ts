@@ -346,3 +346,33 @@ export function prefixAndroidKeys<T extends Record<string, any> = Record<string,
     {} as T
   );
 }
+
+/**
+ * Ensure the `tools:*` namespace is available in the manifest.
+ *
+ * @param manifest AndroidManifest.xml
+ * @returns manifest with the `tools:*` namespace available
+ */
+export function ensureToolsAvailable(manifest: AndroidManifest) {
+  return ensureManifestHasNamespace(manifest, {
+    namespace: 'xmlns:tools',
+    url: 'http://schemas.android.com/tools',
+  });
+}
+
+/**
+ * Ensure a particular namespace is available in the manifest.
+ *
+ * @param manifest `AndroidManifest.xml`
+ * @returns manifest with the provided namespace available
+ */
+function ensureManifestHasNamespace(
+  manifest: AndroidManifest,
+  { namespace, url }: { namespace: string; url: string }
+) {
+  if (manifest?.manifest?.$?.[namespace]) {
+    return manifest;
+  }
+  manifest.manifest.$[namespace] = url;
+  return manifest;
+}

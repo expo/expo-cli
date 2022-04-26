@@ -148,7 +148,15 @@ function getLargeConfig(): ExportedConfig {
           backgroundColor: '#00ffff',
         },
       },
-      permissions: ['CAMERA', 'com.sec.android.provider.badge.permission.WRITE'],
+      blockedPermissions: [
+        'android.permission.RECORD_AUDIO',
+        'android.permission.ACCESS_FINE_LOCATION',
+      ],
+      permissions: [
+        'CAMERA',
+        'com.sec.android.provider.badge.permission.WRITE',
+        'android.permission.RECORD_AUDIO',
+      ],
       googleServicesFile: './config/google-services.json',
       config: {
         branch: {
