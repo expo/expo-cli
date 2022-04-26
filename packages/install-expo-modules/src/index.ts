@@ -2,17 +2,15 @@
 
 import { getConfig } from '@expo/config';
 import { compileModsAsync, ModPlatform } from '@expo/config-plugins';
-import * as PackageManager from '@expo/package-manager';
 import chalk from 'chalk';
 import { Command } from 'commander';
-import path from 'path';
 import prompts from 'prompts';
-import semver from 'semver';
 
 import { withAndroidModules } from './plugins/android/withAndroidModules';
 import { withIosDeploymentTarget } from './plugins/ios/withIosDeploymentTarget';
 import { withIosModules } from './plugins/ios/withIosModules';
 import { getDefaultSdkVersion, getVersionInfo, VersionInfo } from './utils/expoVersionMappings';
+import { installExpoPackageAsync, installPodsAsync } from './utils/packageInstaller';
 import { normalizeProjectRoot } from './utils/projectRoot';
 
 const packageJSON = require('../package.json');
@@ -83,15 +81,10 @@ async function runAsync(programName: string) {
   });
 
   console.log('\u203A Installing expo packages...');
-  const packageManager = PackageManager.createForProject(projectRoot);
-  // e.g. `expo@>=43.0.0-0 <44.0.0`, this will cover prerelease version for beta testing.
-  await packageManager.addAsync(`expo@>=${sdkVersion}-0 <${semver.inc(sdkVersion, 'major')}`);
+  await installExpoPackageAsync(projectRoot, sdkVersion);
 
   console.log('\u203A Installing ios pods...');
-  const podPackageManager = new PackageManager.CocoaPodsPackageManager({
-    cwd: path.join(projectRoot, 'ios'),
-  });
-  await podPackageManager.installAsync();
+  await installPodsAsync(projectRoot);
 
   console.log(chalk.bold('\u203A Installation completed!'));
 }
