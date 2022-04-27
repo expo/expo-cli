@@ -10,6 +10,32 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🧹 Chores
 
+### 🐛 Bug fixes
+
+## [Wed, 27 Apr 2022 10:57:06 -0700](https://github.com/expo/expo-cli/commit/c4258cabdb3f860ff190bb4234074e1570f5be86)
+
+### 🎉 New features
+
+- [install-expo-modules] Add react-native 0.68 and expo sdk 45 support ([#4333](https://github.com/expo/expo-cli/issues/4333))
+- [config plugins] support android.blockedPermissions ([#4323](https://github.com/expo/expo-cli/issues/4323))
+
+### 📦 Packages updated
+
+- @expo/config-plugins@4.1.3
+- @expo/config@6.0.22
+- @expo/dev-server@0.1.109
+- @expo/dev-tools@0.13.150
+- expo-cli@5.4.1
+- expo-optimize@0.2.14
+- install-expo-modules@0.3.0
+- @expo/metro-config@0.3.15
+- @expo/next-adapter@4.0.2
+- @expo/prebuild-config@3.1.3
+- expo-pwa@0.0.117
+- uri-scheme@1.0.118
+- @expo/webpack-config@0.16.22
+- xdl@59.2.34
+
 ## [Mon, 25 Apr 2022 09:39:36 -0700](https://github.com/expo/expo-cli/commit/3b877aba82399512ca583a972effcd09c6f43f26)
 
 ### 🎉 New features
