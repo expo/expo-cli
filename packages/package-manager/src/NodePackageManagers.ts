@@ -1,7 +1,6 @@
 import JsonFile from '@expo/json-file';
 import spawnAsync, { SpawnOptions } from '@expo/spawn-async';
 import ansiRegex from 'ansi-regex';
-import findWorkspaceRoot from 'find-yarn-workspace-root';
 import { existsSync } from 'fs';
 import npmPackageArg from 'npm-package-arg';
 import path from 'path';
@@ -10,13 +9,17 @@ import split from 'split';
 import { Transform } from 'stream';
 
 import { Logger, PackageManager } from './PackageManager';
+import { PnpmPackageManager } from './PnpmPackageManager';
 import isYarnOfflineAsync from './utils/isYarnOfflineAsync';
+import { findWorkspaceRoot, resolvePackageManager } from './utils/nodeWorkspaces';
+
+export type NodePackageManager = 'yarn' | 'npm' | 'pnpm';
 
 /**
  * Disable various postinstall scripts
  * - https://github.com/opencollective/opencollective-postinstall/pull/9
  */
-const disableAdsEnv = { DISABLE_OPENCOLLECTIVE: '1', ADBLOCK: '1' };
+export const DISABLE_ADS_ENV = { DISABLE_OPENCOLLECTIVE: '1', ADBLOCK: '1' };
 
 const ansi = `(?:${ansiRegex().source})*`;
 const npmPeerDependencyWarningPattern = new RegExp(
@@ -62,6 +65,7 @@ class YarnStderrTransform extends Transform {
     callback();
   }
 }
+
 export class NpmPackageManager implements PackageManager {
   options: SpawnOptions;
 
@@ -72,7 +76,7 @@ export class NpmPackageManager implements PackageManager {
     this.options = {
       env: {
         ...process.env,
-        ...disableAdsEnv,
+        ...DISABLE_ADS_ENV,
       },
       cwd,
       ...(silent
@@ -223,7 +227,7 @@ export class YarnPackageManager implements PackageManager {
     this.options = {
       env: {
         ...process.env,
-        ...disableAdsEnv,
+        ...DISABLE_ADS_ENV,
       },
       cwd,
       ...(silent
@@ -328,9 +332,7 @@ export class YarnPackageManager implements PackageManager {
   }
 }
 
-export type CreateForProjectOptions = {
-  npm?: boolean;
-  yarn?: boolean;
+export type CreateForProjectOptions = Partial<Record<NodePackageManager, boolean>> & {
   log?: Logger;
   silent?: boolean;
 };
@@ -338,14 +340,18 @@ export type CreateForProjectOptions = {
 export function createForProject(
   projectRoot: string,
   options: CreateForProjectOptions = {}
-): NpmPackageManager | YarnPackageManager {
+): NpmPackageManager | YarnPackageManager | PnpmPackageManager {
   let PackageManager;
   if (options.npm) {
     PackageManager = NpmPackageManager;
   } else if (options.yarn) {
     PackageManager = YarnPackageManager;
+  } else if (options.pnpm) {
+    PackageManager = PnpmPackageManager;
   } else if (isUsingYarn(projectRoot)) {
     PackageManager = YarnPackageManager;
+  } else if (resolvePackageManager(projectRoot, 'pnpm')) {
+    PackageManager = PnpmPackageManager;
   } else {
     PackageManager = NpmPackageManager;
   }
