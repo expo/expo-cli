@@ -27,7 +27,21 @@ describe(updateModulesAppDelegateObjcHeader, () => {
 });
 
 describe(updateModulesAppDelegateObjcImpl, () => {
-  it('should migrate from classic RN AppDelegate implementation', async () => {
+  it('should migrate from classic react-native@>=0.68.0 AppDelegate.mm implementation', async () => {
+    const [rawContents, expectContents] = await Promise.all([
+      fs.promises.readFile(path.join(fixturesPath, 'AppDelegate-rn068.mm'), 'utf8'),
+      fs.promises.readFile(path.join(fixturesPath, 'AppDelegate-rn068-updated.mm'), 'utf8'),
+    ]);
+
+    const sdkVersion = getLatestSdkVersion().expoSdkVersion;
+    const contents = updateModulesAppDelegateObjcImpl(rawContents, sdkVersion);
+    expect(contents).toEqual(expectContents);
+    // Try it twice...
+    const nextContents = updateModulesAppDelegateObjcImpl(contents, sdkVersion);
+    expect(nextContents).toEqual(expectContents);
+  });
+
+  it('should migrate from classic react-native@<0.68.0 AppDelegate.m implementation', async () => {
     const [rawContents, expectContents] = await Promise.all([
       fs.promises.readFile(path.join(fixturesPath, 'AppDelegate.m'), 'utf8'),
       fs.promises.readFile(path.join(fixturesPath, 'AppDelegate-updated.m'), 'utf8'),
