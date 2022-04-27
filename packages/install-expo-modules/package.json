@@ -46,6 +46,7 @@
     "find-up": "^5.0.0",
     "glob": "7.1.6",
     "prompts": "^2.3.2",
+    "resolve-from": "^5.0.0",
     "semver": "7.3.2"
   },
   "devDependencies": {
