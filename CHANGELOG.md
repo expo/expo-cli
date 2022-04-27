@@ -12,6 +12,27 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+## [Wed, 27 Apr 2022 16:29:28 -0700](https://github.com/expo/expo-cli/commit/e517d22aaf8a3fd93795a276ed68be8b1afed30d)
+
+### 🎉 New features
+
+- [package-manager] Add support for pnpm ([#4311](https://github.com/expo/expo-cli/issues/4311))
+
+### 🧹 Chores
+
+- [prebuild-config] Bump expo-modules-autolinking version
+
+### 📦 Packages updated
+
+- @expo/dev-tools@0.13.152
+- expo-cli@5.4.3
+- install-expo-modules@0.3.2
+- @expo/next-adapter@4.0.4
+- @expo/package-manager@0.0.53
+- pod-install@0.1.35
+- @expo/prebuild-config@4.0.0
+- xdl@59.2.36
+
 ## [Wed, 27 Apr 2022 11:34:35 -0700](https://github.com/expo/expo-cli/commit/7bbabeec424484dd8b1592cc128d35a9e99e323d)
 
 ### 🧹 Chores
