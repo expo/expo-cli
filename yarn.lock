@@ -8431,10 +8431,10 @@ expo-modules-autolinking@~0.3.3:
     find-up "~5.0.0"
     fs-extra "^9.1.0"
 
-expo-modules-autolinking@~0.5.1:
-  version "0.5.1"
-  resolved "https://registry.yarnpkg.com/expo-modules-autolinking/-/expo-modules-autolinking-0.5.1.tgz#44f56288d55f6a71576ddd94c18ec9ec8141207b"
-  integrity sha512-UaqISyuWDTFWBeQv6BniPzAWOJ0R6MCL/uNt6BSMkZW+b8PUq4wYFpSNXSWUJTqY/raYWs5hcSR4HPGkqnVQlg==
+expo-modules-autolinking@~0.7.0:
+  version "0.7.0"
+  resolved "https://registry.yarnpkg.com/expo-modules-autolinking/-/expo-modules-autolinking-0.7.0.tgz#c03383f4b82d82a9fa120a9015e6ecf257390fdb"
+  integrity sha512-xwO3hLCl3Ru8ouuf35cLQgbOL6ym1ku1HLXX/1xs7inYLKvDzAWY/oeiNS30qOl13T4aYFR3q2Nq9XlDw41/2Q==
   dependencies:
     chalk "^4.1.0"
     commander "^7.2.0"
