@@ -23,7 +23,7 @@
     "build"
   ],
   "scripts": {
-    "prepublishOnly": "yarn run clean && yarn run build:prod",
+    "prepare": "yarn run clean && yarn run build:prod",
     "lint": "eslint .",
     "test": "jest",
     "watch": "yarn run build -w",
