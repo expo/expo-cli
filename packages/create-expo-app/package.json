@@ -41,7 +41,6 @@
     "@types/getenv": "^1.0.0",
     "@types/node": "^12.6.8",
     "@types/prompts": "2.0.8",
-    "@types/tar": "^4.0.1",
     "cacache": "^15.3.0",
     "chalk": "^4.0.0",
     "commander": "2.20.0",
@@ -52,7 +51,7 @@
     "minipass": "2.3.5",
     "ora": "3.4.0",
     "prompts": "^2.3.2",
-    "tar": "4.4.6",
+    "tar": "~6.0.5",
     "terminal-link": "^2.1.1",
     "update-check": "^1.5.3"
   },

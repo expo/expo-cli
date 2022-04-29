@@ -112,7 +112,6 @@ export async function extractNpmTarballAsync(
     tar.extract(
       {
         cwd,
-        // @ts-expect-error
         transform: createFileTransform(name),
         onentry: createEntryResolver(name),
         strip: strip ?? 1,
