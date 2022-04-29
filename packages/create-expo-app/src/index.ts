@@ -3,13 +3,18 @@ import chalk from 'chalk';
 import { Command } from 'commander';
 import fs from 'fs';
 import path from 'path';
-import prompts from 'prompts';
+
+import * as Template from './Template';
+import shouldUpdate from './Update';
+import { initGitRepoAsync } from './git';
+import {
+  installDependenciesAsync,
+  PackageManagerName,
+  resolvePackageManager,
+} from './resolvePackageManager';
+import { assertFolderEmpty, assertValidName, resolveProjectRootAsync } from './resolveProjectRoot';
 
 // import * as Examples from './Examples';
-import * as Template from './Template';
-import shouldUpdate, { shouldUseYarn } from './Update';
-import { getConflictsForDirectory } from './dir';
-
 const packageJSON = require('../package.json');
 
 let inputPath: string;
@@ -103,7 +108,7 @@ async function runAsync(): Promise<void> {
     try {
       // check if git is installed
       // check if inside git repo
-      await Template.initGitRepoAsync(projectRoot, { silent: true });
+      await initGitRepoAsync(projectRoot);
     } catch {
       // todo: check if git is installed, bail out
     }
@@ -124,15 +129,17 @@ function getChangeDirectoryPath(projectRoot: string): string {
 
 async function installNodeDependenciesAsync(
   projectRoot: string,
-  packageManager: Template.PackageManagerName
+  packageManager: PackageManagerName
 ): Promise<void> {
-  const installJsDepsStep = Template.logNewSection('Installing JavaScript dependencies.');
+  const installJsDepsStep = Template.logNewSection(
+    `Installing JavaScript dependencies with ${packageManager}.`
+  );
   try {
-    await Template.installDependenciesAsync(projectRoot, packageManager, { silent: true });
+    await installDependenciesAsync(projectRoot, packageManager, { silent: true });
     installJsDepsStep.succeed('Installed JavaScript dependencies.');
   } catch {
     installJsDepsStep.fail(
-      `Something went wrong installing JavaScript dependencies. Check your ${packageManager} logs. Continuing to initialize the app.`
+      `Something went wrong installing JavaScript dependencies. Check your ${packageManager} logs. Continuing to create the app.`
     );
   }
 }
@@ -146,12 +153,12 @@ async function installCocoaPodsAsync(projectRoot: string): Promise<boolean> {
   return podsInstalled;
 }
 
-function logNodeInstallWarning(cdPath: string, packageManager: Template.PackageManagerName): void {
+function logNodeInstallWarning(cdPath: string, packageManager: PackageManagerName): void {
   console.log();
   console.log(`⚠️  Before running your app, make sure you have node modules installed:`);
   console.log('');
   console.log(`  cd ${cdPath ?? '.'}/`);
-  console.log(`  ${packageManager === 'npm' ? 'npm install' : 'yarn'}`);
+  console.log(`  ${packageManager} install`);
   console.log('');
 }
 
@@ -170,92 +177,6 @@ function logCocoaPodsWarning(cdPath: string): void {
 }
 
 runAsync();
-
-function resolvePackageManager(): Template.PackageManagerName {
-  let packageManager: Template.PackageManagerName = 'npm';
-
-  if (shouldUseYarn()) {
-    packageManager = 'yarn';
-    console.log();
-    console.log('Using Yarn to install packages.');
-    //  You can run `npx create-expo-app` to use npm instead'
-    console.log();
-  } else {
-    console.log();
-    console.log('Using npm to install packages.');
-    console.log();
-  }
-  return packageManager;
-}
-
-function assertFolderEmpty(projectRoot: string, folderName: string) {
-  const conflicts = getConflictsForDirectory(projectRoot);
-  if (conflicts.length) {
-    console.log(`The directory ${chalk.green(folderName)} has files that might be overwritten:`);
-    console.log();
-    for (const file of conflicts) {
-      console.log(`  ${file}`);
-    }
-    console.log();
-    console.log('Try using a new directory name, or moving these files.');
-    console.log();
-    process.exit(1);
-  }
-}
-
-function assertValidName(folderName: string) {
-  const validation = Template.validateName(folderName);
-  if (typeof validation === 'string') {
-    console.error(
-      chalk.red(`Cannot create an app named ${chalk.red(`"${folderName}"`)}. ${validation}`)
-    );
-    process.exit(1);
-  }
-}
-
-async function resolveProjectRootAsync(input: string): Promise<string> {
-  let name = input?.trim();
-
-  if (!name) {
-    const { answer } = await prompts({
-      type: 'text',
-      name: 'answer',
-      message: 'What is your app named?',
-      initial: 'my-app',
-      validate: name => {
-        const validation = Template.validateName(path.basename(path.resolve(name)));
-        if (typeof validation === 'string') {
-          return 'Invalid project name: ' + validation;
-        }
-        return true;
-      },
-    });
-
-    if (typeof answer === 'string') {
-      name = answer.trim();
-    }
-  }
-
-  if (!name) {
-    console.log();
-    console.log('Please choose your app name:');
-    console.log(chalk`  {green ${program.name()}} {magenta <name>}`);
-    console.log();
-    console.log(`Run {green ${program.name()} --help} for more info`);
-    process.exit(1);
-  }
-
-  const projectRoot = path.resolve(name);
-  const folderName = path.basename(projectRoot);
-
-  assertValidName(folderName);
-
-  await fs.promises.mkdir(projectRoot, { recursive: true });
-
-  assertFolderEmpty(projectRoot, folderName);
-
-  return projectRoot;
-}
 
 async function commandDidThrowAsync(error: any) {
   console.log();

@@ -13,18 +13,18 @@ function getTemporaryPath() {
   return path.join(os.tmpdir(), Math.random().toString(36).substring(2));
 }
 
-function execute(...args) {
-  return execa('node', [cli, ...args], { cwd: projectRoot });
+function execute(args, env) {
+  return execa('node', [cli, ...args], { cwd: projectRoot, env });
 }
 
-async function executePassingAsync(...args) {
-  const results = await execute(...args);
+async function executePassingAsync(args, env) {
+  const results = await execute(args, env);
   expect(results.exitCode).toBe(0);
   return results;
 }
 
-function executeDefaultAsync(...args) {
-  const res = execute(...args);
+function executeDefaultAsync(args, env) {
+  const res = execute(args, env);
 
   // When the test is prompted to use the default, it'll select it automatically.
   res.stdout.on('data', data => {
@@ -63,7 +63,7 @@ it('prevents overwriting directories with projects', async () => {
 
   expect.assertions(1);
   try {
-    await executeDefaultAsync(projectName);
+    await executeDefaultAsync([projectName]);
   } catch (e) {
     expect(e.stdout).toMatch(/has files that might be overwritten/);
   }
@@ -73,7 +73,7 @@ it(
   'creates a full basic project by default',
   async () => {
     const projectName = 'defaults-to-basic';
-    await executeDefaultAsync(projectName, '--install');
+    await executeDefaultAsync([projectName, '--install']);
 
     expect(fileExists(projectName, 'package.json')).toBeTruthy();
     expect(fileExists(projectName, 'App.js')).toBeTruthy();
@@ -88,8 +88,8 @@ it(
     // Ensure the app.json is written properly
     const appJsonPath = path.join(projectRoot, projectName, 'app.json');
     const appJson = JSON.parse(await fs.readFile(appJsonPath, 'utf8'));
-    expect(appJson.expo.name).toBe('defaultstobasic');
-    expect(appJson.expo.slug).toBe('expo-template-blank');
+    expect(appJson.expo.name).toBe('defaults-to-basic');
+    expect(appJson.expo.slug).toBe('defaults-to-basic');
   },
   extendedTimeout
 );
@@ -130,6 +130,72 @@ describe('yes', () => {
     },
     extendedTimeout
   );
+
+  it(
+    'uses pnpm',
+    async () => {
+      const projectName = 'uses-pnpm';
+      const results = await executeDefaultAsync([projectName, '--no-install'], {
+        // Run: DEBUG=create-expo-app:* pnpm create expo-app
+        npm_config_user_agent: `pnpm`,
+      });
+
+      // Test that the user was warned about deps
+      expect(results.stdout).toMatch(/make sure you have node modules installed/);
+      expect(results.stdout).toMatch(/pnpm install/);
+
+      expect(fileExists(projectName, 'package.json')).toBeTruthy();
+      expect(fileExists(projectName, 'App.js')).toBeTruthy();
+      expect(fileExists(projectName, '.gitignore')).toBeTruthy();
+      // Check if it skipped install
+      expect(fileExists(projectName, 'node_modules')).not.toBeTruthy();
+    },
+    extendedTimeout
+  );
+  it(
+    'uses npm',
+    async () => {
+      const projectName = 'uses-npm';
+      const results = await executeDefaultAsync([projectName, '--no-install'], {
+        // Run: DEBUG=create-expo-app:* npm create expo-app
+        npm_config_user_agent: `npm/8.1.0 node/v16.13.0 darwin x64 workspaces/false`,
+      });
+
+      // Test that the user was warned about deps
+      expect(results.stdout).toMatch(/make sure you have node modules installed/);
+      expect(results.stdout).toMatch(/npm install/);
+
+      expect(fileExists(projectName, 'package.json')).toBeTruthy();
+      expect(fileExists(projectName, 'App.js')).toBeTruthy();
+      expect(fileExists(projectName, '.gitignore')).toBeTruthy();
+      // Check if it skipped install
+      expect(fileExists(projectName, 'node_modules')).not.toBeTruthy();
+    },
+    extendedTimeout
+  );
+
+  it(
+    'uses yarn',
+    async () => {
+      const projectName = 'uses-yarn';
+      const results = await executeDefaultAsync([projectName, '--no-install'], {
+        // Run: DEBUG=create-expo-app:* yarn create expo-app
+        npm_config_user_agent: `yarn/1.22.17 npm/? node/v16.13.0 darwin x64`,
+      });
+
+      // Test that the user was warned about deps
+      expect(results.stdout).toMatch(/make sure you have node modules installed/);
+      expect(results.stdout).toMatch(/yarn install/);
+
+      expect(fileExists(projectName, 'package.json')).toBeTruthy();
+      expect(fileExists(projectName, 'App.js')).toBeTruthy();
+      expect(fileExists(projectName, '.gitignore')).toBeTruthy();
+      // Check if it skipped install
+      expect(fileExists(projectName, 'node_modules')).not.toBeTruthy();
+    },
+    extendedTimeout
+  );
+
   xit('creates a default project in a new directory with a custom template', async () => {
     const projectName = 'yes-custom-template';
 
@@ -174,11 +240,11 @@ xdescribe('templates', () => {
     const projectName = 'invalid-template-name';
     expect.assertions(2);
     try {
-      await execute(
+      await execute([
         projectName,
         '--template',
-        'fake template path that is too obviously long to be real'
-      );
+        'fake template path that is too obviously long to be real',
+      ]);
     } catch (e) {
       expect(e.stderr).toMatch(/Could not locate the template/i);
     }
@@ -187,7 +253,7 @@ xdescribe('templates', () => {
 
   it('downloads a valid template', async () => {
     const projectName = 'valid-template-name';
-    await executePassingAsync(projectName, '--template', 'blank');
+    await executePassingAsync([projectName, '--template', 'blank']);
 
     expect(fileExists(projectName, 'package.json')).toBeTruthy();
     expect(fileExists(projectName, 'App.js')).toBeTruthy();
@@ -199,7 +265,7 @@ xdescribe('templates', () => {
 
   it(`doesn't prompt to install cocoapods in a project without an ios folder`, async () => {
     const projectName = 'no-install-no-pods-no-prompt';
-    const results = await executePassingAsync(projectName, '--template', 'blank', '--no-install');
+    const results = await executePassingAsync([projectName, '--template', 'blank', '--no-install']);
 
     // Ensure it doesn't warn to install pods since blank doesn't have an ios folder.
     expect(results.stdout).not.toMatch(/make sure you have CocoaPods installed/);
@@ -214,7 +280,7 @@ xdescribe('templates', () => {
 
   it('uses npm', async () => {
     const projectName = 'uses-npm';
-    const results = await executeDefaultAsync(projectName, '--use-npm', '--no-install');
+    const results = await executeDefaultAsync([projectName, '--use-npm', '--no-install']);
 
     // Test that the user was warned about deps
     expect(results.stdout).toMatch(/make sure you have node modules installed/);
@@ -233,12 +299,12 @@ xdescribe('templates', () => {
 
   it('downloads a github repo with sub-project', async () => {
     const projectName = 'full-url';
-    const results = await executePassingAsync(
+    const results = await executePassingAsync([
       projectName,
       '--template',
       'https://github.com/expo/examples/tree/master/blank',
-      '--no-install'
-    );
+      '--no-install',
+    ]);
 
     // Test that the user was warned about deps
     expect(results.stdout).toMatch(/make sure you have node modules installed/);
@@ -253,14 +319,14 @@ xdescribe('templates', () => {
 
   it('downloads a github repo with the template path option', async () => {
     const projectName = 'partial-url-and-path';
-    await executePassingAsync(
+    await executePassingAsync([
       projectName,
       '--template',
       'https://github.com/expo/examples/tree/master',
       '--template-path',
       'blank',
-      '--no-install'
-    );
+      '--no-install',
+    ]);
 
     expect(fileExists(projectName, 'package.json')).toBeTruthy();
     expect(fileExists(projectName, 'App.js')).toBeTruthy();
