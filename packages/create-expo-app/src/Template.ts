@@ -45,7 +45,6 @@ export async function extractAndPrepareTemplateAppAsync(projectRoot: string) {
 
   const appFile = new JsonFile(path.join(projectRoot, 'app.json'));
   const appJson = deepMerge(await appFile.readAsync(), config);
-  console.log(appJson);
   await appFile.writeAsync(appJson);
 
   const packageFile = new JsonFile(path.join(projectRoot, 'package.json'));
