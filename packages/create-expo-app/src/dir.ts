@@ -11,7 +11,6 @@ const tolerableFiles = [
   '.gitignore',
   // Project
   '.npmignore',
-  '.travis.yml',
   'LICENSE',
   'docs',
   '.idea',
