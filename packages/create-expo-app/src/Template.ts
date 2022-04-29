@@ -10,16 +10,20 @@ import { formatRunCommand, PackageManagerName } from './resolvePackageManager';
 
 const isMacOS = process.platform === 'darwin';
 
-function lodashMerge(target: any, source: any) {
-  if (typeof target === 'object' && typeof source === 'object') {
-    for (const key in source) {
-      if (source.hasOwnProperty(key)) {
-        lodashMerge(target[key], source[key]);
-      }
-    }
-  } else {
-    target = source;
+function deepMerge(target: any, source: any) {
+  if (typeof target !== 'object') {
+    return source;
   }
+  if (Array.isArray(target) && Array.isArray(source)) {
+    return target.concat(source);
+  }
+  Object.keys(source).forEach(key => {
+    if (typeof source[key] === 'object' && source[key] !== null) {
+      target[key] = deepMerge(target[key], source[key]);
+    } else {
+      target[key] = source[key];
+    }
+  });
   return target;
 }
 
@@ -33,7 +37,6 @@ export async function extractAndPrepareTemplateAppAsync(projectRoot: string) {
   await downloadAndExtractNpmModule(projectRoot, 'expo-template-blank', projectName);
 
   const config: Record<string, any> = {
-    name: projectName,
     expo: {
       name: projectName,
       slug: projectName,
@@ -41,7 +44,8 @@ export async function extractAndPrepareTemplateAppAsync(projectRoot: string) {
   };
 
   const appFile = new JsonFile(path.join(projectRoot, 'app.json'));
-  const appJson = lodashMerge(await appFile.readAsync(), config);
+  const appJson = deepMerge(await appFile.readAsync(), config);
+  console.log(appJson);
   await appFile.writeAsync(appJson);
 
   const packageFile = new JsonFile(path.join(projectRoot, 'package.json'));

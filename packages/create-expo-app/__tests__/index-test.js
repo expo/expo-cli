@@ -89,7 +89,7 @@ it(
     const appJsonPath = path.join(projectRoot, projectName, 'app.json');
     const appJson = JSON.parse(await fs.readFile(appJsonPath, 'utf8'));
     expect(appJson.expo.name).toBe('defaultstobasic');
-    expect(appJson.expo.slug).toBe('expo-template-blank');
+    expect(appJson.expo.slug).toBe('defaults-to-basic');
   },
   extendedTimeout
 );
