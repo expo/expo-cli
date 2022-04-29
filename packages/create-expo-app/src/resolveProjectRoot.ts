@@ -10,7 +10,7 @@ import { formatSelfCommand } from './resolvePackageManager';
 export function assertValidName(folderName: string) {
   const validation = Template.validateName(folderName);
   if (typeof validation === 'string') {
-    console.error(chalk.red(`Cannot create an app named {red "${folderName}"}. ${validation}`));
+    console.error(chalk`{red Cannot create an app named {bold "${folderName}"}. ${validation}}`);
     process.exit(1);
   }
 }
@@ -18,7 +18,7 @@ export function assertValidName(folderName: string) {
 export function assertFolderEmpty(projectRoot: string, folderName: string) {
   const conflicts = getConflictsForDirectory(projectRoot);
   if (conflicts.length) {
-    console.log(`The directory {cyan ${folderName}} has files that might be overwritten:`);
+    console.log(chalk`The directory {cyan ${folderName}} has files that might be overwritten:`);
     console.log();
     for (const file of conflicts) {
       console.log(`  ${file}`);

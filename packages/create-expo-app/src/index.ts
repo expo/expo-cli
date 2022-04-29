@@ -108,7 +108,7 @@ async function runAsync(): Promise<void> {
     try {
       // check if git is installed
       // check if inside git repo
-      await initGitRepoAsync(projectRoot, { silent: true });
+      await initGitRepoAsync(projectRoot);
     } catch {
       // todo: check if git is installed, bail out
     }

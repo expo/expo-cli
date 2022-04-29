@@ -3,14 +3,19 @@ import { execSync } from 'child_process';
 
 export type PackageManagerName = 'npm' | 'pnpm' | 'yarn';
 
+const debug = require('debug')('create-expo-app:resolvePackageManager') as typeof console.log;
+
 /** Determine which package manager to use for installing dependencies based on how the process was started. */
 export function resolvePackageManager(): PackageManagerName {
   // Attempt to detect if the user started the command using `yarn` or `pnpm`
   const userAgent = process.env.npm_config_user_agent;
+  debug('npm_config_user_agent:', userAgent);
   if (userAgent?.startsWith('yarn')) {
     return 'yarn';
   } else if (userAgent?.startsWith('pnpm')) {
     return 'pnpm';
+  } else if (userAgent?.startsWith('npm')) {
+    return 'npm';
   }
 
   // Try availability

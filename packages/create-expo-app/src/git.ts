@@ -1,18 +1,16 @@
 import spawnAsync from '@expo/spawn-async';
 import chalk from 'chalk';
 
-export async function initGitRepoAsync(
-  root: string,
-  flags: { silent: boolean } = { silent: false }
-) {
+const debug = require('debug')('create-expo-app:git') as typeof console.log;
+
+export async function initGitRepoAsync(root: string) {
   // let's see if we're in a git tree
   try {
     await spawnAsync('git', ['rev-parse', '--is-inside-work-tree'], { stdio: 'ignore', cwd: root });
-    !flags.silent &&
-      console.log(chalk.dim('New project is already inside of a Git repo, skipping git init.'));
+    debug(chalk.dim('New project is already inside of a Git repo, skipping git init.'));
   } catch (e: any) {
     if (e.errno === 'ENOENT') {
-      !flags.silent && console.log(chalk.dim('Unable to initialize Git repo. `git` not in $PATH.'));
+      debug(chalk.dim('Unable to initialize Git repo. `git` not in $PATH.'));
       return false;
     }
   }
@@ -30,9 +28,10 @@ export async function initGitRepoAsync(
       cwd: root,
     });
 
-    !flags.silent && console.log(chalk.dim('Initialized a Git repository.'));
+    debug(chalk.dim('Initialized a Git repository.'));
     return true;
-  } catch {
+  } catch (error: any) {
+    debug('Error initializing Git repo:', error);
     // no-op -- this is just a convenience and we don't care if it fails
     return false;
   }
