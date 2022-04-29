@@ -177,9 +177,8 @@ function resolvePackageManager(): Template.PackageManagerName {
   if (shouldUseYarn()) {
     packageManager = 'yarn';
     console.log();
-    console.log(
-      'Using Yarn to install packages. You can run `npx create-expo-app` to use npm instead'
-    );
+    console.log('Using Yarn to install packages.');
+    //  You can run `npx create-expo-app` to use npm instead'
     console.log();
   } else {
     console.log();
