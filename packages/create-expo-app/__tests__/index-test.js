@@ -88,7 +88,7 @@ it(
     // Ensure the app.json is written properly
     const appJsonPath = path.join(projectRoot, projectName, 'app.json');
     const appJson = JSON.parse(await fs.readFile(appJsonPath, 'utf8'));
-    expect(appJson.expo.name).toBe('defaultstobasic');
+    expect(appJson.expo.name).toBe('defaults-to-basic');
     expect(appJson.expo.slug).toBe('defaults-to-basic');
   },
   extendedTimeout
