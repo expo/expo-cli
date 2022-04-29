@@ -25,6 +25,7 @@
   "scripts": {
     "prepublishOnly": "yarn run clean && yarn run build:prod",
     "lint": "eslint .",
+    "test": "jest",
     "watch": "yarn run build -w",
     "build": "ncc build ./src/index.ts -o build/",
     "build:prod": "ncc build ./src/index.ts -o build/ --minify --no-cache --no-source-map-register",
