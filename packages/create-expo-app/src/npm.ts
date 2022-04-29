@@ -1,15 +1,13 @@
 import spawnAsync from '@expo/spawn-async';
 import fs from 'fs';
-import fetch from 'node-fetch';
 import os from 'os';
 import path from 'path';
 import { Stream } from 'stream';
 import tar from 'tar';
 import { promisify } from 'util';
 
-import { FileSystemCache } from './cache/FileSystemCache';
-import { wrapFetchWithCache } from './cache/wrapFetchWithCache';
 import { createEntryResolver, createFileTransform } from './createFileTransform';
+import { createFetch } from './fetch';
 
 type ExtractProps = {
   name: string;
@@ -20,6 +18,12 @@ type ExtractProps = {
 
 // @ts-ignore
 const pipeline = promisify(Stream.pipeline);
+
+const cachedFetch = createFetch({
+  cacheDirectory: 'template-cache',
+  // Set no timeout on the templates since they're versioned already.
+});
+
 export function applyKnownNpmPackageNameRules(name: string): string | null {
   // https://github.com/npm/validate-npm-package-name/#naming-rules
 
@@ -48,17 +52,8 @@ export async function extractLocalNpmTarballAsync(
 }
 
 export function getCacheFilePath(subdir: string = 'template-cache') {
-  return path.join(os.homedir(), 'create-expo-app', 'template-cache');
+  return path.join(os.homedir(), 'create-expo-app', subdir);
 }
-
-const cachedFetch = wrapFetchWithCache(
-  fetch,
-  new FileSystemCache({
-    cacheDirectory: getCacheFilePath(),
-    // Time to live. How long (in ms) responses remain cached before being automatically ejected. If undefined, responses are never automatically ejected from the cache.
-    // ttl: 1000,
-  })
-);
 
 async function getNpmUrlAsync(packageName: string): Promise<string> {
   const url = (await spawnAsync('npm', ['v', packageName, 'dist.tarball'])).stdout;

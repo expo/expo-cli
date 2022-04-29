@@ -1,22 +1,14 @@
 // Inspired by create-next-app & create-react-native-app
-
 import JsonFile, { JSONObject } from '@expo/json-file';
 import chalk from 'chalk';
 import fs from 'fs';
-import fetch from 'node-fetch';
 import path from 'path';
 import prompts from 'prompts';
 import terminalLink from 'terminal-link';
 import { URL } from 'url';
 
-import { FileSystemCache } from './cache/FileSystemCache';
-import { wrapFetchWithCache } from './cache/wrapFetchWithCache';
-import {
-  applyKnownNpmPackageNameRules,
-  createUrlStreamAsync,
-  extractNpmTarballAsync,
-  getCacheFilePath,
-} from './npm';
+import { createFetch } from './fetch';
+import { applyKnownNpmPackageNameRules, createUrlStreamAsync, extractNpmTarballAsync } from './npm';
 import { isUrlOk } from './url';
 
 type RepoInfo = {
@@ -77,10 +69,7 @@ export async function promptAsync(): Promise<string | null> {
         name: 'exampleName',
         message: 'Pick an example',
         choices,
-        suggest: (input: any, choices: any) => {
-          const regex = new RegExp(input, 'i');
-          return choices.filter((choice: any) => regex.test(choice.title));
-        },
+        suggest: createSelectionFilter(),
       });
 
       if (!nameRes.exampleName) {
@@ -94,6 +83,22 @@ export async function promptAsync(): Promise<string | null> {
   }
 
   return null;
+}
+
+function createSelectionFilter(): (input: any, choices: prompts.Choice[]) => Promise<any> {
+  function escapeRegex(string: string) {
+    return string.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
+  }
+
+  return async (input: any, choices: prompts.Choice[]) => {
+    try {
+      const regex = new RegExp(escapeRegex(input), 'i');
+      return choices.filter((choice: any) => regex.test(choice.title));
+    } catch (error: any) {
+      // console.debug('Error filtering choices', error);
+      return [];
+    }
+  };
 }
 
 async function getRepoInfo(url: any, examplePath?: string): Promise<RepoInfo | undefined> {
@@ -308,13 +313,10 @@ async function downloadAndExtractExampleAsync(root: string, name: string): Promi
   );
 }
 
-const cachedFetch = wrapFetchWithCache(
-  fetch,
-  new FileSystemCache({
-    cacheDirectory: getCacheFilePath('github-api'),
-    ttl: 1000 * 60 * 60, // 1 hour
-  })
-);
+const cachedFetch = createFetch({
+  cacheDirectory: 'github-api',
+  ttl: 1000 * 60 * 60, // 1 hour
+});
 
 async function listAsync(): Promise<any> {
   const res = await cachedFetch('https://api.github.com/repos/expo/examples/contents');
