@@ -1,6 +1,6 @@
 {
   "name": "@expo/package-manager",
-  "version": "0.0.52",
+  "version": "0.0.53",
   "description": "A library for installing and finding packages in a node project",
   "main": "build",
   "scripts": {
@@ -22,7 +22,8 @@
     "package-json",
     "node",
     "yarn",
-    "yarnpkg"
+    "yarnpkg",
+    "pnpm"
   ],
   "license": "MIT",
   "bugs": {
@@ -37,6 +38,7 @@
     "@expo/spawn-async": "^1.5.0",
     "ansi-regex": "^5.0.0",
     "chalk": "^4.0.0",
+    "find-up": "^5.0.0",
     "find-yarn-workspace-root": "~2.0.0",
     "npm-package-arg": "^7.0.0",
     "rimraf": "^3.0.2",

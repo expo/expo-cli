@@ -10,6 +10,76 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🧹 Chores
 
+### 🐛 Bug fixes
+
+## [Wed, 27 Apr 2022 16:29:28 -0700](https://github.com/expo/expo-cli/commit/e517d22aaf8a3fd93795a276ed68be8b1afed30d)
+
+### 🎉 New features
+
+- [package-manager] Add support for pnpm ([#4311](https://github.com/expo/expo-cli/issues/4311))
+
+### 🧹 Chores
+
+- [prebuild-config] Bump expo-modules-autolinking version
+
+### 📦 Packages updated
+
+- @expo/dev-tools@0.13.152
+- expo-cli@5.4.3
+- install-expo-modules@0.3.2
+- @expo/next-adapter@4.0.4
+- @expo/package-manager@0.0.53
+- pod-install@0.1.35
+- @expo/prebuild-config@4.0.0
+- xdl@59.2.36
+
+## [Wed, 27 Apr 2022 11:34:35 -0700](https://github.com/expo/expo-cli/commit/7bbabeec424484dd8b1592cc128d35a9e99e323d)
+
+### 🧹 Chores
+
+- [config-types] Bump version
+
+### 📦 Packages updated
+
+- @expo/config-plugins@4.1.4
+- @expo/config@6.0.23
+- @expo/dev-server@0.1.110
+- @expo/dev-tools@0.13.151
+- expo-cli@5.4.2
+- expo-optimize@0.2.15
+- install-expo-modules@0.3.1
+- @expo/metro-config@0.3.16
+- @expo/next-adapter@4.0.3
+- @expo/prebuild-config@3.1.4
+- expo-pwa@0.0.118
+- uri-scheme@1.0.119
+- @expo/webpack-config@0.16.23
+- xdl@59.2.35
+
+## [Wed, 27 Apr 2022 10:57:06 -0700](https://github.com/expo/expo-cli/commit/c4258cabdb3f860ff190bb4234074e1570f5be86)
+
+### 🎉 New features
+
+- [install-expo-modules] Add react-native 0.68 and expo sdk 45 support ([#4333](https://github.com/expo/expo-cli/issues/4333))
+- [config plugins] support android.blockedPermissions ([#4323](https://github.com/expo/expo-cli/issues/4323))
+
+### 📦 Packages updated
+
+- @expo/config-plugins@4.1.3
+- @expo/config@6.0.22
+- @expo/dev-server@0.1.109
+- @expo/dev-tools@0.13.150
+- expo-cli@5.4.1
+- expo-optimize@0.2.14
+- install-expo-modules@0.3.0
+- @expo/metro-config@0.3.15
+- @expo/next-adapter@4.0.2
+- @expo/prebuild-config@3.1.3
+- expo-pwa@0.0.117
+- uri-scheme@1.0.118
+- @expo/webpack-config@0.16.22
+- xdl@59.2.34
+
 ## [Mon, 25 Apr 2022 09:39:36 -0700](https://github.com/expo/expo-cli/commit/3b877aba82399512ca583a972effcd09c6f43f26)
 
 ### 🎉 New features
