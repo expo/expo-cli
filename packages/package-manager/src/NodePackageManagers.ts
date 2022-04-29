@@ -367,5 +367,3 @@ export function getModulesPath(projectRoot: string): string {
 
   return path.resolve(projectRoot, 'node_modules');
 }
-
-export { PnpmPackageManager };
