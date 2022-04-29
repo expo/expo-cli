@@ -32,7 +32,8 @@
     "clean": "rimraf ./build/"
   },
   "devDependencies": {
-    "@expo/package-manager": "0.0.52",
+    "@expo/json-file": "8.2.36",
+    "@expo/package-manager": "0.0.53",
     "@expo/spawn-async": "^1.5.0",
     "@types/cacache": "^15.0.1",
     "@types/form-data": "^2.2.0",
