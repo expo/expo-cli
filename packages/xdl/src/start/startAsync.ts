@@ -152,7 +152,7 @@ export async function stopAsync(projectRoot: string): Promise<void> {
   try {
     const result = await Promise.race([
       stopInternalAsync(projectRoot),
-      new Promise(resolve => setTimeout(resolve, 5000, 'stopFailed')),
+      new Promise(resolve => setTimeout(resolve, 2000, 'stopFailed')),
     ]);
     if (result === 'stopFailed') {
       await forceQuitAsync(projectRoot);
