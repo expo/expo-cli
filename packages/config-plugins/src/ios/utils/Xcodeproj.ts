@@ -16,6 +16,7 @@ import pbxFile from 'xcode/lib/pbxFile';
 
 import { addWarningIOS } from '../../utils/warnings';
 import * as Paths from '../Paths';
+import { trimQuotes } from './string';
 
 export type ProjectSectionEntry = [string, PBXProject];
 
@@ -390,7 +391,7 @@ export function getBuildConfigurationForListIdAndName(
   const xcBuildConfigurationEntry = getBuildConfigurationsForListId(
     project,
     configurationListId
-  ).find(i => i[1].name === buildConfiguration);
+  ).find(i => trimQuotes(i[1].name) === buildConfiguration);
   if (!xcBuildConfigurationEntry) {
     throw new Error(
       `Build configuration '${buildConfiguration}' does not exist in list with id '${configurationListId}'`
