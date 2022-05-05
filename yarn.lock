@@ -17082,13 +17082,6 @@ string-length@^5.0.1:
     char-regex "^2.0.0"
     strip-ansi "^7.0.1"
 
-string-replace-all-ponyfill@^1.0.1:
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/string-replace-all-ponyfill/-/string-replace-all-ponyfill-1.0.1.tgz#1dfbed866d2b6f045c6e507b3d7efa7c99f33aac"
-  integrity sha512-/1tB2+8ghCUza6mN+PXWTyIchMv7GWEuHYDkfejY3wgaAr5pr7gxXOS/jfseHZ8pYBSPFHVmqmgDLmJtg6zFLw==
-  dependencies:
-    escape-string-regexp "^4.0.0"
-
 string-width@^1.0.1:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/string-width/-/string-width-1.0.2.tgz#118bdf5b8cdc51a2a7e70d211e07e2b0b9b107d3"
