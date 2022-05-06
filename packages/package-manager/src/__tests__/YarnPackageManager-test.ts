@@ -40,6 +40,14 @@ describe('YarnPackageManager', () => {
     mockedIsYarnOfflineAsync.mockReset();
   });
 
+  it('uses different spawners', async () => {
+    const spawner = jest.fn(mockedSpawnAsync);
+    const yarn = new YarnPackageManager({ cwd, log, spawner });
+    await yarn.installAsync();
+
+    expect(spawner).toBeCalledWith('yarnpkg', ['install'], expect.objectContaining({ cwd }));
+  });
+
   describe('installAsync', () => {
     it('runs normal installation', async () => {
       const yarn = new YarnPackageManager({ log, cwd });

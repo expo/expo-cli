@@ -36,6 +36,14 @@ describe('PnpmPackageManager', () => {
     mockedSpawnAsync.mockClear();
   });
 
+  it('uses different spawners', async () => {
+    const spawner = jest.fn(mockedSpawnAsync);
+    const pnpm = new PnpmPackageManager({ cwd, log, spawner });
+    await pnpm.installAsync();
+
+    expect(spawner).toBeCalledWith('pnpm', ['install'], expect.objectContaining({ cwd }));
+  });
+
   describe('installAsync', () => {
     it('runs normal installation', async () => {
       const pnpm = new PnpmPackageManager({ log, cwd });

@@ -1,3 +1,4 @@
+import spawnAsync from '@expo/spawn-async';
 import { existsSync } from 'fs';
 import path from 'path';
 
@@ -31,6 +32,7 @@ export function isUsingYarn(projectRoot: string): boolean {
 export type CreateForProjectOptions = Partial<Record<NodePackageManager, boolean>> & {
   log?: Logger;
   silent?: boolean;
+  spawner?: typeof spawnAsync;
 };
 
 export function createForProject(
@@ -52,7 +54,12 @@ export function createForProject(
     PackageManager = NpmPackageManager;
   }
 
-  return new PackageManager({ cwd: projectRoot, log: options.log, silent: options.silent });
+  return new PackageManager({
+    cwd: projectRoot,
+    log: options.log,
+    silent: options.silent,
+    spawner: options.spawner,
+  });
 }
 
 export function getModulesPath(projectRoot: string): string {

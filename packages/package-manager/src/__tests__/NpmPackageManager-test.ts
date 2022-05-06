@@ -36,6 +36,14 @@ describe('NpmPackageManager', () => {
     mockedSpawnAsync.mockClear();
   });
 
+  it('uses different spawners', async () => {
+    const spawner = jest.fn(mockedSpawnAsync);
+    const npm = new NpmPackageManager({ cwd, log, spawner });
+    await npm.installAsync();
+
+    expect(spawner).toBeCalledWith('npm', ['install'], expect.objectContaining({ cwd }));
+  });
+
   describe('installAsync', () => {
     it('runs normal installation', async () => {
       const npm = new NpmPackageManager({ log, cwd });

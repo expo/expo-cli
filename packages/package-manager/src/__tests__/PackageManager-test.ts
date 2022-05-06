@@ -39,6 +39,12 @@ describe('createForProject', () => {
     const manager = createForProject(projectRoot);
     expect(manager.name).toBe('npm');
   });
+  it('creates pnpm package manager from options with custom spawner', async () => {
+    const spawner = jest.fn(spawnAsync);
+    const manager = createForProject(projectRoot, { pnpm: true, spawner });
+    await manager.installAsync();
+    expect(spawner).toHaveBeenCalled();
+  });
 });
 
 describe('getPossibleProjectRoot', () => {

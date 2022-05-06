@@ -30,13 +30,25 @@ export class NpmStderrTransform extends Transform {
   }
 }
 
+type NpmPackageManagerOptions = {
+  /** Current working directory of the package manager */
+  cwd: string;
+  /** The logger to output information not covered by the spawn logs */
+  log?: Logger;
+  /** If the package manager should not log anything */
+  silent?: boolean;
+  /** Method to invoke the process manager, defaults to `@expo/spawn-async` */
+  spawner?: typeof spawnAsync;
+};
+
 export class NpmPackageManager implements PackageManager {
   options: SpawnOptions;
-
   private log: Logger;
+  private spawner: typeof spawnAsync;
 
-  constructor({ cwd, log, silent }: { cwd: string; log?: Logger; silent?: boolean }) {
+  constructor({ cwd, log, silent, spawner }: NpmPackageManagerOptions) {
     this.log = log || console.log;
+    this.spawner = spawner || spawnAsync;
     this.options = {
       env: {
         ...process.env,
@@ -104,12 +116,12 @@ export class NpmPackageManager implements PackageManager {
   }
 
   async versionAsync() {
-    const { stdout } = await spawnAsync('npm', ['--version'], { stdio: 'pipe' });
+    const { stdout } = await this.spawner('npm', ['--version'], { stdio: 'pipe' });
     return stdout.trim();
   }
 
   async getConfigAsync(key: string) {
-    const { stdout } = await spawnAsync('npm', ['config', 'get', key], { stdio: 'pipe' });
+    const { stdout } = await this.spawner('npm', ['config', 'get', key], { stdio: 'pipe' });
     return stdout.trim();
   }
 
@@ -136,7 +148,7 @@ export class NpmPackageManager implements PackageManager {
     }
 
     // Have spawnAsync consume stdio but we don't actually do anything with it if it's ignored
-    const promise = spawnAsync('npm', [...args], { ...this.options, ignoreStdio: false });
+    const promise = this.spawner('npm', [...args], { ...this.options, ignoreStdio: false });
     if (promise.child.stderr && !this.options.ignoreStdio) {
       promise.child.stderr
         .pipe(split(/\r?\n/, (line: string) => line + '\n'))
