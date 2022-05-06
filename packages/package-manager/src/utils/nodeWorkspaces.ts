@@ -9,6 +9,7 @@ export const NPM_LOCK_FILE = 'package-lock.json';
 export const YARN_LOCK_FILE = 'yarn.lock';
 export const PNPM_LOCK_FILE = 'pnpm-lock.yaml';
 export const PNPM_WORKSPACE_FILE = 'pnpm-workspace.yaml';
+export const managerResolutionOrder: NodePackageManager[] = ['npm', 'yarn', 'pnpm'];
 
 /**
  * Find the `pnpm-workspace.yaml` file that represents the root of the monorepo.
@@ -50,9 +51,11 @@ export function findWorkspaceRoot(
     return strategies[packageManager](projectRoot);
   }
 
-  for (const strategy of Object.values(strategies)) {
+  for (const strategy of managerResolutionOrder.map(name => strategies[name])) {
     const root = strategy(projectRoot);
-    if (root) return root;
+    if (root) {
+      return root;
+    }
   }
 
   return null;
@@ -81,13 +84,17 @@ export function resolvePackageManager(
 
   if (packageManager) {
     const lockfilePath = path.join(workspaceRoot, lockfileNames[packageManager]);
-    if (existsSync(lockfilePath)) return packageManager;
+    if (existsSync(lockfilePath)) {
+      return packageManager;
+    }
     return null;
   }
 
-  for (const manager of Object.keys(lockfileNames) as NodePackageManager[]) {
+  for (const manager of managerResolutionOrder) {
     const lockfilePath = path.join(workspaceRoot, lockfileNames[manager]);
-    if (existsSync(lockfilePath)) return manager;
+    if (existsSync(lockfilePath)) {
+      return manager;
+    }
   }
 
   return null;
