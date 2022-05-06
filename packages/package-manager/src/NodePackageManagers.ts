@@ -10,7 +10,7 @@ import { Transform } from 'stream';
 
 import { Logger, PackageManager } from './PackageManager';
 import { PnpmPackageManager } from './PnpmPackageManager';
-import isYarnOfflineAsync from './utils/isYarnOfflineAsync';
+import { YarnPackageManager } from './YarnPackageManager';
 import { findWorkspaceRoot, resolvePackageManager } from './utils/nodeWorkspaces';
 
 export type NodePackageManager = 'yarn' | 'npm' | 'pnpm';
@@ -24,10 +24,6 @@ export const DISABLE_ADS_ENV = { DISABLE_OPENCOLLECTIVE: '1', ADBLOCK: '1' };
 const ansi = `(?:${ansiRegex().source})*`;
 const npmPeerDependencyWarningPattern = new RegExp(
   `${ansi}npm${ansi} ${ansi}WARN${ansi}.+You must install peer dependencies yourself\\.\n`,
-  'g'
-);
-const yarnPeerDependencyWarningPattern = new RegExp(
-  `${ansi}warning${ansi} "[^"]+" has (?:unmet|incorrect) peer dependency "[^"]+"\\.\n`,
   'g'
 );
 
@@ -51,17 +47,6 @@ class NpmStderrTransform extends Transform {
     callback: (error?: Error | null, data?: any) => void
   ) {
     this.push(chunk.toString().replace(npmPeerDependencyWarningPattern, ''));
-    callback();
-  }
-}
-
-class YarnStderrTransform extends Transform {
-  _transform(
-    chunk: Buffer,
-    encoding: string,
-    callback: (error?: Error | null, data?: any) => void
-  ) {
-    this.push(chunk.toString().replace(yarnPeerDependencyWarningPattern, ''));
     callback();
   }
 }
@@ -215,120 +200,6 @@ export class NpmPackageManager implements PackageManager {
       pkg[packageType][spec.name!] = spec.rawSpec;
     });
     await JsonFile.writeAsync(pkgPath, pkg, { json5: false });
-  }
-}
-
-export class YarnPackageManager implements PackageManager {
-  options: SpawnOptions;
-  private log: Logger;
-
-  constructor({ cwd, log, silent }: { cwd: string; log?: Logger; silent?: boolean }) {
-    this.log = log || console.log;
-    this.options = {
-      env: {
-        ...process.env,
-        ...DISABLE_ADS_ENV,
-      },
-      cwd,
-      ...(silent
-        ? { ignoreStdio: true }
-        : {
-            stdio: ['inherit', 'inherit', 'pipe'],
-          }),
-    };
-  }
-
-  get name() {
-    return 'Yarn';
-  }
-
-  private async withOfflineSupportAsync(...args: string[]): Promise<string[]> {
-    if (await isYarnOfflineAsync()) {
-      args.push('--offline');
-    }
-    // TODO: Maybe prompt about being offline and using local yarn cache.
-    return args;
-  }
-
-  async installAsync() {
-    const args = await this.withOfflineSupportAsync('install');
-    await this._runAsync(args);
-  }
-
-  async addGlobalAsync(...names: string[]) {
-    if (!names.length) return this.installAsync();
-    const args = await this.withOfflineSupportAsync('global', 'add');
-    args.push(...names);
-
-    await this._runAsync(args);
-  }
-
-  async addWithParametersAsync(names: string[], parameters: string[] = []) {
-    if (!names.length) return this.installAsync();
-    const args = await this.withOfflineSupportAsync('add');
-    args.push(...names);
-    args.push(...parameters);
-
-    await this._runAsync(args);
-  }
-
-  async addAsync(...names: string[]) {
-    await this.addWithParametersAsync(names, []);
-  }
-
-  async addDevAsync(...names: string[]) {
-    if (!names.length) return this.installAsync();
-    const args = await this.withOfflineSupportAsync('add', '--dev');
-    args.push(...names);
-    await this._runAsync(args);
-  }
-
-  async removeAsync(...names: string[]) {
-    await this._runAsync(['remove', ...names]);
-  }
-
-  async versionAsync() {
-    const { stdout } = await spawnAsync('yarnpkg', ['--version'], { stdio: 'pipe' });
-    return stdout.trim();
-  }
-
-  async getConfigAsync(key: string) {
-    const { stdout } = await spawnAsync('yarnpkg', ['config', 'get', key], { stdio: 'pipe' });
-    return stdout.trim();
-  }
-
-  async removeLockfileAsync() {
-    if (!this.options.cwd) {
-      throw new Error('cwd required for YarnPackageManager.removeLockfileAsync');
-    }
-    const lockfilePath = path.join(this.options.cwd, 'yarn-lock.json');
-    if (existsSync(lockfilePath)) {
-      rimraf.sync(lockfilePath);
-    }
-  }
-
-  async cleanAsync() {
-    if (!this.options.cwd) {
-      throw new Error('cwd required for YarnPackageManager.cleanAsync');
-    }
-    const nodeModulesPath = path.join(this.options.cwd, 'node_modules');
-    if (existsSync(nodeModulesPath)) {
-      rimraf.sync(nodeModulesPath);
-    }
-  }
-
-  // Private
-  private async _runAsync(args: string[]) {
-    if (!this.options.ignoreStdio) {
-      this.log(`> yarn ${args.join(' ')}`);
-    }
-
-    // Have spawnAsync consume stdio but we don't actually do anything with it if it's ignored
-    const promise = spawnAsync('yarnpkg', args, { ...this.options, ignoreStdio: false });
-    if (promise.child.stderr && !this.options.ignoreStdio) {
-      promise.child.stderr.pipe(new YarnStderrTransform()).pipe(process.stderr);
-    }
-    return promise;
   }
 }
 
