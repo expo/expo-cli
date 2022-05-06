@@ -1,5 +1,6 @@
 import spawnAsync, { SpawnOptions } from '@expo/spawn-async';
 import ansiRegex from 'ansi-regex';
+import assert from 'assert';
 import fs from 'fs';
 import path from 'path';
 import rimraf from 'rimraf';
@@ -107,9 +108,7 @@ export class YarnPackageManager implements PackageManager {
   }
 
   async removeLockfileAsync() {
-    if (!this.options.cwd) {
-      throw new Error('cwd required for YarnPackageManager.removeLockfileAsync');
-    }
+    assert(this.options.cwd, 'cwd required for YarnPackageManager.removeLockfileAsync');
     const lockfilePath = path.join(this.options.cwd, 'yarn-lock.json');
     if (fs.existsSync(lockfilePath)) {
       rimraf.sync(lockfilePath);
@@ -117,9 +116,7 @@ export class YarnPackageManager implements PackageManager {
   }
 
   async cleanAsync() {
-    if (!this.options.cwd) {
-      throw new Error('cwd required for YarnPackageManager.cleanAsync');
-    }
+    assert(this.options.cwd, 'cwd required for YarnPackageManager.cleanAsync');
     const nodeModulesPath = path.join(this.options.cwd, 'node_modules');
     if (fs.existsSync(nodeModulesPath)) {
       rimraf.sync(nodeModulesPath);
