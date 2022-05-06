@@ -36,6 +36,7 @@ describe('YarnPackageManager', () => {
   const log = jest.fn();
 
   afterEach(() => {
+    mockedSpawnAsync.mockClear();
     mockedIsYarnOfflineAsync.mockReset();
   });
 
@@ -449,12 +450,19 @@ describe('YarnStderrTransform', () => {
   const installNormal = `
 yarn install v1.22.15
 [1/4] Resolving packages...
-success Already up-to-date.
+[32msuccess[39m Already up-to-date.
 Done in 0.06s.
   `;
 
   const installPeerDepsWarning = `
-warning "react-native > react-native-codegen > jscodeshift@0.13.1" has unmet peer dependency "@babel/preset-env@^7.1.6".
+yarn install v1.22.15
+[1/4] Resolving packages...
+[2/4] Fetching packages...
+[34minfo[39m fsevents@2.3.2: The platform "win32" is incompatible with this module.
+[34minfo[39m "fsevents@2.3.2" is an optional dependency and failed compatibility check. Excluding it from installation.
+[3/4] Linking dependencies...
+[33mwarning[39m "react-native > react-native-codegen > jscodeshift@0.13.1" has unmet peer dependency "@babel/preset-env@^7.1.6".
+[4/4] Building fresh packages...
   `;
 
   it('does not filter normal output', () => {
@@ -476,7 +484,6 @@ warning "react-native > react-native-codegen > jscodeshift@0.13.1" has unmet pee
       expect(data.toString()).not.toContain('peer dependency');
     });
 
-    stream.write(installNormal);
     stream.write(installPeerDepsWarning);
     stream.end();
 
