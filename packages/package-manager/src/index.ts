@@ -1,5 +1,6 @@
 export * from './PackageManager';
 export * from './NodePackageManagers';
+export { NpmPackageManager } from './NpmPackageManager';
 export { PnpmPackageManager } from './PnpmPackageManager';
 export { YarnPackageManager } from './YarnPackageManager';
 export * from './CocoaPodsPackageManager';
