@@ -66,6 +66,12 @@ export class PnpmPackageManager {
   }
 
   async installAsync() {
+    if (this.options.env?.['CI']) {
+      // When running in EAS, we need to disable this to run install after prebuild
+      // see: https://pnpm.io/cli/install#--frozen-lockfile
+      await this._runAsync(['install', '--no-frozen-lockfile']);
+    }
+
     await this._runAsync(['install']);
   }
 

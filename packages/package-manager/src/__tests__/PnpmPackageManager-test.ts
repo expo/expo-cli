@@ -40,6 +40,22 @@ describe('PnpmPackageManager', () => {
         expect.objectContaining({ cwd: projectRoot })
       );
     });
+
+    it('runs with --no-froze-lockfile on CI environments', async () => {
+      const originalCI = process.env.CI;
+      process.env.CI = 'true';
+
+      const pnpm = new PnpmPackageManager({ cwd: projectRoot });
+      await pnpm.installAsync();
+
+      expect(spawnAsync).toBeCalledWith(
+        'pnpm',
+        ['install', '--no-frozen-lockfile'],
+        expect.objectContaining({ cwd: projectRoot })
+      );
+
+      process.env.CI = originalCI;
+    });
   });
 
   describe('addWithParametersAsync', () => {
