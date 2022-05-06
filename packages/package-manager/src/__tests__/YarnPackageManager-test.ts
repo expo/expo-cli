@@ -78,8 +78,8 @@ describe('YarnPackageManager', () => {
     });
 
     it('adds multiple packages with custom parameters', async () => {
-      const pnpm = new YarnPackageManager({ log, cwd });
-      await pnpm.addWithParametersAsync(['@babel/core', '@babel/runtime'], ['--cache-folder=/tmp']);
+      const yarn = new YarnPackageManager({ log, cwd });
+      await yarn.addWithParametersAsync(['@babel/core', '@babel/runtime'], ['--cache-folder=/tmp']);
 
       expect(spawnAsync).toBeCalledWith(
         'yarnpkg',
@@ -89,8 +89,8 @@ describe('YarnPackageManager', () => {
     });
 
     it('installs project without packages', async () => {
-      const pnpm = new YarnPackageManager({ log, cwd });
-      await pnpm.addWithParametersAsync([], ['--cache-folder=/tmp']);
+      const yarn = new YarnPackageManager({ log, cwd });
+      await yarn.addWithParametersAsync([], ['--cache-folder=/tmp']);
 
       expect(spawnAsync).toBeCalledWith('yarnpkg', ['install'], expect.objectContaining({ cwd }));
     });
@@ -112,8 +112,8 @@ describe('YarnPackageManager', () => {
       });
 
       it('adds multiple packages with custom parameters when offline', async () => {
-        const pnpm = new YarnPackageManager({ log, cwd });
-        await pnpm.addWithParametersAsync(
+        const yarn = new YarnPackageManager({ log, cwd });
+        await yarn.addWithParametersAsync(
           ['@babel/core', '@babel/runtime'],
           ['--cache-folder=/tmp']
         );
@@ -126,8 +126,8 @@ describe('YarnPackageManager', () => {
       });
 
       it('installs project without packages', async () => {
-        const pnpm = new YarnPackageManager({ log, cwd });
-        await pnpm.addWithParametersAsync([], ['--cache-folder=/tmp']);
+        const yarn = new YarnPackageManager({ log, cwd });
+        await yarn.addWithParametersAsync([], ['--cache-folder=/tmp']);
 
         expect(spawnAsync).toBeCalledWith(
           'yarnpkg',
