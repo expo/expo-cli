@@ -109,7 +109,7 @@ export class YarnPackageManager implements PackageManager {
 
   async removeLockfileAsync() {
     assert(this.options.cwd, 'cwd required for YarnPackageManager.removeLockfileAsync');
-    const lockfilePath = path.join(this.options.cwd, 'yarn-lock.json');
+    const lockfilePath = path.join(this.options.cwd, 'yarn.lock');
     if (fs.existsSync(lockfilePath)) {
       rimraf.sync(lockfilePath);
     }
