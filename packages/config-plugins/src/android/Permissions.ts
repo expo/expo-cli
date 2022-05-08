@@ -2,7 +2,6 @@ import { ExpoConfig } from '@expo/config-types';
 
 import { ConfigPlugin } from '../Plugin.types';
 import { withAndroidManifest } from '../plugins/android-plugins';
-import * as WarningAggregator from '../utils/warnings';
 import { AndroidManifest, ensureToolsAvailable, ManifestUsesPermission } from './Manifest';
 
 const USES_PERMISSION = 'uses-permission';
@@ -28,10 +27,6 @@ export const withBlockedPermissions: ConfigPlugin<string[] | string> = (config, 
   const resolvedPermissions = (Array.isArray(permissions) ? permissions : [permissions]).filter(
     Boolean
   );
-
-  if (!resolvedPermissions.length) {
-    WarningAggregator.addWarningAndroid('block-permissions', 'No permissions provided');
-  }
 
   if (config?.android?.permissions && Array.isArray(config.android.permissions)) {
     // Remove any static config permissions
