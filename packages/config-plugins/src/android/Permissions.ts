@@ -29,10 +29,6 @@ export const withBlockedPermissions: ConfigPlugin<string[] | string> = (config, 
     Boolean
   );
 
-  if (!resolvedPermissions.length) {
-    WarningAggregator.addWarningAndroid('block-permissions', 'No permissions provided');
-  }
-
   if (config?.android?.permissions && Array.isArray(config.android.permissions)) {
     // Remove any static config permissions
     config.android.permissions = config.android.permissions.filter(
