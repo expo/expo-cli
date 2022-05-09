@@ -9,6 +9,7 @@ import {
   isNotComment,
   ProjectSectionEntry,
 } from './utils/Xcodeproj';
+import { trimQuotes } from './utils/string';
 
 type ProvisioningProfileSettings = {
   targetName?: string;
@@ -36,7 +37,7 @@ export function setProvisioningProfileForPbxproj(
   const quotedAppleTeamId = ensureQuotes(appleTeamId);
 
   getBuildConfigurationsForListId(project, nativeTarget.buildConfigurationList)
-    .filter(([, item]: ConfigurationSectionEntry) => item.name === buildConfiguration)
+    .filter(([, item]: ConfigurationSectionEntry) => trimQuotes(item.name) === buildConfiguration)
     .forEach(([, item]: ConfigurationSectionEntry) => {
       item.buildSettings.PROVISIONING_PROFILE_SPECIFIER = `"${profileName}"`;
       item.buildSettings.DEVELOPMENT_TEAM = quotedAppleTeamId;
