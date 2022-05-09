@@ -9,7 +9,7 @@ const debug = require('debug')('create-expo-app:fetch') as typeof console.log;
 
 export function getCacheFilePath(subdir: string = 'template-cache') {
   // TODO: Revisit
-  return path.join(os.homedir(), 'create-expo-app', subdir);
+  return path.join(os.homedir(), '.create-expo-app', subdir);
 }
 
 export function createFetch({
