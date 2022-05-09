@@ -73,7 +73,7 @@ it(
   'creates a full basic project by default',
   async () => {
     const projectName = 'defaults-to-basic';
-    await executeDefaultAsync([projectName, '--install']);
+    await executeDefaultAsync([projectName]);
 
     expect(fileExists(projectName, 'package.json')).toBeTruthy();
     expect(fileExists(projectName, 'App.js')).toBeTruthy();
@@ -82,9 +82,7 @@ it(
     expect(fileExists(projectName, 'ios/')).not.toBeTruthy();
     expect(fileExists(projectName, 'android/')).not.toBeTruthy();
     expect(fileExists(projectName, 'app.json')).toBeTruthy();
-    // if (process.platform === 'darwin') {
-    //   expect(fileExists(projectName, 'ios/Pods/')).toBeTruthy();
-    // }
+
     // Ensure the app.json is written properly
     const appJsonPath = path.join(projectRoot, projectName, 'app.json');
     const appJson = JSON.parse(await fs.readFile(appJsonPath, 'utf8'));
