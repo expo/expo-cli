@@ -78,7 +78,7 @@ it(
     expect(fileExists(projectName, 'package.json')).toBeTruthy();
     expect(fileExists(projectName, 'App.js')).toBeTruthy();
     expect(fileExists(projectName, '.gitignore')).toBeTruthy();
-    expect(fileExists(projectName, 'node_modules')).toBeTruthy();
+    // expect(fileExists(projectName, 'node_modules')).toBeTruthy();
     expect(fileExists(projectName, 'ios/')).not.toBeTruthy();
     expect(fileExists(projectName, 'android/')).not.toBeTruthy();
     expect(fileExists(projectName, 'app.json')).toBeTruthy();
