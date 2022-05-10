@@ -3,6 +3,7 @@ import path from 'path';
 
 import {
   findWorkspaceRoot,
+  findYarnOrNpmWorkspaceRootSafe,
   NPM_LOCK_FILE,
   PNPM_LOCK_FILE,
   PNPM_WORKSPACE_FILE,
@@ -11,6 +12,21 @@ import {
 } from '../nodeWorkspaces';
 
 jest.mock('fs');
+
+describe(findYarnOrNpmWorkspaceRootSafe, () => {
+  afterEach(() => vol.reset());
+  it(`doesn't throw when the upper level has a malformed package.json`, () => {
+    vol.fromJSON(
+      {
+        'packages/test/package.json': '{}',
+        'package.json': '',
+      },
+      '/'
+    );
+
+    expect(findYarnOrNpmWorkspaceRootSafe('/packages/test')).toBe(null);
+  });
+});
 
 describe(findWorkspaceRoot, () => {
   // Resolve these paths to avoid posix vs windows path issues when validating
