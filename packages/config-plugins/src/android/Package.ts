@@ -102,8 +102,46 @@ export async function renamePackageOnDisk(
   }
 
   for (const type of ['main', 'debug']) {
+    await renameJniOnDiskForType({ projectRoot, type, packageName: newPackageName });
     await renamePackageOnDiskForType({ projectRoot, type, packageName: newPackageName });
   }
+}
+
+export async function renameJniOnDiskForType({
+  projectRoot,
+  type,
+  packageName,
+}: {
+  projectRoot: string;
+  type: string;
+  packageName: string;
+}) {
+  if (!packageName) {
+    return;
+  }
+
+  const currentPackageName = getCurrentPackageNameForType(projectRoot, type);
+  if (!currentPackageName || !packageName || currentPackageName === packageName) {
+    return;
+  }
+
+  const jniRoot = path.join(projectRoot, 'android', 'app', 'src', type, 'jni');
+  const filesToUpdate = [...globSync('**/*', { cwd: jniRoot, absolute: true })];
+  // Replace all occurrences of the path in the project
+  filesToUpdate.forEach((filepath: string) => {
+    try {
+      if (fs.lstatSync(filepath).isFile() && ['.h', '.cpp'].includes(path.extname(filepath))) {
+        let contents = fs.readFileSync(filepath).toString();
+        contents = contents.replace(
+          new RegExp(transformJavaClassDescriptor(currentPackageName).replace(/\//g, '\\/'), 'g'),
+          transformJavaClassDescriptor(packageName)
+        );
+        fs.writeFileSync(filepath, contents);
+      }
+    } catch {
+      debug(`Error updating "${filepath}" for type "${type}"`);
+    }
+  });
 }
 
 export async function renamePackageOnDiskForType({
@@ -174,6 +212,12 @@ export async function renamePackageOnDiskForType({
       if (fs.lstatSync(filepath).isFile()) {
         let contents = fs.readFileSync(filepath).toString();
         contents = contents.replace(new RegExp(currentPackageName!, 'g'), packageName);
+        if (['.h', '.cpp'].includes(path.extname(filepath))) {
+          contents = contents.replace(
+            new RegExp(transformJavaClassDescriptor(currentPackageName).replace(/\//g, '\\'), 'g'),
+            transformJavaClassDescriptor(packageName)
+          );
+        }
         fs.writeFileSync(filepath, contents);
       }
     } catch {
@@ -221,4 +265,12 @@ export async function getApplicationIdAsync(projectRoot: string): Promise<string
   const matchResult = buildGradle.match(/applicationId ['"](.*)['"]/);
   // TODO add fallback for legacy cases to read from AndroidManifest.xml
   return matchResult?.[1] ?? null;
+}
+
+/**
+ * Transform a java package name to java class descriptor,
+ * e.g. `com.helloworld` -> `Lcom/helloworld`.
+ */
+function transformJavaClassDescriptor(packageName: string) {
+  return `L${packageName.replace(/\./g, '/')}`;
 }
