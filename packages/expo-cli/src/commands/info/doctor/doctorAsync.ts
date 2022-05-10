@@ -27,5 +27,7 @@ export async function actionAsync(projectRoot: string, options: Options) {
 
   if ((await Doctor.validateWithNetworkAsync(projectRoot)) === Doctor.NO_ISSUES && areDepsValid) {
     Log.log(chalk.green(`🎉 Didn't find any issues with the project!`));
+  } else {
+    process.exitCode = 1;
   }
 }
