@@ -1,4 +1,4 @@
-import spawnAsync, { SpawnOptions, SpawnResult } from '@expo/spawn-async';
+import spawnAsync, { SpawnOptions, SpawnPromise, SpawnResult } from '@expo/spawn-async';
 import chalk from 'chalk';
 import { existsSync } from 'fs';
 import { Ora } from 'ora';
@@ -47,6 +47,25 @@ export class CocoaPodsPackageManager implements PackageManager {
     return existsSync(path.join(projectRoot, 'Podfile'));
   }
 
+  static isUsingRubyBundler(): boolean {
+    return existsSync('Gemfile');
+  }
+
+  static spawnPodCommandAsync(
+    args?: readonly string[],
+    options?: SpawnOptions
+  ): SpawnPromise<SpawnResult> {
+    if (this.isUsingRubyBundler()) {
+      return spawnAsync('bundle', ['exec', 'pod', ...(args ?? [])]);
+    } else {
+      return spawnAsync('pod', args);
+    }
+  }
+
+  static podCommandForDisplay(): string {
+    return this.isUsingRubyBundler() ? 'bundle exec pod' : 'pod';
+  }
+
   static async gemInstallCLIAsync(
     nonInteractive: boolean = false,
     spawnOptions: SpawnOptions = { stdio: 'inherit' }
@@ -79,6 +98,12 @@ export class CocoaPodsPackageManager implements PackageManager {
     await spawnAsync('brew', ['install', 'cocoapods'], spawnOptions);
   }
 
+  static async rubyBundlerInstallCLIAsync(
+    spawnOptions: SpawnOptions = { stdio: 'inherit' }
+  ): Promise<void> {
+    await spawnAsync('bundle', ['install'], spawnOptions);
+  }
+
   static async installCLIAsync({
     nonInteractive = false,
     spawnOptions = { stdio: 'inherit' },
@@ -90,6 +115,38 @@ export class CocoaPodsPackageManager implements PackageManager {
       spawnOptions = { stdio: 'inherit' };
     }
     const silent = !!spawnOptions.ignoreStdio;
+
+    if (this.isUsingRubyBundler()) {
+      !silent && console.log(`\u203A Attempting to install CocoaPods CLI with Bundler`);
+      try {
+        await CocoaPodsPackageManager.rubyBundlerInstallCLIAsync(spawnOptions);
+      } catch (error: any) {
+        if (!silent) {
+          console.log(chalk.yellow(`\u203A Failed to install CocoaPods CLI with Bundler`));
+          console.log(chalk.red(error.stderr ?? error.message));
+        }
+        throw new CocoaPodsError(
+          'CLI could not be installed automatically with bundler, please install CocoaPods manually(`bundle install`) and try again',
+          'NO_CLI',
+          error
+        );
+      }
+      if (await this.isCLIInstalledAsync()) {
+        !silent && console.log(`\u203A Successfully installed CocoaPods CLI with Bundler`);
+        return true;
+      } else {
+        !silent &&
+          console.log(
+            chalk.red(
+              `\u203A Failed to install CocoaPods CLI with Bundler. Make sure cocoapods is in your Gemfile`
+            )
+          );
+        throw new CocoaPodsError(
+          '`bundle install` appeared to succeed but CocoaPods CLI not found in PATH and unable to link.',
+          'NO_CLI'
+        );
+      }
+    }
 
     try {
       !silent && console.log(`\u203A Attempting to install CocoaPods CLI with Gem`);
@@ -158,7 +215,7 @@ export class CocoaPodsPackageManager implements PackageManager {
     spawnOptions: SpawnOptions = { stdio: 'inherit' }
   ): Promise<boolean> {
     try {
-      await spawnAsync('pod', ['--version'], spawnOptions);
+      await this.spawnPodCommandAsync(['--version'], spawnOptions);
       return true;
     } catch {
       return false;
@@ -328,7 +385,10 @@ export class CocoaPodsPackageManager implements PackageManager {
   }
 
   async versionAsync() {
-    const { stdout } = await spawnAsync('pod', ['--version'], this.options);
+    const { stdout } = await CocoaPodsPackageManager.spawnPodCommandAsync(
+      ['--version'],
+      this.options
+    );
     return stdout.trim();
   }
 
@@ -344,28 +404,12 @@ export class CocoaPodsPackageManager implements PackageManager {
     throw new Error('Unimplemented');
   }
 
-  // Private
-  private async podRepoUpdateAsync(): Promise<void> {
-    try {
-      await this._runAsync(['repo', 'update']);
-    } catch (error: any) {
-      error.message = error.message || (error.stderr ?? error.stdout);
-
-      throw new CocoaPodsError(
-        'The command `pod install --repo-update` failed',
-        'COMMAND_FAILED',
-        error
-      );
-    }
-  }
-
   // Exposed for testing
   async _runAsync(args: string[]): Promise<SpawnResult> {
     if (!this.silent) {
-      console.log(`> pod ${args.join(' ')}`);
+      console.log(`> ${CocoaPodsPackageManager.podCommandForDisplay()} ${args.join(' ')}`);
     }
-    const promise = spawnAsync(
-      'pod',
+    const promise = CocoaPodsPackageManager.spawnPodCommandAsync(
       [
         ...args,
         // Enables colors while collecting output.
@@ -483,7 +527,7 @@ export function getImprovedPodInstallError(
       }
     }
     return new CocoaPodsError(
-      'Command `pod install --repo-update` failed.',
+      `Command \`${CocoaPodsPackageManager.podCommandForDisplay()} install --repo-update\` failed.`,
       'COMMAND_FAILED',
       error
     );
@@ -505,5 +549,9 @@ export function getImprovedPodInstallError(
     error.message = [usefulError, error.message, stderr].filter(Boolean).join('\n');
   }
 
-  return new CocoaPodsError('Command `pod install` failed.', 'COMMAND_FAILED', error);
+  return new CocoaPodsError(
+    `Command \`${CocoaPodsPackageManager.podCommandForDisplay()} install\` failed.`,
+    'COMMAND_FAILED',
+    error
+  );
 }
