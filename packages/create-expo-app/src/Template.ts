@@ -5,7 +5,11 @@ import getenv from 'getenv';
 import ora from 'ora';
 import path from 'path';
 
-import { applyKnownNpmPackageNameRules, downloadAndExtractNpmModule } from './npm';
+import {
+  applyKnownNpmPackageNameRules,
+  downloadAndExtractNpmModule,
+  getResolvedTemplateName,
+} from './npm';
 import { formatRunCommand, PackageManagerName } from './resolvePackageManager';
 
 const isMacOS = process.platform === 'darwin';
@@ -31,10 +35,15 @@ function deepMerge(target: any, source: any) {
  * Extract a template app to a given file path and clean up any properties left over from npm to
  * prepare it for usage.
  */
-export async function extractAndPrepareTemplateAppAsync(projectRoot: string) {
+export async function extractAndPrepareTemplateAppAsync(
+  projectRoot: string,
+  { npmPackage }: { npmPackage?: string | null }
+) {
   const projectName = path.basename(projectRoot);
 
-  await downloadAndExtractNpmModule(projectRoot, 'expo-template-blank', projectName);
+  const resolvedTemplate = npmPackage ? getResolvedTemplateName(npmPackage) : 'expo-template-blank';
+
+  await downloadAndExtractNpmModule(projectRoot, resolvedTemplate, projectName);
 
   const config: Record<string, any> = {
     expo: {

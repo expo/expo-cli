@@ -5,7 +5,7 @@ import fs from 'fs-extra';
 import os from 'os';
 import path from 'path';
 
-const cli = require.resolve('../build/index.js');
+const cli = require.resolve('../../build/index.js');
 
 const projectRoot = getTemporaryPath();
 
