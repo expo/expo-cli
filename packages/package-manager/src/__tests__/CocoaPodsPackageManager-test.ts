@@ -1,4 +1,5 @@
 /* eslint-env jest */
+import spawnAsync from '@expo/spawn-async';
 import fs from 'fs-extra';
 import os from 'os';
 import path from 'path';
@@ -19,22 +20,29 @@ function getRoot(...args) {
   return path.join(projectRoot, ...args);
 }
 
-beforeAll(() => {
-  jest.mock('@expo/spawn-async', () => {
-    return () => {
-      if (process.env.TEST_COCOAPODS_MANAGER_SPAWN_VALUE_TO_RETURN) {
-        return JSON.parse(process.env.TEST_COCOAPODS_MANAGER_SPAWN_VALUE_TO_RETURN);
-      }
-      return { stdout: '', stderr: '' };
-    };
-  });
+jest.mock('@expo/spawn-async', () => {
+  const actualModule = jest.requireActual('@expo/spawn-async');
+
+  return {
+    __esModule: true,
+    ...actualModule,
+    // minimal implementation is needed here because the packager manager depends on the child property to exist.
+    default: jest.fn((_command, _args, _options) => {
+      const promise = new Promise((resolve, _reject) => resolve({}));
+      // @ts-ignore: TypeScript isn't aware the Promise constructor argument runs synchronously
+      promise.child = {};
+      return promise;
+    }),
+  };
 });
+
+const mockedSpawnAsync = spawnAsync as jest.MockedFunction<typeof spawnAsync>;
 
 const originalForceColor = process.env.FORCE_COLOR;
 
 beforeEach(() => {
   process.env.FORCE_COLOR = '1';
-  delete process.env.TEST_COCOAPODS_MANAGER_SPAWN_VALUE_TO_RETURN;
+  jest.clearAllMocks();
 });
 
 afterAll(() => {
@@ -238,14 +246,14 @@ it(`throws for unimplemented methods`, async () => {
 it(`gets the cocoapods version`, async () => {
   const { CocoaPodsPackageManager } = require('../CocoaPodsPackageManager');
   const manager = new CocoaPodsPackageManager({ cwd: projectRoot });
-  process.env.TEST_COCOAPODS_MANAGER_SPAWN_VALUE_TO_RETURN = JSON.stringify({ stdout: '1.9.1' });
+  mockedSpawnAsync.mockResolvedValue({ stdout: '1.9.1' } as any);
   expect(await manager.versionAsync()).toBe('1.9.1');
 });
 
 it(`can detect if the CLI is installed`, async () => {
   const { CocoaPodsPackageManager } = require('../CocoaPodsPackageManager');
   const manager = new CocoaPodsPackageManager({ cwd: projectRoot });
-  process.env.TEST_COCOAPODS_MANAGER_SPAWN_VALUE_TO_RETURN = JSON.stringify({ stdout: '1.9.1' });
+  mockedSpawnAsync.mockResolvedValue({ stdout: '1.9.1' } as any);
   expect(await manager.isCLIInstalledAsync()).toBe(true);
 });
 
@@ -305,5 +313,42 @@ describe('isAvailable', () => {
     expect(CocoaPodsPackageManager.isAvailable(projectRoot, false)).toBe(false);
     expect(console.log).toBeCalledTimes(1);
     expect(message).toMatch(/not supported in this project/);
+  });
+});
+
+describe('isUsingRubyBundler', () => {
+  it('supports no Gemfile', async () => {
+    const projectRoot = getRoot('cocoapods-detect-gemfile');
+    await fs.ensureDir(projectRoot);
+    const { CocoaPodsPackageManager } = require('../CocoaPodsPackageManager');
+
+    expect(CocoaPodsPackageManager.isUsingRubyBundler(projectRoot)).toBe(false);
+  });
+
+  it('supports Gemfile - ruby bundler', async () => {
+    const projectRoot = getRoot('cocoapods-detect-gemfile');
+    await fs.ensureDir(projectRoot);
+    const { CocoaPodsPackageManager } = require('../CocoaPodsPackageManager');
+
+    fs.writeFileSync(path.join(projectRoot, 'Gemfile'), '...');
+    expect(CocoaPodsPackageManager.isUsingRubyBundler(projectRoot)).toBe(true);
+  });
+});
+
+describe('spawnPodCommandAsync', () => {
+  it('supports no Gemfile', async () => {
+    const { CocoaPodsPackageManager } = require('../CocoaPodsPackageManager');
+    const manager = new CocoaPodsPackageManager({ shouldUseRubyBundler: false });
+
+    await manager.spawnPodCommandAsync(['install']);
+    expect(spawnAsync).toBeCalledWith('pod', ['install'], undefined);
+  });
+
+  it('supports Gemfile', async () => {
+    const { CocoaPodsPackageManager } = require('../CocoaPodsPackageManager');
+    const manager = new CocoaPodsPackageManager({ shouldUseRubyBundler: true });
+
+    await manager.spawnPodCommandAsync(['install']);
+    expect(spawnAsync).toBeCalledWith('bundle', ['exec', 'pod', 'install'], undefined);
   });
 });
