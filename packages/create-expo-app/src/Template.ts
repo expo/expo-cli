@@ -160,9 +160,11 @@ export async function installPodsAsync(projectRoot: string) {
     step.succeed('Skipped installing CocoaPods because operating system is not macOS.');
     return false;
   }
+  const useRubyBundler = PackageManager.CocoaPodsPackageManager.isUsingRubyBundler(projectRoot);
   const packageManager = new PackageManager.CocoaPodsPackageManager({
     cwd: path.join(projectRoot, 'ios'),
     silent: !env.EXPO_DEBUG,
+    shouldUseRubyBundler: useRubyBundler,
   });
 
   if (!(await packageManager.isCLIInstalledAsync())) {

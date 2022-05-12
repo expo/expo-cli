@@ -165,9 +165,11 @@ export async function installCocoaPodsAsync(projectRoot: string) {
     return false;
   }
 
+  const useRubyBundler = PackageManager.CocoaPodsPackageManager.isUsingRubyBundler(projectRoot);
   const packageManager = new PackageManager.CocoaPodsPackageManager({
     cwd: path.join(projectRoot, 'ios'),
     silent: !EXPO_DEBUG,
+    shouldUseRubyBundler: useRubyBundler,
   });
 
   if (!(await packageManager.isCLIInstalledAsync())) {
@@ -178,6 +180,7 @@ export async function installCocoaPodsAsync(projectRoot: string) {
       const noisyPackageManager = new PackageManager.CocoaPodsPackageManager({
         cwd: path.join(projectRoot, 'ios'),
         silent: !EXPO_DEBUG,
+        shouldUseRubyBundler: useRubyBundler,
         spawnOptions: {
           // Don't silence this part
           stdio: ['inherit', 'inherit', 'pipe'],
