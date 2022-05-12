@@ -3,7 +3,6 @@ import * as PackageManager from '@expo/package-manager';
 import chalk from 'chalk';
 import getenv from 'getenv';
 import ora from 'ora';
-import os from 'os';
 import path from 'path';
 
 import {
