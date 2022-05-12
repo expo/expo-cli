@@ -5,7 +5,12 @@ import getenv from 'getenv';
 import ora from 'ora';
 import path from 'path';
 
-import { applyKnownNpmPackageNameRules, downloadAndExtractNpmModule } from './npm';
+import {
+  applyKnownNpmPackageNameRules,
+  downloadAndExtractNpmModule,
+  extractLocalNpmTarballAsync,
+  getResolvedTemplateName,
+} from './npm';
 import { formatRunCommand, PackageManagerName } from './resolvePackageManager';
 
 const isMacOS = process.platform === 'darwin';
@@ -27,14 +32,46 @@ function deepMerge(target: any, source: any) {
   return target;
 }
 
+export function resolvePackageModuleId(moduleId: string) {
+  if (
+    // Supports `file:./path/to/template.tgz`
+    moduleId?.startsWith('file:') ||
+    // Supports `../path/to/template.tgz`
+    moduleId?.startsWith('.') ||
+    // Supports `\\path\\to\\template.tgz`
+    moduleId?.startsWith(path.sep)
+  ) {
+    if (moduleId?.startsWith('file:')) {
+      moduleId = moduleId.substring('file:'.length);
+    }
+
+    return { type: 'file', uri: moduleId };
+  } else {
+    return { type: 'npm', uri: moduleId };
+  }
+}
+
 /**
  * Extract a template app to a given file path and clean up any properties left over from npm to
  * prepare it for usage.
  */
-export async function extractAndPrepareTemplateAppAsync(projectRoot: string) {
+export async function extractAndPrepareTemplateAppAsync(
+  projectRoot: string,
+  { npmPackage }: { npmPackage?: string | null }
+) {
   const projectName = path.basename(projectRoot);
 
-  await downloadAndExtractNpmModule(projectRoot, 'expo-template-blank', projectName);
+  const { type, uri } = resolvePackageModuleId(npmPackage || 'expo-template-blank');
+
+  if (type === 'file') {
+    await extractLocalNpmTarballAsync(uri, {
+      cwd: projectRoot,
+      name: projectName,
+    });
+  } else {
+    const resolvedTemplate = getResolvedTemplateName(uri);
+    await downloadAndExtractNpmModule(projectRoot, resolvedTemplate, projectName);
+  }
 
   const config: Record<string, any> = {
     expo: {
