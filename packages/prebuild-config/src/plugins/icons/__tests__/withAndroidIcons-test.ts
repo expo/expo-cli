@@ -1,4 +1,4 @@
-import { AndroidConfig, XML } from '@expo/config-plugins';
+import { AndroidConfig } from '@expo/config-plugins';
 import { ExpoConfig } from '@expo/config-types';
 import * as fs from 'fs';
 import { vol } from 'memfs';
