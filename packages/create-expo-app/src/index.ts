@@ -35,6 +35,15 @@ const program = new Command(packageJSON.name)
 
 async function runAsync(): Promise<void> {
   try {
+    const resolvedTemplate: string | null = program.template;
+    // @ts-ignore: This guards against someone passing --template without a name after it.
+    if (resolvedTemplate === true) {
+      console.log();
+      console.log('Please specify the template, example: --template expo-template-blank');
+      console.log();
+      process.exit(1);
+    }
+
     let projectRoot: string;
     if (!inputPath && program.yes) {
       projectRoot = path.resolve(process.cwd());
@@ -43,14 +52,6 @@ async function runAsync(): Promise<void> {
       assertFolderEmpty(projectRoot, folderName);
     } else {
       projectRoot = await resolveProjectRootAsync(inputPath);
-    }
-    const resolvedTemplate: string | null = program.template;
-    // @ts-ignore: This guards against someone passing --template without a name after it.
-    if (resolvedTemplate === true) {
-      console.log();
-      console.log('Please specify the template, example: --template expo-template-blank');
-      console.log();
-      process.exit(1);
     }
 
     await fs.promises.mkdir(projectRoot, { recursive: true });
