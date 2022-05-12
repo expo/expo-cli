@@ -46,11 +46,7 @@ export async function validateDependenciesVersionsAsync(
   // find incorrect dependencies by comparing the actual package versions with the bundled native module version ranges
   const incorrectDeps = findIncorrectDependencies(packageVersions, bundledNativeModules);
 
-  let issuesFound = false;
-
   if (incorrectDeps.length > 0) {
-    issuesFound = true;
-
     Log.warn('Some dependencies are incompatible with the installed expo package version:');
     incorrectDeps.forEach(({ packageName, expectedVersionOrRange, actualVersion }) => {
       Log.warn(
@@ -75,39 +71,10 @@ export async function validateDependenciesVersionsAsync(
           )}`
       );
     }
-  }
 
-  if (Versions.gteSdkVersion(exp, '45.0.0') && !Versions.gteSdkVersion(exp, '46.0.0')) {
-    try {
-      /* This will throw if the dependency looked for is not installed,
-       * but that doesn't apply here, so that error is ignored */
-      const packageVersionConfigPlugins = await resolvePackageVersionsAsync(projectRoot, [
-        '@expo/config-plugins',
-      ]);
-      if ('@expo/config-plugins' in packageVersionConfigPlugins) {
-        if (!semver.intersects('^4.1.0', packageVersionConfigPlugins['@expo/config-plugins'])) {
-          if (issuesFound) {
-            Log.addNewLineIfNone();
-          }
-          issuesFound = true;
-          Log.warn(`One or more dependencies reference an incompatible version of ${chalk.underline(
-            '@expo/config-plugins'
-          )}.
-- expected version: ${chalk.underline('^4.1.0')} - actual version installed: ${chalk.underline(
-            packageVersionConfigPlugins['@expo/config-plugins']
-          )}'`);
-          Log.warn(`To find out which dependency references ${chalk.underline(
-            '@expo/config-plugins'
-          )},
-run ${chalk.inverse(`yarn why @expo/config-plugins`)} or ${chalk.inverse(
-            `npm why @expo/config-plugins`
-          )}`);
-        }
-      }
-    } catch {}
+    return false;
   }
-
-  return !issuesFound;
+  return true;
 }
 
 function getPackagesToCheck(
