@@ -9,7 +9,7 @@ export const NPM_LOCK_FILE = 'package-lock.json';
 export const YARN_LOCK_FILE = 'yarn.lock';
 export const PNPM_LOCK_FILE = 'pnpm-lock.yaml';
 export const PNPM_WORKSPACE_FILE = 'pnpm-workspace.yaml';
-export const managerResolutionOrder: NodePackageManager[] = ['npm', 'yarn', 'pnpm'];
+export const managerResolutionOrder: NodePackageManager[] = ['yarn', 'npm', 'pnpm'];
 
 /**
  * Find the `pnpm-workspace.yaml` file that represents the root of the monorepo.
