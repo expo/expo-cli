@@ -10,6 +10,8 @@ import { compositeImagesAsync, generateImageAsync } from '@expo/image-utils';
 import fs from 'fs-extra';
 import path from 'path';
 
+import { withAndroidManifestIcons } from './withAndroidManifestIcons';
+
 const { Colors } = AndroidConfig;
 
 type DPIString = 'mdpi' | 'hdpi' | 'xhdpi' | 'xxhdpi' | 'xxxhdpi';
@@ -41,6 +43,7 @@ export const withAndroidIcons: ConfigPlugin = config => {
     return config;
   }
 
+  config = withAndroidManifestIcons(config);
   // Apply colors.xml changes
   config = withAndroidAdaptiveIconColors(config, backgroundColor);
   return withDangerousMod(config, [
