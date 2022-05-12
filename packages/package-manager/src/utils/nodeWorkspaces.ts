@@ -28,6 +28,18 @@ function findPnpmWorkspaceRoot(projectRoot: string) {
   return manifestLocation ? path.dirname(manifestLocation) : null;
 }
 
+/** Wraps `findYarnOrNpmWorkspaceRoot` and guards against having an empty `package.json` file in an upper directory. */
+export function findYarnOrNpmWorkspaceRootSafe(projectRoot: string): string | null {
+  try {
+    return findYarnOrNpmWorkspaceRoot(projectRoot);
+  } catch (error: any) {
+    if (error.message.includes('Unexpected end of JSON input')) {
+      return null;
+    }
+    throw error;
+  }
+}
+
 /**
  * Resolve the workspace root for a project, if its part of a monorepo.
  * Optionally, provide a specific packager to only resolve that one specifically.
@@ -42,8 +54,8 @@ export function findWorkspaceRoot(
   packageManager?: NodePackageManager
 ): string | null {
   const strategies: Record<NodePackageManager, (projectRoot: string) => string | null> = {
-    npm: findYarnOrNpmWorkspaceRoot,
-    yarn: findYarnOrNpmWorkspaceRoot,
+    npm: findYarnOrNpmWorkspaceRootSafe,
+    yarn: findYarnOrNpmWorkspaceRootSafe,
     pnpm: findPnpmWorkspaceRoot,
   };
 
