@@ -70,6 +70,7 @@ type ManifestService = {
 type ManifestApplicationAttributes = {
   'android:name': string | '.MainApplication';
   'android:icon'?: string;
+  'android:roundIcon'?: string;
   'android:label'?: string;
   'android:allowBackup'?: StringBoolean;
   'android:largeHeap'?: StringBoolean;
