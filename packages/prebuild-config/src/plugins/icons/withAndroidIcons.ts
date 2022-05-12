@@ -237,7 +237,7 @@ async function createAdaptiveIconXmlFiles(
   } else {
     // Remove the xml if the icon switches from adaptive to standard.
     await Promise.all(
-      [launcherPath, launcherRoundPath].map(path => {
+      [launcherPath, launcherRoundPath].map(async path => {
         if (fs.existsSync(path)) {
           return fs.remove(path);
         }
