@@ -147,9 +147,9 @@ async function configureLegacyIconAsync(
     icon,
     backgroundImage,
     backgroundColor,
-    imageCacheType: 'android-standard-square',
     outputImageFileName: IC_LAUNCHER_PNG,
-    backgroundImageCacheType: 'android-standard-square-background',
+    imageCacheFolder: 'android-standard-square',
+    backgroundImageCacheFolder: 'android-standard-square-background',
   });
 }
 
@@ -162,11 +162,11 @@ async function generateRoundIconAsync(
   return generateMultiLayerImageAsync(projectRoot, {
     icon,
     borderRadiusRatio: 0.5,
-    imageCacheType: 'android-standard-circle',
     outputImageFileName: IC_LAUNCHER_ROUND_PNG,
     backgroundImage,
     backgroundColor,
-    backgroundImageCacheType: 'android-standard-round-background',
+    imageCacheFolder: 'android-standard-circle',
+    backgroundImageCacheFolder: 'android-standard-round-background',
   });
 }
 
@@ -185,10 +185,10 @@ export async function configureAdaptiveIconAsync(
   await generateMultiLayerImageAsync(projectRoot, {
     backgroundColor: 'transparent',
     backgroundImage,
-    backgroundImageCacheType: 'android-adaptive-background',
+    backgroundImageCacheFolder: 'android-adaptive-background',
     outputImageFileName: IC_LAUNCHER_FOREGROUND_PNG,
     icon: foregroundImage,
-    imageCacheType: 'android-adaptive-foreground',
+    imageCacheFolder: 'android-adaptive-foreground',
     backgroundImageFileName: IC_LAUNCHER_BACKGROUND_PNG,
   });
 
@@ -230,24 +230,20 @@ async function createAdaptiveIconXmlFiles(
   const launcherPath = path.resolve(anyDpiV26Directory, IC_LAUNCHER_XML);
   const launcherRoundPath = path.resolve(anyDpiV26Directory, IC_LAUNCHER_ROUND_XML);
   if (add) {
-    await fs.writeFile(launcherPath, icLauncherXmlString);
-    await fs.writeFile(launcherRoundPath, icLauncherXmlString);
+    await Promise.all([
+      fs.writeFile(launcherPath, icLauncherXmlString),
+      fs.writeFile(launcherRoundPath, icLauncherXmlString),
+    ]);
   } else {
     // Remove the xml if the icon switches from adaptive to standard.
     await Promise.all(
-      [launcherPath, launcherRoundPath].map(async path => {
+      [launcherPath, launcherRoundPath].map(path => {
         if (fs.existsSync(path)) {
-          return await fs.remove(path);
+          return fs.remove(path);
         }
       })
     );
   }
-}
-
-async function deleteIconNamedAsync(projectRoot: string, name: string) {
-  return iterateDpiValues(projectRoot, ({ dpiFolder }) => {
-    return fs.remove(path.resolve(dpiFolder, name));
-  });
 }
 
 async function generateMultiLayerImageAsync(
@@ -256,8 +252,8 @@ async function generateMultiLayerImageAsync(
     icon,
     backgroundColor,
     backgroundImage,
-    imageCacheType,
-    backgroundImageCacheType,
+    imageCacheFolder,
+    backgroundImageCacheFolder,
     borderRadiusRatio,
     outputImageFileName,
     backgroundImageFileName,
@@ -265,47 +261,31 @@ async function generateMultiLayerImageAsync(
     icon: string;
     backgroundImage: string | null;
     backgroundColor: string | null;
-    imageCacheType: string;
-    backgroundImageCacheType: string;
+    imageCacheFolder: string;
+    backgroundImageCacheFolder: string;
     backgroundImageFileName?: string;
     borderRadiusRatio?: number;
     outputImageFileName: string;
   }
 ) {
   await iterateDpiValues(projectRoot, async ({ dpiFolder, scale }) => {
-    const iconSizePx = BASELINE_PIXEL_SIZE * scale;
-
-    // backgroundImage overrides backgroundColor
-    backgroundColor = backgroundImage ? 'transparent' : backgroundColor ?? 'transparent';
-
-    let iconLayer: Buffer = (
-      await generateImageAsync(
-        { projectRoot, cacheType: imageCacheType },
-        {
-          src: icon,
-          width: iconSizePx,
-          height: iconSizePx,
-          resizeMode: 'cover',
-          backgroundColor,
-          borderRadius: borderRadiusRatio ? iconSizePx * borderRadiusRatio : undefined,
-        }
-      )
-    ).source;
+    let iconLayer = await generateIconAsync(projectRoot, {
+      cacheType: imageCacheFolder,
+      src: icon,
+      scale,
+      // backgroundImage overrides backgroundColor
+      backgroundColor: backgroundImage ? 'transparent' : backgroundColor ?? 'transparent',
+      borderRadiusRatio,
+    });
 
     if (backgroundImage) {
-      const backgroundLayer = (
-        await generateImageAsync(
-          { projectRoot, cacheType: backgroundImageCacheType },
-          {
-            src: backgroundImage,
-            width: iconSizePx,
-            height: iconSizePx,
-            resizeMode: 'cover',
-            backgroundColor: 'transparent',
-            borderRadius: borderRadiusRatio ? iconSizePx * borderRadiusRatio : undefined,
-          }
-        )
-      ).source;
+      const backgroundLayer = await generateIconAsync(projectRoot, {
+        cacheType: backgroundImageCacheFolder,
+        src: backgroundImage,
+        scale,
+        backgroundColor: 'transparent',
+        borderRadiusRatio,
+      });
 
       if (backgroundImageFileName) {
         await fs.writeFile(path.resolve(dpiFolder, backgroundImageFileName), backgroundLayer);
@@ -337,4 +317,43 @@ function iterateDpiValues(
       })
     )
   );
+}
+
+async function deleteIconNamedAsync(projectRoot: string, name: string) {
+  return iterateDpiValues(projectRoot, ({ dpiFolder }) => {
+    return fs.remove(path.resolve(dpiFolder, name));
+  });
+}
+
+async function generateIconAsync(
+  projectRoot: string,
+  {
+    cacheType,
+    src,
+    scale,
+    backgroundColor,
+    borderRadiusRatio,
+  }: {
+    cacheType: string;
+    src: string;
+    scale: number;
+    backgroundColor: string;
+    borderRadiusRatio?: number;
+  }
+) {
+  const iconSizePx = BASELINE_PIXEL_SIZE * scale;
+
+  return (
+    await generateImageAsync(
+      { projectRoot, cacheType },
+      {
+        src,
+        width: iconSizePx,
+        height: iconSizePx,
+        resizeMode: 'cover',
+        backgroundColor,
+        borderRadius: borderRadiusRatio ? iconSizePx * borderRadiusRatio : undefined,
+      }
+    )
+  ).source;
 }
