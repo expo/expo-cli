@@ -1,3 +1,4 @@
+import { AndroidConfig, XML } from '@expo/config-plugins';
 import { ExpoConfig } from '@expo/config-types';
 import * as fs from 'fs';
 import { vol } from 'memfs';
@@ -14,9 +15,16 @@ import {
   getAdaptiveIcon,
   getIcon,
   setIconAsync,
+  setRoundIconManifest,
 } from '../withAndroidIcons';
 import { getDirFromFS } from './utils/getDirFromFS';
+const { getMainApplicationOrThrow, readAndroidManifestAsync } = AndroidConfig.Manifest;
 
+const sampleManifestPath = path.resolve(
+  __dirname,
+  '../../__tests__/fixtures',
+  'react-native-AndroidManifest.xml'
+);
 const fsReal = jest.requireActual('fs') as typeof fs;
 
 jest.mock('fs');
@@ -28,6 +36,24 @@ function setUpMipmapDirectories() {
   vol.mkdirpSync('/app/android/app/src/main/res/mipmap-xxhdpi');
   vol.mkdirpSync('/app/android/app/src/main/res/mipmap-xxxhdpi');
 }
+
+describe(setRoundIconManifest, () => {
+  vol.fromJSON({ './AndroidManifest.xml': fsReal.readFileSync(sampleManifestPath, 'utf-8') });
+  it(`adds the round icon property when an adaptive icon is present`, async () => {
+    const manifest = await readAndroidManifestAsync('./AndroidManifest.xml');
+    const results = setRoundIconManifest({ android: { adaptiveIcon: {} } }, manifest);
+
+    const app = getMainApplicationOrThrow(results);
+    expect(app.$['android:roundIcon']).toBe('@mipmap/ic_launcher_round');
+  });
+  it(`removes the round icon property when an adaptive icon is missing`, async () => {
+    const manifest = await readAndroidManifestAsync('./AndroidManifest.xml');
+    const results = setRoundIconManifest({ android: {} }, manifest);
+
+    const app = getMainApplicationOrThrow(results);
+    expect(app.$['android:roundIcon']).not.toBeDefined();
+  });
+});
 
 describe('Android Icon', () => {
   it(`returns null if no icon values provided`, () => {
