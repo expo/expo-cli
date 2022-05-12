@@ -77,7 +77,7 @@ export async function validateDependenciesVersionsAsync(
     }
   }
 
-  if (Versions.gteSdkVersion(exp, '45.0.0')) {
+  if (Versions.gteSdkVersion(exp, '45.0.0') && !Versions.gteSdkVersion(exp, '46.0.0')) {
     try {
       /* This will throw if the dependency looked for is not installed,
        * but that doesn't apply here, so that error is ignored */
