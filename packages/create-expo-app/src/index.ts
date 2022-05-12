@@ -14,7 +14,6 @@ import {
 } from './resolvePackageManager';
 import { assertFolderEmpty, assertValidName, resolveProjectRootAsync } from './resolveProjectRoot';
 
-// import * as Examples from './Examples';
 const packageJSON = require('../package.json');
 
 let inputPath: string;
@@ -28,10 +27,7 @@ const program = new Command(packageJSON.name)
   // .option('--use-npm', 'Use npm to install dependencies. (default when Yarn is not installed)')
   .option('-y, --yes', 'Use the default options for creating a project')
   .option('--no-install', 'Skip installing npm packages or CocoaPods.')
-  // .option(
-  //   '-t, --template [template|url]',
-  //   'The name of a template from expo/examples or URL to a GitHub repo that contains an example.'
-  // )
+  .option('-t, --template [pkg]', 'NPM template to use: blank, bare-minimum. Default: blank')
   // .option('--template-path [name]', 'The path inside of a GitHub repo where the example lives.')
   .allowUnknownOption()
   .action(projectRoot => (inputPath = projectRoot))
@@ -48,32 +44,21 @@ async function runAsync(): Promise<void> {
     } else {
       projectRoot = await resolveProjectRootAsync(inputPath);
     }
-    // let resolvedTemplate: string | null = program.template;
-    // // @ts-ignore: This guards against someone passing --template without a name after it.
-    // if (resolvedTemplate === true) {
-    //   console.log();
-    //   console.log('Please specify the template');
-    //   console.log();
-    //   process.exit(1);
-    // }
-    // if (!resolvedTemplate && !program.yes) {
-    //   resolvedTemplate = await Examples.promptAsync();
-    // }
-    // let templatePath = program.templatePath;
+    const resolvedTemplate: string | null = program.template;
+    // @ts-ignore: This guards against someone passing --template without a name after it.
+    if (resolvedTemplate === true) {
+      console.log();
+      console.log('Please specify the template, example: --template expo-template-blank');
+      console.log();
+      process.exit(1);
+    }
+
     await fs.promises.mkdir(projectRoot, { recursive: true });
     const extractTemplateStep = Template.logNewSection(`Locating project files.`);
     try {
-      // if (resolvedTemplate) {
-      //   await Examples.resolveTemplateArgAsync(
-      //     projectRoot,
-      //     extractTemplateStep,
-      //     resolvedTemplate,
-      //     templatePath
-      //   );
-      //   await Examples.appendScriptsAsync(projectRoot);
-      // } else {
-      await Template.extractAndPrepareTemplateAppAsync(projectRoot);
-      // }
+      await Template.extractAndPrepareTemplateAppAsync(projectRoot, {
+        npmPackage: resolvedTemplate,
+      });
       extractTemplateStep.succeed('Downloaded and extracted project files.');
     } catch (e: any) {
       extractTemplateStep.fail(

@@ -25,7 +25,8 @@
   "scripts": {
     "prepare": "yarn run clean && yarn run build:prod",
     "lint": "eslint .",
-    "test": "jest",
+    "test": "jest --config jest.config.js",
+    "test:e2e": "jest --config ./e2e/jest.config.js",
     "watch": "yarn run build -w",
     "build": "ncc build ./src/index.ts -o build/",
     "build:prod": "ncc build ./src/index.ts -o build/ --minify --no-cache --no-source-map-register",

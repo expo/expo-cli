@@ -1,5 +1,6 @@
 import spawnAsync from '@expo/spawn-async';
 import fs from 'fs';
+import getenv from 'getenv';
 import os from 'os';
 import path from 'path';
 import { Stream } from 'stream';
@@ -15,6 +16,74 @@ type ExtractProps = {
   strip?: number;
   fileList?: string[];
 };
+
+const ALIASES = [
+  'expo-template-blank',
+  'expo-template-blank-typescript',
+  'expo-template-tabs',
+  'expo-template-bare-minimum',
+];
+
+function isBeta() {
+  return getenv.boolish('EXPO_BETA', false);
+}
+
+/** Applies the `@beta` npm tag when `EXPO_BETA` is enabled. */
+export function applyBetaTag(npmPackageName: string): string {
+  let [name, tag] = splitNpmNameAndTag(npmPackageName);
+
+  if (!tag && isBeta()) {
+    tag = 'beta';
+  }
+
+  return joinNpmNameAndTag(name, tag);
+}
+
+/** Join an NPM package name and tag together, stripping the tag if it's `undefined`. */
+function joinNpmNameAndTag(name: string, tag: string | undefined): string {
+  return [name, tag].filter(Boolean).join('@');
+}
+
+/** Split a package name from its tag. */
+export function splitNpmNameAndTag(npmPackageName: string): [string, string | undefined] {
+  const components = npmPackageName.split('@').filter(Boolean);
+
+  if (npmPackageName.startsWith('@')) {
+    return ['@' + components[0], components[1]];
+  }
+
+  return [components[0], components[1]];
+}
+
+/**
+ * Applies known shortcuts to an NPM package name and tag.
+ * - If the name is `blank`, `blank-typescript`, `tabs`, or `bare-minimum`, apply the prefix `expo-template-`.
+ * - If a tag is a numeric value like `45`, and the name is a known template, then convert the tag to `sdk-X`.
+ *
+ * @example `blank@45` => `expo-template-blank@sdk-45`
+ */
+export function getResolvedTemplateName(npmPackageName: string) {
+  let [name, tag] = splitNpmNameAndTag(npmPackageName);
+
+  if (name.startsWith('@')) {
+    return npmPackageName;
+  }
+
+  const aliasPrefix = 'expo-template-';
+
+  if (ALIASES.includes(aliasPrefix + name)) {
+    name = aliasPrefix + name;
+  }
+
+  // Only apply the numeric conversion if the name is a known template.
+  if (ALIASES.includes(name)) {
+    if (tag?.match(/^\d+$/)) {
+      return name + '@sdk-' + tag;
+    }
+  }
+
+  return joinNpmNameAndTag(name, tag);
+}
 
 // @ts-ignore
 const pipeline = promisify(Stream.pipeline);
