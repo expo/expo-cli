@@ -1,6 +1,6 @@
 {
   "name": "create-expo-app",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "main": "build",
   "description": "Create universal Expo apps",
   "license": "BSD-3-Clause",
@@ -34,7 +34,7 @@
   },
   "devDependencies": {
     "@expo/json-file": "8.2.36",
-    "@expo/package-manager": "0.0.53",
+    "@expo/package-manager": "0.0.54",
     "@expo/spawn-async": "^1.5.0",
     "@types/cacache": "^15.0.1",
     "@types/debug": "^4.1.5",
@@ -44,6 +44,7 @@
     "@types/minipass": "^3.1.2",
     "@types/node": "^12.6.8",
     "@types/prompts": "2.0.8",
+    "@types/tar": "^6.1.1",
     "cacache": "^15.3.0",
     "chalk": "^4.0.0",
     "commander": "2.20.0",
@@ -51,12 +52,11 @@
     "execa": "^4.0.1",
     "form-data": "^2.3.2",
     "getenv": "^1.0.0",
-    "node-fetch": "^2.6.0",
     "minipass": "3.1.6",
+    "node-fetch": "^2.6.0",
     "ora": "3.4.0",
     "prompts": "^2.3.2",
     "tar": "^6.0.5",
-    "@types/tar": "^6.1.1",
     "terminal-link": "^2.1.1",
     "update-check": "^1.5.3"
   },
