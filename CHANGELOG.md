@@ -12,6 +12,51 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+## [Fri, 13 May 2022 14:44:51 -0700](https://github.com/expo/expo-cli/commit/dce0e2d23f1b38089a66d023c9ca8a5e70fd3fc2)
+
+### 🎉 New features
+
+- [config-plugins] rename android jni java descriptors from prebuild ([#4362](https://github.com/expo/expo-cli/issues/4362))
+- [create-expo-app] add support for the `--template` arg from `expo init` ([#4367](https://github.com/expo/expo-cli/issues/4367))
+- [create-expo-app] auto select package manager ([#4339](https://github.com/expo/expo-cli/issues/4339))
+- [create-expo-app] fail on invalid template before prompting for the app name ([#4372](https://github.com/expo/expo-cli/issues/4372))
+- [create-expo-app] hello, world! (create the package) ([#4338](https://github.com/expo/expo-cli/issues/4338))
+- [create-expo-app] use hidden directory for home cache ([#4353](https://github.com/expo/expo-cli/issues/4353))
+- [package-manager] Prefer yarn over npm if both lockfiles exists ([#4369](https://github.com/expo/expo-cli/issues/4369))
+
+### 🧹 Chores
+
+- [expo-cli] Improve Fig autocomplete support ([#4331](https://github.com/expo/expo-cli/issues/4331))
+- [expo-cli] set non-zero exit code when expo doctor fails ([#4359](https://github.com/expo/expo-cli/issues/4359))
+- [expo-cli][metro-config] prevent throwing when an upper-level directory has an invalid package.json ([#4363](https://github.com/expo/expo-cli/issues/4363))
+- [package-manager] explicitly order package managers ([#4344](https://github.com/expo/expo-cli/issues/4344))
+
+### 🐛 Bug fixes
+
+- [config-plugins] Handle quoted build configuration ([#4341](https://github.com/expo/expo-cli/issues/4341))
+- [config-plugins] Remove warning when permissions config is empty when using blockedPermissions ([#4352](https://github.com/expo/expo-cli/issues/4352))
+- [prebuild-config] update manifest roundIcon property ([#4370](https://github.com/expo/expo-cli/issues/4370))
+
+### 📦 Packages updated
+
+- @expo/config-plugins@4.1.5
+- @expo/config@6.0.24
+- create-expo-app@0.0.9
+- @expo/dev-server@0.1.111
+- @expo/dev-tools@0.13.153
+- expo-cli@5.4.4
+- expo-optimize@0.2.16
+- install-expo-modules@0.3.3
+- @expo/metro-config@0.3.17
+- @expo/next-adapter@4.0.5
+- @expo/package-manager@0.0.54
+- pod-install@0.1.36
+- @expo/prebuild-config@4.0.1
+- expo-pwa@0.0.119
+- uri-scheme@1.0.120
+- @expo/webpack-config@0.16.24
+- xdl@59.2.37
+
 ## [Wed, 27 Apr 2022 16:29:28 -0700](https://github.com/expo/expo-cli/commit/e517d22aaf8a3fd93795a276ed68be8b1afed30d)
 
 ### 🎉 New features
