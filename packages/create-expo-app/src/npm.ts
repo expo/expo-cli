@@ -9,6 +9,7 @@ import { promisify } from 'util';
 
 import { createEntryResolver, createFileTransform } from './createFileTransform';
 import { createFetch } from './fetch';
+import { ALIASES } from './legacyTemplates';
 
 type ExtractProps = {
   name: string;
@@ -16,13 +17,6 @@ type ExtractProps = {
   strip?: number;
   fileList?: string[];
 };
-
-const ALIASES = [
-  'expo-template-blank',
-  'expo-template-blank-typescript',
-  'expo-template-tabs',
-  'expo-template-bare-minimum',
-];
 
 function isBeta() {
   return getenv.boolish('EXPO_BETA', false);

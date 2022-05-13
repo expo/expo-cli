@@ -7,6 +7,7 @@ import path from 'path';
 import * as Template from './Template';
 import shouldUpdate from './Update';
 import { initGitRepoAsync } from './git';
+import { promptTemplateAsync } from './legacyTemplates';
 import {
   installDependenciesAsync,
   PackageManagerName,
@@ -21,20 +22,34 @@ let inputPath: string;
 // TODO: Use something smaller like arg
 const program = new Command(packageJSON.name)
   .version(packageJSON.version)
-  .arguments('<project-root>')
-  .usage(`${chalk.magenta('<project-root>')} [options]`)
+  .arguments('<path>')
+  .usage(`${chalk.cyan('<path>')} [options]`)
   .description('Creates a new Expo project')
-  // .option('--use-npm', 'Use npm to install dependencies. (default when Yarn is not installed)')
   .option('-y, --yes', 'Use the default options for creating a project')
   .option('--no-install', 'Skip installing npm packages or CocoaPods.')
-  .option('-t, --template [pkg]', 'NPM template to use: blank, bare-minimum. Default: blank')
-  // .option('--template-path [name]', 'The path inside of a GitHub repo where the example lives.')
+  .option('-t, --template [pkg]', 'NPM template to use: blank, tabs, bare-minimum. Default: blank')
+  .on('--help', () => {
+    console.log();
+    console.log(chalk.dim`  The package manager used for installing`);
+    console.log(chalk.dim`  node modules is based on how you invoke the CLI:`);
+    console.log();
+    console.log(chalk`   {bold npm:} {cyan npm create expo-app}`);
+    console.log(chalk`  {bold yarn:} {cyan yarn create expo-app}`);
+    console.log(chalk`  {bold pnpm:} {cyan pnpm create expo-app}`);
+    console.log();
+  })
   .allowUnknownOption()
   .action(projectRoot => (inputPath = projectRoot))
   .parse(process.argv);
 
 async function runAsync(): Promise<void> {
   try {
+    let resolvedTemplate: string | null = program.template;
+    // @ts-ignore: This guards against someone passing --template without a name after it.
+    if (resolvedTemplate === true) {
+      resolvedTemplate = await promptTemplateAsync();
+    }
+
     let projectRoot: string;
     if (!inputPath && program.yes) {
       projectRoot = path.resolve(process.cwd());
@@ -43,14 +58,6 @@ async function runAsync(): Promise<void> {
       assertFolderEmpty(projectRoot, folderName);
     } else {
       projectRoot = await resolveProjectRootAsync(inputPath);
-    }
-    const resolvedTemplate: string | null = program.template;
-    // @ts-ignore: This guards against someone passing --template without a name after it.
-    if (resolvedTemplate === true) {
-      console.log();
-      console.log('Please specify the template, example: --template expo-template-blank');
-      console.log();
-      process.exit(1);
     }
 
     await fs.promises.mkdir(projectRoot, { recursive: true });

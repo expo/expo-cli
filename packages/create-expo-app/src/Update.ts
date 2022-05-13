@@ -9,7 +9,7 @@ export default async function shouldUpdate(): Promise<void> {
     if (res?.latest) {
       console.log();
       console.log(chalk.yellow.bold(`A new version of \`${packageJson.name}\` is available`));
-      console.log(`You can update by running: {cyan npm install -g ${packageJson.name}}`);
+      console.log(chalk`You can update by running: {cyan npm install -g ${packageJson.name}}`);
       console.log();
     }
   } catch {

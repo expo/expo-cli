@@ -2,7 +2,6 @@ import {
   AndroidConfig,
   ConfigPlugin,
   withAndroidColors,
-  withAndroidManifest,
   withDangerousMod,
 } from '@expo/config-plugins';
 import { ResourceXML } from '@expo/config-plugins/build/android/Resources';
@@ -10,6 +9,8 @@ import { ExpoConfig } from '@expo/config-types';
 import { compositeImagesAsync, generateImageAsync } from '@expo/image-utils';
 import fs from 'fs-extra';
 import path from 'path';
+
+import { withAndroidManifestIcons } from './withAndroidManifestIcons';
 
 const { Colors } = AndroidConfig;
 
@@ -42,11 +43,7 @@ export const withAndroidIcons: ConfigPlugin = config => {
     return config;
   }
 
-  config = withAndroidManifest(config, config => {
-    config.modResults = setRoundIconManifest(config, config.modResults);
-    return config;
-  });
-
+  config = withAndroidManifestIcons(config);
   // Apply colors.xml changes
   config = withAndroidAdaptiveIconColors(config, backgroundColor);
   return withDangerousMod(config, [
