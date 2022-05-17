@@ -68,7 +68,7 @@ export interface ExportedConfigWithProps<Data = any> extends ExportedConfig {
    * For example, you could infer that the user defined a certain
    * value explicitly and disable any automatic changes.
    */
-  readonly modOriginalConfig: ExpoConfig;
+  readonly modRawConfig: ExpoConfig;
 }
 
 /**

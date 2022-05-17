@@ -128,7 +128,7 @@ export async function evalModsAsync(
     platforms?: ModPlatform[];
   }
 ): Promise<ExportedConfig> {
-  const modOriginalConfig = Object.freeze(config);
+  const modRawConfig = Object.freeze(config);
 
   for (const [platformName, platform] of Object.entries(config.mods ?? ({} as ModConfig))) {
     if (platforms && !platforms.includes(platformName as any)) {
@@ -175,7 +175,7 @@ export async function evalModsAsync(
           ...config,
           modResults: null,
           modRequest,
-          modOriginalConfig,
+          modRawConfig,
         });
 
         // Sanity check to help locate non compliant mods.
@@ -184,8 +184,8 @@ export async function evalModsAsync(
         delete config.modResults;
         // @ts-ignore: `modRequest` is added for modifications
         delete config.modRequest;
-        // @ts-ignore: `modOriginalConfig` is added for modifications
-        delete config.modOriginalConfig;
+        // @ts-ignore: `modRawConfig` is added for modifications
+        delete config.modRawConfig;
       }
     }
   }

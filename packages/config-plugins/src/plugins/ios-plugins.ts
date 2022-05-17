@@ -48,7 +48,7 @@ export function createInfoPlistPluginWithPropertyGuard(
         ? settings.expoPropertyGetter(config)
         : get(config, settings.expoConfigProperty);
       // If the user explicitly sets a value in the infoPlist, we should respect that.
-      if (config.modOriginalConfig.ios?.infoPlist?.[settings.infoPlistProperty] === undefined) {
+      if (config.modRawConfig.ios?.infoPlist?.[settings.infoPlistProperty] === undefined) {
         config.modResults = await action(config, config.modResults);
       } else if (existingProperty !== undefined) {
         // Only warn if there is a conflict.
