@@ -1,9 +1,6 @@
 import { ExpoConfig } from '@expo/config-types';
 
-import {
-  createInfoPlistPlugin,
-  createInfoPlistPluginWithPropertyGuard,
-} from '../plugins/ios-plugins';
+import { createInfoPlistPluginWithPropertyGuard } from '../plugins/ios-plugins';
 import { InfoPlist } from './IosConfig.types';
 
 export const withVersion = createInfoPlistPluginWithPropertyGuard(
