@@ -1,9 +1,16 @@
 import { ExpoConfig } from '@expo/config-types';
 
-import { createInfoPlistPlugin } from '../plugins/ios-plugins';
+import { createInfoPlistPluginWithPropertyGuard } from '../plugins/ios-plugins';
 import { InfoPlist, URLScheme } from './IosConfig.types';
 
-export const withScheme = createInfoPlistPlugin(setScheme, 'withScheme');
+export const withScheme = createInfoPlistPluginWithPropertyGuard(
+  setScheme,
+  {
+    infoPlistProperty: 'CFBundleURLTypes',
+    expoConfigProperty: 'scheme',
+  },
+  'withScheme'
+);
 
 export function getScheme(config: { scheme?: string | string[] }): string[] {
   if (Array.isArray(config.scheme)) {
