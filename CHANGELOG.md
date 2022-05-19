@@ -12,6 +12,19 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+## [Wed, May 18 2022 19:34:55 2022 -0700](https://github.com/expo/expo-cli/commit/866daede8095b3febb98b0d325085fb36550d7b9)
+
+### 🧹 Chores
+
+- [dev-server] add sdk 45 support for the sanity check of hermes bundle ([#4382](https://github.com/expo/expo-cli/pull/4382))
+
+### 📦 Packages updated
+
+- expo-cli@5.4.6
+- @expo/dev-tools@0.13.154
+- @expo/dev-server@0.1.112
+- xdl@59.2.38
+
 ## [Fri, 13 May 2022 14:44:51 -0700](https://github.com/expo/expo-cli/commit/dce0e2d23f1b38089a66d023c9ca8a5e70fd3fc2)
 
 ### 🎉 New features
