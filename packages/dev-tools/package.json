@@ -1,6 +1,6 @@
 {
   "name": "@expo/dev-tools",
-  "version": "0.13.153",
+  "version": "0.13.154",
   "main": "build/server/index.js",
   "scripts": {
     "dev": "cross-env NODE_ENV=development ts-node -T ./server/dev-server",
