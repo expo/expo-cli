@@ -3,22 +3,41 @@ import chalk from 'chalk';
 import { Doctor } from 'xdl';
 
 import Log from '../../../log';
+import { getRemoteVersionsForSdk } from '../../../utils/getRemoteVersionsForSdk';
 import { profileMethod } from '../../utils/profileMethod';
 import { validateDependenciesVersionsAsync } from '../../utils/validateDependenciesVersions';
-import { doThingAsync } from './depedencies/why';
+import { warnAboutDeepDependenciesAsync } from './depedencies/why';
 import { warnUponCmdExe } from './windows';
 
 type Options = {
   fixDependencies?: boolean;
 };
 
-export async function actionAsync(projectRoot: string, options: Options) {
-  await doThingAsync({ name: '@expo/config-plugins', version: '~4.1.4' });
+async function validateSupportPackagesAsync(sdkVersion: string) {
+  const versionsForSdk = await getRemoteVersionsForSdk(sdkVersion);
 
-  return;
+  const supportPackagesToValidate = [
+    'expo-modules-autolinking',
+    '@expo/config-plugins',
+    '@expo/prebuild-config',
+  ];
+
+  for (const pkg of supportPackagesToValidate) {
+    const version = versionsForSdk[pkg];
+    if (version) {
+      await warnAboutDeepDependenciesAsync({ name: pkg, version });
+    }
+  }
+  Log.newLine();
+}
+
+export async function actionAsync(projectRoot: string, options: Options) {
   await warnUponCmdExe();
 
   const { exp, pkg } = profileMethod(getConfig)(projectRoot);
+
+  await validateSupportPackagesAsync(exp.sdkVersion!);
+
   const areDepsValid = await profileMethod(validateDependenciesVersionsAsync)(
     projectRoot,
     exp,

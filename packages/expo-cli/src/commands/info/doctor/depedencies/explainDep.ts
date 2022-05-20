@@ -39,12 +39,20 @@ const allcolor: Color = {
 /** Print explanation. */
 export const explainNode = (
   node: RootNodePackage | NodePackage,
-  depth: number = Infinity,
+  depth?: number,
   color: Color = allcolor
-) =>
-  printNode(node, color) +
-  explainDependents(node, depth, color) +
-  explainLinksIn(node, depth, color);
+) => {
+  const isFirst = depth == null;
+  if (isFirst) {
+    depth = Infinity;
+  }
+  const format = isFirst ? color.red : nocolor.red;
+  return (
+    format(printNode(node, color)) +
+    explainDependents(node, depth!, color) +
+    explainLinksIn(node, depth!, color)
+  );
+};
 
 const colorType = (type: DependentType, color: Color) => {
   const { red, yellow, cyan, magenta, blue, green } = color ? chalk : nocolor;
@@ -141,27 +149,22 @@ export const explainEdge = (
   depth: number,
   color: Color
 ): string => {
-  const { bold } = color ? chalk : nocolor;
+  const { bold, red } = color ? chalk : nocolor;
   const dep =
     type === 'workspace'
       ? bold(relative(from.location!, spec.slice('file:'.length)))
       : `${bold(name)}@"${bold(spec)}"`;
   const fromMsg = ` from ${explainFrom(from, depth, color)}`;
 
+  // Highlight the tip of the tree.
   if (fromMsg === ' from the root project') {
-    return `${dep}`;
+    return red(dep);
   }
   return (
     (type === 'prod' ? '' : `${colorType(type, color)} `) +
     (bundled ? `${colorType('bundled', color)} ` : '') +
     `${dep}${fromMsg}`
   );
-
-  //   return (
-  //     (type === 'prod' ? '' : `${colorType(type, color)} `) +
-  //     (bundled ? `${colorType('bundled', color)} ` : '') +
-  //     `${dep}${fromMsg}`
-  //   );
 };
 
 const explainFrom = (from: NodePackage, depth: number, color: Color): string => {
