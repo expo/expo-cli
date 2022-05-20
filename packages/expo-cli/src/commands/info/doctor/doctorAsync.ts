@@ -1,6 +1,6 @@
 import { getConfig } from '@expo/config';
 import chalk from 'chalk';
-import { Doctor } from 'xdl';
+import { Doctor, Versions } from 'xdl';
 
 import Log from '../../../log';
 import { getRemoteVersionsForSdk } from '../../../utils/getRemoteVersionsForSdk';
@@ -36,7 +36,10 @@ export async function actionAsync(projectRoot: string, options: Options) {
 
   const { exp, pkg } = profileMethod(getConfig)(projectRoot);
 
-  await validateSupportPackagesAsync(exp.sdkVersion!);
+  // Only use the new validation on SDK +45.
+  if (Versions.gteSdkVersion(exp, '45.0.0')) {
+    await validateSupportPackagesAsync(exp.sdkVersion!);
+  }
 
   const areDepsValid = await profileMethod(validateDependenciesVersionsAsync)(
     projectRoot,
