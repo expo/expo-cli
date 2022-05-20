@@ -148,11 +148,20 @@ export const explainEdge = (
       : `${bold(name)}@"${bold(spec)}"`;
   const fromMsg = ` from ${explainFrom(from, depth, color)}`;
 
+  if (fromMsg === ' from the root project') {
+    return `${dep}`;
+  }
   return (
     (type === 'prod' ? '' : `${colorType(type, color)} `) +
     (bundled ? `${colorType('bundled', color)} ` : '') +
     `${dep}${fromMsg}`
   );
+
+  //   return (
+  //     (type === 'prod' ? '' : `${colorType(type, color)} `) +
+  //     (bundled ? `${colorType('bundled', color)} ` : '') +
+  //     `${dep}${fromMsg}`
+  //   );
 };
 
 const explainFrom = (from: NodePackage, depth: number, color: Color): string => {
@@ -161,7 +170,8 @@ const explainFrom = (from: NodePackage, depth: number, color: Color): string => 
   }
 
   return (
-    // printNode(from, color) +
-    explainDependents(from, depth - 1, color) + explainLinksIn(from, depth - 1, color)
+    printNode(from, color) +
+    explainDependents(from, depth - 1, color) +
+    explainLinksIn(from, depth - 1, color)
   );
 };

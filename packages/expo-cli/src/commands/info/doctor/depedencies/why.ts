@@ -4,7 +4,7 @@ import semver from 'semver';
 import Log from '../../../../log';
 import { logNewSection, ora } from '../../../../utils/ora';
 import { explainNode } from './explainDep';
-import { RootNodePackage, VersionSpec } from './why.types';
+import { NodePackage, RootNodePackage, VersionSpec } from './why.types';
 
 function isSpawnResult(result: any): result is SpawnResult {
   return 'stderr' in result && 'stdout' in result && 'status' in result;
@@ -44,7 +44,13 @@ export async function doThingAsync(pkg: { name: string; version: VersionSpec }) 
     Log.log(`No dependencies found for ${pkg.name}`);
     return;
   }
+  printExplanationsAsync(pkg, explanations);
+}
 
+export async function printExplanationsAsync(
+  pkg: { name: string; version: VersionSpec },
+  explanations: RootNodePackage[]
+) {
   const validNodes: RootNodePackage[] = [];
   const invalidNodes: RootNodePackage[] = [];
 
@@ -63,10 +69,40 @@ export async function doThingAsync(pkg: { name: string; version: VersionSpec }) 
     }
   }
 
-  Log.log('Valid nodes:');
+  Log.log('Valid:');
   Log.log(validNodes.map(explanation => explainNode(explanation)).join('\n\n'));
 
-  Log.log('Invalid nodes:');
+  Log.error('\nInvalid:\n');
+
+  // invalidNodes.forEach(explanation => {
+  //   const getTipOfTree = (explanation: RootNodePackage) => {
+  //     const deepestNodes = (node: NodePackage): string[] => {
+  //       if (!node.dependents) {
+  //         return [`${node.name}@${node.version}`];
+  //       }
+  //       return node.dependents.map(value => deepestNodes(value.from).flat()).flat();
+  //     };
+
+  //     const deps =
+  //       explanation.dependents?.map(value => {
+  //         return getTipOfTree(value.from);
+  //       }) ?? [];
+
+  //     return deps
+  //       .concat(
+  //         explanation.linksIn?.map(value => {
+  //           return deepestNodes(value);
+  //         })
+  //       )
+  //       .flat()
+  //       .join(' -> ');
+  //   };
+
+  //   console.log(
+  //     `Found: ${explanation.name}@${explanation.version} -> ${getTipOfTree(explanation).join(', ')}`
+  //   );
+  // });
+
   Log.error(invalidNodes.map(explanation => explainNode(explanation)).join('\n\n'));
 }
 
