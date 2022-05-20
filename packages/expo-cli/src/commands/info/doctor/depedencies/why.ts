@@ -71,7 +71,7 @@ export async function printExplanationsAsync(
 
   if (invalidNodes.length > 0) {
     Log.warn(`Expected package ${formatPkg(pkg, 'green')}`);
-    Log.warn(chalk`Found invalid: {dim (for more info, run {bold npm why ${pkg.name}})}`);
+    Log.warn(chalk`Found invalid:`);
     Log.warn(invalidNodes.map(explanation => '  ' + formatPkg(explanation, 'red')).join('\n'));
     Log.warn(chalk`  {dim (for more info, run: {bold npm why ${pkg.name}})}`);
 
