@@ -6,22 +6,22 @@ export interface CommonNodePackage<TVersion extends string> {
    */
   name: PackageName;
   version: TVersion;
-  location: Location;
-  isWorkspace: boolean;
-  dependents: Dependent[];
-}
+  location?: Location;
+  isWorkspace?: boolean;
+  dependents?: Dependent[];
 
-export interface RootNodePackage extends CommonNodePackage<VersionSpec> {
-  dev: boolean;
-  optional: boolean;
-  devOptional: boolean;
-  peer: boolean;
-  bundled: boolean;
-}
-
-export interface NodePackage extends Partial<CommonNodePackage<ExactVersion>> {
+  dev?: boolean;
+  optional?: boolean;
+  devOptional?: boolean;
+  peer?: boolean;
+  bundled?: boolean;
+  extraneous?: boolean;
   linksIn?: NodePackage[];
 }
+
+export interface RootNodePackage extends CommonNodePackage<VersionSpec> {}
+
+export interface NodePackage extends CommonNodePackage<ExactVersion> {}
 
 export interface Dependent {
   name: PackageName;
@@ -30,9 +30,19 @@ export interface Dependent {
   spec: VersionSpec;
 
   from: NodePackage;
+
+  bundled?: boolean;
 }
 
-export type DependentType = 'dev' | 'optional' | 'peer' | 'peerOptional' | 'prod' | 'workspace';
+export type DependentType =
+  | 'bundled'
+  | 'extraneous'
+  | 'dev'
+  | 'optional'
+  | 'peer'
+  | 'peerOptional'
+  | 'prod'
+  | 'workspace';
 
 /**
  *

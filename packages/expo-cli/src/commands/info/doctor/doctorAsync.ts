@@ -5,6 +5,7 @@ import { Doctor } from 'xdl';
 import Log from '../../../log';
 import { profileMethod } from '../../utils/profileMethod';
 import { validateDependenciesVersionsAsync } from '../../utils/validateDependenciesVersions';
+import { doThingAsync } from './depedencies/why';
 import { warnUponCmdExe } from './windows';
 
 type Options = {
@@ -12,6 +13,9 @@ type Options = {
 };
 
 export async function actionAsync(projectRoot: string, options: Options) {
+  await doThingAsync({ name: '@expo/config-plugins', version: '~4.1.4' });
+
+  return;
   await warnUponCmdExe();
 
   const { exp, pkg } = profileMethod(getConfig)(projectRoot);
