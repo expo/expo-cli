@@ -30,7 +30,7 @@ export function evalConfig(
     });
 
     result = requireString(code, configFile);
-  } catch (error) {
+  } catch (error: any) {
     const location = extractLocationFromSyntaxError(error);
 
     // Apply a code frame preview to the error if possible, sucrase doesn't do this by default.

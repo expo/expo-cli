@@ -200,7 +200,7 @@ const printServerInfo = async (
       // Log.newLine();
       // TODO: if development build, change this message!
       Log.nested(item(`Scan the QR code above with Expo Go (Android) or the Camera app (iOS)`));
-    } catch (error) {
+    } catch (error: any) {
       // @ts-ignore: If there is no development build scheme, then skip the QR code.
       if (error.code !== 'NO_DEV_CLIENT_SCHEME') {
         throw error;
@@ -302,7 +302,7 @@ export async function startAsync(projectRoot: string, options: StartOptions) {
   async function handleKeypress(key: string) {
     try {
       await handleKeypressAsync(key);
-    } catch (err) {
+    } catch (err: any) {
       await handleErrorsAsync(err, {});
       process.exit(1);
     }

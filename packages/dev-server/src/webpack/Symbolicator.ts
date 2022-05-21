@@ -239,7 +239,7 @@ export class Symbolicator {
           },
           fileName: filename,
         };
-      } catch (error) {
+      } catch (error: any) {
         this.config.logger.error(
           { tag: 'dev-server' },
           'Symbolication failed to create code preview: ' + error.message

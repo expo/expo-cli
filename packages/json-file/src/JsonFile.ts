@@ -132,7 +132,7 @@ function read<TJSONObject extends JSONObject>(
   let json;
   try {
     json = fs.readFileSync(file, 'utf8');
-  } catch (error) {
+  } catch (error: any) {
     assertEmptyJsonString(json, file);
     const defaultValue = cantReadFileDefault(options);
     if (defaultValue === undefined) {
@@ -151,7 +151,7 @@ async function readAsync<TJSONObject extends JSONObject>(
   let json;
   try {
     json = await fs.promises.readFile(file, 'utf8');
-  } catch (error) {
+  } catch (error: any) {
     assertEmptyJsonString(json, file);
     const defaultValue = cantReadFileDefault(options);
     if (defaultValue === undefined) {
@@ -175,7 +175,7 @@ function parseJsonString<TJSONObject extends JSONObject>(
     } else {
       return JSON.parse(json);
     }
-  } catch (e) {
+  } catch (e: any) {
     const defaultValue = jsonParseErrorDefault(options);
     if (defaultValue === undefined) {
       const location = locationFromSyntaxError(e, json);
@@ -225,7 +225,7 @@ async function writeAsync<TJSONObject extends JSONObject>(
     } else {
       json = JSON.stringify(object, null, space);
     }
-  } catch (e) {
+  } catch (e: any) {
     throw new JsonFileError(`Couldn't JSON.stringify object for file: ${file}`, e);
   }
   const data = addNewLineAtEOF ? `${json}\n` : json;

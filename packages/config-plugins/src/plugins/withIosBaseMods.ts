@@ -1,12 +1,13 @@
 import JsonFile, { JSONObject, JSONValue } from '@expo/json-file';
 import plist from '@expo/plist';
 import assert from 'assert';
-import { promises } from 'fs';
+import fs, { promises } from 'fs';
 import path from 'path';
 import xcode, { XcodeProject } from 'xcode';
 
 import { ExportedConfig, ModConfig } from '../Plugin.types';
 import { Entitlements, Paths } from '../ios';
+import { ensureApplicationTargetEntitlementsFileConfigured } from '../ios/Entitlements';
 import { InfoPlist } from '../ios/IosConfig.types';
 import { getPbxproj } from '../ios/utils/Xcodeproj';
 import { getInfoPlistPathFromPbxproj } from '../ios/utils/getInfoPlistPath';
@@ -204,8 +205,8 @@ const defaultProviders = {
 
     async getFilePath(config) {
       try {
-        // Fallback on glob...
-        return await Entitlements.getEntitlementsPath(config.modRequest.projectRoot);
+        ensureApplicationTargetEntitlementsFileConfigured(config.modRequest.projectRoot);
+        return Entitlements.getEntitlementsPath(config.modRequest.projectRoot) ?? '';
       } catch (error: any) {
         if (config.modRequest.introspect) {
           // fallback to an empty string in introspection mode.
@@ -218,9 +219,13 @@ const defaultProviders = {
     async read(filePath, config) {
       let modResults: JSONObject;
       try {
-        const contents = await readFile(filePath, 'utf8');
-        assert(contents, 'Entitlements plist is empty');
-        modResults = plist.parse(contents);
+        if (fs.existsSync(filePath)) {
+          const contents = await readFile(filePath, 'utf8');
+          assert(contents, 'Entitlements plist is empty');
+          modResults = plist.parse(contents);
+        } else {
+          modResults = getEntitlementsPlistTemplate();
+        }
       } catch (error: any) {
         // Throw errors in introspection mode.
         if (!config.modRequest.introspect) {
@@ -270,7 +275,7 @@ const defaultProviders = {
       let results: Record<string, JSONValue> = {};
       try {
         results = await JsonFile.readAsync(filePath);
-      } catch (e) {}
+      } catch {}
       return results;
     },
     async write(filePath, { modResults, modRequest: { introspect } }) {

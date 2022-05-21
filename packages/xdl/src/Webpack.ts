@@ -149,7 +149,7 @@ function createNativeDevServerMiddleware(
   if (!isTargetingNative()) {
     return null;
   }
-  const nativeMiddleware = createDevServerMiddleware({
+  const nativeMiddleware = createDevServerMiddleware(projectRoot, {
     logger: ProjectUtils.getLogger(projectRoot),
     port,
     watchFolders: [projectRoot],
@@ -179,30 +179,40 @@ function attachNativeDevServerMiddlewareToDevServer(
   {
     server,
     middleware,
-    attachToServer,
     logger,
+    // Expo SDK 44 and lower
+    attachToServer,
+    // React Native +68 -- Expo SDK 45 and higher
+    messageSocketEndpoint,
+    eventsSocketEndpoint,
   }: { server: http.Server } & ReturnType<typeof createNativeDevServerMiddleware>
 ) {
-  // Hook up the React Native WebSockets to the Webpack dev server.
-  const { messageSocket, debuggerProxy, eventsSocket } = attachToServer(server);
+  if (attachToServer) {
+    // Hook up the React Native WebSockets to the Webpack dev server.
+    const { messageSocket, eventsSocket } = attachToServer(server);
 
-  customMessageSocketBroadcaster = messageSocket.broadcast;
+    customMessageSocketBroadcaster = messageSocket.broadcast;
 
-  const logReporter = new LogReporter(logger);
-  logReporter.reportEvent = eventsSocket.reportEvent;
+    const logReporter = new LogReporter(logger);
+    logReporter.reportEvent = eventsSocket.reportEvent;
 
-  const { inspectorProxy } = attachInspectorProxy(projectRoot, {
-    middleware,
-    server,
-  });
+    attachInspectorProxy(projectRoot, {
+      middleware,
+      server,
+    });
+  } else {
+    // React Native +68
+    const logReporter = new LogReporter(logger);
 
-  return {
-    messageSocket,
-    eventsSocket,
-    debuggerProxy,
-    logReporter,
-    inspectorProxy,
-  };
+    logReporter.reportEvent = eventsSocketEndpoint.reportEvent;
+
+    customMessageSocketBroadcaster = messageSocketEndpoint.broadcast;
+
+    attachInspectorProxy(projectRoot, {
+      middleware,
+      server,
+    });
+  }
 }
 
 export async function startAsync(
@@ -424,7 +434,7 @@ async function bundleWebAppAsync(projectRoot: string, config: WebpackConfigurati
     } else {
       ProjectUtils.logInfo(projectRoot, WEBPACK_LOG_TAG, chalk.green('Compiled successfully.\n'));
     }
-  } catch (error) {
+  } catch (error: any) {
     ProjectUtils.logError(projectRoot, WEBPACK_LOG_TAG, chalk.red('Failed to compile.\n'));
     throw error;
   }
@@ -494,7 +504,7 @@ async function getAvailablePortAsync(options: {
       throw new Error(`Port ${defaultPort} not available.`);
     }
     return port;
-  } catch (error) {
+  } catch (error: any) {
     throw new XDLError('NO_PORT_FOUND', error.message);
   }
 }
@@ -596,7 +606,7 @@ async function getSSLCertAsync({
       };
     }
     return result;
-  } catch (error) {
+  } catch (error: any) {
     console.log(`Error creating SSL certificates: ${error}`);
   }
 
@@ -677,7 +687,7 @@ async function openProjectAsync(
     }
     openBrowserAsync(url);
     return { success: true, url };
-  } catch (e) {
+  } catch (e: any) {
     Logger.global.error(`Couldn't start project on web: ${e.message}`);
     return { success: false, error: e };
   }

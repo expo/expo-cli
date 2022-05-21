@@ -1,19 +1,19 @@
 import { ExpoConfig } from '@expo/config-types';
 import { JSONObject } from '@expo/json-file';
-import fs from 'fs-extra';
+import fs from 'fs';
 import path from 'path';
 import slash from 'slash';
+import { XCBuildConfiguration } from 'xcode';
 
 import { createEntitlementsPlugin } from '../plugins/ios-plugins';
-import * as Paths from './Paths';
+import { findFirstNativeTarget, getXCBuildConfigurationFromPbxproj } from './Target';
 import {
+  getBuildConfigurationsForListId,
   getPbxproj,
   getProductName,
   getProjectName,
-  isBuildConfig,
-  isNotComment,
-  isNotTestHost,
 } from './utils/Xcodeproj';
+import { trimQuotes } from './utils/string';
 
 export const withAssociatedDomains = createEntitlementsPlugin(
   setAssociatedDomains,
@@ -34,70 +34,75 @@ export function setAssociatedDomains(
   return entitlementsPlist;
 }
 
-export function getEntitlementsPath(projectRoot: string): string {
-  const paths = Paths.getAllEntitlementsPaths(projectRoot);
-  let targetPath: string | null = null;
+export function getEntitlementsPath(
+  projectRoot: string,
+  {
+    targetName,
+    buildConfiguration = 'Release',
+  }: { targetName?: string; buildConfiguration?: string } = {}
+): string | null {
+  const project = getPbxproj(projectRoot);
+  const xcBuildConfiguration = getXCBuildConfigurationFromPbxproj(project, {
+    targetName,
+    buildConfiguration,
+  });
+  if (!xcBuildConfiguration) {
+    return null;
+  }
+  const entitlementsPath = getEntitlementsPathFromBuildConfiguration(
+    projectRoot,
+    xcBuildConfiguration
+  );
+  return entitlementsPath && fs.existsSync(entitlementsPath) ? entitlementsPath : null;
+}
 
-  /**
-   * Add file to pbxproj under CODE_SIGN_ENTITLEMENTS
-   */
+function getEntitlementsPathFromBuildConfiguration(
+  projectRoot: string,
+  xcBuildConfiguration: XCBuildConfiguration
+): string | null {
+  const entitlementsPathRaw = xcBuildConfiguration?.buildSettings?.CODE_SIGN_ENTITLEMENTS as
+    | string
+    | undefined;
+  if (entitlementsPathRaw) {
+    return path.normalize(path.join(projectRoot, 'ios', trimQuotes(entitlementsPathRaw)));
+  } else {
+    return null;
+  }
+}
+
+export function ensureApplicationTargetEntitlementsFileConfigured(projectRoot: string): void {
   const project = getPbxproj(projectRoot);
   const projectName = getProjectName(projectRoot);
   const productName = getProductName(project);
 
-  // Use posix formatted path, even on Windows
-  const entitlementsRelativePath = slash(path.join(projectName, `${productName}.entitlements`));
-  const entitlementsPath = slash(
-    path.normalize(path.join(projectRoot, 'ios', entitlementsRelativePath))
+  const [, applicationTarget] = findFirstNativeTarget(project);
+  const buildConfigurations = getBuildConfigurationsForListId(
+    project,
+    applicationTarget.buildConfigurationList
   );
-
-  const pathsToDelete: string[] = [];
-
-  while (paths.length) {
-    const last = slash(path.normalize(paths.pop()!));
-    if (last !== entitlementsPath) {
-      pathsToDelete.push(last);
-    } else {
-      targetPath = last;
+  let hasChangesToWrite = false;
+  for (const [, xcBuildConfiguration] of buildConfigurations) {
+    const oldEntitlementPath = getEntitlementsPathFromBuildConfiguration(
+      projectRoot,
+      xcBuildConfiguration
+    );
+    if (oldEntitlementPath && fs.existsSync(oldEntitlementPath)) {
+      return;
     }
+    hasChangesToWrite = true;
+    // Use posix formatted path, even on Windows
+    const entitlementsRelativePath = slash(path.join(projectName, `${productName}.entitlements`));
+    const entitlementsPath = path.normalize(
+      path.join(projectRoot, 'ios', entitlementsRelativePath)
+    );
+    fs.mkdirSync(path.dirname(entitlementsPath), { recursive: true });
+    if (!fs.existsSync(entitlementsPath)) {
+      fs.writeFileSync(entitlementsPath, ENTITLEMENTS_TEMPLATE);
+    }
+    xcBuildConfiguration.buildSettings.CODE_SIGN_ENTITLEMENTS = entitlementsRelativePath;
   }
-
-  // Create a new entitlements file
-  if (!targetPath) {
-    targetPath = entitlementsPath;
-
-    // Use the default template
-    let template = ENTITLEMENTS_TEMPLATE;
-
-    // If an old entitlements file exists, copy it's contents into the new file.
-    if (pathsToDelete.length) {
-      // Get the last entitlements file and use it as the template
-      const last = pathsToDelete[pathsToDelete.length - 1]!;
-      template = fs.readFileSync(last, 'utf8');
-    }
-
-    fs.ensureDirSync(path.dirname(entitlementsPath));
-    fs.writeFileSync(entitlementsPath, template);
-
-    Object.entries(project.pbxXCBuildConfigurationSection())
-      .filter(isNotComment)
-      .filter(isBuildConfig)
-      .filter(isNotTestHost)
-      .forEach(({ 1: { buildSettings } }: any) => {
-        buildSettings.CODE_SIGN_ENTITLEMENTS = `"${entitlementsRelativePath}"`;
-      });
+  if (hasChangesToWrite) {
     fs.writeFileSync(project.filepath, project.writeSync());
-  }
-
-  // Clean up others
-  deleteEntitlementsFiles(pathsToDelete);
-
-  return entitlementsPath;
-}
-
-function deleteEntitlementsFiles(entitlementsPaths: string[]) {
-  for (const path of entitlementsPaths) {
-    fs.removeSync(path);
   }
 }
 

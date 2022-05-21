@@ -1,3 +1,18 @@
-# plist [![CircleCI](https://circleci.com/gh/expo/plist.svg?style=svg)](https://circleci.com/gh/expo/plist)
+<!-- Title -->
+<h1 align="center">
+👋 Welcome to <br><code>@expo/plist</code>
+</h1>
 
-Mac OS X Plist parser/builder for Node.js and browsers, forked from this [repo](https://github.com/TooTallNate/plist.js)
+<p align="center">A macOS Plist parser/builder for Node.js and browsers.</p>
+
+<p align="center">
+  <img src="https://flat.badgen.net/packagephobia/install/@expo/plist">
+
+  <a href="https://www.npmjs.com/package/@expo/plist">
+    <img src="https://flat.badgen.net/npm/dw/@expo/plist" target="_blank" />
+  </a>
+</p>
+
+<!-- Body -->
+
+Forked from this [repo](https://github.com/TooTallNate/plist.js).

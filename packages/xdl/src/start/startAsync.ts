@@ -131,12 +131,12 @@ async function forceQuitAsync(projectRoot: string) {
   if (packagerPid) {
     try {
       process.kill(packagerPid);
-    } catch (e) {}
+    } catch {}
   }
   if (ngrokPid) {
     try {
       process.kill(ngrokPid);
-    } catch (e) {}
+    } catch {}
   }
   await ProjectSettings.setPackagerInfoAsync(projectRoot, {
     expoServerPort: null,
@@ -158,7 +158,7 @@ export async function stopAsync(projectRoot: string): Promise<void> {
     if (result === 'stopFailed') {
       await forceQuitAsync(projectRoot);
     }
-  } catch (error) {
+  } catch (error: any) {
     await forceQuitAsync(projectRoot);
     throw error;
   }

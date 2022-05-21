@@ -2,7 +2,7 @@ import { ExpoConfig } from '@expo/config-types';
 import { XcodeProject } from 'xcode';
 
 import { ConfigPlugin } from '../Plugin.types';
-import { createInfoPlistPlugin, withXcodeProject } from '../plugins/ios-plugins';
+import { createInfoPlistPluginWithPropertyGuard, withXcodeProject } from '../plugins/ios-plugins';
 import { InfoPlist } from './IosConfig.types';
 import { findFirstNativeTarget } from './Target';
 import {
@@ -11,9 +11,23 @@ import {
   sanitizedName,
 } from './utils/Xcodeproj';
 
-export const withDisplayName = createInfoPlistPlugin(setDisplayName, 'withDisplayName');
+export const withDisplayName = createInfoPlistPluginWithPropertyGuard(
+  setDisplayName,
+  {
+    infoPlistProperty: 'CFBundleDisplayName',
+    expoConfigProperty: 'name',
+  },
+  'withDisplayName'
+);
 
-export const withName = createInfoPlistPlugin(setName, 'withName');
+export const withName = createInfoPlistPluginWithPropertyGuard(
+  setName,
+  {
+    infoPlistProperty: 'CFBundleName',
+    expoConfigProperty: 'name',
+  },
+  'withName'
+);
 
 /** Set the PRODUCT_NAME variable in the xcproj file based on the app.json name property. */
 export const withProductName: ConfigPlugin = config => {

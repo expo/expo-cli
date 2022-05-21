@@ -6,7 +6,7 @@ import { ConfigError } from './Errors';
 function fileExists(file: string): boolean {
   try {
     return statSync(file).isFile();
-  } catch (e) {
+  } catch {
     return false;
   }
 }

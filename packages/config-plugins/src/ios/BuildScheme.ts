@@ -41,7 +41,14 @@ export function getRunnableSchemesFromXcodeproj(
     let osType = 'iOS';
     const type = unquote(target.productType);
 
-    if (type === TargetType.APPLICATION) {
+    if (type === TargetType.WATCH) {
+      osType = 'watchOS';
+    } else if (
+      // (apps) com.apple.product-type.application
+      // (app clips) com.apple.product-type.application.on-demand-install-capable
+      // NOTE(EvanBacon): This matches against `watchOS` as well so we check for watch first.
+      type.startsWith(TargetType.APPLICATION)
+    ) {
       // Attempt to resolve the platform SDK for each target so we can filter devices.
       const xcConfigurationList =
         project.hash.project.objects.XCConfigurationList[target.buildConfigurationList];
@@ -67,8 +74,6 @@ export function getRunnableSchemesFromXcodeproj(
           }
         }
       }
-    } else if (type === TargetType.WATCH) {
-      osType = 'watchOS';
     }
 
     return {

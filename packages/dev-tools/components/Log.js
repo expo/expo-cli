@@ -108,7 +108,7 @@ export default class Log extends React.Component {
             <StackTrace level={message.level} stack={data.stack} />
           </React.Fragment>
         );
-      } catch (e) {
+      } catch {
         return this.renderMessageContent(message);
       }
     } else {

@@ -30,7 +30,7 @@ it(`exits with warning when a package.json is not found in a project`, async () 
   expect.assertions(1);
   try {
     await spawnAsync(EXPO_CLI, ['install'], { cwd: projectRoot });
-  } catch (e) {
+  } catch (e: any) {
     expect(e.stderr).toMatch(/No managed or bare projects found/);
   }
 });
@@ -51,7 +51,7 @@ it(`exits with warning when a package.json is not found in a project with an app
   expect.assertions(1);
   try {
     await spawnAsync(EXPO_CLI, ['install'], { cwd: projectRoot });
-  } catch (e) {
+  } catch (e: any) {
     expect(e.stderr).toMatch(/No managed or bare projects found/);
   }
 });

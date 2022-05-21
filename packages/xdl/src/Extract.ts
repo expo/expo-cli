@@ -10,7 +10,7 @@ export async function extractAsync(archive: string, dir: string): Promise<void> 
       });
       return;
     }
-  } catch (e) {
+  } catch (e: any) {
     console.error(e.message);
   }
   // tar node module has previously had problems with big files, and seems to

@@ -1,4 +1,4 @@
-import fs from 'fs-extra';
+import fs from 'fs';
 import path from 'path';
 
 import gradleScript from './EasBuildGradleScript';
@@ -24,14 +24,17 @@ export async function configureEasBuildAsync(projectRoot: string): Promise<void>
   const buildGradlePath = Paths.getAppBuildGradleFilePath(projectRoot);
   const easGradlePath = getEasBuildGradlePath(projectRoot);
 
-  await fs.writeFile(easGradlePath, gradleScript);
+  await fs.promises.writeFile(easGradlePath, gradleScript);
 
-  const buildGradleContent = await fs.readFile(path.join(buildGradlePath), 'utf8');
+  const buildGradleContent = await fs.promises.readFile(path.join(buildGradlePath), 'utf8');
 
   const hasEasGradleApply = hasApplyLine(buildGradleContent, APPLY_EAS_GRADLE);
 
   if (!hasEasGradleApply) {
-    await fs.writeFile(buildGradlePath, `${buildGradleContent.trim()}\n${APPLY_EAS_GRADLE}\n`);
+    await fs.promises.writeFile(
+      buildGradlePath,
+      `${buildGradleContent.trim()}\n${APPLY_EAS_GRADLE}\n`
+    );
   }
 }
 
@@ -39,9 +42,9 @@ export async function isEasBuildGradleConfiguredAsync(projectRoot: string): Prom
   const buildGradlePath = Paths.getAppBuildGradleFilePath(projectRoot);
   const easGradlePath = getEasBuildGradlePath(projectRoot);
 
-  const hasEasGradleFile = await fs.pathExists(easGradlePath);
+  const hasEasGradleFile = await fs.existsSync(easGradlePath);
 
-  const buildGradleContent = await fs.readFile(path.join(buildGradlePath), 'utf8');
+  const buildGradleContent = await fs.promises.readFile(path.join(buildGradlePath), 'utf8');
   const hasEasGradleApply = hasApplyLine(buildGradleContent, APPLY_EAS_GRADLE);
 
   return hasEasGradleApply && hasEasGradleFile;

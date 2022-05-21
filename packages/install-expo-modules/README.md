@@ -1,18 +1,31 @@
-# install-expo-modules
+<!-- Title -->
+<h1 align="center">
+👋 Welcome to <br><code>install-expo-modules</code>
+</h1>
 
-`install-expo-modules` is a tool for existing react-native projects to adopt [expo-modules and SDK easier](https://docs.expo.dev/versions/latest/).
+<p align="center">A tool for existing React Native projects to adopt <a href="https://docs.expo.dev/versions/latest/">expo-modules and SDK easier</a>.</p>
+
+<p align="center">
+  <img src="https://flat.badgen.net/packagephobia/install/install-expo-modules">
+
+  <a href="https://www.npmjs.com/package/install-expo-modules">
+    <img src="https://flat.badgen.net/npm/dw/install-expo-modules" target="_blank" />
+  </a>
+</p>
+
+<!-- Body -->
 
 # Usage
 
 Just to run `install-expo-modules` command in your project:
 
-```
+```sh
 npx install-expo-modules
 ```
 
 After that, you can add other expo-modules you need, e.g. `expo-device`:
 
-```
+```sh
 expo install expo-device
 # the expo command is from expo-cli. if you don't have this, run `npm -g install expo-cli` to install.
 ```

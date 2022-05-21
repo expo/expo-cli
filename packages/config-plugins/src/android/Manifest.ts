@@ -1,5 +1,5 @@
 import assert from 'assert';
-import fs from 'fs-extra';
+import fs from 'fs';
 import path from 'path';
 
 import * as XML from '../utils/XML';
@@ -70,6 +70,7 @@ type ManifestService = {
 type ManifestApplicationAttributes = {
   'android:name': string | '.MainApplication';
   'android:icon'?: string;
+  'android:roundIcon'?: string;
   'android:label'?: string;
   'android:allowBackup'?: StringBoolean;
   'android:largeHeap'?: StringBoolean;
@@ -155,8 +156,8 @@ export async function writeAndroidManifestAsync(
   androidManifest: AndroidManifest
 ): Promise<void> {
   const manifestXml = XML.format(androidManifest);
-  await fs.ensureDir(path.dirname(manifestPath));
-  await fs.writeFile(manifestPath, manifestXml);
+  await fs.promises.mkdir(path.dirname(manifestPath), { recursive: true });
+  await fs.promises.writeFile(manifestPath, manifestXml);
 }
 
 export async function readAndroidManifestAsync(manifestPath: string): Promise<AndroidManifest> {
@@ -345,4 +346,34 @@ export function prefixAndroidKeys<T extends Record<string, any> = Record<string,
     (prev, [key, curr]) => ({ ...prev, [`android:${key}`]: curr }),
     {} as T
   );
+}
+
+/**
+ * Ensure the `tools:*` namespace is available in the manifest.
+ *
+ * @param manifest AndroidManifest.xml
+ * @returns manifest with the `tools:*` namespace available
+ */
+export function ensureToolsAvailable(manifest: AndroidManifest) {
+  return ensureManifestHasNamespace(manifest, {
+    namespace: 'xmlns:tools',
+    url: 'http://schemas.android.com/tools',
+  });
+}
+
+/**
+ * Ensure a particular namespace is available in the manifest.
+ *
+ * @param manifest `AndroidManifest.xml`
+ * @returns manifest with the provided namespace available
+ */
+function ensureManifestHasNamespace(
+  manifest: AndroidManifest,
+  { namespace, url }: { namespace: string; url: string }
+) {
+  if (manifest?.manifest?.$?.[namespace]) {
+    return manifest;
+  }
+  manifest.manifest.$[namespace] = url;
+  return manifest;
 }

@@ -72,7 +72,7 @@ export function createSymbolicateMiddleware({
             fileName: file,
             platform: props.platform,
           });
-        } catch (error) {
+        } catch (error: any) {
           parseError = error;
           console.warn('Failed to read source map from sourceMappingURL:', file);
           // logger.warn({ tag: 'dev-server' }, 'Failed to read source map from sourceMappingURL');
@@ -108,7 +108,7 @@ export function createSymbolicateMiddleware({
 
       const parsed = await symbolicate.process(stack, { platform });
       return res.end(JSON.stringify(parsed));
-    } catch (error) {
+    } catch (error: any) {
       console.error(`Failed to symbolicate: ${error} ${error.stack}`);
       // logger.error({ tag: 'dev-server' }, `Failed to symbolicate: ${error} ${error.stack}`);
       res.statusCode = 500;

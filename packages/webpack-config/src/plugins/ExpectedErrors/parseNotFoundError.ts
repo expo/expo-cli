@@ -174,7 +174,7 @@ async function createStackTrace(
       column: result.originalStackFrame.column,
       frame: result.originalCodeFrame ?? '',
     };
-  } catch (err) {
+  } catch (err: any) {
     console.log('Failed to parse source map:', err);
     // Don't fail on failure to resolve sourcemaps
     return null;

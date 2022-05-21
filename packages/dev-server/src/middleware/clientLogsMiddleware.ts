@@ -33,7 +33,7 @@ export default function clientLogsMiddleware(logger: Log): HandleFunction {
         logs: req.body,
         devicePlatform: expoPlatform?.toString(),
       });
-    } catch (error) {
+    } catch (error: any) {
       logger.error({ tag: 'expo' }, `Error getting device logs: ${error} ${error.stack}`);
       next(error);
     }
@@ -107,7 +107,7 @@ function handleDeviceLogs(
       }
       try {
         return JSON.stringify(obj);
-      } catch (e) {
+      } catch {
         return obj.toString();
       }
     });

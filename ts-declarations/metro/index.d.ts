@@ -170,6 +170,7 @@ declare module 'metro' {
     secure?: boolean;
     secureCert?: string;
     secureKey?: string;
+    websocketEndpoints?: object;
   };
 
   type BuildGraphOptions = {

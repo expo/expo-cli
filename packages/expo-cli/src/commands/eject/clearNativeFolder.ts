@@ -17,7 +17,7 @@ export async function clearNativeFolder(projectRoot: string, folders: string[]) 
   try {
     await Promise.all(folders.map(folderName => fs.remove(path.join(projectRoot, folderName))));
     step.succeed(`Cleared ${folders.join(', ')} code`);
-  } catch (error) {
+  } catch (error: any) {
     step.fail(`Failed to delete ${folders.join(', ')} code: ${error.message}`);
     throw error;
   }

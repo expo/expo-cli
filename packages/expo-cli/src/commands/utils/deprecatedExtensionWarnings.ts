@@ -50,9 +50,21 @@ export async function assertProjectHasExpoExtensionFilesAsync(
   }
 }
 
+/** Wraps `findWorkspaceRoot` and guards against having an empty `package.json` file in an upper directory. */
+function getWorkspaceRoot(projectRoot: string): string | null {
+  try {
+    return findWorkspaceRoot(projectRoot);
+  } catch (error: any) {
+    if (error.message.includes('Unexpected end of JSON input')) {
+      return null;
+    }
+    throw error;
+  }
+}
+
 async function assertModulesHasExpoExtensionFilesAsync(projectRoot: string) {
   const spinner = ora('Checking project for deprecated features, this may take a moment.').start();
-  const root = findWorkspaceRoot(projectRoot) || projectRoot;
+  const root = getWorkspaceRoot(projectRoot) || projectRoot;
 
   Log.time('assertModulesHasExpoExtensionFilesAsync');
   let matches = await queryExpoExtensionFilesAsync(root, [

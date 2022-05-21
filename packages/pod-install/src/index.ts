@@ -71,7 +71,7 @@ async function runAsync(): Promise<void> {
     if (!program.quiet) {
       await shouldUpdate();
     }
-  } catch (reason) {
+  } catch (reason: any) {
     console.log();
     console.log('Aborting run');
     if (reason.command) {

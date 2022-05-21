@@ -198,7 +198,7 @@ function runHooks({
     Log.log(`Running postExport hook: ${hook.file}`);
     try {
       Project.runHook(hook, hookOptions);
-    } catch (e) {
+    } catch (e: any) {
       Log.warn(`Warning: postExport hook '${hook.file}' failed: ${e.stack}`);
     }
   }

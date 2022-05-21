@@ -6,4 +6,5 @@ module.exports = {
   displayName: require('./package').name,
   roots: ['__mocks__', 'src'],
   setupFiles: ['<rootDir>/jest/fs-mock-setup.ts'],
+  testRunner: 'jest-jasmine2',
 };

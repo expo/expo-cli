@@ -85,7 +85,15 @@ export async function runMetroDevServerAsync(
 
   const metroConfig = await ExpoMetroConfig.loadAsync(projectRoot, { reporter, ...options });
 
-  const { middleware, attachToServer } = createDevServerMiddleware({
+  const {
+    middleware,
+    attachToServer,
+
+    // RN +68 -- Expo SDK +45
+    messageSocketEndpoint,
+    eventsSocketEndpoint,
+    websocketEndpoints,
+  } = createDevServerMiddleware(projectRoot, {
     port: metroConfig.server.port,
     watchFolders: metroConfig.watchFolders,
     logger: options.logger,
@@ -100,16 +108,32 @@ export async function runMetroDevServerAsync(
     return middleware.use(metroMiddleware);
   };
 
-  const server = await Metro.runServer(metroConfig, { hmrEnabled: true });
+  const server = await Metro.runServer(metroConfig, {
+    hmrEnabled: true,
+    websocketEndpoints,
+  });
 
-  const { messageSocket, eventsSocket } = attachToServer(server);
-  reporter.reportEvent = eventsSocket.reportEvent;
+  if (attachToServer) {
+    // Expo SDK 44 and lower
+    const { messageSocket, eventsSocket } = attachToServer(server);
+    reporter.reportEvent = eventsSocket.reportEvent;
 
-  return {
-    server,
-    middleware,
-    messageSocket,
-  };
+    return {
+      server,
+      middleware,
+      messageSocket,
+    };
+  } else {
+    // RN +68 -- Expo SDK +45
+    reporter.reportEvent = eventsSocketEndpoint.reportEvent;
+
+    return {
+      server,
+      middleware,
+      messageSocket: messageSocketEndpoint,
+      // debuggerProxyEndpoint,
+    };
+  }
 }
 
 let nextBuildID = 0;

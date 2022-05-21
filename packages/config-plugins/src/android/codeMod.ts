@@ -40,7 +40,7 @@ export function findNewInstanceCodeBlock(
   // ```
   const nextBrace = contents.indexOf('{', end + 1);
   const isAnonymousClass =
-    nextBrace >= end && !!contents.substring(end + 1, nextBrace).match(/^\s*$/m);
+    nextBrace >= end && !!contents.substring(end + 1, nextBrace).match(/^\s*$/);
   if (isAnonymousClass) {
     end = findMatchingBracketPosition(contents, '{', end);
   }

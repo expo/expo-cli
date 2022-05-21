@@ -1,10 +1,10 @@
 import * as AllowBackup from './AllowBackup';
+import * as BuildProperties from './BuildProperties';
 import * as Colors from './Colors';
 import * as EasBuild from './EasBuild';
 import * as GoogleMapsApiKey from './GoogleMapsApiKey';
 import * as GoogleServices from './GoogleServices';
 import * as IntentFilters from './IntentFilters';
-import * as JsEngine from './JsEngine';
 import * as Manifest from './Manifest';
 import * as Name from './Name';
 import * as Orientation from './Orientation';
@@ -26,6 +26,7 @@ export { Manifest, Colors, Paths, Permissions, Properties, Resources, Scheme, St
 
 export {
   AllowBackup,
+  BuildProperties,
   EasBuild,
   GoogleMapsApiKey,
   GoogleServices,
@@ -37,6 +38,5 @@ export {
   StatusBar,
   Updates,
   Version,
-  JsEngine,
   WindowSoftInputMode,
 };

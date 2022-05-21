@@ -88,7 +88,7 @@ async function _getSchemaJSONAsync(sdkVersion: string): Promise<{ schema: Schema
   if (!_xdlSchemaJson[sdkVersion]) {
     try {
       _xdlSchemaJson[sdkVersion] = await getConfigurationSchemaAsync(sdkVersion);
-    } catch (e) {
+    } catch (e: any) {
       if (e.code && e.code === 'INVALID_JSON') {
         throw new Error(`Couldn't read schema from server`);
       } else {

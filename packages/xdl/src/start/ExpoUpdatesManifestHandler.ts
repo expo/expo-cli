@@ -216,7 +216,7 @@ export function getManifestHandler(projectRoot: string) {
         developerTool: Config.developerTool,
         runtimeVersion: (body as any).runtimeVersion,
       });
-    } catch (e) {
+    } catch (e: any) {
       ProjectUtils.logError(projectRoot, 'expo', e.stack);
       res.statusCode = 520;
       res.end(

@@ -95,7 +95,7 @@ async function loginAsync(
       providerId: userCredentials.providerId,
       teamId: userCredentials.teamId,
     });
-  } catch (error) {
+  } catch (error: any) {
     if (error instanceof InvalidUserCredentialsError) {
       Log.error(error.message);
       // Remove the invalid password so it isn't automatically used...
@@ -180,7 +180,7 @@ export async function authenticateAsync(options: Options = {}): Promise<AppleCtx
       // Defined for legacy usage in Turtle V1 or any other places where Fastlane is used in the servers.
       fastlaneSession,
     };
-  } catch (error) {
+  } catch (error: any) {
     if (error.message === 'ABORTED') {
       process.exit(1);
     }

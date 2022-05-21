@@ -16,10 +16,9 @@ import xcode from 'xcode';
 
 export const withIosModulesAppDelegate: ConfigPlugin = config => {
   return withAppDelegate(config, config => {
-    config.modResults.contents =
-      config.modResults.language === 'objc'
-        ? updateModulesAppDelegateObjcImpl(config.modResults.contents, config.sdkVersion)
-        : updateModulesAppDelegateSwift(config.modResults.contents, config.sdkVersion);
+    config.modResults.contents = ['objc', 'objcpp'].includes(config.modResults.language)
+      ? updateModulesAppDelegateObjcImpl(config.modResults.contents, config.sdkVersion)
+      : updateModulesAppDelegateSwift(config.modResults.contents, config.sdkVersion);
     return config;
   });
 };

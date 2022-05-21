@@ -1,6 +1,21 @@
-# `@expo/image-utils`
+<!-- Title -->
+<h1 align="center">
+👋 Welcome to <br><code>@expo/image-utils</code>
+</h1>
 
-A library for image processing functionality in Expo CLI. It uses `sharp` for image processing if it's available through a global `sharp-cli` installation. Otherwise it uses `jimp`, a Node library with no native dependencies, and warns the user that they may want to install `sharp-cli` for faster image processing.
+<p align="center">A library for image processing functionality in Expo CLI.</p>
+
+<p align="center">
+  <img src="https://flat.badgen.net/packagephobia/install/@expo/image-utils">
+
+  <a href="https://www.npmjs.com/package/@expo/image-utils">
+    <img src="https://flat.badgen.net/npm/dw/@expo/image-utils" target="_blank" />
+  </a>
+</p>
+
+<!-- Body -->
+
+It uses `sharp` for image processing if it's available through a global `sharp-cli` installation. Otherwise it uses `jimp`, a Node library with no native dependencies, and warns the user that they may want to install `sharp-cli` for faster image processing.
 
 ## Advanced Configuration
 

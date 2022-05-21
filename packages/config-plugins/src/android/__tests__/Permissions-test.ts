@@ -10,10 +10,74 @@ import {
   getPermissions,
   removePermissions,
   setAndroidPermissions,
+  withInternalBlockedPermissions,
 } from '../Permissions';
 
 const fixturesPath = resolve(__dirname, 'fixtures');
 const sampleManifestPath = resolve(fixturesPath, 'react-native-AndroidManifest.xml');
+
+function getMockAndroidManifest() {
+  return readAndroidManifestAsync(sampleManifestPath);
+}
+
+describe(withInternalBlockedPermissions, () => {
+  it(`adds blocked permissions`, async () => {
+    const config = withInternalBlockedPermissions({
+      slug: '',
+      name: '',
+      android: {
+        blockedPermissions: ['android.permission.ACCESS_FINE_LOCATION', 'OTHER'],
+      },
+    });
+
+    const { modResults } = await (config as any).mods.android.manifest({
+      modRequest: {},
+      modResults: await getMockAndroidManifest(),
+    });
+
+    expect(modResults).toEqual({
+      manifest: {
+        $: {
+          'xmlns:android': expect.any(String),
+          package: expect.any(String),
+          // Added tools
+          'xmlns:tools': 'http://schemas.android.com/tools',
+        },
+        'uses-permission': [
+          expect.anything(),
+          // Added two blocked permissions
+          {
+            $: {
+              'android:name': 'android.permission.ACCESS_FINE_LOCATION',
+              'tools:node': 'remove',
+            },
+          },
+          {
+            $: {
+              'android:name': 'OTHER',
+              'tools:node': 'remove',
+            },
+          },
+        ],
+        queries: expect.anything(),
+        application: expect.anything(),
+      },
+    });
+  });
+
+  it(`does not add tools if there are no blocked permissions`, async () => {
+    const config = withInternalBlockedPermissions({
+      slug: '',
+      name: '',
+      android: {
+        blockedPermissions: [],
+      },
+    });
+
+    // Doesn't even add the mod
+    expect((config as any).mods).not.toBeDefined();
+  });
+});
 
 describe(addBlockedPermissions, () => {
   it(`restricts an existing permission`, () => {

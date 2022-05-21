@@ -153,7 +153,7 @@ class IOSBuilder extends BaseBuilder {
 
     try {
       await this.produceCredentials(context, appLookupParams);
-    } catch (e) {
+    } catch (e: any) {
       if (e.code === ErrorCodes.NON_INTERACTIVE) {
         Log.newLine();
         const link = TerminalLink.fallbackToTextAndUrl(
@@ -199,7 +199,7 @@ class IOSBuilder extends BaseBuilder {
       } else {
         await runCredentialsManager(ctx, new SetupIosDist(appLookupParams));
       }
-    } catch (e) {
+    } catch (e: any) {
       Log.error('Failed to set up Distribution Certificate');
       throw e;
     }
@@ -213,7 +213,7 @@ class IOSBuilder extends BaseBuilder {
       } else {
         await runCredentialsManager(ctx, new SetupIosPush(appLookupParams));
       }
-    } catch (e) {
+    } catch (e: any) {
       Log.error('Failed to set up Push Key');
       throw e;
     }
@@ -229,7 +229,7 @@ class IOSBuilder extends BaseBuilder {
       } else {
         await runCredentialsManager(ctx, new SetupIosProvisioningProfile(appLookupParams));
       }
-    } catch (e) {
+    } catch (e: any) {
       Log.error('Failed to set up Provisioning Profile');
       throw e;
     }
@@ -340,7 +340,7 @@ class IOSBuilder extends BaseBuilder {
         return;
       }
       await ensurePNGIsNotTransparent(icon);
-    } catch (err) {
+    } catch (err: any) {
       if (err instanceof XDLError) {
         throw err;
       } else {

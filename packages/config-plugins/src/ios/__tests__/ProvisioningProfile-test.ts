@@ -1,4 +1,4 @@
-import * as fs from 'fs-extra';
+import fs from 'fs';
 import { vol } from 'memfs';
 import path from 'path';
 
@@ -6,7 +6,7 @@ import { setProvisioningProfileForPbxproj } from '../ProvisioningProfile';
 
 jest.mock('fs');
 
-const originalFs = jest.requireActual('fs') as typeof fs;
+const originalFs = jest.requireActual('fs') as typeof import('fs');
 
 describe('ProvisioningProfile module', () => {
   describe(setProvisioningProfileForPbxproj, () => {

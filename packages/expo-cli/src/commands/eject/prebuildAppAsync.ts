@@ -90,7 +90,7 @@ export async function prebuildAsync(
       platforms,
     });
     configSyncingStep.succeed('Config synced');
-  } catch (error) {
+  } catch (error: any) {
     configSyncingStep.fail('Config sync failed');
     throw error;
   }

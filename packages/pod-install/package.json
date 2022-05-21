@@ -1,6 +1,6 @@
 {
   "name": "pod-install",
-  "version": "0.1.32",
+  "version": "0.1.36",
   "main": "build",
   "keywords": [
     "cocoapods",
@@ -32,7 +32,7 @@
     "clean": "rimraf ./build/"
   },
   "devDependencies": {
-    "@expo/package-manager": "0.0.50",
+    "@expo/package-manager": "0.0.54",
     "chalk": "^4.0.0",
     "commander": "2.20.0",
     "update-check": "1.5.3"

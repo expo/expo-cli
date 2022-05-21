@@ -1,49 +1,19 @@
+import fs from 'fs';
+import path from 'path';
+
 import { setModulesMainActivity } from '../withAndroidModulesMainActivity';
 
+const fixturesPath = path.resolve(__dirname, 'fixtures');
+
 describe(setModulesMainActivity, () => {
-  it(`should add createReactActivityDelegate code block if not overridden yet - java`, () => {
-    const rawContents = `
-package com.helloworld;
-
-import com.facebook.react.ReactActivity;
-
-public class MainActivity extends ReactActivity {
-
-  /**
-   * Returns the name of the main component registered from JavaScript. This is used to schedule
-   * rendering of the component.
-   */
-  @Override
-  protected String getMainComponentName() {
-    return "HelloWorld";
-  }
-}`;
-
-    const expectContents = `
-package com.helloworld;
-import expo.modules.ReactActivityDelegateWrapper;
-import com.facebook.react.ReactActivityDelegate;
-
-import com.facebook.react.ReactActivity;
-
-public class MainActivity extends ReactActivity {
-
-  /**
-   * Returns the name of the main component registered from JavaScript. This is used to schedule
-   * rendering of the component.
-   */
-  @Override
-  protected String getMainComponentName() {
-    return "HelloWorld";
-  }
-
-  @Override
-  protected ReactActivityDelegate createReactActivityDelegate() {
-    return new ReactActivityDelegateWrapper(this,
-      new ReactActivityDelegate(this, getMainComponentName())
-    );
-  }
-}`;
+  it(`should add createReactActivityDelegate code block if not overridden yet - java`, async () => {
+    const [rawContents, expectContents] = await Promise.all([
+      fs.promises.readFile(path.join(fixturesPath, 'MainActivity-no-delegate.java'), 'utf8'),
+      fs.promises.readFile(
+        path.join(fixturesPath, 'MainActivity-no-delegate-updated.java'),
+        'utf8'
+      ),
+    ]);
 
     const contents = setModulesMainActivity(rawContents, 'java');
     expect(contents).toEqual(expectContents);
@@ -52,46 +22,11 @@ public class MainActivity extends ReactActivity {
     expect(nextContents).toEqual(expectContents);
   });
 
-  it(`should add createReactActivityDelegate code block if not overridden yet - kotlin`, () => {
-    const rawContents = `
-package com.helloworld
-
-import com.facebook.react.ReactActivity
-
-class MainActivity : ReactActivity() {
-
-  /**
-   * Returns the name of the main component registered from JavaScript. This is used to schedule
-   * rendering of the component.
-   */
-  override fun mainComponentName: String {
-    return "HelloWorld"
-  }
-}`;
-
-    const expectContents = `
-package com.helloworld
-import expo.modules.ReactActivityDelegateWrapper
-import com.facebook.react.ReactActivityDelegate
-
-import com.facebook.react.ReactActivity
-
-class MainActivity : ReactActivity() {
-
-  /**
-   * Returns the name of the main component registered from JavaScript. This is used to schedule
-   * rendering of the component.
-   */
-  override fun mainComponentName: String {
-    return "HelloWorld"
-  }
-
-  override fun createReactActivityDelegate(): ReactActivityDelegate {
-    return ReactActivityDelegateWrapper(this,
-      ReactActivityDelegate(this, getMainComponentName())
-    );
-  }
-}`;
+  it(`should add createReactActivityDelegate code block if not overridden yet - kotlin`, async () => {
+    const [rawContents, expectContents] = await Promise.all([
+      fs.promises.readFile(path.join(fixturesPath, 'MainActivity-no-delegate.kt'), 'utf8'),
+      fs.promises.readFile(path.join(fixturesPath, 'MainActivity-no-delegate-updated.kt'), 'utf8'),
+    ]);
 
     const contents = setModulesMainActivity(rawContents, 'kt');
     expect(contents).toEqual(expectContents);
@@ -100,53 +35,11 @@ class MainActivity : ReactActivity() {
     expect(nextContents).toEqual(expectContents);
   });
 
-  it(`should add ReactActivityDelegateWrapper - java`, () => {
-    const rawContents = `
-package com.helloworld;
-
-import com.facebook.react.ReactActivity;
-import com.facebook.react.ReactActivityDelegate;
-
-public class MainActivity extends ReactActivity {
-
-  /**
-   * Returns the name of the main component registered from JavaScript. This is used to schedule
-   * rendering of the component.
-   */
-  @Override
-  protected String getMainComponentName() {
-    return "HelloWorld";
-  }
-
-  @Override
-  protected ReactActivityDelegate createReactActivityDelegate() {
-    return new ReactActivityDelegate(this, getMainComponentName());
-  }
-}`;
-
-    const expectContents = `
-package com.helloworld;
-import expo.modules.ReactActivityDelegateWrapper;
-
-import com.facebook.react.ReactActivity;
-import com.facebook.react.ReactActivityDelegate;
-
-public class MainActivity extends ReactActivity {
-
-  /**
-   * Returns the name of the main component registered from JavaScript. This is used to schedule
-   * rendering of the component.
-   */
-  @Override
-  protected String getMainComponentName() {
-    return "HelloWorld";
-  }
-
-  @Override
-  protected ReactActivityDelegate createReactActivityDelegate() {
-    return new ReactActivityDelegateWrapper(this, new ReactActivityDelegate(this, getMainComponentName()));
-  }
-}`;
+  it(`should add ReactActivityDelegateWrapper for react-native@>=0.68.0 - java`, async () => {
+    const [rawContents, expectContents] = await Promise.all([
+      fs.promises.readFile(path.join(fixturesPath, 'MainActivity-rn068.java'), 'utf8'),
+      fs.promises.readFile(path.join(fixturesPath, 'MainActivity-rn068-updated.java'), 'utf8'),
+    ]);
 
     const contents = setModulesMainActivity(rawContents, 'java');
     expect(contents).toEqual(expectContents);
@@ -155,49 +48,11 @@ public class MainActivity extends ReactActivity {
     expect(nextContents).toEqual(expectContents);
   });
 
-  it(`should add ReactActivityDelegateWrapper - kotlin`, () => {
-    const rawContents = `
-package com.helloworld
-
-import com.facebook.react.ReactActivity
-import com.facebook.react.ReactActivityDelegate
-
-class MainActivity : ReactActivity() {
-
-  /**
-   * Returns the name of the main component registered from JavaScript. This is used to schedule
-   * rendering of the component.
-   */
-  override fun mainComponentName: String {
-    return "HelloWorld"
-  }
-
-  override fun createReactActivityDelegate(): ReactActivityDelegate {
-    return ReactActivityDelegate(this, mainComponentName)
-  }
-}`;
-
-    const expectContents = `
-package com.helloworld
-import expo.modules.ReactActivityDelegateWrapper
-
-import com.facebook.react.ReactActivity
-import com.facebook.react.ReactActivityDelegate
-
-class MainActivity : ReactActivity() {
-
-  /**
-   * Returns the name of the main component registered from JavaScript. This is used to schedule
-   * rendering of the component.
-   */
-  override fun mainComponentName: String {
-    return "HelloWorld"
-  }
-
-  override fun createReactActivityDelegate(): ReactActivityDelegate {
-    return ReactActivityDelegateWrapper(this, ReactActivityDelegate(this, mainComponentName))
-  }
-}`;
+  it(`should add ReactActivityDelegateWrapper for react-native@>=0.68.0 - kotlin`, async () => {
+    const [rawContents, expectContents] = await Promise.all([
+      fs.promises.readFile(path.join(fixturesPath, 'MainActivity-rn068.kt'), 'utf8'),
+      fs.promises.readFile(path.join(fixturesPath, 'MainActivity-rn068-updated.kt'), 'utf8'),
+    ]);
 
     const contents = setModulesMainActivity(rawContents, 'kt');
     expect(contents).toEqual(expectContents);
@@ -206,67 +61,11 @@ class MainActivity : ReactActivity() {
     expect(nextContents).toEqual(expectContents);
   });
 
-  it(`should add ReactActivityDelegateWrapper for anonymous class - java`, () => {
-    const rawContents = `
-package com.helloworld;
-
-import com.facebook.react.ReactActivity;
-import com.facebook.react.ReactActivityDelegate;
-import com.facebook.react.ReactRootView
-import com.swmansion.gesturehandler.react.RNGestureHandlerEnabledRootView;
-
-public class MainActivity extends ReactActivity {
-
-  /**
-   * Returns the name of the main component registered from JavaScript. This is used to schedule
-   * rendering of the component.
-   */
-  @Override
-  protected String getMainComponentName() {
-    return "HelloWorld";
-  }
-
-  @Override
-  protected ReactActivityDelegate createReactActivityDelegate() {
-    return new ReactActivityDelegate(this, getMainComponentName()) {
-      @Override
-      protected ReactRootView createRootView() {
-        return new RNGestureHandlerEnabledRootView(MainActivity.this);
-      }
-    };
-  }
-}`;
-
-    const expectContents = `
-package com.helloworld;
-import expo.modules.ReactActivityDelegateWrapper;
-
-import com.facebook.react.ReactActivity;
-import com.facebook.react.ReactActivityDelegate;
-import com.facebook.react.ReactRootView
-import com.swmansion.gesturehandler.react.RNGestureHandlerEnabledRootView;
-
-public class MainActivity extends ReactActivity {
-
-  /**
-   * Returns the name of the main component registered from JavaScript. This is used to schedule
-   * rendering of the component.
-   */
-  @Override
-  protected String getMainComponentName() {
-    return "HelloWorld";
-  }
-
-  @Override
-  protected ReactActivityDelegate createReactActivityDelegate() {
-    return new ReactActivityDelegateWrapper(this, new ReactActivityDelegate(this, getMainComponentName()) {
-      @Override
-      protected ReactRootView createRootView() {
-        return new RNGestureHandlerEnabledRootView(MainActivity.this);
-      }
-    });
-  }
-}`;
+  it(`should add ReactActivityDelegateWrapper for react-native@<0.68.0 - java`, async () => {
+    const [rawContents, expectContents] = await Promise.all([
+      fs.promises.readFile(path.join(fixturesPath, 'MainActivity-rn064.java'), 'utf8'),
+      fs.promises.readFile(path.join(fixturesPath, 'MainActivity-rn064-updated.java'), 'utf8'),
+    ]);
 
     const contents = setModulesMainActivity(rawContents, 'java');
     expect(contents).toEqual(expectContents);
@@ -275,61 +74,43 @@ public class MainActivity extends ReactActivity {
     expect(nextContents).toEqual(expectContents);
   });
 
-  it(`should add ReactActivityDelegateWrapper for anonymous class - kotlin`, () => {
-    const rawContents = `
-package com.helloworld
+  it(`should add ReactActivityDelegateWrapper for react-native@<0.68.0 - kotlin`, async () => {
+    const [rawContents, expectContents] = await Promise.all([
+      fs.promises.readFile(path.join(fixturesPath, 'MainActivity-rn064.kt'), 'utf8'),
+      fs.promises.readFile(path.join(fixturesPath, 'MainActivity-rn064-updated.kt'), 'utf8'),
+    ]);
 
-import com.facebook.react.ReactActivity
-import com.facebook.react.ReactActivityDelegate
-import com.facebook.react.ReactRootView
-import com.swmansion.gesturehandler.react.RNGestureHandlerEnabledRootView
+    const contents = setModulesMainActivity(rawContents, 'kt');
+    expect(contents).toEqual(expectContents);
+    // Try it twice...
+    const nextContents = setModulesMainActivity(contents, 'kt');
+    expect(nextContents).toEqual(expectContents);
+  });
 
-class MainActivity : ReactActivity() {
+  it(`should add ReactActivityDelegateWrapper for anonymous class - java`, async () => {
+    const [rawContents, expectContents] = await Promise.all([
+      fs.promises.readFile(path.join(fixturesPath, 'MainActivity-anonymous-delegate.java'), 'utf8'),
+      fs.promises.readFile(
+        path.join(fixturesPath, 'MainActivity-anonymous-delegate-updated.java'),
+        'utf8'
+      ),
+    ]);
 
-  /**
-   * Returns the name of the main component registered from JavaScript. This is used to schedule
-   * rendering of the component.
-   */
-  override fun mainComponentName: String {
-    return "HelloWorld"
-  }
+    const contents = setModulesMainActivity(rawContents, 'java');
+    expect(contents).toEqual(expectContents);
+    // Try it twice...
+    const nextContents = setModulesMainActivity(contents, 'java');
+    expect(nextContents).toEqual(expectContents);
+  });
 
-  override fun createReactActivityDelegate(): ReactActivityDelegate {
-    return object : ReactActivityDelegate(this, mainComponentName) {
-      override fun createRootView(): ReactRootView {
-        return RNGestureHandlerEnabledRootView(this@MainActivity)
-      }
-    }
-  }
-}`;
-
-    const expectContents = `
-package com.helloworld
-import expo.modules.ReactActivityDelegateWrapper
-
-import com.facebook.react.ReactActivity
-import com.facebook.react.ReactActivityDelegate
-import com.facebook.react.ReactRootView
-import com.swmansion.gesturehandler.react.RNGestureHandlerEnabledRootView
-
-class MainActivity : ReactActivity() {
-
-  /**
-   * Returns the name of the main component registered from JavaScript. This is used to schedule
-   * rendering of the component.
-   */
-  override fun mainComponentName: String {
-    return "HelloWorld"
-  }
-
-  override fun createReactActivityDelegate(): ReactActivityDelegate {
-    return ReactActivityDelegateWrapper(this, object : ReactActivityDelegate(this, mainComponentName) {
-      override fun createRootView(): ReactRootView {
-        return RNGestureHandlerEnabledRootView(this@MainActivity)
-      }
-    })
-  }
-}`;
+  it(`should add ReactActivityDelegateWrapper for anonymous class - kotlin`, async () => {
+    const [rawContents, expectContents] = await Promise.all([
+      fs.promises.readFile(path.join(fixturesPath, 'MainActivity-anonymous-delegate.kt'), 'utf8'),
+      fs.promises.readFile(
+        path.join(fixturesPath, 'MainActivity-anonymous-delegate-updated.kt'),
+        'utf8'
+      ),
+    ]);
 
     const contents = setModulesMainActivity(rawContents, 'kt');
     expect(contents).toEqual(expectContents);

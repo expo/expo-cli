@@ -78,7 +78,7 @@ async function connectToNgrokAsync(
         if (ngrokPid) {
           try {
             process.kill(ngrokPid, 'SIGKILL');
-          } catch (e) {
+          } catch {
             ProjectUtils.logDebug(projectRoot, 'expo', `Couldn't kill ngrok with PID ${ngrokPid}`);
           }
         } else {
@@ -229,7 +229,7 @@ export async function stopTunnelsAsync(projectRoot: string): Promise<void> {
     // Ngrok is running in some other process. Kill at the os level.
     try {
       process.kill(packagerInfo.ngrokPid);
-    } catch (e) {
+    } catch {
       ProjectUtils.logDebug(
         projectRoot,
         'expo',

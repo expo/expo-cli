@@ -66,7 +66,7 @@ export async function resolveNgrokAsync(
         try {
           await packageManager.addGlobalAsync(packageName);
           Logger.global.info(`Successfully installed ${packageName}`);
-        } catch (e) {
+        } catch (e: any) {
           e.message = `Failed to install ${packageName} globally: ${e.message}`;
           throw e;
         }

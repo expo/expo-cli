@@ -44,7 +44,7 @@ async function exportCertBinary(
       '-storetype',
       'JKS',
     ]);
-  } catch (err) {
+  } catch (err: any) {
     if (err.code === 'ENOENT') {
       log.warn('Are you sure you have keytool installed?');
       log.info('keytool is a part of OpenJDK: https://openjdk.java.net/');
@@ -84,7 +84,7 @@ export async function exportCertBase64(
       '-storetype',
       'JKS',
     ]);
-  } catch (err) {
+  } catch (err: any) {
     if (err.code === 'ENOENT') {
       log.warn('Are you sure you have keytool installed?');
       log.info('keytool is a part of OpenJDK: https://openjdk.java.net/');
@@ -118,7 +118,7 @@ export async function logKeystoreHashes(keystoreInfo: KeystoreInfo, linePrefix: 
     log.info(`${linePrefix}Google Certificate Hash (SHA-1):    ${googleHash}`);
     log.info(`${linePrefix}Google Certificate Hash (SHA-256):  ${googleHash256}`);
     log.info(`${linePrefix}Facebook Key Hash:                  ${fbHash}`);
-  } catch (err) {
+  } catch (err: any) {
     if (err.code === 'ENOENT') {
       log.warn('Are you sure you have keytool installed?');
       log.info('keytool is a part of OpenJDK: https://openjdk.java.net/');
@@ -134,7 +134,7 @@ export async function logKeystoreHashes(keystoreInfo: KeystoreInfo, linePrefix: 
   } finally {
     try {
       await fs.unlink(certFile);
-    } catch (err) {
+    } catch (err: any) {
       if (err.code !== 'ENOENT') {
         log.error(err);
       }
@@ -169,7 +169,7 @@ async function createKeystore(
       '-dname',
       `CN=${androidPackage},OU=,O=,L=,S=,C=US`,
     ]);
-  } catch (err) {
+  } catch (err: any) {
     if (err.code === 'ENOENT') {
       log.warn('Are you sure you have keytool installed?');
       log.info('keytool is a part of OpenJDK: https://openjdk.java.net/');

@@ -1,11 +1,12 @@
 import { vol } from 'memfs';
 
-import { renamePackageOnDiskForType } from '../../../build/android/Package';
 import rnFixture from '../../plugins/__tests__/fixtures/react-native-project';
 import { readAndroidManifestAsync } from '../Manifest';
 import {
   getApplicationIdAsync,
   getPackage,
+  renameJniOnDiskForType,
+  renamePackageOnDiskForType,
   setPackageInAndroidManifest,
   setPackageInBuildGradle,
 } from '../Package';
@@ -109,6 +110,29 @@ describe(renamePackageOnDiskForType, () => {
     const results = vol.toJSON();
     expect(results['/android/app/src/debug/java/com/bacon/foobar/ReactNativeFlipper.java']).toMatch(
       /package com.bacon.foobar;/
+    );
+  });
+});
+
+describe(renameJniOnDiskForType, () => {
+  afterAll(async () => {
+    vol.reset();
+  });
+  it(`refactors a main project`, async () => {
+    const projectRoot = '/';
+    vol.fromJSON(rnFixture, projectRoot);
+
+    await renameJniOnDiskForType({
+      projectRoot,
+      type: 'main',
+      packageName: 'com.bacon.foobar',
+    });
+
+    const results = vol.toJSON();
+    expect(
+      results['/android/app/src/main/jni/MainApplicationTurboModuleManagerDelegate.h']
+    ).toMatch(
+      /"Lcom\/bacon\/foobar\/newarchitecture\/modules\/MainApplicationTurboModuleManagerDelegate;";/
     );
   });
 });

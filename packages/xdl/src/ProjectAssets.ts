@@ -102,7 +102,7 @@ export async function resolveManifestAssets({
     assetSchemas.forEach((manifestField, index: number) =>
       set(manifest, `${manifestField}Url`, urls[index])
     );
-  } catch (e) {
+  } catch (e: any) {
     let logMethod = ProjectUtils.logWarning;
     if (strict) {
       logMethod = ProjectUtils.logError;
