@@ -11,10 +11,10 @@ beforeAll(() => {
       },
     };
   });
-  jest.mock('fs-extra', () => {
+  jest.mock('../nodeWorkspaces', () => {
     return {
-      existsSync: () => {
-        return !!process.env.TEST_NPM_LOCKFILE_EXISTS;
+      resolvePackageManager: () => {
+        return process.env.TEST_NPM_LOCKFILE_EXISTS ? 'npm' : null;
       },
     };
   });
@@ -42,7 +42,8 @@ it(`returns false if yarn -v throws an error`, () => {
   expect(shouldUseYarn()).toBe(false);
 });
 
-it(`returns false if NPM lockfile exists`, () => {
+it(`returns false if npm lockfile exists`, () => {
+  // Use project with npm lockfile
   process.env.TEST_NPM_LOCKFILE_EXISTS = 'true';
   expect(shouldUseYarn()).toBe(false);
 });

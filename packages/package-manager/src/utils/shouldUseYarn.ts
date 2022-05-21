@@ -1,6 +1,6 @@
 import { execSync } from 'child_process';
-import fs from 'fs-extra';
-import path from 'path';
+
+import { resolvePackageManager } from './nodeWorkspaces';
 
 export default function shouldUseYarn(): boolean {
   try {
@@ -8,17 +8,17 @@ export default function shouldUseYarn(): boolean {
       return true;
     }
 
-    if (npmLockfileExists()) {
-      return false;
-    }
-
     execSync('yarnpkg --version', { stdio: 'ignore' });
-    return true;
+
+    return isNotUsingNpm();
   } catch {
     return false;
   }
 }
 
-function npmLockfileExists(): boolean {
-  return fs.existsSync(path.join(process.cwd(), 'package-lock.json'));
+/**
+ * Returns true if the project does not have an npm lockfile, false otherwise.
+ */
+function isNotUsingNpm(): boolean {
+  return resolvePackageManager(process.cwd(), 'npm') === null;
 }
