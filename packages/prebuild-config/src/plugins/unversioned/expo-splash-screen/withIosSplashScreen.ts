@@ -9,7 +9,8 @@ import {
 import { withIosSplashAssets } from './withIosSplashAssets';
 import { withIosSplashInfoPlist } from './withIosSplashInfoPlist';
 import { withIosSplashScreenStoryboardBaseMod } from './withIosSplashScreenStoryboard';
-import { withIosSplashScreenImage, withIosSplashXcodeProject } from './withIosSplashXcodeProject';
+import { withIosSplashXcodeProject } from './withIosSplashXcodeProject';
+import { withIosSplashScreenImage } from './wtihIosSplashScreenStoryboardImage';
 
 const debug = Debug('expo:prebuild-config:expo-splash-screen:ios');
 

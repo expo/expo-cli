@@ -3,6 +3,227 @@
 exports[`built-in plugins compiles mods 1`] = `
 Object {
   "_internal": Object {
+    "modResults": Object {
+      "ios": Object {
+        "splashScreenStoryboard": Object {
+          "document": Object {
+            "$": Object {
+              "colorMatched": "YES",
+              "initialViewController": "EXPO-VIEWCONTROLLER-1",
+              "launchScreen": "YES",
+              "propertyAccessControl": "none",
+              "targetRuntime": "iOS.CocoaTouch",
+              "toolsVersion": "16096",
+              "type": "com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB",
+              "useAutolayout": "YES",
+              "useSafeAreas": "YES",
+              "useTraitCollections": "YES",
+              "version": "3.0",
+            },
+            "dependencies": Array [
+              Object {
+                "capability": Array [
+                  Object {
+                    "$": Object {
+                      "minToolsVersion": "9.0",
+                      "name": "Safe area layout guides",
+                    },
+                  },
+                  Object {
+                    "$": Object {
+                      "minToolsVersion": "8.0",
+                      "name": "documents saved in the Xcode 8 format",
+                    },
+                  },
+                ],
+                "deployment": Array [
+                  Object {
+                    "$": Object {
+                      "identifier": "iOS",
+                    },
+                  },
+                ],
+                "plugIn": Array [
+                  Object {
+                    "$": Object {
+                      "identifier": "com.apple.InterfaceBuilder.IBCocoaTouchPlugin",
+                      "version": "16087",
+                    },
+                  },
+                ],
+              },
+            ],
+            "resources": Array [
+              Object {
+                "image": Array [
+                  Object {
+                    "$": Object {
+                      "height": "1",
+                      "name": "SplashScreenBackground",
+                      "width": "1",
+                    },
+                  },
+                ],
+              },
+            ],
+            "scenes": Array [
+              Object {
+                "scene": Array [
+                  Object {
+                    "$": Object {
+                      "sceneID": "EXPO-SCENE-1",
+                    },
+                    "objects": Array [
+                      Object {
+                        "placeholder": Array [
+                          Object {
+                            "$": Object {
+                              "id": "EXPO-PLACEHOLDER-1",
+                              "placeholderIdentifier": "IBFirstResponder",
+                              "sceneMemberID": "firstResponder",
+                              "userLabel": "First Responder",
+                            },
+                          },
+                        ],
+                        "viewController": Array [
+                          Object {
+                            "$": Object {
+                              "id": "EXPO-VIEWCONTROLLER-1",
+                              "sceneMemberID": "viewController",
+                              "storyboardIdentifier": "SplashScreenViewController",
+                            },
+                            "view": Array [
+                              Object {
+                                "$": Object {
+                                  "contentMode": "scaleToFill",
+                                  "id": "EXPO-ContainerView",
+                                  "insetsLayoutMarginsFromSafeArea": "NO",
+                                  "key": "view",
+                                  "userInteractionEnabled": "NO",
+                                  "userLabel": "ContainerView",
+                                },
+                                "autoresizingMask": Array [
+                                  Object {
+                                    "$": Object {
+                                      "flexibleMaxX": "YES",
+                                      "flexibleMaxY": "YES",
+                                      "key": "autoresizingMask",
+                                    },
+                                  },
+                                ],
+                                "color": Array [
+                                  Object {
+                                    "$": Object {
+                                      "key": "backgroundColor",
+                                      "systemColor": "systemBackgroundColor",
+                                    },
+                                  },
+                                ],
+                                "constraints": Array [
+                                  Object {
+                                    "constraint": Array [
+                                      Object {
+                                        "$": Object {
+                                          "firstAttribute": "top",
+                                          "firstItem": "EXPO-SplashScreenBackground",
+                                          "id": "1gX-mQ-vu6",
+                                          "secondAttribute": "top",
+                                          "secondItem": "EXPO-ContainerView",
+                                        },
+                                      },
+                                      Object {
+                                        "$": Object {
+                                          "firstAttribute": "leading",
+                                          "firstItem": "EXPO-SplashScreenBackground",
+                                          "id": "6tX-OG-Sck",
+                                          "secondAttribute": "leading",
+                                          "secondItem": "EXPO-ContainerView",
+                                        },
+                                      },
+                                      Object {
+                                        "$": Object {
+                                          "firstAttribute": "trailing",
+                                          "firstItem": "EXPO-SplashScreenBackground",
+                                          "id": "ABX-8g-7v4",
+                                          "secondAttribute": "trailing",
+                                          "secondItem": "EXPO-ContainerView",
+                                        },
+                                      },
+                                      Object {
+                                        "$": Object {
+                                          "firstAttribute": "bottom",
+                                          "firstItem": "EXPO-SplashScreenBackground",
+                                          "id": "jkI-2V-eW5",
+                                          "secondAttribute": "bottom",
+                                          "secondItem": "EXPO-ContainerView",
+                                        },
+                                      },
+                                    ],
+                                  },
+                                ],
+                                "rect": Array [
+                                  Object {
+                                    "$": Object {
+                                      "height": "736",
+                                      "key": "frame",
+                                      "width": "414",
+                                      "x": "0.0",
+                                      "y": "0.0",
+                                    },
+                                  },
+                                ],
+                                "subviews": Array [
+                                  Object {
+                                    "imageView": Array [
+                                      Object {
+                                        "$": Object {
+                                          "contentMode": "scaleAspectFill",
+                                          "horizontalHuggingPriority": "251",
+                                          "id": "EXPO-SplashScreenBackground",
+                                          "image": "SplashScreenBackground",
+                                          "insetsLayoutMarginsFromSafeArea": "NO",
+                                          "translatesAutoresizingMaskIntoConstraints": "NO",
+                                          "userInteractionEnabled": "NO",
+                                          "userLabel": "SplashScreenBackground",
+                                          "verticalHuggingPriority": "251",
+                                        },
+                                        "rect": Array [
+                                          Object {
+                                            "$": Object {
+                                              "height": "736",
+                                              "key": "frame",
+                                              "width": "414",
+                                              "x": "0.0",
+                                              "y": "0.0",
+                                            },
+                                          },
+                                        ],
+                                      },
+                                    ],
+                                  },
+                                ],
+                                "viewLayoutGuide": Array [
+                                  Object {
+                                    "$": Object {
+                                      "id": "Rmq-lb-GrQ",
+                                      "key": "safeArea",
+                                    },
+                                  },
+                                ],
+                              },
+                            ],
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        },
+      },
+    },
     "pluginHistory": Object {
       "expo-ads-admob": Object {
         "name": "expo-ads-admob",
@@ -998,6 +1219,223 @@ Object {
         "podfileProperties": Object {
           "expo.jsEngine": "jsc",
         },
+        "splashScreenStoryboard": Object {
+          "document": Object {
+            "$": Object {
+              "colorMatched": "YES",
+              "initialViewController": "EXPO-VIEWCONTROLLER-1",
+              "launchScreen": "YES",
+              "propertyAccessControl": "none",
+              "targetRuntime": "iOS.CocoaTouch",
+              "toolsVersion": "16096",
+              "type": "com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB",
+              "useAutolayout": "YES",
+              "useSafeAreas": "YES",
+              "useTraitCollections": "YES",
+              "version": "3.0",
+            },
+            "dependencies": Array [
+              Object {
+                "capability": Array [
+                  Object {
+                    "$": Object {
+                      "minToolsVersion": "9.0",
+                      "name": "Safe area layout guides",
+                    },
+                  },
+                  Object {
+                    "$": Object {
+                      "minToolsVersion": "8.0",
+                      "name": "documents saved in the Xcode 8 format",
+                    },
+                  },
+                ],
+                "deployment": Array [
+                  Object {
+                    "$": Object {
+                      "identifier": "iOS",
+                    },
+                  },
+                ],
+                "plugIn": Array [
+                  Object {
+                    "$": Object {
+                      "identifier": "com.apple.InterfaceBuilder.IBCocoaTouchPlugin",
+                      "version": "16087",
+                    },
+                  },
+                ],
+              },
+            ],
+            "resources": Array [
+              Object {
+                "image": Array [
+                  Object {
+                    "$": Object {
+                      "height": "1",
+                      "name": "SplashScreenBackground",
+                      "width": "1",
+                    },
+                  },
+                ],
+              },
+            ],
+            "scenes": Array [
+              Object {
+                "scene": Array [
+                  Object {
+                    "$": Object {
+                      "sceneID": "EXPO-SCENE-1",
+                    },
+                    "objects": Array [
+                      Object {
+                        "placeholder": Array [
+                          Object {
+                            "$": Object {
+                              "id": "EXPO-PLACEHOLDER-1",
+                              "placeholderIdentifier": "IBFirstResponder",
+                              "sceneMemberID": "firstResponder",
+                              "userLabel": "First Responder",
+                            },
+                          },
+                        ],
+                        "viewController": Array [
+                          Object {
+                            "$": Object {
+                              "id": "EXPO-VIEWCONTROLLER-1",
+                              "sceneMemberID": "viewController",
+                              "storyboardIdentifier": "SplashScreenViewController",
+                            },
+                            "view": Array [
+                              Object {
+                                "$": Object {
+                                  "contentMode": "scaleToFill",
+                                  "id": "EXPO-ContainerView",
+                                  "insetsLayoutMarginsFromSafeArea": "NO",
+                                  "key": "view",
+                                  "userInteractionEnabled": "NO",
+                                  "userLabel": "ContainerView",
+                                },
+                                "autoresizingMask": Array [
+                                  Object {
+                                    "$": Object {
+                                      "flexibleMaxX": "YES",
+                                      "flexibleMaxY": "YES",
+                                      "key": "autoresizingMask",
+                                    },
+                                  },
+                                ],
+                                "color": Array [
+                                  Object {
+                                    "$": Object {
+                                      "key": "backgroundColor",
+                                      "systemColor": "systemBackgroundColor",
+                                    },
+                                  },
+                                ],
+                                "constraints": Array [
+                                  Object {
+                                    "constraint": Array [
+                                      Object {
+                                        "$": Object {
+                                          "firstAttribute": "top",
+                                          "firstItem": "EXPO-SplashScreenBackground",
+                                          "id": "1gX-mQ-vu6",
+                                          "secondAttribute": "top",
+                                          "secondItem": "EXPO-ContainerView",
+                                        },
+                                      },
+                                      Object {
+                                        "$": Object {
+                                          "firstAttribute": "leading",
+                                          "firstItem": "EXPO-SplashScreenBackground",
+                                          "id": "6tX-OG-Sck",
+                                          "secondAttribute": "leading",
+                                          "secondItem": "EXPO-ContainerView",
+                                        },
+                                      },
+                                      Object {
+                                        "$": Object {
+                                          "firstAttribute": "trailing",
+                                          "firstItem": "EXPO-SplashScreenBackground",
+                                          "id": "ABX-8g-7v4",
+                                          "secondAttribute": "trailing",
+                                          "secondItem": "EXPO-ContainerView",
+                                        },
+                                      },
+                                      Object {
+                                        "$": Object {
+                                          "firstAttribute": "bottom",
+                                          "firstItem": "EXPO-SplashScreenBackground",
+                                          "id": "jkI-2V-eW5",
+                                          "secondAttribute": "bottom",
+                                          "secondItem": "EXPO-ContainerView",
+                                        },
+                                      },
+                                    ],
+                                  },
+                                ],
+                                "rect": Array [
+                                  Object {
+                                    "$": Object {
+                                      "height": "736",
+                                      "key": "frame",
+                                      "width": "414",
+                                      "x": "0.0",
+                                      "y": "0.0",
+                                    },
+                                  },
+                                ],
+                                "subviews": Array [
+                                  Object {
+                                    "imageView": Array [
+                                      Object {
+                                        "$": Object {
+                                          "contentMode": "scaleAspectFill",
+                                          "horizontalHuggingPriority": "251",
+                                          "id": "EXPO-SplashScreenBackground",
+                                          "image": "SplashScreenBackground",
+                                          "insetsLayoutMarginsFromSafeArea": "NO",
+                                          "translatesAutoresizingMaskIntoConstraints": "NO",
+                                          "userInteractionEnabled": "NO",
+                                          "userLabel": "SplashScreenBackground",
+                                          "verticalHuggingPriority": "251",
+                                        },
+                                        "rect": Array [
+                                          Object {
+                                            "$": Object {
+                                              "height": "736",
+                                              "key": "frame",
+                                              "width": "414",
+                                              "x": "0.0",
+                                              "y": "0.0",
+                                            },
+                                          },
+                                        ],
+                                      },
+                                    ],
+                                  },
+                                ],
+                                "viewLayoutGuide": Array [
+                                  Object {
+                                    "$": Object {
+                                      "id": "Rmq-lb-GrQ",
+                                      "key": "safeArea",
+                                    },
+                                  },
+                                ],
+                              },
+                            ],
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        },
       },
     },
     "pluginHistory": Object {
@@ -1893,6 +2331,223 @@ Object {
         },
         "podfileProperties": Object {
           "expo.jsEngine": "jsc",
+        },
+        "splashScreenStoryboard": Object {
+          "document": Object {
+            "$": Object {
+              "colorMatched": "YES",
+              "initialViewController": "EXPO-VIEWCONTROLLER-1",
+              "launchScreen": "YES",
+              "propertyAccessControl": "none",
+              "targetRuntime": "iOS.CocoaTouch",
+              "toolsVersion": "16096",
+              "type": "com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB",
+              "useAutolayout": "YES",
+              "useSafeAreas": "YES",
+              "useTraitCollections": "YES",
+              "version": "3.0",
+            },
+            "dependencies": Array [
+              Object {
+                "capability": Array [
+                  Object {
+                    "$": Object {
+                      "minToolsVersion": "9.0",
+                      "name": "Safe area layout guides",
+                    },
+                  },
+                  Object {
+                    "$": Object {
+                      "minToolsVersion": "8.0",
+                      "name": "documents saved in the Xcode 8 format",
+                    },
+                  },
+                ],
+                "deployment": Array [
+                  Object {
+                    "$": Object {
+                      "identifier": "iOS",
+                    },
+                  },
+                ],
+                "plugIn": Array [
+                  Object {
+                    "$": Object {
+                      "identifier": "com.apple.InterfaceBuilder.IBCocoaTouchPlugin",
+                      "version": "16087",
+                    },
+                  },
+                ],
+              },
+            ],
+            "resources": Array [
+              Object {
+                "image": Array [
+                  Object {
+                    "$": Object {
+                      "height": "1",
+                      "name": "SplashScreenBackground",
+                      "width": "1",
+                    },
+                  },
+                ],
+              },
+            ],
+            "scenes": Array [
+              Object {
+                "scene": Array [
+                  Object {
+                    "$": Object {
+                      "sceneID": "EXPO-SCENE-1",
+                    },
+                    "objects": Array [
+                      Object {
+                        "placeholder": Array [
+                          Object {
+                            "$": Object {
+                              "id": "EXPO-PLACEHOLDER-1",
+                              "placeholderIdentifier": "IBFirstResponder",
+                              "sceneMemberID": "firstResponder",
+                              "userLabel": "First Responder",
+                            },
+                          },
+                        ],
+                        "viewController": Array [
+                          Object {
+                            "$": Object {
+                              "id": "EXPO-VIEWCONTROLLER-1",
+                              "sceneMemberID": "viewController",
+                              "storyboardIdentifier": "SplashScreenViewController",
+                            },
+                            "view": Array [
+                              Object {
+                                "$": Object {
+                                  "contentMode": "scaleToFill",
+                                  "id": "EXPO-ContainerView",
+                                  "insetsLayoutMarginsFromSafeArea": "NO",
+                                  "key": "view",
+                                  "userInteractionEnabled": "NO",
+                                  "userLabel": "ContainerView",
+                                },
+                                "autoresizingMask": Array [
+                                  Object {
+                                    "$": Object {
+                                      "flexibleMaxX": "YES",
+                                      "flexibleMaxY": "YES",
+                                      "key": "autoresizingMask",
+                                    },
+                                  },
+                                ],
+                                "color": Array [
+                                  Object {
+                                    "$": Object {
+                                      "key": "backgroundColor",
+                                      "systemColor": "systemBackgroundColor",
+                                    },
+                                  },
+                                ],
+                                "constraints": Array [
+                                  Object {
+                                    "constraint": Array [
+                                      Object {
+                                        "$": Object {
+                                          "firstAttribute": "top",
+                                          "firstItem": "EXPO-SplashScreenBackground",
+                                          "id": "1gX-mQ-vu6",
+                                          "secondAttribute": "top",
+                                          "secondItem": "EXPO-ContainerView",
+                                        },
+                                      },
+                                      Object {
+                                        "$": Object {
+                                          "firstAttribute": "leading",
+                                          "firstItem": "EXPO-SplashScreenBackground",
+                                          "id": "6tX-OG-Sck",
+                                          "secondAttribute": "leading",
+                                          "secondItem": "EXPO-ContainerView",
+                                        },
+                                      },
+                                      Object {
+                                        "$": Object {
+                                          "firstAttribute": "trailing",
+                                          "firstItem": "EXPO-SplashScreenBackground",
+                                          "id": "ABX-8g-7v4",
+                                          "secondAttribute": "trailing",
+                                          "secondItem": "EXPO-ContainerView",
+                                        },
+                                      },
+                                      Object {
+                                        "$": Object {
+                                          "firstAttribute": "bottom",
+                                          "firstItem": "EXPO-SplashScreenBackground",
+                                          "id": "jkI-2V-eW5",
+                                          "secondAttribute": "bottom",
+                                          "secondItem": "EXPO-ContainerView",
+                                        },
+                                      },
+                                    ],
+                                  },
+                                ],
+                                "rect": Array [
+                                  Object {
+                                    "$": Object {
+                                      "height": "736",
+                                      "key": "frame",
+                                      "width": "414",
+                                      "x": "0.0",
+                                      "y": "0.0",
+                                    },
+                                  },
+                                ],
+                                "subviews": Array [
+                                  Object {
+                                    "imageView": Array [
+                                      Object {
+                                        "$": Object {
+                                          "contentMode": "scaleAspectFill",
+                                          "horizontalHuggingPriority": "251",
+                                          "id": "EXPO-SplashScreenBackground",
+                                          "image": "SplashScreenBackground",
+                                          "insetsLayoutMarginsFromSafeArea": "NO",
+                                          "translatesAutoresizingMaskIntoConstraints": "NO",
+                                          "userInteractionEnabled": "NO",
+                                          "userLabel": "SplashScreenBackground",
+                                          "verticalHuggingPriority": "251",
+                                        },
+                                        "rect": Array [
+                                          Object {
+                                            "$": Object {
+                                              "height": "736",
+                                              "key": "frame",
+                                              "width": "414",
+                                              "x": "0.0",
+                                              "y": "0.0",
+                                            },
+                                          },
+                                        ],
+                                      },
+                                    ],
+                                  },
+                                ],
+                                "viewLayoutGuide": Array [
+                                  Object {
+                                    "$": Object {
+                                      "id": "Rmq-lb-GrQ",
+                                      "key": "safeArea",
+                                    },
+                                  },
+                                ],
+                              },
+                            ],
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
         },
       },
     },
