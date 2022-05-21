@@ -11,6 +11,13 @@ beforeAll(() => {
       },
     };
   });
+  jest.mock('fs-extra', () => {
+    return {
+      existsSync: () => {
+        return !!process.env.TEST_NPM_LOCKFILE_EXISTS;
+      },
+    };
+  });
 });
 beforeEach(() => {
   delete process.env.CAN_USE_YARN_TEST_VALUE_SHOULD_THROW;
@@ -32,5 +39,10 @@ it(`uses env variable instead of yarn -v`, () => {
 it(`returns false if yarn -v throws an error`, () => {
   // Ensure yarn -v doesn't work
   process.env.CAN_USE_YARN_TEST_VALUE_SHOULD_THROW = 'true';
+  expect(shouldUseYarn()).toBe(false);
+});
+
+it(`returns false if NPM lockfile exists`, () => {
+  process.env.TEST_NPM_LOCKFILE_EXISTS = 'true';
   expect(shouldUseYarn()).toBe(false);
 });
