@@ -83,6 +83,7 @@ export async function downloadAndExtractNpmModuleAsync(
   Log.debug(`Looking for tarball for ${npmName} in ${getCacheFilePath()}...`);
   try {
     const cachePath = getCacheFilePath();
+    await fs.ensureDir(cachePath);
     // Perform dry-run to get actual filename for resolved version
     const filename = (((await npmPackAsync(
       npmName,
