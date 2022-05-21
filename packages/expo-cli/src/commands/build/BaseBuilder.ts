@@ -40,7 +40,7 @@ export default class BaseBuilder {
     try {
       await this.prepareProjectInfo();
       await this.run();
-    } catch (e) {
+    } catch (e: any) {
       if (!(e instanceof BuildError)) {
         throw e;
       } else {
@@ -58,7 +58,7 @@ export default class BaseBuilder {
     try {
       await this.prepareProjectInfo();
       await this.checkStatus();
-    } catch (e) {
+    } catch (e: any) {
       if (!(e instanceof BuildError)) {
         throw e;
       } else {

@@ -1,4 +1,4 @@
-import fs from 'fs-extra';
+import fs from 'fs';
 import { vol } from 'memfs';
 
 import { ExportedConfig, Mod } from '../../Plugin.types';
@@ -133,7 +133,7 @@ describe(compileModsAsync, () => {
     expect(Object.values(config.mods.ios).every(value => typeof value === 'function')).toBe(true);
 
     // Test that the actual file was rewritten.
-    const data = await fs.readFile('/app/ios/ReactNativeProject/Info.plist', 'utf8');
+    const data = await fs.promises.readFile('/app/ios/ReactNativeProject/Info.plist', 'utf8');
     expect(data).toMatch(/CFBundleDevelopmentRegion-crazy-random-value/);
   });
 

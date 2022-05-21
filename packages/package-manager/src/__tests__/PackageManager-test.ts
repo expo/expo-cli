@@ -31,6 +31,10 @@ describe('createForProject', () => {
     const manager = createForProject(projectRoot, { yarn: true });
     expect(manager.name).toBe('Yarn');
   });
+  it(`creates pnpm package manager from options`, () => {
+    const manager = createForProject(projectRoot, { pnpm: true });
+    expect(manager.name).toBe('pnpm');
+  });
   it(`defaults to npm package manager`, () => {
     const manager = createForProject(projectRoot);
     expect(manager.name).toBe('npm');

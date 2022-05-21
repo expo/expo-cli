@@ -116,7 +116,7 @@ describe('findProjectRootAsync', () => {
 
       try {
         await findProjectRootAsync(exampleProjectPath);
-      } catch (e) {
+      } catch (e: any) {
         expect(e).toMatchInlineSnapshot(
           `[CommandError: No managed or bare projects found. Please make sure you are inside a project folder.]`
         );

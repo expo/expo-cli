@@ -36,6 +36,7 @@ jobs:
         node: ['12', '14']
         package:
           [
+            create-expo-app,
             dev-tools,
             babel-preset-cli,
             config,
@@ -67,8 +68,8 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
       - name: Test ${{ matrix.package }}
-        run: cd packages/${{ matrix.package }} && yarn test
-        # run: cd packages/${{ matrix.package }} && yarn test --coverage
+        # run: cd packages/${{ matrix.package }} && yarn test
+        run: cd packages/${{ matrix.package }} && yarn test --coverage
         env:
           CI: true
           EXPO_DEBUG: true

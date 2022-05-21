@@ -1,5 +1,5 @@
 import assert from 'assert';
-import fs from 'fs-extra';
+import fs from 'fs';
 import { sync as globSync } from 'glob';
 import * as path from 'path';
 
@@ -68,8 +68,8 @@ export function getGradleFilePath(projectRoot: string, gradleName: string): stri
   const groovyPath = path.resolve(projectRoot, `${gradleName}.gradle`);
   const ktPath = path.resolve(projectRoot, `${gradleName}.gradle.kts`);
 
-  const isGroovy = fs.pathExistsSync(groovyPath);
-  const isKotlin = !isGroovy && fs.pathExistsSync(ktPath);
+  const isGroovy = fs.existsSync(groovyPath);
+  const isKotlin = !isGroovy && fs.existsSync(ktPath);
 
   if (!isGroovy && !isKotlin) {
     throw new Error(`Failed to find '${gradleName}.gradle' file for project: ${projectRoot}.`);

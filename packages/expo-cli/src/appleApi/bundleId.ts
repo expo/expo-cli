@@ -27,7 +27,7 @@ export async function getProfilesForBundleIdAsync(
       try {
         await profile.getBundleIdAsync();
         validProfileIds.add(profile.id);
-      } catch (e) {
+      } catch (e: any) {
         if (
           e.name === 'UnexpectedAppleResponse' &&
           e.message.includes('The specified resource does not exist - There is no resource of type')

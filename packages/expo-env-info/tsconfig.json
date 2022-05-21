@@ -7,7 +7,8 @@
     "resolveJsonModule": true,
     "rootDir": "src",
     "declaration": false,
-    "composite": false
+    "composite": false,
+    "module": "es2020",
   },
   "exclude": [
     "**/__mocks__/*",

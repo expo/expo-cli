@@ -57,7 +57,7 @@ export async function sharpAsync(
     ]);
     const outputFilePaths = stdout.trim().split('\n');
     return outputFilePaths;
-  } catch (error) {
+  } catch (error: any) {
     if (error.stderr) {
       throw new Error(
         '\nProcessing images using sharp-cli failed: ' +
@@ -121,14 +121,14 @@ async function findSharpBinAsync(): Promise<string> {
       _sharpBin = require.resolve(`sharp-cli/${sharpCliPackage.bin.sharp}`);
       return _sharpBin;
     }
-  } catch (e) {
+  } catch {
     // fall back to global sharp-cli
   }
 
   let installedCliVersion;
   try {
     installedCliVersion = (await spawnAsync('sharp', ['--version'])).stdout.toString().trim();
-  } catch (e) {
+  } catch {
     throw notFoundError(SHARP_REQUIRED_VERSION);
   }
 

@@ -14,6 +14,286 @@ This is the log of notable changes to Expo CLI and related packages.
 
 - [expo-cli] use `npm pack` for template downloading to be compatible with private npm registries ([#4233](https://github.com/expo/expo-cli/pull/4223))
 
+## [Wed, May 18 2022 19:34:55 2022 -0700](https://github.com/expo/expo-cli/commit/866daede8095b3febb98b0d325085fb36550d7b9)
+
+### 🧹 Chores
+
+- [dev-server] add sdk 45 support for the sanity check of hermes bundle ([#4382](https://github.com/expo/expo-cli/pull/4382))
+
+### 📦 Packages updated
+
+- expo-cli@5.4.6
+- @expo/dev-tools@0.13.154
+- @expo/dev-server@0.1.112
+- xdl@59.2.38
+
+## [Fri, 13 May 2022 14:44:51 -0700](https://github.com/expo/expo-cli/commit/dce0e2d23f1b38089a66d023c9ca8a5e70fd3fc2)
+
+### 🎉 New features
+
+- [config-plugins] rename android jni java descriptors from prebuild ([#4362](https://github.com/expo/expo-cli/issues/4362))
+- [create-expo-app] add support for the `--template` arg from `expo init` ([#4367](https://github.com/expo/expo-cli/issues/4367))
+- [create-expo-app] auto select package manager ([#4339](https://github.com/expo/expo-cli/issues/4339))
+- [create-expo-app] fail on invalid template before prompting for the app name ([#4372](https://github.com/expo/expo-cli/issues/4372))
+- [create-expo-app] hello, world! (create the package) ([#4338](https://github.com/expo/expo-cli/issues/4338))
+- [create-expo-app] use hidden directory for home cache ([#4353](https://github.com/expo/expo-cli/issues/4353))
+- [package-manager] Prefer yarn over npm if both lockfiles exists ([#4369](https://github.com/expo/expo-cli/issues/4369))
+
+### 🧹 Chores
+
+- [expo-cli] Improve Fig autocomplete support ([#4331](https://github.com/expo/expo-cli/issues/4331))
+- [expo-cli] set non-zero exit code when expo doctor fails ([#4359](https://github.com/expo/expo-cli/issues/4359))
+- [expo-cli][metro-config] prevent throwing when an upper-level directory has an invalid package.json ([#4363](https://github.com/expo/expo-cli/issues/4363))
+- [package-manager] explicitly order package managers ([#4344](https://github.com/expo/expo-cli/issues/4344))
+
+### 🐛 Bug fixes
+
+- [config-plugins] Handle quoted build configuration ([#4341](https://github.com/expo/expo-cli/issues/4341))
+- [config-plugins] Remove warning when permissions config is empty when using blockedPermissions ([#4352](https://github.com/expo/expo-cli/issues/4352))
+- [prebuild-config] update manifest roundIcon property ([#4370](https://github.com/expo/expo-cli/issues/4370))
+
+### 📦 Packages updated
+
+- @expo/config-plugins@4.1.5
+- @expo/config@6.0.24
+- create-expo-app@0.0.9
+- @expo/dev-server@0.1.111
+- @expo/dev-tools@0.13.153
+- expo-cli@5.4.4
+- expo-optimize@0.2.16
+- install-expo-modules@0.3.3
+- @expo/metro-config@0.3.17
+- @expo/next-adapter@4.0.5
+- @expo/package-manager@0.0.54
+- pod-install@0.1.36
+- @expo/prebuild-config@4.0.1
+- expo-pwa@0.0.119
+- uri-scheme@1.0.120
+- @expo/webpack-config@0.16.24
+- xdl@59.2.37
+
+## [Wed, 27 Apr 2022 16:29:28 -0700](https://github.com/expo/expo-cli/commit/e517d22aaf8a3fd93795a276ed68be8b1afed30d)
+
+### 🎉 New features
+
+- [package-manager] Add support for pnpm ([#4311](https://github.com/expo/expo-cli/issues/4311))
+
+### 🧹 Chores
+
+- [prebuild-config] Bump expo-modules-autolinking version
+
+### 📦 Packages updated
+
+- @expo/dev-tools@0.13.152
+- expo-cli@5.4.3
+- install-expo-modules@0.3.2
+- @expo/next-adapter@4.0.4
+- @expo/package-manager@0.0.53
+- pod-install@0.1.35
+- @expo/prebuild-config@4.0.0
+- xdl@59.2.36
+
+## [Wed, 27 Apr 2022 11:34:35 -0700](https://github.com/expo/expo-cli/commit/7bbabeec424484dd8b1592cc128d35a9e99e323d)
+
+### 🧹 Chores
+
+- [config-types] Bump version
+
+### 📦 Packages updated
+
+- @expo/config-plugins@4.1.4
+- @expo/config@6.0.23
+- @expo/dev-server@0.1.110
+- @expo/dev-tools@0.13.151
+- expo-cli@5.4.2
+- expo-optimize@0.2.15
+- install-expo-modules@0.3.1
+- @expo/metro-config@0.3.16
+- @expo/next-adapter@4.0.3
+- @expo/prebuild-config@3.1.4
+- expo-pwa@0.0.118
+- uri-scheme@1.0.119
+- @expo/webpack-config@0.16.23
+- xdl@59.2.35
+
+## [Wed, 27 Apr 2022 10:57:06 -0700](https://github.com/expo/expo-cli/commit/c4258cabdb3f860ff190bb4234074e1570f5be86)
+
+### 🎉 New features
+
+- [install-expo-modules] Add react-native 0.68 and expo sdk 45 support ([#4333](https://github.com/expo/expo-cli/issues/4333))
+- [config plugins] support android.blockedPermissions ([#4323](https://github.com/expo/expo-cli/issues/4323))
+
+### 📦 Packages updated
+
+- @expo/config-plugins@4.1.3
+- @expo/config@6.0.22
+- @expo/dev-server@0.1.109
+- @expo/dev-tools@0.13.150
+- expo-cli@5.4.1
+- expo-optimize@0.2.14
+- install-expo-modules@0.3.0
+- @expo/metro-config@0.3.15
+- @expo/next-adapter@4.0.2
+- @expo/prebuild-config@3.1.3
+- expo-pwa@0.0.117
+- uri-scheme@1.0.118
+- @expo/webpack-config@0.16.22
+- xdl@59.2.34
+
+## [Mon, 25 Apr 2022 09:39:36 -0700](https://github.com/expo/expo-cli/commit/3b877aba82399512ca583a972effcd09c6f43f26)
+
+### 🎉 New features
+
+- [config-plugins] Introduce rule-based build properties config-plugin ([#4270](https://github.com/expo/expo-cli/issues/4270))
+- [config-plugins] add initial app clip support ([#4327](https://github.com/expo/expo-cli/issues/4327))
+- [config-plugins] resolve target specific entitlements files ([#4313](https://github.com/expo/expo-cli/issues/4313))
+- [expo-env-info] prepare repo to convert expo-env-info to esm ([#4312](https://github.com/expo/expo-cli/issues/4312))
+- [dev-server] support new API for Expo SDK 45 ([#4306](https://github.com/expo/expo-cli/issues/4306))
+
+### 🧹 Chores
+
+- [expo-env-info] convert expo-env-info from CJS to ESM ([#4320](https://github.com/expo/expo-cli/issues/4320))
+
+### 📦 Packages updated
+
+- @expo/config-plugins@4.1.2
+- @expo/config@6.0.21
+- @expo/dev-server@0.1.108
+- @expo/dev-tools@0.13.149
+- expo-cli@5.4.0
+- expo-codemod@1.1.6
+- expo-env-info@1.0.3
+- expo-optimize@0.2.13
+- @expo/image-utils@0.3.20
+- install-expo-modules@0.2.8
+- @expo/json-file@8.2.36
+- @expo/metro-config@0.3.14
+- @expo/next-adapter@4.0.1
+- @expo/osascript@2.0.33
+- @expo/package-manager@0.0.52
+- pod-install@0.1.34
+- @expo/prebuild-config@3.1.2
+- expo-pwa@0.0.116
+- @expo/schemer@1.4.1
+- uri-scheme@1.0.117
+- @expo/webpack-config@0.16.21
+- xdl@59.2.33
+
+## [Tue, 19 Apr 2022 14:19:30 -0700](https://github.com/expo/expo-cli/commit/a61ddb4dcd27da86f74de9c7e9bd18570d8c2684)
+
+### 🧹 Chores
+
+- [ci] Set timeout to 2 minutes and remove check files on windows ([#4302](https://github.com/expo/expo-cli/issues/4302))
+- chore(xdl): add new metro logging events ([#4304](https://github.com/expo/expo-cli/issues/4304))
+- chore: sync stale config with other repo ([#4297](https://github.com/expo/expo-cli/issues/4297))
+- Bump @expo/apple-utils@0.0.0-alpha.31 ([#4300](https://github.com/expo/expo-cli/issues/4300))
+- ci: add stale bot from expo/expo ([#4295](https://github.com/expo/expo-cli/issues/4295))
+
+### 🐛 Bug fixes
+
+- [schemer] Update user-facing error message for `not` fields ([#4308](https://github.com/expo/expo-cli/issues/4308))
+
+### 📦 Packages updated
+
+- @expo/dev-tools@0.13.148
+- expo-cli@5.3.2
+- @expo/schemer@1.4.0
+- xdl@59.2.32
+
+## [Mon, 11 Apr 2022 13:14:18 -0700](https://github.com/expo/expo-cli/commit/f163652768ae987280307275b0a02cfd4b3cc403)
+
+### 🛠 Breaking changes
+
+- [next-adapter] revert webpack5 detection ([#4254](https://github.com/expo/expo-cli/issues/4254))
+- [metro-config] Removes duplicate `json` extensions in metro `assetExts` and `sourceExts`. ([#4255](https://github.com/expo/expo-cli/pull/4255))
+
+
+### 🎉 New features
+
+- [cli] update supported Node version warning to reflect current LTS schema ([#4261](https://github.com/expo/expo-cli/pull/4261))
+- [cli] Cap Expo CLI at Node 16 ([#4281](https://github.com/expo/expo-cli/issues/4281))
+
+### 🧹 Chores
+
+- update packages readme files ([#4170](https://github.com/expo/expo-cli/issues/4170))
+- add webpack-dev-server dependency to expo/webpack-config ([#4282](https://github.com/expo/expo-cli/issues/4282))
+- chore(config plugins): drop fs-extra ([#4290](https://github.com/expo/expo-cli/issues/4290))
+- update bugreport template label ([#4272](https://github.com/expo/expo-cli/issues/4272))
+- re-enable codecov ([#4222](https://github.com/expo/expo-cli/issues/4222))
+
+### 🐛 Bug fixes
+
+- [config-plugins] use relative path for locales ([#4260](https://github.com/expo/expo-cli/issues/4260))
+- [config-plugins] match `xcodeproj` in ios directory only ([#4288](https://github.com/expo/expo-cli/issues/4288))
+
+### 📦 Packages updated
+
+- @expo/babel-preset-cli@0.2.24
+- @expo/config-plugins@4.1.1
+- @expo/config@6.0.20
+- @expo/dev-server@0.1.107
+- @expo/dev-tools@0.13.147
+- expo-cli@5.3.1
+- expo-optimize@0.2.12
+- @expo/image-utils@0.3.19
+- install-expo-modules@0.2.7
+- @expo/json-file@8.2.35
+- @expo/metro-config@0.3.13
+- @expo/next-adapter@4.0.0
+- @expo/osascript@2.0.32
+- @expo/package-manager@0.0.51
+- @expo/pkcs12@0.0.8
+- @expo/plist@0.0.18
+- pod-install@0.1.33
+- @expo/prebuild-config@3.1.1
+- expo-pwa@0.0.115
+- @expo/schemer@1.3.34
+- uri-scheme@1.0.116
+- @expo/webpack-config@0.16.20
+- xdl@59.2.31
+
+## [Tue, 8 Mar 2022 12:30:47 -0700](https://github.com/expo/expo-cli/commit/82dcf7ce6669e277eafe5bca0440e925dcbc6e08)
+
+### 🛠 Breaking changes
+
+- [expo-cli] Deprecate the `--name` argument of the init command. ([#4225](https://github.com/expo/expo-cli/issues/4225))
+- [expo-cli] Deprecate `expo diagnostics` command in favor of `npx expo-env-info`. ([#4221](https://github.com/expo/expo-cli/issues/4221))
+
+### 🎉 New features
+
+- [config-plugins] Added support for `AppDelegate.mm`. ([#4243](https://github.com/expo/expo-cli/issues/4243))
+- [config-plugin] Append scheme `REVERSED_CLIENT_ID` from `GoogleService-Info.plist`. ([#4238](https://github.com/expo/expo-cli/issues/4238))
+
+### 🧹 Chores
+
+- [expo-cli] Move `expo eject` to the deprecated help group ([#4249](https://github.com/expo/expo-cli/issues/4249))
+- [config-plugins] update `AndroidManifest.xml` template for introspect ([#4245](https://github.com/expo/expo-cli/issues/4245))
+- [chore] Switch issue template to `expo-env-info` ([#4233](https://github.com/expo/expo-cli/issues/4233))
+
+### 🐛 Bug fixes
+
+- [config-types] Deprecated `reservedClientId` ([#4241](https://github.com/expo/expo-cli/issues/4241))
+- [expo-cli] Pick correct scheme for open android app ([#4228](https://github.com/expo/expo-cli/issues/4228))
+- [config-plugins] Unescape values when reading strings.xml ([#4229](https://github.com/expo/expo-cli/issues/4229))
+- Round file results to fix E2E tests ([#4226](https://github.com/expo/expo-cli/issues/4226))
+
+### 📦 Packages updated
+
+- @expo/config-plugins@4.1.0
+- @expo/config@6.0.19
+- @expo/dev-server@0.1.106
+- @expo/dev-tools@0.13.146
+- expo-cli@5.3.0
+- expo-optimize@0.2.11
+- install-expo-modules@0.2.6
+- @expo/metro-config@0.3.12
+- @expo/next-adapter@3.1.21
+- @expo/prebuild-config@3.1.0
+- expo-pwa@0.0.114
+- uri-scheme@1.0.115
+- @expo/webpack-config@0.16.19
+- xdl@59.2.30
+
 ## [Wed, 16 Feb 2022 12:20:14 -0800](https://github.com/expo/expo-cli/commit/11f518d24c070ef6b82b6eb5f9da22f1648f2665)
 
 ### 🎉 New features
@@ -131,7 +411,6 @@ This is the log of notable changes to Expo CLI and related packages.
 - [config-plugins] avoid duplicate CFBundleURLTypes ([#4164](https://github.com/expo/expo-cli/issues/4164))
 - [config-plugins] handle missing targetattributes edge case when setting provisioning profile for multitarget projects ([#4175](https://github.com/expo/expo-cli/issues/4175))
 - [metro-config] Add missing resolve-from dependency ([#4182](https://github.com/expo/expo-cli/issues/4182))
-
 
 ### 📦 Packages updated
 

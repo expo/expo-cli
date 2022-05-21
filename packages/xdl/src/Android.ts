@@ -277,7 +277,7 @@ async function adbAlreadyRunning(adb: string): Promise<boolean> {
     const result = await spawnAsync(adb, ['start-server']);
     const lines = trim(result.stderr).split(/\r?\n/);
     return lines.includes('* daemon started successfully') === false;
-  } catch (e) {
+  } catch (e: any) {
     let errorMessage = trim(e.stderr || e.stdout);
     if (errorMessage.startsWith(BEGINNING_OF_ADB_ERROR_MESSAGE)) {
       errorMessage = errorMessage.substring(BEGINNING_OF_ADB_ERROR_MESSAGE.length);
@@ -302,7 +302,7 @@ export async function getAdbOutputAsync(args: string[]): Promise<string> {
   try {
     const result = await spawnAsync(adb, args);
     return result.output.join('\n');
-  } catch (e) {
+  } catch (e: any) {
     // User pressed ctrl+c to cancel the process...
     if (e.signal === 'SIGINT') {
       e.isAbortError = true;
@@ -331,7 +331,7 @@ export async function getAdbFileOutputAsync(args: string[], encoding?: 'latin1')
       encoding,
       stdio: 'pipe',
     });
-  } catch (e) {
+  } catch (e: any) {
     let errorMessage = (e.stderr || e.stdout || e.message).trim();
     if (errorMessage.startsWith(BEGINNING_OF_ADB_ERROR_MESSAGE)) {
       errorMessage = errorMessage.substring(BEGINNING_OF_ADB_ERROR_MESSAGE.length);
@@ -480,7 +480,7 @@ export async function uninstallExpoAsync(device: Device): Promise<string | undef
 
   try {
     return await getAdbOutputAsync(adbPidArgs(device.pid, 'uninstall', 'host.exp.exponent'));
-  } catch (e) {
+  } catch (e: any) {
     Logger.global.error(
       'Could not uninstall Expo Go from your device, please uninstall Expo Go manually and try again.'
     );
@@ -526,7 +526,7 @@ export async function upgradeExpoAsync({
     }
 
     return true;
-  } catch (e) {
+  } catch (e: any) {
     Logger.global.error(e.message);
     return false;
   }
@@ -779,7 +779,7 @@ async function openUrlAsync({
       let applicationId: string | undefined;
       try {
         applicationId = await getClientApplicationId();
-      } catch (e) {
+      } catch (e: any) {
         Logger.global.warn(e);
       }
 
@@ -815,7 +815,7 @@ async function openUrlAsync({
 
     try {
       await _openUrlAsync({ pid: device.pid!, url, applicationId: clientApplicationId });
-    } catch (e) {
+    } catch (e: any) {
       if (isDetached) {
         e.message = `Error running app. Have you installed the app already using Android Studio? Since you are detached you must build manually. ${e.message}`;
       } else {
@@ -833,7 +833,7 @@ async function openUrlAsync({
       platform: 'android',
       installedExpo,
     });
-  } catch (e) {
+  } catch (e: any) {
     e.message = `Error running adb: ${e.message}`;
     throw e;
   }
@@ -964,7 +964,7 @@ export async function openProjectAsync({
       await openAppAsync(device, {
         launchActivity,
       });
-    } catch (error) {
+    } catch (error: any) {
       let errorMessage = `Couldn't open Android app with activity "${launchActivity}" on device "${device.name}".`;
       if (error instanceof XDLError && error.code === 'APP_NOT_INSTALLED') {
         errorMessage += `\nThe app might not be installed, try installing it with: ${chalk.bold(
@@ -993,7 +993,7 @@ export async function openProjectAsync({
       projectRoot,
     });
     return { success: true, url: projectUrl };
-  } catch (e) {
+  } catch (e: any) {
     if (e.isAbortError) {
       // Don't log anything when the user cancelled the process
       return { success: false, error: 'escaped' };
@@ -1032,7 +1032,7 @@ export async function openWebProjectAsync({
 
     await openUrlAsync({ url: projectUrl, device, isDetached: true, projectRoot });
     return { success: true, url: projectUrl };
-  } catch (e) {
+  } catch (e: any) {
     return { success: false, error: `Couldn't open the web project on Android: ${e.message}` };
   }
 }
@@ -1088,7 +1088,7 @@ async function adbReverse({ device, port }: { device: Device; port: number }): P
   try {
     await getAdbOutputAsync(adbPidArgs(device.pid, 'reverse', `tcp:${port}`, `tcp:${port}`));
     return true;
-  } catch (e) {
+  } catch (e: any) {
     Logger.global.warn(`Couldn't adb reverse: ${e.message}`);
     return false;
   }
@@ -1108,7 +1108,7 @@ async function adbReverseRemove({
   try {
     await getAdbOutputAsync(adbPidArgs(device.pid, 'reverse', '--remove', `tcp:${port}`));
     return true;
-  } catch (e) {
+  } catch (e: any) {
     // Don't send this to warn because we call this preemptively sometimes
     Logger.global.debug(`Couldn't adb reverse remove: ${e.message}`);
     return false;
@@ -1383,7 +1383,7 @@ export async function getPropertyForDeviceAsync(
   if (deviceProperties[device.name] == null) {
     try {
       deviceProperties[device.name] = await getPropertyDataForDeviceAsync(device);
-    } catch (error) {
+    } catch (error: any) {
       // TODO: Ensure error has message and not stderr
       Logger.global.error(
         `Failed to get properties for device "${device.name}" (${device.pid}): ${error.message}`
@@ -1412,7 +1412,7 @@ async function getPropertyDataForDeviceAsync(
       };
     }
     return parseAdbDeviceProperties(results);
-  } catch (error) {
+  } catch (error: any) {
     // TODO: Ensure error has message and not stderr
     throw new Error(`Failed to get properties for device (${device.pid}): ${error.message}`);
   }

@@ -178,10 +178,16 @@ export async function maybeInconsistentEngineIosAsync(
   const podfilePath = path.join(projectRoot, 'ios', 'Podfile');
   if (fs.existsSync(podfilePath)) {
     const content = await fs.readFile(podfilePath, 'utf8');
-    const isPropsReference =
-      content.search(
-        /^\s*:hermes_enabled\s*=>\s*podfile_properties\['expo.jsEngine'\] == 'hermes',?\s+/m
-      ) >= 0;
+    const hermesPropReferences = [
+      // sdk 45
+      /^\s*:hermes_enabled\s*=>\s*flags\[:hermes_enabled\]\s*\|\|\s*podfile_properties\['expo.jsEngine'\]\s*==\s*'hermes',?/m,
+      // <= sdk 44
+      /^\s*:hermes_enabled\s*=>\s*podfile_properties\['expo.jsEngine'\] == 'hermes',?\s+/m,
+    ];
+    const isPropsReference = hermesPropReferences.reduce(
+      (prev, curr) => prev || content.search(curr) >= 0,
+      false
+    );
     const isHermesBare = content.search(/^\s*:hermes_enabled\s*=>\s*true,?\s+/m) >= 0;
     if (!isPropsReference && isHermesManaged !== isHermesBare) {
       return true;
@@ -237,7 +243,7 @@ function gteSdkVersion(expJson: Pick<ExpoConfig, 'sdkVersion'>, sdkVersion: stri
 
   try {
     return semver.gte(expJson.sdkVersion, sdkVersion);
-  } catch (e) {
+  } catch {
     throw new Error(`${expJson.sdkVersion} is not a valid version. Must be in the form of x.y.z`);
   }
 }
@@ -247,7 +253,7 @@ async function parsePodfilePropertiesAsync(
 ): Promise<Record<string, string>> {
   try {
     return JSON.parse(await fs.readFile(podfilePropertiesPath, 'utf8'));
-  } catch (e) {
+  } catch {
     return {};
   }
 }

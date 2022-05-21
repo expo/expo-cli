@@ -14,4 +14,6 @@ module.exports = {
   displayName: require('./package').name,
   roots,
   setupFilesAfterEnv: ['<rootDir>/jest/setup.ts'],
+  testTimeout: 60000,
+  testRunner: 'jest-jasmine2',
 };

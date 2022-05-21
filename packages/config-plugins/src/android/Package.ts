@@ -1,6 +1,6 @@
 import { ExpoConfig } from '@expo/config-types';
 import Debug from 'debug';
-import fs from 'fs-extra';
+import fs from 'fs';
 import { sync as globSync } from 'glob';
 import path from 'path';
 
@@ -102,8 +102,46 @@ export async function renamePackageOnDisk(
   }
 
   for (const type of ['main', 'debug']) {
+    await renameJniOnDiskForType({ projectRoot, type, packageName: newPackageName });
     await renamePackageOnDiskForType({ projectRoot, type, packageName: newPackageName });
   }
+}
+
+export async function renameJniOnDiskForType({
+  projectRoot,
+  type,
+  packageName,
+}: {
+  projectRoot: string;
+  type: string;
+  packageName: string;
+}) {
+  if (!packageName) {
+    return;
+  }
+
+  const currentPackageName = getCurrentPackageNameForType(projectRoot, type);
+  if (!currentPackageName || !packageName || currentPackageName === packageName) {
+    return;
+  }
+
+  const jniRoot = path.join(projectRoot, 'android', 'app', 'src', type, 'jni');
+  const filesToUpdate = [...globSync('**/*', { cwd: jniRoot, absolute: true })];
+  // Replace all occurrences of the path in the project
+  filesToUpdate.forEach((filepath: string) => {
+    try {
+      if (fs.lstatSync(filepath).isFile() && ['.h', '.cpp'].includes(path.extname(filepath))) {
+        let contents = fs.readFileSync(filepath).toString();
+        contents = contents.replace(
+          new RegExp(transformJavaClassDescriptor(currentPackageName).replace(/\//g, '\\/'), 'g'),
+          transformJavaClassDescriptor(packageName)
+        );
+        fs.writeFileSync(filepath, contents);
+      }
+    } catch {
+      debug(`Error updating "${filepath}" for type "${type}"`);
+    }
+  });
 }
 
 export async function renamePackageOnDiskForType({
@@ -136,15 +174,15 @@ export async function renamePackageOnDiskForType({
   const newPackagePath = path.join(packageRoot, ...packageName.split('.'));
 
   // Create the new directory
-  fs.mkdirpSync(newPackagePath);
+  fs.mkdirSync(newPackagePath, { recursive: true });
 
   // Move everything from the old directory over
   globSync('**/*', { cwd: currentPackagePath }).forEach(relativePath => {
     const filepath = path.join(currentPackagePath, relativePath);
     if (fs.lstatSync(filepath).isFile()) {
-      fs.moveSync(filepath, path.join(newPackagePath, relativePath));
+      moveFileSync(filepath, path.join(newPackagePath, relativePath));
     } else {
-      fs.mkdirpSync(filepath);
+      fs.mkdirSync(filepath, { recursive: true });
     }
   });
 
@@ -174,12 +212,23 @@ export async function renamePackageOnDiskForType({
       if (fs.lstatSync(filepath).isFile()) {
         let contents = fs.readFileSync(filepath).toString();
         contents = contents.replace(new RegExp(currentPackageName!, 'g'), packageName);
+        if (['.h', '.cpp'].includes(path.extname(filepath))) {
+          contents = contents.replace(
+            new RegExp(transformJavaClassDescriptor(currentPackageName).replace(/\//g, '\\'), 'g'),
+            transformJavaClassDescriptor(packageName)
+          );
+        }
         fs.writeFileSync(filepath, contents);
       }
-    } catch (e) {
+    } catch {
       debug(`Error updating "${filepath}" for type "${type}"`);
     }
   });
+}
+
+function moveFileSync(src: string, dest: string) {
+  fs.mkdirSync(path.dirname(dest), { recursive: true });
+  fs.renameSync(src, dest);
 }
 
 export function setPackageInBuildGradle(config: Pick<ExpoConfig, 'android'>, buildGradle: string) {
@@ -209,11 +258,19 @@ export function setPackageInAndroidManifest(
 
 export async function getApplicationIdAsync(projectRoot: string): Promise<string | null> {
   const buildGradlePath = getAppBuildGradleFilePath(projectRoot);
-  if (!(await fs.pathExists(buildGradlePath))) {
+  if (!fs.existsSync(buildGradlePath)) {
     return null;
   }
-  const buildGradle = await fs.readFile(buildGradlePath, 'utf8');
+  const buildGradle = await fs.promises.readFile(buildGradlePath, 'utf8');
   const matchResult = buildGradle.match(/applicationId ['"](.*)['"]/);
   // TODO add fallback for legacy cases to read from AndroidManifest.xml
   return matchResult?.[1] ?? null;
+}
+
+/**
+ * Transform a java package name to java class descriptor,
+ * e.g. `com.helloworld` -> `Lcom/helloworld`.
+ */
+function transformJavaClassDescriptor(packageName: string) {
+  return `L${packageName.replace(/\./g, '/')}`;
 }

@@ -79,7 +79,7 @@ describe('publish details', () => {
 
     try {
       await rollbackPublicationFromChannelAsync(testProject.projectRoot, rollbackOptions);
-    } catch (e) {
+    } catch (e: any) {
       expect(e.message).toMatch(/There isn't anything published/);
     }
 
@@ -122,7 +122,7 @@ describe('publish details', () => {
 
     try {
       await rollbackPublicationFromChannelAsync(testProject.projectRoot, rollbackOptions);
-    } catch (e) {
+    } catch (e: any) {
       expect(e.message).toMatch(/There is only 1 publication/);
     }
 

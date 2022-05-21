@@ -13,7 +13,7 @@ type Options = {
 export async function actionAsync(projectRoot: string, options: Options) {
   try {
     await Detach.bundleAssetsAsync(projectRoot, options);
-  } catch (e) {
+  } catch (e: any) {
     Log.error(e);
     Log.error(
       `Before making a release build, make sure you have run '${chalk.bold(

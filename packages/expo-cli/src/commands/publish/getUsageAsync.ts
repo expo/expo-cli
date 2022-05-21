@@ -10,7 +10,7 @@ import {
 export async function getUsageAsync(projectRoot: string): Promise<string> {
   try {
     return await _getUsageAsync(projectRoot);
-  } catch (e) {
+  } catch (e: any) {
     Log.warn(e);
     // couldn't print out warning for some reason
     return _getGenericUsage();

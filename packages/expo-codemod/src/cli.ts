@@ -79,7 +79,7 @@ Transforms available:
       console.log(`> expo install ${packages.join(' ')}`);
       try {
         await spawnAsync('expo', ['install', ...packages], { stdio: 'inherit' });
-      } catch (error) {
+      } catch (error: any) {
         console.error(chalk.red('\n⚠️  expo install failed.'));
         console.log(chalk.dim(error.stack));
         console.error(

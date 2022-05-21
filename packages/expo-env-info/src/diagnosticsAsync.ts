@@ -28,7 +28,6 @@ function getEnvironmentInfoAsync(): Promise<string> {
       npmGlobalPackages: ['expo-cli', 'eas-cli'],
     },
     {
-      yaml: true,
       title: `expo-env-info ${packageJSON.version} environment info`,
     }
   );

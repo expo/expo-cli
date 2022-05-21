@@ -148,7 +148,15 @@ function getLargeConfig(): ExportedConfig {
           backgroundColor: '#00ffff',
         },
       },
-      permissions: ['CAMERA', 'com.sec.android.provider.badge.permission.WRITE'],
+      blockedPermissions: [
+        'android.permission.RECORD_AUDIO',
+        'android.permission.ACCESS_FINE_LOCATION',
+      ],
+      permissions: [
+        'CAMERA',
+        'com.sec.android.provider.badge.permission.WRITE',
+        'android.permission.RECORD_AUDIO',
+      ],
       googleServicesFile: './config/google-services.json',
       config: {
         branch: {
@@ -258,7 +266,7 @@ describe('built-in plugins', () => {
     await compileModsAsync(config, { projectRoot: '/invalid', platforms: ['android'] });
   });
 
-  it('prefers named keys over info.plist overrides', async () => {
+  it('allows conflicts with info.plist overrides', async () => {
     let config: ExportedConfig = {
       name: 'app',
       slug: '',
@@ -279,7 +287,7 @@ describe('built-in plugins', () => {
     // Apply mod
     config = await compileModsAsync(config, { projectRoot: '/app' });
     // This should be false because ios.config.usesNonExemptEncryption is used in favor of ios.infoPlist.ITSAppUsesNonExemptEncryption
-    expect(config.ios?.infoPlist?.ITSAppUsesNonExemptEncryption).toBe(false);
+    expect(config.ios?.infoPlist?.ITSAppUsesNonExemptEncryption).toBe(true);
   });
 
   it('sends a valid modRequest', async () => {

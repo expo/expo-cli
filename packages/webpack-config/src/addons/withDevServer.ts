@@ -25,14 +25,14 @@ function validateKeyAndCerts({ cert, key, keyFile, crtFile }: any): boolean {
   try {
     // publicEncrypt will throw an error with an invalid cert
     encrypted = crypto.publicEncrypt(cert, Buffer.from('test'));
-  } catch (err) {
+  } catch {
     return false;
   }
 
   try {
     // privateDecrypt will throw an error with an invalid key
     crypto.privateDecrypt(key, encrypted);
-  } catch (err) {
+  } catch {
     return false;
   }
   return true;

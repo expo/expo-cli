@@ -56,7 +56,7 @@ export async function getProjectBuildSettings(
   const { stdout } = await spawnAsync('xcodebuild', args, { stdio: 'pipe' });
   try {
     return JSON.parse(stdout);
-  } catch (error) {
+  } catch (error: any) {
     // This can fail if the xcodebuild command throws a simulator error:
     // 2021-01-24 14:22:43.802 xcodebuild[73087:14664906]  DVTAssertions: Warning in /Library/Caches/com.apple.xbs/Sources/DVTiOSFrameworks/DVTiOSFrameworks-17705/DTDeviceKitBase/DTDKRemoteDeviceData.m:371
     Log.warn(error.message);

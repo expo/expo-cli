@@ -23,6 +23,7 @@ export function setModulesMainApplication(
   const isJava = language === 'java';
 
   mainApplication = addReactNativeHostWrapperIfNeeded(mainApplication, language, isJava);
+  mainApplication = addReactNativeNewArchHostWrapperIfNeeded(mainApplication, language, isJava);
   mainApplication = addApplicationLifecycleDispatchImportIfNeeded(
     mainApplication,
     language,
@@ -48,6 +49,45 @@ function addReactNativeHostWrapperIfNeeded(
   const newInstanceCodeBlock = findNewInstanceCodeBlock(
     mainApplication,
     'ReactNativeHost',
+    language
+  );
+  if (newInstanceCodeBlock == null) {
+    throw new Error('Unable to find ReactNativeHost new instance code block.');
+  }
+
+  const replacement = isJava
+    ? `new ReactNativeHostWrapper(this, ${newInstanceCodeBlock.code})`
+    : `ReactNativeHostWrapper(this, ${newInstanceCodeBlock.code})`;
+  mainApplication = replaceContentsWithOffset(
+    mainApplication,
+    replacement,
+    newInstanceCodeBlock.start,
+    newInstanceCodeBlock.end
+  );
+  return mainApplication;
+}
+
+function addReactNativeNewArchHostWrapperIfNeeded(
+  mainApplication: string,
+  language: 'java' | 'kt',
+  isJava: boolean
+): string {
+  // Early return when there's no new arch `MainApplicationReactNativeHost`.
+  if (!mainApplication.match(/^import .*\.newarchitecture\.MainApplicationReactNativeHost;?$/m)) {
+    return mainApplication;
+  }
+
+  if (
+    mainApplication.match(/\s+ReactNativeHostWrapper\(this,.*MainApplicationReactNativeHost\(/m)
+  ) {
+    return mainApplication;
+  }
+
+  mainApplication = addImports(mainApplication, ['expo.modules.ReactNativeHostWrapper'], isJava);
+
+  const newInstanceCodeBlock = findNewInstanceCodeBlock(
+    mainApplication,
+    'MainApplicationReactNativeHost',
     language
   );
   if (newInstanceCodeBlock == null) {

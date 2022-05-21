@@ -3,20 +3,23 @@
 👋 Welcome to <br/><code>@expo/next-adapter</code>
 </h1>
 
-<!-- Header -->
+<p align="center">Adapter document and server for Next.js projects using Expo modules.</p>
 
 <p align="center">
-    <b>Adapter document and server for Next.js projects using Expo modules</b>
-    <br/>
-    <br/>
-    <a aria-label="Circle CI" href="https://circleci.com/gh/expo/expo-cli/tree/main">
-        <img alt="Circle CI" src="https://flat.badgen.net/circleci/github/expo/expo-cli?label=Circle%20CI&labelColor=555555&icon=circleci">
-    </a>
+  <img src="https://flat.badgen.net/packagephobia/install/@expo/next-adapter">
+
+  <a href="https://www.npmjs.com/package/@expo/next-adapter">
+    <img src="https://flat.badgen.net/npm/dw/@expo/next-adapter" target="_blank" />
+  </a>
+
+  <a aria-label="Circle CI" href="https://circleci.com/gh/expo/expo-cli/tree/main">
+    <img alt="Circle CI" src="https://flat.badgen.net/circleci/github/expo/expo-cli?label=Circle%20CI&labelColor=555555&icon=circleci">
+  </a>
 </p>
 
 ---
 
-> Warning: Support for Next.js is experimental. Please open an issue at [expo-cli/issues](https://github.com/expo/expo-cli/issues) if you encountered any problems.
+> ⚠️ **Warning:** Support for Next.js is experimental. Please open an issue at [expo-cli/issues](https://github.com/expo/expo-cli/issues) if you encountered any problems.
 
 ## [Documentation][docs]
 

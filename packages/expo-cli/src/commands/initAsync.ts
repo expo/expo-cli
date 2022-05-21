@@ -290,7 +290,7 @@ export async function actionAsync(incomingProjectRoot: string, command: Partial<
       initialConfig
     );
     extractTemplateStep.succeed('Downloaded template.');
-  } catch (e) {
+  } catch (e: any) {
     extractTemplateStep.fail('Something went wrong while downloading and extracting the template.');
     throw e;
   }

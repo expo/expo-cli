@@ -69,7 +69,7 @@ function _isDirectory(dir: string) {
     }
 
     return false;
-  } catch (e) {
+  } catch {
     return false;
   }
 }

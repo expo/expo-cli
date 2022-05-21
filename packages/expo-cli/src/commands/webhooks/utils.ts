@@ -52,7 +52,7 @@ export async function setupAsync(projectRoot: string) {
     }
     const project = projects[0];
     return { experienceName, project, client };
-  } catch (error) {
+  } catch (error: any) {
     if (error.code === 'EXPERIENCE_NOT_FOUND') {
       throw projectNotFoundError(experienceName);
     } else {

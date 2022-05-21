@@ -52,7 +52,7 @@ export function wrapGlobWithTimeout(
 
     try {
       resolve(await query());
-    } catch (error) {
+    } catch (error: any) {
       reject(error);
     } finally {
       clearTimeout(timeout);

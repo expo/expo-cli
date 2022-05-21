@@ -79,7 +79,8 @@ async function resizeAsync(imageOptions: ImageOptions): Promise<Buffer> {
           backgroundColor && backgroundColor !== 'transparent' ? backgroundColor : 'none'
         }" /></svg>`
       );
-      sharpBuffer.composite([{ input: mask, blend: 'dest-over' }]);
+
+      sharpBuffer.composite([{ input: mask, blend: 'dest-in' }]);
     }
 
     return await sharpBuffer.png().toBuffer();

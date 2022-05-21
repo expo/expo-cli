@@ -72,7 +72,7 @@ export default class FromJsonValidator<From extends JsonShape<To>, To extends ob
         }
         const value = await validatingFunc(rawValue, config);
         set(config, propertyPath, value);
-      } catch (e) {
+      } catch (e: any) {
         errors.push([propertyPath, e]);
       }
     }

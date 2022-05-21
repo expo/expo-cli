@@ -138,7 +138,7 @@ async function useExistingProvisioningProfileAsync(
       teamId: authCtx.team.id,
       teamName: authCtx.team.name,
     };
-  } catch (error) {
+  } catch (error: any) {
     spinner.fail(
       `Failed to update provisioning profile (${provisioningProfile.provisioningProfileId}) with distribution certificate${certIdTag}`
     );
@@ -165,7 +165,7 @@ async function listProvisioningProfilesAsync(
 
     spinner.succeed(`Fetched Apple provisioning profiles`);
     return result;
-  } catch (error) {
+  } catch (error: any) {
     spinner.fail(`Failed to fetch Apple provisioning profiles`);
     throw error;
   }
@@ -209,7 +209,7 @@ async function createProvisioningProfileAsync(
 
     spinner.succeed('Created Apple provisioning profile');
     return result;
-  } catch (error) {
+  } catch (error: any) {
     spinner.fail('Failed to create Apple provisioning profile');
     throw error;
   }
@@ -232,7 +232,7 @@ async function revokeProvisioningProfileAsync(
         .map(profile => Profile.deleteAsync(context, { id: profile.id }))
     );
     spinner.succeed('Revoked Apple provisioning profile');
-  } catch (error) {
+  } catch (error: any) {
     spinner.fail('Failed to revoke Apple provisioning profile');
     throw error;
   }

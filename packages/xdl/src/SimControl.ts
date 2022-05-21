@@ -97,7 +97,7 @@ export async function getDefaultSimulatorDeviceUDIDAsync() {
       'CurrentDeviceUDID',
     ]);
     return defaultDeviceUDID.trim();
-  } catch (e) {
+  } catch {
     return null;
   }
 }
@@ -425,7 +425,7 @@ export async function xcrunAsync(args: string[], options?: SpawnOptions) {
   Logger.global.debug('Running: xcrun ' + args.join(' '));
   try {
     return await spawnAsync('xcrun', args, options);
-  } catch (e) {
+  } catch (e: any) {
     throw parseXcrunError(e);
   }
 }

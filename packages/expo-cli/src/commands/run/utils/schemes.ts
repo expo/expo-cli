@@ -26,7 +26,9 @@ export async function getSchemesForAndroidAsync(projectRoot: string) {
   try {
     const configPath = await AndroidConfig.Paths.getAndroidManifestAsync(projectRoot);
     const manifest = await AndroidConfig.Manifest.readAndroidManifestAsync(configPath);
-    return sortLongest(await AndroidConfig.Scheme.getSchemesFromManifest(manifest));
+    return sortLongest(
+      await AndroidConfig.Scheme.getSchemesFromManifest(manifest, 'expo-development-client')
+    );
   } catch {
     // No android folder or some other error
     return [];
@@ -74,7 +76,7 @@ async function getManagedDevClientSchemeAsync(projectRoot: string): Promise<stri
     const getDefaultScheme = require(resolveFrom(projectRoot, 'expo-dev-client/getDefaultScheme'));
     const scheme = getDefaultScheme(exp);
     return scheme;
-  } catch (error) {
+  } catch {
     Log.warn(
       '\nDevelopment build: Unable to get the default URI scheme for the project. Please make sure the expo-dev-client package is installed.'
     );

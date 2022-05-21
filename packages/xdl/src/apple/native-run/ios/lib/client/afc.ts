@@ -100,7 +100,7 @@ export class AFCClient extends ServiceClient<AFCProtocolClient> {
     try {
       await this.writeFile(destFile, srcFile);
       await this.closeFile(destFile);
-    } catch (err) {
+    } catch (err: any) {
       await this.closeFile(destFile);
       throw err;
     }

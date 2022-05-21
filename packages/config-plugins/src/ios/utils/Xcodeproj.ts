@@ -16,6 +16,7 @@ import pbxFile from 'xcode/lib/pbxFile';
 
 import { addWarningIOS } from '../../utils/warnings';
 import * as Paths from '../Paths';
+import { trimQuotes } from './string';
 
 export type ProjectSectionEntry = [string, PBXProject];
 
@@ -99,18 +100,21 @@ export function addResourceFileToGroup({
   isBuildFile,
   project,
   verbose,
+  targetUuid,
 }: {
   filepath: string;
   groupName: string;
   isBuildFile?: boolean;
   project: XcodeProject;
   verbose?: boolean;
+  targetUuid?: string;
 }): XcodeProject {
   return addFileToGroupAndLink({
     filepath,
     groupName,
     project,
     verbose,
+    targetUuid,
     addFileToProject({ project, file }) {
       project.addToPbxFileReferenceSection(file);
       if (isBuildFile) {
@@ -143,6 +147,7 @@ export function addBuildSourceFileToGroup({
     groupName,
     project,
     verbose,
+    targetUuid,
     addFileToProject({ project, file }) {
       project.addToPbxFileReferenceSection(file);
       project.addToPbxBuildFileSection(file);
@@ -386,7 +391,7 @@ export function getBuildConfigurationForListIdAndName(
   const xcBuildConfigurationEntry = getBuildConfigurationsForListId(
     project,
     configurationListId
-  ).find(i => i[1].name === buildConfiguration);
+  ).find(i => trimQuotes(i[1].name) === buildConfiguration);
   if (!xcBuildConfigurationEntry) {
     throw new Error(
       `Build configuration '${buildConfiguration}' does not exist in list with id '${configurationListId}'`

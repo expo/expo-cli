@@ -13,6 +13,7 @@ export enum TargetType {
   APPLICATION = 'com.apple.product-type.application',
   EXTENSION = 'com.apple.product-type.app-extension',
   WATCH = 'com.apple.product-type.application.watchapp',
+  APP_CLIP = 'com.apple.product-type.application.on-demand-install-capable',
   STICKER_PACK_EXTENSION = 'com.apple.product-type.app-extension.messages-sticker-pack',
   OTHER = 'other',
 }
@@ -92,13 +93,23 @@ export function getNativeTargets(project: XcodeProject): NativeTargetSectionEntr
 
 export function findSignableTargets(project: XcodeProject): NativeTargetSectionEntry[] {
   const targets = getNativeTargets(project);
-  const applicationTargets = targets.filter(
-    ([, target]) =>
-      isTargetOfType(target, TargetType.APPLICATION) ||
-      isTargetOfType(target, TargetType.EXTENSION) ||
-      isTargetOfType(target, TargetType.WATCH) ||
-      isTargetOfType(target, TargetType.STICKER_PACK_EXTENSION)
-  );
+
+  const signableTargetTypes = [
+    TargetType.APPLICATION,
+    TargetType.APP_CLIP,
+    TargetType.EXTENSION,
+    TargetType.WATCH,
+    TargetType.STICKER_PACK_EXTENSION,
+  ];
+
+  const applicationTargets = targets.filter(([, target]) => {
+    for (const targetType of signableTargetTypes) {
+      if (isTargetOfType(target, targetType)) {
+        return true;
+      }
+    }
+    return false;
+  });
   if (applicationTargets.length === 0) {
     throw new Error(`Could not find any signable targets in project.pbxproj`);
   }

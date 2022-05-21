@@ -52,7 +52,7 @@ async function isAppRunningAsync(appName: string): Promise<boolean> {
 async function safeIdOfAppAsync(appName: string): Promise<string | null> {
   try {
     return (await osascriptExecAsync('id of app ' + JSON.stringify(appName))).trim();
-  } catch (e) {
+  } catch {
     return null;
   }
 }

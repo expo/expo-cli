@@ -1,9 +1,8 @@
 import { ExpoConfig } from '@expo/config-types';
-import assert from 'assert';
 
 import { ConfigPlugin } from '../Plugin.types';
 import { withAndroidManifest } from '../plugins/android-plugins';
-import { AndroidManifest, ManifestUsesPermission } from './Manifest';
+import { AndroidManifest, ensureToolsAvailable, ManifestUsesPermission } from './Manifest';
 
 const USES_PERMISSION = 'uses-permission';
 
@@ -23,37 +22,35 @@ export const withPermissions: ConfigPlugin<string[] | void> = (config, permissio
   });
 };
 
-export const withBlockedPermissions: ConfigPlugin<string[]> = (config, permissions) => {
-  assert(Array.isArray(permissions), 'permissions prop must be an array');
+/** Given a permission or list of permissions, block permissions in the final `AndroidManifest.xml` to ensure no installed library or plugin can add them. */
+export const withBlockedPermissions: ConfigPlugin<string[] | string> = (config, permissions) => {
+  const resolvedPermissions = (Array.isArray(permissions) ? permissions : [permissions]).filter(
+    Boolean
+  );
 
   if (config?.android?.permissions && Array.isArray(config.android.permissions)) {
     // Remove any static config permissions
     config.android.permissions = config.android.permissions.filter(
-      permission => !permissions.includes(permission)
+      permission => !resolvedPermissions.includes(permission)
     );
   }
 
   return withAndroidManifest(config, async config => {
     config.modResults = ensureToolsAvailable(config.modResults);
-    config.modResults = addBlockedPermissions(config.modResults, permissions);
-
+    config.modResults = addBlockedPermissions(config.modResults, resolvedPermissions);
     return config;
   });
 };
 
-/**
- * Ensure the `tools:*` namespace is available in the manifest.
- *
- * @param manifest AndroidManifest.xml
- * @returns manifest with the `tools:*` namespace available
- */
-function ensureToolsAvailable(manifest: AndroidManifest) {
-  if (manifest?.manifest?.$?.['xmlns:tools']) {
-    return manifest;
+export const withInternalBlockedPermissions: ConfigPlugin = config => {
+  // Only add permissions if the user defined the property and added some values
+  // this ensures we don't add the `tools:*` namespace extraneously.
+  if (config.android?.blockedPermissions?.length) {
+    return withBlockedPermissions(config, config.android.blockedPermissions);
   }
-  manifest.manifest.$['xmlns:tools'] = 'http://schemas.android.com/tools';
-  return manifest;
-}
+
+  return config;
+};
 
 export function addBlockedPermissions(androidManifest: AndroidManifest, permissions: string[]) {
   if (!Array.isArray(androidManifest.manifest['uses-permission'])) {

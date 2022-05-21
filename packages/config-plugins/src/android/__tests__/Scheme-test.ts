@@ -13,6 +13,10 @@ import {
 
 const fixturesPath = resolve(__dirname, 'fixtures');
 const sampleManifestPath = resolve(fixturesPath, 'react-native-AndroidManifest.xml');
+const sampleManifestWithHostPath = resolve(
+  fixturesPath,
+  'react-native-AndroidManifest-with-host.xml'
+);
 
 describe('scheme', () => {
   it(`returns empty array if no scheme is provided`, () => {
@@ -106,6 +110,21 @@ describe('Schemes', () => {
     expect(schemes).toContain('myapp.test');
     const removedManifest = removeScheme('myapp.test', manifest);
     expect(getSchemesFromManifest(removedManifest)).not.toContain('myapp.test');
+  });
+
+  it(`get all schemes for the host`, async () => {
+    const manifest = await readAndroidManifestAsync(sampleManifestWithHostPath);
+    ensureManifestHasValidIntentFilter(manifest);
+    expect(hasScheme('longestschemewiththehost', manifest)).toBe(true);
+
+    const modifiedManifest = appendScheme('myapp.test', manifest);
+    let schemes = getSchemesFromManifest(modifiedManifest, 'any-host');
+    expect(schemes).toContain('myapp.test');
+    expect(schemes).not.toContain('longestschemewiththehost');
+
+    schemes = getSchemesFromManifest(modifiedManifest, 'expo-development-client');
+    expect(schemes).toContain('myapp.test');
+    expect(schemes).toContain('longestschemewiththehost');
   });
 
   it(`detect when a duplicate might be added`, async () => {

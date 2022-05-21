@@ -175,7 +175,7 @@ export async function assertInstalledAsync() {
       try {
         await brewInstallAsync();
         return;
-      } catch (error) {
+      } catch (error: any) {
         Log.error(`Failed to install ${chalk.bold`ios-deploy`} with homebrew: ${error.message}`);
       }
     }
