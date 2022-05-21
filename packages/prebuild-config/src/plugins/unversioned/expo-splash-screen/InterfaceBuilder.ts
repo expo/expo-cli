@@ -222,22 +222,31 @@ export function applyImageToSplashScreenXML(
     ],
   };
 
+  const mainView = xml.document.scenes[0].scene[0].objects[0].viewController[0].view[0];
+
   // Add ImageView
-  xml.document.scenes[0].scene[0].objects[0].viewController[0].view[0].subviews[0].imageView.push(
-    imageView
-  );
+  ensureUniquePush(mainView.subviews[0].imageView, imageView);
 
   // Add Constraints
-  xml.document.scenes[0].scene[0].objects[0].viewController[0].view[0].constraints[0].constraint.push(
-    // <constraint firstItem="EXPO-SplashScreen" firstAttribute="top" secondItem="EXPO-ContainerView" secondAttribute="top" id="2VS-Uz-0LU"/>
+  [
     createConstraint([imageId, 'top'], [containerId, 'top']),
     createConstraint([imageId, 'leading'], [containerId, 'leading']),
     createConstraint([imageId, 'trailing'], [containerId, 'trailing']),
-    createConstraint([imageId, 'bottom'], [containerId, 'bottom'])
-  );
+    createConstraint([imageId, 'bottom'], [containerId, 'bottom']),
+  ].forEach(constraint => {
+    // <constraint firstItem="EXPO-SplashScreen" firstAttribute="top" secondItem="EXPO-ContainerView" secondAttribute="top" id="2VS-Uz-0LU"/>
+    const constrainsArray = mainView.constraints[0].constraint;
+    ensureUniquePush(constrainsArray, constraint);
+  });
 
   // Add resource
-  xml.document.resources[0].image.push({
+  const imageSection = xml.document.resources[0].image;
+
+  const existingImageIndex = imageSection.findIndex(image => image.$.name === imageName);
+  if (existingImageIndex > -1) {
+    imageSection.splice(existingImageIndex, 1);
+  }
+  imageSection.push({
     // <image name="SplashScreen" width="414" height="736"/>
     $: {
       name: imageName,
@@ -247,6 +256,24 @@ export function applyImageToSplashScreenXML(
   });
 
   return xml;
+}
+
+/**
+ * IB does not allow two items to have the same ID.
+ * This method will add an item by first removing any existing item with the same `$.id`.
+ */
+export function ensureUniquePush<TItem extends { $: { id: string } }>(array: TItem[], item: TItem) {
+  removeExisting(array, item);
+  array.push(item);
+  return array;
+}
+
+export function removeExisting<TItem extends { $: { id: string } }>(array: TItem[], item: TItem) {
+  const existingItem = array.findIndex(existingItem => existingItem.$.id === item.$.id);
+  if (existingItem > -1) {
+    array.splice(existingItem, 1);
+  }
+  return array;
 }
 
 export async function createTemplateSplashScreenAsync(): Promise<IBSplashScreenDocument> {

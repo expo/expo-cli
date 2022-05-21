@@ -1,6 +1,5 @@
 import { ConfigPlugin, IOSConfig, withXcodeProject } from '@expo/config-plugins';
 import Debug from 'debug';
-import fs from 'fs-extra';
 import * as path from 'path';
 import { XcodeProject } from 'xcode';
 
@@ -11,18 +10,44 @@ import {
   toString,
 } from './InterfaceBuilder';
 import { IOSSplashConfig } from './getIosSplashConfig';
+import {
+  STORYBOARD_FILE_PATH,
+  withIosSplashScreenStoryboard,
+} from './withIosSplashScreenStoryboard';
 
 const debug = Debug('expo:prebuild-config:expo-splash-screen:ios:xcodeproj');
 
-const STORYBOARD_FILE_PATH = './SplashScreen.storyboard';
+export const withIosSplashScreenImage: ConfigPlugin<IOSSplashConfig> = (config, splash) => {
+  // const labelXml = await new Parser().parseStringPromise(
+  //   `<label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Evan Bacon" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Xy0-Cd-FXu">
+  //    <rect key="frame" x="20" y="682" width="374" height="34"/>
+  //    <fontDescription key="fontDescription" type="system" pointSize="28"/>
+  //    <nil key="textColor"/>
+  //    <nil key="highlightedColor"/>
+  //  </label>`);
+  return withIosSplashScreenStoryboard(config, async config => {
+    const resizeMode = splash?.resizeMode;
+    const splashScreenImagePresent = Boolean(splash?.image);
+    // Only get the resize mode when the image is present.
+    if (splashScreenImagePresent) {
+      const contentMode = getImageContentMode(resizeMode || 'contain');
+      config.modResults = applyImageToSplashScreenXML(config.modResults, {
+        contentMode,
+        imageName: 'SplashScreen',
+      });
+    }
+    return config;
+  });
+};
 
-export const withIosSplashXcodeProject: ConfigPlugin<IOSSplashConfig> = (config, splash) => {
+export const withIosSplashXcodeProject: ConfigPlugin = config => {
   return withXcodeProject(config, async config => {
     const projectPath = IOSConfig.Paths.getSourceRoot(config.modRequest.projectRoot);
-    config.modResults = await setSplashStoryboardAsync(
-      { projectPath, projectName: config.modRequest.projectName!, project: config.modResults },
-      splash
-    );
+    config.modResults = await setSplashStoryboardAsync({
+      projectPath,
+      projectName: config.modRequest.projectName!,
+      project: config.modResults,
+    });
     return config;
   });
 };
@@ -85,20 +110,15 @@ export async function getSplashStoryboardContentsAsync(
   return toString(xml);
 }
 
-export async function setSplashStoryboardAsync(
-  {
-    projectPath,
-    projectName,
-    project,
-  }: { projectPath: string; projectName: string; project: XcodeProject },
-  config?: Partial<Pick<IOSSplashConfig, 'image' | 'resizeMode'>>
-): Promise<XcodeProject> {
-  const contents = await getSplashStoryboardContentsAsync(config);
-
-  const filePath = path.resolve(projectPath, STORYBOARD_FILE_PATH);
-  await fs.ensureDir(projectPath);
-  await fs.writeFile(filePath, contents);
-
+export async function setSplashStoryboardAsync({
+  projectPath,
+  projectName,
+  project,
+}: {
+  projectPath: string;
+  projectName: string;
+  project: XcodeProject;
+}): Promise<XcodeProject> {
   await updatePbxProject({ projectName, project });
   return project;
 }

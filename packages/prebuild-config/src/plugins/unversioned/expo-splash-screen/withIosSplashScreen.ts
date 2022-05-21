@@ -8,7 +8,8 @@ import {
 } from './getIosSplashConfig';
 import { withIosSplashAssets } from './withIosSplashAssets';
 import { withIosSplashInfoPlist } from './withIosSplashInfoPlist';
-import { withIosSplashXcodeProject } from './withIosSplashXcodeProject';
+import { withIosSplashScreenStoryboardBaseMod } from './withIosSplashScreenStoryboard';
+import { withIosSplashScreenImage, withIosSplashXcodeProject } from './withIosSplashXcodeProject';
 
 const debug = Debug('expo:prebuild-config:expo-splash-screen:ios');
 
@@ -31,6 +32,12 @@ export const withIosSplashScreen: ConfigPlugin<IOSSplashConfig | undefined | nul
   return withPlugins(config, [
     [withIosSplashInfoPlist, splash],
     [withIosSplashAssets, splash],
-    [withIosSplashXcodeProject, splash],
+    // Add the image settings to the storyboard.
+    [withIosSplashScreenImage, splash],
+    // Link storyboard to xcode project.
+    // TODO: Maybe fold this into the base mod.
+    withIosSplashXcodeProject,
+    // Insert the base mod last, no other ios.splashScreenStoryboard mods can be added after this.
+    withIosSplashScreenStoryboardBaseMod,
   ]);
 };
