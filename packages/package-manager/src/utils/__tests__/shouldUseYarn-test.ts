@@ -13,8 +13,8 @@ beforeAll(() => {
   });
   jest.mock('../nodeWorkspaces', () => {
     return {
-      resolvePackageManager: () => {
-        return process.env.TEST_NPM_LOCKFILE_EXISTS ? 'npm' : null;
+      isUsingNpm: () => {
+        return !!process.env.TEST_NPM_LOCKFILE_EXISTS;
       },
     };
   });

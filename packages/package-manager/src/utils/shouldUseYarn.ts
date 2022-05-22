@@ -1,6 +1,6 @@
 import { execSync } from 'child_process';
 
-import { resolvePackageManager } from './nodeWorkspaces';
+import { isUsingNpm } from './nodeWorkspaces';
 
 export default function shouldUseYarn(): boolean {
   try {
@@ -10,15 +10,12 @@ export default function shouldUseYarn(): boolean {
 
     execSync('yarnpkg --version', { stdio: 'ignore' });
 
-    return isNotUsingNpm();
+    if (isUsingNpm(process.cwd())) {
+      return false;
+    }
+
+    return true;
   } catch {
     return false;
   }
-}
-
-/**
- * Returns true if the project does not have an npm lockfile, false otherwise.
- */
-function isNotUsingNpm(): boolean {
-  return resolvePackageManager(process.cwd(), 'npm') === null;
 }
