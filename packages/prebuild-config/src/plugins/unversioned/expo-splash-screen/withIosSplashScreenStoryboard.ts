@@ -129,7 +129,7 @@ export async function getTemplateAsync(): Promise<IBSplashScreenDocument> {
                   <constraint firstItem="EXPO-SplashScreenBackground" firstAttribute="trailing" secondItem="EXPO-ContainerView" secondAttribute="trailing" id="ABX-8g-7v4"/>
                   <constraint firstItem="EXPO-SplashScreenBackground" firstAttribute="bottom" secondItem="EXPO-ContainerView" secondAttribute="bottom" id="jkI-2V-eW5"/>
                 </constraints>
-                <viewLayoutGuide key="safeArea" id="Rmq-lb-GrQ"/>
+                <viewLayoutGuide key="safeArea" id="EXPO-SafeArea"/>
               </view>
             </viewController>
             <placeholder placeholderIdentifier="IBFirstResponder" id="EXPO-PLACEHOLDER-1" userLabel="First Responder" sceneMemberID="firstResponder"/>
