@@ -205,7 +205,7 @@ Object {
                                 "viewLayoutGuide": Array [
                                   Object {
                                     "$": Object {
-                                      "id": "Rmq-lb-GrQ",
+                                      "id": "EXPO-SafeArea",
                                       "key": "safeArea",
                                     },
                                   },
@@ -1419,7 +1419,7 @@ Object {
                                 "viewLayoutGuide": Array [
                                   Object {
                                     "$": Object {
-                                      "id": "Rmq-lb-GrQ",
+                                      "id": "EXPO-SafeArea",
                                       "key": "safeArea",
                                     },
                                   },
@@ -2532,7 +2532,7 @@ Object {
                                 "viewLayoutGuide": Array [
                                   Object {
                                     "$": Object {
-                                      "id": "Rmq-lb-GrQ",
+                                      "id": "EXPO-SafeArea",
                                       "key": "safeArea",
                                     },
                                   },
