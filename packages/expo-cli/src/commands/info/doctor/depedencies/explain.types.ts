@@ -34,6 +34,7 @@ export interface Dependent {
   bundled?: boolean;
 }
 
+/** Type of dependence the package has. */
 export type DependentType =
   | 'bundled'
   | 'extraneous'

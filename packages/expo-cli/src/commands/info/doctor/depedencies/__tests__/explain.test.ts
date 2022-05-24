@@ -1,4 +1,4 @@
-import { printExplanationsAsync } from '../why';
+import { printExplanationsAsync } from '../explain';
 
 describe(printExplanationsAsync, () => {
   it(`formats`, async () => {
