@@ -1,6 +1,5 @@
-import { JSONValue } from '@expo/json-file';
+import { JSONArray, JSONObject, JSONValue } from '@expo/json-file';
 import spawnAsync from '@expo/spawn-async';
-import assert from 'assert';
 import fs from 'fs-extra';
 import path from 'path';
 import slugify from 'slugify';
@@ -9,7 +8,6 @@ import tar from 'tar';
 import { promisify } from 'util';
 import { UserSettings } from 'xdl';
 
-import CommandError from '../../CommandError';
 import Log from '../../log';
 import { createEntryResolver, createFileTransform } from './createFileTransform';
 import { FileSystemCache } from './fetch-cache/FileSystemCache';
@@ -52,11 +50,17 @@ function applyKnownNpmPackageNameRules(name: string): string | null {
   );
 }
 
-export async function npmViewAsync(...props: string[]): Promise<JSONValue> {
-  const cmd = ['view', ...props, '--json'];
-  const results = (await spawnAsync('npm', cmd)).stdout?.trim();
+export async function npmPackAsync(
+  packageName: string,
+  cwd: string | undefined = undefined,
+  ...props: string[]
+): Promise<JSONValue> {
+  const cmd = ['pack', packageName, ...props];
+
   const cmdString = `npm ${cmd.join(' ')}`;
   Log.debug('Run:', cmdString);
+  const results = (await spawnAsync('npm', [...cmd, '--json'], { cwd })).stdout?.trim();
+
   if (!results) {
     return null;
   }
@@ -69,31 +73,6 @@ export async function npmViewAsync(...props: string[]): Promise<JSONValue> {
   }
 }
 
-/** Given a package name like `expo` or `expo@beta`, return the registry URL if it exists. */
-export async function getNpmUrlAsync(packageName: string): Promise<string> {
-  const results = await npmViewAsync(packageName, 'dist.tarball');
-
-  assert(results, `Could not get npm url for package "${packageName}"`);
-
-  // Fully qualified url returns a string.
-  // Example:
-  // 𝝠 npm view expo-template-bare-minimum@sdk-33 dist.tarball --json
-  if (typeof results === 'string') {
-    return results;
-  }
-
-  // When the tag is arbitrary, the tarball url is an array, return the last value as it's the most recent.
-  // Example:
-  // 𝝠 npm view expo-template-bare-minimum@33 dist.tarball --json
-  if (Array.isArray(results)) {
-    return results[results.length - 1] as string;
-  }
-
-  throw new CommandError(
-    'Expected results of `npm view ...` to be an array or string. Instead found: ' + results
-  );
-}
-
 // @ts-ignore
 const pipeline = promisify(Stream.pipeline);
 
@@ -101,10 +80,31 @@ export async function downloadAndExtractNpmModuleAsync(
   npmName: string,
   props: ExtractProps
 ): Promise<void> {
-  const url = await getNpmUrlAsync(npmName);
+  Log.debug(`Looking for tarball for ${npmName} in ${getCacheFilePath()}...`);
+  try {
+    const cachePath = getCacheFilePath();
+    await fs.ensureDir(cachePath);
+    // Perform dry-run to get actual filename for resolved version
+    const filename = (((await npmPackAsync(
+      npmName,
+      cachePath,
+      '--dry-run'
+    )) as JSONArray)[0] as JSONObject).filename as string;
 
-  Log.debug('Fetch from URL:', url);
-  await extractNpmTarballFromUrlAsync(url, props);
+    const cacheFilename = path.join(cachePath, filename);
+
+    // TODO: This cache does not expire, but neither does the FileCache at the top of this file.
+    if (!(await fs.stat(cacheFilename).catch(() => null))?.isFile() ?? false) {
+      Log.debug(`Downloading tarball for ${npmName} to ${cachePath}...`);
+      await npmPackAsync(npmName, cachePath);
+    }
+    await extractLocalNpmTarballAsync(cacheFilename, {
+      cwd: props.cwd,
+      name: props.name,
+    });
+  } catch (error) {
+    Log.error('Error downloading and extracting template package:', error);
+  }
 }
 
 export async function extractLocalNpmTarballAsync(
