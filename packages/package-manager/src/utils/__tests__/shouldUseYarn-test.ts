@@ -1,6 +1,12 @@
+import { isUsingNpm } from '../nodeWorkspaces';
 import shouldUseYarn from '../shouldUseYarn';
 
+export const asMock = <T extends (...args: any[]) => any>(fn: T): jest.MockedFunction<T> =>
+  fn as jest.MockedFunction<T>;
+
 beforeAll(() => {
+  jest.mock('../nodeWorkspaces', () => ({ isUsingNpm: jest.fn() }));
+
   jest.mock('child_process', () => {
     return {
       execSync: () => {
@@ -8,13 +14,6 @@ beforeAll(() => {
           throw new Error('failed');
         }
         return 'something';
-      },
-    };
-  });
-  jest.mock('../nodeWorkspaces', () => {
-    return {
-      isUsingNpm: () => {
-        return !!process.env.TEST_NPM_LOCKFILE_EXISTS;
       },
     };
   });
@@ -44,6 +43,6 @@ it(`returns false if yarn -v throws an error`, () => {
 
 it(`returns false if npm lockfile exists`, () => {
   // Use project with npm lockfile
-  process.env.TEST_NPM_LOCKFILE_EXISTS = 'true';
+  asMock(isUsingNpm).mockClear().mockReturnValueOnce(true);
   expect(shouldUseYarn()).toBe(false);
 });
