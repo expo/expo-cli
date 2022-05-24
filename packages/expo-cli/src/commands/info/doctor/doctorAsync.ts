@@ -6,7 +6,7 @@ import Log from '../../../log';
 import { getRemoteVersionsForSdk } from '../../../utils/getRemoteVersionsForSdk';
 import { profileMethod } from '../../utils/profileMethod';
 import { validateDependenciesVersionsAsync } from '../../utils/validateDependenciesVersions';
-import { warnAboutDeepDependenciesAsync } from './depedencies/why';
+import { warnAboutDeepDependenciesAsync } from './depedencies/explain';
 import { warnUponCmdExe } from './windows';
 
 type Options = {
