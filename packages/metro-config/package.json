@@ -45,7 +45,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.15.5",
-    "expo": "43",
+    "expo": "45",
     "metro": "~0.64.0",
     "metro-babel-transformer": "~0.64.0",
     "metro-config": "~0.64.0",
