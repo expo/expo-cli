@@ -1,15 +1,16 @@
 import spawnAsync from '@expo/spawn-async';
 import fs from 'fs';
-import getenv from 'getenv';
-import os from 'os';
 import path from 'path';
 import { Stream } from 'stream';
 import tar from 'tar';
 import { promisify } from 'util';
 
 import { createEntryResolver, createFileTransform } from './createFileTransform';
-import { createFetch } from './fetch';
+import { createFetch, getCacheFilePath } from './fetch';
 import { ALIASES } from './legacyTemplates';
+import { Log } from './log';
+import { env } from './utils/env';
+import { CommandError } from './utils/errors';
 
 type ExtractProps = {
   name: string;
@@ -18,15 +19,19 @@ type ExtractProps = {
   fileList?: string[];
 };
 
-function isBeta() {
-  return getenv.boolish('EXPO_BETA', false);
-}
+// @ts-ignore
+const pipeline = promisify(Stream.pipeline);
+
+const cachedFetch = createFetch({
+  cacheDirectory: 'template-cache',
+  // Set no timeout on the templates since they're versioned already.
+});
 
 /** Applies the `@beta` npm tag when `EXPO_BETA` is enabled. */
 export function applyBetaTag(npmPackageName: string): string {
   let [name, tag] = splitNpmNameAndTag(npmPackageName);
 
-  if (!tag && isBeta()) {
+  if (!tag && env.EXPO_BETA) {
     tag = 'beta';
   }
 
@@ -79,14 +84,6 @@ export function getResolvedTemplateName(npmPackageName: string) {
   return joinNpmNameAndTag(name, tag);
 }
 
-// @ts-ignore
-const pipeline = promisify(Stream.pipeline);
-
-const cachedFetch = createFetch({
-  cacheDirectory: 'template-cache',
-  // Set no timeout on the templates since they're versioned already.
-});
-
 export function applyKnownNpmPackageNameRules(name: string): string | null {
   // https://github.com/npm/validate-npm-package-name/#naming-rules
 
@@ -112,33 +109,6 @@ export async function extractLocalNpmTarballAsync(
 ): Promise<void> {
   const readStream = fs.createReadStream(tarFilePath);
   await extractNpmTarballAsync(readStream, props);
-}
-
-export function getCacheFilePath(subdir: string = 'template-cache') {
-  return path.join(os.homedir(), 'create-expo-app', subdir);
-}
-
-async function getNpmUrlAsync(packageName: string): Promise<string> {
-  const url = (await spawnAsync('npm', ['v', packageName, 'dist.tarball'])).stdout;
-
-  if (!url) {
-    throw new Error(`Could not get npm url for package "${packageName}"`);
-  }
-
-  return url;
-}
-
-export async function downloadAndExtractNpmModule(
-  root: string,
-  npmName: string,
-  projectName: string
-): Promise<void> {
-  const url = await getNpmUrlAsync(npmName);
-
-  await extractNpmTarballFromUrlAsync(url, {
-    cwd: root,
-    name: projectName,
-  });
 }
 
 export async function createUrlStreamAsync(url: string) {
@@ -177,4 +147,118 @@ export async function extractNpmTarballAsync(
       fileList
     )
   );
+}
+
+export async function npmPackAsync(
+  packageName: string,
+  cwd: string | undefined = undefined,
+  ...props: string[]
+): Promise<NpmPackageInfo[] | null> {
+  const cmd = ['pack', packageName, ...props];
+
+  const cmdString = `npm ${cmd.join(' ')}`;
+  Log.debug('Run:', cmdString);
+  let results: string;
+  try {
+    results = (await spawnAsync('npm', [...cmd, '--json'], { cwd })).stdout?.trim();
+  } catch (error: any) {
+    if (error?.stderr.match(/npm ERR! code E404/)) {
+      const pkg =
+        error.stderr.match(/npm ERR! 404\s+'(.*)' is not in this registry\./)?.[1] ?? error.stderr;
+      throw new CommandError('NPM_NOT_FOUND', `NPM package not found: ` + pkg);
+    }
+    console.log('errrr', error);
+    throw error;
+  }
+
+  if (!results) {
+    return null;
+  }
+
+  try {
+    const json = JSON.parse(results);
+    if (Array.isArray(json) && json.every(isNpmPackageInfo)) {
+      return json;
+    } else {
+      throw new CommandError('NPM_INVALID_RESPONSE', `Invalid response from npm: ${results}`);
+    }
+  } catch (error: any) {
+    throw new Error(
+      `Could not parse JSON returned from "${cmdString}".\n\n${results}\n\nError: ${error.message}`
+    );
+  }
+}
+
+export type NpmPackageInfo = {
+  /** "expo-template-blank@45.0.0" */
+  id: string;
+  /** "expo-template-blank" */
+  name: string;
+  /** "45.0.0" */
+  version: string;
+  /** 73765 */
+  size: number;
+  /** 90909 */
+  unpackedSize: number;
+  /** "2366988b44e4ee16eb2b0e902ee6c12a127b2c2e" */
+  shasum: string;
+  /** "sha512-oc7MjAt3sp8mi3Gf3LkKUNUkbiK7lJ7BecHMqe06n8vrStT4h2cHJKxf5dtAfgmXkBHHsQE/g7RUWrh1KbBjAw==" */
+  integrity: string;
+  /** "expo-template-blank-45.0.0.tgz" */
+  filename: string;
+  files: {
+    path: string;
+    size: number;
+    mode: number;
+  }[];
+  entryCount: number;
+  bundled: unknown[];
+};
+
+async function getNpmInfoAsync(moduleId: string): Promise<NpmPackageInfo> {
+  const infos = await npmPackAsync(moduleId, getCacheFilePath(), '--dry-run');
+  if (infos?.[0]) {
+    return infos[0];
+  }
+  throw new CommandError('NPM_NOT_FOUND', `Could not find npm package "${moduleId}"`);
+}
+
+function isNpmPackageInfo(item: any): item is NpmPackageInfo {
+  return (
+    item &&
+    typeof item === 'object' &&
+    'id' in item &&
+    'filename' in item &&
+    'version' in item &&
+    'files' in item
+  );
+}
+
+export async function downloadAndExtractNpmModuleAsync(
+  npmName: string,
+  props: ExtractProps
+): Promise<void> {
+  const cachePath = getCacheFilePath();
+
+  Log.debug(`Looking for NPM tarball (id: ${npmName}, cache: ${cachePath})`);
+
+  const info = await getNpmInfoAsync(npmName);
+
+  try {
+    await fs.promises.mkdir(cachePath, { recursive: true });
+
+    const cacheFilename = path.join(cachePath, info.filename);
+
+    // TODO: This cache does not expire, but neither does the FileCache at the top of this file.
+    if (!(await fs.promises.stat(cacheFilename).catch(() => null))?.isFile() ?? false) {
+      Log.debug(`Downloading tarball for ${npmName} to ${cachePath}...`);
+      await npmPackAsync(npmName, cachePath);
+    }
+    await extractLocalNpmTarballAsync(cacheFilename, {
+      cwd: props.cwd,
+      name: props.name,
+    });
+  } catch (error: any) {
+    Log.error('Error downloading and extracting template package:', error);
+  }
 }

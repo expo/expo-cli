@@ -64,10 +64,7 @@ async function setupDependenciesAsync(projectRoot: string, props: Pick<Options, 
   console.log();
   Template.logProjectReady({ cdPath, packageManager });
   if (!shouldInstall) {
-    logNodeInstallWarning(cdPath, packageManager);
-  }
-  if (needsPodsInstalled && !podsInstalled) {
-    logCocoaPodsWarning(cdPath);
+    logNodeInstallWarning(cdPath, packageManager, needsPodsInstalled && !podsInstalled);
   }
 }
 
@@ -133,25 +130,18 @@ async function installCocoaPodsAsync(projectRoot: string): Promise<boolean> {
   return podsInstalled;
 }
 
-function logNodeInstallWarning(cdPath: string, packageManager: PackageManagerName): void {
+function logNodeInstallWarning(
+  cdPath: string,
+  packageManager: PackageManagerName,
+  needsPods: boolean
+): void {
   console.log();
-  console.log(`⚠️  Before running your app, make sure you have node modules installed:`);
+  console.log(`⚠️  Before running your app, make sure you have modules installed:`);
   console.log('');
   console.log(`  cd ${cdPath ?? '.'}/`);
   console.log(`  ${packageManager} install`);
-  console.log('');
-}
-
-function logCocoaPodsWarning(cdPath: string): void {
-  if (process.platform !== 'darwin') {
-    return;
+  if (needsPods && process.platform === 'darwin') {
+    console.log(`  npx pod-install`);
   }
-  console.log();
-  console.log(
-    `⚠️  Before running your app on iOS, make sure you have CocoaPods installed and initialize the project:`
-  );
-  console.log('');
-  console.log(`  cd ${cdPath ?? '.'}/ios`);
-  console.log(`  npx pod-install`);
   console.log('');
 }

@@ -1,6 +1,9 @@
 import chalk from 'chalk';
 import prompts from 'prompts';
 
+import { env } from './utils/env';
+import { CommandError } from './utils/errors';
+
 export const LEGACY_TEMPLATES = [
   {
     title: 'Blank',
@@ -29,6 +32,9 @@ export const LEGACY_TEMPLATES = [
 export const ALIASES = LEGACY_TEMPLATES.map(({ value }) => value);
 
 export async function promptTemplateAsync() {
+  if (env.CI) {
+    throw new CommandError('Cannot prompt for template in CI');
+  }
   const { answer } = await prompts({
     type: 'select',
     name: 'answer',

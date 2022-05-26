@@ -4,6 +4,7 @@ import path from 'path';
 
 import { FileSystemCache } from './cache/FileSystemCache';
 import { wrapFetchWithCache } from './cache/wrapFetchWithCache';
+import { env } from './utils/env';
 
 const debug = require('debug')('create-expo-app:fetch') as typeof console.log;
 
@@ -16,7 +17,7 @@ export function createFetch({
   cacheDirectory,
   ttl,
 }: { cacheDirectory?: string; ttl?: number | false } = {}) {
-  if (ttl === false) {
+  if (ttl === false || env.EXPO_NO_CACHE) {
     return fetch;
   }
   const directory = getCacheFilePath(cacheDirectory);

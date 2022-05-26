@@ -1,17 +1,16 @@
 import JsonFile from '@expo/json-file';
 import * as PackageManager from '@expo/package-manager';
 import chalk from 'chalk';
-import getenv from 'getenv';
 import ora from 'ora';
 import path from 'path';
 
 import {
   applyKnownNpmPackageNameRules,
-  downloadAndExtractNpmModule,
-  extractLocalNpmTarballAsync,
+  downloadAndExtractNpmModuleAsync,
   getResolvedTemplateName,
 } from './npm';
 import { formatRunCommand, PackageManagerName } from './resolvePackageManager';
+import { env } from './utils/env';
 
 const isMacOS = process.platform === 'darwin';
 
@@ -63,15 +62,12 @@ export async function extractAndPrepareTemplateAppAsync(
 
   const { type, uri } = resolvePackageModuleId(npmPackage || 'expo-template-blank');
 
-  if (type === 'file') {
-    await extractLocalNpmTarballAsync(uri, {
-      cwd: projectRoot,
-      name: projectName,
-    });
-  } else {
-    const resolvedTemplate = getResolvedTemplateName(uri);
-    await downloadAndExtractNpmModule(projectRoot, resolvedTemplate, projectName);
-  }
+  const resolvedUri = type === 'file' ? uri : getResolvedTemplateName(uri);
+
+  await downloadAndExtractNpmModuleAsync(resolvedUri, {
+    cwd: projectRoot,
+    name: projectName,
+  });
 
   const config: Record<string, any> = {
     expo: {
@@ -154,7 +150,7 @@ export async function installPodsAsync(projectRoot: string) {
   }
   const packageManager = new PackageManager.CocoaPodsPackageManager({
     cwd: path.join(projectRoot, 'ios'),
-    silent: !getenv.boolish('EXPO_DEBUG', false),
+    silent: !env.EXPO_DEBUG,
   });
 
   if (!(await packageManager.isCLIInstalledAsync())) {
