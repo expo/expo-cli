@@ -5,12 +5,14 @@ import { Stream } from 'stream';
 import tar from 'tar';
 import { promisify } from 'util';
 
-import { createEntryResolver, createFileTransform } from './createFileTransform';
+import { createEntryResolver, createFileTransform } from '../createFileTransform';
+import { ALIASES } from '../legacyTemplates';
+import { Log } from '../log';
+import { env } from './env';
+import { CommandError } from './errors';
 import { createFetch, getCacheFilePath } from './fetch';
-import { ALIASES } from './legacyTemplates';
-import { Log } from './log';
-import { env } from './utils/env';
-import { CommandError } from './utils/errors';
+
+const debug = require('debug')('expo:init:npm') as typeof console.log;
 
 type ExtractProps = {
   name: string;
@@ -157,7 +159,7 @@ export async function npmPackAsync(
   const cmd = ['pack', packageName, ...props];
 
   const cmdString = `npm ${cmd.join(' ')}`;
-  Log.debug('Run:', cmdString);
+  debug('Run:', cmdString);
   let results: string;
   try {
     results = (await spawnAsync('npm', [...cmd, '--json'], { cwd })).stdout?.trim();
@@ -167,7 +169,6 @@ export async function npmPackAsync(
         error.stderr.match(/npm ERR! 404\s+'(.*)' is not in this registry\./)?.[1] ?? error.stderr;
       throw new CommandError('NPM_NOT_FOUND', `NPM package not found: ` + pkg);
     }
-    console.log('errrr', error);
     throw error;
   }
 
@@ -240,7 +241,7 @@ export async function downloadAndExtractNpmModuleAsync(
 ): Promise<void> {
   const cachePath = getCacheFilePath();
 
-  Log.debug(`Looking for NPM tarball (id: ${npmName}, cache: ${cachePath})`);
+  debug(`Looking for NPM tarball (id: ${npmName}, cache: ${cachePath})`);
 
   const info = await getNpmInfoAsync(npmName);
 
@@ -251,7 +252,7 @@ export async function downloadAndExtractNpmModuleAsync(
 
     // TODO: This cache does not expire, but neither does the FileCache at the top of this file.
     if (!(await fs.promises.stat(cacheFilename).catch(() => null))?.isFile() ?? false) {
-      Log.debug(`Downloading tarball for ${npmName} to ${cachePath}...`);
+      debug(`Downloading tarball for ${npmName} to ${cachePath}...`);
       await npmPackAsync(npmName, cachePath);
     }
     await extractLocalNpmTarballAsync(cacheFilename, {
@@ -259,6 +260,7 @@ export async function downloadAndExtractNpmModuleAsync(
       name: props.name,
     });
   } catch (error: any) {
-    Log.error('Error downloading and extracting template package:', error);
+    Log.error('Error downloading and extracting template package: ' + npmName);
+    throw error;
   }
 }

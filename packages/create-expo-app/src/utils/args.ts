@@ -80,23 +80,20 @@ export async function resolveStringOrBooleanArgsAsync(
   rawMap: arg.Spec,
   extraArgs: arg.Spec
 ) {
+  const combined = {
+    ...rawMap,
+    ...extraArgs,
+  };
   // Assert any missing arguments
-  assertUnknownArgs(
-    {
-      ...rawMap,
-      ...extraArgs,
-    },
-    args
-  );
+  assertUnknownArgs(combined, args);
 
   // Collapse aliases into fully qualified arguments.
-  args = collapseAliases(extraArgs, args);
-
+  args = collapseAliases(combined, args);
   // Resolve all of the string or boolean arguments and the project root.
-  return _resolveStringOrBooleanArgs(args, extraArgs);
+  return _resolveStringOrBooleanArgs(extraArgs, args);
 }
 
-export function _resolveStringOrBooleanArgs(args: string[], multiTypeArgs: Spec) {
+export function _resolveStringOrBooleanArgs(multiTypeArgs: Spec, args: string[]) {
   // Default project root, if a custom one is defined then it will overwrite this.
   let projectRoot: string = '';
   // The resolved arguments.

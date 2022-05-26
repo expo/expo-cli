@@ -3,7 +3,7 @@ import { execSync } from 'child_process';
 
 export type PackageManagerName = 'npm' | 'pnpm' | 'yarn';
 
-const debug = require('debug')('create-expo-app:resolvePackageManager') as typeof console.log;
+const debug = require('debug')('expo:init:resolvePackageManager') as typeof console.log;
 
 /** Determine which package manager to use for installing dependencies based on how the process was started. */
 export function resolvePackageManager(): PackageManagerName {

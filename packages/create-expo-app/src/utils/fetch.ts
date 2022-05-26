@@ -2,11 +2,11 @@ import fetch from 'node-fetch';
 import os from 'os';
 import path from 'path';
 
-import { FileSystemCache } from './cache/FileSystemCache';
-import { wrapFetchWithCache } from './cache/wrapFetchWithCache';
-import { env } from './utils/env';
+import { FileSystemCache } from '../cache/FileSystemCache';
+import { wrapFetchWithCache } from '../cache/wrapFetchWithCache';
+import { env } from './env';
 
-const debug = require('debug')('create-expo-app:fetch') as typeof console.log;
+const debug = require('debug')('expo:init:fetch') as typeof console.log;
 
 export function getCacheFilePath(subdir: string = 'template-cache') {
   // TODO: Revisit

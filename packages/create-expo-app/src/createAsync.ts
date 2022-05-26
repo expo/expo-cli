@@ -3,7 +3,6 @@ import fs from 'fs';
 import path from 'path';
 
 import * as Template from './Template';
-import { initGitRepoAsync } from './git';
 import { promptTemplateAsync } from './legacyTemplates';
 import {
   installDependenciesAsync,
@@ -11,12 +10,15 @@ import {
   resolvePackageManager,
 } from './resolvePackageManager';
 import { assertFolderEmpty, assertValidName, resolveProjectRootAsync } from './resolveProjectRoot';
+import { initGitRepoAsync } from './utils/git';
 
 export type Options = {
   install: boolean;
   template?: string | true;
   yes: boolean;
 };
+
+const debug = require('debug')('expo:init:create') as typeof console.log;
 
 async function resolveProjectRootArgAsync(
   inputPath: string,
@@ -40,9 +42,10 @@ async function cloneTemplateAsync(projectRoot: string, template: string | null) 
       npmPackage: template,
     });
     extractTemplateStep.succeed('Downloaded and extracted project files.');
-  } catch (e: any) {
+  } catch (error: any) {
+    debug(`Error cloning template: %O`, error);
     extractTemplateStep.fail(
-      'Something went wrong in downloading and extracting the project files: ' + e.message
+      'Something went wrong in downloading and extracting the project files: ' + error.message
     );
     process.exit(1);
   }
@@ -91,7 +94,8 @@ export async function createAsync(inputPath: string, props: Options): Promise<vo
     // check if git is installed
     // check if inside git repo
     await initGitRepoAsync(projectRoot);
-  } catch {
+  } catch (error) {
+    debug(`Error initializing git: %O`, error);
     // todo: check if git is installed, bail out
   }
 }
@@ -114,7 +118,8 @@ async function installNodeDependenciesAsync(
   try {
     await installDependenciesAsync(projectRoot, packageManager, { silent: true });
     installJsDepsStep.succeed('Installed JavaScript dependencies.');
-  } catch {
+  } catch (error) {
+    debug(`Error installing node modules: %O`, error);
     installJsDepsStep.fail(
       `Something went wrong installing JavaScript dependencies. Check your ${packageManager} logs. Continuing to create the app.`
     );
@@ -125,23 +130,23 @@ async function installCocoaPodsAsync(projectRoot: string): Promise<boolean> {
   let podsInstalled = false;
   try {
     podsInstalled = await Template.installPodsAsync(projectRoot);
-  } catch {}
+  } catch (error) {
+    debug(`Error installing CocoaPods: %O`, error);
+  }
 
   return podsInstalled;
 }
 
-function logNodeInstallWarning(
+export function logNodeInstallWarning(
   cdPath: string,
   packageManager: PackageManagerName,
   needsPods: boolean
 ): void {
-  console.log();
-  console.log(`⚠️  Before running your app, make sure you have modules installed:`);
-  console.log('');
-  console.log(`  cd ${cdPath ?? '.'}/`);
+  console.log(`\n⚠️  Before running your app, make sure you have modules installed:\n`);
+  console.log(`  cd ${cdPath || '.'}${path.sep}`);
   console.log(`  ${packageManager} install`);
   if (needsPods && process.platform === 'darwin') {
     console.log(`  npx pod-install`);
   }
-  console.log('');
+  console.log();
 }

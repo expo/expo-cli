@@ -4,29 +4,27 @@ import path from 'path';
 import prompts from 'prompts';
 
 import * as Template from './Template';
-import { getConflictsForDirectory } from './dir';
+import { Log } from './log';
 import { formatSelfCommand } from './resolvePackageManager';
+import { getConflictsForDirectory } from './utils/dir';
 
 export function assertValidName(folderName: string) {
   const validation = Template.validateName(folderName);
   if (typeof validation === 'string') {
-    console.error(chalk`{red Cannot create an app named {bold "${folderName}"}. ${validation}}`);
-    process.exit(1);
+    Log.exit(chalk`{red Cannot create an app named {bold "${folderName}"}. ${validation}}`, 1);
   }
 }
 
 export function assertFolderEmpty(projectRoot: string, folderName: string) {
   const conflicts = getConflictsForDirectory(projectRoot);
   if (conflicts.length) {
-    console.log(chalk`The directory {cyan ${folderName}} has files that might be overwritten:`);
-    console.log();
+    Log.log(chalk`The directory {cyan ${folderName}} has files that might be overwritten:`);
+    Log.log();
     for (const file of conflicts) {
-      console.log(`  ${file}`);
+      Log.log(`  ${file}`);
     }
-    console.log();
-    console.log('Try using a new directory name, or moving these files.');
-    console.log();
-    process.exit(1);
+    Log.log();
+    Log.exit('Try using a new directory name, or moving these files.\n');
   }
 }
 
@@ -55,14 +53,14 @@ export async function resolveProjectRootAsync(input: string): Promise<string> {
 
   if (!name) {
     const selfCmd = formatSelfCommand();
-    console.log();
-    console.log('Please choose your app name:');
-    console.log(chalk`  {dim $} {cyan ${selfCmd} <name>}`);
-    console.log();
-    console.log(`For more info, run:`);
-    console.log(chalk`  {dim $} {cyan ${selfCmd} --help}`);
-    console.log();
-    process.exit(1);
+    Log.log();
+    Log.log('Please choose your app name:');
+    Log.log(chalk`  {dim $} {cyan ${selfCmd} <name>}`);
+    Log.log();
+    Log.log(`For more info, run:`);
+    Log.log(chalk`  {dim $} {cyan ${selfCmd} --help}`);
+    Log.log();
+    Log.exit('');
   }
 
   const projectRoot = path.resolve(name);
