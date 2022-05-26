@@ -12,7 +12,29 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
-- [expo-cli] use `npm pack` for template downloading to be compatible with private npm registries ([#4233](https://github.com/expo/expo-cli/pull/4223))
+## [Thu, 26 May 2022 16:40:07 -0700](https://github.com/expo/expo-cli/commit/8c468c79bcbae988d0ef2a2d5e298a0b8d0f91d6)
+
+### 🎉 New features
+
+- [cli] use `npm pack` for template downloading to be compatible with private npm registries ([#4233](https://github.com/expo/expo-cli/pull/4223))
+- [doctor] Add version validation for expo-modules-autolinking, @expo/config-plugins, @expo/config ([#4392](https://github.com/expo/expo-cli/issues/4392))
+
+### 🧹 Chores
+
+- [prebuild-config] Bump expo-modules-autolinking version
+
+### 🐛 Bug fixes
+
+- [dev-server] Fix js inspector broken from websocket address transform ([#4394](https://github.com/expo/expo-cli/issues/4394))
+
+### 📦 Packages updated
+
+- @expo/dev-server@0.1.113
+- @expo/dev-tools@0.13.155
+- expo-cli@5.4.7
+- @expo/metro-config@0.3.18
+- @expo/prebuild-config@4.0.2
+- xdl@59.2.39
 
 ## [Wed, May 18 2022 19:34:55 2022 -0700](https://github.com/expo/expo-cli/commit/866daede8095b3febb98b0d325085fb36550d7b9)
 
