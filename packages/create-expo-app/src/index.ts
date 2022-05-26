@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 // Set the title of the process
 process.title = 'create-expo-app';
 

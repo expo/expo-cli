@@ -9,7 +9,6 @@ import { createEntryResolver, createFileTransform } from '../createFileTransform
 import { ALIASES } from '../legacyTemplates';
 import { Log } from '../log';
 import { env } from './env';
-import { CommandError } from './errors';
 import { createFetch, getCacheFilePath } from './fetch';
 
 const debug = require('debug')('expo:init:npm') as typeof console.log;
@@ -64,10 +63,10 @@ export function splitNpmNameAndTag(npmPackageName: string): [string, string | un
  * @example `blank@45` => `expo-template-blank@sdk-45`
  */
 export function getResolvedTemplateName(npmPackageName: string) {
-  let [name, tag] = splitNpmNameAndTag(npmPackageName);
+  let [name, tag = 'latest'] = splitNpmNameAndTag(npmPackageName);
 
   if (name.startsWith('@')) {
-    return npmPackageName;
+    return joinNpmNameAndTag(name, tag);
   }
 
   const aliasPrefix = 'expo-template-';
@@ -151,23 +150,25 @@ export async function extractNpmTarballAsync(
   );
 }
 
-export async function npmPackAsync(
+async function npmPackAsync(
   packageName: string,
   cwd: string | undefined = undefined,
   ...props: string[]
 ): Promise<NpmPackageInfo[] | null> {
+  const npm = getNpmBin();
+
   const cmd = ['pack', packageName, ...props];
 
-  const cmdString = `npm ${cmd.join(' ')}`;
+  const cmdString = `${npm} ${cmd.join(' ')}`;
   debug('Run:', cmdString);
   let results: string;
   try {
-    results = (await spawnAsync('npm', [...cmd, '--json'], { cwd })).stdout?.trim();
+    results = (await spawnAsync(npm, [...cmd, '--json'], { cwd })).stdout?.trim();
   } catch (error: any) {
     if (error?.stderr.match(/npm ERR! code E404/)) {
       const pkg =
         error.stderr.match(/npm ERR! 404\s+'(.*)' is not in this registry\./)?.[1] ?? error.stderr;
-      throw new CommandError('NPM_NOT_FOUND', `NPM package not found: ` + pkg);
+      throw new Error(`NPM package not found: ` + pkg);
     }
     throw error;
   }
@@ -181,7 +182,7 @@ export async function npmPackAsync(
     if (Array.isArray(json) && json.every(isNpmPackageInfo)) {
       return json;
     } else {
-      throw new CommandError('NPM_INVALID_RESPONSE', `Invalid response from npm: ${results}`);
+      throw new Error(`Invalid response from npm: ${results}`);
     }
   } catch (error: any) {
     throw new Error(
@@ -216,12 +217,16 @@ export type NpmPackageInfo = {
   bundled: unknown[];
 };
 
+function getNpmBin() {
+  return process.platform === 'win32' ? 'npm.cmd' : 'npm';
+}
+
 async function getNpmInfoAsync(moduleId: string): Promise<NpmPackageInfo> {
   const infos = await npmPackAsync(moduleId, getCacheFilePath(), '--dry-run');
   if (infos?.[0]) {
     return infos[0];
   }
-  throw new CommandError('NPM_NOT_FOUND', `Could not find npm package "${moduleId}"`);
+  throw new Error(`Could not find npm package "${moduleId}"`);
 }
 
 function isNpmPackageInfo(item: any): item is NpmPackageInfo {
@@ -243,11 +248,11 @@ export async function downloadAndExtractNpmModuleAsync(
 
   debug(`Looking for NPM tarball (id: ${npmName}, cache: ${cachePath})`);
 
+  await fs.promises.mkdir(cachePath, { recursive: true });
+
   const info = await getNpmInfoAsync(npmName);
 
   try {
-    await fs.promises.mkdir(cachePath, { recursive: true });
-
     const cacheFilename = path.join(cachePath, info.filename);
 
     // TODO: This cache does not expire, but neither does the FileCache at the top of this file.

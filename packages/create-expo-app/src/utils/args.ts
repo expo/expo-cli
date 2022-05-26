@@ -7,7 +7,6 @@ import { resolve } from 'path';
 
 import * as Log from '../log';
 import { replaceValue } from './array';
-import { CommandError } from './errors';
 
 /**
  * Parse the first argument as a project directory.
@@ -128,7 +127,7 @@ export function _resolveStringOrBooleanArgs(multiTypeArgs: Spec, args: string[])
         projectRoot = value;
       } else {
         // This will asserts if two strings are passed in a row and not at the end of the line.
-        throw new CommandError('BAD_ARGS', `Unknown argument: ${value}`);
+        throw new Error(`Unknown argument: ${value}`);
       }
     }
   }
@@ -157,7 +156,7 @@ export function assertUnknownArgs(arg: Spec, args: string[]) {
   const allowedArgs = Object.keys(arg);
   const unknownArgs = args.filter(arg => !allowedArgs.includes(arg) && arg.startsWith('-'));
   if (unknownArgs.length > 0) {
-    throw new CommandError(`Unknown arguments: ${unknownArgs.join(', ')}`);
+    throw new Error(`Unknown arguments: ${unknownArgs.join(', ')}`);
   }
 }
 
@@ -169,10 +168,7 @@ function getAliasTuples(arg: Spec): [string, string][] {
 export function assertDuplicateArgs(args: string[], argNameAliasTuple: [string, string][]) {
   for (const [argName, argNameAlias] of argNameAliasTuple) {
     if (args.filter(a => [argName, argNameAlias].includes(a)).length > 1) {
-      throw new CommandError(
-        'BAD_ARGS',
-        `Can only provide one instance of ${argName} or ${argNameAlias}`
-      );
+      throw new Error(`Can only provide one instance of ${argName} or ${argNameAlias}`);
     }
   }
 }

@@ -39,12 +39,14 @@ describe(splitNpmNameAndTag, () => {
 describe(getResolvedTemplateName, () => {
   it('should expand an alias', () => {
     expect(getResolvedTemplateName('@expo/foobar@2.1.0')).toBe('@expo/foobar@2.1.0');
-    expect(getResolvedTemplateName('expo-template-blank')).toBe('expo-template-blank');
+    expect(getResolvedTemplateName('expo-template-blank')).toBe('expo-template-blank@latest');
     expect(getResolvedTemplateName('expo-template-blank@beta')).toBe('expo-template-blank@beta');
-    expect(getResolvedTemplateName('blank')).toBe('expo-template-blank');
-    expect(getResolvedTemplateName('blank-typescript')).toBe('expo-template-blank-typescript');
-    expect(getResolvedTemplateName('tabs')).toBe('expo-template-tabs');
-    expect(getResolvedTemplateName('bare-minimum')).toBe('expo-template-bare-minimum');
+    expect(getResolvedTemplateName('blank')).toBe('expo-template-blank@latest');
+    expect(getResolvedTemplateName('blank-typescript')).toBe(
+      'expo-template-blank-typescript@latest'
+    );
+    expect(getResolvedTemplateName('tabs')).toBe('expo-template-tabs@latest');
+    expect(getResolvedTemplateName('bare-minimum')).toBe('expo-template-bare-minimum@latest');
   });
   it('should expand numeric tag to sdk-X', () => {
     // expect(expandAlias('blank@sdk-45')).toBe('expo-template-blank@sdk-45');
