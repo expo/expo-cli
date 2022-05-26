@@ -29,7 +29,7 @@ export function openJsInspector(app: MetroInspectorProxyApp) {
   const devtoolsFrontendRev = 'e3cd97fc771b893b7fd1879196d1215b622c2bed'; // Chrome 90.0.4430.212
 
   const urlBase = `https://chrome-devtools-frontend.appspot.com/serve_rev/@${devtoolsFrontendRev}/inspector.html`;
-  const ws = app.webSocketDebuggerUrl.replace('ws://[::]:', 'localhost:');
+  const ws = app.webSocketDebuggerUrl.replace(/^ws:\/\//, '');
   const url = `${urlBase}?panel=sources&v8only=true&ws=${encodeURIComponent(ws)}`;
   launchChromiumAsync(url);
 }
