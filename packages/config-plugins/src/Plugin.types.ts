@@ -61,14 +61,6 @@ export interface ExportedConfigWithProps<Data = any> extends ExportedConfig {
    */
   modResults: Data;
   modRequest: ModProps<Data>;
-  /**
-   * A frozen representation of the original file contents,
-   * this can be used as a reference into the user's original intent.
-   *
-   * For example, you could infer that the user defined a certain
-   * value explicitly and disable any automatic changes.
-   */
-  readonly modRawConfig: ExpoConfig;
 }
 
 /**

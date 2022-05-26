@@ -1,16 +1,9 @@
 import { ExpoConfig } from '@expo/config-types';
 
-import { createInfoPlistPluginWithPropertyGuard } from '../plugins/ios-plugins';
+import { createInfoPlistPlugin } from '../plugins/ios-plugins';
 import { InfoPlist, InterfaceOrientation } from './IosConfig.types';
 
-export const withOrientation = createInfoPlistPluginWithPropertyGuard(
-  setOrientation,
-  {
-    infoPlistProperty: 'UISupportedInterfaceOrientations',
-    expoConfigProperty: 'orientation',
-  },
-  'withOrientation'
-);
+export const withOrientation = createInfoPlistPlugin(setOrientation, 'withOrientation');
 
 export function getOrientation(config: Pick<ExpoConfig, 'orientation'>) {
   return config.orientation ?? null;

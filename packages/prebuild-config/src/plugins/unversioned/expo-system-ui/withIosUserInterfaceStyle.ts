@@ -1,16 +1,12 @@
-import { InfoPlist } from '@expo/config-plugins';
-import { createInfoPlistPluginWithPropertyGuard } from '@expo/config-plugins/build/plugins/ios-plugins';
+import { ConfigPlugin, InfoPlist, withInfoPlist } from '@expo/config-plugins';
 import { ExpoConfig } from '@expo/config-types';
 
-export const withIosUserInterfaceStyle = createInfoPlistPluginWithPropertyGuard(
-  setUserInterfaceStyle,
-  {
-    infoPlistProperty: 'UIUserInterfaceStyle',
-    expoConfigProperty: 'userInterfaceStyle | ios.userInterfaceStyle',
-    expoPropertyGetter: getUserInterfaceStyle,
-  },
-  'withIosUserInterfaceStyle'
-);
+export const withIosUserInterfaceStyle: ConfigPlugin = config => {
+  return withInfoPlist(config, config => {
+    config.modResults = setUserInterfaceStyle(config, config.modResults);
+    return config;
+  });
+};
 
 export function getUserInterfaceStyle(
   config: Pick<ExpoConfig, 'ios' | 'userInterfaceStyle'>

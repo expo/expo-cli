@@ -96,12 +96,6 @@ function sortMods(commands: [string, any][], order: string[]): [string, any][] {
   return sorted;
 }
 
-function getRawClone({ mods, ...config }: ExportedConfig) {
-  // Configs should be fully serializable, so we can clone them without worrying about
-  // the mods.
-  return Object.freeze(JSON.parse(JSON.stringify(config)));
-}
-
 const orders: Record<string, string[]> = {
   ios: [
     // dangerous runs first
@@ -134,7 +128,6 @@ export async function evalModsAsync(
     platforms?: ModPlatform[];
   }
 ): Promise<ExportedConfig> {
-  const modRawConfig = getRawClone(config);
   for (const [platformName, platform] of Object.entries(config.mods ?? ({} as ModConfig))) {
     if (platforms && !platforms.includes(platformName as any)) {
       debug(`skip platform: ${platformName}`);
@@ -180,17 +173,14 @@ export async function evalModsAsync(
           ...config,
           modResults: null,
           modRequest,
-          modRawConfig,
         });
 
         // Sanity check to help locate non compliant mods.
         config = assertModResults(results, platformName, modName);
-        // @ts-ignore: `modResults` is added for modifications
+        // @ts-ignore: data is added for modifications
         delete config.modResults;
-        // @ts-ignore: `modRequest` is added for modifications
+        // @ts-ignore: info is added for modifications
         delete config.modRequest;
-        // @ts-ignore: `modRawConfig` is added for modifications
-        delete config.modRawConfig;
       }
     }
   }

@@ -1,14 +1,10 @@
 import { ExpoConfig } from '@expo/config-types';
 
-import { createInfoPlistPluginWithPropertyGuard } from '../plugins/ios-plugins';
+import { createInfoPlistPlugin } from '../plugins/ios-plugins';
 import { InfoPlist } from './IosConfig.types';
 
-export const withUsesNonExemptEncryption = createInfoPlistPluginWithPropertyGuard(
+export const withUsesNonExemptEncryption = createInfoPlistPlugin(
   setUsesNonExemptEncryption,
-  {
-    infoPlistProperty: 'ITSAppUsesNonExemptEncryption',
-    expoConfigProperty: 'ios.config.usesNonExemptEncryption',
-  },
   'withUsesNonExemptEncryption'
 );
 
