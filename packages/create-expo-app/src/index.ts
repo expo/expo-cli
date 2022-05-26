@@ -1,182 +1,78 @@
 #!/usr/bin/env node
+import { Spec } from 'arg';
 import chalk from 'chalk';
-import { Command } from 'commander';
-import fs from 'fs';
-import path from 'path';
 
-import * as Template from './Template';
-import shouldUpdate from './Update';
-import { initGitRepoAsync } from './git';
-import { promptTemplateAsync } from './legacyTemplates';
-import {
-  installDependenciesAsync,
-  PackageManagerName,
-  resolvePackageManager,
-} from './resolvePackageManager';
-import { assertFolderEmpty, assertValidName, resolveProjectRootAsync } from './resolveProjectRoot';
+import { Log } from './log';
+import { assertWithOptionsArgs, printHelp, resolveStringOrBooleanArgsAsync } from './utils/args';
 
-const packageJSON = require('../package.json');
+const debug = require('debug')('create-expo-app') as typeof console.log;
 
-let inputPath: string;
+async function run() {
+  const argv = process.argv.slice(2) ?? [];
+  const rawArgsMap: Spec = {
+    // Types
+    '--yes': Boolean,
+    '--no-install': Boolean,
+    '--help': Boolean,
+    '--version': Boolean,
+    // Aliases
+    '-y': '--yes',
+    '-h': '--help',
+    '-v': '--version',
+  };
+  const args = assertWithOptionsArgs(rawArgsMap, {
+    argv,
+    permissive: true,
+  });
 
-// TODO: Use something smaller like arg
-const program = new Command(packageJSON.name)
-  .version(packageJSON.version)
-  .arguments('<path>')
-  .usage(`${chalk.cyan('<path>')} [options]`)
-  .description('Creates a new Expo project')
-  .option('-y, --yes', 'Use the default options for creating a project')
-  .option('--no-install', 'Skip installing npm packages or CocoaPods.')
-  .option('-t, --template [pkg]', 'NPM template to use: blank, tabs, bare-minimum. Default: blank')
-  .on('--help', () => {
-    console.log();
-    console.log(chalk.dim`  The package manager used for installing`);
-    console.log(chalk.dim`  node modules is based on how you invoke the CLI:`);
-    console.log();
-    console.log(chalk`   {bold npm:} {cyan npm create expo-app}`);
-    console.log(chalk`  {bold yarn:} {cyan yarn create expo-app}`);
-    console.log(chalk`  {bold pnpm:} {cyan pnpm create expo-app}`);
-    console.log();
-  })
-  .allowUnknownOption()
-  .action(projectRoot => (inputPath = projectRoot))
-  .parse(process.argv);
-
-async function runAsync(): Promise<void> {
-  try {
-    let resolvedTemplate: string | null = program.template;
-    // @ts-ignore: This guards against someone passing --template without a name after it.
-    if (resolvedTemplate === true) {
-      resolvedTemplate = await promptTemplateAsync();
-    }
-
-    let projectRoot: string;
-    if (!inputPath && program.yes) {
-      projectRoot = path.resolve(process.cwd());
-      const folderName = path.basename(projectRoot);
-      assertValidName(folderName);
-      assertFolderEmpty(projectRoot, folderName);
-    } else {
-      projectRoot = await resolveProjectRootAsync(inputPath);
-    }
-
-    await fs.promises.mkdir(projectRoot, { recursive: true });
-    const extractTemplateStep = Template.logNewSection(`Locating project files.`);
-    try {
-      await Template.extractAndPrepareTemplateAppAsync(projectRoot, {
-        npmPackage: resolvedTemplate,
-      });
-      extractTemplateStep.succeed('Downloaded and extracted project files.');
-    } catch (e: any) {
-      extractTemplateStep.fail(
-        'Something went wrong in downloading and extracting the project files: ' + e.message
-      );
-      process.exit(1);
-    }
-    // Install dependencies
-    const shouldInstall = program.install;
-    const packageManager = resolvePackageManager();
-    let podsInstalled: boolean = false;
-    const needsPodsInstalled = await fs.existsSync(path.join(projectRoot, 'ios'));
-    if (shouldInstall) {
-      await installNodeDependenciesAsync(projectRoot, packageManager);
-      if (needsPodsInstalled) {
-        podsInstalled = await installCocoaPodsAsync(projectRoot);
-      }
-    }
-    const cdPath = getChangeDirectoryPath(projectRoot);
-    console.log();
-    Template.logProjectReady({ cdPath, packageManager });
-    if (!shouldInstall) {
-      logNodeInstallWarning(cdPath, packageManager);
-    }
-    if (needsPodsInstalled && !podsInstalled) {
-      logCocoaPodsWarning(cdPath);
-    }
-    // for now, we will just init a git repo if they have git installed and the
-    // project is not inside an existing git tree, and do it silently. we should
-    // at some point check if git is installed and actually bail out if not, because
-    // npm install will fail with a confusing error if so.
-    try {
-      // check if git is installed
-      // check if inside git repo
-      await initGitRepoAsync(projectRoot);
-    } catch {
-      // todo: check if git is installed, bail out
-    }
-  } catch (error) {
-    await commandDidThrowAsync(error);
+  if (args['--version']) {
+    Log.exit(require('../package.json').version, 0);
   }
-  await shouldUpdate();
-  process.exit(0);
-}
 
-function getChangeDirectoryPath(projectRoot: string): string {
-  const cdPath = path.relative(process.cwd(), projectRoot);
-  if (cdPath.length <= projectRoot.length) {
-    return cdPath;
-  }
-  return projectRoot;
-}
-
-async function installNodeDependenciesAsync(
-  projectRoot: string,
-  packageManager: PackageManagerName
-): Promise<void> {
-  const installJsDepsStep = Template.logNewSection(
-    `Installing JavaScript dependencies with ${packageManager}.`
-  );
-  try {
-    await installDependenciesAsync(projectRoot, packageManager, { silent: true });
-    installJsDepsStep.succeed('Installed JavaScript dependencies.');
-  } catch {
-    installJsDepsStep.fail(
-      `Something went wrong installing JavaScript dependencies. Check your ${packageManager} logs. Continuing to create the app.`
+  if (args['--help']) {
+    printHelp(
+      `Creates a new Expo project`,
+      chalk`npx create-expo-app {cyan <path>} [options]`,
+      [
+        `-y, --yes             Use the default options for creating a project`,
+        `--no-install          Skip installing npm packages or CocoaPods`,
+        chalk`-t, --template {gray [pkg]}  NPM template to use: blank, tabs, bare-minimum. Default: blank`,
+        `-v, --version         Version number`,
+        `-h, --help            Usage info`,
+      ].join('\n'),
+      chalk`
+    {gray The package manager used for installing}
+    {gray node modules is based on how you invoke the CLI:}
+    
+    {bold  npm:} {cyan npm create expo-app}
+    {bold yarn:} {cyan yarn create expo-app}
+    {bold pnpm:} {cyan pnpm create expo-app}
+    `
     );
   }
-}
 
-async function installCocoaPodsAsync(projectRoot: string): Promise<boolean> {
-  let podsInstalled = false;
   try {
-    podsInstalled = await Template.installPodsAsync(projectRoot);
-  } catch {}
+    const parsed = await resolveStringOrBooleanArgsAsync(argv, rawArgsMap, {
+      '--template': Boolean,
+      '-t': '--template',
+    });
 
-  return podsInstalled;
-}
+    debug(`Default args:`, args);
+    debug(`Parsed args:`, parsed);
 
-function logNodeInstallWarning(cdPath: string, packageManager: PackageManagerName): void {
-  console.log();
-  console.log(`⚠️  Before running your app, make sure you have node modules installed:`);
-  console.log('');
-  console.log(`  cd ${cdPath ?? '.'}/`);
-  console.log(`  ${packageManager} install`);
-  console.log('');
-}
-
-function logCocoaPodsWarning(cdPath: string): void {
-  if (process.platform !== 'darwin') {
-    return;
+    const { createAsync } = await import('./createAsync');
+    await createAsync(parsed.projectRoot, {
+      yes: !!args['--yes'],
+      template: parsed.args['--template'],
+      install: !args['--no-install'],
+    });
+  } catch (error: any) {
+    // TODO: format error
+    Log.exit(chalk.red(error.toString()) + '\n' + chalk.gray(error.stack));
+  } finally {
+    const shouldUpdate = await (await import('./Update')).default;
+    await shouldUpdate();
   }
-  console.log();
-  console.log(
-    `⚠️  Before running your app on iOS, make sure you have CocoaPods installed and initialize the project:`
-  );
-  console.log('');
-  console.log(`  cd ${cdPath ?? '.'}/ios`);
-  console.log(`  npx pod-install`);
-  console.log('');
 }
 
-runAsync();
-
-async function commandDidThrowAsync(error: any) {
-  console.log();
-  console.log(chalk.red(`An unexpected error occurred:`));
-  console.log(error);
-  console.log();
-
-  await shouldUpdate();
-
-  process.exit(1);
-}
+run();
