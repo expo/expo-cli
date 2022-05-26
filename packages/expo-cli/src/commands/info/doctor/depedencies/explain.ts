@@ -89,7 +89,7 @@ export async function printExplanationsAsync(pkg: TargetPackage, explanations: R
   });
 
   if (invalid.length > 0) {
-    printInvalidPackages(pkg, { explanations });
+    printInvalidPackages(pkg, { explanations: invalid });
   } else {
     Log.log(chalk`  All copies of {bold ${pkg.name}} satisfy {green ${pkg.version}}`);
   }
