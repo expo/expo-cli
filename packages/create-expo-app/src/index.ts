@@ -6,14 +6,6 @@ import path from 'path';
 
 import * as Template from './Template';
 import shouldUpdate from './Update';
-import {
-  AnalyticsEventPhases,
-  AnalyticsEventTypes,
-  flushAsync,
-  identify,
-  initializeAnalyticsIdentityAsync,
-  track,
-} from './analytics';
 import { initGitRepoAsync } from './git';
 import { promptTemplateAsync } from './legacyTemplates';
 import {
@@ -22,6 +14,14 @@ import {
   resolvePackageManager,
 } from './resolvePackageManager';
 import { assertFolderEmpty, assertValidName, resolveProjectRootAsync } from './resolveProjectRoot';
+import {
+  AnalyticsEventPhases,
+  AnalyticsEventTypes,
+  flushAsync,
+  identify,
+  initializeAnalyticsIdentityAsync,
+  track,
+} from './telemetry';
 
 const packageJSON = require('../package.json');
 

@@ -1,12 +1,10 @@
-import { homedir } from 'os';
-import * as path from 'path';
-
-// copied from https://github.com/expo/eas-cli/blob/f0c958e58bc7aa90ee8f822e075d40703563708e/packages/eas-cli/src/utils/paths.ts
+import os from 'os';
+import path from 'path';
 
 // The ~/.expo directory is used to store authentication sessions,
 // which are shared between EAS CLI and Expo CLI.
-function dotExpoHomeDirectory(): string {
-  const home = homedir();
+export function dotExpoHomeDirectory(): string {
+  const home = os.homedir();
   if (!home) {
     throw new Error(
       "Can't determine your home directory; make sure your $HOME environment variable is set."
@@ -24,6 +22,4 @@ function dotExpoHomeDirectory(): string {
   return dirPath;
 }
 
-const getStateJsonPath = (): string => path.join(dotExpoHomeDirectory(), 'state.json');
-
-export { getStateJsonPath };
+export const getStateJsonPath = (): string => path.join(dotExpoHomeDirectory(), 'state.json');

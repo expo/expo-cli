@@ -4,21 +4,22 @@ import fs from 'fs';
 import fetch from 'node-fetch';
 import os from 'os';
 
-import { getStateJsonPath } from './paths';
+import { dotExpoHomeDirectory, getStateJsonPath } from './paths';
 import { getSession } from './sessionStorage';
 
 const packageJSON = require('../package.json');
 
-const xdlWriteKey = '1wabJGd5IiuF9Q8SGlcI90v8WTs';
+const xdlUnifiedWriteKey = '1wabJGd5IiuF9Q8SGlcI90v8WTs';
 const analyticsEndpoint = 'https://cdp.expo.dev/v1/batch';
 const version = '1.0.0';
-const library = 'create-expo-app';
+const library = packageJSON.name;
 
 //#region mostly copied from @expo/rudder-sdk-node https://github.com/expo/rudder-sdk-node/blob/main/index.ts
 // some changes include:
 // - the identity being injected inside of the enqueue method, rather than as a function argument.
 // - a global event queue that gets cleared after each flush
-// - using node's crypto library for hashing and uuidv4
+// - no support for large message queues and concurrent flushes
+// - using node's crypto library for hashing and uuidv4 (available on node14+)
 type AnalyticsPayload = {
   messageId: string;
   _metadata: any;
@@ -52,6 +53,12 @@ type AnalyticsIdentity =
 const messageBatch = [] as AnalyticsPayload[];
 
 let analyticsIdentity: AnalyticsIdentity | null = null;
+
+// jest does not clear global variables inbetween tests so we need this helper
+export function _resetGlobals() {
+  analyticsIdentity = null;
+  messageBatch.splice(0, messageBatch.length);
+}
 
 // call before tracking any analytics events.
 // if track/identify are called before this method they will be dropped
@@ -91,7 +98,7 @@ function enqueue(type: 'identify' | 'track', message: any) {
 
   message.context = {
     library: {
-      name: `@expo/expo-cli/${library}`,
+      name: library,
       version,
     },
     ...message.context,
@@ -116,9 +123,11 @@ function enqueue(type: 'identify' | 'track', message: any) {
       .update(JSON.stringify(message))
       .digest('hex')}-${uuidv4()}`;
   }
-  messageBatch.unshift(message);
+  messageBatch.push(message);
 }
 
+// very barebones implemention...
+// does not support multiple concurrent flushes or large numbers of messages
 export async function flushAsync() {
   if (!messageBatch.length) {
     return;
@@ -129,8 +138,8 @@ export async function flushAsync() {
     headers: {
       accept: 'application/json, text/plain, */*',
       'content-type': 'application/json;charset=utf-8',
-      'user-agent': `expo-expo-cli-${library}/${version}`,
-      authorization: 'Basic ' + Buffer.from(`${xdlWriteKey}:`).toString('base64'),
+      'user-agent': `${library}/${version}`,
+      authorization: 'Basic ' + Buffer.from(`${xdlUnifiedWriteKey}:`).toString('base64'),
     },
     body: JSON.stringify({
       batch: messageBatch.map(message => ({ ...message, sentAt: new Date() })),
@@ -155,12 +164,13 @@ function getAnalyticsContext(): Record<string, any> {
   return {
     os: { name: platform, version: os.release() },
     device: { type: platform, model: platform },
-    app: { name: 'create expo app', version: packageJSON.version },
+    app: { name: library, version: packageJSON.version },
   };
 }
 //#endregion
 
 function uuidv4() {
+  // available on node 14+
   // https://github.com/denoland/deno/issues/12754
   return (crypto as any).randomUUID();
 }
@@ -176,6 +186,9 @@ export enum AnalyticsEventPhases {
 }
 
 async function getAnalyticsIdentityAsync(): Promise<AnalyticsIdentity> {
+  if (!fs.existsSync(dotExpoHomeDirectory())) {
+    fs.mkdirSync(dotExpoHomeDirectory(), { recursive: true });
+  }
   if (!fs.existsSync(getStateJsonPath())) {
     fs.writeFileSync(getStateJsonPath(), JSON.stringify({}));
   }
