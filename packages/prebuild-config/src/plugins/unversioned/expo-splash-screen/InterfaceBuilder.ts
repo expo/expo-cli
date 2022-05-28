@@ -1,6 +1,10 @@
 import crypto from 'crypto';
 import { Builder, Parser } from 'xml2js';
 
+const debug = require('debug')(
+  'expo:prebuild-config:expo-splash-screen:ios:InterfaceBuilder'
+) as typeof console.log;
+
 export type IBBoolean = 'YES' | 'NO' | boolean;
 
 export type IBItem<
@@ -20,6 +24,53 @@ export type Rect = {
 
 export type IBRect = IBItem<Rect>;
 
+export type IBAutoresizingMask = IBItem<{
+  /** @example `autoresizingMask` */
+  key: string;
+  flexibleMaxX: IBBoolean;
+  flexibleMaxY: IBBoolean;
+}>;
+
+/** @example `<color key="textColor" systemColor="linkColor"/>` */
+export type IBColor = IBItem<
+  {
+    /** @example `textColor` */
+    key: string;
+  } & (
+    | /** Custom color */
+    {
+        /** @example `0.86584504117670746` */
+        red: number;
+        /** @example `0.26445041990630447` */
+        green: number;
+        /** @example `0.3248577810203549` */
+        blue: number;
+        /** @example `1` */
+        alpha: number;
+        colorSpace: 'custom' | string;
+        customColorSpace: 'displayP3' | 'sRGB' | string;
+      }
+    /** Built-in color */
+    | {
+        systemColor: 'linkColor' | string;
+      }
+  )
+>;
+
+export type IBFontDescription = IBItem<{
+  /** @example `fontDescription` */
+  key: string;
+  /** Font size */
+  pointSize: number;
+
+  /** Custom font */
+  name?: 'HelveticaNeue' | string;
+  family?: 'Helvetica Neue' | string;
+
+  /** Built-in font */
+  type?: 'system' | 'boldSystem' | 'UICTFontTextStyleCallout' | 'UICTFontTextStyleBody' | string;
+}>;
+
 export type ImageContentMode = 'scaleAspectFit' | 'scaleAspectFill';
 
 export type ConstraintAttribute = 'top' | 'bottom' | 'trailing' | 'leading';
@@ -31,7 +82,7 @@ export type IBImageView = IBItem<
     image: string;
     clipsSubviews?: IBBoolean;
     userInteractionEnabled: IBBoolean;
-    contentMode: string | 'scaleAspectFill';
+    contentMode: IBContentMode;
     horizontalHuggingPriority: number;
     verticalHuggingPriority: number;
     insetsLayoutMarginsFromSafeArea?: IBBoolean;
@@ -42,11 +93,56 @@ export type IBImageView = IBItem<
   }
 >;
 
+export type IBLabel = IBItem<
+  {
+    id: string;
+    /** The main value. */
+    text: string;
+
+    opaque: IBBoolean;
+    fixedFrame: IBBoolean;
+    textAlignment?: IBTextAlignment;
+    lineBreakMode:
+      | 'clip'
+      | 'characterWrap'
+      | 'wordWrap'
+      | 'headTruncation'
+      | 'middleTruncation'
+      | 'tailTruncation';
+    baselineAdjustment?: 'none' | 'alignBaselines';
+    adjustsFontSizeToFit: IBBoolean;
+    userInteractionEnabled: IBBoolean;
+    contentMode: IBContentMode;
+    horizontalHuggingPriority: number;
+    verticalHuggingPriority: number;
+    translatesAutoresizingMaskIntoConstraints?: IBBoolean;
+  },
+  {
+    /** @example `<rect key="frame" x="175" y="670" width="35" height="17"/>` */
+    rect: IBRect[];
+    /** @example `<autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>` */
+    autoresizingMask?: IBAutoresizingMask[];
+    /** @example `<fontDescription key="fontDescription" type="system" pointSize="19"/>` */
+    fontDescription?: IBFontDescription[];
+    /** @example `<color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>` */
+    color?: IBColor[];
+    nil?: IBItem<{
+      /** @example `textColor` `highlightedColor` */
+      key: string;
+    }>[];
+  }
+>;
+
+export type IBTextAlignment = 'left' | 'center' | 'right' | 'justified' | 'natural';
+
+export type IBContentMode = string | 'left' | 'scaleAspectFill';
+
 export type IBConstraint = IBItem<{
   firstItem: string;
   firstAttribute: ConstraintAttribute;
   secondItem: string;
   secondAttribute: ConstraintAttribute;
+  constant?: number;
   id: string;
 }>;
 
@@ -79,6 +175,7 @@ export type IBViewController = IBItem<
           object,
           {
             imageView: IBImageView[];
+            label: IBLabel[];
           }
         >[];
         color: IBItem<{
@@ -122,13 +219,13 @@ export type IBScene = IBItem<
   }
 >;
 
-type IBResourceImage = IBItem<{
+export type IBResourceImage = IBItem<{
   name: string;
   width: number;
   height: number;
 }>;
 
-type IBDevice = IBItem<{
+export type IBDevice = IBItem<{
   id: string;
   orientation: string | 'portrait';
   appearance: string | 'light';
@@ -162,9 +259,10 @@ export type IBSplashScreenDocument = {
   >;
 };
 
-function createConstraint(
+export function createConstraint(
   [firstItem, firstAttribute]: [string, ConstraintAttribute],
-  [secondItem, secondAttribute]: [string, ConstraintAttribute]
+  [secondItem, secondAttribute]: [string, ConstraintAttribute],
+  constant?: number
 ): IBConstraint {
   return {
     $: {
@@ -172,14 +270,54 @@ function createConstraint(
       firstAttribute,
       secondItem,
       secondAttribute,
+      constant,
       // Prevent updating between runs
       id: createConstraintId(firstItem, firstAttribute, secondItem, secondAttribute),
     },
   };
 }
 
-function createConstraintId(...attributes: string[]) {
+export function createConstraintId(...attributes: string[]) {
   return crypto.createHash('sha1').update(attributes.join('-')).digest('hex');
+}
+
+const IMAGE_ID = 'EXPO-SplashScreen';
+const CONTAINER_ID = 'EXPO-ContainerView';
+
+export function removeImageFromSplashScreen(
+  xml: IBSplashScreenDocument,
+  { imageName }: { imageName: string }
+) {
+  const mainView = xml.document.scenes[0].scene[0].objects[0].viewController[0].view[0];
+
+  debug(`Remove all splash screen image elements`);
+
+  removeExisting(mainView.subviews[0].imageView, IMAGE_ID);
+
+  // Add Constraints
+  getAbsoluteConstraints(IMAGE_ID, CONTAINER_ID).forEach(constraint => {
+    // <constraint firstItem="EXPO-SplashScreen" firstAttribute="top" secondItem="EXPO-ContainerView" secondAttribute="top" id="2VS-Uz-0LU"/>
+    const constrainsArray = mainView.constraints[0].constraint;
+    removeExisting(constrainsArray, constraint);
+  });
+
+  // Add resource
+  const imageSection = xml.document.resources[0].image;
+
+  const existingImageIndex = imageSection.findIndex(image => image.$.name === imageName);
+  if (existingImageIndex > -1) {
+    imageSection.splice(existingImageIndex, 1);
+  }
+  return xml;
+}
+
+function getAbsoluteConstraints(childId: string, parentId: string) {
+  return [
+    createConstraint([childId, 'top'], [parentId, 'top']),
+    createConstraint([childId, 'leading'], [parentId, 'leading']),
+    createConstraint([childId, 'trailing'], [parentId, 'trailing']),
+    createConstraint([childId, 'bottom'], [parentId, 'bottom']),
+  ];
 }
 
 export function applyImageToSplashScreenXML(
@@ -192,14 +330,12 @@ export function applyImageToSplashScreenXML(
     contentMode: ImageContentMode;
   }
 ): IBSplashScreenDocument {
-  const imageId = 'EXPO-SplashScreen';
-  const containerId = 'EXPO-ContainerView';
   const width = 414;
   const height = 736;
 
   const imageView: IBImageView = {
     $: {
-      id: imageId,
+      id: IMAGE_ID,
       userLabel: imageName,
       image: imageName,
       contentMode,
@@ -222,22 +358,27 @@ export function applyImageToSplashScreenXML(
     ],
   };
 
+  const mainView = xml.document.scenes[0].scene[0].objects[0].viewController[0].view[0];
+
   // Add ImageView
-  xml.document.scenes[0].scene[0].objects[0].viewController[0].view[0].subviews[0].imageView.push(
-    imageView
-  );
+  ensureUniquePush(mainView.subviews[0].imageView, imageView);
 
   // Add Constraints
-  xml.document.scenes[0].scene[0].objects[0].viewController[0].view[0].constraints[0].constraint.push(
+  getAbsoluteConstraints(IMAGE_ID, CONTAINER_ID).forEach(constraint => {
     // <constraint firstItem="EXPO-SplashScreen" firstAttribute="top" secondItem="EXPO-ContainerView" secondAttribute="top" id="2VS-Uz-0LU"/>
-    createConstraint([imageId, 'top'], [containerId, 'top']),
-    createConstraint([imageId, 'leading'], [containerId, 'leading']),
-    createConstraint([imageId, 'trailing'], [containerId, 'trailing']),
-    createConstraint([imageId, 'bottom'], [containerId, 'bottom'])
-  );
+    const constrainsArray = mainView.constraints[0].constraint;
+    ensureUniquePush(constrainsArray, constraint);
+  });
 
   // Add resource
-  xml.document.resources[0].image.push({
+  const imageSection = xml.document.resources[0].image;
+
+  const existingImageIndex = imageSection.findIndex(image => image.$.name === imageName);
+  if (existingImageIndex > -1) {
+    debug(`Removing existing IB image asset at index ${existingImageIndex}`);
+    imageSection.splice(existingImageIndex, 1);
+  }
+  imageSection.push({
     // <image name="SplashScreen" width="414" height="736"/>
     $: {
       name: imageName,
@@ -249,82 +390,28 @@ export function applyImageToSplashScreenXML(
   return xml;
 }
 
-export async function createTemplateSplashScreenAsync(): Promise<IBSplashScreenDocument> {
-  const contents = `<?xml version="1.0" encoding="UTF-8"?>
-    <document
-      type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB"
-      version="3.0"
-      toolsVersion="16096"
-      targetRuntime="iOS.CocoaTouch"
-      propertyAccessControl="none"
-      useAutolayout="YES"
-      launchScreen="YES"
-      useTraitCollections="YES"
-      useSafeAreas="YES"
-      colorMatched="YES"
-      initialViewController="EXPO-VIEWCONTROLLER-1"
-    >
-      <device id="retina5_5" orientation="portrait" appearance="light"/>
-      <dependencies>
-        <deployment identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="16087"/>
-        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
-        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
-      </dependencies>
-      <scenes>
-        <!--View Controller-->
-        <scene sceneID="EXPO-SCENE-1">
-          <objects>
-            <viewController
-              storyboardIdentifier="SplashScreenViewController"
-              id="EXPO-VIEWCONTROLLER-1"
-              sceneMemberID="viewController"
-            >
-              <view
-                key="view"
-                userInteractionEnabled="NO"
-                contentMode="scaleToFill"
-                insetsLayoutMarginsFromSafeArea="NO"
-                id="EXPO-ContainerView"
-                userLabel="ContainerView"
-              >
-                <rect key="frame" x="0.0" y="0.0" width="414" height="736"/>
-                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                <subviews>
-                  <imageView
-                    userInteractionEnabled="NO"
-                    contentMode="scaleAspectFill"
-                    horizontalHuggingPriority="251"
-                    verticalHuggingPriority="251"
-                    insetsLayoutMarginsFromSafeArea="NO"
-                    image="SplashScreenBackground"
-                    translatesAutoresizingMaskIntoConstraints="NO"
-                    id="EXPO-SplashScreenBackground"
-                    userLabel="SplashScreenBackground"
-                  >
-                    <rect key="frame" x="0.0" y="0.0" width="414" height="736"/>
-                  </imageView>
-                </subviews>
-                <color key="backgroundColor" systemColor="systemBackgroundColor"/>
-                <constraints>
-                  <constraint firstItem="EXPO-SplashScreenBackground" firstAttribute="top" secondItem="EXPO-ContainerView" secondAttribute="top" id="1gX-mQ-vu6"/>
-                  <constraint firstItem="EXPO-SplashScreenBackground" firstAttribute="leading" secondItem="EXPO-ContainerView" secondAttribute="leading" id="6tX-OG-Sck"/>
-                  <constraint firstItem="EXPO-SplashScreenBackground" firstAttribute="trailing" secondItem="EXPO-ContainerView" secondAttribute="trailing" id="ABX-8g-7v4"/>
-                  <constraint firstItem="EXPO-SplashScreenBackground" firstAttribute="bottom" secondItem="EXPO-ContainerView" secondAttribute="bottom" id="jkI-2V-eW5"/>
-                </constraints>
-                <viewLayoutGuide key="safeArea" id="Rmq-lb-GrQ"/>
-              </view>
-            </viewController>
-            <placeholder placeholderIdentifier="IBFirstResponder" id="EXPO-PLACEHOLDER-1" userLabel="First Responder" sceneMemberID="firstResponder"/>
-          </objects>
-          <point key="canvasLocation" x="140.625" y="129.4921875"/>
-        </scene>
-      </scenes>
-      <resources>
-        <image name="SplashScreenBackground" width="1" height="1"/>
-      </resources>
-    </document>`;
-  return await new Parser().parseStringPromise(contents);
+/**
+ * IB does not allow two items to have the same ID.
+ * This method will add an item by first removing any existing item with the same `$.id`.
+ */
+export function ensureUniquePush<TItem extends { $: { id: string } }>(array: TItem[], item: TItem) {
+  if (!array) return array;
+  removeExisting(array, item);
+  array.push(item);
+  return array;
+}
+
+export function removeExisting<TItem extends { $: { id: string } }>(
+  array: TItem[],
+  item: TItem | string
+) {
+  const id = typeof item === 'string' ? item : item.$?.id;
+  const existingItem = array?.findIndex(existingItem => existingItem.$.id === id);
+  if (existingItem > -1) {
+    debug(`Removing existing IB item with id ${id}, from: %O`, array);
+    array.splice(existingItem, 1);
+  }
+  return array;
 }
 
 // Attempt to copy Xcode formatting.
@@ -341,4 +428,9 @@ export function toString(xml: any): string {
     },
   });
   return builder.buildObject(xml);
+}
+
+/** Parse string contents into an object. */
+export function toObjectAsync(contents: string) {
+  return new Parser().parseStringPromise(contents);
 }
