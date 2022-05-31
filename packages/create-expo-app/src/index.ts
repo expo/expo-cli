@@ -14,6 +14,14 @@ import {
   resolvePackageManager,
 } from './resolvePackageManager';
 import { assertFolderEmpty, assertValidName, resolveProjectRootAsync } from './resolveProjectRoot';
+import {
+  AnalyticsEventPhases,
+  AnalyticsEventTypes,
+  flushAsync,
+  identify,
+  initializeAnalyticsIdentityAsync,
+  track,
+} from './telemetry';
 
 const packageJSON = require('../package.json');
 
@@ -60,7 +68,15 @@ async function runAsync(): Promise<void> {
       projectRoot = await resolveProjectRootAsync(inputPath);
     }
 
-    await fs.promises.mkdir(projectRoot, { recursive: true });
+    await Promise.all([
+      fs.promises.mkdir(projectRoot, { recursive: true }),
+      initializeAnalyticsIdentityAsync(),
+    ]);
+    identify();
+    track({
+      event: AnalyticsEventTypes.CREATE_EXPO_APP,
+      properties: { phase: AnalyticsEventPhases.ATTEMPT },
+    });
     const extractTemplateStep = Template.logNewSection(`Locating project files.`);
     try {
       await Template.extractAndPrepareTemplateAppAsync(projectRoot, {
@@ -71,6 +87,11 @@ async function runAsync(): Promise<void> {
       extractTemplateStep.fail(
         'Something went wrong in downloading and extracting the project files: ' + e.message
       );
+      track({
+        event: AnalyticsEventTypes.CREATE_EXPO_APP,
+        properties: { phase: AnalyticsEventPhases.FAIL, message: e.message },
+      });
+      await flushAsync();
       process.exit(1);
     }
     // Install dependencies
@@ -104,10 +125,18 @@ async function runAsync(): Promise<void> {
     } catch {
       // todo: check if git is installed, bail out
     }
-  } catch (error) {
-    await commandDidThrowAsync(error);
+  } catch (error: any) {
+    track({
+      event: AnalyticsEventTypes.CREATE_EXPO_APP,
+      properties: { phase: AnalyticsEventPhases.FAIL, message: error.message },
+    });
+    await Promise.all([commandDidThrowAsync(error), flushAsync()]);
   }
-  await shouldUpdate();
+  track({
+    event: AnalyticsEventTypes.CREATE_EXPO_APP,
+    properties: { phase: AnalyticsEventPhases.SUCCESS },
+  });
+  await Promise.all([shouldUpdate(), flushAsync()]);
   process.exit(0);
 }
 
