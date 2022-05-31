@@ -146,7 +146,11 @@ export async function flushAsync() {
       sentAt: new Date(),
     }),
   };
-  await fetch(analyticsEndpoint, request);
+  try {
+    await fetch(analyticsEndpoint, request);
+  } catch (error) {
+    // supress errors - likely due to network connectivity or endpoint health
+  }
   // clear array so we don't resend events in subsequent flushes
   messageBatch.splice(0, messageBatch.length);
 }
@@ -170,9 +174,14 @@ function getAnalyticsContext(): Record<string, any> {
 //#endregion
 
 function uuidv4() {
-  // available on node 14+
-  // https://github.com/denoland/deno/issues/12754
-  return (crypto as any).randomUUID();
+  try {
+    // available on node 14+
+    // https://github.com/denoland/deno/issues/12754
+    return (crypto as any).randomUUID();
+  } catch (error) {
+    // supress errors due to node 13 or less not having randomUUID
+    return null;
+  }
 }
 
 export enum AnalyticsEventTypes {
@@ -185,7 +194,7 @@ export enum AnalyticsEventPhases {
   FAIL = 'fail',
 }
 
-async function getAnalyticsIdentityAsync(): Promise<AnalyticsIdentity> {
+async function getAnalyticsIdentityAsync(): Promise<AnalyticsIdentity | null> {
   if (!fs.existsSync(dotExpoHomeDirectory())) {
     fs.mkdirSync(dotExpoHomeDirectory(), { recursive: true });
   }
@@ -194,6 +203,11 @@ async function getAnalyticsIdentityAsync(): Promise<AnalyticsIdentity> {
   }
   const savedDeviceId = await JsonFile.getAsync(getStateJsonPath(), 'analyticsDeviceId', null);
   const deviceId = savedDeviceId ?? uuidv4();
+
+  if (!deviceId) {
+    // unable to generate an id or load one from disk
+    return null;
+  }
   if (!savedDeviceId) {
     await JsonFile.setAsync(getStateJsonPath(), 'analyticsDeviceId', deviceId);
   }

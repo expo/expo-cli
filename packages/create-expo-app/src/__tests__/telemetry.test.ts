@@ -14,10 +14,17 @@ import {
 } from '../telemetry';
 
 jest.mock('node-fetch');
+jest.mock('crypto', () => {
+  const actual = jest.requireActual('crypto');
+  return { ...actual, randomUUID: jest.fn(actual.randomUUID) };
+});
+
 const fetchAsMock = (fetch as any) as jest.Mock;
+const randomUUIDAsMock = (crypto as any).randomUUID as jest.Mock;
 
 function clearGlobals() {
   fetchAsMock.mockClear();
+  randomUUIDAsMock.mockClear();
   if (!fs.existsSync(dotExpoHomeDirectory())) {
     fs.mkdirSync(dotExpoHomeDirectory(), { recursive: true });
   }
@@ -105,6 +112,22 @@ describe('telemetry', () => {
     });
 
     it('does not enqueue events if not initialized', async () => {
+      identify();
+      track({
+        event: AnalyticsEventTypes.CREATE_EXPO_APP,
+        properties: { phase: AnalyticsEventPhases.ATTEMPT },
+      });
+      track({
+        event: AnalyticsEventTypes.CREATE_EXPO_APP,
+        properties: { phase: AnalyticsEventPhases.SUCCESS },
+      });
+      await flushAsync();
+      expect(fetchAsMock.mock.calls.length).toEqual(0);
+    });
+
+    it('does not enqueue events when the analytics identity is null', async () => {
+      randomUUIDAsMock.mockImplementationOnce(() => null);
+      await initializeAnalyticsIdentityAsync();
       identify();
       track({
         event: AnalyticsEventTypes.CREATE_EXPO_APP,
@@ -216,6 +239,28 @@ describe('telemetry', () => {
       });
       await flushAsync();
       expect(fetchAsMock.mock.calls.length).toEqual(0);
+    });
+
+    it('can enqueue events when randomUUID is missing by loading state from disk', async () => {
+      randomUUIDAsMock.mockImplementationOnce(() => null);
+      await initializeAnalyticsIdentityAsync();
+      identify();
+      track({
+        event: AnalyticsEventTypes.CREATE_EXPO_APP,
+        properties: { phase: AnalyticsEventPhases.ATTEMPT },
+      });
+      track({
+        event: AnalyticsEventTypes.CREATE_EXPO_APP,
+        properties: { phase: AnalyticsEventPhases.FAIL },
+      });
+      await flushAsync();
+      expect(fetchAsMock.mock.calls.length).toEqual(1);
+      const [fetchRequestArgs] = fetchAsMock.mock.calls;
+      const [, request] = fetchRequestArgs;
+      const { batch }: { batch: any[] } = JSON.parse(request.body);
+      batch.every(
+        message => message.anonymousId === existingAnonymousId && message.userId === existingUserId
+      );
     });
   });
 });
