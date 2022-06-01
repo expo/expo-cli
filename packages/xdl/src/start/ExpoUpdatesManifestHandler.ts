@@ -1,6 +1,7 @@
 import { ExpoUpdatesManifest, getConfig } from '@expo/config';
 import { Updates } from '@expo/config-plugins';
 import { JSONObject } from '@expo/json-file';
+import chalk from 'chalk';
 import express from 'express';
 import http from 'http';
 import nullthrows from 'nullthrows';
@@ -13,6 +14,7 @@ import {
   ApiV2,
   Config,
   ConnectionStatus,
+  Env,
   ProjectAssets,
   ProjectUtils,
   resolveEntryPoint,
@@ -198,6 +200,12 @@ export function getManifestHandler(projectRoot: string) {
     ) {
       next();
       return;
+    }
+
+    if (Env.isDebug()) {
+      console.log(
+        chalk.gray(`Manifest request: URL "${req.url}", Headers ${JSON.stringify(req.headers)}`)
+      );
     }
 
     try {
