@@ -12,6 +12,18 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+## [Wed, 1 Jun 2022 14:18:31 -0700](https://github.com/expo/expo-cli/commit/7873fefa2f73a5c8df08d20376d0ff374a19e96d)
+
+### 🧹 Chores
+
+- [xdl] Add logging of manifest requests for debugging purposes
+
+### 📦 Packages updated
+
+- @expo/dev-tools@0.13.156
+- expo-cli@5.4.8
+- xdl@59.2.40
+
 ## [Thu, 26 May 2022 16:40:07 -0700](https://github.com/expo/expo-cli/commit/8c468c79bcbae988d0ef2a2d5e298a0b8d0f91d6)
 
 ### 🎉 New features
