@@ -60,7 +60,7 @@ async function run() {
   for (const { name, location, version } of toPublish) {
     console.log();
     console.log('🚢 Publishing', name);
-    const args = ['publish', '--access', 'public'];
+    const args = ['pack', '--access', 'public'];
     if (shouldPrerelease) {
       args.push('--tag', 'alpha');
     }
