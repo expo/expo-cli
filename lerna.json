@@ -6,7 +6,7 @@
   "packages": ["packages/*"],
   "command": {
     "publish": {
-      "ignoreChanges": ["packages/config-types/**/*", "scripts/*", "yarn.lock", "lerna.json"]
+      "ignoreChanges": ["packages/config-types/**/*"]
     }
   }
 }
