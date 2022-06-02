@@ -9,7 +9,14 @@ import { serializeAfterStaticPlugins } from '../Serialize';
  * @param projectRoot
  */
 export const withConfigPlugins: ConfigPlugin<boolean> = (config, skipPlugins) => {
-  // @ts-ignore: plugins not on config type yet -- TODO
+  if (process.env.EAS_BUILD_CONFIG_PLUGIN_PATH) {
+    const easPlugin = process.env.EAS_BUILD_CONFIG_PLUGIN_PATH;
+    if (!Array.isArray(config.plugins) || !config.plugins?.length) {
+      config.plugins = [easPlugin];
+    } else {
+      config.plugins.push(easPlugin);
+    }
+  }
   if (!Array.isArray(config.plugins) || !config.plugins?.length) {
     return config;
   }
