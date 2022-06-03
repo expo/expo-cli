@@ -158,9 +158,12 @@ export async function extractNpmTarballFromUrlAsync(
 }
 
 export async function extractNpmTarballAsync(
-  stream: NodeJS.ReadableStream,
+  stream: NodeJS.ReadableStream | null,
   props: ExtractProps
 ): Promise<void> {
+  if (!stream) {
+    throw new Error('Missing stream');
+  }
   const { cwd, strip, name, fileList = [] } = props;
 
   await fs.promises.mkdir(cwd, { recursive: true });

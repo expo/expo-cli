@@ -24,6 +24,7 @@ export class NFCResponse extends Response {
       statusText: res.statusText,
       headers: res.headers.raw(),
       size: res.size,
+      // @ts-expect-error
       timeout: res.timeout,
       // @ts-ignore
       counter: res[responseInternalSymbol].counter,
