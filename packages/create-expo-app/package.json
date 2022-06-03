@@ -53,7 +53,7 @@
     "form-data": "^2.3.2",
     "getenv": "^1.0.0",
     "minipass": "3.1.6",
-    "node-fetch": "^3.2.5",
+    "node-fetch": "2.6.7",
     "ora": "3.4.0",
     "prompts": "^2.3.2",
     "tar": "^6.0.5",
