@@ -1,5 +1,7 @@
 import chalk from 'chalk';
 
+import { ExitError } from './error';
+
 export function error(...message: string[]): void {
   console.error(...message);
 }
@@ -18,10 +20,7 @@ export function log(...message: string[]): void {
 export function exit(message: string | Error, code: number = 1): never {
   if (message instanceof Error) {
     exception(message);
-    process.exit(code);
-  }
-
-  if (message) {
+  } else if (message) {
     if (code === 0) {
       log(message);
     } else {
@@ -29,6 +28,9 @@ export function exit(message: string | Error, code: number = 1): never {
     }
   }
 
+  if (code !== 0) {
+    throw new ExitError(message, code);
+  }
   process.exit(code);
 }
 

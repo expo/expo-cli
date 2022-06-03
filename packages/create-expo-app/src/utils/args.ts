@@ -2,26 +2,9 @@
 // These functions should be used by every command.
 import arg, { Spec } from 'arg';
 import chalk from 'chalk';
-import { existsSync } from 'fs';
-import { resolve } from 'path';
 
 import * as Log from '../log';
 import { replaceValue } from './array';
-
-/**
- * Parse the first argument as a project directory.
- *
- * @returns valid project directory.
- */
-export function getProjectRoot(args: arg.Result<arg.Spec>) {
-  const projectRoot = resolve(args._[0] || '.');
-
-  if (!existsSync(projectRoot)) {
-    Log.exit(`Invalid project root: ${projectRoot}`);
-  }
-
-  return projectRoot;
-}
 
 /**
  * Parse args and assert unknown options.
@@ -30,10 +13,6 @@ export function getProjectRoot(args: arg.Result<arg.Spec>) {
  * @param argv extra strings
  * @returns processed args object.
  */
-export function assertArgs(schema: arg.Spec, argv?: string[]): arg.Result<arg.Spec> {
-  return assertWithOptionsArgs(schema, { argv });
-}
-
 export function assertWithOptionsArgs(
   schema: arg.Spec,
   options: arg.Options

@@ -4,12 +4,20 @@ import path from 'path';
 
 import * as Template from './Template';
 import { promptTemplateAsync } from './legacyTemplates';
+import { Log } from './log';
 import {
   installDependenciesAsync,
   PackageManagerName,
   resolvePackageManager,
 } from './resolvePackageManager';
 import { assertFolderEmpty, assertValidName, resolveProjectRootAsync } from './resolveProjectRoot';
+import {
+  AnalyticsEventPhases,
+  AnalyticsEventTypes,
+  identify,
+  initializeAnalyticsIdentityAsync,
+  track,
+} from './telemetry';
 import { initGitRepoAsync } from './utils/git';
 
 export type Options = {
@@ -43,11 +51,10 @@ async function cloneTemplateAsync(projectRoot: string, template: string | null) 
     });
     extractTemplateStep.succeed('Downloaded and extracted project files.');
   } catch (error: any) {
-    debug(`Error cloning template: %O`, error);
     extractTemplateStep.fail(
       'Something went wrong in downloading and extracting the project files: ' + error.message
     );
-    process.exit(1);
+    Log.exit(`Error cloning template: %O`, error);
   }
 }
 
@@ -81,8 +88,18 @@ export async function createAsync(inputPath: string, props: Options): Promise<vo
   }
 
   const projectRoot = await resolveProjectRootArgAsync(inputPath, props);
-
   await fs.promises.mkdir(projectRoot, { recursive: true });
+
+  // Setup telemetry attempt after a reasonable point.
+  // Telemetry is used to ensure safe feature deprecation since the command is unversioned.
+  // All telemetry can be disabled across Expo tooling by using the env var $EXPO_NO_TELEMETRY.
+  await initializeAnalyticsIdentityAsync();
+  identify();
+  track({
+    event: AnalyticsEventTypes.CREATE_EXPO_APP,
+    properties: { phase: AnalyticsEventPhases.ATTEMPT },
+  });
+
   await cloneTemplateAsync(projectRoot, resolvedTemplate);
   await setupDependenciesAsync(projectRoot, props);
 

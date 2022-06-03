@@ -17,6 +17,10 @@ class Env {
   get EXPO_NO_CACHE() {
     return boolish('EXPO_NO_CACHE', false);
   }
+  /** Disable telemetry (analytics) */
+  get EXPO_NO_TELEMETRY() {
+    return boolish('EXPO_NO_TELEMETRY', false);
+  }
 }
 
 export const env = new Env();
