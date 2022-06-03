@@ -9,7 +9,7 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
-        node: ['12', '14']
+        node: ['14', '16']
     name: Build with Node ${{ matrix.node }}
     steps:
       - uses: actions/checkout@v2
@@ -32,7 +32,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node: ['12', '14']
+        node: ['14', '16']
         package:
           [
             create-expo-app,
