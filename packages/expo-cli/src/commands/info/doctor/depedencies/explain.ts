@@ -33,6 +33,14 @@ export async function explainAsync(
         ora.succeed();
         return null;
       }
+      if (error.stdout.match(/Usage: npm <command>/)) {
+        ora.fail(
+          `Dependency tree validation for ${chalk.underline(
+            packageName
+          )} failed. This validation is only available on Node 16+ / npm 8.`
+        );
+        return null;
+      }
     }
     ora.fail(`Failed to find dependency tree for ${packageName}: ` + error.message);
     throw error;
