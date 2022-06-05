@@ -12,7 +12,15 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+## [Sun, 5 Jun 2022 15:51:35 +0200](https://github.com/expo/expo-cli/commit/82139f7d126e8a950a005875de1d1b4f73c83ca7)
+
+### 🧹 Chores
+
 - [doctor] Gracefully handle not being able to run dependency tree validation on older Node/npm versions. ([#4413](https://github.com/expo/expo-cli/pull/4413))
+
+### 📦 Packages updated
+
+- expo-cli@5.4.9
 
 ## [Wed, 1 Jun 2022 14:18:31 -0700](https://github.com/expo/expo-cli/commit/7873fefa2f73a5c8df08d20376d0ff374a19e96d)
 
