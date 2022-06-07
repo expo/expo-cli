@@ -65,7 +65,16 @@ export async function npmPackAsync(
     return null;
   }
   try {
-    return JSON.parse(results);
+    const parsedResults = JSON.parse(results);
+    const filename = (parsedResults[0] as JSONObject).filename as string;
+
+    // Transform filename for scoped packages.
+    // See issue https://github.com/npm/cli/issues/3405
+    if (filename.startsWith('@') && packageName.startsWith('@')) {
+      parsedResults[0].filename = filename.replace(/^@/, '').replace(/\//, '-');
+    }
+
+    return parsedResults;
   } catch (error: any) {
     throw new Error(
       `Could not parse JSON returned from "${cmdString}".\n\n${results}\n\nError: ${error.message}`
