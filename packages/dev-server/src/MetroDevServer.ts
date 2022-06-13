@@ -111,6 +111,8 @@ export async function runMetroDevServerAsync(
   const server = await Metro.runServer(metroConfig, {
     hmrEnabled: true,
     websocketEndpoints,
+    // Ensure Metro starts with an IPv4 address for maximum interoperability.
+    host: "0.0.0.0",
   });
 
   if (attachToServer) {
