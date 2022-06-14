@@ -32,6 +32,13 @@ export async function explainAsync(
       if (error.stderr.match(/npm ERR! No dependencies found matching/)) {
         ora.succeed();
         return null;
+      } else if (error.stdout.match(/Usage: npm <command>/)) {
+        ora.fail(
+          `Dependency tree validation for ${chalk.underline(
+            packageName
+          )} failed. This validation is only available on Node 16+ / npm 8.`
+        );
+        return null;
       }
     }
     ora.fail(`Failed to find dependency tree for ${packageName}: ` + error.message);
