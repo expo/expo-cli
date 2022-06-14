@@ -70,7 +70,7 @@ export async function npmPackAsync(
 
     // Transform filename for scoped packages.
     // See issue https://github.com/npm/cli/issues/3405
-    if (filename.startsWith('@') && packageName.startsWith('@')) {
+    if (filename?.startsWith('@') && packageName.startsWith('@')) {
       parsedResults[0].filename = filename.replace(/^@/, '').replace(/\//, '-');
     }
 
