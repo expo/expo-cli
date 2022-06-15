@@ -27,7 +27,7 @@
     "@types/lodash": "^4.14.176"
   },
   "dependencies": {
-    "ajv": "^5.2.2",
+    "ajv": "^6.12.6",
     "json-schema-traverse": "0.3.1",
     "lodash": "^4.17.19",
     "probe-image-size": "~6.0.0",
