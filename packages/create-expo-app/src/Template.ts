@@ -1,17 +1,19 @@
 import JsonFile from '@expo/json-file';
 import * as PackageManager from '@expo/package-manager';
 import chalk from 'chalk';
-import getenv from 'getenv';
 import ora from 'ora';
 import path from 'path';
 
+import { Log } from './log';
+import { formatRunCommand, PackageManagerName } from './resolvePackageManager';
+import { env } from './utils/env';
 import {
   applyKnownNpmPackageNameRules,
-  downloadAndExtractNpmModule,
-  extractLocalNpmTarballAsync,
+  downloadAndExtractNpmModuleAsync,
   getResolvedTemplateName,
-} from './npm';
-import { formatRunCommand, PackageManagerName } from './resolvePackageManager';
+} from './utils/npm';
+
+const debug = require('debug')('expo:init:template') as typeof console.log;
 
 const isMacOS = process.platform === 'darwin';
 
@@ -44,9 +46,10 @@ export function resolvePackageModuleId(moduleId: string) {
     if (moduleId?.startsWith('file:')) {
       moduleId = moduleId.substring('file:'.length);
     }
-
+    debug(`Resolved moduleId to file path:`, moduleId);
     return { type: 'file', uri: moduleId };
   } else {
+    debug(`Resolved moduleId to NPM package:`, moduleId);
     return { type: 'npm', uri: moduleId };
   }
 }
@@ -61,17 +64,16 @@ export async function extractAndPrepareTemplateAppAsync(
 ) {
   const projectName = path.basename(projectRoot);
 
+  debug(`Extracting template app (pkg: ${npmPackage}, projectName: ${projectName})`);
+
   const { type, uri } = resolvePackageModuleId(npmPackage || 'expo-template-blank');
 
-  if (type === 'file') {
-    await extractLocalNpmTarballAsync(uri, {
-      cwd: projectRoot,
-      name: projectName,
-    });
-  } else {
-    const resolvedTemplate = getResolvedTemplateName(uri);
-    await downloadAndExtractNpmModule(projectRoot, resolvedTemplate, projectName);
-  }
+  const resolvedUri = type === 'file' ? uri : getResolvedTemplateName(uri);
+
+  await downloadAndExtractNpmModuleAsync(resolvedUri, {
+    cwd: projectRoot,
+    name: projectName,
+  });
 
   const config: Record<string, any> = {
     expo: {
@@ -80,9 +82,13 @@ export async function extractAndPrepareTemplateAppAsync(
     },
   };
 
-  const appFile = new JsonFile(path.join(projectRoot, 'app.json'));
+  const appFile = new JsonFile(path.join(projectRoot, 'app.json'), {
+    default: { expo: {} },
+  });
   const appJson = deepMerge(await appFile.readAsync(), config);
   await appFile.writeAsync(appJson);
+
+  debug(`Created app.json:\n%O`, appJson);
 
   const packageFile = new JsonFile(path.join(projectRoot, 'package.json'));
   const packageJson = await packageFile.readAsync();
@@ -154,7 +160,7 @@ export async function installPodsAsync(projectRoot: string) {
   }
   const packageManager = new PackageManager.CocoaPodsPackageManager({
     cwd: path.join(projectRoot, 'ios'),
-    silent: !getenv.boolish('EXPO_DEBUG', false),
+    silent: !env.EXPO_DEBUG,
   });
 
   if (!(await packageManager.isCLIInstalledAsync())) {
@@ -172,7 +178,7 @@ export async function installPodsAsync(projectRoot: string) {
         ),
       });
       if (e.message) {
-        console.log(`- ${e.message}`);
+        Log.error(`- ${e.message}`);
       }
       return false;
     }
@@ -190,14 +196,22 @@ export async function installPodsAsync(projectRoot: string) {
       ),
     });
     if (e.message) {
-      console.log(`- ${e.message}`);
+      Log.error(`- ${e.message}`);
     }
     return false;
   }
 }
 
 export function logNewSection(title: string) {
-  const spinner = ora(chalk.bold(title));
+  const disabled = env.CI || env.EXPO_DEBUG;
+  const spinner = ora({
+    text: chalk.bold(title),
+    // Ensure our non-interactive mode emulates CI mode.
+    isEnabled: !disabled,
+    // In non-interactive mode, send the stream to stdout so it prevents looking like an error.
+    stream: disabled ? process.stdout : process.stderr,
+  });
+
   spinner.start();
   return spinner;
 }

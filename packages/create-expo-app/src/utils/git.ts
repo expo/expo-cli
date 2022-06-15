@@ -1,7 +1,7 @@
 import spawnAsync from '@expo/spawn-async';
 import chalk from 'chalk';
 
-const debug = require('debug')('create-expo-app:git') as typeof console.log;
+const debug = require('debug')('expo:init:git') as typeof console.log;
 
 export async function initGitRepoAsync(root: string) {
   // let's see if we're in a git tree

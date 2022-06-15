@@ -3,6 +3,8 @@ import checkForUpdate from 'update-check';
 
 const packageJson = require('../package.json');
 
+const debug = require('debug')('expo:init:update-check') as typeof console.log;
+
 export default async function shouldUpdate(): Promise<void> {
   try {
     const res = await checkForUpdate(packageJson);
@@ -12,7 +14,7 @@ export default async function shouldUpdate(): Promise<void> {
       console.log(chalk`You can update by running: {cyan npm install -g ${packageJson.name}}`);
       console.log();
     }
-  } catch {
-    // ignore error
+  } catch (error: any) {
+    debug('Error checking for update:\n%O', error);
   }
 }

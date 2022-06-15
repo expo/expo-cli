@@ -14,27 +14,19 @@ function getTemporaryPath() {
 }
 
 function execute(args, env) {
-  return execa('node', [cli, ...args], { cwd: projectRoot, env });
+  return execa('node', [cli, ...args], {
+    cwd: projectRoot,
+    env: {
+      ...process.env,
+      ...env,
+    },
+  });
 }
 
 async function executePassingAsync(args, env) {
   const results = await execute(args, env);
   expect(results.exitCode).toBe(0);
   return results;
-}
-
-function executeDefaultAsync(args, env) {
-  const res = execute(args, env);
-
-  // When the test is prompted to use the default, it'll select it automatically.
-  res.stdout.on('data', data => {
-    const stdout = data.toString();
-    if (/How would you like to start/.test(stdout)) {
-      res.stdin.write('\n');
-    }
-  });
-
-  return res;
 }
 
 function fileExists(projectName, filePath) {
@@ -63,7 +55,7 @@ it('prevents overwriting directories with projects', async () => {
 
   expect.assertions(1);
   try {
-    await executeDefaultAsync([projectName]);
+    await execute([projectName]);
   } catch (e) {
     expect(e.stdout).toMatch(/has files that might be overwritten/);
   }
@@ -73,7 +65,7 @@ it(
   'creates a full basic project by default',
   async () => {
     const projectName = 'defaults-to-basic';
-    await executeDefaultAsync([projectName]);
+    await execute([projectName]);
 
     expect(fileExists(projectName, 'package.json')).toBeTruthy();
     expect(fileExists(projectName, 'App.js')).toBeTruthy();
@@ -133,13 +125,13 @@ describe('yes', () => {
     'uses pnpm',
     async () => {
       const projectName = 'uses-pnpm';
-      const results = await executeDefaultAsync([projectName, '--no-install'], {
+      const results = await execute([projectName, '--no-install'], {
         // Run: DEBUG=create-expo-app:* pnpm create expo-app
         npm_config_user_agent: `pnpm`,
       });
 
       // Test that the user was warned about deps
-      expect(results.stdout).toMatch(/make sure you have node modules installed/);
+      expect(results.stdout).toMatch(/make sure you have modules installed/);
       expect(results.stdout).toMatch(/pnpm install/);
 
       expect(fileExists(projectName, 'package.json')).toBeTruthy();
@@ -154,13 +146,13 @@ describe('yes', () => {
     'uses npm',
     async () => {
       const projectName = 'uses-npm';
-      const results = await executeDefaultAsync([projectName, '--no-install'], {
+      const results = await execute([projectName, '--no-install'], {
         // Run: DEBUG=create-expo-app:* npm create expo-app
         npm_config_user_agent: `npm/8.1.0 node/v16.13.0 darwin x64 workspaces/false`,
       });
 
       // Test that the user was warned about deps
-      expect(results.stdout).toMatch(/make sure you have node modules installed/);
+      expect(results.stdout).toMatch(/make sure you have modules installed/);
       expect(results.stdout).toMatch(/npm install/);
 
       expect(fileExists(projectName, 'package.json')).toBeTruthy();
@@ -176,13 +168,13 @@ describe('yes', () => {
     'uses yarn',
     async () => {
       const projectName = 'uses-yarn';
-      const results = await executeDefaultAsync([projectName, '--no-install'], {
+      const results = await execute([projectName, '--no-install'], {
         // Run: DEBUG=create-expo-app:* yarn create expo-app
         npm_config_user_agent: `yarn/1.22.17 npm/? node/v16.13.0 darwin x64`,
       });
 
       // Test that the user was warned about deps
-      expect(results.stdout).toMatch(/make sure you have node modules installed/);
+      expect(results.stdout).toMatch(/make sure you have modules installed/);
       expect(results.stdout).toMatch(/yarn install/);
 
       expect(fileExists(projectName, 'package.json')).toBeTruthy();
@@ -278,10 +270,10 @@ xdescribe('templates', () => {
 
   it('uses npm', async () => {
     const projectName = 'uses-npm';
-    const results = await executeDefaultAsync([projectName, '--use-npm', '--no-install']);
+    const results = await execute([projectName, '--use-npm', '--no-install']);
 
     // Test that the user was warned about deps
-    expect(results.stdout).toMatch(/make sure you have node modules installed/);
+    expect(results.stdout).toMatch(/make sure you have modules installed/);
     expect(results.stdout).toMatch(/npm install/);
     if (process.platform === 'darwin') {
       expect(results.stdout).toMatch(/make sure you have CocoaPods installed/);
@@ -305,7 +297,7 @@ xdescribe('templates', () => {
     ]);
 
     // Test that the user was warned about deps
-    expect(results.stdout).toMatch(/make sure you have node modules installed/);
+    expect(results.stdout).toMatch(/make sure you have modules installed/);
     expect(results.stdout).toMatch(/yarn/);
     expect(fileExists(projectName, 'package.json')).toBeTruthy();
     expect(fileExists(projectName, 'App.js')).toBeTruthy();
