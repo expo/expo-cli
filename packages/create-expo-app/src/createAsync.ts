@@ -18,6 +18,7 @@ import {
   initializeAnalyticsIdentityAsync,
   track,
 } from './telemetry';
+import { env } from './utils/env';
 import { initGitRepoAsync } from './utils/git';
 
 export type Options = {
@@ -133,7 +134,7 @@ async function installNodeDependenciesAsync(
     `Installing JavaScript dependencies with ${packageManager}.`
   );
   try {
-    await installDependenciesAsync(projectRoot, packageManager, { silent: true });
+    await installDependenciesAsync(projectRoot, packageManager, { silent: !env.EXPO_DEBUG });
     installJsDepsStep.succeed('Installed JavaScript dependencies.');
   } catch (error) {
     debug(`Error installing node modules: %O`, error);
