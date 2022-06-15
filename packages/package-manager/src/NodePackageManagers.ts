@@ -11,7 +11,7 @@ import { Transform } from 'stream';
 import { Logger, PackageManager } from './PackageManager';
 import { PnpmPackageManager } from './PnpmPackageManager';
 import isYarnOfflineAsync from './utils/isYarnOfflineAsync';
-import { findWorkspaceRoot, resolvePackageManager } from './utils/nodeWorkspaces';
+import { findWorkspaceRoot, isUsingYarn, resolvePackageManager } from './utils/nodeWorkspaces';
 
 export type NodePackageManager = 'yarn' | 'npm' | 'pnpm';
 
@@ -30,19 +30,6 @@ const yarnPeerDependencyWarningPattern = new RegExp(
   `${ansi}warning${ansi} "[^"]+" has (?:unmet|incorrect) peer dependency "[^"]+"\\.\n`,
   'g'
 );
-
-/**
- * Returns true if the project is using yarn, false if the project is using npm.
- *
- * @param projectRoot
- */
-export function isUsingYarn(projectRoot: string): boolean {
-  const workspaceRoot = findWorkspaceRoot(projectRoot);
-  if (workspaceRoot) {
-    return existsSync(path.join(workspaceRoot, 'yarn.lock'));
-  }
-  return existsSync(path.join(projectRoot, 'yarn.lock'));
-}
 
 class NpmStderrTransform extends Transform {
   _transform(
