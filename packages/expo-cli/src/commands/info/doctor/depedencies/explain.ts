@@ -45,15 +45,18 @@ export async function explainAsync(
     throw error;
   }
 }
-
-export async function warnAboutDeepDependenciesAsync(pkg: TargetPackage) {
+/**
+ * @param pkg
+ * @returns true if all versions of the package satisfy the constraints
+ */
+export async function warnAboutDeepDependenciesAsync(pkg: TargetPackage): Promise<boolean> {
   const explanations = await explainAsync(pkg.name);
 
   if (!explanations) {
     Log.debug(`No dependencies found for ${pkg.name}`);
-    return;
+    return true;
   }
-  printExplanationsAsync(pkg, explanations);
+  return printExplanationsAsync(pkg, explanations);
 }
 
 export function organizeExplanations(
@@ -87,7 +90,15 @@ export function organizeExplanations(
   return { valid, invalid };
 }
 
-export async function printExplanationsAsync(pkg: TargetPackage, explanations: RootNodePackage[]) {
+/**
+ * @param pkg
+ * @param explanations
+ * @returns true if all versions of the package satisfy the constraints
+ */
+export async function printExplanationsAsync(
+  pkg: TargetPackage,
+  explanations: RootNodePackage[]
+): Promise<boolean> {
   const { invalid } = organizeExplanations(pkg, {
     explanations,
     isValid(otherPkg) {
@@ -97,8 +108,10 @@ export async function printExplanationsAsync(pkg: TargetPackage, explanations: R
 
   if (invalid.length > 0) {
     printInvalidPackages(pkg, { explanations: invalid });
+    return false;
   } else {
     Log.log(chalk`  All copies of {bold ${pkg.name}} satisfy {green ${pkg.version}}`);
+    return true;
   }
 }
 
