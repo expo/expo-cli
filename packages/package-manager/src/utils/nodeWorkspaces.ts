@@ -111,3 +111,17 @@ export function resolvePackageManager(
 
   return null;
 }
+
+/**
+ * Returns true if the project is using yarn, false if the project is using another package manager.
+ */
+export function isUsingYarn(projectRoot: string): boolean {
+  return !!resolvePackageManager(projectRoot, 'yarn');
+}
+
+/**
+ * Returns true if the project is using npm, false if the project is using another package manager.
+ */
+export function isUsingNpm(projectRoot: string): boolean {
+  return !!resolvePackageManager(projectRoot, 'npm');
+}
