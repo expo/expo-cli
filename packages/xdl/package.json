@@ -1,6 +1,6 @@
 {
   "name": "xdl",
-  "version": "59.2.40",
+  "version": "59.2.41",
   "description": "The Expo Development Library",
   "main": "build/index.js",
   "files": [
@@ -39,10 +39,10 @@
     "@expo/devcert": "^1.0.0",
     "@expo/json-file": "8.2.36",
     "@expo/osascript": "2.0.33",
-    "@expo/package-manager": "0.0.54",
+    "@expo/package-manager": "0.0.55",
     "@expo/plist": "0.0.18",
     "@expo/rudder-sdk-node": "1.1.1",
-    "@expo/schemer": "1.4.1",
+    "@expo/schemer": "1.4.2",
     "@expo/sdk-runtime-versions": "^1.0.0",
     "@expo/spawn-async": "1.5.0",
     "@expo/webpack-config": "0.16.24",
