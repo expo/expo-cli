@@ -6,7 +6,7 @@
   "packages": ["packages/*"],
   "command": {
     "publish": {
-      "ignoreChanges": ["packages/config-types/**/*"]
+      "ignoreChanges": ["packages/config-types/**/*", "packages/create-expo-app/**/*"]
     }
   }
 }
