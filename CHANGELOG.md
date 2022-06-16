@@ -12,6 +12,29 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+## [Wed, 15 Jun 2022 20:47:15 -0700](https://github.com/expo/expo-cli/commit/2c8188fd3e0dbbc9f545ce4c59ea543d676f97eb)
+
+### 🧹 Chores
+
+- update ajv ([#4385](https://github.com/expo/expo-cli/issues/4385))
+
+### 🐛 Bug fixes
+
+- [cli] Support scoped package names for initialising projects ([#4417](https://github.com/expo/expo-cli/issues/4417))
+- [package-manager] should not use yarn when npm lockfile exists ([#4387](https://github.com/expo/expo-cli/issues/4387))
+- [cli] `expo doctor` return non-zero exit code if package versions are incorrect ([#4424](https://github.com/expo/expo-cli/issues/4424))
+
+### 📦 Packages updated
+
+- @expo/dev-tools@0.13.157
+- expo-cli@5.4.10
+- install-expo-modules@0.3.4
+- @expo/next-adapter@4.0.6
+- @expo/package-manager@0.0.55
+- pod-install@0.1.37
+- @expo/schemer@1.4.2
+- xdl@59.2.41
+
 ## [Sun, 5 Jun 2022 15:51:35 +0200](https://github.com/expo/expo-cli/commit/82139f7d126e8a950a005875de1d1b4f73c83ca7)
 
 ### 🧹 Chores
