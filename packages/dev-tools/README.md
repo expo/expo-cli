@@ -17,10 +17,10 @@
 
 ## Features
 
-- viewing logs from supporting services: Metro and Webpack bundlers
-- viewing logs from your device
-- publishing your project
-- debugging connectivity
+- Viewing logs from supporting services: Metro and Webpack bundlers
+- Viewing logs from your device
+- Publishing your project
+- Debugging connectivity
 
 ## Developing
 
