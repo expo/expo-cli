@@ -1,6 +1,6 @@
 import { vol } from 'memfs';
 
-import { isBareWorkflowProject } from '../diagnosticsAsync';
+import { isBareWorkflowProject, isInsideProjectAsync } from '../diagnosticsAsync';
 
 jest.mock('fs');
 
@@ -41,5 +41,28 @@ describe(isBareWorkflowProject, () => {
       projectRoot
     );
     expect(await isBareWorkflowProject('/mytest')).toBeFalsy();
+  });
+});
+
+describe(isInsideProjectAsync, () => {
+  const projectRoot = '/';
+
+  afterEach(() => {
+    vol.reset();
+  });
+
+  it('returns true if package.json is in the project folder', async () => {
+    vol.fromJSON(
+      {
+        '/package.json': '1',
+      },
+      projectRoot
+    );
+    expect(await isInsideProjectAsync(projectRoot)).toBeTruthy();
+  });
+
+  it('returns false if package.json is not in the project folder', async () => {
+    vol.fromJSON({}, projectRoot);
+    expect(await isInsideProjectAsync(projectRoot)).toBeFalsy();
   });
 });

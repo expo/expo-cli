@@ -36,7 +36,7 @@ function getEnvironmentInfoAsync(): Promise<string> {
 }
 
 /* Poor mans implementation to prevent bloating the package size */
-async function isInsideProjectAsync(projectRoot: string): Promise<boolean> {
+export async function isInsideProjectAsync(projectRoot: string): Promise<boolean> {
   try {
     await promises.access(
       path.join(projectRoot || process.cwd(), './package.json'),
