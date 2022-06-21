@@ -51,7 +51,7 @@ describe(isInsideProjectAsync, () => {
     vol.reset();
   });
 
-  it('returns true if package.json is in the project folder', async () => {
+  it('returns true if package.json is in the current folder', async () => {
     vol.fromJSON(
       {
         '/package.json': '1',
@@ -61,7 +61,7 @@ describe(isInsideProjectAsync, () => {
     expect(await isInsideProjectAsync(projectRoot)).toBeTruthy();
   });
 
-  it('returns false if package.json is not in the project folder', async () => {
+  it('returns false if package.json is not in the current folder', async () => {
     vol.fromJSON({}, projectRoot);
     expect(await isInsideProjectAsync(projectRoot)).toBeFalsy();
   });
