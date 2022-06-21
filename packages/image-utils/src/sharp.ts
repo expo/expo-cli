@@ -7,7 +7,7 @@ import semver from 'semver';
 import { Options, SharpCommandOptions, SharpGlobalOptions } from './sharp.types';
 
 const SHARP_HELP_PATTERN = /\n\nSpecify --help for available options/g;
-const SHARP_REQUIRED_VERSION = '^1.10.0';
+const SHARP_REQUIRED_VERSION = '^2.1.0';
 
 export async function resizeBufferAsync(buffer: Buffer, sizes: number[]): Promise<Buffer[]> {
   const sharp = await findSharpInstanceAsync();
