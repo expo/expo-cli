@@ -10,6 +10,8 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🧹 Chores
 
+- [image-utils] update expected `sharp-cli` version to 2.1.0 for M1 compatibility ([#4435](https://github.com/expo/expo-cli/pull/4435))
+
 ### 🐛 Bug fixes
 
 ## [Wed, 15 Jun 2022 20:47:15 -0700](https://github.com/expo/expo-cli/commit/2c8188fd3e0dbbc9f545ce4c59ea543d676f97eb)
