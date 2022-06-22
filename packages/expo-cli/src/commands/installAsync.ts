@@ -141,7 +141,7 @@ export async function actionAsync(
   await packageManager.addWithParametersAsync(versionedPackages, parameters);
 
   try {
-    exp = getConfig(projectRoot, { skipSDKVersionRequirement: true, skipPlugins: false }).exp;
+    exp = getConfig(projectRoot, { skipSDKVersionRequirement: true }).exp;
 
     // Only auto add plugins if the plugins array is defined or if the project is using SDK +42.
     await autoAddConfigPluginsAsync(
