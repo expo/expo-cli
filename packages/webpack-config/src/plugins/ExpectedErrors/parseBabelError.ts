@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2021 Expo, Inc.
- * Copyright (c) 2021 Vercel, Inc.
+ * Copyright © 2021 650 Industries.
+ * Copyright © 2021 Vercel, Inc.
  * Copyright 2014-present Sebastian McKenzie and other contributors
  *
  * This source code is licensed under the MIT license found in the
