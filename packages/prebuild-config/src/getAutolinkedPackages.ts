@@ -1,9 +1,5 @@
 import { ModPlatform, StaticPlugin } from '@expo/config-plugins';
 import { ExpoConfig } from '@expo/config-types';
-import {
-  findModulesAsync,
-  resolveSearchPathsAsync,
-} from 'expo-modules-autolinking/build/autolinking';
 
 /**
  * Returns a list of packages that are autolinked to a project.
@@ -16,11 +12,12 @@ export async function getAutolinkedPackagesAsync(
   projectRoot: string,
   platforms: ModPlatform[] = ['ios', 'android']
 ) {
-  const searchPaths = await resolveSearchPathsAsync(null, projectRoot);
+  const autolinking = importExpoModulesAutolinking(projectRoot);
+  const searchPaths = await autolinking.resolveSearchPathsAsync(null, projectRoot);
 
   const platformPaths = await Promise.all(
     platforms.map(platform =>
-      findModulesAsync({
+      autolinking.findModulesAsync({
         platform,
         searchPaths,
         silent: true,
@@ -63,4 +60,20 @@ export function shouldSkipAutoPlugin(
     }
   }
   return false;
+}
+
+/**
+ * Imports the `expo-modules-autolinking` package installed in the project at the given path.
+ */
+function importExpoModulesAutolinking(projectRoot: string) {
+  try {
+    const resolvedAutolinkingPath = require.resolve('expo-modules-autolinking/build/autolinking', {
+      paths: [projectRoot],
+    });
+    return require(resolvedAutolinkingPath);
+  } catch (error) {
+    throw new Error(
+      "Cannot find 'expo-modules-autolinking' package in your project, make sure that you have 'expo' package installed"
+    );
+  }
 }
