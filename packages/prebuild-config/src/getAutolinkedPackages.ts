@@ -1,6 +1,8 @@
 import { ModPlatform, StaticPlugin } from '@expo/config-plugins';
 import { ExpoConfig } from '@expo/config-types';
 
+import { importExpoModulesAutolinking } from './importExpoModulesAutolinking';
+
 /**
  * Returns a list of packages that are autolinked to a project.
  *
@@ -60,20 +62,4 @@ export function shouldSkipAutoPlugin(
     }
   }
   return false;
-}
-
-/**
- * Imports the `expo-modules-autolinking` package installed in the project at the given path.
- */
-function importExpoModulesAutolinking(projectRoot: string) {
-  try {
-    const resolvedAutolinkingPath = require.resolve('expo-modules-autolinking/build/autolinking', {
-      paths: [projectRoot],
-    });
-    return require(resolvedAutolinkingPath);
-  } catch (error) {
-    throw new Error(
-      "Cannot find 'expo-modules-autolinking' package in your project, make sure that you have 'expo' package installed"
-    );
-  }
 }

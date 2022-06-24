@@ -46,6 +46,9 @@
     "semver": "7.3.2",
     "xml2js": "0.4.23"
   },
+  "peerDependencies": {
+    "expo-modules-autolinking": ">=0.8.1"
+  },
   "publishConfig": {
     "access": "public"
   }
