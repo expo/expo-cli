@@ -94,7 +94,6 @@ async function launchChromiumAsync(url: string): Promise<void> {
     '--allow-running-insecure-content',
     `--user-data-dir=${tempProfileDir}`,
     '--no-first-run',
-    '--no-startup-window',
     '--no-default-browser-check',
   ];
 
