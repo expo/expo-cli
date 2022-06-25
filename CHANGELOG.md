@@ -10,11 +10,37 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🧹 Chores
 
-- [image-utils] update expected `sharp-cli` version to 2.1.0 for M1 compatibility ([#4435](https://github.com/expo/expo-cli/pull/4435))
+### 🐛 Bug fixes
+
+## [Fri, 24 Jun 2022 17:35:58 -0700](https://github.com/expo/expo-cli/commit/5441ad05c2b99429cee32e5be5ddd5bcedcec204)
+
+### 🛠 Breaking changes
+
+### 🎉 New features
+
+### 🧹 Chores
 
 ### 🐛 Bug fixes
 
-- [cli] Fix ignored existing plugins on `expo install`. ([#4429]([https://github.com/expo/expo/pull/17936](https://github.com/expo/expo-cli/pull/4429))
+- [cli] Fix ignored existing plugins on `expo install`. ([#4429](<[https://github.com/expo/expo/pull/17936](https://github.com/expo/expo-cli/pull/4429)>)
+- [cli] Remove no-startup-window flag when starting Hermes debugger
+- [expo-env-info] don't show workflow type outside of project folder ([#4310](https://github.com/expo/expo-cli/issues/4310))
+- [fix] fix auto TypeScript version check ([#4439](https://github.com/expo/expo-cli/issues/4439))
+- [image-utils] update expected `sharp-cli` version to 2.1.0 for M1 compatibility ([#4435](https://github.com/expo/expo-cli/pull/4435))
+
+### 📦 Packages updated
+
+- @expo/dev-server@0.1.114
+- @expo/dev-tools@0.13.159
+- expo-cli@5.4.12
+- expo-env-info@1.0.4
+- expo-optimize@0.2.17
+- @expo/image-utils@0.3.21
+- @expo/next-adapter@4.0.7
+- @expo/prebuild-config@4.0.3
+- expo-pwa@0.0.120
+- @expo/webpack-config@0.16.25
+- xdl@59.2.42
 
 ## [Wed, 15 Jun 2022 20:47:15 -0700](https://github.com/expo/expo-cli/commit/2c8188fd3e0dbbc9f545ce4c59ea543d676f97eb)
 
@@ -277,7 +303,6 @@ This is the log of notable changes to Expo CLI and related packages.
 
 - [next-adapter] revert webpack5 detection ([#4254](https://github.com/expo/expo-cli/issues/4254))
 - [metro-config] Removes duplicate `json` extensions in metro `assetExts` and `sourceExts`. ([#4255](https://github.com/expo/expo-cli/pull/4255))
-
 
 ### 🎉 New features
 
