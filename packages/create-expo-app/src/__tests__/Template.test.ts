@@ -1,22 +1,26 @@
+import path from 'path';
+
 import { resolvePackageModuleId } from '../Template';
 
 describe(resolvePackageModuleId, () => {
   it(`resolves 'file:' path`, () => {
-    expect(resolvePackageModuleId('file:./path/to/template.tgz')).toEqual({
+    const result = resolvePackageModuleId('file:./path/to/template.tgz');
+    expect(result).toEqual({
       type: 'file',
-      uri: './path/to/template.tgz',
+      uri: expect.stringMatching('./path/to/template.tgz'),
     });
+    expect(path.isAbsolute(result.uri)).toBe(true);
   });
   it(`resolves darwin local path`, () => {
     expect(resolvePackageModuleId('./path/to/template.tgz')).toEqual({
       type: 'file',
-      uri: './path/to/template.tgz',
+      uri: expect.stringMatching('./path/to/template.tgz'),
     });
   });
   it(`resolves windows local path`, () => {
     expect(resolvePackageModuleId('.\\path\\to\\template.tgz')).toEqual({
       type: 'file',
-      uri: '.\\path\\to\\template.tgz',
+      uri: expect.stringMatching(/template\.tgz$/),
     });
   });
   it(`resolves module ID`, () => {

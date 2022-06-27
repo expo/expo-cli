@@ -44,10 +44,10 @@ export function resolvePackageModuleId(moduleId: string) {
     moduleId?.startsWith(path.sep)
   ) {
     if (moduleId?.startsWith('file:')) {
-      moduleId = moduleId.substring('file:'.length);
+      moduleId = moduleId.substring(5);
     }
     debug(`Resolved moduleId to file path:`, moduleId);
-    return { type: 'file', uri: moduleId };
+    return { type: 'file', uri: path.resolve(moduleId) };
   } else {
     debug(`Resolved moduleId to NPM package:`, moduleId);
     return { type: 'npm', uri: moduleId };

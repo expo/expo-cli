@@ -55,7 +55,7 @@ async function cloneTemplateAsync(projectRoot: string, template: string | null) 
     extractTemplateStep.fail(
       'Something went wrong in downloading and extracting the project files: ' + error.message
     );
-    Log.exit(`Error cloning template: %O`, error);
+    Log.exit(`Error cloning template: ` + error);
   }
 }
 
