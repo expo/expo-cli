@@ -6,7 +6,7 @@ import Log from '../../../../log';
 import { logNewSection } from '../../../../utils/ora';
 import { RootNodePackage, VersionSpec } from './explain.types';
 
-type TargetPackage = { name: string; version: VersionSpec };
+type TargetPackage = { name: string; version?: VersionSpec };
 
 function isSpawnResult(result: any): result is SpawnResult {
   return 'stderr' in result && 'stdout' in result && 'status' in result;
@@ -24,13 +24,13 @@ export async function explainAsync(
     const { stdout } = await spawnAsync('npm', args, {
       stdio: 'pipe',
     });
-    ora.succeed(`Found all copies of ${packageName}`);
+    ora.stop();
 
     return JSON.parse(stdout);
   } catch (error: any) {
     if (isSpawnResult(error)) {
       if (error.stderr.match(/npm ERR! No dependencies found matching/)) {
-        ora.succeed();
+        ora.stop();
         return null;
       } else if (error.stdout.match(/Usage: npm <command>/)) {
         ora.fail(
@@ -56,6 +56,7 @@ export async function warnAboutDeepDependenciesAsync(pkg: TargetPackage): Promis
     Log.debug(`No dependencies found for ${pkg.name}`);
     return true;
   }
+
   return printExplanationsAsync(pkg, explanations);
 }
 
@@ -102,7 +103,7 @@ export async function printExplanationsAsync(
   const { invalid } = organizeExplanations(pkg, {
     explanations,
     isValid(otherPkg) {
-      return semver.satisfies(otherPkg.version, pkg.version);
+      return semver.satisfies(otherPkg.version!, pkg.version!);
     },
   });
 
@@ -110,7 +111,7 @@ export async function printExplanationsAsync(
     printInvalidPackages(pkg, { explanations: invalid });
     return false;
   } else {
-    Log.log(chalk`  All copies of {bold ${pkg.name}} satisfy {green ${pkg.version}}`);
+    Log.log(chalk`All copies of {bold ${pkg.name}} satisfy {green ${pkg.version}}`);
     return true;
   }
 }
@@ -119,7 +120,11 @@ function printInvalidPackages(
   pkg: TargetPackage,
   { explanations }: { explanations: RootNodePackage[] }
 ) {
-  Log.warn(`Expected package ${formatPkg(pkg, 'green')}`);
+  if (pkg.version) {
+    Log.warn(`Expected package ${formatPkg(pkg, 'green')}`);
+  } else {
+    Log.warn(`Expected to not find any copies of ${formatPkg(pkg, 'green')}`);
+  }
   Log.warn(chalk`Found invalid:`);
   Log.warn(explanations.map(explanation => '  ' + formatPkg(explanation, 'red')).join('\n'));
   Log.warn(chalk`  {dim (for more info, run: {bold npm why ${pkg.name}})}`);
@@ -128,5 +133,9 @@ function printInvalidPackages(
 }
 
 function formatPkg(pkg: TargetPackage, versionColor: string) {
-  return chalk`{bold ${pkg.name}}{cyan @}{${versionColor} ${pkg.version}}`;
+  if (pkg.version) {
+    return chalk`{bold ${pkg.name}}{cyan @}{${versionColor} ${pkg.version}}`;
+  } else {
+    return chalk`{bold ${pkg.name}}`;
+  }
 }

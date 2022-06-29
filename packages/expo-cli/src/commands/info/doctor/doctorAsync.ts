@@ -32,7 +32,23 @@ async function validateSupportPackagesAsync(sdkVersion: string): Promise<boolean
       }
     }
   }
+
+  // None of these packages should exist in any modern project
+  const illegalPackages = [
+    '@unimodules/core',
+    '@unimodules/react-native-adapter',
+    'react-native-unimodules',
+  ];
+
+  for (const pkg of illegalPackages) {
+    const isPackageAbsent = await warnAboutDeepDependenciesAsync({ name: pkg });
+    if (!isPackageAbsent) {
+      allPackagesValid = false;
+    }
+  }
+
   Log.newLine();
+
   return allPackagesValid;
 }
 
