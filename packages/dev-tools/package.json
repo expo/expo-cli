@@ -22,11 +22,11 @@
     "better-opn": "^3.0.1",
     "express": "4.16.4",
     "freeport-async": "2.0.0",
-    "graphql": "0.13.2",
-    "graphql-tools": "3.0.0",
+    "graphql": "16.5.0",
+    "graphql-tools": "8.3.0",
     "iterall": "1.2.2",
     "lodash": "^4.17.19",
-    "subscriptions-transport-ws": "0.9.8"
+    "subscriptions-transport-ws": "0.11.0"
   },
   "peerDependencies": {
     "xdl": "*"
@@ -46,7 +46,7 @@
     "cross-env": "^7.0.2",
     "emotion": "^9.2.9",
     "emotion-server": "^9.2.9",
-    "graphql-tag": "^2.9.1",
+    "graphql-tag": "^2.12.6",
     "has-ansi": "^3.0.0",
     "http-proxy-middleware": "^0.18.0",
     "next": "^9.0.0",
