@@ -111,7 +111,7 @@ export async function printExplanationsAsync(
     printInvalidPackages(pkg, { explanations: invalid });
     return false;
   } else {
-    Log.log(chalk`All copies of {bold ${pkg.name}} satisfy {green ${pkg.version}}`);
+    Log.debug(chalk`All copies of {bold ${pkg.name}} satisfy {green ${pkg.version}}`);
     return true;
   }
 }
