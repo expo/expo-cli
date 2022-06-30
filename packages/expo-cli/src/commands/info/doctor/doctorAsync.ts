@@ -32,24 +32,27 @@ async function validateSupportPackagesAsync(sdkVersion: string): Promise<boolean
       }
     }
   }
+  return allPackagesValid;
+}
 
-  // None of these packages should exist in any modern project
+// Ensures that a set of packages
+async function validateIllegalPackagesAsync(): Promise<boolean> {
   const illegalPackages = [
     '@unimodules/core',
     '@unimodules/react-native-adapter',
     'react-native-unimodules',
   ];
 
+  let allPackagesLegal = true;
+
   for (const pkg of illegalPackages) {
     const isPackageAbsent = await warnAboutDeepDependenciesAsync({ name: pkg });
     if (!isPackageAbsent) {
-      allPackagesValid = false;
+      allPackagesLegal = false;
     }
   }
 
-  Log.newLine();
-
-  return allPackagesValid;
+  return allPackagesLegal;
 }
 
 export async function actionAsync(projectRoot: string, options: Options) {
@@ -61,6 +64,12 @@ export async function actionAsync(projectRoot: string, options: Options) {
   // Only use the new validation on SDK +45.
   if (Versions.gteSdkVersion(exp, '45.0.0')) {
     if (!(await validateSupportPackagesAsync(exp.sdkVersion!))) {
+      foundSomeIssues = true;
+    }
+  }
+
+  if (Versions.gteSdkVersion(exp, '44.0.0')) {
+    if (!(await validateIllegalPackagesAsync())) {
       foundSomeIssues = true;
     }
   }
