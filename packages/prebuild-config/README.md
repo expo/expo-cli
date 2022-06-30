@@ -1,16 +1,3 @@
-<!-- Title -->
-<h1 align="center">
-👋 Welcome to <br><code>@expo/prebuild-config</code>
-</h1>
+# `@expo/prebuild-config`
 
-<p align="center">Get the modified config for <code>expo prebuild</code>.</p>
-
-<p align="center">
-  <img src="https://flat.badgen.net/packagephobia/install/@expo/prebuild-config">
-
-  <a href="https://www.npmjs.com/package/@expo/prebuild-config">
-    <img src="https://flat.badgen.net/npm/dw/@expo/prebuild-config" target="_blank" />
-  </a>
-</p>
-
-<!-- Body -->
+This package has [moved to the `expo/expo` repo](https://github.com/expo/expo/tree/main/packages/%40expo/prebuild-config).
