@@ -1,5 +1,6 @@
 import * as Constants from 'app/common/constants';
 import ProjectManagerSection from 'app/components/ProjectManagerSection';
+import DeprecatedBanner from 'app/components/DeprecatedBanner';
 import * as React from 'react';
 import { css } from 'react-emotion';
 
@@ -251,6 +252,7 @@ export default class ProjectManagerLayout extends React.Component {
 
     return (
       <section className={STYLES_MAIN_SECTION}>
+        <DeprecatedBanner />
         {navigationSection}
         {alertSection}
         <div className={STYLES_CONTAINER}>
@@ -263,6 +265,7 @@ export default class ProjectManagerLayout extends React.Component {
               {this.props.headerSection ? (
                 <div className={STYLES_CONTAINER_MIDDLE_TOP_HEADER}>{headerSection}</div>
               ) : null}
+
               <div className={STYLES_CONTAINER_MIDDLE_TOP_ACTIONS}>{toolbarSection}</div>
             </div>
             {sectionElements}
