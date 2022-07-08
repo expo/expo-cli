@@ -47,7 +47,7 @@ body {
 export async function getInitialProps({ renderPage }) {
   AppRegistry.registerComponent('Main', () => Main);
   const { getStyleElement } = AppRegistry.getApplication('Main');
-  const page = renderPage();
+  const page = await renderPage();
   const styles = [<style dangerouslySetInnerHTML={{ __html: style }} />, getStyleElement()];
   return { ...page, styles: React.Children.toArray(styles) };
 }
