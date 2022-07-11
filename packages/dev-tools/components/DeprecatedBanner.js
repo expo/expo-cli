@@ -19,7 +19,7 @@ export default function DeprecatedBanner() {
     <div className={STYLES_BANNER}>
       <span className={STYLES_INDICATOR}>
         This Development UI is deprecated, please use the Terminal UI instead.{' '}
-        <a style={{ color: 'white' }} href="#">
+        <a style={{ color: 'white' }} href="https://blog.expo.dev/sunsetting-the-web-ui-for-expo-cli-ab12936d2206">
           Learn more
         </a>
         .
