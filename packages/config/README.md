@@ -3,7 +3,7 @@
 👋 Welcome to <br><code>@expo/config</code>
 </h1>
 
-<p align="center">A library for interacting with the <code>app.json</code>.</p>
+<p align="center">A library for interacting with the <code>app.json</code> and <code>app.config.js</code>.</p>
 
 <p align="center">
   <img src="https://flat.badgen.net/packagephobia/install/@expo/config">
