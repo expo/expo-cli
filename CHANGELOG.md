@@ -12,9 +12,28 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
-## [Mon, 11 Jul 2022 13:58:56 -0700](https://github.com/expo/expo-cli/commit/413f14e366e090c2c5f3f53103d764fc30b97b4b)
+## [Mon, 11 Jul 2022 14:48:32 -0700](https://github.com/expo/expo-cli/commit/ad7d79c9b216de9c62b52083aa407c843f261bdd)
 
-### 🛠 Breaking changes
+### 🐛 Bug fixes
+
+- Republish packages in order to prevent @expo/config@6.0.25 from being pulled in.
+
+### 📦 Packages updated
+
+- @expo/config@6.0.26
+- @expo/dev-server@0.1.116
+- @expo/dev-tools@0.13.161
+- expo-cli@5.5.1
+- expo-optimize@0.2.18
+- install-expo-modules@0.3.5
+- @expo/metro-config@0.3.19
+- @expo/next-adapter@4.0.8
+- @expo/prebuild-config@4.0.4
+- expo-pwa@0.0.121
+- @expo/webpack-config@0.16.26
+- xdl@59.2.44
+
+## [Mon, 11 Jul 2022 13:58:56 -0700](https://github.com/expo/expo-cli/commit/413f14e366e090c2c5f3f53103d764fc30b97b4b)
 
 ### 🎉 New features
 
