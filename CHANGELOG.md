@@ -12,6 +12,29 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+## [Mon, 11 Jul 2022 13:58:56 -0700](https://github.com/expo/expo-cli/commit/413f14e366e090c2c5f3f53103d764fc30b97b4b)
+
+### 🛠 Breaking changes
+
+### 🎉 New features
+
+- [doctor] Validate that projects do not include illegal packages ([#4448](https://github.com/expo/expo-cli/issues/4448))
+
+### 🧹 Chores
+
+- [dev-tools-ui] add deprecated banner to dev tools UI ([#4453](https://github.com/expo/expo-cli/issues/4453))
+
+### 🐛 Bug fixes
+
+- [dev-server] Support prebuilt hermes in react-native 0.69 ([#4462](https://github.com/expo/expo-cli/issues/4462))
+
+### 📦 Packages updated
+
+- @expo/dev-server@0.1.115
+- @expo/dev-tools@0.13.160
+- expo-cli@5.5.0
+- xdl@59.2.43
+
 ## [Fri, 24 Jun 2022 17:35:58 -0700](https://github.com/expo/expo-cli/commit/5441ad05c2b99429cee32e5be5ddd5bcedcec204)
 
 ### 🛠 Breaking changes
