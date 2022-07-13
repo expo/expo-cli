@@ -82,7 +82,10 @@
     "@types/webpack-dev-server": "3.11.0",
     "@types/webpack-manifest-plugin": "~2.1.0",
     "jest-puppeteer": "^4.4.0",
-    "serve": "^11.1.0"
+    "serve": "^11.1.0",
+    "expo": "45",
+    "metro": "~0.64.0",
+    "react-native": "~0.64.3"
   },
   "browserslist": {
     "production": [
