@@ -240,26 +240,26 @@ export function getDefaultConfig(
     server: {
       port: Number(process.env.RCT_METRO_PORT) || 8081,
     },
-    symbolicator: {
-      customizeFrame: frame => {
-        let collapse = Boolean(frame.file && INTERNAL_CALLSITES_REGEX.test(frame.file));
+    // symbolicator: {
+    //   customizeFrame: frame => {
+    //     let collapse = Boolean(frame.file && INTERNAL_CALLSITES_REGEX.test(frame.file));
 
-        if (!collapse) {
-          // This represents the first frame of the stacktrace.
-          // Often this looks like: `__r(0);`.
-          // The URL will also be unactionable in the app and therefore not very useful to the developer.
-          if (
-            frame.column === 3 &&
-            frame.methodName === 'global code' &&
-            frame.file?.match(/^https?:\/\//g)
-          ) {
-            collapse = true;
-          }
-        }
+    //     if (!collapse) {
+    //       // This represents the first frame of the stacktrace.
+    //       // Often this looks like: `__r(0);`.
+    //       // The URL will also be unactionable in the app and therefore not very useful to the developer.
+    //       if (
+    //         frame.column === 3 &&
+    //         frame.methodName === 'global code' &&
+    //         frame.file?.match(/^https?:\/\//g)
+    //       ) {
+    //         collapse = true;
+    //       }
+    //     }
 
-        return { ...(frame || {}), collapse };
-      },
-    },
+    //     return { ...(frame || {}), collapse };
+    //   },
+    // },
     transformer: {
       allowOptionalDependencies: true,
       babelTransformerPath: isExotic
