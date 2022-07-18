@@ -8,6 +8,7 @@ import { Log } from './log';
 import { formatRunCommand, PackageManagerName } from './resolvePackageManager';
 import { env } from './utils/env';
 import {
+  applyBetaTag,
   applyKnownNpmPackageNameRules,
   downloadAndExtractNpmModuleAsync,
   getResolvedTemplateName,
@@ -68,7 +69,7 @@ export async function extractAndPrepareTemplateAppAsync(
 
   const { type, uri } = resolvePackageModuleId(npmPackage || 'expo-template-blank');
 
-  const resolvedUri = type === 'file' ? uri : getResolvedTemplateName(uri);
+  const resolvedUri = type === 'file' ? uri : getResolvedTemplateName(applyBetaTag(uri));
 
   await downloadAndExtractNpmModuleAsync(resolvedUri, {
     cwd: projectRoot,
