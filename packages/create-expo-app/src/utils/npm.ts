@@ -33,6 +33,7 @@ export function applyBetaTag(npmPackageName: string): string {
   let [name, tag] = splitNpmNameAndTag(npmPackageName);
 
   if (!tag && env.EXPO_BETA) {
+    debug('Using beta tag for', name);
     tag = 'beta';
   }
 
