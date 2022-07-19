@@ -7,7 +7,10 @@ import { Command } from 'commander';
 import prompts from 'prompts';
 
 import { withAndroidModules } from './plugins/android/withAndroidModules';
-import { withIosDeploymentTarget } from './plugins/ios/withIosDeploymentTarget';
+import {
+  shouldUpdateDeployTargetPodfileAsync,
+  withIosDeploymentTarget,
+} from './plugins/ios/withIosDeploymentTarget';
 import { withIosModules } from './plugins/ios/withIosModules';
 import { getDefaultSdkVersion, getVersionInfo, VersionInfo } from './utils/expoVersionMappings';
 import { installExpoPackageAsync, installPodsAsync } from './utils/packageInstaller';
@@ -39,13 +42,20 @@ function getSdkVersionInfo(): VersionInfo {
   return getDefaultSdkVersion(projectRoot);
 }
 
-async function runAsync(programName: string) {
-  projectRoot = normalizeProjectRoot(projectRoot);
+/**
+ * Show a prompt before upgrading the iOS deployment target version for the target project.
+ *
+ * @returns true if user confirm to update. otherwise, returns false.
+ */
+async function promptUpgradeIosDeployTargetAsync(projectRoot: string, iosDeploymentTarget: string) {
+  if (!(await shouldUpdateDeployTargetPodfileAsync(projectRoot, iosDeploymentTarget))) {
+    return true;
+  }
 
-  const { expoSdkVersion: sdkVersion, iosDeploymentTarget } = getSdkVersionInfo();
   const deploymentTargetMessage = `Expo modules minimum iOS requirement is ${iosDeploymentTarget}. This tool will change your iOS deployment target to ${iosDeploymentTarget}.`;
   if (program.nonInteractive) {
     console.log(chalk.yellow(`⚠️  ${deploymentTargetMessage}`));
+    return true;
   } else {
     const { value } = await prompts({
       type: 'confirm',
@@ -53,9 +63,16 @@ async function runAsync(programName: string) {
       message: `${deploymentTargetMessage} Do you want to continue?`,
       initial: true,
     });
-    if (!value) {
-      return;
-    }
+    return !!value;
+  }
+}
+
+async function runAsync(programName: string) {
+  projectRoot = normalizeProjectRoot(projectRoot);
+
+  const { expoSdkVersion: sdkVersion, iosDeploymentTarget } = getSdkVersionInfo();
+  if (!(await promptUpgradeIosDeployTargetAsync(projectRoot, iosDeploymentTarget))) {
+    return;
   }
 
   const platforms: ModPlatform[] = ['android', 'ios'];

@@ -30,16 +30,35 @@ const withIosDeploymentTargetPodfile: IosDeploymentTargetConfigPlugin = (config,
   ]);
 };
 
+// Because regexp //g is stateful, to use it multiple times, we should create a new one.
+function createPodfilePlatformRegExp() {
+  return /^(\s*platform :ios, ['"])([\d.]+)(['"])/gm;
+}
+
 export function updateDeploymentTargetPodfile(contents: string, deploymentTarget: string): string {
-  return contents.replace(
-    /^(\s*platform :ios, ['"])([\d.]+)(['"])/gm,
-    (match, prefix, version, suffix) => {
-      if (semver.lt(toSemVer(version), toSemVer(deploymentTarget))) {
-        return `${prefix}${deploymentTarget}${suffix}`;
-      }
-      return match;
+  return contents.replace(createPodfilePlatformRegExp(), (match, prefix, version, suffix) => {
+    if (semver.lt(toSemVer(version), toSemVer(deploymentTarget))) {
+      return `${prefix}${deploymentTarget}${suffix}`;
     }
-  );
+    return match;
+  });
+}
+
+export async function shouldUpdateDeployTargetPodfileAsync(
+  projectRoot: string,
+  targetVersion: string
+) {
+  const podfilePath = path.join(projectRoot, 'ios', 'Podfile');
+  const podfile = await fs.promises.readFile(podfilePath, 'utf-8');
+  const matchResult = createPodfilePlatformRegExp().exec(podfile);
+  if (!matchResult) {
+    console.warn(
+      'Unrecognized `ios/Podfile` content, will skip the process to update minimum iOS supported version.'
+    );
+    return false;
+  }
+  const [, , version] = matchResult;
+  return semver.lt(toSemVer(version), toSemVer(targetVersion));
 }
 
 const withIosDeploymentTargetXcodeProject: IosDeploymentTargetConfigPlugin = (config, props) => {
