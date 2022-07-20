@@ -38,8 +38,6 @@ jobs:
             create-expo-app,
             dev-tools,
             babel-preset-cli,
-            config,
-            config-plugins,
             expo-cli,
             expo-codemod,
             image-utils,

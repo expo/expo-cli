@@ -66,9 +66,6 @@
 | Package                                                     | Version                                                                                                                                               |
 | ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [**`@expo/babel-preset-cli`**](./packages/babel-preset-cli) | [![badges](https://img.shields.io/npm/v/@expo/babel-preset-cli?color=32cd32&style=flat-square)](https://www.npmjs.com/package/@expo/babel-preset-cli) |
-| [**`@expo/config`**](./packages/config)                     | [![badges](https://img.shields.io/npm/v/@expo/config?color=32cd32&style=flat-square)](https://www.npmjs.com/package/@expo/config)                     |
-| [**`@expo/config-plugins`**](./packages/config-plugins)     | [![badges](https://img.shields.io/npm/v/@expo/config-plugins?color=32cd32&style=flat-square)](https://www.npmjs.com/package/@expo/config-plugins)     |
-| [**`@expo/config-types`**](./packages/config-types)         | [![badges](https://img.shields.io/npm/v/@expo/config-types?color=32cd32&style=flat-square)](https://www.npmjs.com/package/@expo/config-types)         |
 | [**`@expo/dev-tools`**](./packages/dev-tools)               | [![badges](https://img.shields.io/npm/v/@expo/dev-tools?color=32cd32&style=flat-square)](https://www.npmjs.com/package/@expo/dev-tools)               |
 | [**`expo-cli`**](./packages/expo-cli)                       | [![badges](https://img.shields.io/npm/v/expo-cli?color=32cd32&style=flat-square)](https://www.npmjs.com/package/expo-cli)                             |
 | [**`expo-codemod`**](./packages/expo-codemod)               | [![badges](https://img.shields.io/npm/v/expo-codemod?color=32cd32&style=flat-square)](https://www.npmjs.com/package/expo-codemod)                     |
@@ -81,7 +78,6 @@
 | [**`@expo/pkcs12`**](./packages/pkcs12)                     | [![badges](https://img.shields.io/npm/v/@expo/pkcs12?color=32cd32&style=flat-square)](https://www.npmjs.com/package/@expo/pkcs12)                     |
 | [**`@expo/plist`**](./packages/plist)                       | [![badges](https://img.shields.io/npm/v/@expo/plist?color=32cd32&style=flat-square)](https://www.npmjs.com/package/@expo/plist)                       |
 | [**`pod-install`**](./packages/pod-install)                 | [![badges](https://img.shields.io/npm/v/pod-install?color=32cd32&style=flat-square)](https://www.npmjs.com/package/pod-install)                       |
-| [**`@expo/prebuild-config`**](./packages/prebuild-config)   | [![badges](https://img.shields.io/npm/v/@expo/prebuild-config?color=32cd32&style=flat-square)](https://www.npmjs.com/package/@expo/prebuild-config)   |
 | [**`expo-pwa`**](./packages/pwa)                            | [![badges](https://img.shields.io/npm/v/expo-pwa?color=32cd32&style=flat-square)](https://www.npmjs.com/package/expo-pwa)                             |
 | [**`@expo/schemer`**](./packages/schemer)                   | [![badges](https://img.shields.io/npm/v/@expo/schemer?color=32cd32&style=flat-square)](https://www.npmjs.com/package/@expo/schemer)                   |
 | [**`uri-scheme`**](./packages/uri-scheme)                   | [![badges](https://img.shields.io/npm/v/uri-scheme?color=32cd32&style=flat-square)](https://www.npmjs.com/package/uri-scheme)                         |

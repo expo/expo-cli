@@ -1,16 +1,3 @@
-<!-- Title -->
-<h1 align="center">
-👋 Welcome to <br><code>@expo/config</code>
-</h1>
+# `@expo/config`
 
-<p align="center">A library for interacting with the <code>app.json</code> and <code>app.config.js</code>.</p>
-
-<p align="center">
-  <img src="https://flat.badgen.net/packagephobia/install/@expo/config">
-
-  <a href="https://www.npmjs.com/package/@expo/config">
-    <img src="https://flat.badgen.net/npm/dw/@expo/config" target="_blank" />
-  </a>
-</p>
-
-<!-- Body -->
+This package has [moved to the `expo/expo` repo](https://github.com/expo/expo/tree/main/packages/%40expo/config).
