@@ -12,6 +12,39 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+## [Wed, 20 Jul 2022 16:42:39 -0700](https://github.com/expo/expo-cli/commit/8c3da4b3c28eef860dc612f18c841c57eaa28a7d)
+
+### 🎉 New features
+
+- [install-expo-modules] Add SDK 46 support ([#4471](https://github.com/expo/expo-cli/issues/4471))
+- [create-expo-app] add support for EXPO_BETA flag ([#4474](https://github.com/expo/expo-cli/issues/4474))
+
+### 🧹 Chores
+
+- Deleted config packages ([#4449](https://github.com/expo/expo-cli/issues/4449))
+- Deleted metro packages ([#4465](https://github.com/expo/expo-cli/issues/4465))
+
+### 🐛 Bug fixes
+
+- [next-adapter] Fix showstopper in next-adapter/document.js ([#4461](https://github.com/expo/expo-cli/issues/4461))
+
+### 📦 Packages updated
+
+- create-expo-app@1.0.4
+- @expo/dev-tools@0.13.165
+- expo-cli@5.6.0
+- expo-env-info@1.0.5
+- expo-optimize@0.2.19
+- @expo/image-utils@0.3.22
+- install-expo-modules@0.3.7
+- @expo/next-adapter@4.0.9
+- @expo/package-manager@0.0.56
+- pod-install@0.1.38
+- expo-pwa@0.0.122
+- @expo/schemer@1.4.3
+- @expo/webpack-config@0.16.27
+- xdl@59.2.47
+
 ## [Mon, 11 Jul 2022 14:48:32 -0700](https://github.com/expo/expo-cli/commit/ad7d79c9b216de9c62b52083aa407c843f261bdd)
 
 ### 🐛 Bug fixes
