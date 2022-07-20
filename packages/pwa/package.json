@@ -1,6 +1,6 @@
 {
   "name": "expo-pwa",
-  "version": "0.0.120",
+  "version": "0.0.122",
   "main": "build",
   "preferGlobal": true,
   "keywords": [
@@ -33,7 +33,7 @@
   },
   "dependencies": {
     "@expo/config": "6.0.24",
-    "@expo/image-utils": "0.3.21",
+    "@expo/image-utils": "0.3.22",
     "chalk": "^4.0.0",
     "commander": "2.20.0",
     "update-check": "1.5.3"
