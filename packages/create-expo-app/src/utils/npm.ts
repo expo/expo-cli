@@ -25,7 +25,8 @@ const pipeline = promisify(Stream.pipeline);
 
 const cachedFetch = createFetch({
   cacheDirectory: 'template-cache',
-  // Set no timeout on the templates since they're versioned already.
+  // We'll use a 3 day cache for versions so older versions get flushed out eventually.
+  ttl: 1000 * 60 * 60 * 24 * 3,
 });
 
 /** Applies the `@beta` npm tag when `EXPO_BETA` is enabled. */
