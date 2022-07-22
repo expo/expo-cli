@@ -98,6 +98,9 @@ Object {
     ],
     "strictExportPresence": false,
   },
+  "optimization": Object {
+    "usedExports": false,
+  },
   "output": Object {
     "chunkFilename": "static/js/[name].chunk.js",
     "devtoolModuleFilenameTemplate": [Function],
@@ -309,6 +312,7 @@ Object {
       "chunks": "all",
       "name": false,
     },
+    "usedExports": false,
   },
   "output": Object {
     "chunkFilename": "static/js/[name].[contenthash:8].chunk.js",
@@ -420,6 +424,7 @@ Object {
   "entry": Object {
     "app": Array [
       "node_modules/react-dev-utils/webpackHotDevClient.js",
+      "packages/webpack-config/e2e/basic/node_modules/resize-observer-polyfill/dist/ResizeObserver.global.js",
       "packages/webpack-config/e2e/basic/index.js",
     ],
   },
@@ -528,6 +533,9 @@ Object {
     "net": "empty",
     "tls": "empty",
   },
+  "optimization": Object {
+    "usedExports": false,
+  },
   "output": Object {
     "chunkFilename": "static/js/[name].chunk.js",
     "devtoolModuleFilenameTemplate": [Function],
@@ -606,6 +614,7 @@ Object {
   "devtool": "source-map",
   "entry": Object {
     "app": Array [
+      "packages/webpack-config/e2e/basic/node_modules/resize-observer-polyfill/dist/ResizeObserver.global.js",
       "packages/webpack-config/e2e/basic/index.js",
     ],
   },
@@ -794,6 +803,7 @@ Object {
       "chunks": "all",
       "name": false,
     },
+    "usedExports": false,
   },
   "output": Object {
     "chunkFilename": "static/js/[name].[contenthash:8].chunk.js",
