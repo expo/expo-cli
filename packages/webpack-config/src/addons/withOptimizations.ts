@@ -22,6 +22,12 @@ export function isDebugMode(): boolean {
  */
 export default function withOptimizations(webpackConfig: AnyConfiguration): AnyConfiguration {
   if (webpackConfig.mode !== 'production') {
+    webpackConfig.optimization = {
+      ...webpackConfig.optimization,
+      // Required for React Native packages that use import/export syntax:
+      // https://webpack.js.org/configuration/optimization/#optimizationusedexports
+      usedExports: false,
+    };
     return webpackConfig;
   }
   const shouldUseSourceMap = typeof webpackConfig.devtool === 'string';
@@ -29,6 +35,9 @@ export default function withOptimizations(webpackConfig: AnyConfiguration): AnyC
   const _isDebugMode = isDebugMode();
 
   webpackConfig.optimization = {
+    // Required for React Native packages that use import/export syntax:
+    // https://webpack.js.org/configuration/optimization/#optimizationusedexports
+    usedExports: false,
     ...(webpackConfig.optimization || {}),
     nodeEnv: false,
     minimize: true,

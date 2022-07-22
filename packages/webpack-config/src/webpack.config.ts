@@ -587,9 +587,8 @@ export default async function (
     webpackConfig.target = 'webworker';
   }
 
-  if (isProd) {
-    webpackConfig = withOptimizations(webpackConfig);
-  } else {
+  webpackConfig = withOptimizations(webpackConfig);
+  if (!isProd) {
     webpackConfig = withDevServer(webpackConfig, env, {
       allowedHost: argv.allowedHost,
       proxy: argv.proxy,
