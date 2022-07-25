@@ -408,8 +408,8 @@ export async function startAsync(projectRoot: string, options: StartOptions) {
       }
       case 'D':
       case 'd': {
-        Log.log(
-          `${BLT} Dev Tools UI has been deprecated. ${learnMore(
+        Log.warn(
+          `\n${BLT} Dev Tools UI has been deprecated. ${learnMore(
             'https://blog.expo.dev/sunsetting-the-web-ui-for-expo-cli-ab12936d2206'
           )}`
         );
