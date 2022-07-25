@@ -409,7 +409,7 @@ export async function startAsync(projectRoot: string, options: StartOptions) {
       case 'D':
       case 'd': {
         Log.warn(
-          `\n${BLT} Dev Tools UI has been deprecated. ${learnMore(
+          `\n${BLT} Dev Tools Web UI has been removed. ${learnMore(
             'https://blog.expo.dev/sunsetting-the-web-ui-for-expo-cli-ab12936d2206'
           )}`
         );
