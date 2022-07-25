@@ -98,6 +98,9 @@ Object {
     ],
     "strictExportPresence": false,
   },
+  "optimization": Object {
+    "usedExports": false,
+  },
   "output": Object {
     "chunkFilename": "static/js/[name].chunk.js",
     "devtoolModuleFilenameTemplate": [Function],
@@ -309,6 +312,7 @@ Object {
       "chunks": "all",
       "name": false,
     },
+    "usedExports": false,
   },
   "output": Object {
     "chunkFilename": "static/js/[name].[contenthash:8].chunk.js",
@@ -527,6 +531,9 @@ Object {
     "module": "empty",
     "net": "empty",
     "tls": "empty",
+  },
+  "optimization": Object {
+    "usedExports": false,
   },
   "output": Object {
     "chunkFilename": "static/js/[name].chunk.js",
@@ -794,6 +801,7 @@ Object {
       "chunks": "all",
       "name": false,
     },
+    "usedExports": false,
   },
   "output": Object {
     "chunkFilename": "static/js/[name].[contenthash:8].chunk.js",
