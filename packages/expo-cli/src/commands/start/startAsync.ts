@@ -16,7 +16,6 @@ import { validateDependenciesVersionsAsync } from '../utils/validateDependencies
 import { ensureWebSupportSetupAsync } from '../utils/web/ensureWebSetup';
 import * as TerminalUI from './TerminalUI';
 import { installCustomExitHook, installExitHooks } from './installExitHooks';
-import { tryOpeningDevToolsAsync } from './openDevTools';
 import { NormalizedOptions, parseStartOptions } from './parseStartOptions';
 
 export async function actionAsync(projectRoot: string, options: NormalizedOptions): Promise<void> {
@@ -55,12 +54,6 @@ export async function actionAsync(projectRoot: string, options: NormalizedOption
 
   // TODO: This is useless on mac, check if useless on win32
   const rootPath = path.resolve(projectRoot);
-
-  // Optionally open the developer tools UI.
-  await profileMethod(tryOpeningDevToolsAsync)(rootPath, {
-    exp,
-    options,
-  });
 
   if (Versions.gteSdkVersion(exp, '34.0.0')) {
     await profileMethod(ensureTypeScriptSetupAsync)(projectRoot);

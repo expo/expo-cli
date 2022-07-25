@@ -1,6 +1,5 @@
 import { ExpoConfig } from '@expo/config-types';
 import { openJsInspector, queryAllInspectorAppsAsync } from '@expo/dev-server';
-import openBrowserAsync from 'better-opn';
 import chalk from 'chalk';
 import wrapAnsi from 'wrap-ansi';
 import {
@@ -51,15 +50,6 @@ const printHelp = (): void => {
 
 const div = chalk.dim(`│`);
 
-export async function shouldOpenDevToolsOnStartupAsync() {
-  return UserSettings.getAsync(
-    'openDevToolsAtStartup',
-    // Defaults to false for new users.
-    // We can swap this back to true when dev tools UI has a code owner again.
-    false
-  );
-}
-
 const printUsageAsync = async (
   projectRoot: string,
   options: Pick<
@@ -68,9 +58,7 @@ const printUsageAsync = async (
   >
 ) => {
   const { dev } = await ProjectSettings.readAsync(projectRoot);
-  const openDevToolsAtStartup = await shouldOpenDevToolsOnStartupAsync();
   const devMode = dev ? 'development' : 'production';
-  const currentToggle = openDevToolsAtStartup ? 'enabled' : 'disabled';
 
   const isMac = process.platform === 'darwin';
 
@@ -99,13 +87,6 @@ const printUsageAsync = async (
     !options.isRemoteReloadingEnabled && { key: 'r', msg: `restart bundler` },
     !options.isRemoteReloadingEnabled && { key: 'shift+r', msg: `restart and clear cache` },
     {},
-    { key: 'd', msg: `show developer tools` },
-    {
-      key: 'shift+d',
-      msg: `toggle auto opening developer tools on startup`,
-      status: currentToggle,
-    },
-    {},
   ]);
 };
 
@@ -116,8 +97,6 @@ const printBasicUsageAsync = async (
   >
 ) => {
   const isMac = process.platform === 'darwin';
-  const openDevToolsAtStartup = await shouldOpenDevToolsOnStartupAsync();
-  const currentToggle = openDevToolsAtStartup ? 'enabled' : 'disabled';
 
   const { platforms = ['ios', 'android', 'web'] } = options;
 
@@ -133,12 +112,6 @@ const printBasicUsageAsync = async (
     {},
     !!options.isRemoteReloadingEnabled && { key: 'r', msg: `reload app` },
     !!options.isWebSocketsEnabled && { key: 'm', msg: `toggle menu` },
-    { key: 'd', msg: `show developer tools` },
-    {
-      key: 'shift+d',
-      msg: `toggle auto opening developer tools on startup`,
-      status: currentToggle,
-    },
     {},
   ]);
 };
@@ -225,13 +198,6 @@ const printServerInfo = async (
   printHelp();
   Log.addNewLineIfNone();
 };
-
-export async function openDeveloperTools(url: string) {
-  Log.log(`Opening developer tools in the browser...`);
-  if (!(await openBrowserAsync(url))) {
-    Log.warn(`Unable to open developer tools in the browser`);
-  }
-}
 
 async function openJsInsectorAsync(projectRoot: string) {
   Log.log(`Opening JavaScript inspector in the browser...`);
@@ -440,18 +406,13 @@ export async function startAsync(projectRoot: string, options: StartOptions) {
         await printServerInfo(projectRoot, options);
         break;
       }
+      case 'D':
       case 'd': {
-        const { devToolsPort } = await ProjectSettings.readPackagerInfoAsync(projectRoot);
-        openDeveloperTools(`http://localhost:${devToolsPort}`);
-        printHelp();
-        break;
-      }
-      case 'D': {
-        const enabled = !(await shouldOpenDevToolsOnStartupAsync());
-        await UserSettings.setAsync('openDevToolsAtStartup', enabled);
-        const currentToggle = enabled ? 'enabled' : 'disabled';
-        Log.log(`Auto opening developer tools on startup: ${chalk.bold(currentToggle)}`);
-        logCommandsTable([{ key: 'd', msg: `show developer tools now` }]);
+        Log.log(
+          `${BLT} Dev Tools UI has been deprecated. ${learnMore(
+            'https://blog.expo.dev/sunsetting-the-web-ui-for-expo-cli-ab12936d2206'
+          )}`
+        );
         break;
       }
       case 'j': {
