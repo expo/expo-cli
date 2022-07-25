@@ -12,6 +12,29 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+## [Mon, 25 Jul 2022 14:09:28 -0700](https://github.com/expo/expo-cli/commit/0f34bd72db14d9504877dd9a0b1d7b44f6f99a3c)
+
+### 🛠 Breaking changes
+
+- [expo-cli] stop showing dev tools UI ([#4482](https://github.com/expo/expo-cli/issues/4482))
+
+### 🧹 Chores
+
+- [create-expo-app] drop all URL caching in favor of temporary cache ([#4481](https://github.com/expo/expo-cli/issues/4481))
+
+### 🐛 Bug fixes
+
+- [webpack-config] fix import export treeshaking ([#4476](https://github.com/expo/expo-cli/issues/4476))
+
+### 📦 Packages updated
+
+- create-expo-app@1.1.1
+- @expo/dev-tools@0.13.166
+- expo-cli@6.0.0
+- @expo/next-adapter@4.0.10
+- @expo/webpack-config@0.17.0
+- xdl@59.2.48
+
 ## [Wed, 20 Jul 2022 16:42:39 -0700](https://github.com/expo/expo-cli/commit/8c3da4b3c28eef860dc612f18c841c57eaa28a7d)
 
 ### 🎉 New features
