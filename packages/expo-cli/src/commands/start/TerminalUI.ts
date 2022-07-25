@@ -12,7 +12,6 @@ import {
   Simulator,
   UrlUtils,
   UserManager,
-  UserSettings,
   Webpack,
 } from 'xdl';
 
