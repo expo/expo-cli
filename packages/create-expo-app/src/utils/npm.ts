@@ -1,5 +1,6 @@
 import spawnAsync from '@expo/spawn-async';
 import fs from 'fs';
+import os from 'os';
 import path from 'path';
 import { Stream } from 'stream';
 import tar from 'tar';
@@ -9,7 +10,6 @@ import { createEntryResolver, createFileTransform } from '../createFileTransform
 import { ALIASES } from '../legacyTemplates';
 import { Log } from '../log';
 import { env } from './env';
-import { createFetch, getCacheFilePath } from './fetch';
 
 const debug = require('debug')('expo:init:npm') as typeof console.log;
 
@@ -18,15 +18,16 @@ type ExtractProps = {
   cwd: string;
   strip?: number;
   fileList?: string[];
+  disableCache?: boolean;
 };
 
 // @ts-ignore
 const pipeline = promisify(Stream.pipeline);
 
-const cachedFetch = createFetch({
-  cacheDirectory: 'template-cache',
-  // Set no timeout on the templates since they're versioned already.
-});
+function getTemporaryCacheFilePath(subdir: string = 'template-cache') {
+  // This is cleared when the device restarts
+  return path.join(os.tmpdir(), '.create-expo-app', subdir);
+}
 
 /** Applies the `@beta` npm tag when `EXPO_BETA` is enabled. */
 export function applyBetaTag(npmPackageName: string): string {
@@ -113,22 +114,6 @@ export async function extractLocalNpmTarballAsync(
   await extractNpmTarballAsync(readStream, props);
 }
 
-export async function createUrlStreamAsync(url: string) {
-  const response = await cachedFetch(url);
-  if (!response.ok) {
-    throw new Error(`Unexpected response: ${response.statusText}. From url: ${url}`);
-  }
-
-  return response.body;
-}
-
-export async function extractNpmTarballFromUrlAsync(
-  url: string,
-  props: ExtractProps
-): Promise<void> {
-  await extractNpmTarballAsync(await createUrlStreamAsync(url), props);
-}
-
 export async function extractNpmTarballAsync(
   stream: NodeJS.ReadableStream | null,
   props: ExtractProps
@@ -164,7 +149,12 @@ async function npmPackAsync(
   const cmd = ['pack', packageName, ...props];
 
   const cmdString = `${npm} ${cmd.join(' ')}`;
-  debug('Run:', cmdString);
+  debug('Run:', cmdString, `(cwd: ${cwd ?? process.cwd()})`);
+
+  if (cwd) {
+    await fs.promises.mkdir(cwd, { recursive: true });
+  }
+
   let results: string;
   try {
     results = (await spawnAsync(npm, [...cmd, '--json'], { cwd })).stdout?.trim();
@@ -225,8 +215,8 @@ function getNpmBin() {
   return process.platform === 'win32' ? 'npm.cmd' : 'npm';
 }
 
-async function getNpmInfoAsync(moduleId: string): Promise<NpmPackageInfo> {
-  const infos = await npmPackAsync(moduleId, getCacheFilePath(), '--dry-run');
+async function getNpmInfoAsync(moduleId: string, cwd: string): Promise<NpmPackageInfo> {
+  const infos = await npmPackAsync(moduleId, cwd, '--dry-run');
   if (infos?.[0]) {
     return infos[0];
   }
@@ -244,32 +234,49 @@ function isNpmPackageInfo(item: any): item is NpmPackageInfo {
   );
 }
 
+async function fileExistsAsync(path: string): Promise<boolean> {
+  try {
+    const stat = await fs.promises.stat(path);
+    return stat.isFile();
+  } catch {
+    return false;
+  }
+}
+
 export async function downloadAndExtractNpmModuleAsync(
   npmName: string,
   props: ExtractProps
 ): Promise<void> {
-  const cachePath = getCacheFilePath();
+  const cachePath = getTemporaryCacheFilePath();
 
   debug(`Looking for NPM tarball (id: ${npmName}, cache: ${cachePath})`);
 
   await fs.promises.mkdir(cachePath, { recursive: true });
 
-  const info = await getNpmInfoAsync(npmName);
+  const info = await getNpmInfoAsync(npmName, cachePath);
 
+  const cacheFilename = path.join(cachePath, info.filename);
   try {
-    const cacheFilename = path.join(cachePath, info.filename);
+    // TODO: This cache does not expire.
+    const fileExists = await fileExistsAsync(cacheFilename);
 
-    // TODO: This cache does not expire, but neither does the FileCache at the top of this file.
-    if (!(await fs.promises.stat(cacheFilename).catch(() => null))?.isFile() ?? false) {
+    const disableCache = env.EXPO_NO_CACHE || props.disableCache;
+    if (disableCache || !fileExists) {
       debug(`Downloading tarball for ${npmName} to ${cachePath}...`);
       await npmPackAsync(npmName, cachePath);
     }
+  } catch (error: any) {
+    Log.error('Error downloading template package: ' + npmName);
+    throw error;
+  }
+
+  try {
     await extractLocalNpmTarballAsync(cacheFilename, {
       cwd: props.cwd,
       name: props.name,
     });
   } catch (error: any) {
-    Log.error('Error downloading and extracting template package: ' + npmName);
+    Log.error('Error extracting template package: ' + npmName);
     throw error;
   }
 }

@@ -74,6 +74,7 @@ export async function extractAndPrepareTemplateAppAsync(
   await downloadAndExtractNpmModuleAsync(resolvedUri, {
     cwd: projectRoot,
     name: projectName,
+    disableCache: type === 'file',
   });
 
   const config: Record<string, any> = {
