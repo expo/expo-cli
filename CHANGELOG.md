@@ -12,6 +12,18 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+## [Tue, 26 Jul 2022 15:36:36 -0400](https://github.com/expo/expo-cli/commit/0a8681d04e3558676384c767b61aa123c140dfc1)
+
+### 🐛 Bug fixes
+
+- [xdl] include version number in package info cache ([#4484](https://github.com/expo/expo-cli/issues/4484))
+
+### 📦 Packages updated
+
+- @expo/dev-tools@0.13.167
+- expo-cli@6.0.1
+- xdl@59.2.49
+
 ## [Mon, 25 Jul 2022 14:09:28 -0700](https://github.com/expo/expo-cli/commit/0f34bd72db14d9504877dd9a0b1d7b44f6f99a3c)
 
 ### 🛠 Breaking changes
