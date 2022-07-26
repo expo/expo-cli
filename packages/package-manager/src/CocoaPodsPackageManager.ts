@@ -29,12 +29,18 @@ export function extractMissingDependencyError(errorOutput: string): [string, str
   return null;
 }
 
+interface CocoaPodsPackageManagerProps {
+  cwd: string;
+  silent?: boolean;
+  spawnOptions?: SpawnOptions;
+  isNonInteractive?: boolean;
+}
+
 export class CocoaPodsPackageManager implements PackageManager {
   options: SpawnOptions;
 
-  private silent: boolean;
+  silent: boolean;
   private isNonInteractive: boolean;
-  private shouldUseRubyBundler: boolean;
 
   static getPodProjectRoot(projectRoot: string): string | null {
     if (CocoaPodsPackageManager.isUsingPods(projectRoot)) return projectRoot;
@@ -49,6 +55,7 @@ export class CocoaPodsPackageManager implements PackageManager {
     return existsSync(path.join(projectRoot, 'Podfile'));
   }
 
+  // Visible for testing
   static isUsingRubyBundler(projectRoot: string): boolean {
     return existsSync(path.join(projectRoot, 'Gemfile'));
   }
@@ -65,22 +72,17 @@ export class CocoaPodsPackageManager implements PackageManager {
     return true;
   }
 
-  constructor({
-    cwd,
-    silent,
-    spawnOptions,
-    isNonInteractive,
-    shouldUseRubyBundler,
-  }: {
-    cwd: string;
-    silent?: boolean;
-    spawnOptions?: SpawnOptions;
-    isNonInteractive?: boolean;
-    shouldUseRubyBundler?: boolean;
-  }) {
+  static create(projectRoot: string, props: CocoaPodsPackageManagerProps): CocoaPodsPackageManager {
+    if (this.isUsingRubyBundler(projectRoot)) {
+      return new CocoaPodsBundlerPackageManager(props);
+    } else {
+      return new CocoaPodsPackageManager(props);
+    }
+  }
+
+  constructor({ cwd, silent, spawnOptions, isNonInteractive }: CocoaPodsPackageManagerProps) {
     this.silent = !!silent;
     this.isNonInteractive = !!isNonInteractive;
-    this.shouldUseRubyBundler = !!shouldUseRubyBundler;
     this.options = {
       cwd,
       // We use pipe by default instead of inherit so that we can capture stderr/stdout and process it for errors.
@@ -134,47 +136,7 @@ export class CocoaPodsPackageManager implements PackageManager {
     await spawnAsync('brew', ['install', 'cocoapods'], this.options);
   }
 
-  private async rubyBundlerInstallCLIAsync(): Promise<void> {
-    await spawnAsync('bundle', ['install'], this.options);
-  }
-
-  private async installCLIUsingBundlerAsync(): Promise<boolean> {
-    !this.silent && console.log(`\u203A Attempting to install CocoaPods CLI with Bundler`);
-    try {
-      await this.rubyBundlerInstallCLIAsync();
-    } catch (error: any) {
-      if (!this.silent) {
-        console.log(chalk.yellow(`\u203A Failed to install CocoaPods CLI with Bundler`));
-        console.log(chalk.red(error.stderr ?? error.message));
-      }
-      throw new CocoaPodsError(
-        'CLI could not be installed automatically with bundler, please install CocoaPods manually(`bundle install`) and try again',
-        'NO_CLI',
-        error
-      );
-    }
-    if (await this.isCLIInstalledAsync()) {
-      !this.silent && console.log(`\u203A Successfully installed CocoaPods CLI with Bundler`);
-      return true;
-    } else {
-      !this.silent &&
-        console.log(
-          chalk.red(
-            `\u203A Failed to install CocoaPods CLI with Bundler. Make sure cocoapods is in your Gemfile`
-          )
-        );
-      throw new CocoaPodsError(
-        '`bundle install` appeared to succeed but CocoaPods CLI not found in PATH and unable to link.',
-        'NO_CLI'
-      );
-    }
-  }
-
   public async installCLIAsync(): Promise<boolean> {
-    if (this.shouldUseRubyBundler) {
-      return this.installCLIUsingBundlerAsync();
-    }
-
     try {
       !this.silent && console.log(`\u203A Attempting to install CocoaPods CLI with Gem`);
       await this.gemInstallCLIAsync();
@@ -351,15 +313,11 @@ export class CocoaPodsPackageManager implements PackageManager {
     args?: readonly string[],
     options?: SpawnOptions
   ): SpawnPromise<SpawnResult> {
-    if (this.shouldUseRubyBundler) {
-      return spawnAsync('bundle', ['exec', 'pod', ...(args ?? [])], options);
-    } else {
-      return spawnAsync('pod', args, options);
-    }
+    return spawnAsync('pod', args, options);
   }
 
-  private podCommandForDisplay(): string {
-    return this.shouldUseRubyBundler ? 'bundle exec pod' : 'pod';
+  podCommandForDisplay(): string {
+    return 'pod';
   }
 
   async addWithParametersAsync(names: string[], parameters: string[]) {
@@ -505,6 +463,55 @@ export class CocoaPodsPackageManager implements PackageManager {
       'COMMAND_FAILED',
       error
     );
+  }
+}
+
+export class CocoaPodsBundlerPackageManager extends CocoaPodsPackageManager {
+  public async installCLIAsync(): Promise<boolean> {
+    !this.silent && console.log(`\u203A Attempting to install CocoaPods CLI with Bundler`);
+    try {
+      await this.rubyBundlerInstallCLIAsync();
+    } catch (error: any) {
+      if (!this.silent) {
+        console.log(chalk.yellow(`\u203A Failed to install CocoaPods CLI with Bundler`));
+        console.log(chalk.red(error.stderr ?? error.message));
+      }
+      throw new CocoaPodsError(
+        'CLI could not be installed automatically with bundler, please install Gems manually(`bundle install`) and try again',
+        'NO_CLI',
+        error
+      );
+    }
+    if (await this.isCLIInstalledAsync()) {
+      !this.silent && console.log(`\u203A Successfully installed CocoaPods CLI with Bundler`);
+      return true;
+    } else {
+      !this.silent &&
+        console.log(
+          chalk.red(
+            `\u203A Failed to install CocoaPods CLI with Bundler. Make sure cocoapods is in your Gemfile`
+          )
+        );
+      throw new CocoaPodsError(
+        '`bundle install` appeared to succeed but CocoaPods CLI not found in PATH and unable to link.',
+        'NO_CLI'
+      );
+    }
+  }
+
+  private async rubyBundlerInstallCLIAsync(): Promise<void> {
+    await spawnAsync('bundle', ['install'], this.options);
+  }
+
+  spawnPodCommandAsync(
+    args?: readonly string[],
+    options?: SpawnOptions
+  ): SpawnPromise<SpawnResult> {
+    return spawnAsync('bundle', ['exec', 'pod', ...(args ?? [])], options);
+  }
+
+  podCommandForDisplay(): string {
+    return 'bundle exec pod';
   }
 }
 

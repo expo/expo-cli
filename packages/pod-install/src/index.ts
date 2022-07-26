@@ -39,20 +39,18 @@ async function runAsync(): Promise<void> {
     return;
   }
 
-  const useRubyBundler = CocoaPodsPackageManager.isUsingRubyBundler(projectRoot);
-
+  let podfileRoot = projectRoot;
   const possibleProjectRoot = CocoaPodsPackageManager.getPodProjectRoot(projectRoot);
   if (!possibleProjectRoot) {
     info(chalk.yellow('CocoaPods is not supported in this project'));
     return;
   } else {
-    projectRoot = possibleProjectRoot;
+    podfileRoot = possibleProjectRoot;
   }
 
-  const manager = new CocoaPodsPackageManager({
-    cwd: projectRoot,
+  const manager = CocoaPodsPackageManager.create(projectRoot, {
+    cwd: podfileRoot,
     isNonInteractive: program.nonInteractive,
-    shouldUseRubyBundler: useRubyBundler,
   });
   if (!(await manager.isCLIInstalledAsync())) {
     await manager.installCLIAsync();

@@ -338,15 +338,15 @@ describe('isUsingRubyBundler', () => {
 describe('spawnPodCommandAsync', () => {
   it('supports no Gemfile', async () => {
     const { CocoaPodsPackageManager } = require('../CocoaPodsPackageManager');
-    const manager = new CocoaPodsPackageManager({ shouldUseRubyBundler: false });
+    const manager = new CocoaPodsPackageManager({ cwd: projectRoot });
 
     await manager.spawnPodCommandAsync(['install']);
     expect(spawnAsync).toBeCalledWith('pod', ['install'], undefined);
   });
 
   it('supports Gemfile', async () => {
-    const { CocoaPodsPackageManager } = require('../CocoaPodsPackageManager');
-    const manager = new CocoaPodsPackageManager({ shouldUseRubyBundler: true });
+    const { CocoaPodsBundlerPackageManager } = require('../CocoaPodsPackageManager');
+    const manager = new CocoaPodsBundlerPackageManager({ cwd: projectRoot });
 
     await manager.spawnPodCommandAsync(['install']);
     expect(spawnAsync).toBeCalledWith('bundle', ['exec', 'pod', 'install'], undefined);

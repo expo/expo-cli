@@ -165,11 +165,9 @@ export async function installCocoaPodsAsync(projectRoot: string) {
     return false;
   }
 
-  const useRubyBundler = PackageManager.CocoaPodsPackageManager.isUsingRubyBundler(projectRoot);
-  const packageManager = new PackageManager.CocoaPodsPackageManager({
+  const packageManager = PackageManager.CocoaPodsPackageManager.create(projectRoot, {
     cwd: path.join(projectRoot, 'ios'),
     silent: !EXPO_DEBUG,
-    shouldUseRubyBundler: useRubyBundler,
   });
 
   if (!(await packageManager.isCLIInstalledAsync())) {
@@ -177,10 +175,9 @@ export async function installCocoaPodsAsync(projectRoot: string) {
       // prompt user -- do you want to install cocoapods right now?
       step.text = 'CocoaPods CLI not found in your PATH, installing it now.';
       step.stopAndPersist();
-      const noisyPackageManager = new PackageManager.CocoaPodsPackageManager({
+      const noisyPackageManager = PackageManager.CocoaPodsPackageManager.create(projectRoot, {
         cwd: path.join(projectRoot, 'ios'),
         silent: !EXPO_DEBUG,
-        shouldUseRubyBundler: useRubyBundler,
         spawnOptions: {
           // Don't silence this part
           stdio: ['inherit', 'inherit', 'pipe'],
