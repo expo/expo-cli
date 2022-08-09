@@ -4,6 +4,7 @@ import { getPrebuildConfigAsync } from '@expo/prebuild-config';
 
 import CommandError from '../../../CommandError';
 import Log from '../../../log';
+import { warnAboutLocalCLI } from '../../../utils/migration';
 import { logConfig } from '../../eject/configureProjectAsync';
 import { profileMethod } from '../../utils/profileMethod';
 
@@ -14,6 +15,10 @@ type Options = {
 };
 
 export async function actionAsync(projectRoot: string, options: Options) {
+  // Don't break the existing functionality.
+  if (!options.json) {
+    warnAboutLocalCLI(projectRoot, { localCmd: 'config' });
+  }
   let config: ProjectConfig;
 
   if (options.type === 'prebuild') {

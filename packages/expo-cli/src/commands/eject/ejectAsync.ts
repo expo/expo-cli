@@ -3,6 +3,7 @@ import { Versions } from 'xdl';
 
 import CommandError from '../../CommandError';
 import Log from '../../log';
+import { warnAboutLocalCLI } from '../../utils/migration';
 import { confirmAsync } from '../../utils/prompts';
 import { usesOldExpoUpdatesAsync } from '../utils/ProjectUtils';
 import maybeBailOnGitStatusAsync from '../utils/maybeBailOnGitStatusAsync';
@@ -50,6 +51,8 @@ export async function actionAsync(
     platform?: string;
   }
 ) {
+  warnAboutLocalCLI(projectRoot, { localCmd: 'prebuild' });
+
   const { exp } = getConfig(projectRoot);
 
   if (options.npm) {

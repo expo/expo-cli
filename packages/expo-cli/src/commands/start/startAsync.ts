@@ -7,6 +7,7 @@ import { LoadingPageHandler, Project, UnifiedAnalytics, UrlUtils, Versions } fro
 import StatusEventEmitter from '../../analytics/StatusEventEmitter';
 import getDevClientProperties from '../../analytics/getDevClientProperties';
 import Log from '../../log';
+import { warnAboutLocalCLI } from '../../utils/migration';
 import { assertProjectHasExpoExtensionFilesAsync } from '../utils/deprecatedExtensionWarnings';
 import { profileMethod } from '../utils/profileMethod';
 import * as sendTo from '../utils/sendTo';
@@ -19,6 +20,8 @@ import { installCustomExitHook, installExitHooks } from './installExitHooks';
 import { NormalizedOptions, parseStartOptions } from './parseStartOptions';
 
 export async function actionAsync(projectRoot: string, options: NormalizedOptions): Promise<void> {
+  warnAboutLocalCLI(projectRoot, { localCmd: 'start' });
+
   Log.log(chalk.gray(`Starting project at ${projectRoot}`));
 
   // Add clean up hooks
