@@ -9,7 +9,9 @@ export function warnAboutLocalCLI(projectRoot: string, { localCmd }: { localCmd:
   const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
   const useLocalCLI = boolish('EXPO_USE_LOCAL_CLI', true);
   if (Versions.gteSdkVersion(exp, '46.0.0') && useLocalCLI) {
-    Log.warn(chalk`\n\nMigrate to the local CLI command:\n\u203A {bold npx expo ${localCmd}}\n`);
+    Log.warn(
+      chalk`\nThis command is being executed with the global Expo CLI.\nTo use the local CLI instead (recommended in SDK 46 and higher), run:\n\u203A {bold npx expo ${localCmd}}\n`
+    );
   }
 }
 
