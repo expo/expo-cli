@@ -42,7 +42,6 @@ jobs:
             expo-codemod,
             image-utils,
             json-file,
-            package-manager,
             pkcs12,
             plist,
             pwa,
