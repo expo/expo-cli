@@ -9,6 +9,7 @@ import CommandError from '../../../CommandError';
 import StatusEventEmitter from '../../../analytics/StatusEventEmitter';
 import getDevClientProperties from '../../../analytics/getDevClientProperties';
 import Log from '../../../log';
+import { warnAboutLocalCLI } from '../../../utils/migration';
 import { promptToClearMalformedNativeProjectsAsync } from '../../eject/clearNativeFolder';
 import { prebuildAsync } from '../../eject/prebuildAppAsync';
 import { installCustomExitHook } from '../../start/installExitHooks';
@@ -127,6 +128,7 @@ async function resolveOptionsAsync(
 }
 
 export async function actionAsync(projectRoot: string, options: Options) {
+  warnAboutLocalCLI(projectRoot, { localCmd: 'run:android' });
   // If the user has an empty android folder then the project won't build, this can happen when they delete the prebuild files in git.
   // Check to ensure most of the core files are in place, and prompt to remove the folder if they aren't.
   await profileMethod(promptToClearMalformedNativeProjectsAsync)(projectRoot, ['android']);

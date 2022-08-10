@@ -1,3 +1,4 @@
+import { warnAboutLocalCLI } from '../../utils/migration';
 import maybeBailOnGitStatusAsync from '../utils/maybeBailOnGitStatusAsync';
 import { clearNativeFolder, promptToClearMalformedNativeProjectsAsync } from './clearNativeFolder';
 import { platformsFromPlatform } from './platformOptions';
@@ -17,6 +18,8 @@ export async function actionAsync(
     skipDependencyUpdate?: string;
   }
 ) {
+  warnAboutLocalCLI(projectRoot, { localCmd: 'prebuild' });
+
   if (options.npm) {
     options.packageManager = 'npm';
   }

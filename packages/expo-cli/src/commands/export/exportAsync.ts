@@ -7,6 +7,7 @@ import { UrlUtils } from 'xdl';
 
 import CommandError from '../../CommandError';
 import Log from '../../log';
+import { warnAboutLocalCLI } from '../../utils/migration';
 import prompt from '../../utils/prompts';
 import { platformsFromPlatform } from '../eject/platformOptions';
 import * as CreateApp from '../utils/CreateApp';
@@ -163,6 +164,8 @@ export async function collectMergeSourceUrlsAsync(
 }
 
 export async function actionAsync(projectRoot: string, options: Options) {
+  warnAboutLocalCLI(projectRoot, { localCmd: 'export' });
+
   if (!options.experimentalBundle) {
     // Ensure URL
     options.publicUrl = await ensurePublicUrlAsync(options.publicUrl, options.dev);

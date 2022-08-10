@@ -8,6 +8,7 @@ import prompts from 'prompts';
 import resolveFrom from 'resolve-from';
 
 import Log from '../../log';
+import { warnAboutLocalCLI } from '../../utils/migration';
 
 type Options = { force: boolean };
 
@@ -91,6 +92,7 @@ async function generateFilesAsync({
 }
 
 export async function actionAsync(projectRoot: string = './', options: Options = { force: false }) {
+  warnAboutLocalCLI(projectRoot, { localCmd: 'customize' });
   // Get the static path (defaults to 'web/')
   // Doesn't matter if expo is installed or which mode is used.
   const { exp } = getConfig(projectRoot, {
