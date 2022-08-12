@@ -10,6 +10,8 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🧹 Chores
 
+- [webpack-config] Remove explicit `@expo/config` dependency ([#4512](https://github.com/expo/expo-cli/pull/4512))
+
 ### 🐛 Bug fixes
 
 ## [Thu, 11 Aug 2022 17:55:34 -0700](https://github.com/expo/expo-cli/commit/8012304c978ae6f943b95210534536577418cb86)
