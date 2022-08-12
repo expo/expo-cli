@@ -32,10 +32,15 @@
     "clean": "rimraf build ./tsconfig.tsbuildinfo"
   },
   "dependencies": {
-    "@expo/config": "6.0.24",
     "@expo/image-utils": "0.3.22",
     "chalk": "^4.0.0",
     "commander": "2.20.0",
     "update-check": "1.5.3"
+  },
+  "devDependencies": {
+    "@expo/config": "6.0.24"
+  },
+  "peerDependencies": {
+    "expo": "*"
   }
 }
