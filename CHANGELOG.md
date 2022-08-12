@@ -12,6 +12,22 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+## [Tue, 9 Aug 2022 17:12:18 -0700](https://github.com/expo/expo-cli/commit/5cbaeba757f2ea1e27f6f962c7b63bcd3f462e03)
+
+### 🎉 New features
+
+- feat(cli): add migration logs when available ([#4505](https://github.com/expo/expo-cli/issues/4505))
+
+### 🧹 Chores
+
+- chore(expo-cli): add better warning when prebuilding in non-interactive mode ([#4456](https://github.com/expo/expo-cli/issues/4456))
+
+### 📦 Packages updated
+
+- @expo/dev-tools@0.13.168
+- expo-cli@6.0.2
+- xdl@59.2.50
+
 ## [Tue, 26 Jul 2022 15:36:36 -0400](https://github.com/expo/expo-cli/commit/0a8681d04e3558676384c767b61aa123c140dfc1)
 
 ### 🐛 Bug fixes
