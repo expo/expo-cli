@@ -10,7 +10,19 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🧹 Chores
 
+## [Thu, 11 Aug 2022 21:01:44 -0700](https://github.com/expo/expo-cli/commit/2989fd7bf0737e007f9cb8c72a78246d41bac0dc)
+
+### 🧹 Chores
+
 - [webpack-config] Remove explicit `@expo/config` dependency ([#4512](https://github.com/expo/expo-cli/pull/4512))
+
+### 📦 Packages updated
+
+- @expo/dev-tools@0.13.170
+- expo-cli@6.0.4
+- @expo/next-adapter@4.0.12
+- @expo/webpack-config@0.17.2
+- xdl@59.2.52
 
 ### 🐛 Bug fixes
 
