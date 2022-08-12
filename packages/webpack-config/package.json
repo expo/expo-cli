@@ -1,6 +1,6 @@
 {
   "name": "@expo/webpack-config",
-  "version": "0.17.0",
+  "version": "0.17.1",
   "description": "The default Webpack configuration used to build Expo apps targeting the web.",
   "main": "webpack.config.js",
   "types": "webpack.config.d.ts",
@@ -47,7 +47,7 @@
     "clean-webpack-plugin": "^3.0.0",
     "copy-webpack-plugin": "~6.0.3",
     "css-loader": "~3.6.0",
-    "expo-pwa": "0.0.122",
+    "expo-pwa": "0.0.123",
     "file-loader": "~6.0.0",
     "find-yarn-workspace-root": "~2.0.0",
     "getenv": "^1.0.0",
