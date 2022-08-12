@@ -17,7 +17,7 @@
     "build"
   ],
   "dependencies": {
-    "@expo/config": "6.0.24",
+    "@expo/config": "7.0.1",
     "base64url": "3.0.1",
     "better-opn": "^3.0.1",
     "express": "4.16.4",

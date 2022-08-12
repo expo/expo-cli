@@ -1,4 +1,4 @@
-import { ExpoConfig } from '@expo/config-types';
+import { ExpoConfig } from '@expo/config';
 import os from 'os';
 import { URLSearchParams } from 'url';
 

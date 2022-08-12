@@ -1,5 +1,4 @@
-import { getConfig } from '@expo/config';
-import { ExpoConfig } from '@expo/config-types';
+import { ExpoConfig, getConfig } from '@expo/config';
 import chalk from 'chalk';
 import { Versions } from 'xdl';
 

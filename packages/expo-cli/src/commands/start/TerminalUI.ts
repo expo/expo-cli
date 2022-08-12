@@ -1,4 +1,4 @@
-import { ExpoConfig } from '@expo/config-types';
+import { ExpoConfig } from '@expo/config';
 import { openJsInspector, queryAllInspectorAppsAsync } from '@expo/dev-server';
 import chalk from 'chalk';
 import wrapAnsi from 'wrap-ansi';

@@ -1,5 +1,4 @@
-import { getConfig } from '@expo/config';
-import { ExpoConfig } from '@expo/config-types';
+import { ExpoConfig, getConfig } from '@expo/config';
 import resolveFrom from 'resolve-from';
 import { Versions } from 'xdl';
 

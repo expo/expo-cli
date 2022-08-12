@@ -1,4 +1,4 @@
-import { ExpoConfig } from '@expo/config-types';
+import { ExpoConfig } from '@expo/config';
 import camelCase from 'lodash/camelCase';
 import isEmpty from 'lodash/isEmpty';
 import snakeCase from 'lodash/snakeCase';

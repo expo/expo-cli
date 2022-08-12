@@ -4,7 +4,7 @@ import {
   readConfigJson,
   writeConfigJsonAsync,
 } from '@expo/config';
-import type { ExpoConfig } from '@expo/config-types';
+import type { ExpoConfig } from '@expo/config';
 import JsonFile from '@expo/json-file';
 import * as PackageManager from '@expo/package-manager';
 import chalk from 'chalk';
