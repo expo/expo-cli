@@ -10,6 +10,16 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🧹 Chores
 
+## [Wed, 17 Aug 2022 09:13:43 -0700](https://github.com/expo/expo-cli/commit/e0f8c6f7bb2f70c57905947d37a6b7819fe8fc3d)
+
+### 🧹 Chores
+
+- [cli] Add learn more link about local CLI
+
+### 📦 Packages updated
+
+- expo-cli@6.0.5
+
 ## [Thu, 11 Aug 2022 21:01:44 -0700](https://github.com/expo/expo-cli/commit/2989fd7bf0737e007f9cb8c72a78246d41bac0dc)
 
 ### 🧹 Chores
