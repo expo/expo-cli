@@ -1,7 +1,6 @@
 /* eslint-env jest */
-import execa from 'execa';
-import { existsSync } from 'fs';
-import fs from 'fs-extra';
+import spawnAsync from '@expo/spawn-async';
+import fs from 'fs';
 import os from 'os';
 import path from 'path';
 
@@ -14,7 +13,7 @@ function getTemporaryPath() {
 }
 
 function execute(args, env) {
-  return execa('node', [cli, ...args], {
+  return spawnAsync('node', [cli, ...args], {
     cwd: projectRoot,
     env: {
       ...process.env,
@@ -30,7 +29,7 @@ async function executePassingAsync(args, env) {
 }
 
 function fileExists(projectName, filePath) {
-  return existsSync(path.join(projectRoot, projectName, filePath));
+  return fs.existsSync(path.join(projectRoot, projectName, filePath));
 }
 
 function getRoot(...args) {
@@ -42,14 +41,14 @@ const extendedTimeout = 3 * 1000 * 60;
 
 beforeAll(async () => {
   jest.setTimeout(extendedTimeout);
-  await fs.mkdirp(projectRoot);
+  fs.mkdirSync(projectRoot);
 });
 
 it('prevents overwriting directories with projects', async () => {
   const projectName = 'cannot-overwrite-files';
   const projectRoot = getRoot(projectName);
   // Create the project root aot
-  await fs.mkdirp(projectRoot);
+  fs.mkdirSync(projectRoot);
   // Create a fake package.json -- this is a terminal file that cannot be overwritten.
   fs.writeFileSync(path.join(projectRoot, 'package.json'), '{ "version": "1.0.0" }');
 
@@ -77,7 +76,7 @@ it(
 
     // Ensure the app.json is written properly
     const appJsonPath = path.join(projectRoot, projectName, 'app.json');
-    const appJson = JSON.parse(await fs.readFile(appJsonPath, 'utf8'));
+    const appJson = JSON.parse(fs.readFileSync(appJsonPath, { encoding: 'utf8' }));
     expect(appJson.expo.name).toBe('defaults-to-basic');
     expect(appJson.expo.slug).toBe('defaults-to-basic');
   },
@@ -91,10 +90,12 @@ describe('yes', () => {
       const projectName = 'yes-default-directory';
       const projectRoot = getRoot(projectName);
       // Create the project root aot
-      await fs.mkdirp(projectRoot);
+      fs.mkdirSync(projectRoot);
 
-      const results = await execa('node', [cli, '--yes', '--no-install'], { cwd: projectRoot });
-      expect(results.exitCode).toBe(0);
+      const results = await spawnAsync('node', [cli, '--yes', '--no-install'], {
+        cwd: projectRoot,
+      });
+      expect(results.status).toBe(0);
 
       expect(fileExists(projectName, 'package.json')).toBeTruthy();
       expect(fileExists(projectName, 'App.js')).toBeTruthy();
@@ -108,10 +109,10 @@ describe('yes', () => {
     async () => {
       const projectName = 'yes-new-directory';
 
-      const results = await execa('node', [cli, projectName, '-y', '--no-install'], {
+      const results = await spawnAsync('node', [cli, projectName, '-y', '--no-install'], {
         cwd: projectRoot,
       });
-      expect(results.exitCode).toBe(0);
+      expect(results.status).toBe(0);
 
       expect(fileExists(projectName, 'package.json')).toBeTruthy();
       expect(fileExists(projectName, 'App.js')).toBeTruthy();
@@ -189,7 +190,7 @@ describe('yes', () => {
   xit('creates a default project in a new directory with a custom template', async () => {
     const projectName = 'yes-custom-template';
 
-    const results = await execa(
+    const results = await spawnAsync(
       'node',
       [cli, projectName, '--yes', '--template', 'blank', '--no-install'],
       {
@@ -210,7 +211,7 @@ xdescribe('templates', () => {
     const projectName = 'can-overwrite';
     const projectRoot = getRoot(projectName);
     // Create the project root aot
-    await fs.mkdirp(projectRoot);
+    fs.mkdirSync(projectRoot);
     // Create a fake package.json -- this is a terminal file that cannot be overwritten.
     fs.writeFileSync(path.join(projectRoot, 'LICENSE'), 'hello world');
 
