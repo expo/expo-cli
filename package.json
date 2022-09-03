@@ -26,7 +26,7 @@
     ]
   },
   "dependencies": {
-    "@babel/cli": "^7.8.4",
+    "@babel/cli": "^7.18.10",
     "@expo/spawn-async": "^1.5.0",
     "@types/jest": "^26.0.8",
     "@types/node": "^12",

@@ -45,7 +45,7 @@
     "extends": "../../package.json"
   },
   "devDependencies": {
-    "@babel/core": "^7.9.0",
+    "@babel/core": "^7.18.13",
     "@types/cacache": "^15.0.1",
     "@types/command-exists": "^1.2.0",
     "@types/dateformat": "^3.0.0",
@@ -67,7 +67,7 @@
     "pretty-bytes": "^5.3.0"
   },
   "dependencies": {
-    "@babel/runtime": "7.9.0",
+    "@babel/runtime": "^7.18.9",
     "@expo/apple-utils": "0.0.0-alpha.31",
     "@expo/bunyan": "4.0.0",
     "@expo/config": "6.0.24",

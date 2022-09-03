@@ -28,12 +28,12 @@
     "build"
   ],
   "dependencies": {
-    "@babel/code-frame": "~7.10.4",
+    "@babel/code-frame": "^7.18.6",
     "json5": "^1.0.1",
     "write-file-atomic": "^2.3.0"
   },
   "devDependencies": {
-    "@types/babel__code-frame": "^7.0.1",
+    "@types/babel__code-frame": "^7.0.3",
     "@types/json5": "^0.0.30",
     "@types/write-file-atomic": "^2.1.1"
   },
