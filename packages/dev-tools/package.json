@@ -41,7 +41,7 @@
     "apollo-link-ws": "^1.0.8",
     "apollo-server-express": "^1.3.6",
     "babel-jest": "^26.2.2",
-    "babel-plugin-module-resolver": "^3.1.1",
+    "babel-plugin-module-resolver": "^4.1.0",
     "copy-to-clipboard": "^3.0.8",
     "cross-env": "^7.0.2",
     "emotion": "^9.2.9",
