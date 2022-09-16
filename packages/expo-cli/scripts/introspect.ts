@@ -111,18 +111,15 @@ function formatOptionsAsMarkdown(options: OptionData[]) {
 
 function formatCommandAsMarkdown(command: CommandData): string {
   return [
-    `<details>`,
-    `<summary>`,
-    `<h4>expo ${command.name}</h4>`,
-    `<p>${sanitizeFlags(command.description)}</p>`,
-    `</summary>`,
-    `<p>`,
+    `<Collapsible summary={<><h4>expo ${command.name}</h4>${sanitizeFlags(
+      command.description
+    )}</>}>`,
+    '',
     ...(command.alias ? ['', `Alias: \`expo ${command.alias}\``] : []),
     '',
     formatOptionsAsMarkdown(command.options),
     '',
-    '</p>',
-    '</details>',
+    '</Collapsible>',
     '',
   ].join('\n');
 }
