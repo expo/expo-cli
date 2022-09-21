@@ -1,9 +1,4 @@
-import { ConfigPlugin, withAppDelegate, withDangerousMod } from '@expo/config-plugins';
-import {
-  getAppDelegateObjcHeaderFilePath,
-  getPBXProjectPath,
-} from '@expo/config-plugins/build/ios/Paths';
-import { getDesignatedSwiftBridgingHeaderFileReference } from '@expo/config-plugins/build/ios/Swift';
+import { ConfigPlugin, IOSConfig, withAppDelegate, withDangerousMod } from '@expo/config-plugins';
 import {
   addObjcImports,
   insertContentsInsideObjcFunctionBlock,
@@ -12,7 +7,11 @@ import {
 import fs from 'fs';
 import { sync as globSync } from 'glob';
 import semver from 'semver';
-import xcode from 'xcode';
+
+import {
+  getDesignatedSwiftBridgingHeaderFileReference,
+  withXCParseXcodeProject,
+} from './withXCParseXcodeProject';
 
 export const withIosModulesAppDelegate: ConfigPlugin = config => {
   return withAppDelegate(config, config => {
@@ -28,7 +27,7 @@ export const withIosModulesAppDelegateObjcHeader: ConfigPlugin = config => {
     'ios',
     async config => {
       try {
-        const appDelegateObjcHeaderPath = getAppDelegateObjcHeaderFilePath(
+        const appDelegateObjcHeaderPath = IOSConfig.Paths.getAppDelegateObjcHeaderFilePath(
           config.modRequest.projectRoot
         );
         let contents = await fs.promises.readFile(appDelegateObjcHeaderPath, 'utf8');
@@ -41,38 +40,31 @@ export const withIosModulesAppDelegateObjcHeader: ConfigPlugin = config => {
 };
 
 export const withIosModulesSwiftBridgingHeader: ConfigPlugin = config => {
-  return withDangerousMod(config, [
-    'ios',
-    async config => {
-      const { projectRoot } = config.modRequest;
-      const projectFilePath = getPBXProjectPath(projectRoot);
-      const project = xcode.project(projectFilePath);
-      project.parseSync();
-
-      const bridgingHeaderFileName = getDesignatedSwiftBridgingHeaderFileReference({ project });
-      if (!bridgingHeaderFileName) {
-        return config;
-      }
-      const [bridgingHeaderFilePath] = globSync(
-        `ios/${bridgingHeaderFileName.replace(/['"]/g, '')}`,
-        {
-          absolute: true,
-          cwd: projectRoot,
-        }
-      );
-      if (!bridgingHeaderFilePath) {
-        return config;
-      }
-      let contents = await fs.promises.readFile(bridgingHeaderFilePath, 'utf8');
-
-      if (!contents.match(/^#import\s+<Expo\/Expo\.h>\s*$/m)) {
-        contents = addObjcImports(contents, ['<Expo/Expo.h>']);
-      }
-
-      await fs.promises.writeFile(bridgingHeaderFilePath, contents);
+  return withXCParseXcodeProject(config, async config => {
+    const bridgingHeaderFileName = getDesignatedSwiftBridgingHeaderFileReference(config.modResults);
+    if (!bridgingHeaderFileName) {
       return config;
-    },
-  ]);
+    }
+
+    const [bridgingHeaderFilePath] = globSync(
+      `ios/${bridgingHeaderFileName.replace(/['"]/g, '')}`,
+      {
+        absolute: true,
+        cwd: config.modRequest.projectRoot,
+      }
+    );
+    if (!bridgingHeaderFilePath) {
+      return config;
+    }
+    let contents = await fs.promises.readFile(bridgingHeaderFilePath, 'utf8');
+
+    if (!contents.match(/^#import\s+<Expo\/Expo\.h>\s*$/m)) {
+      contents = addObjcImports(contents, ['<Expo/Expo.h>']);
+    }
+
+    await fs.promises.writeFile(bridgingHeaderFilePath, contents);
+    return config;
+  });
 };
 
 export function updateModulesAppDelegateObjcImpl(

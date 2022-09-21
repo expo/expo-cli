@@ -12,6 +12,7 @@ import {
   withIosDeploymentTarget,
 } from './plugins/ios/withIosDeploymentTarget';
 import { withIosModules } from './plugins/ios/withIosModules';
+import { withXCParseXcodeProjectBaseMod } from './plugins/ios/withXCParseXcodeProject';
 import { getDefaultSdkVersion, getVersionInfo, VersionInfo } from './utils/expoVersionMappings';
 import { installExpoPackageAsync, installPodsAsync } from './utils/packageInstaller';
 import { normalizeProjectRoot } from './utils/projectRoot';
@@ -90,6 +91,9 @@ async function runAsync(programName: string) {
   config = withIosDeploymentTarget(config, {
     deploymentTarget: iosDeploymentTarget,
   });
+
+  // Keeps the base mods last
+  config = withXCParseXcodeProjectBaseMod(config);
 
   console.log('\u203A Updating your project...');
   await compileModsAsync(config, {
