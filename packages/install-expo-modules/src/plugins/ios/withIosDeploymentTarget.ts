@@ -1,12 +1,10 @@
-import {
-  ConfigPlugin,
-  withDangerousMod,
-  withXcodeProject,
-  XcodeProject,
-} from '@expo/config-plugins';
+import { ConfigPlugin, withDangerousMod } from '@expo/config-plugins';
 import fs from 'fs';
 import path from 'path';
 import semver from 'semver';
+import { ISA, XCBuildConfiguration } from 'xcparse';
+
+import { withXCParseXcodeProject, XCParseXcodeProject } from './withXCParseXcodeProject';
 
 type IosDeploymentTargetConfigPlugin = ConfigPlugin<{ deploymentTarget: string }>;
 
@@ -62,7 +60,7 @@ export async function shouldUpdateDeployTargetPodfileAsync(
 }
 
 const withIosDeploymentTargetXcodeProject: IosDeploymentTargetConfigPlugin = (config, props) => {
-  return withXcodeProject(config, config => {
+  return withXCParseXcodeProject(config, config => {
     config.modResults = updateDeploymentTargetXcodeProject(
       config.modResults,
       props.deploymentTarget
@@ -72,17 +70,19 @@ const withIosDeploymentTargetXcodeProject: IosDeploymentTargetConfigPlugin = (co
 };
 
 export function updateDeploymentTargetXcodeProject(
-  project: XcodeProject,
+  project: XCParseXcodeProject,
   deploymentTarget: string
-): XcodeProject {
-  const configurations = project.pbxXCBuildConfigurationSection();
-  for (const { buildSettings } of Object.values(configurations ?? {})) {
-    const currDeploymentTarget = buildSettings?.IPHONEOS_DEPLOYMENT_TARGET;
-    if (
-      currDeploymentTarget &&
-      semver.lt(toSemVer(currDeploymentTarget), toSemVer(deploymentTarget))
-    ) {
-      buildSettings.IPHONEOS_DEPLOYMENT_TARGET = deploymentTarget;
+): XCParseXcodeProject {
+  for (const section of Object.values(project.objects ?? {})) {
+    if (section.isa === ISA.XCBuildConfiguration) {
+      const { buildSettings } = section as XCBuildConfiguration;
+      const currDeploymentTarget = buildSettings?.IPHONEOS_DEPLOYMENT_TARGET;
+      if (
+        currDeploymentTarget &&
+        semver.lt(toSemVer(currDeploymentTarget), toSemVer(deploymentTarget))
+      ) {
+        buildSettings.IPHONEOS_DEPLOYMENT_TARGET = deploymentTarget;
+      }
     }
   }
   return project;
