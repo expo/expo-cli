@@ -93,6 +93,10 @@ export function updateModulesAppDelegateObjcImpl(
       /\[\[RCTRootView alloc\] initWithBridge:/g,
       '[self.reactDelegate createRootViewWithBridge:'
     );
+    contents = contents.replace(/\bRCTAppSetupDefaultRootView\((.+)\)/g, (match, group) => {
+      const [bridge, moduleName, initProps] = group.split(',').map((s: string) => s.trim());
+      return `[self.reactDelegate createRootViewWithBridge:${bridge} moduleName:${moduleName} initialProperties:${initProps}]`;
+    });
     contents = contents.replace(
       /\[UIViewController new\]/g,
       '[self.reactDelegate createRootViewController]'
