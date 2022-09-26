@@ -1,6 +1,6 @@
 {
   "name": "create-expo-app",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "main": "build",
   "description": "Create universal Expo apps",
   "license": "BSD-3-Clause",

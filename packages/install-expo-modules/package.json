@@ -1,6 +1,6 @@
 {
   "name": "install-expo-modules",
-  "version": "0.3.7",
+  "version": "0.3.8",
   "description": "Tools to install expo-modules for existing react-native projects",
   "main": "build",
   "scripts": {
