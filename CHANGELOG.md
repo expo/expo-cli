@@ -10,6 +10,26 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🧹 Chores
 
+## [Mon, 26 Sep 2022 16:10:32 -0700](https://github.com/expo/expo-cli/commit/baa05e13d84a2a4e16bf2481883c40233d1e9ef9)
+
+### 🧹 Chores
+
+- [xdl] fix schema test ([#4539](https://github.com/expo/expo-cli/issues/4539))
+- [CEA] bump and cleanup dependencies ([#4536](https://github.com/expo/expo-cli/issues/4536))
+
+### 🐛 Bug fixes
+
+- [install-expo-modules] Fix RCTRootView for react-native 0.68 or above ([#4555](https://github.com/expo/expo-cli/issues/4555))
+- [install-expo-modules] Replace xcode with xcparse ([#4554](https://github.com/expo/expo-cli/issues/4554))
+
+### 📦 Packages updated
+
+- create-expo-app@1.1.2
+- @expo/dev-tools@0.13.171
+- expo-cli@6.0.6
+- install-expo-modules@0.3.8
+- xdl@59.2.53
+
 ## [Wed, 17 Aug 2022 09:13:43 -0700](https://github.com/expo/expo-cli/commit/e0f8c6f7bb2f70c57905947d37a6b7819fe8fc3d)
 
 ### 🧹 Chores
