@@ -18,6 +18,12 @@ const debug = require('debug')('expo:init:template') as typeof console.log;
 
 const isMacOS = process.platform === 'darwin';
 
+const FORBIDDEN_NAMES = ['react-native', 'react', 'react-dom', 'react-native-web', 'expo'];
+
+export function isFolderNameForbidden(folderName: string): boolean {
+  return FORBIDDEN_NAMES.includes(folderName);
+}
+
 function deepMerge(target: any, source: any) {
   if (typeof target !== 'object') {
     return source;
