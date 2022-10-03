@@ -98,11 +98,11 @@ export default class Schemer {
       case 'not': {
         const notHuman = meta?.notHuman;
         const notHumanErrorMessage = notHuman
-          ? `'${dataPath}' should be ${notHuman[0].toLowerCase() + notHuman.slice(1)}`
-          : `'${dataPath}' ${message}`;
+          ? `'${instancePath}' should be ${notHuman[0].toLowerCase() + notHuman.slice(1)}`
+          : `'${instancePath}' ${message}`;
         return new ValidationError({
           errorCode: 'SCHEMA_INVALID_NOT',
-          fieldPath: dataPath,
+          fieldPath: instancePath,
           message: notHumanErrorMessage,
           data,
           meta,
