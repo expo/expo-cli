@@ -27,10 +27,11 @@
     "@types/lodash": "^4.14.176"
   },
   "dependencies": {
-    "ajv": "^6.12.6",
-    "json-schema-traverse": "0.3.1",
-    "lodash": "^4.17.19",
-    "probe-image-size": "~6.0.0",
+    "ajv": "^8.1.0",
+    "ajv-formats": "^2.0.2",
+    "json-schema-traverse": "^1.0.0",
+    "lodash": "^4.17.21",
+    "probe-image-size": "^7.1.0",
     "read-chunk": "^3.2.0"
   },
   "publishConfig": {
