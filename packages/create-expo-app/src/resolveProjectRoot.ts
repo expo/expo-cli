@@ -13,10 +13,12 @@ export function assertValidName(folderName: string) {
   if (typeof validation === 'string') {
     Log.exit(chalk`{red Cannot create an app named {bold "${folderName}"}. ${validation}}`, 1);
   }
-  
   const isFolderNameForbidden = Template.isFolderNameForbidden(folderName);
   if (isFolderNameForbidden) {
-    Log.exit(chalk`{red Cannot create an app named {bold "${folderName}"} because it would conflict with a dependency of the same name.}`, 1);
+    Log.exit(
+      chalk`{red Cannot create an app named {bold "${folderName}"} because it would conflict with a dependency of the same name.}`,
+      1
+    );
   }
 }
 
