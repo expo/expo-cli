@@ -3,7 +3,8 @@
 import { CocoaPodsPackageManager } from '@expo/package-manager/build/CocoaPodsPackageManager';
 import chalk from 'chalk';
 import { Command } from 'commander';
-import { resolve } from 'path';
+import { readFileSync } from 'fs';
+import { join, resolve } from 'path';
 
 import shouldUpdate from './update';
 
@@ -41,6 +42,22 @@ async function runAsync(): Promise<void> {
 
   const possibleProjectRoot = CocoaPodsPackageManager.getPodProjectRoot(projectRoot);
   if (!possibleProjectRoot) {
+    try {
+      const jsonData = JSON.parse(readFileSync(join(projectRoot, 'package.json')).toString());
+      const hasExpo = jsonData.dependencies?.hasOwnProperty('expo');
+      const hasReactNativeUnimodules = jsonData.dependencies?.hasOwnProperty(
+        'react-native-unimodules'
+      );
+      const isManaged = hasExpo && !hasReactNativeUnimodules;
+
+      if (isManaged) {
+        info(chalk.yellow('There is no need to run `pod-install` in managed project'));
+        return;
+      }
+    } catch {
+      // Expected to throw if no package.json is present
+    }
+
     info(chalk.yellow('CocoaPods is not supported in this project'));
     return;
   } else {
