@@ -51,7 +51,11 @@ async function runAsync(): Promise<void> {
       const isManaged = hasExpo && !hasReactNativeUnimodules;
 
       if (isManaged) {
-        info(chalk.yellow('There is no need to run `pod-install` in managed project'));
+        info(
+          chalk.yellow(
+            'In a managed project, `pod-install` will run automatically as part of the EAS Build process. Learn more: https://docs.expo.dev/build-reference/ios-builds/'
+          )
+        );
         return;
       }
     } catch {
