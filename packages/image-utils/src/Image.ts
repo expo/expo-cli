@@ -40,8 +40,8 @@ async function resizeAsync(imageOptions: ImageOptions): Promise<Buffer> {
       await Jimp.circleAsync(jimp);
     }
 
-    const imgBuffer = await jimp.getBufferAsync(jimp.getMIME());
-    return imgBuffer;
+    // Convert to png buffer
+    return jimp.getBufferAsync('image/png');
   }
   try {
     let sharpBuffer = sharp(imageOptions.src)
