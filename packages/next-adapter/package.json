@@ -1,7 +1,7 @@
 {
   "name": "@expo/next-adapter",
   "version": "4.0.12",
-  "description": "Adapter for using Next.js with Expo modules",
+  "description": "Adapter for using Next.js with Expo for web targets",
   "main": "build/index.js",
   "types": "build/index.d.ts",
   "scripts": {
@@ -12,7 +12,7 @@
     "lint": "eslint ."
   },
   "bin": {
-    "next-expo": "./build/cli/index.js"
+    "next-expo": "echo \"the next-expo command has been deprecated in favor of manual setup\""
   },
   "repository": {
     "type": "git",
@@ -21,9 +21,7 @@
   },
   "keywords": [
     "expo",
-    "expo-web",
-    "json",
-    "next",
+    "next.js",
     "react",
     "react-native",
     "react-dom",
@@ -35,20 +33,18 @@
   },
   "homepage": "https://github.com/expo/expo-cli/tree/main/packages/next-adapter#readme",
   "files": [
-    "babel",
     "build"
   ],
   "peerDependencies": {
-    "next": "^11",
-    "react": "^17",
-    "react-native-web": "^0.17.0"
+    "next": "^12",
+    "expo": "^46",
+    "react": "^18",
+    "react-native-web": "~0.18.0"
   },
   "publishConfig": {
     "access": "public"
   },
   "dependencies": {
-    "@expo/webpack-config": "0.17.2",
-    "resolve-from": "^5.0.0",
-    "update-check": "^1.5.3"
+    "@expo/webpack-config": "0.17.2"
   }
 }

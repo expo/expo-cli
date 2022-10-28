@@ -149,6 +149,19 @@ export default function App({ Component, pageProps }) {
 
 Now you can import and use React Native modules in the `pages/` directory.
 
+## Transpiling modules
+
+By default, modules in the React Native ecosystem are not transpiled to run in web browsers. You will have to manually mark every module you want to transpile with the `transpileModules` option in `next.config.js`:
+
+```js
+const { withExpo } = require('@expo/next-adapter');
+
+module.exports = withExpo({
+  projectRoot: __dirname,
+  transpileModules: ['expo', '@expo/vector-icons'],
+});
+```
+
 ## Notice
 
 Using Next.js for web means you will be bundling with the Next.js Webpack config. This will lead to some core differences in how you develop your app vs your website.

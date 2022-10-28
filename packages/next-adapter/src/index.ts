@@ -1,6 +1,7 @@
 import { getBareExtensions } from '@expo/config/paths';
-import { withUnimodules } from '@expo/webpack-config/addons';
+import { ExpoDefinePlugin } from '@expo/webpack-config/plugins';
 import { AnyConfiguration } from '@expo/webpack-config/webpack/types';
+import { getConfigForPWA } from 'expo-pwa';
 
 export function withExpo({ projectRoot = process.cwd(), ...nextConfig }: any = {}): any {
   return {
@@ -10,27 +11,47 @@ export function withExpo({ projectRoot = process.cwd(), ...nextConfig }: any = {
       // Prevent define plugin from overwriting Next.js environment.
       process.env.EXPO_WEBPACK_DEFINE_ENVIRONMENT_AS_KEYS = 'true';
 
-      const webpack5 = (options.config || {}).webpack5;
+      // Mix in aliases
+      if (!config.resolve) config.resolve = {};
+      config.resolve.alias = {
+        ...(config.resolve.alias || {}),
+        // Alias direct react-native imports to react-native-web
+        'react-native$': 'react-native-web',
+        // Alias internal react-native modules to react-native-web
+        'react-native/Libraries/Components/View/ViewStylePropTypes$':
+          'react-native-web/dist/exports/View/ViewStylePropTypes',
+        'react-native/Libraries/EventEmitter/RCTDeviceEventEmitter$':
+          'react-native-web/dist/vendor/react-native/NativeEventEmitter/RCTDeviceEventEmitter',
+        'react-native/Libraries/vendor/emitter/EventEmitter$':
+          'react-native-web/dist/vendor/react-native/emitter/EventEmitter',
+        'react-native/Libraries/vendor/emitter/EventSubscriptionVendor$':
+          'react-native-web/dist/vendor/react-native/emitter/EventSubscriptionVendor',
+        'react-native/Libraries/EventEmitter/NativeEventEmitter$':
+          'react-native-web/dist/vendor/react-native/NativeEventEmitter',
+      };
 
-      const expoConfig = withUnimodules(
-        config,
-        {
-          projectRoot,
-        },
-        {
-          supportsFontLoading: false,
-          webpack5: webpack5 !== false,
-        }
+      config.resolve.extensions = [
+        '.web.js',
+        '.web.jsx',
+        '.web.ts',
+        '.web.tsx',
+        ...(config.resolve?.extensions ?? []),
+      ];
+
+      config.plugins!.push(
+        // Used for surfacing information related to constants
+        new ExpoDefinePlugin({
+          mode: config.mode ?? 'development',
+          publicUrl: config.output?.publicPath ?? '/',
+          config: getConfigForPWA(projectRoot),
+        })
       );
-      // Use original public path
-      (expoConfig.output || {}).publicPath = (config.output || {}).publicPath;
 
-      // TODO: Bacon: use commonjs for RNW babel maybe...
       if (typeof nextConfig.webpack === 'function') {
-        return nextConfig.webpack(expoConfig, options);
+        return nextConfig.webpack(config, options);
       }
 
-      return expoConfig;
+      return config;
     },
   };
 }
