@@ -6,7 +6,7 @@ import { getConfigForPWA } from 'expo-pwa';
 export function withExpo({ projectRoot = process.cwd(), ...nextConfig }: any = {}): any {
   return {
     ...nextConfig,
-    pageExtensions: getBareExtensions(['web']),
+    pageExtensions: [...getBareExtensions(['web']), ...nextConfig.pageExtensions],
     webpack(config: AnyConfiguration, options: any): AnyConfiguration {
       // Prevent define plugin from overwriting Next.js environment.
       process.env.EXPO_WEBPACK_DEFINE_ENVIRONMENT_AS_KEYS = 'true';
@@ -30,13 +30,9 @@ export function withExpo({ projectRoot = process.cwd(), ...nextConfig }: any = {
           'react-native-web/dist/vendor/react-native/NativeEventEmitter',
       };
 
-      config.resolve.extensions = [
-        '.web.js',
-        '.web.jsx',
-        '.web.ts',
-        '.web.tsx',
-        ...(config.resolve?.extensions ?? []),
-      ];
+      //   config.resolve.extensions = [
+      //     ...(config.resolve?.extensions ?? []),
+      //   ];
 
       if (!config.plugins) config.plugins = [];
 
