@@ -3,10 +3,11 @@
 import { CocoaPodsPackageManager } from '@expo/package-manager/build/CocoaPodsPackageManager';
 import chalk from 'chalk';
 import { Command } from 'commander';
-import { readFileSync } from 'fs';
+import { existsSync, readFileSync } from 'fs';
 import { join, resolve } from 'path';
 
 import shouldUpdate from './update';
+import { learnMore } from './utils';
 
 const packageJSON = require('../package.json');
 
@@ -30,10 +31,7 @@ const info = (message: string) => {
 };
 
 async function runAsync(): Promise<void> {
-  if (typeof projectRoot === 'string') {
-    projectRoot = projectRoot.trim();
-  }
-  projectRoot = resolve(projectRoot);
+  projectRoot = resolve(projectRoot.trim());
 
   if (process.platform !== 'darwin') {
     info(chalk.red('CocoaPods is only supported on darwin machines'));
@@ -42,24 +40,21 @@ async function runAsync(): Promise<void> {
 
   const possibleProjectRoot = CocoaPodsPackageManager.getPodProjectRoot(projectRoot);
   if (!possibleProjectRoot) {
-    try {
-      const jsonData = JSON.parse(readFileSync(join(projectRoot, 'package.json')).toString());
-      const hasExpo = jsonData.dependencies?.hasOwnProperty('expo');
-      const hasReactNativeUnimodules = jsonData.dependencies?.hasOwnProperty(
-        'react-native-unimodules'
-      );
-      const isManaged = hasExpo && !hasReactNativeUnimodules;
+    const packageJsonPath = join(projectRoot, 'package.json');
+
+    if (existsSync(packageJsonPath)) {
+      const jsonData = JSON.parse(readFileSync(packageJsonPath).toString());
+      const isManaged = jsonData.dependencies?.hasOwnProperty('expo');
 
       if (isManaged) {
         info(
           chalk.yellow(
-            'In a managed project, `pod-install` will run automatically as part of the EAS Build process. Learn more: https://docs.expo.dev/build-reference/ios-builds/'
+            `In a managed project, 'pod-install' will run automatically as part of the EAS Build process.
+             ${learnMore('https://docs.expo.dev/build-reference/ios-builds/')}`
           )
         );
         return;
       }
-    } catch {
-      // Expected to throw if no package.json is present
     }
 
     info(chalk.yellow('CocoaPods is not supported in this project'));
