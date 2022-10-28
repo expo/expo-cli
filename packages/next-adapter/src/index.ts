@@ -2,7 +2,7 @@ import { getBareExtensions } from '@expo/config/paths';
 import { withUnimodules } from '@expo/webpack-config/addons';
 import { AnyConfiguration } from '@expo/webpack-config/webpack/types';
 
-export function withExpo(nextConfig: any = {}): any {
+export function withExpo({ projectRoot = process.cwd(), ...nextConfig }: any = {}): any {
   return {
     ...nextConfig,
     pageExtensions: getBareExtensions(['web']),
@@ -15,7 +15,7 @@ export function withExpo(nextConfig: any = {}): any {
       const expoConfig = withUnimodules(
         config,
         {
-          projectRoot: nextConfig.projectRoot || process.cwd(),
+          projectRoot,
         },
         {
           supportsFontLoading: false,
