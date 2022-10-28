@@ -48,22 +48,21 @@ for (const isExotic of [false, true]) {
       const distPath = path.join(projectRoot, 'dist');
 
       const assetMap = JsonFile.read(path.join(distPath, 'assetmap.json'));
-      expect(deepRelativizePaths(projectRoot, assetMap)).toMatchSnapshot({}, 'assetmap');
+      expect(deepRelativizePaths(projectRoot, assetMap)).toEqual({});
 
       const androidIndex = JsonFile.read(path.join(distPath, 'android-index.json'));
       expect(androidIndex.bundleUrl).toMatch(
         /^https:\/\/example.com\/export-test-app\/bundles\/android-[\w\d]+\.js$/
       );
 
-      expect(androidIndex).toMatchSnapshot(
-        {
+      expect(androidIndex).toEqual(
+        expect.objectContaining({
           bundleUrl: expect.any(String),
           commitTime: expect.any(String),
           publishedTime: expect.any(String),
           releaseId: expect.any(String),
           revisionId: expect.any(String),
-        },
-        'android-index'
+        })
       );
 
       // List output files with sizes for snapshotting.
@@ -82,7 +81,17 @@ for (const isExotic of [false, true]) {
         return `${path.posix.relative(projectRoot, entry.path)} (${formatFileSize(entry)})`;
       });
 
-      expect(distFiles).toMatchSnapshot();
+      expect(distFiles).toEqual(
+        expect.arrayContaining([
+          expect.stringContaining('dist/android-index.json '),
+          expect.stringContaining('dist/assetmap.json '),
+          expect.stringContaining('dist/assets (dir)'),
+          expect.stringContaining('dist/bundles (dir)'),
+          expect.stringContaining('dist/bundles/android-XXX.js '),
+          expect.stringContaining('dist/bundles/ios-XXX.js '),
+          expect.stringContaining('dist/ios-index.json '),
+        ])
+      );
     });
   });
 }
