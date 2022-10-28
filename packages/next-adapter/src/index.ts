@@ -38,7 +38,9 @@ export function withExpo({ projectRoot = process.cwd(), ...nextConfig }: any = {
         ...(config.resolve?.extensions ?? []),
       ];
 
-      config.plugins!.push(
+      if (!config.plugins) config.plugins = [];
+
+      config.plugins.push(
         // Used for surfacing information related to constants
         new ExpoDefinePlugin({
           mode: config.mode ?? 'development',
