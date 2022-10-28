@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Issue with EAS CLI
+    url: https://github.com/expo/eas-cli/issues/new/choose
+    about: Report issues related to eas-cli in the expo/eas-cli repo.
+  - name: Issue with Expo CLI or Expo Config Plugins
+    url: https://github.com/expo/expo/issues/new?labels=needs+review%2CCLI&template=bug_report_cli.yml
+    about: Report issues related to npx expo and the versioned CLI in the expo/expo repo.
+  - name: Expo Developers Discord
+    url: https://chat.expo.dev/
+    about: Join other developers in discussions regarding Expo.
