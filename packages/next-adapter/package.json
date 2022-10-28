@@ -58,7 +58,7 @@
   "dependencies": {
     "@expo/package-manager": "0.0.56",
     "@expo/webpack-config": "0.17.2",
-    "babel-preset-expo": "^8.4.1",
+    "babel-preset-expo": "^9.2.0",
     "chalk": "^4.0.0",
     "commander": "^4.0.1",
     "fs-extra": "9.0.0",
