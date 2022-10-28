@@ -36,17 +36,8 @@
   "homepage": "https://github.com/expo/expo-cli/tree/main/packages/next-adapter#readme",
   "files": [
     "babel",
-    "customize",
-    "template",
-    "build",
-    "document.js",
-    "document.d.ts"
+    "build"
   ],
-  "devDependencies": {
-    "@types/fs-extra": "^9.0.1",
-    "@types/node-fetch": "^2.5.8",
-    "@types/prompts": "^2.0.6"
-  },
   "peerDependencies": {
     "next": "^11",
     "react": "^17",
@@ -56,13 +47,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@expo/package-manager": "0.0.56",
     "@expo/webpack-config": "0.17.2",
-    "babel-preset-expo": "^8.4.1",
-    "chalk": "^4.0.0",
-    "commander": "^4.0.1",
-    "fs-extra": "9.0.0",
-    "prompts": "^2.3.2",
     "resolve-from": "^5.0.0",
     "update-check": "^1.5.3"
   }
