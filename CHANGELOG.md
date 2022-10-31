@@ -10,6 +10,43 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🧹 Chores
 
+## [Mon, 31 Oct 2022 14:39:49 -0700](https://github.com/expo/expo-cli/commit/1f5ff3e45d83de6e437cb9b445e5f3afa9db33cc)
+
+### 🛠 Breaking changes
+
+### 🎉 New features
+
+- [install-expo-modules] add sdk 47 (rn 0.70) support. ([#4578](https://github.com/expo/expo-cli/issues/4578))
+
+### 🧹 Chores
+
+- update babel preset ([#4580](https://github.com/expo/expo-cli/issues/4580))
+- update e2e tests for export ([#4579](https://github.com/expo/expo-cli/issues/4579))
+- [plist] Update xmldom for security reasons ([#4571](https://github.com/expo/expo-cli/issues/4571))
+- [create-expo-app] Prevent Forbidden/ Conflicting app names ([#4565](https://github.com/expo/expo-cli/issues/4565))
+- [schemer] bump AJV, bump other deps ([#3423](https://github.com/expo/expo-cli/issues/3423))
+- [image-utils] Silence sharp related warnings by default ([#4558](https://github.com/expo/expo-cli/issues/4558))
+
+### 🐛 Bug fixes
+
+- fix(image-utils): make jimp export buffers as png like sharp ([#4576](https://github.com/expo/expo-cli/issues/4576))
+
+### 📦 Packages updated
+
+- create-expo-app@1.1.4
+- @expo/dev-tools@0.13.172
+- expo-cli@6.0.7
+- expo-optimize@0.2.20
+- @expo/image-utils@0.3.23
+- install-expo-modules@0.3.9
+- @expo/next-adapter@4.0.13
+- @expo/plist@0.0.19
+- expo-pwa@0.0.124
+- @expo/schemer@1.4.4
+- uri-scheme@1.0.121
+- @expo/webpack-config@0.17.3
+- xdl@59.2.54
+
 ## [Mon, 26 Sep 2022 16:10:32 -0700](https://github.com/expo/expo-cli/commit/baa05e13d84a2a4e16bf2481883c40233d1e9ef9)
 
 ### 🧹 Chores
