@@ -3,54 +3,71 @@
 👋 Welcome to <br/><code>@expo/next-adapter</code>
 </h1>
 
-<p align="center">Adapter document and server for Next.js projects using Expo modules.</p>
+<p align="center">Next.js plugin for using React Native modules</p>
 
 <p align="center">
-  <img src="https://flat.badgen.net/packagephobia/install/@expo/next-adapter">
-
   <a href="https://www.npmjs.com/package/@expo/next-adapter">
     <img src="https://flat.badgen.net/npm/dw/@expo/next-adapter" target="_blank" />
-  </a>
-
-  <a aria-label="Circle CI" href="https://circleci.com/gh/expo/expo-cli/tree/main">
-    <img alt="Circle CI" src="https://flat.badgen.net/circleci/github/expo/expo-cli?label=Circle%20CI&labelColor=555555&icon=circleci">
   </a>
 </p>
 
 ---
 
-> ⚠️ **Warning:** Support for Next.js is experimental. Please open an issue at [expo-cli/issues](https://github.com/expo/expo-cli/issues) if you encountered any problems.
+> ⚠️ **Warning:** Support for Next.js is unofficial and not a first-class Expo feature.
 
-## Documentation
+## Setup
 
-Ensure you have `expo` and `next` installed in your project.
+### Dependencies
 
-Add the following to your `babel.config.js`:
+Ensure you have `expo`, `next`, `@expo/next-adapter` installed in your project.
+
+### Transpilation
+
+Configure Next.js to transform language features:
+
+<details>
+  <summary>Next.js with swc. (Recommended)</summary>
+  
+  When using Next.js with SWC, you can configure the `babel.config.js` to only account for native.
 
 ```js
-module.exports = function (api: any) {
+// babel.config.js
+module.exports = function (api) {
+  api.cache(true);
+  return {
+    presets: ['babel-preset-expo'],
+  };
+};
+```
+
+</details>
+
+<details>
+  <summary>Next.js with Babel. (Not recommended)</summary>
+  
+  Adjust your `babel.config.js` to conditionally add `next/babel` when bundling with Webpack for web.
+
+```js
+// babel.config.js
+module.exports = function (api) {
   // Detect web usage (this may change in the future if Next.js changes the loader)
   const isWeb = api.caller(
-    (caller?: { name: string }) =>
+    caller =>
       caller && (caller.name === 'babel-loader' || caller.name === 'next-babel-turbo-loader')
   );
   return {
     presets: [
       // Only use next in the browser, it'll break your native project
       isWeb && require('next/babel'),
-      [
-        require('babel-preset-expo'),
-        {
-          web: { useTransformReactJSXExperimental: true },
-          // Disable the `no-anonymous-default-export` plugin in babel-preset-expo
-          // so users don't see duplicate warnings.
-          'no-anonymous-default-export': false,
-        },
-      ],
+      'babel-preset-expo',
     ].filter(Boolean),
   };
 };
 ```
+
+</details>
+
+### Next.js configuration
 
 Add the following to your `next.config.js`:
 
@@ -58,11 +75,16 @@ Add the following to your `next.config.js`:
 const { withExpo } = require('@expo/next-adapter');
 
 module.exports = withExpo({
-  projectRoot: __dirname,
+  // Your Next.js config...
 });
 ```
 
-Create a `pages/_document.js` file:
+### React Native Web styling
+
+The package `react-native-web` builds on the assumption of reset CSS styles, here's how you reset styles in Next.js using the `pages/` directory.
+
+<details>
+  <summary>Required <code>pages/_document.js</code> file</summary>
 
 ```js
 import { Children } from 'react';
@@ -129,7 +151,10 @@ export default class MyDocument extends Document {
 }
 ```
 
-Create a `pages/_app.js` file:
+</details>
+
+<details>
+  <summary>Required <code>pages/_app.js</code> file</summary>
 
 ```js
 import * as React from 'react';
@@ -147,18 +172,19 @@ export default function App({ Component, pageProps }) {
 }
 ```
 
-Now you can import and use React Native modules in the `pages/` directory.
+</details>
 
 ## Transpiling modules
 
-By default, modules in the React Native ecosystem are not transpiled to run in web browsers. You will have to manually mark every module you want to transpile with the `transpileModules` option in `next.config.js`:
+By default, modules in the React Native ecosystem are not transpiled to run in web browsers. React Native relies on advanced caching in Metro to reload quickly. Next.js uses Webpack, which does not have the same level of caching, so by default no node modules are transpiled. You will have to manually mark every module you want to transpile with the `transpileModules` option in `next.config.js`:
 
 ```js
 const { withExpo } = require('@expo/next-adapter');
 
 module.exports = withExpo({
-  projectRoot: __dirname,
-  transpileModules: ['expo', '@expo/vector-icons'],
+  experimental: {
+    transpilePackages: ['@acme/ui', 'lodash-es'],
+  },
 });
 ```
 
@@ -166,10 +192,4 @@ module.exports = withExpo({
 
 Using Next.js for web means you will be bundling with the Next.js Webpack config. This will lead to some core differences in how you develop your app vs your website.
 
-[docs]: https://docs.expo.dev/guides/using-nextjs/
-[nextjs]: https://nextjs.org/
-[next-docs]: https://nextjs.org/docs
-[custom-document]: https://nextjs.org/docs#custom-document
-[next-offline]: https://github.com/hanford/next-offline
-[next-pwa]: https://nextjs.org/features/progressive-web-apps
 [next-transpile-modules]: https://github.com/martpie/next-transpile-modules
