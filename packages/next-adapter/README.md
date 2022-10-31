@@ -75,7 +75,13 @@ Add the following to your `next.config.js`:
 const { withExpo } = require('@expo/next-adapter');
 
 module.exports = withExpo({
-  // Your Next.js config...
+  experimental: {
+    transpilePackages: [
+      'react-native-web',
+      'expo',
+      // Add more React Native / Expo packages here...
+    ],
+  },
 });
 ```
 
@@ -176,20 +182,22 @@ export default function App({ Component, pageProps }) {
 
 ## Transpiling modules
 
-By default, modules in the React Native ecosystem are not transpiled to run in web browsers. React Native relies on advanced caching in Metro to reload quickly. Next.js uses Webpack, which does not have the same level of caching, so by default no node modules are transpiled. You will have to manually mark every module you want to transpile with the `transpileModules` option in `next.config.js`:
+By default, modules in the React Native ecosystem are not transpiled to run in web browsers. React Native relies on advanced caching in Metro to reload quickly. Next.js uses Webpack, which does not have the same level of caching, so by default, no node modules are transpiled. You will have to manually mark every module you want to transpile with the `experimental.transpilePackages` option in `next.config.js`:
 
 ```js
 const { withExpo } = require('@expo/next-adapter');
 
 module.exports = withExpo({
   experimental: {
-    transpilePackages: ['@acme/ui', 'lodash-es'],
+    transpilePackages: [
+      'react-native-web',
+      'expo',
+      // Add more React Native / Expo packages here...
+    ],
   },
 });
 ```
 
 ## Notice
 
-Using Next.js for web means you will be bundling with the Next.js Webpack config. This will lead to some core differences in how you develop your app vs your website.
-
-[next-transpile-modules]: https://github.com/martpie/next-transpile-modules
+Using Next.js for the web means you will be bundling with the Next.js Webpack config. This will lead to some core differences in how you develop your app vs your website.
