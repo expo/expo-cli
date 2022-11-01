@@ -75,6 +75,8 @@ Add the following to your `next.config.js`:
 const { withExpo } = require('@expo/next-adapter');
 
 module.exports = withExpo({
+  // experimental.transpilePackages is a Next.js +13 feature.
+  // older versions can use next-transpile-modules
   experimental: {
     transpilePackages: [
       'react-native-web',
@@ -97,33 +99,25 @@ import { Children } from 'react';
 import Document, { Html, Head, Main, NextScript } from 'next/document';
 import { AppRegistry } from 'react-native';
 
+// Follows the setup for react-native-web:
+// https://necolas.github.io/react-native-web/docs/setup/#root-element
+// Plus additional React Native scroll and text parity styles for various
+// browsers.
 // Force Next-generated DOM elements to fill their parent's height
 const style = `
 html, body, #__next {
-  width: 100%;
-  /* To smooth any scrolling behavior */
   -webkit-overflow-scrolling: touch;
-  margin: 0px;
-  padding: 0px;
-  /* Allows content to fill the viewport and go beyond the bottom */
-  min-height: 100%;
 }
 #__next {
-  flex-shrink: 0;
-  flex-basis: auto;
-  flex-direction: column;
-  flex-grow: 1;
   display: flex;
-  flex: 1;
+  flex-direction: column;
+  height: 100%;
 }
 html {
   scroll-behavior: smooth;
-  /* Prevent text size change on orientation change https://gist.github.com/tfausak/2222823#file-ios-8-web-app-html-L138 */
   -webkit-text-size-adjust: 100%;
-  height: 100%;
 }
 body {
-  display: flex;
   /* Allows you to scroll below the viewport; default value is visible */
   overflow-y: auto;
   overscroll-behavior-y: none;
