@@ -1,10 +1,9 @@
-import type { AnyConfiguration } from '@expo/webpack-config/webpack/types';
-import { DefinePlugin } from 'webpack';
+import { Configuration, DefinePlugin } from 'webpack';
 
 export function withExpo(nextConfig: any = {}): any {
   return {
     ...nextConfig,
-    webpack(config: AnyConfiguration, options: any): AnyConfiguration {
+    webpack(config: Configuration, options: any): Configuration {
       // Mix in aliases
       if (!config.resolve) {
         config.resolve = {};
