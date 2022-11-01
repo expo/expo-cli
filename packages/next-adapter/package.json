@@ -39,7 +39,8 @@
     "next": "^13",
     "expo": "^46",
     "react": "^18",
-    "react-native-web": "~0.18.0"
+    "react-native-web": "~0.18.0",
+    "webpack": "^5.74.0"
   },
   "publishConfig": {
     "access": "public"
