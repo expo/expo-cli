@@ -7,6 +7,8 @@ import {
   Analytics,
   ApiV2 as ApiV2Client,
   ConnectionStatus,
+  FeatureGateEnvOverrides,
+  FeatureGating,
   Logger,
   Semaphore,
   UnifiedAnalytics,
@@ -411,6 +413,13 @@ export class UserManagerInstance {
 
     // Delete saved auth info
     await UserSettings.deleteKeyAsync('auth');
+  }
+
+  async getFeatureGatingAsync(): Promise<FeatureGating> {
+    const user = await this.ensureLoggedInAsync();
+    const api = ApiV2Client.clientForUser(user);
+    const { featureGates } = await api.getAsync('auth/user-feature-gates');
+    return new FeatureGating(featureGates, new FeatureGateEnvOverrides());
   }
 
   /**
