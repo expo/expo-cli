@@ -83,8 +83,6 @@ export async function actionAsync(
 
   logExpoUpdatesWarnings(pkg);
 
-  logOptimizeWarnings({ projectRoot });
-
   if (!options.target && target === 'bare' && isLegacyImportsEnabled(exp)) {
     logBareWorkflowWarnings(pkg);
   }
@@ -312,22 +310,6 @@ export function logExpoUpdatesWarnings(pkg: PackageJSONConfig): void {
       )}.\n  If you intend to use ${chalk.bold('expo-updates')}, please remove ${chalk.bold(
         'expokit'
       )} from your dependencies.`
-    )
-  );
-}
-
-export function logOptimizeWarnings({ projectRoot }: { projectRoot: string }): void {
-  const hasOptimized = fs.existsSync(path.join(projectRoot, '/.expo-shared/assets.json'));
-  if (hasOptimized) {
-    return;
-  }
-  Log.nestedWarn(
-    formatNamedWarning(
-      'Optimization',
-      `Project may contain uncompressed images. Optimizing image assets can improve app size and performance.\n  To fix this, run ${chalk.bold(
-        `npx expo-optimize`
-      )}`,
-      'https://docs.expo.dev/distribution/optimizing-updates/#optimize-images'
     )
   );
 }
