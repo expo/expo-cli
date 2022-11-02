@@ -40,6 +40,17 @@ module.exports = function (api) {
 };
 ```
 
+You will also have to [force Next.js to use SWC](https://nextjs.org/docs/messages/swc-disabled) by adding the following to your `next.config.js`:
+
+```js
+// next.config.js
+module.exports = {
+  experimental: {
+    forceSwcTransforms: true,
+  },
+};
+```
+
 </details>
 
 <details>
@@ -85,6 +96,28 @@ module.exports = withExpo({
     ],
   },
 });
+```
+
+The fully qualified Next.js config may look like:
+
+```js
+const { withExpo } = require('@expo/next-adapter');
+
+/** @type {import('next').NextConfig} */
+const nextConfig = withExpo({
+  reactStrictMode: true,
+  swcMinify: true,
+  experimental: {
+    forceSwcTransforms: true,
+    transpilePackages: [
+      'react-native-web',
+      'expo',
+      // Add more React Native / Expo packages here...
+    ],
+  },
+});
+
+module.exports = nextConfig;
 ```
 
 ### React Native Web styling
@@ -133,7 +166,10 @@ export default class MyDocument extends Document {
     AppRegistry.registerComponent('main', () => Main);
     const { getStyleElement } = AppRegistry.getApplication('main');
     const page = await renderPage();
-    const styles = [<style dangerouslySetInnerHTML={{ __html: style }} />, getStyleElement()];
+    const styles = [
+      <style key="react-native-style" dangerouslySetInnerHTML={{ __html: style }} />,
+      getStyleElement(),
+    ];
     return { ...page, styles: Children.toArray(styles) };
   }
 
@@ -157,7 +193,6 @@ export default class MyDocument extends Document {
   <summary>Required <code>pages/_app.js</code> file</summary>
 
 ```js
-import * as React from 'react';
 import Head from 'next/head';
 
 export default function App({ Component, pageProps }) {
@@ -195,3 +230,23 @@ module.exports = withExpo({
 ## Notice
 
 Using Next.js for the web means you will be bundling with the Next.js Webpack config. This will lead to some core differences in how you develop your app vs your website.
+
+## Troubleshooting
+
+### Cannot use import statement outside a module
+
+Figure out which module has the import statement and add it to the `experimental.transpilePackages` option in `next.config.js`:
+
+```js
+const { withExpo } = require('@expo/next-adapter');
+
+module.exports = withExpo({
+  experimental: {
+    transpilePackages: [
+      'react-native-web',
+      'expo',
+      // Add failing package here, and restart the server...
+    ],
+  },
+});
+```
