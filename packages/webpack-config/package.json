@@ -40,8 +40,8 @@
     "url": "https://github.com/expo/expo-cli/issues"
   },
   "dependencies": {
-    "@babel/core": "7.9.0",
-    "babel-loader": "8.1.0",
+    "@babel/core": "^7.12.0",
+    "babel-loader": "^8.1.0",
     "chalk": "^4.0.0",
     "clean-webpack-plugin": "^3.0.0",
     "copy-webpack-plugin": "~6.0.3",
