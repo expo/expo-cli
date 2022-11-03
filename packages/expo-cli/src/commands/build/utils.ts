@@ -6,6 +6,7 @@ import CommandError from '../../CommandError';
 import Log from '../../log';
 import prompts, { confirmAsync } from '../../utils/prompts';
 import * as ProjectUtils from '../utils/ProjectUtils';
+import { learnMore } from '../utils/TerminalLink';
 
 export async function maybeBailOnWorkflowWarning({
   projectRoot,
@@ -67,17 +68,30 @@ export async function checkIfSdkIsSupported(
   const minimumSdkVersionSupported = await Versions.oldestSupportedMajorVersionAsync();
   const majorSdkVersion = Number(sdkVersion.split('.')[0]);
   const { version: latestSDKVersion } = await Versions.newestReleasedSdkVersionAsync();
+  const versionWillNeverBeSupported = Versions.gteSdkVersion({ sdkVersion }, '47.0.0');
 
   if (!isSupported) {
-    Log.error(
-      chalk.red(
-        'Unsupported SDK version: our app builders ' +
-          (majorSdkVersion < minimumSdkVersionSupported
-            ? `no longer support SDK version ${majorSdkVersion}. Please upgrade to at least SDK ${minimumSdkVersionSupported}, or to the latest SDK version (${latestSDKVersion}).`
-            : `do not support SDK version ${majorSdkVersion}, yet. The latest SDK version is ${latestSDKVersion}.`)
-      )
-    );
-    throw new Error('Unsupported SDK version');
+    if (versionWillNeverBeSupported) {
+      Log.error(
+        chalk.red(
+          `The Classic Build service is deprecated. The final version to support it was Expo SDK 46.\n\nPlease migrate to EAS Build to continue building your app.\n${learnMore(
+            'https://docs.expo.dev/build-reference/migrating/'
+          )}`
+        )
+      );
+    } else {
+      Log.error(
+        chalk.red(
+          'Unsupported SDK version: our app builders' +
+            (majorSdkVersion < minimumSdkVersionSupported
+              ? `no longer support SDK version ${majorSdkVersion}. Please upgrade to at least SDK ${minimumSdkVersionSupported}, or to the latest SDK version (${latestSDKVersion}).`
+              : `do not support SDK version ${majorSdkVersion}, yet. The latest SDK version is ${latestSDKVersion}.`)
+        )
+      );
+    }
+
+    process.exit(1);
+    // throw new Error('Unsupported SDK version');
   }
 }
 
