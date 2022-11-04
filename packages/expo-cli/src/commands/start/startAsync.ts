@@ -33,7 +33,7 @@ export async function actionAsync(projectRoot: string, options: NormalizedOption
     const hasExpoInstalled = resolveFrom.silent(projectRoot, 'expo');
     if (!hasExpoInstalled) {
       throw new ConfigError(
-        `Unable to find expo in this project - have you run yarn / npm install yet?`,
+        `Unable to find expo in this project - have you installed it yet? (run yarn add expo / npm install expo)`,
         'MODULE_NOT_FOUND'
       );
     }
