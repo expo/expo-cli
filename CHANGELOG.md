@@ -10,9 +10,19 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🧹 Chores
 
-## [Mon, 31 Oct 2022 14:39:49 -0700](https://github.com/expo/expo-cli/commit/1f5ff3e45d83de6e437cb9b445e5f3afa9db33cc)
+## [Thu, 3 Nov 2022 15:56:46 -0700](https://github.com/expo/expo-cli/commit/e01f9467376b71a8e1bbe28065a697f7c8e1da1e)
 
-### 🛠 Breaking changes
+### 🧹 Chores
+
+- [cli] Add specific error message about SDK 47+ and expo build
+
+### 📦 Packages updated
+
+- @expo/dev-tools@0.13.173
+- expo-cli@6.0.8
+- xdl@59.2.55
+
+## [Mon, 31 Oct 2022 14:39:49 -0700](https://github.com/expo/expo-cli/commit/1f5ff3e45d83de6e437cb9b445e5f3afa9db33cc)
 
 ### 🎉 New features
 
