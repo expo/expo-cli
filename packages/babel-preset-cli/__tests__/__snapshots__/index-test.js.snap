@@ -5,20 +5,15 @@ Object {
   Symbol(jest-snapshot-serializer-raw): "\\"use strict\\";
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
 class Bork {
   constructor() {
     _defineProperty(this, \\"instanceProperty\\", \\"bork\\");
-
     _defineProperty(this, \\"boundFunction\\", () => {
       return this.instanceProperty;
     });
   }
-
 }
-
 _defineProperty(Bork, \\"staticProperty\\", \\"babelIsCool\\");
-
 _defineProperty(Bork, \\"staticFunction\\", function () {
   return Bork.staticProperty;
 });",
@@ -30,7 +25,6 @@ Object {
   Symbol(jest-snapshot-serializer-raw): "\\"use strict\\";
 
 var _object$foo;
-
 var foo = (_object$foo = object.foo) !== null && _object$foo !== void 0 ? _object$foo : \\"default\\";",
 }
 `;
@@ -40,7 +34,6 @@ Object {
   Symbol(jest-snapshot-serializer-raw): "\\"use strict\\";
 
 var _foo;
-
 (_foo = foo) === null || _foo === void 0 ? void 0 : _foo.bar;",
 }
 `;
