@@ -40,6 +40,7 @@ This is the log of notable changes to Expo CLI and related packages.
 ### 🐛 Bug fixes
 
 - fix(image-utils): make jimp export buffers as png like sharp ([#4576](https://github.com/expo/expo-cli/issues/4576))
+- fix(cli): fix crash when a device doesn't have a udid defined
 
 ### 📦 Packages updated
 
