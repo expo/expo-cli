@@ -98,7 +98,7 @@ export async function resolveDeviceAsync(
   }
   const searchValue = device.toLowerCase();
   const resolved = devices.find(device => {
-    return device.udid.toLowerCase() === searchValue || device.name.toLowerCase() === searchValue;
+    return device.udid?.toLowerCase() === searchValue || device.name.toLowerCase() === searchValue;
   });
 
   if (!resolved) {
