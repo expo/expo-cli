@@ -8,9 +8,7 @@ import {
 } from '@expo/config';
 import spawnAsync from '@expo/spawn-async';
 import chalk from 'chalk';
-import fs from 'fs';
 import { Ora } from 'ora';
-import path from 'path';
 import resolveFrom from 'resolve-from';
 import { Project, UserManager } from 'xdl';
 
