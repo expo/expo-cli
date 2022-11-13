@@ -1,6 +1,13 @@
 # Why
 
 <!-- 
+
+!! NOTICE !! The global Expo CLI (`packages/expo-cli`) is deprecated in favor of the new versioned CLI `npx expo`:
+
+Open Expo CLI changes here -> https://github.com/expo/expo/tree/main/packages/@expo/cli
+
+...
+
 Please describe the motivation for this PR, and link to relevant GitHub issues, forums posts, or feature requests. 
 -->
 

@@ -33,11 +33,8 @@ Packages used in Expo CLI and related tooling. Contains source for the legacy gl
 
 | Package                                                     | Version                                                                                                                                               |
 | ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [**`@expo/babel-preset-cli`**](./packages/babel-preset-cli) | [![badges](https://img.shields.io/npm/v/@expo/babel-preset-cli?color=32cd32&style=flat-square)](https://www.npmjs.com/package/@expo/babel-preset-cli) |
-| [**`@expo/dev-tools`**](./packages/dev-tools)               | [![badges](https://img.shields.io/npm/v/@expo/dev-tools?color=32cd32&style=flat-square)](https://www.npmjs.com/package/@expo/dev-tools)               |
 | [**`expo-cli`**](./packages/expo-cli)                       | [![badges](https://img.shields.io/npm/v/expo-cli?color=32cd32&style=flat-square)](https://www.npmjs.com/package/expo-cli)                             |
 | [**`expo-codemod`**](./packages/expo-codemod)               | [![badges](https://img.shields.io/npm/v/expo-codemod?color=32cd32&style=flat-square)](https://www.npmjs.com/package/expo-codemod)                     |
-| [**`expo-optimize`**](./packages/expo-optimize)             | [![badges](https://img.shields.io/npm/v/expo-optimize?color=32cd32&style=flat-square)](https://www.npmjs.com/package/expo-optimize)                   |
 | [**`@expo/image-utils`**](./packages/image-utils)           | [![badges](https://img.shields.io/npm/v/@expo/image-utils?color=32cd32&style=flat-square)](https://www.npmjs.com/package/@expo/image-utils)           |
 | [**`@expo/json-file`**](./packages/json-file)               | [![badges](https://img.shields.io/npm/v/@expo/json-file?color=32cd32&style=flat-square)](https://www.npmjs.com/package/@expo/json-file)               |
 | [**`@expo/next-adapter`**](./packages/next-adapter)         | [![badges](https://img.shields.io/npm/v/@expo/next-adapter?color=32cd32&style=flat-square)](https://www.npmjs.com/package/@expo/next-adapter)         |
@@ -49,7 +46,6 @@ Packages used in Expo CLI and related tooling. Contains source for the legacy gl
 | [**`@expo/schemer`**](./packages/schemer)                   | [![badges](https://img.shields.io/npm/v/@expo/schemer?color=32cd32&style=flat-square)](https://www.npmjs.com/package/@expo/schemer)                   |
 | [**`uri-scheme`**](./packages/uri-scheme)                   | [![badges](https://img.shields.io/npm/v/uri-scheme?color=32cd32&style=flat-square)](https://www.npmjs.com/package/uri-scheme)                         |
 | [**`@expo/webpack-config`**](./packages/webpack-config)     | [![badges](https://img.shields.io/npm/v/@expo/webpack-config?color=32cd32&style=flat-square)](https://www.npmjs.com/package/@expo/webpack-config)     |
-| [**`xdl`**](./packages/xdl)                                 | [![badges](https://img.shields.io/npm/v/xdl?color=32cd32&style=flat-square)](https://www.npmjs.com/package/xdl)                                       |
 
 ## 👏 Contributing
 

@@ -5,7 +5,6 @@ import {
   isInvalidReleaseChannel,
   logBareWorkflowWarnings,
   logExpoUpdatesWarnings,
-  logOptimizeWarnings,
 } from '../publishAsync';
 
 jest.mock('fs');
@@ -58,17 +57,6 @@ describe('warnings', () => {
   it(`warns about publishing in a bare workflow project when expo is installed`, () => {
     (Log.nestedWarn as jest.Mock).mockReset();
     logBareWorkflowWarnings({ dependencies: { expo: '1.0.0' } });
-    expect(Log.nestedWarn).toBeCalledTimes(1);
-  });
-
-  it(`skips warning about assets if shared file exists`, () => {
-    (Log.nestedWarn as jest.Mock).mockReset();
-    logOptimizeWarnings({ projectRoot: 'optimized' });
-    expect(Log.nestedWarn).toBeCalledTimes(0);
-  });
-  it(`warns about unoptimized assets when shared folder is missing`, () => {
-    (Log.nestedWarn as jest.Mock).mockReset();
-    logOptimizeWarnings({ projectRoot: '/' });
     expect(Log.nestedWarn).toBeCalledTimes(1);
   });
 });

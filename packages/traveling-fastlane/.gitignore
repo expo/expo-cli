@@ -1,8 +1,0 @@
-packaging/vendor
-packaging/traveling-ruby-20150715-2.2.2-linux-x86_64
-packaging/traveling-ruby-20150715-2.2.2-osx
-packaging/tmp
-packaging/*.gz
-publishing/**/traveling-fastlane-*
-/publishing/*/dist
-traveling-fastlane-*
