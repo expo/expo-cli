@@ -519,7 +519,7 @@ export default async function (
               }
               return manifest;
             }, seed);
-            const entrypointFiles = entrypoints.app.filter(fileName => !fileName.endsWith('.map'));
+            const entrypointFiles = entrypoints.app?.filter(fileName => !fileName.endsWith('.map'));
 
             return {
               files: manifestFiles,
