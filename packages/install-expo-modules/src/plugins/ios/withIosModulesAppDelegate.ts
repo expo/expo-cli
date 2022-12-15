@@ -117,9 +117,14 @@ export function updateModulesAppDelegateObjcHeader(
 
   // Replace parent class if needed
   contents = contents.replace(
+    /^(\s*@interface\s+AppDelegate\s+:\s+)RCTAppDelegate$/m,
+    '$1EXAppDelegateWrapper'
+  ); // react-native@>=0.71.0
+
+  contents = contents.replace(
     /^(\s*@interface\s+AppDelegate\s+:\s+)UIResponder(\s+.+)$/m,
     '$1EXAppDelegateWrapper$2'
-  );
+  ); // react-native@<0.71.0
 
   return contents;
 }

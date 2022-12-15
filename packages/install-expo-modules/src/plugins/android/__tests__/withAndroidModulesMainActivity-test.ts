@@ -35,6 +35,32 @@ describe(setModulesMainActivity, () => {
     expect(nextContents).toEqual(expectContents);
   });
 
+  it(`should add ReactActivityDelegateWrapper for react-native@>=0.71.0 - java`, async () => {
+    const [rawContents, expectContents] = await Promise.all([
+      fs.promises.readFile(path.join(fixturesPath, 'MainActivity-rn071.java'), 'utf8'),
+      fs.promises.readFile(path.join(fixturesPath, 'MainActivity-rn071-updated.java'), 'utf8'),
+    ]);
+
+    const contents = setModulesMainActivity(rawContents, 'java');
+    expect(contents).toEqual(expectContents);
+    // Try it twice...
+    const nextContents = setModulesMainActivity(contents, 'java');
+    expect(nextContents).toEqual(expectContents);
+  });
+
+  it(`should add ReactActivityDelegateWrapper for react-native@>=0.71.0 - kotlin`, async () => {
+    const [rawContents, expectContents] = await Promise.all([
+      fs.promises.readFile(path.join(fixturesPath, 'MainActivity-rn071.kt'), 'utf8'),
+      fs.promises.readFile(path.join(fixturesPath, 'MainActivity-rn071-updated.kt'), 'utf8'),
+    ]);
+
+    const contents = setModulesMainActivity(rawContents, 'kt');
+    expect(contents).toEqual(expectContents);
+    // Try it twice...
+    const nextContents = setModulesMainActivity(contents, 'kt');
+    expect(nextContents).toEqual(expectContents);
+  });
+
   it(`should add ReactActivityDelegateWrapper for react-native@>=0.68.0 - java`, async () => {
     const [rawContents, expectContents] = await Promise.all([
       fs.promises.readFile(path.join(fixturesPath, 'MainActivity-rn068.java'), 'utf8'),

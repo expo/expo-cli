@@ -17,6 +17,16 @@ describe(updatePodfile, () => {
     expect(updatePodfile(rawContents, 'HelloWorld', sdkVersion)).toEqual(expectContents);
   });
 
+  it('should support classic rn 0.71 podfile', async () => {
+    const [rawContents, expectContents] = await Promise.all([
+      fs.promises.readFile(path.join(fixturesPath, 'Podfile-rn071'), 'utf8'),
+      fs.promises.readFile(path.join(fixturesPath, 'Podfile-rn071-updated'), 'utf8'),
+    ]);
+
+    const sdkVersion = getLatestSdkVersion().expoSdkVersion;
+    expect(updatePodfile(rawContents, 'HelloWorld', sdkVersion)).toEqual(expectContents);
+  });
+
   it('minimum support for existing post_integrate hook', async () => {
     const [rawContents, expectContents] = await Promise.all([
       fs.promises.readFile(path.join(fixturesPath, 'Podfile-with-post-integrate'), 'utf8'),
