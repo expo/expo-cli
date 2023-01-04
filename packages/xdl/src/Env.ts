@@ -15,6 +15,13 @@ export function isLocal(): boolean {
   return getenv.boolish('EXPO_LOCAL', false);
 }
 
+export function getFeatureGateOverrides(): { enable: string[]; disable: string[] } {
+  return {
+    enable: getenv.array('EXPO_FG_ENABLE'),
+    disable: getenv.array('EXPO_FG_DISABLE'),
+  };
+}
+
 // TODO: remove this function once all related PRs have landed and there's no chance for conflict
 export function isInterstitiaLPageEnabled(): boolean {
   return true;

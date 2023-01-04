@@ -3,7 +3,7 @@ import axios, { AxiosRequestConfig } from 'axios';
 import concat from 'concat-stream';
 import FormData from 'form-data';
 import merge from 'lodash/merge';
-import QueryString from 'querystring';
+import QueryString, { ParsedUrlQueryInput } from 'querystring';
 
 import { Config, ConnectionStatus } from './internal';
 
@@ -55,7 +55,7 @@ type UploadOptions = {
   data: any;
 };
 
-type QueryParameters = { [key: string]: string | number | boolean | null | undefined };
+type QueryParameters = ParsedUrlQueryInput;
 
 type APIV2ClientOptions = {
   sessionSecret?: string;
