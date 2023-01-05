@@ -29,12 +29,12 @@
   ],
   "dependencies": {
     "@babel/code-frame": "~7.10.4",
-    "json5": "^1.0.1",
+    "json5": "^2.2.2",
     "write-file-atomic": "^2.3.0"
   },
   "devDependencies": {
     "@types/babel__code-frame": "^7.0.1",
-    "@types/json5": "^0.0.30",
+    "@types/json5": "^2.2.0",
     "@types/write-file-atomic": "^2.1.1"
   },
   "publishConfig": {
