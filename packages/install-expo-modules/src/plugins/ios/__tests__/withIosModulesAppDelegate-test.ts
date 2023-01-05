@@ -11,6 +11,20 @@ import {
 const fixturesPath = path.resolve(__dirname, 'fixtures');
 
 describe(updateModulesAppDelegateObjcHeader, () => {
+  it('should migrate from react-native@>=0.71.0 AppDelegate header', async () => {
+    const [rawContents, expectContents] = await Promise.all([
+      fs.promises.readFile(path.join(fixturesPath, 'AppDelegate-rn071.h'), 'utf8'),
+      fs.promises.readFile(path.join(fixturesPath, 'AppDelegate-rn071-updated.h'), 'utf8'),
+    ]);
+
+    const sdkVersion = getLatestSdkVersion().expoSdkVersion;
+    const contents = updateModulesAppDelegateObjcHeader(rawContents, sdkVersion);
+    expect(updateModulesAppDelegateObjcHeader(contents, sdkVersion)).toEqual(expectContents);
+    // Try it twice...
+    const nextContents = updateModulesAppDelegateObjcHeader(contents, sdkVersion);
+    expect(updateModulesAppDelegateObjcHeader(nextContents, sdkVersion)).toEqual(expectContents);
+  });
+
   it('should migrate from classic RN AppDelegate header', async () => {
     const [rawContents, expectContents] = await Promise.all([
       fs.promises.readFile(path.join(fixturesPath, 'AppDelegate.h'), 'utf8'),
