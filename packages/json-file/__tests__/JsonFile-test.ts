@@ -4,7 +4,7 @@ import path from 'path';
 
 import JsonFile from '../src/JsonFile';
 
-jasmine.DEFAULT_TIMEOUT_INTERVAL = 30 * 1000;
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 20 * 1000;
 
 const FIXTURES = path.join(os.tmpdir(), 'json-file-fixtures');
 
