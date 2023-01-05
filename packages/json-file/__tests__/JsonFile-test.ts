@@ -105,8 +105,6 @@ it(`deletes another key from the file`, async () => {
 // This fails when i is high, around 200. However, no realistic use case would have the user
 // constantly update a file that often
 it('Multiple updates to the same file have no race conditions', async () => {
-  // jest.setTimeout(30_000);
-
   const file = new JsonFile(path.join(FIXTURES, 'atomic-test.json'), { json5: true });
   for (let i = 0; i < 50; i++) {
     await file.writeAsync({});
