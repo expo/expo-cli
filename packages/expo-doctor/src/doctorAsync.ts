@@ -1,12 +1,32 @@
-import { getConfig } from '@expo/config';
+import { ExpoConfig, getConfig } from '@expo/config';
 import chalk from 'chalk';
+import semver from 'semver';
 
 //import Log from '../../../log';
-//import { getRemoteVersionsForSdk } from '../../../utils/getRemoteVersionsForSdk';
-//import { profileMethod } from '../../utils/profileMethod';
-//import { validateDependenciesVersionsAsync } from '../../utils/validateDependenciesVersions';
-import { warnAboutDeepDependenciesAsync } from './dependencies/explain';
+// import { getRemoteVersionsForSdk } from '../../../utils/getRemoteVersionsForSdk';
+// import { profileMethod } from '../../utils/profileMethod';
+// import { validateDependenciesVersionsAsync } from '../../utils/validateDependenciesVersions';
+// import { warnAboutDeepDependenciesAsync } from './dependencies/explain';
 import { warnUponCmdExe } from './windows';
+
+function gteSdkVersion(expJson: Pick<ExpoConfig, 'sdkVersion'>, sdkVersion: string): boolean {
+  if (!expJson.sdkVersion) {
+    return false;
+  }
+
+  if (expJson.sdkVersion === 'UNVERSIONED') {
+    return true;
+  }
+
+  try {
+    return semver.gte(expJson.sdkVersion, sdkVersion);
+  } catch (e) {
+    throw new Error(
+      //'INVALID_VERSION',
+      `${expJson.sdkVersion} is not a valid version. Must be in the form of x.y.z`
+    );
+  }
+}
 
 // async function validateSupportPackagesAsync(sdkVersion: string): Promise<boolean> {
 //   const versionsForSdk = await getRemoteVersionsForSdk(sdkVersion);
@@ -30,7 +50,7 @@ import { warnUponCmdExe } from './windows';
 //   return allPackagesValid;
 // }
 
-// // Ensures that a set of packages
+// Ensures that a set of packages
 // async function validateIllegalPackagesAsync(): Promise<boolean> {
 //   const illegalPackages = [
 //     '@unimodules/core',
@@ -53,15 +73,15 @@ import { warnUponCmdExe } from './windows';
 export async function actionAsync(projectRoot: string) {
   await warnUponCmdExe();
 
-  // const { exp, pkg } = profileMethod(getConfig)(projectRoot);
+  const { exp, pkg } = getConfig(projectRoot);
   const foundSomeIssues = false;
 
-  // // Only use the new validation on SDK +45.
-  // if (Versions.gteSdkVersion(exp, '45.0.0')) {
-  //   if (!(await validateSupportPackagesAsync(exp.sdkVersion!))) {
-  //     foundSomeIssues = true;
-  //   }
-  // }
+  // Only use the new validation on SDK +45.
+  if (gteSdkVersion(exp, '45.0.0')) {
+    // if (!(await validateSupportPackagesAsync(exp.sdkVersion!))) {
+    //   foundSomeIssues = true;
+    // }
+  }
 
   // if (Versions.gteSdkVersion(exp, '44.0.0')) {
   //   if (!(await validateIllegalPackagesAsync())) {

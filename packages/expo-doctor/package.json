@@ -2,7 +2,6 @@
   "name": "expo-doctor",
   "version": "1.0.0",
   "preferGlobal": true,
-  "type": "module",
   "keywords": [
     "expo",
     "ios",
@@ -40,6 +39,9 @@
   },
   "dependencies": {
     "envinfo": "^7.8.1",
-    "chalk": "^4.0.0"
+    "chalk": "^4.0.0",
+    "@expo/config": "7.0.3",
+    "@expo/json-file": "8.2.36",
+    "semver": "7.3.2"
   }
 }
