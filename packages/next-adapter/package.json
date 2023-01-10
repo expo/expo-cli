@@ -1,6 +1,6 @@
 {
   "name": "@expo/next-adapter",
-  "version": "4.0.13",
+  "version": "5.0.0",
   "description": "Adapter for using Next.js to bundle Expo web projects",
   "main": "build/index.js",
   "types": "build/index.d.ts",
@@ -36,8 +36,8 @@
     "build"
   ],
   "peerDependencies": {
-    "next": "^13",
     "expo": "^46",
+    "next": "^13",
     "react": "^18",
     "react-native-web": "~0.18.0",
     "webpack": "^4.46.0 || ^5.74.0"

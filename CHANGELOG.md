@@ -10,6 +10,40 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🧹 Chores
 
+## [Thu, 5 Jan 2023 12:40:31 +0100](https://github.com/expo/expo-cli/commit/a1511511803f5b4c1935a00cd18b340a9d5309ce)
+
+### 🛠 Breaking changes
+
+### 🎉 New features
+
+- [install-expo-modules] Add react-native 0.71 support ([#4612](https://github.com/expo/expo-cli/issues/4612))
+- [uri-scheme] Handle multiple query parameters in Android URIs ([#4538](https://github.com/expo/expo-cli/issues/4538))
+- [xdl] Add feature gates ([#4587](https://github.com/expo/expo-cli/issues/4587))
+
+### 🧹 Chores
+
+- [expo-cli] deprecate `expo-optimize` and drop related checks ([#4588](https://github.com/expo/expo-cli/issues/4588))
+- [traveling-fastlane] drop source ([#4589](https://github.com/expo/expo-cli/issues/4589))
+
+### 🐛 Bug fixes
+
+- [json] json5 to v2.2.2 where vulnerability has been patched ([#4618](https://github.com/expo/expo-cli/issues/4618))
+- [plist] Update `@xmldom/xmldom` ([#4592](https://github.com/expo/expo-cli/issues/4592))
+
+### 📦 Packages updated
+
+- @expo/babel-preset-cli@0.2.25
+- create-expo-app@1.1.5
+- @expo/dev-tools@0.13.174
+- expo-cli@6.1.0
+- install-expo-modules@0.4.0
+- @expo/json-file@8.2.37
+- @expo/next-adapter@5.0.0
+- @expo/plist@0.0.20
+- uri-scheme@1.1.0
+- @expo/webpack-config@0.17.4
+- xdl@59.3.0
+
 ## [Thu, 3 Nov 2022 15:56:46 -0700](https://github.com/expo/expo-cli/commit/e01f9467376b71a8e1bbe28065a697f7c8e1da1e)
 
 ### 🧹 Chores

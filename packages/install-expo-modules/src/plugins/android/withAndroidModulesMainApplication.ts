@@ -22,6 +22,7 @@ export function setModulesMainApplication(
 ): string {
   const isJava = language === 'java';
 
+  mainApplication = addDefaultReactNativeHostWrapperIfNeeded(mainApplication, language, isJava);
   mainApplication = addReactNativeHostWrapperIfNeeded(mainApplication, language, isJava);
   mainApplication = addReactNativeNewArchHostWrapperIfNeeded(mainApplication, language, isJava);
   mainApplication = addApplicationLifecycleDispatchImportIfNeeded(
@@ -32,6 +33,51 @@ export function setModulesMainApplication(
   mainApplication = addApplicationCreateIfNeeded(mainApplication, language, isJava);
   mainApplication = addConfigurationChangeIfNeeded(mainApplication, language, isJava);
 
+  return mainApplication;
+}
+
+/**
+ * Add `ReactNativeHostWrapper` for `DefaultReactNativeHost`.
+ * For react-native@>=0.71
+ */
+function addDefaultReactNativeHostWrapperIfNeeded(
+  mainApplication: string,
+  language: 'java' | 'kt',
+  isJava: boolean
+): string {
+  // Early return when there's no `DefaultReactNativeHost`.
+  if (!mainApplication.match(/^import .*\.defaults\.DefaultReactNativeHost;?$/m)) {
+    return mainApplication;
+  }
+
+  if (mainApplication.match(/\s+ReactNativeHostWrapper\(this,.*DefaultReactNativeHost\(/m)) {
+    return mainApplication;
+  }
+
+  if (mainApplication.match(/\s+ReactNativeHostWrapper\(/m)) {
+    return mainApplication;
+  }
+
+  mainApplication = addImports(mainApplication, ['expo.modules.ReactNativeHostWrapper'], isJava);
+
+  const newInstanceCodeBlock = findNewInstanceCodeBlock(
+    mainApplication,
+    'DefaultReactNativeHost',
+    language
+  );
+  if (newInstanceCodeBlock == null) {
+    throw new Error('Unable to find DefaultReactNativeHost new instance code block.');
+  }
+
+  const replacement = isJava
+    ? `new ReactNativeHostWrapper(this, ${newInstanceCodeBlock.code})`
+    : `ReactNativeHostWrapper(this, ${newInstanceCodeBlock.code})`;
+  mainApplication = replaceContentsWithOffset(
+    mainApplication,
+    replacement,
+    newInstanceCodeBlock.start,
+    newInstanceCodeBlock.end
+  );
   return mainApplication;
 }
 
