@@ -1,4 +1,4 @@
-import { getConfig } from '@expo/config';
+import { ExpoConfig, getConfig } from '@expo/config';
 import chalk from 'chalk';
 import { Doctor, Versions } from 'xdl';
 
@@ -33,6 +33,20 @@ async function validateSupportPackagesAsync(sdkVersion: string): Promise<boolean
     }
   }
   return allPackagesValid;
+}
+
+function validateAndroidExpoConfig(exp: ExpoConfig) {
+  if (
+    exp.android?.softwareKeyboardLayoutMode === 'resize' &&
+    exp.androidStatusBar?.translucent === true
+  ) {
+    Log.warn(
+      'Explicitly setting `androidStatusBar.translucent` to `true` in `app.json` with `softwareKeyboardLayoutMode` `resize` may result in unexpected keyboard behavior on Android and you will have to use a KeyboardAvoidingView to manage the keyboard layout.'
+    );
+    return false;
+  }
+
+  return true;
 }
 
 // Ensures that a set of packages
@@ -82,6 +96,10 @@ export async function actionAsync(projectRoot: string, options: Options) {
       options.fixDependencies
     ))
   ) {
+    foundSomeIssues = true;
+  }
+
+  if (!validateAndroidExpoConfig(exp)) {
     foundSomeIssues = true;
   }
 
