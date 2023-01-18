@@ -37,8 +37,9 @@ async function validateSupportPackagesAsync(sdkVersion: string): Promise<boolean
 
 function validateAndroidExpoConfig(exp: ExpoConfig) {
   if (
-    exp.android?.softwareKeyboardLayoutMode === 'resize' &&
-    exp.androidStatusBar?.translucent === true
+    exp.androidStatusBar?.translucent === true &&
+    (!exp.android?.softwareKeyboardLayoutMode ||
+      exp.android?.softwareKeyboardLayoutMode === 'resize')
   ) {
     Log.warn(
       'Explicitly setting `androidStatusBar.translucent` to `true` in `app.json` with `softwareKeyboardLayoutMode` `resize` may result in unexpected keyboard behavior on Android and you will have to use a KeyboardAvoidingView to manage the keyboard layout.'
