@@ -3,10 +3,10 @@ import chalk from 'chalk';
 import semver from 'semver';
 
 //import Log from '../../../log';
-// import { getRemoteVersionsForSdk } from '../../../utils/getRemoteVersionsForSdk';
+import { warnAboutDeepDependenciesAsync } from './dependencies/explain';
+import { getRemoteVersionsForSdkAsync } from './utils/getRemoteVersionsForSdkAsync';
 // import { profileMethod } from '../../utils/profileMethod';
 // import { validateDependenciesVersionsAsync } from '../../utils/validateDependenciesVersions';
-// import { warnAboutDeepDependenciesAsync } from './dependencies/explain';
 import { warnUponCmdExe } from './windows';
 
 function gteSdkVersion(expJson: Pick<ExpoConfig, 'sdkVersion'>, sdkVersion: string): boolean {
@@ -28,66 +28,66 @@ function gteSdkVersion(expJson: Pick<ExpoConfig, 'sdkVersion'>, sdkVersion: stri
   }
 }
 
-// async function validateSupportPackagesAsync(sdkVersion: string): Promise<boolean> {
-//   const versionsForSdk = await getRemoteVersionsForSdk(sdkVersion);
+async function validateSupportPackagesAsync(sdkVersion: string): Promise<boolean> {
+  const versionsForSdk = await getRemoteVersionsForSdkAsync(sdkVersion);
 
-//   const supportPackagesToValidate = [
-//     'expo-modules-autolinking',
-//     '@expo/config-plugins',
-//     '@expo/prebuild-config',
-//   ];
+  const supportPackagesToValidate = [
+    'expo-modules-autolinking',
+    '@expo/config-plugins',
+    '@expo/prebuild-config',
+  ];
 
-//   let allPackagesValid = true;
-//   for (const pkg of supportPackagesToValidate) {
-//     const version = versionsForSdk[pkg];
-//     if (version) {
-//       const isVersionValid = await warnAboutDeepDependenciesAsync({ name: pkg, version });
-//       if (!isVersionValid) {
-//         allPackagesValid = false;
-//       }
-//     }
-//   }
-//   return allPackagesValid;
-// }
+  let allPackagesValid = true;
+  for (const pkg of supportPackagesToValidate) {
+    const version = versionsForSdk[pkg];
+    if (version) {
+      const isVersionValid = await warnAboutDeepDependenciesAsync({ name: pkg, version });
+      if (!isVersionValid) {
+        allPackagesValid = false;
+      }
+    }
+  }
+  return allPackagesValid;
+}
 
 // Ensures that a set of packages
-// async function validateIllegalPackagesAsync(): Promise<boolean> {
-//   const illegalPackages = [
-//     '@unimodules/core',
-//     '@unimodules/react-native-adapter',
-//     'react-native-unimodules',
-//   ];
+async function validateIllegalPackagesAsync(): Promise<boolean> {
+  const illegalPackages = [
+    '@unimodules/core',
+    '@unimodules/react-native-adapter',
+    'react-native-unimodules',
+  ];
 
-//   let allPackagesLegal = true;
+  let allPackagesLegal = true;
 
-//   for (const pkg of illegalPackages) {
-//     const isPackageAbsent = await warnAboutDeepDependenciesAsync({ name: pkg });
-//     if (!isPackageAbsent) {
-//       allPackagesLegal = false;
-//     }
-//   }
+  for (const pkg of illegalPackages) {
+    const isPackageAbsent = await warnAboutDeepDependenciesAsync({ name: pkg });
+    if (!isPackageAbsent) {
+      allPackagesLegal = false;
+    }
+  }
 
-//   return allPackagesLegal;
-// }
+  return allPackagesLegal;
+}
 
 export async function actionAsync(projectRoot: string) {
   await warnUponCmdExe();
 
   const { exp, pkg } = getConfig(projectRoot);
-  const foundSomeIssues = false;
+  let foundSomeIssues = false;
 
   // Only use the new validation on SDK +45.
   if (gteSdkVersion(exp, '45.0.0')) {
-    // if (!(await validateSupportPackagesAsync(exp.sdkVersion!))) {
-    //   foundSomeIssues = true;
-    // }
+    if (!(await validateSupportPackagesAsync(exp.sdkVersion!))) {
+      foundSomeIssues = true;
+    }
   }
 
-  // if (Versions.gteSdkVersion(exp, '44.0.0')) {
-  //   if (!(await validateIllegalPackagesAsync())) {
-  //     foundSomeIssues = true;
-  //   }
-  // }
+  if (gteSdkVersion(exp, '44.0.0')) {
+    if (!(await validateIllegalPackagesAsync())) {
+      foundSomeIssues = true;
+    }
+  }
 
   // if (
   //   !(await profileMethod(validateDependenciesVersionsAsync)(
