@@ -1,10 +1,11 @@
 import { ExpoConfig, getConfig } from '@expo/config';
 import chalk from 'chalk';
 import semver from 'semver';
+import shell from 'shelljs';
 
-//import Log from '../../../log';
 import { warnAboutDeepDependenciesAsync } from './dependencies/explain';
 import { getRemoteVersionsForSdkAsync } from './utils/getRemoteVersionsForSdkAsync';
+import { logNewSection } from './utils/ora';
 // import { profileMethod } from '../../utils/profileMethod';
 // import { validateDependenciesVersionsAsync } from '../../utils/validateDependenciesVersions';
 import { warnUponCmdExe } from './windows';
@@ -88,6 +89,24 @@ export async function actionAsync(projectRoot: string) {
       foundSomeIssues = true;
     }
   }
+
+  // dependency check
+  const ora = logNewSection(`Checking versions of installed dependencies...`);
+  const originalPwd = shell.pwd().stdout;
+
+  shell.cd(projectRoot);
+
+  const installCheckOutput = shell.exec('echo "n" | npx expo install --check', { silent: true });
+
+  //console.log(chalk.yellow(installCheckOutput.stderr));
+  if (installCheckOutput.code !== 0) {
+    ora.fail(installCheckOutput.stderr);
+    foundSomeIssues = true;
+  } else {
+    ora.stop();
+  }
+
+  shell.cd(originalPwd);
 
   // if (
   //   !(await profileMethod(validateDependenciesVersionsAsync)(
