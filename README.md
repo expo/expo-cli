@@ -1,6 +1,10 @@
+**The modern [local Expo CLI](https://blog.expo.dev/the-new-expo-cli-f4250d8e3421) is included with the `expo` package and does not need to be installed separately. Run it with `npx expo`. Its source code lives in the [`expo/expo`](https://github.com/expo/expo/blob/main/packages/%40expo/cli) repo.**
+
+---
+
 # Assorted Expo Dev Tools
 
-Packages used in Expo CLI and related tooling. Contains source for the legacy global Expo CLI. The new [local Expo CLI](https://blog.expo.dev/the-new-expo-cli-f4250d8e3421) lives in the [**`expo/expo`**](https://github.com/expo/expo/blob/main/packages/%40expo/cli) repo.
+This repo consists of packages used in the legacy global Expo CLI and related tooling.
 
 <p>
   <a aria-label="Follow @expo on Twitter" href="https://twitter.com/intent/follow?screen_name=expo" target="_blank">
