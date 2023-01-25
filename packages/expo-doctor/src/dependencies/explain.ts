@@ -6,8 +6,6 @@ import Log from '../utils/log';
 import { logNewSection } from '../utils/ora';
 import { RootNodePackage, VersionSpec } from './explain.types';
 
-//
-
 type TargetPackage = { name: string; version?: VersionSpec };
 
 function isSpawnResult(result: any): result is SpawnResult {

@@ -17,6 +17,8 @@ async function run() {
     logHelpAndExit();
   }
 
+  // TODO: add offline flag
+
   const projectRoot = path.resolve(process.cwd(), args[0] ?? process.cwd());
 
   await fs.access(projectRoot, constants.F_OK).catch((err: any) => {
