@@ -35,11 +35,11 @@ export async function actionAsync(projectRoot: string) {
 
   // add additional checks here
   const checks = [
-    //new IllegalPackageCheck(),
-    //new SupportPackageVersionCheck(),
-    //new GlobalPrereqsVersionCheck(),
+    new IllegalPackageCheck(),
+    new SupportPackageVersionCheck(),
+    new GlobalPrereqsVersionCheck(),
     new InstalledDependencyVersionCheck(),
-    //new ExpoConfigSchemaCheck(),
+    new ExpoConfigSchemaCheck(),
   ];
 
   let foundSomeIssues = false;
