@@ -1,8 +1,0 @@
-{
-  "extends": "../../tsconfig.base",
-  "include": ["src/**/*.ts"],
-  "compilerOptions": {
-    "outDir": "build",
-    "rootDir": "src"
-  }
-}

@@ -13,7 +13,9 @@ it(`only uses optimizations in production`, () => {
     withOptimizations({
       mode: 'development',
     }).optimization
-  ).not.toBeDefined();
+  ).toEqual({
+    usedExports: false,
+  });
 });
 
 it(`doesn't overwrite existing optimizations`, () => {

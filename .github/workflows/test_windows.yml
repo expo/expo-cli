@@ -9,14 +9,14 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
-        node: ['12', '14']
+        node: ['14', '16']
     name: Build with Node ${{ matrix.node }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 1
       - name: Setup node
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node }}
       - run: yarn install --frozen-lockfile --network-timeout 120000
@@ -32,20 +32,16 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node: ['12', '14']
+        node: ['14', '16']
         package:
           [
+            create-expo-app,
             dev-tools,
             babel-preset-cli,
-            config,
-            config-plugins,
-            dev-server,
             expo-cli,
             expo-codemod,
             image-utils,
             json-file,
-            metro-config,
-            package-manager,
             pkcs12,
             plist,
             pwa,
@@ -61,7 +57,7 @@ jobs:
           path: '*'
           key: v2-${{ github.sha }}-${{ matrix.node }}
       - name: Set up Node
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node }}
       - name: Test ${{ matrix.package }}

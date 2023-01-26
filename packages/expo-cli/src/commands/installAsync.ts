@@ -8,6 +8,7 @@ import { Versions } from 'xdl';
 import CommandError, { SilentError } from '../CommandError';
 import Log from '../log';
 import { getRemoteVersionsForSdk } from '../utils/getRemoteVersionsForSdk';
+import { warnAboutLocalCLI } from '../utils/migration';
 import { findProjectRootAsync } from './utils/ProjectUtils';
 import { autoAddConfigPluginsAsync } from './utils/autoAddConfigPluginsAsync';
 import { getBundledNativeModulesAsync } from './utils/bundledNativeModules';
@@ -36,6 +37,7 @@ export async function actionAsync(
   options: PackageManager.CreateForProjectOptions
 ) {
   const projectRoot = await resolveExpoProjectRootAsync();
+  warnAboutLocalCLI(projectRoot, { localCmd: 'install' });
 
   const packageManager = PackageManager.createForProject(projectRoot, {
     npm: options.npm,
@@ -141,7 +143,7 @@ export async function actionAsync(
   await packageManager.addWithParametersAsync(versionedPackages, parameters);
 
   try {
-    exp = getConfig(projectRoot, { skipSDKVersionRequirement: true, skipPlugins: true }).exp;
+    exp = getConfig(projectRoot, { skipSDKVersionRequirement: true }).exp;
 
     // Only auto add plugins if the plugins array is defined or if the project is using SDK +42.
     await autoAddConfigPluginsAsync(

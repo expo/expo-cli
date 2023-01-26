@@ -10,7 +10,7 @@ import { AbortCommandError, SilentError } from '../../CommandError';
 import Log from '../../log';
 import { logNewSection } from '../../utils/ora';
 import * as GitIgnore from '../utils/GitIgnore';
-import { downloadAndExtractNpmModuleAsync, getNpmUrlAsync } from '../utils/npm';
+import { downloadAndExtractNpmModuleAsync } from '../utils/npm';
 import { resolveTemplateArgAsync } from './Github';
 import {
   DependenciesModificationResults,
@@ -114,7 +114,6 @@ async function cloneNativeDirectoriesAsync({
       await resolveTemplateArgAsync(tempDir, creatingNativeProjectStep, exp.name, template);
     } else {
       const templatePackageName = await getTemplateNpmPackageName(exp.sdkVersion);
-      await getNpmUrlAsync(templatePackageName);
       await downloadAndExtractNpmModuleAsync(templatePackageName, {
         cwd: tempDir,
         name: exp.name,

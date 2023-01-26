@@ -2,21 +2,19 @@
 
 import { getConfig } from '@expo/config';
 import { compileModsAsync, ModPlatform } from '@expo/config-plugins';
-import * as PackageManager from '@expo/package-manager';
 import chalk from 'chalk';
 import { Command } from 'commander';
-import path from 'path';
 import prompts from 'prompts';
-import semver from 'semver';
 
 import { withAndroidModules } from './plugins/android/withAndroidModules';
-import { withIosDeploymentTarget } from './plugins/ios/withIosDeploymentTarget';
-import { withIosModules } from './plugins/ios/withIosModules';
 import {
-  getDefaultVersion,
-  getIosDeploymentTarget,
-  isSupportedVersion,
-} from './utils/expoVersionMappings';
+  shouldUpdateDeployTargetPodfileAsync,
+  withIosDeploymentTarget,
+} from './plugins/ios/withIosDeploymentTarget';
+import { withIosModules } from './plugins/ios/withIosModules';
+import { withXCParseXcodeProjectBaseMod } from './plugins/ios/withXCParseXcodeProject';
+import { getDefaultSdkVersion, getVersionInfo, VersionInfo } from './utils/expoVersionMappings';
+import { installExpoPackageAsync, installPodsAsync } from './utils/packageInstaller';
 import { normalizeProjectRoot } from './utils/projectRoot';
 
 const packageJSON = require('../package.json');
@@ -33,26 +31,32 @@ const program = new Command(packageJSON.name)
   .action((inputProjectRoot: string) => (projectRoot = inputProjectRoot))
   .parse(process.argv);
 
-function getSdkVersion(): string {
+function getSdkVersionInfo(): VersionInfo {
   const { sdkVersion } = program;
   if (sdkVersion) {
-    if (!isSupportedVersion(sdkVersion)) {
+    const versionInfo = getVersionInfo(sdkVersion);
+    if (!versionInfo) {
       throw new Error(`Unsupported sdkVersion: ${sdkVersion}`);
     }
-    return sdkVersion;
+    return versionInfo;
   }
-  return getDefaultVersion();
+  return getDefaultSdkVersion(projectRoot);
 }
 
-async function runAsync(programName: string) {
-  projectRoot = normalizeProjectRoot(projectRoot);
+/**
+ * Show a prompt before upgrading the iOS deployment target version for the target project.
+ *
+ * @returns true if user confirm to update. otherwise, returns false.
+ */
+async function promptUpgradeIosDeployTargetAsync(projectRoot: string, iosDeploymentTarget: string) {
+  if (!(await shouldUpdateDeployTargetPodfileAsync(projectRoot, iosDeploymentTarget))) {
+    return true;
+  }
 
-  const sdkVersion = getSdkVersion();
-
-  const iosDeploymentTarget = getIosDeploymentTarget(sdkVersion);
   const deploymentTargetMessage = `Expo modules minimum iOS requirement is ${iosDeploymentTarget}. This tool will change your iOS deployment target to ${iosDeploymentTarget}.`;
   if (program.nonInteractive) {
     console.log(chalk.yellow(`⚠️  ${deploymentTargetMessage}`));
+    return true;
   } else {
     const { value } = await prompts({
       type: 'confirm',
@@ -60,9 +64,16 @@ async function runAsync(programName: string) {
       message: `${deploymentTargetMessage} Do you want to continue?`,
       initial: true,
     });
-    if (!value) {
-      return;
-    }
+    return !!value;
+  }
+}
+
+async function runAsync(programName: string) {
+  projectRoot = normalizeProjectRoot(projectRoot);
+
+  const { expoSdkVersion: sdkVersion, iosDeploymentTarget } = getSdkVersionInfo();
+  if (!(await promptUpgradeIosDeployTargetAsync(projectRoot, iosDeploymentTarget))) {
+    return;
   }
 
   const platforms: ModPlatform[] = ['android', 'ios'];
@@ -81,6 +92,9 @@ async function runAsync(programName: string) {
     deploymentTarget: iosDeploymentTarget,
   });
 
+  // Keeps the base mods last
+  config = withXCParseXcodeProjectBaseMod(config);
+
   console.log('\u203A Updating your project...');
   await compileModsAsync(config, {
     projectRoot,
@@ -88,15 +102,10 @@ async function runAsync(programName: string) {
   });
 
   console.log('\u203A Installing expo packages...');
-  const packageManager = PackageManager.createForProject(projectRoot);
-  // e.g. `expo@>=43.0.0-0 <44.0.0`, this will cover prerelease version for beta testing.
-  await packageManager.addAsync(`expo@>=${sdkVersion}-0 <${semver.inc(sdkVersion, 'major')}`);
+  await installExpoPackageAsync(projectRoot, sdkVersion);
 
   console.log('\u203A Installing ios pods...');
-  const podPackageManager = new PackageManager.CocoaPodsPackageManager({
-    cwd: path.join(projectRoot, 'ios'),
-  });
-  await podPackageManager.installAsync();
+  await installPodsAsync(projectRoot);
 
   console.log(chalk.bold('\u203A Installation completed!'));
 }

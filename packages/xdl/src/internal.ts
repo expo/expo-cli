@@ -11,6 +11,10 @@
 */
 export { Semaphore } from './utils/Semaphore';
 export * as Env from './Env';
+export { default as FeatureGating } from './gating/FeatureGating';
+export { default as FeatureGateEnvOverrides } from './gating/FeatureGateEnvOverrides';
+export { FeatureGateKey, featureGateDefaultValueWhenNoServerValue } from './gating/FeatureGateKey';
+export * as FeatureGateTestOverrides from './gating/FeatureGateTestOverrides';
 export * as CoreSimulator from './apple/CoreSimulator';
 export * as AppleDevice from './apple/AppleDevice';
 export { default as Config } from './Config';

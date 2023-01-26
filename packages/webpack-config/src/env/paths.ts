@@ -9,6 +9,18 @@ import url from 'url';
 import { Environment, FilePaths, InputEnvironment } from '../types';
 import getMode from './getMode';
 
+/** Wraps `findYarnOrNpmWorkspaceRoot` and guards against having an empty `package.json` file in an upper directory. */
+function findYarnOrNpmWorkspaceRootSafe(projectRoot: string): string | null {
+  try {
+    return findWorkspaceRoot(projectRoot);
+  } catch (error: any) {
+    if (error.message.includes('Unexpected end of JSON input')) {
+      return null;
+    }
+    throw error;
+  }
+}
+
 function getAbsolutePathWithProjectRoot(projectRoot: string, ...pathComponents: string[]): string {
   // Simple check if we are dealing with a URL.
   if (pathComponents?.length === 1 && pathComponents[0].startsWith('http')) {
@@ -19,7 +31,7 @@ function getAbsolutePathWithProjectRoot(projectRoot: string, ...pathComponents: 
 }
 
 function getModulesPath(projectRoot: string): string {
-  const workspaceRoot = findWorkspaceRoot(path.resolve(projectRoot)); // Absolute path or null
+  const workspaceRoot = findYarnOrNpmWorkspaceRootSafe(path.resolve(projectRoot)); // Absolute path or null
   if (workspaceRoot) {
     return path.resolve(workspaceRoot, 'node_modules');
   }

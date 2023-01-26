@@ -13,6 +13,7 @@ import { UserManager, Versions } from 'xdl';
 
 import CommandError, { AbortCommandError, SilentError } from '../CommandError';
 import Log from '../log';
+import { warnMigration } from '../utils/migration';
 import { logNewSection } from '../utils/ora';
 import prompts, { selectAsync } from '../utils/prompts';
 import { directoryExistsAsync } from './eject/clearNativeFolder';
@@ -226,6 +227,8 @@ async function resolveTemplateAsync(resolvedTemplate?: string | null) {
 }
 
 export async function actionAsync(incomingProjectRoot: string, command: Partial<Options>) {
+  warnMigration('npx create-expo-app --template');
+
   const options = parseOptions(command);
 
   const deprecatedNameArgument =

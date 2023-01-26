@@ -1,0 +1,33 @@
+name: 'Update expo-cli spec'
+on:
+  push:
+    tags:        
+      - 'expo-cli@*'
+  workflow_dispatch:
+
+jobs:
+  push-to-fig-autocomplete:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v2
+      - name: Get version
+        id: expo-version
+        env: 
+          FULL_VERSION: ${{ github.ref_name }}
+        run: |
+          echo "::set-output name=version::$(echo "$FULL_VERSION" | cut -f2 -d@)"
+      - name: Generate the spec
+        run: |
+          yarn
+          yarn build
+          cd packages/expo-cli
+          yarn --silent introspect fig > new-spec.ts
+      - name: 'Create Autocomplete PR'
+        uses: withfig/push-to-fig-autocomplete-action@v1
+        with:
+          token: ${{ secrets.GH_TOKEN }}
+          autocomplete-spec-name: expo
+          spec-path: packages/expo-cli/new-spec.ts
+          diff-based-versioning: true
+          new-spec-version: ${{ steps.echo-version.outputs.version }}

@@ -1,4 +1,5 @@
-import Ajv from 'ajv';
+import Ajv, { ErrorObject, Options } from 'ajv';
+import addFormats from 'ajv-formats';
 import fs from 'fs';
 import traverse from 'json-schema-traverse';
 import get from 'lodash/get';
@@ -8,14 +9,6 @@ import readChunk from 'read-chunk';
 
 import { SchemerError, ValidationError } from './Error';
 import { fieldPathToSchema, schemaPointerToFieldPath } from './Util';
-
-type Options = {
-  allErrors?: boolean;
-  rootDir?: string;
-  verbose?: boolean;
-  format?: 'full' | 'empty'; //figure out later
-  metaValidation?: boolean;
-};
 
 type Meta = {
   asset?: boolean;
@@ -28,26 +21,32 @@ type Meta = {
   contentTypeHuman?: string;
 };
 
+type SchemerOptions = Options & {
+  rootDir?: string;
+};
+
 type AssetField = { fieldPath: string; data: string; meta: Meta };
 
 export { SchemerError, ValidationError, ErrorCodes, ErrorCode } from './Error';
 export default class Schemer {
-  options: Options;
-  ajv: Ajv.Ajv;
+  options: SchemerOptions;
+  ajv: Ajv;
   schema: object;
   rootDir: string;
   manualValidationErrors: ValidationError[];
   // Schema is a JSON Schema object
-  constructor(schema: object, options: Options = {}) {
+  constructor(schema: object, options: SchemerOptions = {}) {
     this.options = {
       allErrors: true,
       verbose: true,
-      format: 'full',
-      metaValidation: true,
+      meta: true,
+      strict: false,
+      unicodeRegExp: false,
       ...options,
     };
 
     this.ajv = new Ajv(this.options);
+    addFormats(this.ajv, { mode: 'full' });
     this.schema = schema;
     this.rootDir = this.options.rootDir || __dirname;
     this.manualValidationErrors = [];
@@ -55,20 +54,20 @@ export default class Schemer {
 
   _formatAjvErrorMessage({
     keyword,
-    dataPath,
+    instancePath,
     params,
     parentSchema,
     data,
     message,
-  }: Ajv.ErrorObject) {
+  }: ErrorObject) {
     const meta = parentSchema && (parentSchema as any).meta;
     // This removes the "." in front of a fieldPath
-    dataPath = dataPath.slice(1);
+    instancePath = instancePath.slice(1);
     switch (keyword) {
       case 'additionalProperties': {
         return new ValidationError({
           errorCode: 'SCHEMA_ADDITIONAL_PROPERTY',
-          fieldPath: dataPath,
+          fieldPath: instancePath,
           message: `should NOT have additional property '${(params as any).additionalProperty}'`,
           data,
           meta,
@@ -77,7 +76,7 @@ export default class Schemer {
       case 'required':
         return new ValidationError({
           errorCode: 'SCHEMA_MISSING_REQUIRED_PROPERTY',
-          fieldPath: dataPath,
+          fieldPath: instancePath,
           message: `is missing required property '${(params as any).missingProperty}'`,
           data,
           meta,
@@ -86,11 +85,11 @@ export default class Schemer {
         //@TODO Parse the message in a less hacky way. Perhaps for regex validation errors, embed the error message under the meta tag?
         const regexHuman = meta?.regexHuman;
         const regexErrorMessage = regexHuman
-          ? `'${dataPath}' should be a ${regexHuman[0].toLowerCase() + regexHuman.slice(1)}`
-          : `'${dataPath}' ${message}`;
+          ? `'${instancePath}' should be a ${regexHuman[0].toLowerCase() + regexHuman.slice(1)}`
+          : `'${instancePath}' ${message}`;
         return new ValidationError({
           errorCode: 'SCHEMA_INVALID_PATTERN',
-          fieldPath: dataPath,
+          fieldPath: instancePath,
           message: regexErrorMessage,
           data,
           meta,
@@ -99,11 +98,11 @@ export default class Schemer {
       case 'not': {
         const notHuman = meta?.notHuman;
         const notHumanErrorMessage = notHuman
-          ? `'${dataPath}' should be ${notHuman[0].toLowerCase() + notHuman.slice(1)}`
-          : `'${dataPath}' ${message}`;
+          ? `'${instancePath}' should be ${notHuman[0].toLowerCase() + notHuman.slice(1)}`
+          : `'${instancePath}' ${message}`;
         return new ValidationError({
           errorCode: 'SCHEMA_INVALID_NOT',
-          fieldPath: dataPath,
+          fieldPath: instancePath,
           message: notHumanErrorMessage,
           data,
           meta,
@@ -112,7 +111,7 @@ export default class Schemer {
       default:
         return new ValidationError({
           errorCode: 'SCHEMA_VALIDATION_ERROR',
-          fieldPath: dataPath,
+          fieldPath: instancePath,
           message: message || 'Validation error',
           data,
           meta,

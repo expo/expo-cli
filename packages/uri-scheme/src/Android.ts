@@ -137,7 +137,7 @@ export async function openAsync({
   uri,
   androidPackage,
 }: Pick<Options, 'uri'> & { androidPackage?: string }): Promise<string> {
-  return await openUrlAsync(uri, androidPackage ?? null);
+  return await openUrlAsync(uri.replace(/&/g, String.raw`\&`), androidPackage ?? null);
 }
 
 export async function getAsync({

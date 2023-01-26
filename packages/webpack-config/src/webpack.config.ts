@@ -572,11 +572,11 @@ export default async function (env: Environment, argv: Arguments = {}): Promise<
   if (isProd) {
     webpackConfig = withOptimizations(webpackConfig);
   } else {
+    webpackConfig = withDevServer(webpackConfig, env, {
+      allowedHost: argv.allowedHost,
+      proxy: argv.proxy,
+    });
   }
-  webpackConfig = withDevServer(webpackConfig, env, {
-    allowedHost: argv.allowedHost,
-    proxy: argv.proxy,
-  });
 
   if (!isNative) {
     webpackConfig = withAlias(webpackConfig, getAliases(env.projectRoot));

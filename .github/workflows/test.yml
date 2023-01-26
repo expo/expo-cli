@@ -10,14 +10,14 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node: ['12', '14']
+        node: ['14', '16']
     name: Build with Node ${{ matrix.node }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 1
       - name: Setup node
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node }}
       - run: yarn install --frozen-lockfile --check-files
@@ -33,21 +33,16 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node: ['12', '14']
+        node: ['14', '16']
         package:
           [
             dev-tools,
             babel-preset-cli,
-            config,
-            config-plugins,
-            dev-server,
             expo-cli,
+            create-expo-app,
             expo-codemod,
             image-utils,
             json-file,
-            metro-config,
-            package-manager,
-            prebuild-config,
             pkcs12,
             plist,
             pwa,
@@ -63,24 +58,24 @@ jobs:
           path: '*'
           key: v2-${{ github.sha }}-${{ matrix.node }}
       - name: Set up Node
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node }}
       - name: Test ${{ matrix.package }}
-        # run: cd packages/${{ matrix.package }} && yarn test
-        run: cd packages/${{ matrix.package }} && yarn test --coverage
+        run: cd packages/${{ matrix.package }} && yarn test
+        # run: cd packages/${{ matrix.package }} && yarn test --coverage
         env:
           CI: true
           EXPO_DEBUG: true
-      - name: Get Test Flag Name
-        id: cov-flag-name
-        run: echo "::set-output name=flag::$(echo ${{ matrix.package }} | perl -pe 's/[^a-z]+([a-z])/\U\1/gi;s/^([A-Z])/\l\1/')"
-      - uses: codecov/codecov-action@v2
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
-          file: ./packages/${{ matrix.package }}/coverage/clover.xml # optional
-          flags: ${{ steps.cov-flag-name.outputs.flag }} # optional
-          fail_ci_if_error: false # optional (default = false)
+      # - name: Get Test Flag Name
+      #   id: cov-flag-name
+      #   run: echo "::set-output name=flag::$(echo ${{ matrix.package }} | perl -pe 's/[^a-z]+([a-z])/\U\1/gi;s/^([A-Z])/\l\1/')"
+      # - uses: codecov/codecov-action@v2
+      #   with:
+      #     token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
+      #     file: ./packages/${{ matrix.package }}/coverage/clover.xml # optional
+      #     flags: ${{ steps.cov-flag-name.outputs.flag }} # optional
+      #     fail_ci_if_error: false # optional (default = false)
 
   puppeteer:
     runs-on: ubuntu-latest

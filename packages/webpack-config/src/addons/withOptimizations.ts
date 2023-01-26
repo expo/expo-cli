@@ -20,12 +20,21 @@ export function isDebugMode(): boolean {
  */
 export default function withOptimizations(webpackConfig: Configuration): Configuration {
   if (webpackConfig.mode !== 'production') {
+    webpackConfig.optimization = {
+      ...webpackConfig.optimization,
+      // Required for React Native packages that use import/export syntax:
+      // https://webpack.js.org/configuration/optimization/#optimizationusedexports
+      usedExports: false,
+    };
     return webpackConfig;
   }
 
   const _isDebugMode = isDebugMode();
 
   webpackConfig.optimization = {
+    // Required for React Native packages that use import/export syntax:
+    // https://webpack.js.org/configuration/optimization/#optimizationusedexports
+    usedExports: false,
     ...(webpackConfig.optimization || {}),
 
     // https://github.com/facebook/create-react-app/discussions/11278#discussioncomment-1808511

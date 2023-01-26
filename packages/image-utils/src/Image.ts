@@ -5,6 +5,7 @@ import * as Cache from './Cache';
 import * as Download from './Download';
 import * as Ico from './Ico';
 import { ImageOptions } from './Image.types';
+import { env } from './env';
 import * as Jimp from './jimp';
 import * as Sharp from './sharp';
 
@@ -40,8 +41,8 @@ async function resizeAsync(imageOptions: ImageOptions): Promise<Buffer> {
       await Jimp.circleAsync(jimp);
     }
 
-    const imgBuffer = await jimp.getBufferAsync(jimp.getMIME());
-    return imgBuffer;
+    // Convert to png buffer
+    return jimp.getBufferAsync('image/png');
   }
   try {
     let sharpBuffer = sharp(imageOptions.src)
@@ -73,13 +74,14 @@ async function resizeAsync(imageOptions: ImageOptions): Promise<Buffer> {
 
     if (imageOptions.borderRadius) {
       const mask = Buffer.from(
-        `<svg><rect x="0" y="0" width="${width}" height="${height}" 
-        rx="${imageOptions.borderRadius}" ry="${imageOptions.borderRadius}" 
+        `<svg><rect x="0" y="0" width="${width}" height="${height}"
+        rx="${imageOptions.borderRadius}" ry="${imageOptions.borderRadius}"
         fill="${
           backgroundColor && backgroundColor !== 'transparent' ? backgroundColor : 'none'
         }" /></svg>`
       );
-      sharpBuffer.composite([{ input: mask, blend: 'dest-over' }]);
+
+      sharpBuffer.composite([{ input: mask, blend: 'dest-in' }]);
     }
 
     return await sharpBuffer.png().toBuffer();
@@ -104,7 +106,7 @@ function getDimensionsId(imageOptions: Pick<ImageOptions, 'width' | 'height'>): 
 
 async function maybeWarnAboutInstallingSharpAsync() {
   // Putting the warning here will prevent the warning from showing if all images were reused from the cache
-  if (!hasWarned && !(await Sharp.isAvailableAsync())) {
+  if (env.EXPO_IMAGE_UTILS_DEBUG && !hasWarned && !(await Sharp.isAvailableAsync())) {
     hasWarned = true;
     console.warn(
       chalk.yellow(

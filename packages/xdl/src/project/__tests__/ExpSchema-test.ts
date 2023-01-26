@@ -8,7 +8,7 @@ describe(`getAssetSchemasAsync return array of strings including some known valu
     ],
     [
       'UNVERSIONED',
-      ['icon', 'notification.icon', 'splash.image', 'ios.splash.xib', 'android.splash.xxhdpi'],
+      ['icon', 'notification.icon', 'splash.image', 'ios.splash.image', 'android.splash.xxhdpi'],
     ],
   ])('for SDK %s', async (sdkVersion, expectedAssetsPaths) => {
     const schemas = await ExpSchema.getAssetSchemasAsync(sdkVersion);
