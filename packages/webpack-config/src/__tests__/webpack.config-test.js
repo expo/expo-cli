@@ -40,6 +40,7 @@ function normalizeConfig(config) {
   normalized.module.rules = normalizeLoaders(normalized.module.rules);
 
   delete normalized.devServer?.watchOptions;
+  delete normalized.devServer?.static?.watch.ignored;
 
   // performance is disabled in CI
   delete normalized.performance;

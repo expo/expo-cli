@@ -48,9 +48,7 @@ Object {
       "publicPath": Array [
         "/",
       ],
-      "watch": Object {
-        "ignored": /\\^\\(\\?!\\\\/Users\\\\/evanbacon\\\\/Documents\\\\/GitHub\\\\/cli\\\\/packages\\\\/webpack\\\\x2dconfig\\\\/e2e\\\\/basic\\\\/\\)\\.\\+\\\\/node_modules\\\\//g,
-      },
+      "watch": Object {},
     },
     "webSocketServer": Object {
       "options": Object {

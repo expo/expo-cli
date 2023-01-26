@@ -75,7 +75,8 @@
     "jest-puppeteer": "^4.4.0",
     "metro": "~0.64.0",
     "react-native": "~0.64.3",
-    "serve": "^11.1.0"
+    "serve": "^11.1.0",
+    "resize-observer-polyfill": "^1.5.1"
   },
   "browserslist": {
     "production": [
