@@ -38,6 +38,11 @@ function normalizeConfig(config) {
   }
 
   normalized.module.rules = normalizeLoaders(normalized.module.rules);
+  expect(normalized.entry).toEqual([
+    expect.stringContaining('node_modules/resize-observer-polyfill/dist/ResizeObserver.global.js'),
+    expect.stringContaining('basic/index.js'),
+  ]);
+  delete normalized.entry;
 
   delete normalized.devServer?.watchOptions;
   delete normalized.devServer?.static?.watch.ignored;

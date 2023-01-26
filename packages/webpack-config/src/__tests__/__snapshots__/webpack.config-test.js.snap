@@ -60,10 +60,6 @@ Object {
     },
   },
   "devtool": "cheap-module-source-map",
-  "entry": Array [
-    "packages/webpack-config/e2e/basic/node_modules/resize-observer-polyfill/dist/ResizeObserver.global.js",
-    "packages/webpack-config/e2e/basic/index.js",
-  ],
   "infrastructureLogging": Object {
     "debug": true,
     "level": "verbose",
@@ -254,10 +250,6 @@ Object {
   },
   "context": "packages/webpack-config/e2e/basic",
   "devtool": "source-map",
-  "entry": Array [
-    "packages/webpack-config/e2e/basic/node_modules/resize-observer-polyfill/dist/ResizeObserver.global.js",
-    "packages/webpack-config/e2e/basic/index.js",
-  ],
   "infrastructureLogging": Object {
     "debug": true,
     "level": "verbose",
