@@ -5,7 +5,6 @@
 import { isRegExp } from 'util';
 import {
   Configuration,
-  Entry,
   RuleSetCondition,
   RuleSetRule,
   RuleSetUse,
@@ -189,46 +188,4 @@ export function getPluginsByName(config: Configuration, name: string): PluginIte
  */
 export function isRuleSetItem(loader: RuleSetUse): loader is RuleSetUseItem {
   return typeof loader === 'string' || typeof loader === 'function';
-}
-
-/**
- *
- * @param arg
- * @category utils
- */
-export function isEntry(arg: any): arg is Entry {
-  if (typeof arg !== 'object' || arg === null) {
-    return false;
-  }
-  return Object.values(arg).every(value => {
-    if (Array.isArray(value)) {
-      return value.every(value => typeof value === 'string');
-    }
-    return typeof value === 'string';
-  });
-}
-
-/**
- *
- * @param arg
- * @category utils
- */
-export async function resolveEntryAsync(arg: any): Promise<Entry> {
-  if (typeof arg === 'undefined') {
-    throw new Error('Webpack config entry cannot be undefined');
-  }
-
-  if (typeof arg === 'function') {
-    return resolveEntryAsync(await arg());
-  } else if (typeof arg === 'string') {
-    return resolveEntryAsync([arg]);
-  } else if (Array.isArray(arg)) {
-    return {
-      app: arg,
-    };
-  } else if (isEntry(arg)) {
-    return arg;
-  }
-
-  throw new Error('Cannot resolve Webpack config entry prop: ' + arg);
 }

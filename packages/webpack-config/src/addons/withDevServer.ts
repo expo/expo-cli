@@ -114,13 +114,7 @@ export function createDevServer(
 ): WebpackDevServerConfiguration {
   const { https = false } = env;
   const locations = env.locations || getPaths(env.projectRoot, env);
-  const isNative = ['ios', 'android'].includes(env.platform);
   const { publicPath: publicUrlOrPath } = getPublicPaths(env);
-  // Because native React runtimes uses .bundle we must make
-  // the .bundle extension be served as javascript.
-  const mimeTypes: any = {
-    bundle: 'text/javascript',
-  };
 
   const disableFirewall = !proxy || process.env.DANGEROUSLY_DISABLE_HOST_CHECK === 'true';
 
@@ -199,8 +193,6 @@ export function createDevServer(
       },
     },
     devMiddleware: {
-      mimeTypes,
-      // headers: { 'expo-platform': 'yes '},
       index: true,
       // It is important to tell WebpackDevServer to use the same "publicPath" path as
       // we specified in the webpack config. When homepage is '.', default to serving
@@ -216,15 +208,6 @@ export function createDevServer(
       // See https://github.com/facebook/create-react-app/issues/387.
       disableDotRule: true,
       index: publicUrlOrPath,
-      // @ts-ignore
-      rewrites: [
-        isNative && {
-          from: /^\/assets\/.*$/,
-          to: ((context: import('connect-history-api-fallback').Context) => {
-            return context.parsedUrl.pathname;
-          }) as import('connect-history-api-fallback').RewriteTo,
-        },
-      ].filter(Boolean),
     },
 
     // `proxy` is run between `before` and `after` `webpack-dev-server` hooks

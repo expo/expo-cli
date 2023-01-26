@@ -19,10 +19,6 @@ export default async function createWebpackConfigAsync(
   if (!env.projectRoot) {
     env.projectRoot = getPossibleProjectRoot();
   }
-  if (!env.platform) {
-    // @ts-ignore
-    env.platform = process.env.EXPO_WEBPACK_PLATFORM;
-  }
 
   const environment: Environment = validateEnvironment(env);
 

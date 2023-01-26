@@ -45,7 +45,7 @@
     "@expo/schemer": "1.4.4",
     "@expo/sdk-runtime-versions": "^1.0.0",
     "@expo/spawn-async": "1.5.0",
-    "@expo/webpack-config": "0.17.4",
+    "@expo/webpack-config": "18.0.0",
     "axios": "0.21.1",
     "better-opn": "^3.0.1",
     "boxen": "^5.0.1",
@@ -113,7 +113,6 @@
     "@types/text-table": "^0.2.1",
     "@types/url-join": "^4.0.0",
     "@types/uuid": "^8.3.1",
-    "@types/webpack": "^5.28.0",
     "@types/wrap-ansi": "^3.0.0",
     "hashids": "1.1.4",
     "tempy": "^0.7.1"

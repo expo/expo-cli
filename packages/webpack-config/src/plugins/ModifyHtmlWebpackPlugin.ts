@@ -73,7 +73,7 @@ export default class ModifyHtmlWebpackPlugin {
 
                 try {
                   data = await this.modifyAsync(compiler, compilation, data);
-                } catch (error) {
+                } catch (error: any) {
                   compilation.errors.push(error);
                 }
 

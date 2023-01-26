@@ -42,10 +42,13 @@ export function createEvalSourceMapMiddleware(server: WebpackDevServer) {
   ) {
     if (req.url.startsWith('/__get-internal-source')) {
       const fileName = req.query.fileName;
-      const id = fileName.match(/webpack-internal:\/\/\/(.+)/)[1];
+      if (typeof fileName !== 'string') {
+        return next();
+      }
+      const id = fileName?.match(/webpack-internal:\/\/\/(.+)/)?.[1];
       // @ts-ignore: untyped
       if (!id || !server._stats) {
-        next();
+        return next();
       }
 
       const source = getSourceById(server, id);
@@ -53,7 +56,7 @@ export function createEvalSourceMapMiddleware(server: WebpackDevServer) {
       const sourceURL = `//# sourceURL=webpack-internal:///${module.id}`;
       res.end(`${source.source()}\n${sourceMapURL}\n${sourceURL}`);
     } else {
-      next();
+      return next();
     }
   };
 }

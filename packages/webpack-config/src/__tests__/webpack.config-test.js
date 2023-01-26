@@ -57,19 +57,6 @@ afterAll(() => {
   process.env.CI = originalCiValue;
 });
 
-describe(`ios`, () => {
-  it('ios development', async () => {
-    const config = await createConfig({ mode: 'development', platform: 'ios', projectRoot });
-    const normalized = normalizeConfig(config);
-    expect(normalized).toMatchSnapshot();
-  });
-  it('ios production', async () => {
-    const config = await createConfig({ mode: 'production', platform: 'ios', projectRoot });
-    const normalized = normalizeConfig(config);
-
-    expect(normalized).toMatchSnapshot();
-  });
-});
 describe(`web`, () => {
   it('web development', async () => {
     const config = await createConfig({ mode: 'development', platform: 'web', projectRoot });

@@ -9,5 +9,4 @@ export const sockPort = process.env.WDS_SOCKET_PORT;
 
 // Source maps are resource heavy and can cause out of memory issue for large source files.
 export const shouldUseSourceMap = boolish('GENERATE_SOURCEMAP', true);
-export const shouldUseNativeCodeLoading = boolish('EXPO_WEBPACK_USE_NATIVE_CODE_LOADING', false);
 export const isCI = boolish('CI', false);

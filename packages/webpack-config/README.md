@@ -321,20 +321,6 @@ This webpack config currently does not supply service workers by default, they c
 
 For adding features to an existing Webpack config.
 
-#### `withUnimodules`
-
-```js
-import { withUnimodules } from '@expo/webpack-config/addons';
-```
-
-Wrap your existing webpack config with support for Unimodules (Expo web). ex: **Storybook** `({ config }) => withUnimodules(config)`
-
-**params**
-
-- `webpackConfig: Configuration = {}` Optional existing Webpack config to modify.
-- `env: InputEnvironment = {}` Optional [`Environment`][#environment] options for configuring what features the Webpack config supports.
-- `argv: Arguments = {}`
-
 #### `withOptimizations`
 
 ```js
@@ -497,16 +483,6 @@ import { ExpoInterpolateHtmlPlugin } from '@expo/webpack-config/plugins';
 ```
 
 Add variables to the `index.html`.
-
-### utils
-
-Tools for resolving fields, or searching and indexing loaders and plugins.
-
-#### `resolveEntryAsync`
-
-```js
-import { resolveEntryAsync } from '@expo/webpack-config/utils';
-```
 
 ## What it does not do
 

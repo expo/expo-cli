@@ -9,7 +9,7 @@
  * But with Node LTS support and removed support for CaseSensitivePathsPlugin which we don't implement due to performance concerns.
  */
 import chalk from 'chalk';
-import { findUpSync } from 'find-up';
+import { sync as findUpSync } from 'find-up';
 import path from 'path';
 import { Compilation, Compiler, WebpackError } from 'webpack';
 

@@ -123,8 +123,5 @@
     "uuid": "^8.0.0",
     "wrap-ansi": "^7.0.0",
     "xdl": "59.3.0"
-  },
-  "resolutions": {
-    "hermes-engine": "0.0.0"
   }
 }

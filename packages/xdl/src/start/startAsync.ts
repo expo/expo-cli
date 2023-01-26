@@ -97,7 +97,7 @@ export async function startAsync(
     }
   }
 
-  const target = !options.webOnly || Webpack.isTargetingNative() ? 'native' : 'web';
+  const target = !options.webOnly ? 'native' : 'web';
   // This is used to make Expo Go open the project in either Expo Go, or the web browser.
   // Must come after ngrok (`startTunnelsAsync`) setup.
   DevSession.startSession(projectRoot, exp, target);

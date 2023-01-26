@@ -1,4 +1,3 @@
-/* eslint-env node */
 import chalk from 'chalk';
 import { CleanWebpackPlugin } from 'clean-webpack-plugin';
 import CopyWebpackPlugin from 'copy-webpack-plugin';
@@ -16,20 +15,19 @@ import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 import { parse } from 'node-html-parser';
 import path from 'path';
 import resolveFrom from 'resolve-from';
-import webpack, { Configuration } from 'webpack';
+import { Configuration } from 'webpack';
 import { WebpackManifestPlugin } from 'webpack-manifest-plugin';
 
-import { withAlias, withDevServer, withOptimizations, withPlatformSourceMaps } from './addons';
+import { withAlias, withDevServer, withOptimizations } from './addons';
 import {
   getAliases,
   getConfig,
   getMode,
   getModuleFileExtensions,
-  getNativeModuleFileExtensions,
   getPathsAsync,
   getPublicPaths,
 } from './env';
-import { EXPO_DEBUG, isCI, shouldUseNativeCodeLoading, shouldUseSourceMap } from './env/defaults';
+import { EXPO_DEBUG, isCI, shouldUseSourceMap } from './env/defaults';
 import { createAllLoaders } from './loaders';
 import {
   ApplePwaWebpackPlugin,
@@ -41,7 +39,6 @@ import {
   ExpoProgressBarPlugin,
   ExpoPwaManifestWebpackPlugin,
   FaviconWebpackPlugin,
-  NativeAssetsPlugin,
 } from './plugins';
 import { HTMLLinkNode } from './plugins/ModifyHtmlWebpackPlugin';
 import { ModuleNotFoundPlugin } from './plugins/ModuleNotFoundPlugin';
@@ -111,30 +108,10 @@ function getOutput(
     ): string => path.resolve(info.absoluteResourcePath).replace(/\\/g, '/');
   }
 
-  if (!shouldUseNativeCodeLoading && isPlatformNative(platform)) {
-    // Give the output bundle a constant name to prevent caching.
-    // Also there are no actual files generated in dev.
-    // TODO: This is required for production iOS builds
-    commonOutput.filename = mode === 'production' ? `main.jsbundle` : `index.bundle`;
-    // commonOutput.hotUpdateMainFilename;
-    commonOutput.publicPath = `http://localhost:${port}/`;
-    // This works best for our custom native symbolication middleware
-    // commonOutput.devtoolModuleFilenameTemplate = (
-    //   info: DevtoolModuleFilenameTemplateInfo
-    // ): string => info.resourcePath.replace(/\\/g, '/');
-  }
-
   return commonOutput;
 }
 
-function isPlatformNative(platform: string): boolean {
-  return ['ios', 'android'].includes(platform);
-}
-
 function getPlatformsExtensions(platform: string): string[] {
-  if (isPlatformNative(platform)) {
-    return getNativeModuleFileExtensions(platform, 'native');
-  }
   return getModuleFileExtensions(platform);
 }
 
@@ -155,14 +132,6 @@ export default async function (env: Environment, argv: Arguments = {}): Promise<
   const isDev = mode === 'development';
   const isProd = mode === 'production';
 
-  // Because the native React runtime is different to the browser we need to make
-  // some core modifications to webpack.
-  const isNative = ['ios', 'android'].includes(env.platform);
-
-  if (isNative) {
-    env.pwa = false;
-  }
-
   const locations = env.locations || (await getPathsAsync(env.projectRoot));
 
   const { publicPath, publicUrl } = getPublicPaths(env);
@@ -178,31 +147,16 @@ export default async function (env: Environment, argv: Arguments = {}): Promise<
     appEntry.push(locations.appMain);
   }
 
-  if (isNative) {
-    const getPolyfillsPath = resolveFrom.silent(
-      env.projectRoot,
-      'react-native/rn-get-polyfills.js'
-    );
-
-    if (getPolyfillsPath) {
-      appEntry.unshift(
-        ...require(getPolyfillsPath)(),
-        resolveFrom(env.projectRoot, 'react-native/Libraries/Core/InitializeCore')
-      );
-    }
-    // TODO: Polyfill __webpack_require__.l and window.location
-  } else {
-    // Add a loose requirement on the ResizeObserver polyfill if it's installed...
-    const resizeObserverPolyfill = resolveFrom.silent(
-      env.projectRoot,
-      'resize-observer-polyfill/dist/ResizeObserver.global'
-    );
-    if (resizeObserverPolyfill) {
-      appEntry.unshift(resizeObserverPolyfill);
-    }
+  // Add a loose requirement on the ResizeObserver polyfill if it's installed...
+  const resizeObserverPolyfill = resolveFrom.silent(
+    env.projectRoot,
+    'resize-observer-polyfill/dist/ResizeObserver.global'
+  );
+  if (resizeObserverPolyfill) {
+    appEntry.unshift(resizeObserverPolyfill);
   }
 
-  let generatePWAImageAssets: boolean = !isNative && !isDev;
+  let generatePWAImageAssets: boolean = !isDev;
   if (!isDev && typeof env.pwa !== 'undefined') {
     generatePWAImageAssets = env.pwa;
   }
@@ -341,55 +295,12 @@ export default async function (env: Environment, argv: Arguments = {}): Promise<
           verbose: false,
         }),
       // Copy the template files over
-      isProd && !isNative && new CopyWebpackPlugin({ patterns: filesToCopy }),
+      isProd && new CopyWebpackPlugin({ patterns: filesToCopy }),
 
       // Generate the `index.html`
-      (!isNative || shouldUseNativeCodeLoading) && new ExpoHtmlWebpackPlugin(env, templateIndex),
+      new ExpoHtmlWebpackPlugin(env, templateIndex),
 
-      (!isNative || shouldUseNativeCodeLoading) &&
-        // @ts-ignore
-        ExpoInterpolateHtmlPlugin.fromEnv(env, ExpoHtmlWebpackPlugin),
-
-      isNative &&
-        new NativeAssetsPlugin({
-          platforms: [env.platform, 'native'],
-          persist: isProd,
-          assetExtensions: [
-            // Image formats
-            'bmp',
-            'gif',
-            'jpg',
-            'jpeg',
-            'png',
-            'psd',
-            'svg',
-            'webp',
-            // Video formats
-            'm4v',
-            'mov',
-            'mp4',
-            'mpeg',
-            'mpg',
-            'webm',
-            // Audio formats
-            'aac',
-            'aiff',
-            'caf',
-            'm4a',
-            'mp3',
-            'wav',
-            // Document formats
-            'html',
-            'pdf',
-            'yaml',
-            'yml',
-            // Font formats
-            'otf',
-            'ttf',
-            // Archives (virtual files)
-            'zip',
-          ],
-        }),
+      ExpoInterpolateHtmlPlugin.fromEnv(env, ExpoHtmlWebpackPlugin),
 
       env.pwa &&
         new ExpoPwaManifestWebpackPlugin(
@@ -401,15 +312,15 @@ export default async function (env: Environment, argv: Arguments = {}): Promise<
           },
           config
         ),
-      !isNative &&
-        new FaviconWebpackPlugin(
-          {
-            projectRoot: env.projectRoot,
-            publicPath,
-            links,
-          },
-          ensureSourceAbsolute(getFaviconIconConfig(config))
-        ),
+
+      new FaviconWebpackPlugin(
+        {
+          projectRoot: env.projectRoot,
+          publicPath,
+          links,
+        },
+        ensureSourceAbsolute(getFaviconIconConfig(config))
+      ),
       generatePWAImageAssets &&
         new ApplePwaWebpackPlugin(
           {
@@ -448,25 +359,7 @@ export default async function (env: Environment, argv: Arguments = {}): Promise<
         platform: env.platform,
       }),
 
-      // Disable chunking on native because offline (expo-updates) is not powerful enough
-      // to support anything more than a single hardcoded chunk in a predetermined location.
-      // https://gist.github.com/glennreyes/f538a369db0c449b681e86ef7f86a254#file-razzle-config-js
-      isNative &&
-        isProd &&
-        new webpack.optimize.LimitChunkCountPlugin({
-          maxChunks: 1,
-        }),
-
-      // Replace the Metro specific HMR code in `react-native` with
-      // a shim.
-      isNative &&
-        new webpack.NormalModuleReplacementPlugin(
-          /react-native\/Libraries\/Utilities\/HMRClient\.js$/,
-          require.resolve('./runtime/metro-runtime-shim')
-        ),
-
-      !isNative &&
-        isProd &&
+      isProd &&
         new MiniCssExtractPlugin({
           // Options similar to the same options in webpackOptions.output
           // both options are optional
@@ -480,38 +373,38 @@ export default async function (env: Environment, argv: Arguments = {}): Promise<
       //   `index.html`
       // - "entrypoints" key: Array of files which are included in `index.html`,
       //   can be used to reconstruct the HTML if necessary
-      !isNative &&
-        new WebpackManifestPlugin({
-          fileName: 'asset-manifest.json',
-          publicPath,
-          filter: ({ path }) => {
-            if (
-              path.match(
-                /(apple-touch-startup-image|apple-touch-icon|chrome-icon|precache-manifest)/
-              )
-            ) {
-              return false;
+
+      new WebpackManifestPlugin({
+        fileName: 'asset-manifest.json',
+        publicPath,
+        filter: ({ path }) => {
+          if (
+            path.match(/(apple-touch-startup-image|apple-touch-icon|chrome-icon|precache-manifest)/)
+          ) {
+            return false;
+          }
+          // Remove compressed versions and service workers
+          return !(path.endsWith('.gz') || path.endsWith('worker.js'));
+        },
+        generate: (seed: Record<string, any>, files, entrypoints) => {
+          const manifestFiles = files.reduce<Record<string, string>>((manifest, file) => {
+            if (file.name) {
+              manifest[file.name] = file.path;
             }
-            // Remove compressed versions and service workers
-            return !(path.endsWith('.gz') || path.endsWith('worker.js'));
-          },
-          generate: (seed: Record<string, any>, files, entrypoints) => {
-            const manifestFiles = files.reduce<Record<string, string>>((manifest, file) => {
-              if (file.name) {
-                manifest[file.name] = file.path;
-              }
-              return manifest;
-            }, seed);
-            const entrypointFiles = entrypoints.main.filter(fileName => !fileName.endsWith('.map'));
+            return manifest;
+          }, seed);
+          const entrypointFiles = entrypoints.main.filter(fileName => !fileName.endsWith('.map'));
 
-            return {
-              files: manifestFiles,
-              entrypoints: entrypointFiles,
-            };
-          },
-        }),
+          return {
+            files: manifestFiles,
+            entrypoints: entrypointFiles,
+          };
+        },
+      }),
 
+      // TODO: Drop
       new ExpectedErrorsPlugin(),
+
       // Skip using a progress bar in CI
       env.logger &&
         new ExpoProgressBarPlugin({
@@ -545,8 +438,8 @@ export default async function (env: Environment, argv: Arguments = {}): Promise<
     },
     resolve: {
       // modules: ['node_modules'],
-      mainFields: isNative ? ['react-native', 'browser', 'main'] : ['browser', 'module', 'main'],
-      aliasFields: isNative ? ['react-native', 'browser', 'main'] : ['browser', 'module', 'main'],
+      mainFields: ['browser', 'module', 'main'],
+      aliasFields: ['browser', 'module', 'main'],
       extensions: getPlatformsExtensions(env.platform),
       symlinks: false,
     },
@@ -557,18 +450,6 @@ export default async function (env: Environment, argv: Arguments = {}): Promise<
     performance: isCI ? false : { maxAssetSize: 600000, maxEntrypointSize: 600000 },
   };
 
-  if (!shouldUseNativeCodeLoading) {
-    webpackConfig = withPlatformSourceMaps(webpackConfig, env);
-  }
-
-  if (isNative) {
-    webpackConfig.target = false;
-    webpackConfig.output!.chunkLoading = 'jsonp';
-    webpackConfig.output!.chunkFormat = 'array-push';
-    webpackConfig.output!.globalObject = 'this';
-    webpackConfig.output!.chunkLoadingGlobal = 'exLoadChunk';
-  }
-
   if (isProd) {
     webpackConfig = withOptimizations(webpackConfig);
   } else {
@@ -578,9 +459,7 @@ export default async function (env: Environment, argv: Arguments = {}): Promise<
     });
   }
 
-  if (!isNative) {
-    webpackConfig = withAlias(webpackConfig, getAliases(env.projectRoot));
-  }
+  webpackConfig = withAlias(webpackConfig, getAliases(env.projectRoot));
 
   return webpackConfig;
 }
