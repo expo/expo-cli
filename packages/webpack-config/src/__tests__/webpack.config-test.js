@@ -43,17 +43,22 @@ function normalizeConfig(config) {
 
   // performance is disabled in CI
   delete normalized.performance;
+  delete normalized.cache.version;
   return normalized;
 }
 
 let originalCiValue;
+let original_EXPO_DEBUG;
 
 beforeAll(() => {
+  original_EXPO_DEBUG = process.env.EXPO_DEBUG;
   originalCiValue = process.env.CI;
   process.env.CI = 'true';
+  process.env.EXPO_DEBUG = 'true';
 });
 
 afterAll(() => {
+  process.env.EXPO_DEBUG = original_EXPO_DEBUG;
   process.env.CI = originalCiValue;
 });
 

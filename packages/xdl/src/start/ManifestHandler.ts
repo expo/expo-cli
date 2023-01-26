@@ -116,7 +116,7 @@ function getPlatformFromRequest(headers: http.IncomingHttpHeaders): string {
   return (headers['exponent-platform'] || 'ios').toString();
 }
 
-export function getManifestHandler(projectRoot: string, usePlatformHeaders?: boolean) {
+export function getManifestHandler(projectRoot: string) {
   return async (
     req: express.Request | http.IncomingMessage,
     res: express.Response | http.ServerResponse,
@@ -132,11 +132,6 @@ export function getManifestHandler(projectRoot: string, usePlatformHeaders?: boo
         parse(req.url).pathname || req.url
       )
     ) {
-      return next();
-    }
-
-    const headerPlatform = req.headers['exponent-platform'] || req.headers['expo-platform'];
-    if (usePlatformHeaders && headerPlatform !== 'ios' && headerPlatform !== 'android') {
       return next();
     }
 

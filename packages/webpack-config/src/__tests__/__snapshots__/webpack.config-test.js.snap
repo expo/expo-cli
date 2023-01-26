@@ -16,7 +16,6 @@ Object {
     "cacheDirectory": "packages/webpack-config/e2e/basic/node_modules/.cache/web",
     "store": "pack",
     "type": "filesystem",
-    "version": "5de67b8deaefc2d4ac22119a39a94c6a",
   },
   "context": "packages/webpack-config/e2e/basic",
   "devServer": Object {
@@ -68,8 +67,8 @@ Object {
     "packages/webpack-config/e2e/basic/index.js",
   ],
   "infrastructureLogging": Object {
-    "debug": false,
-    "level": "none",
+    "debug": true,
+    "level": "verbose",
   },
   "mode": "development",
   "module": Object {
@@ -220,7 +219,7 @@ Object {
     ],
     "symlinks": false,
   },
-  "stats": "errors-warnings",
+  "stats": "detailed",
   "target": Array [
     "web",
   ],
@@ -254,7 +253,6 @@ Object {
     "cacheDirectory": "packages/webpack-config/e2e/basic/node_modules/.cache/web",
     "store": "pack",
     "type": "filesystem",
-    "version": "5de67b8deaefc2d4ac22119a39a94c6a",
   },
   "context": "packages/webpack-config/e2e/basic",
   "devtool": "source-map",
@@ -263,8 +261,8 @@ Object {
     "packages/webpack-config/e2e/basic/index.js",
   ],
   "infrastructureLogging": Object {
-    "debug": false,
-    "level": "none",
+    "debug": true,
+    "level": "verbose",
   },
   "mode": "production",
   "module": Object {
@@ -479,7 +477,7 @@ Object {
     ],
     "symlinks": false,
   },
-  "stats": "errors-warnings",
+  "stats": "detailed",
   "target": Array [
     "web",
   ],
