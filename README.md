@@ -6,8 +6,6 @@
 
 This repo consists of packages used in the legacy global Expo CLI and related tooling.
 
----
-
 - [🗺 Project Layout](#-project-layout)
 - [👏 Contributing](#-contributing)
 - [❓ FAQ](#-faq)
