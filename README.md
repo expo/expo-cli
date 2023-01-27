@@ -6,15 +6,6 @@
 
 This repo consists of packages used in the legacy global Expo CLI and related tooling.
 
-<p>
-  <a aria-label="Follow @expo on Twitter" href="https://twitter.com/intent/follow?screen_name=expo" target="_blank">
-    <img  alt="Twitter: expo" src="https://img.shields.io/twitter/follow/expo.svg?style=flat-square&label=Follow%20%40expo&logo=TWITTER&logoColor=FFFFFF&labelColor=00aced&logoWidth=15&color=lightgray" target="_blank" />
-  </a>
-  <a aria-label="Follow Expo on Medium" href="https://blog.expo.dev">
-    <img align="right" alt="Medium: exposition" src="https://img.shields.io/badge/Learn%20more%20on%20our%20blog-lightgray.svg?style=flat-square" target="_blank" />
-  </a>
-</p>
-
 ---
 
 - [🗺 Project Layout](#-project-layout)
