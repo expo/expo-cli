@@ -14,9 +14,9 @@ import { WebpackFileError } from './WebpackFileError';
 import { getBabelError } from './parseBabelError';
 import { getModuleDependencyWarning, getNotFoundError } from './parseNotFoundError';
 
-function getFileData(compilation: webpack.compilation.Compilation, m: any): string {
+function getFileData(compilation: webpack.Compilation, m: any): string {
   let resolved: string;
-  const ctx: string | null = compilation.compiler?.context ?? compilation.context ?? null;
+  const ctx: string | null = compilation.compiler?.context ?? compilation.options.context ?? null;
   if (ctx !== null && typeof m.resource === 'string') {
     const res = path.relative(ctx, m.resource).replace(/\\/g, path.posix.sep);
     resolved = res.startsWith('.') ? res : `.${path.posix.sep}${res}`;
@@ -33,7 +33,7 @@ function getFileData(compilation: webpack.compilation.Compilation, m: any): stri
 }
 
 export async function getModuleBuildError(
-  compilation: webpack.compilation.Compilation,
+  compilation: webpack.Compilation,
   input: any
 ): Promise<WebpackFileError | false> {
   if (

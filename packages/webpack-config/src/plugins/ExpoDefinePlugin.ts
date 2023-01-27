@@ -1,10 +1,11 @@
 import { ExpoConfig } from '@expo/config';
 import { boolish } from 'getenv';
 import semver from 'semver';
-import { DefinePlugin as OriginalDefinePlugin } from 'webpack';
+import webpack from 'webpack';
 
 import { getConfig, getMode, getPublicPaths } from '../env';
-import { Environment, Mode } from '../types';
+import { EXPO_DEBUG, sockPath } from '../env/defaults';
+import { Environment, ExpoPlatform, Mode } from '../types';
 
 const RESTRICTED_MANIFEST_FIELDS = [
   // Omit app.json properties that get removed during the native build
@@ -46,7 +47,7 @@ function createEnvironmentConstants(appManifest: ExpoConfig) {
  * @internal
  */
 export interface ClientEnv {
-  [key: string]: OriginalDefinePlugin.CodeValueObject;
+  [key: string]: any;
 }
 
 /**
@@ -55,12 +56,14 @@ export interface ClientEnv {
  * @param mode defines the Metro bundler `global.__DEV__` value.
  * @param publicPath passed as `process.env.PUBLIC_URL` to the app.
  * @param nativeAppManifest public values to be used in `expo-constants`.
+ * @param platform native platform.
  * @internal
  */
 export function createClientEnvironment(
   mode: Mode,
   publicPath: string,
-  nativeAppManifest: ExpoConfig
+  nativeAppManifest: ExpoConfig,
+  platform: string
 ): ClientEnv {
   const environment = getMode({ mode });
   const __DEV__ = environment !== 'production';
@@ -102,6 +105,12 @@ export function createClientEnvironment(
          * `expo-constants` https://docs.expo.dev/versions/latest/sdk/constants/
          */
         [`${prefix}APP_MANIFEST`]: JSON.stringify(nativeAppManifest),
+
+        [`${prefix}EXPO_DEBUG`]: EXPO_DEBUG,
+        [`${prefix}PLATFORM`]: JSON.stringify(platform),
+        // [`${prefix}WDS_SOCKET_HOST`]: process.env.WDS_SOCKET_HOST,
+        // [`${prefix}WDS_SOCKET_PORT`]: process.env.WDS_SOCKET_PORT,
+        [`${prefix}WDS_SOCKET_PATH`]: sockPath ? JSON.stringify(sockPath) : undefined,
       } as Record<string, string>
     );
 
@@ -123,10 +132,10 @@ export function createClientEnvironment(
  * This surfaces the `app.json` (config) as an environment variable which is then parsed by `expo-constants`.
  * @category plugins
  */
-export default class DefinePlugin extends OriginalDefinePlugin {
+export default class DefinePlugin extends webpack.DefinePlugin {
   static createClientEnvironment = createClientEnvironment;
   static fromEnv = (
-    env: Pick<Environment, 'projectRoot' | 'mode' | 'config' | 'locations'>
+    env: Pick<Environment, 'projectRoot' | 'mode' | 'config' | 'locations' | 'platform'>
   ): DefinePlugin => {
     const mode = getMode(env);
     const { publicUrl } = getPublicPaths(env);
@@ -135,13 +144,29 @@ export default class DefinePlugin extends OriginalDefinePlugin {
       mode,
       publicUrl,
       config,
+      platform: env.platform,
     });
   };
 
-  constructor({ mode, publicUrl, config }: { mode: Mode; publicUrl: string; config: ExpoConfig }) {
+  constructor({
+    mode,
+    publicUrl,
+    config,
+    platform,
+  }: {
+    mode: Mode;
+    publicUrl: string;
+    config: ExpoConfig;
+    platform: ExpoPlatform;
+  }) {
     const publicAppManifest = createEnvironmentConstants(config);
 
-    const environmentVariables = createClientEnvironment(mode, publicUrl, publicAppManifest as any);
+    const environmentVariables = createClientEnvironment(
+      mode,
+      publicUrl,
+      publicAppManifest as any,
+      platform
+    );
 
     super(environmentVariables);
   }

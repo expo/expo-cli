@@ -1,17 +1,6 @@
 import type Log from '@expo/bunyan';
-import { PWAConfig } from 'expo-pwa';
-import { Configuration as WebpackConfiguration } from 'webpack';
-import {
-  ProxyConfigArray,
-  ProxyConfigMap,
-  Configuration as WebpackDevServerConfiguration,
-} from 'webpack-dev-server';
-
-export interface DevConfiguration extends WebpackConfiguration {
-  devServer?: WebpackDevServerConfiguration;
-}
-
-export type AnyConfiguration = DevConfiguration | WebpackConfiguration;
+import type { PWAConfig } from 'expo-pwa';
+import type { ProxyConfigArray, ProxyConfigMap } from 'webpack-dev-server';
 
 type AnyObject = Record<string, any>;
 
@@ -30,6 +19,7 @@ export type InputEnvironment = {
     dangerouslyAddModulePathsToTranspile: string[];
   };
   logger?: Log;
+  port?: number;
 };
 
 export type Environment = {
@@ -75,6 +65,11 @@ export type Environment = {
    * Used for sending unified bundler logs to Expo CLI.
    */
   logger?: Log;
+
+  /**
+   * Dev server port.
+   */
+  port?: number;
 };
 
 /**
@@ -112,6 +107,9 @@ export interface FilePaths {
   appMain: string | null;
   modules: string;
   servedPath: string;
+  appWebpackCache: string;
+  appTsConfig: string;
+  appJsConfig: string;
   //   [route: string]: string | PathResolver | FilePathsFolder;
 }
 

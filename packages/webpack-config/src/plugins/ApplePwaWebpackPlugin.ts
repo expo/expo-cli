@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import { generateAppleIconAsync, generateSplashAsync, IconOptions, ProjectOptions } from 'expo-pwa';
-import { compilation as compilationNS, Compiler } from 'webpack';
+import { Compilation, Compiler, sources } from 'webpack';
 
 import ModifyHtmlWebpackPlugin, { HTMLLinkNode, HTMLPluginData } from './ModifyHtmlWebpackPlugin';
 
@@ -11,12 +11,6 @@ export type ApplePwaMeta = {
   isFullScreen?: boolean;
 };
 
-function logNotice(type: string, message: string) {
-  console.log(chalk.magenta(`\u203A ${type}: ${chalk.gray(message)}`));
-}
-function logWarning(type: string, message: string) {
-  console.log(chalk.yellow(`\u203A ${type}: ${chalk.gray(message)}`));
-}
 export default class ApplePwaWebpackPlugin extends ModifyHtmlWebpackPlugin {
   constructor(
     private pwaOptions: ProjectOptions & { links: HTMLLinkNode[]; meta: HTMLLinkNode[] },
@@ -29,7 +23,7 @@ export default class ApplePwaWebpackPlugin extends ModifyHtmlWebpackPlugin {
 
   async modifyAsync(
     compiler: Compiler,
-    compilation: compilationNS.Compilation,
+    compilation: Compilation,
     data: HTMLPluginData
   ): Promise<HTMLPluginData> {
     // Meta
@@ -58,6 +52,15 @@ export default class ApplePwaWebpackPlugin extends ModifyHtmlWebpackPlugin {
       );
     }
 
+    const logger = compiler.getInfrastructureLogger('apple-pwa-plugin');
+
+    function logNotice(type: string, message: string) {
+      logger.log(chalk.magenta(`\u203A ${type}: ${chalk.gray(message)}`));
+    }
+
+    function logWarning(type: string, message: string) {
+      logger.warn(chalk.yellow(`\u203A ${type}: ${chalk.gray(message)}`));
+    }
     // App Icon
     if (this.icon) {
       const links: string[] = this.pwaOptions.links
@@ -91,10 +94,7 @@ export default class ApplePwaWebpackPlugin extends ModifyHtmlWebpackPlugin {
             `Using custom <link rel="apple-touch-icon" sizes="${size}" .../>`
           );
         } else {
-          compilation.assets[asset.asset.path] = {
-            source: () => asset.asset.source,
-            size: () => asset.asset.source.length,
-          };
+          compilation.emitAsset(asset.asset.path, new sources.RawSource(asset.asset.source));
           data.assetTags.meta.push(asset.tag);
         }
       }
@@ -119,10 +119,7 @@ export default class ApplePwaWebpackPlugin extends ModifyHtmlWebpackPlugin {
             `Using custom <link rel="apple-touch-startup-image" media="${media}" ... />`
           );
         } else {
-          compilation.assets[asset.asset.path] = {
-            source: () => asset.asset.source,
-            size: () => asset.asset.source.length,
-          };
+          compilation.emitAsset(asset.asset.path, new sources.RawSource(asset.asset.source));
           data.assetTags.meta.push(asset.tag);
         }
       }

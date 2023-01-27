@@ -3,7 +3,10 @@
 exports[`has consistent defaults 1`] = `
 Object {
   "absolute": [Function],
+  "appJsConfig": "e2e/basic/jsconfig.json",
   "appMain": "e2e/basic/index.js",
+  "appTsConfig": "e2e/basic/tsconfig.json",
+  "appWebpackCache": "e2e/basic/node_modules/.cache",
   "includeModule": [Function],
   "modules": "e2e/basic/node_modules",
   "packageJson": "e2e/basic/package.json",
@@ -33,7 +36,10 @@ exports[`uses a custom public path from the homepage field of a project's packag
 exports[`works with no app.json 1`] = `
 Object {
   "absolute": [Function],
+  "appJsConfig": "e2e/minimum/jsconfig.json",
   "appMain": "e2e/minimum/index.js",
+  "appTsConfig": "e2e/minimum/tsconfig.json",
+  "appWebpackCache": "e2e/minimum/node_modules/.cache",
   "includeModule": [Function],
   "modules": "e2e/minimum/node_modules",
   "packageJson": "e2e/minimum/package.json",

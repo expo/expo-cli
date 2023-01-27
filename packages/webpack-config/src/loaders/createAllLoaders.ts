@@ -1,10 +1,13 @@
 import { getPossibleProjectRoot } from '@expo/config/paths';
-import { Rule } from 'webpack';
+import { boolish } from 'getenv';
+import MiniCssExtractPlugin from 'mini-css-extract-plugin';
+import { RuleSetRule } from 'webpack';
 
-import { getConfig, getPaths } from '../env';
+import { getConfig, getPaths, getPublicPaths } from '../env';
 import { Environment } from '../types';
 import createBabelLoader from './createBabelLoader';
-import createFontLoader from './createFontLoader';
+
+const shouldUseSourceMap = boolish('GENERATE_SOURCEMAP', true);
 
 // Inline resources as Base64 when there is less reason to parallelize their download. The
 // heuristic we use is whether the resource would fit within a TCP/IP packet that we would
@@ -15,6 +18,19 @@ import createFontLoader from './createFontLoader';
 // about 1000 bytes for content to fit in a packet.
 const imageInlineSizeLimit = parseInt(process.env.IMAGE_INLINE_SIZE_LIMIT || '1000', 10);
 
+// TODO: Merge this config once `image/avif` is in the mime-db
+// https://github.com/jshttp/mime-db
+export const avifImageLoaderRule: RuleSetRule = {
+  test: [/\.avif$/],
+  type: 'asset',
+  mimetype: 'image/avif',
+  parser: {
+    dataUrlCondition: {
+      maxSize: imageInlineSizeLimit,
+    },
+  },
+};
+
 /**
  * This is needed for webpack to import static images in JavaScript files.
  * "url" loader works like "file" loader except that it embeds assets
@@ -24,15 +40,12 @@ const imageInlineSizeLimit = parseInt(process.env.IMAGE_INLINE_SIZE_LIMIT || '10
  * @category loaders
  */
 // TODO: Bacon: Move SVG
-export const imageLoaderRule: Rule = {
-  test: /\.(gif|jpe?g|png|svg)$/,
-  use: {
-    loader: require.resolve('url-loader'),
-    options: {
-      limit: imageInlineSizeLimit,
-      // Interop assets like Metro bundler
-      esModule: false,
-      name: 'static/media/[name].[hash:8].[ext]',
+export const imageLoaderRule: RuleSetRule = {
+  test: [/\.bmp$/, /\.gif$/, /\.jpe?g$/, /\.png$/, /\.svg$/],
+  type: 'asset',
+  parser: {
+    dataUrlCondition: {
+      maxSize: imageInlineSizeLimit,
     },
   },
 };
@@ -46,20 +59,13 @@ export const imageLoaderRule: Rule = {
  *
  * @category loaders
  */
-export const fallbackLoaderRule: Rule = {
-  loader: require.resolve('file-loader'),
+export const fallbackLoaderRule: RuleSetRule = {
   // Exclude `js` files to keep "css" loader working as it injects
   // its runtime that would otherwise be processed through "file" loader.
   // Also exclude `html` and `json` extensions so they get processed
   // by webpacks internal loaders.
-
-  // Excludes: js, jsx, ts, tsx, html, json
-  exclude: [/\.(mjs|[jt]sx?)$/, /\.html$/, /\.json$/],
-  options: {
-    // Interop assets like Metro bundler
-    esModule: false,
-    name: 'static/media/[name].[hash:8].[ext]',
-  },
+  exclude: [/^$/, /\.(js|mjs|jsx|ts|tsx)$/, /\.html$/, /\.json$/],
+  type: 'asset/resource',
 };
 
 /**
@@ -67,7 +73,7 @@ export const fallbackLoaderRule: Rule = {
  *
  * @category loaders
  */
-export const styleLoaderRule: Rule = {
+export const styleLoaderRule: RuleSetRule = {
   test: /\.(css)$/,
   use: [require.resolve('style-loader'), require.resolve('css-loader')],
 };
@@ -80,30 +86,65 @@ export const styleLoaderRule: Rule = {
  */
 export default function createAllLoaders(
   env: Pick<Environment, 'projectRoot' | 'locations' | 'mode' | 'config' | 'platform' | 'babel'>
-): Rule[] {
+): RuleSetRule[] {
   env.projectRoot = env.projectRoot || getPossibleProjectRoot();
   // @ts-ignore
   env.config = env.config || getConfig(env);
   // @ts-ignore
   env.locations = env.locations || getPaths(env.projectRoot, env);
 
-  const { root, includeModule, template } = env.locations;
   const isNative = ['ios', 'android'].includes(env.platform);
 
   if (isNative) {
     // TODO: Support fallback loader + assets
-    return [getHtmlLoaderRule(template.folder), getBabelLoaderRule(env)];
+    return [getBabelLoaderRule(env)];
   }
 
+  const isEnvDevelopment = env.mode === 'development';
+  const isEnvProduction = env.mode === 'production';
+  const { publicPath: publicUrlOrPath } = getPublicPaths(env);
+
+  // common function to get style loaders
+  const getStyleLoaders = (cssOptions: RuleSetRule['options']) => {
+    const loaders = [
+      isEnvDevelopment && require.resolve('style-loader'),
+      isEnvProduction && {
+        loader: MiniCssExtractPlugin.loader,
+        // css is located in `static/css`, use '../../' to locate index.html folder
+        // in production `paths.publicUrlOrPath` can be a relative path
+        options: publicUrlOrPath.startsWith('.') ? { publicPath: '../../' } : {},
+      },
+      {
+        loader: require.resolve('css-loader'),
+        options: cssOptions,
+      },
+    ].filter(Boolean);
+
+    return loaders;
+  };
+
   return [
-    getHtmlLoaderRule(template.folder),
+    avifImageLoaderRule,
     imageLoaderRule,
     getBabelLoaderRule(env),
-    createFontLoader(root, includeModule),
-    styleLoaderRule,
+    {
+      test: /\.(css)$/,
+      use: getStyleLoaders({
+        importLoaders: 1,
+        sourceMap: isEnvProduction ? shouldUseSourceMap : isEnvDevelopment,
+        modules: {
+          mode: 'icss',
+        },
+      }),
+      // Don't consider CSS imports dead code even if the
+      // containing package claims to have no side effects.
+      // Remove this when webpack adds a warning or an error for this.
+      // See https://github.com/webpack/webpack/issues/6571
+      sideEffects: true,
+    },
     // This needs to be the last loader
     fallbackLoaderRule,
-  ].filter(Boolean) as Rule[];
+  ].filter(Boolean) as RuleSetRule[];
 }
 
 /**
@@ -115,7 +156,7 @@ export default function createAllLoaders(
  */
 export function getBabelLoaderRule(
   env: Pick<Environment, 'projectRoot' | 'config' | 'locations' | 'mode' | 'platform' | 'babel'>
-): Rule {
+): RuleSetRule {
   env.projectRoot = env.projectRoot || getPossibleProjectRoot();
   // @ts-ignore
   env.config = env.config || getConfig(env);
@@ -138,17 +179,4 @@ export function getBabelLoaderRule(
     include: [...include, ...(env.babel?.dangerouslyAddModulePathsToTranspile || [])],
     use,
   });
-}
-
-/**
- *
- * @param exclude
- * @category loaders
- */
-export function getHtmlLoaderRule(exclude: string): Rule {
-  return {
-    test: /\.html$/,
-    use: [require.resolve('html-loader')],
-    exclude,
-  };
 }

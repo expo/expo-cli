@@ -50,7 +50,7 @@ describe('Basic', () => {
     it(`should load a font as a string like Metro`, async () => {
       const elementId = getTestIdQuery('asset-raw-font');
       await expect(page).toMatchElement(elementId, {
-        text: 'data:font/ttf;base64,ZXhwbyBpcyB0aGUgYmVzdA==',
+        text: '/static/media/font.b180596bf611ffbf9d1d.ttf',
       });
     });
 

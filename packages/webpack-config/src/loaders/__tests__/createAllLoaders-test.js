@@ -23,11 +23,13 @@ it(`matches expected files`, () => {
 
   const imgMatches = rules.filter(({ rule }) => conditionMatchesFile(rule, 'something.png'));
   expect(imgMatches.length).toBeGreaterThanOrEqual(1);
-  expect(imgMatches[0].rule.test).toStrictEqual(/\.(gif|jpe?g|png|svg)$/);
-
-  const htmlMatches = rules.filter(({ rule }) => conditionMatchesFile(rule, 'something.html'));
-  expect(htmlMatches.length).toBeGreaterThanOrEqual(1);
-  expect(htmlMatches[0].rule.test).toStrictEqual(/\.html$/);
+  expect(imgMatches[0].rule.test).toStrictEqual([
+    /\.bmp$/,
+    /\.gif$/,
+    /\.jpe?g$/,
+    /\.png$/,
+    /\.svg$/,
+  ]);
 
   const strangeMatches = rules.filter(({ rule }) => conditionMatchesFile(rule, 'something.ide'));
   expect(strangeMatches.length).toBe(1);

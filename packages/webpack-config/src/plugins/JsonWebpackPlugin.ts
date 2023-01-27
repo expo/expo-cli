@@ -1,5 +1,5 @@
 import { AsyncSeriesWaterfallHook } from 'tapable';
-import { compilation, Compiler } from 'webpack';
+import { Compilation, Compiler, sources } from 'webpack';
 
 export type Options = {
   path: string;
@@ -9,17 +9,22 @@ export type Options = {
 
 export type BeforeEmitOptions = Options & { plugin: JsonWebpackPlugin };
 
-const hooksMap = new WeakMap<compilation.Compilation, Record<string, AsyncSeriesWaterfallHook>>();
+export type AfterEmitOptions = Pick<Options, 'json'> & {
+  outputName: string;
+  plugin: JsonWebpackPlugin;
+};
 
-function createWebpackPluginHooks(): Record<string, AsyncSeriesWaterfallHook> {
+const hooksMap = new WeakMap<Compilation, ReturnType<typeof createWebpackPluginHooks>>();
+
+function createWebpackPluginHooks() {
   return {
-    beforeEmit: new AsyncSeriesWaterfallHook(['pluginArgs']),
-    afterEmit: new AsyncSeriesWaterfallHook(['pluginArgs']),
+    beforeEmit: new AsyncSeriesWaterfallHook<BeforeEmitOptions>(['pluginArgs']),
+    afterEmit: new AsyncSeriesWaterfallHook<AfterEmitOptions>(['pluginArgs']),
   };
 }
 
 export default class JsonWebpackPlugin {
-  static getHooks(compilation: compilation.Compilation): Record<string, AsyncSeriesWaterfallHook> {
+  static getHooks(compilation: Compilation) {
     let hooks = hooksMap.get(compilation);
     // Setup the hooks only once
     if (hooks === undefined) {
@@ -36,13 +41,21 @@ export default class JsonWebpackPlugin {
   }
 
   apply(compiler: Compiler) {
-    compiler.hooks.emit.tapAsync(this.constructor.name, this.writeObject);
+    compiler.hooks.compilation.tap(this.constructor.name, (compilation: Compilation) => {
+      compilation.hooks.processAssets.tapPromise(
+        {
+          name: this.constructor.name,
+          // https://github.com/webpack/webpack/blob/master/lib/Compilation.js#L3280
+          stage: Compilation.PROCESS_ASSETS_STAGE_ADDITIONAL,
+        },
+        async () => {
+          await this.writeObject(compilation);
+        }
+      );
+    });
   }
 
-  private writeObject = async (
-    compilation: compilation.Compilation,
-    callback: () => void
-  ): Promise<void> => {
+  private writeObject = async (compilation: Compilation): Promise<void> => {
     let result: BeforeEmitOptions = {
       json: this.options.json,
       path: this.options.path,
@@ -58,17 +71,12 @@ export default class JsonWebpackPlugin {
 
     // Once all files are added to the webpack compilation
     // let the webpack compiler continue
-    compilation.assets[result.path] = {
-      source: () => json,
-      size: () => json.length,
-    };
+    compilation.emitAsset(result.path, new sources.RawSource(json));
 
     await JsonWebpackPlugin.getHooks(compilation).afterEmit.promise({
       json,
       outputName: result.path,
       plugin: this,
     });
-
-    callback();
   };
 }

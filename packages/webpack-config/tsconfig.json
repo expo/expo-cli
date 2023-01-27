@@ -3,7 +3,8 @@
   "include": ["src/**/*"],
   "compilerOptions": {
     "outDir": "webpack",
-    "rootDir": "src"
+    "rootDir": "src",
+    "esModuleInterop": true
   },
   "exclude": ["**/__mocks__/*", "**/__tests__/*"]
 }

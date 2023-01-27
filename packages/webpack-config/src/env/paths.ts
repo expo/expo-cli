@@ -96,6 +96,9 @@ function parsePaths(
     appMain,
     modules: modulesPath,
     servedPath: getServedPath(inputProjectRoot),
+    appWebpackCache: absolute('node_modules/.cache'),
+    appTsConfig: absolute('tsconfig.json'),
+    appJsConfig: absolute('jsconfig.json'),
     template: {
       get: templatePath,
       folder: templatePath(),

@@ -2,6 +2,7 @@ import { ExpoConfig, getConfig } from '@expo/config';
 import { closeJsInspector, MessageSocket } from '@expo/dev-server';
 import { Server } from 'http';
 
+import { WebpackDevServerResults } from '../Webpack';
 import {
   Analytics,
   Android,
@@ -26,6 +27,7 @@ import { watchBabelConfigForProject } from './watchBabelConfig';
 
 let serverInstance: Server | null = null;
 let messageSocket: MessageSocket | null = null;
+let webpackDevServer: WebpackDevServerResults | null = null;
 
 /**
  * Sends a message over web sockets to any connected device,
@@ -38,9 +40,25 @@ export function broadcastMessage(
   method: 'reload' | 'devMenu' | 'sendDevCommand',
   params?: Record<string, any> | undefined
 ) {
+  if (webpackDevServer) {
+    webpackDevServer.messageSocket.broadcast(method, params);
+  }
   if (messageSocket) {
     messageSocket.broadcast(method, params);
   }
+}
+
+export async function startWebpackAsync(
+  projectRoot: string,
+  {
+    exp = getConfig(projectRoot).exp,
+    ...options
+  }: StartDevServerOptions & { exp?: ExpoConfig } = {}
+) {
+  webpackDevServer = await Webpack.startAsync(projectRoot, {
+    ...options,
+    port: options.webpackPort,
+  });
 }
 
 export async function startAsync(
@@ -61,10 +79,7 @@ export async function startAsync(
   watchBabelConfigForProject(projectRoot);
 
   if (options.webOnly) {
-    await Webpack.startAsync(projectRoot, {
-      ...options,
-      port: options.webpackPort,
-    });
+    await startWebpackAsync(projectRoot, { exp, ...options });
   } else if (Env.shouldUseDevServer(exp) || options.devClient) {
     [serverInstance, , messageSocket] = await startDevServerAsync(projectRoot, options);
   } else {
@@ -82,7 +97,7 @@ export async function startAsync(
     }
   }
 
-  const target = !options.webOnly || Webpack.isTargetingNative() ? 'native' : 'web';
+  const target = !options.webOnly ? 'native' : 'web';
   // This is used to make Expo Go open the project in either Expo Go, or the web browser.
   // Must come after ngrok (`startTunnelsAsync`) setup.
   DevSession.startSession(projectRoot, exp, target);
