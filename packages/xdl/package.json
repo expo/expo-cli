@@ -93,7 +93,7 @@
     "url-join": "4.0.0",
     "uuid": "^8.0.0",
     "webpack": "^5.64.4",
-    "webpack-dev-server": "^4.7.3",
+    "webpack-dev-server": "^4.11.1",
     "wrap-ansi": "^7.0.0"
   },
   "devDependencies": {
