@@ -4,6 +4,25 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ## main
 
+## [Fri, 27 Jan 2023 11:42:59 -0600](https://github.com/expo/expo-cli/commit/226ac07bd39ec14a97441365af0d2030a8ff0f59)
+
+### 🛠 Breaking changes
+
+### 🎉 New features
+
+### 🧹 Chores
+
+### 🐛 Bug fixes
+
+- fix(webpack): add webpack-dev-server as a dependency of webpack-config ([#4636](https://github.com/expo/expo-cli/issues/4636))
+
+### 📦 Packages updated
+
+- @expo/dev-tools@0.13.176
+- expo-cli@6.2.1
+- @expo/webpack-config@18.0.1
+- xdl@60.0.1
+
 ## [Fri, 27 Jan 2023 11:01:19 -0600](https://github.com/expo/expo-cli/commit/4e7dbf3adc90106a3d013cb5289c1b0e1ca06172)
 
 ### 🛠 Breaking changes
