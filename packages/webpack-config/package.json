@@ -1,6 +1,6 @@
 {
   "name": "@expo/webpack-config",
-  "version": "18.0.0",
+  "version": "18.0.1",
   "description": "A Webpack configuration used to bundle Expo websites with Expo CLI.",
   "main": "webpack.config.js",
   "types": "webpack.config.d.ts",
