@@ -11,9 +11,6 @@
     "clean": "rimraf build ./tsconfig.tsbuildinfo",
     "lint": "eslint ."
   },
-  "bin": {
-    "next-expo": "echo \"the next-expo command has been deprecated in favor of manual setup. See README for more.\" && exit 1"
-  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/expo/expo-cli.git",
