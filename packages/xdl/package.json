@@ -1,6 +1,6 @@
 {
   "name": "xdl",
-  "version": "59.3.0",
+  "version": "60.0.1",
   "description": "The Expo Development Library",
   "main": "build/index.js",
   "files": [
@@ -45,7 +45,7 @@
     "@expo/schemer": "1.4.4",
     "@expo/sdk-runtime-versions": "^1.0.0",
     "@expo/spawn-async": "1.5.0",
-    "@expo/webpack-config": "0.17.4",
+    "@expo/webpack-config": "18.0.1",
     "axios": "0.21.1",
     "better-opn": "^3.0.1",
     "boxen": "^5.0.1",
@@ -79,7 +79,6 @@
     "probe-image-size": "~6.0.0",
     "progress": "2.0.3",
     "prompts": "^2.3.2",
-    "react-dev-utils": "~11.0.1",
     "requireg": "^0.2.2",
     "resolve-from": "^5.0.0",
     "semver": "7.3.2",
@@ -93,8 +92,8 @@
     "tree-kill": "1.2.2",
     "url-join": "4.0.0",
     "uuid": "^8.0.0",
-    "webpack": "4.43.0",
-    "webpack-dev-server": "3.11.0",
+    "webpack": "^5.64.4",
+    "webpack-dev-server": "^4.11.1",
     "wrap-ansi": "^7.0.0"
   },
   "devDependencies": {
@@ -106,7 +105,6 @@
     "@types/getenv": "^0.7.0",
     "@types/hashids": "^1.0.30",
     "@types/node-forge": "^0.9.7",
-    "@types/react-dev-utils": "~9.0.4",
     "@types/semver": "^6.0.0",
     "@types/source-map-support": "^0.5.0",
     "@types/split": "^1.0.0",
@@ -115,8 +113,6 @@
     "@types/text-table": "^0.2.1",
     "@types/url-join": "^4.0.0",
     "@types/uuid": "^8.3.1",
-    "@types/webpack": "4.41.18",
-    "@types/webpack-dev-server": "3.11.0",
     "@types/wrap-ansi": "^3.0.0",
     "hashids": "1.1.4",
     "tempy": "^0.7.1"

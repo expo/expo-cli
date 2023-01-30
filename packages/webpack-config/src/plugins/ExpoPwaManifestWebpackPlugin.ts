@@ -1,7 +1,7 @@
 import { ExpoConfig } from '@expo/config';
 import chalk from 'chalk';
 import { generateManifestJson } from 'expo-pwa';
-import fs from 'fs-extra';
+import fs from 'fs';
 
 import PwaManifestWebpackPlugin, { PwaManifestOptions } from './PwaManifestWebpackPlugin';
 

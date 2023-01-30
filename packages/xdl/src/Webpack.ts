@@ -1,45 +1,34 @@
 import type Log from '@expo/bunyan';
-import {
-  attachInspectorProxy,
-  createDevServerMiddleware,
-  LogReporter,
-  MessageSocket,
-} from '@expo/dev-server';
-import { createSymbolicateMiddleware } from '@expo/dev-server/build/webpack/symbolicateMiddleware';
+import { MessageSocket } from '@expo/dev-server';
 import * as devcert from '@expo/devcert';
 import openBrowserAsync from 'better-opn';
 import chalk from 'chalk';
 import fs from 'fs-extra';
 import getenv from 'getenv';
-import http from 'http';
 import * as path from 'path';
-import formatWebpackMessages from 'react-dev-utils/formatWebpackMessages';
 import webpack from 'webpack';
 import WebpackDevServer from 'webpack-dev-server';
 
 import {
   choosePortAsync,
-  ExpoUpdatesManifestHandler,
   ip,
   Logger,
-  ManifestHandler,
   ProjectSettings,
   ProjectUtils,
   UrlUtils,
   WebpackEnvironment,
   XDLError,
 } from './internal';
+import { formatWebpackMessages } from './webpack-utils/formatWebpackMessages';
 
 const WEBPACK_LOG_TAG = 'expo';
 
-type DevServer = WebpackDevServer | http.Server;
-
-let webpackDevServerInstance: DevServer | null = null;
+let webpackDevServerInstance: WebpackDevServer | null = null;
 let webpackServerPort: number | null = null;
 
 interface WebpackSettings {
   url: string;
-  server: DevServer;
+  server: WebpackDevServer;
   port: number;
   protocol: 'http' | 'https';
   host?: string;
@@ -61,6 +50,8 @@ type BundlingOptions = {
   port?: number;
   pwa?: boolean;
   isImageEditingEnabled?: boolean;
+  entryFile?: string;
+  platform?: string;
   webpackEnv?: object;
   mode?: 'development' | 'production' | 'test' | 'none';
   https?: boolean;
@@ -78,6 +69,8 @@ export type WebEnvironment = {
   mode: 'development' | 'production' | 'test' | 'none';
   https: boolean;
   logger: Log;
+  port?: number;
+  platform?: string;
 };
 
 // A custom message websocket broadcaster used to send messages to a React Native runtime.
@@ -97,17 +90,8 @@ async function clearWebCacheAsync(projectRoot: string, mode: string): Promise<vo
   } catch {}
 }
 
-// Temporary hack while we implement multi-bundler dev server proxy.
-const _isTargetingNative: boolean = ['ios', 'android'].includes(
-  process.env.EXPO_WEBPACK_PLATFORM || ''
-);
-
-export function isTargetingNative() {
-  return _isTargetingNative;
-}
-
 export type WebpackDevServerResults = {
-  server: DevServer;
+  server: WebpackDevServer;
   location: Omit<WebpackSettings, 'server'>;
   messageSocket: MessageSocket;
 };
@@ -120,7 +104,7 @@ export async function broadcastMessage(message: 'reload' | string, data?: any) {
   // Allow any message on native
   if (customMessageSocketBroadcaster) {
     customMessageSocketBroadcaster(message, data);
-    return;
+    // return;
   }
 
   if (message !== 'reload') {
@@ -135,84 +119,13 @@ export async function broadcastMessage(message: 'reload' | string, data?: any) {
   // For now, just manually convert the value so our CLI interface can be unified.
   const hackyConvertedMessage = message === 'reload' ? 'content-changed' : message;
 
-  webpackDevServerInstance.sockWrite(webpackDevServerInstance.sockets, hackyConvertedMessage, data);
-}
+  // @ts-ignore: type not exposed
+  const connections = webpackDevServerInstance.webSocketServer.clients;
 
-function createNativeDevServerMiddleware(
-  projectRoot: string,
-  {
-    port,
-    compiler,
-    forceManifestType,
-  }: { port: number; compiler: webpack.Compiler; forceManifestType?: 'classic' | 'expo-updates' }
-) {
-  if (!isTargetingNative()) {
-    return null;
+  if (!connections.length) {
+    console.warn('No HMR clients are connected to the dev server');
   }
-  const nativeMiddleware = createDevServerMiddleware(projectRoot, {
-    logger: ProjectUtils.getLogger(projectRoot),
-    port,
-    watchFolders: [projectRoot],
-  });
-  // Add manifest middleware to the other middleware.
-  // TODO: Move this in to expo/dev-server.
-
-  const useExpoUpdatesManifest = forceManifestType === 'expo-updates';
-
-  const middleware = useExpoUpdatesManifest
-    ? ExpoUpdatesManifestHandler.getManifestHandler(projectRoot)
-    : ManifestHandler.getManifestHandler(projectRoot);
-
-  nativeMiddleware.middleware.use(middleware).use(
-    '/symbolicate',
-    createSymbolicateMiddleware({
-      projectRoot,
-      compiler,
-      logger: nativeMiddleware.logger,
-    })
-  );
-  return nativeMiddleware;
-}
-
-function attachNativeDevServerMiddlewareToDevServer(
-  projectRoot: string,
-  {
-    server,
-    middleware,
-    logger,
-    // Expo SDK 44 and lower
-    attachToServer,
-    // React Native +68 -- Expo SDK 45 and higher
-    messageSocketEndpoint,
-    eventsSocketEndpoint,
-  }: { server: http.Server } & ReturnType<typeof createNativeDevServerMiddleware>
-) {
-  if (attachToServer) {
-    // Hook up the React Native WebSockets to the Webpack dev server.
-    const { messageSocket, eventsSocket } = attachToServer(server);
-
-    customMessageSocketBroadcaster = messageSocket.broadcast;
-
-    const logReporter = new LogReporter(logger);
-    logReporter.reportEvent = eventsSocket.reportEvent;
-
-    attachInspectorProxy(projectRoot, {
-      middleware,
-      server,
-    });
-  } else {
-    // React Native +68
-    const logReporter = new LogReporter(logger);
-
-    logReporter.reportEvent = eventsSocketEndpoint.reportEvent;
-
-    customMessageSocketBroadcaster = messageSocketEndpoint.broadcast;
-
-    attachInspectorProxy(projectRoot, {
-      middleware,
-      server,
-    });
-  }
+  webpackDevServerInstance.sendMessage(connections, hackyConvertedMessage, data);
 }
 
 export async function startAsync(
@@ -247,7 +160,6 @@ export async function startAsync(
     }
   }
 
-  const config = await loadConfigAsync(env);
   const port = await getAvailablePortAsync({
     projectRoot,
     defaultPort: options.port,
@@ -263,52 +175,35 @@ export async function startAsync(
 
   const protocol = env.https ? 'https' : 'http';
 
-  if (isTargetingNative()) {
-    await ProjectSettings.setPackagerInfoAsync(projectRoot, {
-      expoServerPort: webpackServerPort,
-      packagerPort: webpackServerPort,
-    });
-  }
+  const config = await loadConfigAsync({
+    ...env,
+    platform: 'web',
+  });
 
-  // Create a webpack compiler that is configured with custom messages.
+  // Create a webpack compiler
   const compiler = webpack(config);
 
-  // Create the middleware required for interacting with a native runtime (Expo Go, or a development build).
-  let nativeMiddleware: ReturnType<typeof createNativeDevServerMiddleware> | null = null;
-
-  if (config.devServer?.before) {
-    nativeMiddleware = createNativeDevServerMiddleware(projectRoot, {
+  const server = new WebpackDevServer(
+    {
+      ...config.devServer!,
       port,
-      compiler,
-      forceManifestType: options.forceManifestType,
-    });
-    // Inject the native manifest middleware.
-    const originalBefore = config.devServer.before.bind(config.devServer.before);
-    config.devServer.before = (app, server, compiler) => {
-      originalBefore(app, server, compiler);
+      host: WebpackEnvironment.WEB_HOST,
+    },
+    compiler
+  );
+  try {
+    // Launch WebpackDevServer.
+    await server.start();
 
-      if (nativeMiddleware?.middleware) {
-        app.use(nativeMiddleware.middleware);
-      }
-    };
-  }
-
-  const server = new WebpackDevServer(compiler, config.devServer);
-  // Launch WebpackDevServer.
-  server.listen(port, WebpackEnvironment.HOST, function (this: http.Server, error) {
-    if (nativeMiddleware) {
-      attachNativeDevServerMiddlewareToDevServer(projectRoot, {
-        server: this,
-        ...nativeMiddleware,
-      });
+    if (typeof options.onWebpackFinished === 'function') {
+      options.onWebpackFinished();
     }
-    if (error) {
-      ProjectUtils.logError(projectRoot, WEBPACK_LOG_TAG, error.message);
-    }
+  } catch (error: any) {
+    ProjectUtils.logError(projectRoot, WEBPACK_LOG_TAG, error.message);
     if (typeof options.onWebpackFinished === 'function') {
       options.onWebpackFinished(error);
     }
-  });
+  }
 
   webpackDevServerInstance = server;
 
@@ -320,9 +215,9 @@ export async function startAsync(
   const url = `${protocol}://${host}:${port}`;
 
   // Extend the close method to ensure that we clean up the local info.
-  const originalClose = server.close.bind(server);
+  const originalClose = server.stopCallback.bind(server);
 
-  server.close = (callback?: (err?: Error) => void) => {
+  server.stopCallback = (callback?: (err?: Error) => void) => {
     return originalClose((err?: Error) => {
       ProjectSettings.setPackagerInfoAsync(projectRoot, {
         webpackServerPort: null,
@@ -351,32 +246,30 @@ export async function startAsync(
 
 export async function stopAsync(projectRoot: string): Promise<void> {
   if (webpackDevServerInstance) {
-    await new Promise(res => {
+    await new Promise<Error | undefined>(res => {
       if (webpackDevServerInstance) {
         ProjectUtils.logInfo(projectRoot, WEBPACK_LOG_TAG, '\u203A Stopping Webpack server');
-        webpackDevServerInstance.close(res);
+        webpackDevServerInstance.stopCallback(res);
       }
     });
   }
 }
 
-export async function openAsync(projectRoot: string, options?: BundlingOptions): Promise<void> {
-  if (!webpackDevServerInstance) {
-    await startAsync(projectRoot, options);
-  }
-  await openProjectAsync(projectRoot);
-}
-
+// TODO: Reuse logging system that we use in dev server + extras
 async function compileWebAppAsync(projectRoot: string, compiler: webpack.Compiler): Promise<any> {
   // We generate the stats.json file in the webpack-config
   const { warnings } = await new Promise((resolve, reject) =>
     compiler.run((error, stats) => {
-      let messages;
+      let messages: {
+        errors?: string[];
+        warnings?: string[];
+      };
       if (error) {
         if (!error.message) {
           return reject(error);
         }
         messages = formatWebpackMessages({
+          // @ts-ignore: TODO
           errors: [error.message],
           warnings: [],
           _showErrors: true,
@@ -384,11 +277,11 @@ async function compileWebAppAsync(projectRoot: string, compiler: webpack.Compile
         });
       } else {
         messages = formatWebpackMessages(
-          stats.toJson({ all: false, warnings: true, errors: true })
+          stats?.toJson({ all: false, warnings: true, errors: true })
         );
       }
 
-      if (messages.errors.length) {
+      if (messages?.errors?.length) {
         // Only keep the first error. Others are often indicative
         // of the same problem, but confuse the reader with noise.
         if (messages.errors.length > 1) {
@@ -399,7 +292,7 @@ async function compileWebAppAsync(projectRoot: string, compiler: webpack.Compile
       if (
         getenv.boolish('EXPO_WEB_BUILD_STRICT', false) &&
         getenv.boolish('CI', false) &&
-        messages.warnings.length
+        messages?.warnings?.length
       ) {
         ProjectUtils.logWarning(
           projectRoot,
@@ -498,7 +391,7 @@ async function getAvailablePortAsync(options: {
         : WebpackEnvironment.DEFAULT_PORT;
     const port = await choosePortAsync(options.projectRoot, {
       defaultPort,
-      host: 'host' in options && options.host ? options.host : WebpackEnvironment.HOST,
+      host: 'host' in options && options.host ? options.host : WebpackEnvironment.WEB_HOST,
     });
     if (!port) {
       throw new Error(`Port ${defaultPort} not available.`);
@@ -569,10 +462,11 @@ async function getWebpackConfigEnvFromBundlingOptionsAsync(
   return {
     projectRoot,
     pwa: isImageEditingEnabled,
-    logger: ProjectUtils.getLogger(projectRoot),
     isImageEditingEnabled,
     mode,
     https,
+    logger: ProjectUtils.getLogger(projectRoot),
+    port: options.port,
     ...(options.webpackEnv || {}),
   };
 }
@@ -623,30 +517,14 @@ function applyEnvironmentVariables(config: WebpackConfiguration): WebpackConfigu
     const output = config.output || {};
     const optimization = config.optimization || {};
 
-    // Enable line to line mapped mode for all/specified modules.
-    // Line to line mapped mode uses a simple SourceMap where each line of the generated source is mapped to the same line of the original source.
-    // It’s a performance optimization. Only use it if your performance need to be better and you are sure that input lines match which generated lines.
-    // true enables it for all modules (not recommended)
-    output.devtoolLineToLine = true;
-
     // Add comments that describe the file import/exports.
     // This will make it easier to debug.
     output.pathinfo = true;
-    // Instead of numeric ids, give modules readable names for better debugging.
-    optimization.namedModules = true;
-    // Instead of numeric ids, give chunks readable names for better debugging.
-    optimization.namedChunks = true;
     // Readable ids for better debugging.
-    // @ts-ignore Property 'moduleIds' does not exist.
     optimization.moduleIds = 'named';
     // if optimization.namedChunks is enabled optimization.chunkIds is set to 'named'.
     // This will manually enable it just to be safe.
-    // @ts-ignore Property 'chunkIds' does not exist.
     optimization.chunkIds = 'named';
-
-    if (optimization.splitChunks) {
-      optimization.splitChunks.name = true;
-    }
 
     Object.assign(config, { output, optimization });
   }
@@ -677,7 +555,7 @@ async function loadConfigAsync(
   return applyEnvironmentVariables(config);
 }
 
-async function openProjectAsync(
+export async function openAsync(
   projectRoot: string
 ): Promise<{ success: true; url: string } | { success: false; error: Error }> {
   try {

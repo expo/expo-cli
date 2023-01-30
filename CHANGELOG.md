@@ -4,6 +4,54 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ## main
 
+## [Fri, 27 Jan 2023 11:42:59 -0600](https://github.com/expo/expo-cli/commit/226ac07bd39ec14a97441365af0d2030a8ff0f59)
+
+### 🛠 Breaking changes
+
+### 🎉 New features
+
+### 🧹 Chores
+
+### 🐛 Bug fixes
+
+- fix(webpack): add webpack-dev-server as a dependency of webpack-config ([#4636](https://github.com/expo/expo-cli/issues/4636))
+
+### 📦 Packages updated
+
+- @expo/dev-tools@0.13.176
+- expo-cli@6.2.1
+- @expo/webpack-config@18.0.1
+- xdl@60.0.1
+
+## [Fri, 27 Jan 2023 11:01:19 -0600](https://github.com/expo/expo-cli/commit/4e7dbf3adc90106a3d013cb5289c1b0e1ca06172)
+
+### 🛠 Breaking changes
+
+- [webpack] Upgrade to Webpack 5 ([#3763](https://github.com/expo/expo-cli/issues/3763))
+- Remove Node.js limitations on the legacy CLI ([#4635](https://github.com/expo/expo-cli/issues/4635))
+
+### 🎉 New features
+
+- [webpack] Upgrade to Webpack 5 ([#3763](https://github.com/expo/expo-cli/issues/3763))
+
+### 🧹 Chores
+
+- [readme] Highlight the modern local CLI over everything else ([#4632](https://github.com/expo/expo-cli/issues/4632))
+
+### 🐛 Bug fixes
+
+- fix(create-expo-app): skip creating a git repo when inside existing repo ([#4629](https://github.com/expo/expo-cli/issues/4629))
+
+### 📦 Packages updated
+
+- @expo/babel-preset-cli@0.3.0
+- create-expo-app@1.1.7
+- @expo/dev-tools@0.13.175
+- expo-cli@6.2.0
+- @expo/next-adapter@5.0.1
+- @expo/webpack-config@18.0.0
+- xdl@60.0.0
+
 ### 🛠 Breaking changes
 
 ### 🎉 New features

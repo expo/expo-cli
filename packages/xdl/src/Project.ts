@@ -26,6 +26,7 @@ export {
   runHook,
   startAsync,
   stopAsync,
+  startWebpackAsync,
   writeArtifactSafelyAsync,
   LoadedHook,
 } from './internal';

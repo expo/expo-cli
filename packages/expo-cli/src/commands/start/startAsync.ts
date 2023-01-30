@@ -99,6 +99,13 @@ export async function actionAsync(projectRoot: string, options: NormalizedOption
   );
   await profileMethod(Project.startAsync)(rootPath, { ...startOptions, exp });
 
+  if (!startOptions.webOnly && options.web) {
+    await profileMethod(Project.startWebpackAsync)(rootPath, {
+      ...startOptions,
+      exp,
+    });
+  }
+
   // Send to option...
   const url = await profileMethod(
     UrlUtils.constructDeepLinkAsync,
@@ -139,15 +146,8 @@ export async function actionAsync(projectRoot: string, options: NormalizedOption
   }
 
   // Final note about closing the server.
-  if (!options.webOnly) {
-    Log.nested(`Logs for your project will appear below. ${chalk.dim(`Press Ctrl+C to exit.`)}`);
-  } else {
-    Log.nested(
-      `\nLogs for your project will appear in the browser console. ${chalk.dim(
-        `Press Ctrl+C to exit.`
-      )}`
-    );
-  }
+  Log.nested(`Logs for your project will appear below. ${chalk.dim(`Press Ctrl+C to exit.`)}`);
+
   if (options.devClient) {
     UnifiedAnalytics.logEvent('dev client start command', {
       status: 'ready',

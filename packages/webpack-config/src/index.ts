@@ -2,7 +2,7 @@ import { getPossibleProjectRoot } from '@expo/config/paths';
 import { Configuration } from 'webpack';
 
 import { validateEnvironment } from './env';
-import { Arguments, DevConfiguration, Environment, InputEnvironment } from './types';
+import { Arguments, Environment, InputEnvironment } from './types';
 import webpackConfig from './webpack.config';
 
 /**
@@ -15,18 +15,14 @@ import webpackConfig from './webpack.config';
 export default async function createWebpackConfigAsync(
   env: InputEnvironment = {},
   argv: Arguments = {}
-): Promise<Configuration | DevConfiguration> {
+): Promise<Configuration> {
   if (!env.projectRoot) {
     env.projectRoot = getPossibleProjectRoot();
-  }
-  if (!env.platform) {
-    // @ts-ignore
-    env.platform = process.env.EXPO_WEBPACK_PLATFORM;
   }
 
   const environment: Environment = validateEnvironment(env);
 
-  const config: Configuration | DevConfiguration = await webpackConfig(environment, argv);
+  const config = await webpackConfig(environment, argv);
 
   // @ts-ignore: deprecated
   if (environment.info) {

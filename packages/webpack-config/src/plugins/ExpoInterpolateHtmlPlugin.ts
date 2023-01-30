@@ -1,18 +1,25 @@
+/**
+ * Copyright (c) 2015-present, Facebook, Inc.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * @borrows https://github.com/facebook/create-react-app/blob/f0a837c1f07ebd963ddbba2c2937d04fc1b79d40/packages/react-dev-utils/InterpolateHtmlPlugin.js
+ */
+
+// Extracted to ensure the `html-webpack-plugin` was always the same.
+
 import HtmlWebpackPlugin from 'html-webpack-plugin';
-import OriginalInterpolateHtmlPlugin from 'react-dev-utils/InterpolateHtmlPlugin';
+import { Compiler } from 'webpack';
 
 import { getConfig, getPublicPaths } from '../env';
 import { Environment } from '../types';
+import { escapeStringRegexp } from '../utils/escapeStringRegexp';
 
-/**
- * Add variables to the `index.html`.
- *
- * @category plugins
- */
-export default class InterpolateHtmlPlugin extends OriginalInterpolateHtmlPlugin {
+export default class InterpolateHtmlPlugin {
   static fromEnv = (
     env: Pick<Environment, 'mode' | 'config' | 'locations' | 'projectRoot'>,
-    htmlWebpackPlugin: HtmlWebpackPlugin
+    htmlWebpackPlugin: typeof HtmlWebpackPlugin
   ): InterpolateHtmlPlugin => {
     const config = env.config || getConfig(env);
     const { publicPath } = getPublicPaths(env);
@@ -28,4 +35,30 @@ export default class InterpolateHtmlPlugin extends OriginalInterpolateHtmlPlugin
       ROOT_ID: 'root',
     });
   };
+
+  constructor(
+    public htmlWebpackPlugin: HtmlWebpackPlugin,
+    public replacements: Record<string, string>
+  ) {}
+
+  apply(compiler: Compiler) {
+    const logger = compiler.getInfrastructureLogger('interpolate-html-plugin');
+
+    compiler.hooks.compilation.tap(this.constructor.name, compilation => {
+      this.htmlWebpackPlugin
+        // @ts-ignore
+        .getHooks(compilation)
+        .afterTemplateExecution.tap(this.constructor.name, (data: any) => {
+          // Run HTML through a series of user-specified string replacements.
+          Object.keys(this.replacements).forEach(key => {
+            const value = this.replacements[key];
+            logger.debug(`Replace: "${key}" with: ${value}`);
+            data.html = data.html.replace(
+              new RegExp('%' + escapeStringRegexp(key) + '%', 'g'),
+              value
+            );
+          });
+        });
+    });
+  }
 }

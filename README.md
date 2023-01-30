@@ -1,17 +1,10 @@
-# Assorted Expo Dev Tools
-
-Packages used in Expo CLI and related tooling. Contains source for the legacy global Expo CLI. The new [local Expo CLI](https://blog.expo.dev/the-new-expo-cli-f4250d8e3421) lives in the [**`expo/expo`**](https://github.com/expo/expo/blob/main/packages/%40expo/cli) repo.
-
-<p>
-  <a aria-label="Follow @expo on Twitter" href="https://twitter.com/intent/follow?screen_name=expo" target="_blank">
-    <img  alt="Twitter: expo" src="https://img.shields.io/twitter/follow/expo.svg?style=flat-square&label=Follow%20%40expo&logo=TWITTER&logoColor=FFFFFF&labelColor=00aced&logoWidth=15&color=lightgray" target="_blank" />
-  </a>
-  <a aria-label="Follow Expo on Medium" href="https://blog.expo.dev">
-    <img align="right" alt="Medium: exposition" src="https://img.shields.io/badge/Learn%20more%20on%20our%20blog-lightgray.svg?style=flat-square" target="_blank" />
-  </a>
-</p>
+**The modern [local Expo CLI](https://blog.expo.dev/the-new-expo-cli-f4250d8e3421) is included with the `expo` package and does not need to be installed separately. Run it with `npx expo`. Its source code lives in the [`expo/expo`](https://github.com/expo/expo/blob/main/packages/%40expo/cli) repo.**
 
 ---
+
+# Assorted Expo Dev Tools
+
+This repo consists of packages used in the legacy global Expo CLI and related tooling.
 
 - [🗺 Project Layout](#-project-layout)
 - [👏 Contributing](#-contributing)

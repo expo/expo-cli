@@ -550,6 +550,7 @@ const resolvers = {
     async openWeb(parent, props, context) {
       const currentProject = context.getCurrentProject();
       try {
+        await Project.startWebpackAsync(currentProject.projectDir);
         await Webpack.openAsync(currentProject.projectDir);
 
         return {

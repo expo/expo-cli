@@ -86,15 +86,13 @@ Add the following to your `next.config.js`:
 const { withExpo } = require('@expo/next-adapter');
 
 module.exports = withExpo({
-  // experimental.transpilePackages is a Next.js +13 feature.
+  // transpilePackages is a Next.js +13.1 feature.
   // older versions can use next-transpile-modules
-  experimental: {
-    transpilePackages: [
-      'react-native-web',
-      'expo',
-      // Add more React Native / Expo packages here...
-    ],
-  },
+  transpilePackages: [
+    'react-native',
+    'expo',
+    // Add more React Native / Expo packages here...
+  ],
 });
 ```
 
@@ -107,13 +105,13 @@ const { withExpo } = require('@expo/next-adapter');
 const nextConfig = withExpo({
   reactStrictMode: true,
   swcMinify: true,
+  transpilePackages: [
+    'react-native',
+    'expo',
+    // Add more React Native / Expo packages here...
+  ],
   experimental: {
     forceSwcTransforms: true,
-    transpilePackages: [
-      'react-native-web',
-      'expo',
-      // Add more React Native / Expo packages here...
-    ],
   },
 });
 
@@ -211,7 +209,7 @@ export default function App({ Component, pageProps }) {
 
 ## Transpiling modules
 
-By default, modules in the React Native ecosystem are not transpiled to run in web browsers. React Native relies on advanced caching in Metro to reload quickly. Next.js uses Webpack, which does not have the same level of caching, so by default, no node modules are transpiled. You will have to manually mark every module you want to transpile with the `experimental.transpilePackages` option in `next.config.js`:
+By default, modules in the React Native ecosystem are not transpiled to run in web browsers. React Native relies on advanced caching in Metro to reload quickly. Next.js uses Webpack, which does not have the same level of caching, so by default, no node modules are transpiled. You will have to manually mark every module you want to transpile with the `transpilePackages` option in `next.config.js`:
 
 ```js
 const { withExpo } = require('@expo/next-adapter');
@@ -219,7 +217,10 @@ const { withExpo } = require('@expo/next-adapter');
 module.exports = withExpo({
   experimental: {
     transpilePackages: [
-      'react-native-web',
+      // NOTE: Even though `react-native` is never used in Next.js,
+      // you need to list `react-native` because `react-native-web`
+      // is aliased to `react-native`. Adding `react-native-web` will not work.
+      'react-native',
       'expo',
       // Add more React Native / Expo packages here...
     ],
@@ -235,7 +236,7 @@ Using Next.js for the web means you will be bundling with the Next.js Webpack co
 
 ### Cannot use import statement outside a module
 
-Figure out which module has the import statement and add it to the `experimental.transpilePackages` option in `next.config.js`:
+Figure out which module has the import statement and add it to the `transpilePackages` option in `next.config.js`:
 
 ```js
 const { withExpo } = require('@expo/next-adapter');
@@ -243,7 +244,7 @@ const { withExpo } = require('@expo/next-adapter');
 module.exports = withExpo({
   experimental: {
     transpilePackages: [
-      'react-native-web',
+      'react-native',
       'expo',
       // Add failing package here, and restart the server...
     ],

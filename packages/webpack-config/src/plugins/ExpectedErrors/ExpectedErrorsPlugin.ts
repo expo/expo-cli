@@ -12,7 +12,7 @@ import webpack from 'webpack';
 import { getModuleBuildError } from './getModuleBuildError';
 
 export default class ExpectedErrorsPlugin {
-  private parseErrorsAsync(compilation: webpack.compilation.Compilation, errors: any[]) {
+  private parseErrorsAsync(compilation: webpack.Compilation, errors: any[]) {
     return Promise.all(
       errors.map(async error => {
         try {
