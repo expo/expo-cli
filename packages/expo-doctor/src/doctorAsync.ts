@@ -7,6 +7,7 @@ import IllegalPackageCheck from './checks/IllegalPackageCheck';
 import InstalledDependencyVersionCheck from './checks/InstalledDependencyVersionCheck';
 import SupportPackageVersionCheck from './checks/SupportPackageVersionCheck';
 import { DoctorCheck, DoctorCheckParams } from './checks/checks.types';
+import { gteSdkVersion } from './utils/gteSdkVersion';
 import { warnUponCmdExe } from './warnings/windows';
 
 async function runCheck(check: DoctorCheck, checkParams: DoctorCheckParams) {
@@ -33,11 +34,21 @@ export async function actionAsync(projectRoot: string) {
 
   const { exp, pkg } = getConfig(projectRoot);
 
+  if (!gteSdkVersion(exp, '44.0.0')) {
+    console.log(
+      chalk.red(
+        `expo-doctor is only supported for SDK 44 and higher. Please use 'expo-cli doctor' for older SDKs.`
+      )
+    );
+    process.exitCode = 1;
+    return;
+  }
+
   // add additional checks here
   const checks = [
+    new GlobalPrereqsVersionCheck(),
     new IllegalPackageCheck(),
     new SupportPackageVersionCheck(),
-    new GlobalPrereqsVersionCheck(),
     new InstalledDependencyVersionCheck(),
     new ExpoConfigSchemaCheck(),
   ];
