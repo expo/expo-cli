@@ -24,7 +24,7 @@ export default class InstalledDependencyVersionCheck implements DoctorCheck {
       });
     } catch (error: any) {
       if (isSpawnResult(error)) {
-        issues.push(error.stderr);
+        issues.push(error.stderr.trim());
         advice.push(`Use npx expo install --check to review and upgrade your dependencies.`);
       } else {
         throw error;

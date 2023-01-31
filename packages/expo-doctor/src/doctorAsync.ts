@@ -8,21 +8,34 @@ import InstalledDependencyVersionCheck from './checks/InstalledDependencyVersion
 import SupportPackageVersionCheck from './checks/SupportPackageVersionCheck';
 import { DoctorCheck, DoctorCheckParams } from './checks/checks.types';
 import { gteSdkVersion } from './utils/gteSdkVersion';
+import { logNewSection } from './utils/ora';
 import { warnUponCmdExe } from './warnings/windows';
 
 async function runCheck(check: DoctorCheck, checkParams: DoctorCheckParams) {
   try {
+    const ora = logNewSection(check.description);
     const result = await check.runAsync(checkParams);
     if (!result.isSuccessful) {
-      for (const issue of result.issues) {
-        console.log(chalk.yellow(`${issue}`));
+      ora.fail();
+      if (result.issues.length) {
+        console.log(chalk.underline(chalk.yellow(`Issues:`)));
+        console.group();
+        for (const issue of result.issues) {
+          console.log(chalk.yellow(`${issue}`));
+        }
+        console.groupEnd();
       }
-      for (const advice of result.advice) {
-        console.log(chalk.yellow(`${advice}`));
+      if (result.advice.length) {
+        console.log(chalk.underline(chalk.green(`Advice:`)));
+        console.group();
+        for (const advice of result.advice) {
+          console.log(chalk.green(`• ${advice}`));
+        }
+        console.groupEnd();
       }
       return false;
     } else {
-      console.log(chalk.green(`✓ No issues found!`));
+      ora.succeed();
       return true;
     }
   } catch (e: any) {
@@ -69,14 +82,17 @@ export async function actionAsync(projectRoot: string) {
   const checkParams = { exp, pkg, projectRoot };
 
   for (const check of checks) {
-    console.log(chalk.underline(check.description));
     if (!(await runCheck(check, checkParams))) {
       foundSomeIssues = true;
     }
   }
 
   if (foundSomeIssues) {
-    console.log(chalk.red(`\n✖ Found one or more issues with the project. See above for details.`));
+    console.log(
+      chalk.red(
+        `\n✖ Found one or more possible issues with the project. See above logs for issues and advice to resolve`
+      )
+    );
     process.exitCode = 1;
   } else {
     console.log(chalk.green(`\n🎉 Didn't find any issues with the project!`));

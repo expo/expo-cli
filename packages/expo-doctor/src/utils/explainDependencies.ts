@@ -3,8 +3,6 @@ import chalk from 'chalk';
 import semver from 'semver';
 
 import { RootNodePackage, VersionSpec } from './explainDependencies.types';
-import Log from './log';
-import { logNewSection } from './ora';
 
 type TargetPackage = { name: string; version?: VersionSpec };
 
@@ -18,7 +16,6 @@ async function explainAsync(
   projectRoot: string,
   parameters: string[] = []
 ): Promise<RootNodePackage[] | null> {
-  const ora = logNewSection(`Finding all copies of ${packageName}`);
   const args = ['explain', packageName, ...parameters, '--json'];
 
   try {
@@ -26,25 +23,21 @@ async function explainAsync(
       stdio: 'pipe',
       cwd: projectRoot,
     });
-    ora.stop();
 
     return JSON.parse(stdout);
   } catch (error: any) {
     if (isSpawnResult(error)) {
       if (error.stderr.match(/npm ERR! No dependencies found matching/)) {
-        ora.stop();
         return null;
       } else if (error.stdout.match(/Usage: npm <command>/)) {
-        ora.fail(
+        throw new Error(
           `Dependency tree validation for ${chalk.underline(
             packageName
           )} failed. This validation is only available on Node 16+ / npm 8.`
         );
-        return null;
       }
     }
-    ora.fail(`Failed to find dependency tree for ${packageName}: ` + error.message);
-    throw error;
+    throw new Error(`Failed to find dependency tree for ${packageName}: ` + error.message);
   }
 }
 
@@ -69,11 +62,6 @@ function organizeExplanations(
       } else {
         invalid.push(explanation);
       }
-    } else {
-      // Should never happen
-      Log.warn(
-        `Found invalid case where the searched package name "${name}" doesn't match requested package name "${pkg.name}"`
-      );
     }
   }
   return { valid, invalid };
@@ -87,7 +75,7 @@ function organizeExplanations(
 async function printExplanationsAsync(
   pkg: TargetPackage,
   explanations: RootNodePackage[]
-): Promise<boolean> {
+): Promise<string | null> {
   const { invalid } = organizeExplanations(pkg, {
     explanations,
     isValid(otherPkg) {
@@ -96,28 +84,26 @@ async function printExplanationsAsync(
   });
 
   if (invalid.length > 0) {
-    printInvalidPackages(pkg, { explanations: invalid });
-    return false;
-  } else {
-    Log.debug(chalk`All copies of {bold ${pkg.name}} satisfy {green ${pkg.version}}`);
-    return true;
+    return getInvalidPackagesWarning(pkg, { explanations: invalid });
   }
+  return null;
 }
 
-function printInvalidPackages(
+function getInvalidPackagesWarning(
   pkg: TargetPackage,
   { explanations }: { explanations: RootNodePackage[] }
-) {
+): string {
+  const lines = [];
   if (pkg.version) {
-    Log.warn(`Expected package ${formatPkg(pkg, 'green')}`);
+    lines.push(`Expected package ${formatPkg(pkg, 'green')}`);
   } else {
-    Log.warn(`Expected to not find any copies of ${formatPkg(pkg, 'green')}`);
+    lines.push(`Expected to not find any copies of ${formatPkg(pkg, 'green')}`);
   }
-  Log.warn(chalk`Found invalid:`);
-  Log.warn(explanations.map(explanation => '  ' + formatPkg(explanation, 'red')).join('\n'));
-  Log.warn(chalk`  {dim (for more info, run: {bold npm why ${pkg.name}})}`);
+  lines.push(chalk`Found invalid:`);
+  lines.push(explanations.map(explanation => '  ' + formatPkg(explanation, 'red')).join('\n'));
+  lines.push(chalk`  {dim (for more info, run: {bold npm why ${pkg.name}})}`);
 
-  // Log.log(invalid.map(explanation => explainNode(explanation)).join('\n\n'));
+  return lines.join('\n');
 }
 
 function formatPkg(pkg: TargetPackage, versionColor: string) {
@@ -135,12 +121,11 @@ function formatPkg(pkg: TargetPackage, versionColor: string) {
 export async function warnAboutDeepDependenciesAsync(
   pkg: TargetPackage,
   projectRoot: string
-): Promise<boolean> {
+): Promise<string | null> {
   const explanations = await explainAsync(pkg.name, projectRoot);
 
   if (!explanations) {
-    Log.debug(`No dependencies found for ${pkg.name}`);
-    return true;
+    return null;
   }
 
   return printExplanationsAsync(pkg, explanations);

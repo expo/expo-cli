@@ -5,7 +5,7 @@ import { validateWithSchemaAsync } from '../utils/schema';
 import { DoctorCheck, DoctorCheckParams, DoctorCheckResult } from './checks.types';
 
 export default class ExpoConfigSchemaCheck implements DoctorCheck {
-  description = 'Validating Expo Config against schema...';
+  description = 'Validating Expo Config';
 
   async runAsync({ exp, projectRoot }: DoctorCheckParams): Promise<DoctorCheckResult> {
     const issues: string[] = [];
@@ -32,6 +32,7 @@ export default class ExpoConfigSchemaCheck implements DoctorCheck {
     return {
       isSuccessful: issues.length === 0,
       issues,
+      // kind of redundant with issues, but maybe we could plug the VSCode extension here?
       advice: [],
     };
   }
