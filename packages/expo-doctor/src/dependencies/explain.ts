@@ -15,6 +15,7 @@ function isSpawnResult(result: any): result is SpawnResult {
 /** Spawn `npm explain [name] --json` and return the parsed JSON. Returns `null` if the requested package is not installed. */
 export async function explainAsync(
   packageName: string,
+  projectRoot: string,
   parameters: string[] = []
 ): Promise<RootNodePackage[] | null> {
   const ora = logNewSection(`Finding all copies of ${packageName}`);
@@ -23,6 +24,7 @@ export async function explainAsync(
   try {
     const { stdout } = await spawnAsync('npm', args, {
       stdio: 'pipe',
+      cwd: projectRoot,
     });
     ora.stop();
 
@@ -49,8 +51,11 @@ export async function explainAsync(
  * @param pkg
  * @returns true if all versions of the package satisfy the constraints
  */
-export async function warnAboutDeepDependenciesAsync(pkg: TargetPackage): Promise<boolean> {
-  const explanations = await explainAsync(pkg.name);
+export async function warnAboutDeepDependenciesAsync(
+  pkg: TargetPackage,
+  projectRoot: string
+): Promise<boolean> {
+  const explanations = await explainAsync(pkg.name, projectRoot);
 
   if (!explanations) {
     Log.debug(`No dependencies found for ${pkg.name}`);

@@ -91,10 +91,6 @@ export default class GlobalPrereqsVersionCheck implements DoctorCheck {
   async runAsync({ exp, projectRoot }: DoctorCheckParams): Promise<DoctorCheckResult> {
     const issues: string[] = [];
 
-    // TODO: implement this check
-
-    // NPM check
-
     // Watchman check?
     const watchmanCheck = await _checkWatchmanVersionAsync();
     if (watchmanCheck) {

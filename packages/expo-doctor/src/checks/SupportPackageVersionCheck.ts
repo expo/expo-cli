@@ -4,7 +4,10 @@ import { gteSdkVersion } from '../utils/gteSdkVersion';
 import { DoctorCheck, DoctorCheckParams, DoctorCheckResult } from './checks.types';
 
 // Ensures that a set of packages
-async function validateSupportPackagesAsync(sdkVersion: string): Promise<boolean> {
+async function validateSupportPackagesAsync(
+  sdkVersion: string,
+  projectRoot: string
+): Promise<boolean> {
   const versionsForSdk = await getRemoteVersionsForSdkAsync(sdkVersion);
 
   const supportPackagesToValidate = [
@@ -17,7 +20,10 @@ async function validateSupportPackagesAsync(sdkVersion: string): Promise<boolean
   for (const pkg of supportPackagesToValidate) {
     const version = versionsForSdk[pkg];
     if (version) {
-      const isVersionValid = await warnAboutDeepDependenciesAsync({ name: pkg, version });
+      const isVersionValid = await warnAboutDeepDependenciesAsync(
+        { name: pkg, version },
+        projectRoot
+      );
       if (!isVersionValid) {
         allPackagesValid = false;
       }
@@ -29,10 +35,13 @@ async function validateSupportPackagesAsync(sdkVersion: string): Promise<boolean
 export default class SupportPackageVersionCheck implements DoctorCheck {
   description = 'Checking support package versions for SDK 45+ projects';
 
-  async runAsync({ exp }: DoctorCheckParams): Promise<DoctorCheckResult> {
+  async runAsync({ exp, projectRoot }: DoctorCheckParams): Promise<DoctorCheckResult> {
     const issues: string[] = [];
 
-    if (gteSdkVersion(exp, '45.0.0') && !(await validateSupportPackagesAsync(exp.sdkVersion!))) {
+    if (
+      gteSdkVersion(exp, '45.0.0') &&
+      !(await validateSupportPackagesAsync(exp.sdkVersion!, projectRoot))
+    ) {
       issues.push(`See errors above for details. You may need to upgrade some dependencies.`);
     }
 
