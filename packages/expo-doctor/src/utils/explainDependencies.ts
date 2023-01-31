@@ -2,9 +2,9 @@ import spawnAsync, { SpawnResult } from '@expo/spawn-async';
 import chalk from 'chalk';
 import semver from 'semver';
 
-import Log from '../utils/log';
-import { logNewSection } from '../utils/ora';
-import { RootNodePackage, VersionSpec } from './explain.types';
+import { RootNodePackage, VersionSpec } from './explainDependencies.types';
+import Log from './log';
+import { logNewSection } from './ora';
 
 type TargetPackage = { name: string; version?: VersionSpec };
 
@@ -13,7 +13,7 @@ function isSpawnResult(result: any): result is SpawnResult {
 }
 
 /** Spawn `npm explain [name] --json` and return the parsed JSON. Returns `null` if the requested package is not installed. */
-export async function explainAsync(
+async function explainAsync(
   packageName: string,
   projectRoot: string,
   parameters: string[] = []
@@ -47,25 +47,8 @@ export async function explainAsync(
     throw error;
   }
 }
-/**
- * @param pkg
- * @returns true if all versions of the package satisfy the constraints
- */
-export async function warnAboutDeepDependenciesAsync(
-  pkg: TargetPackage,
-  projectRoot: string
-): Promise<boolean> {
-  const explanations = await explainAsync(pkg.name, projectRoot);
 
-  if (!explanations) {
-    Log.debug(`No dependencies found for ${pkg.name}`);
-    return true;
-  }
-
-  return printExplanationsAsync(pkg, explanations);
-}
-
-export function organizeExplanations(
+function organizeExplanations(
   pkg: TargetPackage,
   {
     explanations,
@@ -101,7 +84,7 @@ export function organizeExplanations(
  * @param explanations
  * @returns true if all versions of the package satisfy the constraints
  */
-export async function printExplanationsAsync(
+async function printExplanationsAsync(
   pkg: TargetPackage,
   explanations: RootNodePackage[]
 ): Promise<boolean> {
@@ -143,4 +126,22 @@ function formatPkg(pkg: TargetPackage, versionColor: string) {
   } else {
     return chalk`{bold ${pkg.name}}`;
   }
+}
+
+/**
+ * @param pkg
+ * @returns true if all versions of the package satisfy the constraints
+ */
+export async function warnAboutDeepDependenciesAsync(
+  pkg: TargetPackage,
+  projectRoot: string
+): Promise<boolean> {
+  const explanations = await explainAsync(pkg.name, projectRoot);
+
+  if (!explanations) {
+    Log.debug(`No dependencies found for ${pkg.name}`);
+    return true;
+  }
+
+  return printExplanationsAsync(pkg, explanations);
 }

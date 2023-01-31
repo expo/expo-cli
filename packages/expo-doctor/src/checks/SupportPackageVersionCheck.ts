@@ -1,4 +1,4 @@
-import { warnAboutDeepDependenciesAsync } from '../dependencies/explain';
+import { warnAboutDeepDependenciesAsync } from '../utils/explainDependencies';
 import { getRemoteVersionsForSdkAsync } from '../utils/getRemoteVersionsForSdkAsync';
 import { gteSdkVersion } from '../utils/gteSdkVersion';
 import { DoctorCheck, DoctorCheckParams, DoctorCheckResult } from './checks.types';
@@ -33,21 +33,23 @@ async function validateSupportPackagesAsync(
 }
 
 export default class SupportPackageVersionCheck implements DoctorCheck {
-  description = 'Checking support package versions for SDK 45+ projects';
+  description = 'Verifying version of installed support packages are compatible';
 
   async runAsync({ exp, projectRoot }: DoctorCheckParams): Promise<DoctorCheckResult> {
-    const issues: string[] = [];
+    const advice: string[] = [];
 
     if (
       gteSdkVersion(exp, '45.0.0') &&
       !(await validateSupportPackagesAsync(exp.sdkVersion!, projectRoot))
     ) {
-      issues.push(`See errors above for details. You may need to upgrade some dependencies.`);
+      advice.push(`Upgrade dependencies that are using the invalid package versions.`);
     }
 
     return {
-      isSuccessful: issues.length === 0,
-      issues,
+      isSuccessful: advice.length === 0,
+      // issues are output by deep dependency checker
+      issues: [],
+      advice,
     };
   }
 }

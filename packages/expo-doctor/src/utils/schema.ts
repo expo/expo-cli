@@ -1,7 +1,13 @@
 import { ExpoConfig } from '@expo/config';
 import Schemer, { SchemerError, ValidationError } from '@expo/schemer';
 
-import { learnMore } from '../utils/TerminalLink';
+import { learnMore } from './TerminalLink';
+
+function formatValidationError(validationError: ValidationError) {
+  return `\n • ${validationError.fieldPath ? 'Field: ' + validationError.fieldPath + ' - ' : ''}${
+    validationError.message
+  }.`;
+}
 
 export async function validateWithSchemaAsync(
   projectRoot: string,
@@ -45,10 +51,4 @@ export async function validateWithSchemaAsync(
     }
   }
   return { schemaErrorMessage, assetsErrorMessage };
-}
-
-function formatValidationError(validationError: ValidationError) {
-  return `\n • ${validationError.fieldPath ? 'Field: ' + validationError.fieldPath + ' - ' : ''}${
-    validationError.message
-  }.`;
 }

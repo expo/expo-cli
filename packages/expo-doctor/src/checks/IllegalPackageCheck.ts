@@ -1,4 +1,4 @@
-import { warnAboutDeepDependenciesAsync } from '../dependencies/explain';
+import { warnAboutDeepDependenciesAsync } from '../utils/explainDependencies';
 import { gteSdkVersion } from '../utils/gteSdkVersion';
 import { DoctorCheck, DoctorCheckParams, DoctorCheckResult } from './checks.types';
 
@@ -23,20 +23,20 @@ async function validateIllegalPackagesAsync(projectRoot: string): Promise<boolea
 }
 
 export default class IllegalPackageCheck implements DoctorCheck {
-  description = 'Checking for packages not compatible with SDK 44+ projects';
+  description = 'Checking for incompatible packages';
 
   async runAsync({ exp, projectRoot }: DoctorCheckParams): Promise<DoctorCheckResult> {
-    const issues: string[] = [];
+    const advice: string[] = [];
 
     if (gteSdkVersion(exp, '44.0.0') && !(await validateIllegalPackagesAsync(projectRoot))) {
-      issues.push(
-        `See errors above for details. You may need to remove these packages from your project.`
-      );
+      advice.push(`Remove any 'unimodules' packages from your project.`);
     }
 
     return {
-      isSuccessful: issues.length === 0,
-      issues,
+      isSuccessful: advice.length === 0,
+      advice,
+      // issues are output as check is run
+      issues: [],
     };
   }
 }

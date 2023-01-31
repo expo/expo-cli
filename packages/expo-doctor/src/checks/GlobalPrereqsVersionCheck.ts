@@ -91,7 +91,6 @@ export default class GlobalPrereqsVersionCheck implements DoctorCheck {
   async runAsync({ exp, projectRoot }: DoctorCheckParams): Promise<DoctorCheckResult> {
     const issues: string[] = [];
 
-    // Watchman check?
     const watchmanCheck = await _checkWatchmanVersionAsync();
     if (watchmanCheck) {
       issues.push(watchmanCheck);
@@ -107,6 +106,7 @@ export default class GlobalPrereqsVersionCheck implements DoctorCheck {
     return {
       isSuccessful: issues.length === 0,
       issues,
+      advice: [],
     };
   }
 }

@@ -17,14 +17,24 @@ async function runCheck(check: DoctorCheck, checkParams: DoctorCheckParams) {
       for (const issue of result.issues) {
         console.log(chalk.yellow(`${issue}`));
       }
+      for (const advice of result.advice) {
+        console.log(chalk.yellow(`${advice}`));
+      }
       return false;
     } else {
       console.log(chalk.green(`✓ No issues found!`));
       return true;
     }
-  } catch (e) {
-    console.log(chalk.red(`Error: check could not be completed due to an unexpected error.`));
-    // TODO: highlight network errors
+  } catch (e: any) {
+    if (e.code === 'ENOTFOUND') {
+      console.log(
+        chalk.red(
+          `Error: this check requires a connection to the Expo API. Please check your network connection.`
+        )
+      );
+    } else {
+      console.log(chalk.red(`Error: check could not be completed due to an unexpected error.`));
+    }
     return false;
   }
 }
@@ -34,6 +44,7 @@ export async function actionAsync(projectRoot: string) {
 
   const { exp, pkg } = getConfig(projectRoot);
 
+  // expo-doctor relies on versioned CLI, which is only available for 44+
   if (!gteSdkVersion(exp, '44.0.0')) {
     console.log(
       chalk.red(

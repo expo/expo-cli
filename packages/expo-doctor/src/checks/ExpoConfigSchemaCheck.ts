@@ -1,7 +1,7 @@
 import { configFilename } from '@expo/config';
 
 import { getSchemaAsync } from '../api/getSchemaAsync';
-import { validateWithSchemaAsync } from '../schema/validate';
+import { validateWithSchemaAsync } from '../utils/schema';
 import { DoctorCheck, DoctorCheckParams, DoctorCheckResult } from './checks.types';
 
 export default class ExpoConfigSchemaCheck implements DoctorCheck {
@@ -32,6 +32,7 @@ export default class ExpoConfigSchemaCheck implements DoctorCheck {
     return {
       isSuccessful: issues.length === 0,
       issues,
+      advice: [],
     };
   }
 }

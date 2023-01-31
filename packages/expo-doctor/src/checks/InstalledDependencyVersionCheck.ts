@@ -1,5 +1,4 @@
 import spawnAsync, { SpawnResult } from '@expo/spawn-async';
-import chalk from 'chalk';
 
 import { logNewSection } from '../utils/ora';
 import { DoctorCheck, DoctorCheckParams, DoctorCheckResult } from './checks.types';
@@ -9,10 +8,11 @@ function isSpawnResult(result: any): result is SpawnResult {
 }
 
 export default class InstalledDependencyVersionCheck implements DoctorCheck {
-  description = 'Checking dependency versions for compatibility with installed SDK...';
+  description = 'Checking dependency versions for compatibility with the installed Expo SDK';
 
   async runAsync({ projectRoot }: DoctorCheckParams): Promise<DoctorCheckResult> {
     const issues: string[] = [];
+    const advice: string[] = [];
 
     // dependency check
     const ora = logNewSection(`Checking versions...`);
@@ -24,8 +24,8 @@ export default class InstalledDependencyVersionCheck implements DoctorCheck {
       });
     } catch (error: any) {
       if (isSpawnResult(error)) {
-        console.log(chalk.yellow(error.stderr));
-        issues.push(`One or more packages are incompatible with your Expo SDK version.`);
+        issues.push(error.stderr);
+        advice.push(`Use npx expo install --check to review and upgrade your dependencies.`);
       } else {
         throw error;
       }
@@ -34,8 +34,9 @@ export default class InstalledDependencyVersionCheck implements DoctorCheck {
     }
 
     return {
-      isSuccessful: issues.length === 0,
+      isSuccessful: advice.length === 0,
       issues,
+      advice,
     };
   }
 }
