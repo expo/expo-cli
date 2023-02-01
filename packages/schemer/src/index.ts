@@ -3,6 +3,7 @@ import addFormats from 'ajv-formats';
 import fs from 'fs';
 import traverse from 'json-schema-traverse';
 import get from 'lodash/get';
+import lowerFirst from 'lodash/lowerFirst';
 import path from 'path';
 import imageProbe from 'probe-image-size';
 import readChunk from 'read-chunk';
@@ -165,7 +166,7 @@ export default class Schemer {
         const fieldPath = schemaPointerToFieldPath(jsonPointer);
         assets.push({
           fieldPath,
-          data: get(data, fieldPath),
+          data: get(data, lowerFirst(fieldPath)),
           meta: subSchema.meta,
         });
       }

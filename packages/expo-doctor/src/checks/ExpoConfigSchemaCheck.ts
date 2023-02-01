@@ -19,7 +19,7 @@ export class ExpoConfigSchemaCheck implements DoctorCheck {
       exp,
       schema,
       configName,
-      false
+      true
     );
 
     if (schemaErrorMessage) {
