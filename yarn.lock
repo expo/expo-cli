@@ -11115,6 +11115,11 @@ jest-message-util@^27.5.1:
     slash "^3.0.0"
     stack-utils "^2.0.3"
 
+jest-mock-console@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/jest-mock-console/-/jest-mock-console-2.0.0.tgz#65a7f7e59f606b588359801dc1a732bd270f6108"
+  integrity sha512-7zrKtXVut+6doalosFxw/2O9spLepQJ9VukODtyLIub2fFkWKe1TyQrxr/GyQogTQcdkHfhvFJdx1OEzLqf/mw==
+
 jest-mock@^27.5.1:
   version "27.5.1"
   resolved "https://registry.yarnpkg.com/jest-mock/-/jest-mock-27.5.1.tgz#19948336d49ef4d9c52021d34ac7b5f36ff967d6"

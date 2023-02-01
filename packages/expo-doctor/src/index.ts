@@ -2,7 +2,7 @@
 import { constants, promises as fs } from 'fs';
 import path from 'path';
 
-import { actionAsync } from './doctorAsync';
+import { actionAsync } from './doctor';
 
 const packageJson = () => require('../package.json');
 

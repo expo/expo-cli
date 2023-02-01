@@ -2,7 +2,7 @@ import { warnAboutDeepDependenciesAsync } from '../utils/explainDependencies';
 import { gteSdkVersion } from '../utils/gteSdkVersion';
 import { DoctorCheck, DoctorCheckParams, DoctorCheckResult } from './checks.types';
 
-export default class IllegalPackageCheck implements DoctorCheck {
+export class IllegalPackageCheck implements DoctorCheck {
   description = 'Checking for incompatible packages';
 
   async runAsync({ exp, projectRoot }: DoctorCheckParams): Promise<DoctorCheckResult> {

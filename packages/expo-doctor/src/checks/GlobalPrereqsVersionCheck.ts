@@ -85,7 +85,7 @@ async function _checkWatchmanVersionAsync(): Promise<string | null> {
   return null;
 }
 
-export default class GlobalPrereqsVersionCheck implements DoctorCheck {
+export class GlobalPrereqsVersionCheck implements DoctorCheck {
   description = 'Validating global prerequisites versions';
 
   async runAsync({ exp, projectRoot }: DoctorCheckParams): Promise<DoctorCheckResult> {

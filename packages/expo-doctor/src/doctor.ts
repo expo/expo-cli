@@ -1,17 +1,20 @@
 import { getConfig } from '@expo/config';
 import chalk from 'chalk';
 
-import ExpoConfigSchemaCheck from './checks/ExpoConfigSchemaCheck';
-import GlobalPrereqsVersionCheck from './checks/GlobalPrereqsVersionCheck';
-import IllegalPackageCheck from './checks/IllegalPackageCheck';
-import InstalledDependencyVersionCheck from './checks/InstalledDependencyVersionCheck';
-import SupportPackageVersionCheck from './checks/SupportPackageVersionCheck';
+import { ExpoConfigSchemaCheck } from './checks/ExpoConfigSchemaCheck';
+import { GlobalPrereqsVersionCheck } from './checks/GlobalPrereqsVersionCheck';
+import { IllegalPackageCheck } from './checks/IllegalPackageCheck';
+import { InstalledDependencyVersionCheck } from './checks/InstalledDependencyVersionCheck';
+import { SupportPackageVersionCheck } from './checks/SupportPackageVersionCheck';
 import { DoctorCheck, DoctorCheckParams } from './checks/checks.types';
 import { gteSdkVersion } from './utils/gteSdkVersion';
 import { logNewSection } from './utils/ora';
 import { warnUponCmdExe } from './warnings/windows';
 
-async function runCheck(check: DoctorCheck, checkParams: DoctorCheckParams) {
+export async function runCheckAsync(
+  check: DoctorCheck,
+  checkParams: DoctorCheckParams
+): Promise<boolean> {
   try {
     const ora = logNewSection(check.description);
     const result = await check.runAsync(checkParams);
@@ -82,7 +85,7 @@ export async function actionAsync(projectRoot: string) {
   const checkParams = { exp, pkg, projectRoot };
 
   for (const check of checks) {
-    if (!(await runCheck(check, checkParams))) {
+    if (!(await runCheckAsync(check, checkParams))) {
       foundSomeIssues = true;
     }
   }
@@ -90,7 +93,7 @@ export async function actionAsync(projectRoot: string) {
   if (foundSomeIssues) {
     console.log(
       chalk.red(
-        `\n✖ Found one or more possible issues with the project. See above logs for issues and advice to resolve`
+        `\n✖ Found one or more possible issues with the project. See above logs for issues and advice to resolve.`
       )
     );
     process.exitCode = 1;

@@ -1,23 +1,21 @@
 import spawnAsync, { SpawnResult } from '@expo/spawn-async';
 
-import { logNewSection } from '../utils/ora';
 import { DoctorCheck, DoctorCheckParams, DoctorCheckResult } from './checks.types';
 
 function isSpawnResult(result: any): result is SpawnResult {
   return 'stderr' in result && 'stdout' in result && 'status' in result;
 }
 
-export default class InstalledDependencyVersionCheck implements DoctorCheck {
+export class InstalledDependencyVersionCheck implements DoctorCheck {
   description = 'Checking dependency versions for compatibility with the installed Expo SDK';
 
   async runAsync({ projectRoot }: DoctorCheckParams): Promise<DoctorCheckResult> {
     const issues: string[] = [];
     const advice: string[] = [];
 
-    // dependency check
-    const ora = logNewSection(`Checking versions...`);
-
     try {
+      // only way to check dependencies without automatically fixing them is to use interactive prompt
+      // In the future, we should add JSON output to npx expo install, check for support, and use that instead
       await spawnAsync('sh', ['-c', 'echo "n" | npx expo install --check'], {
         stdio: 'pipe',
         cwd: projectRoot,
@@ -29,12 +27,10 @@ export default class InstalledDependencyVersionCheck implements DoctorCheck {
       } else {
         throw error;
       }
-    } finally {
-      ora.stop();
     }
 
     return {
-      isSuccessful: advice.length === 0,
+      isSuccessful: issues.length === 0,
       issues,
       advice,
     };

@@ -3,7 +3,7 @@ import { getRemoteVersionsForSdkAsync } from '../utils/getRemoteVersionsForSdkAs
 import { gteSdkVersion } from '../utils/gteSdkVersion';
 import { DoctorCheck, DoctorCheckParams, DoctorCheckResult } from './checks.types';
 
-export default class SupportPackageVersionCheck implements DoctorCheck {
+export class SupportPackageVersionCheck implements DoctorCheck {
   description = 'Verifying prebuild support package versions are compatible';
 
   async runAsync({ exp, projectRoot }: DoctorCheckParams): Promise<DoctorCheckResult> {

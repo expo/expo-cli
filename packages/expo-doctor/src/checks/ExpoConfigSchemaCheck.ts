@@ -4,7 +4,7 @@ import { getSchemaAsync } from '../api/getSchemaAsync';
 import { validateWithSchemaAsync } from '../utils/schema';
 import { DoctorCheck, DoctorCheckParams, DoctorCheckResult } from './checks.types';
 
-export default class ExpoConfigSchemaCheck implements DoctorCheck {
+export class ExpoConfigSchemaCheck implements DoctorCheck {
   description = 'Validating Expo Config';
 
   async runAsync({ exp, projectRoot }: DoctorCheckParams): Promise<DoctorCheckResult> {
