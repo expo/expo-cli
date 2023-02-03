@@ -29,7 +29,7 @@ export class IllegalPackageCheck implements DoctorCheck {
     }
 
     return {
-      isSuccessful: issues.length === 0,
+      isSuccessful: !issues.length,
       advice,
       issues,
     };
