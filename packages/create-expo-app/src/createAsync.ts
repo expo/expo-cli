@@ -18,7 +18,6 @@ import {
   initializeAnalyticsIdentityAsync,
   track,
 } from './telemetry';
-import { env } from './utils/env';
 import { initGitRepoAsync } from './utils/git';
 
 export type Options = {
@@ -130,17 +129,14 @@ async function installNodeDependenciesAsync(
   projectRoot: string,
   packageManager: PackageManagerName
 ): Promise<void> {
-  const installJsDepsStep = Template.logNewSection(
-    `Installing JavaScript dependencies with ${packageManager}.`
-  );
   try {
-    await installDependenciesAsync(projectRoot, packageManager, { silent: !env.EXPO_DEBUG });
-    installJsDepsStep.succeed('Installed JavaScript dependencies.');
-  } catch (error) {
+    await installDependenciesAsync(projectRoot, packageManager, { silent: false });
+  } catch (error: any) {
     debug(`Error installing node modules: %O`, error);
-    installJsDepsStep.fail(
+    Log.error(
       `Something went wrong installing JavaScript dependencies. Check your ${packageManager} logs. Continuing to create the app.`
     );
+    Log.exception(error);
   }
 }
 
