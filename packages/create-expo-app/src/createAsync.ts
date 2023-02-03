@@ -18,7 +18,6 @@ import {
   initializeAnalyticsIdentityAsync,
   track,
 } from './telemetry';
-import { env } from './utils/env';
 import { initGitRepoAsync } from './utils/git';
 
 export type Options = {
