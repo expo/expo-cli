@@ -64,7 +64,7 @@ export async function actionAsync(projectRoot: string) {
   if (!gteSdkVersion(exp, '44.0.0')) {
     console.log(
       chalk.red(
-        `expo-doctor is only supported for SDK 44 and higher. Please use 'expo-cli doctor' for older SDKs.`
+        `expo-doctor supports Expo SDK +44. Use 'expo-cli doctor' for SDK 43 and lower.`
       )
     );
     process.exitCode = 1;
