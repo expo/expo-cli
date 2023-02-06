@@ -16,32 +16,10 @@ export async function runCheckAsync(
   check: DoctorCheck,
   checkParams: DoctorCheckParams
 ): Promise<boolean> {
+  const ora = logNewSection(check.description);
+  let result;
   try {
-    const ora = logNewSection(check.description);
-    const result = await check.runAsync(checkParams);
-    if (!result.isSuccessful) {
-      ora.fail();
-      if (result.issues.length) {
-        Log.log(chalk.underline(chalk.yellow(`Issues:`)));
-        Log.group();
-        for (const issue of result.issues) {
-          Log.log(chalk.yellow(`${issue}`));
-        }
-        Log.groupEnd();
-      }
-      if (result.advice.length) {
-        Log.log(chalk.underline(chalk.green(`Advice:`)));
-        Log.group();
-        for (const advice of result.advice) {
-          Log.log(chalk.green(`• ${advice}`));
-        }
-        Log.groupEnd();
-      }
-      return false;
-    } else {
-      ora.succeed();
-      return true;
-    }
+    result = await check.runAsync(checkParams);
   } catch (e: any) {
     if (e.code === 'ENOTFOUND') {
       Log.error(
@@ -50,7 +28,31 @@ export async function runCheckAsync(
     } else {
       Log.exception(e);
     }
+    ora.fail();
     return false;
+  }
+  if (!result.isSuccessful) {
+    ora.fail();
+    if (result.issues.length) {
+      Log.log(chalk.underline(chalk.yellow(`Issues:`)));
+      Log.group();
+      for (const issue of result.issues) {
+        Log.log(chalk.yellow(`${issue}`));
+      }
+      Log.groupEnd();
+    }
+    if (result.advice.length) {
+      Log.log(chalk.underline(chalk.green(`Advice:`)));
+      Log.group();
+      for (const advice of result.advice) {
+        Log.log(chalk.green(`• ${advice}`));
+      }
+      Log.groupEnd();
+    }
+    return false;
+  } else {
+    ora.succeed();
+    return true;
   }
 }
 
@@ -83,17 +85,17 @@ export async function actionAsync(projectRoot: string) {
     new ExpoConfigSchemaCheck(),
   ];
 
-  let foundSomeIssues = false;
+  let hasIssues = false;
 
   const checkParams = { exp, pkg, projectRoot };
 
   for (const check of checks) {
     if (!(await runCheckAsync(check, checkParams))) {
-      foundSomeIssues = true;
+      hasIssues = true;
     }
   }
 
-  if (foundSomeIssues) {
+  if (hasIssues) {
     Log.log();
     Log.error(
       chalk.red(
