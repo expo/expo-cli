@@ -1,3 +1,4 @@
+import { learnMore } from '../utils/TerminalLink';
 import { getDeepDependenciesWarningAsync } from '../utils/explainDependencies';
 import { DoctorCheck, DoctorCheckParams, DoctorCheckResult } from './checks.types';
 
@@ -22,7 +23,11 @@ export class IllegalPackageCheck implements DoctorCheck {
     }
 
     if (issues.length) {
-      advice.push(`Remove any 'unimodules' packages from your project.`);
+      advice.push(
+        `Remove any 'unimodules' packages from your project. Learn more: ${learnMore(
+          'https://expo.fyi/r/sdk-44-remove-unimodules'
+        )}`
+      );
     }
 
     return {
