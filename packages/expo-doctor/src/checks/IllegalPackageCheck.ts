@@ -1,4 +1,4 @@
-import { warnAboutDeepDependenciesAsync } from '../utils/explainDependencies';
+import { getDeepDependenciesWarningAsync } from '../utils/explainDependencies';
 import { DoctorCheck, DoctorCheckParams, DoctorCheckResult } from './checks.types';
 
 export class IllegalPackageCheck implements DoctorCheck {
@@ -15,7 +15,7 @@ export class IllegalPackageCheck implements DoctorCheck {
     ];
 
     for (const pkg of illegalPackages) {
-      const warning = await warnAboutDeepDependenciesAsync({ name: pkg }, projectRoot);
+      const warning = await getDeepDependenciesWarningAsync({ name: pkg }, projectRoot);
       if (warning) {
         issues.push(warning);
       }

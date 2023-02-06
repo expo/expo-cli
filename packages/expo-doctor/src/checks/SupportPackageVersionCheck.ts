@@ -1,4 +1,4 @@
-import { warnAboutDeepDependenciesAsync } from '../utils/explainDependencies';
+import { getDeepDependenciesWarningAsync } from '../utils/explainDependencies';
 import { getRemoteVersionsForSdkAsync } from '../utils/getRemoteVersionsForSdkAsync';
 import { DoctorCheck, DoctorCheckParams, DoctorCheckResult } from './checks.types';
 
@@ -19,7 +19,7 @@ export class SupportPackageVersionCheck implements DoctorCheck {
     for (const pkg of supportPackagesToValidate) {
       const version = versionsForSdk[pkg];
       if (version) {
-        const warning = await warnAboutDeepDependenciesAsync({ name: pkg, version }, projectRoot);
+        const warning = await getDeepDependenciesWarningAsync({ name: pkg, version }, projectRoot);
         if (warning) {
           issues.push(warning);
         }

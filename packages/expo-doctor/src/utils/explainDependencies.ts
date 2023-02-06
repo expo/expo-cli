@@ -1,3 +1,7 @@
+// copied from https://github.com/expo/expo-cli/blob/d00319aae4fdcacf1a335af5a8428c45b62fc4d7/packages/expo-cli/src/commands/info/doctor/depedencies/explain.ts
+// adapted to return warnings instead of displaying, with some modest renaming to match,
+// but otherwise logic is unchanged.
+
 import spawnAsync, { SpawnResult } from '@expo/spawn-async';
 import chalk from 'chalk';
 import semver from 'semver';
@@ -70,9 +74,9 @@ function organizeExplanations(
 /**
  * @param pkg
  * @param explanations
- * @returns true if all versions of the package satisfy the constraints
+ * @returns null if versions of the package satisfy the constraints, otherwise a string with the warning
  */
-async function printExplanationsAsync(
+async function getExplanationsAsync(
   pkg: TargetPackage,
   explanations: RootNodePackage[]
 ): Promise<string | null> {
@@ -84,12 +88,12 @@ async function printExplanationsAsync(
   });
 
   if (invalid.length > 0) {
-    return getInvalidPackagesWarning(pkg, { explanations: invalid });
+    return formatInvalidPackagesWarning(pkg, { explanations: invalid });
   }
   return null;
 }
 
-function getInvalidPackagesWarning(
+function formatInvalidPackagesWarning(
   pkg: TargetPackage,
   { explanations }: { explanations: RootNodePackage[] }
 ): string {
@@ -116,9 +120,9 @@ function formatPkg(pkg: TargetPackage, versionColor: string) {
 
 /**
  * @param pkg
- * @returns true if all versions of the package satisfy the constraints
+ * @returns string if there's a warning, null if otherwise
  */
-export async function warnAboutDeepDependenciesAsync(
+export async function getDeepDependenciesWarningAsync(
   pkg: TargetPackage,
   projectRoot: string
 ): Promise<string | null> {
@@ -128,5 +132,5 @@ export async function warnAboutDeepDependenciesAsync(
     return null;
   }
 
-  return printExplanationsAsync(pkg, explanations);
+  return getExplanationsAsync(pkg, explanations);
 }
