@@ -1,3 +1,5 @@
+import { ExpoConfig, PackageJSONConfig } from '@expo/config';
+
 export interface DoctorCheck {
   // description that will appear as each check is run
   description: string;
@@ -14,6 +16,6 @@ export interface DoctorCheckResult {
 
 export interface DoctorCheckParams {
   projectRoot: string;
-  exp?: any;
-  pkg?: any;
+  exp?: ExpoConfig;
+  pkg?: PackageJSONConfig;
 }
