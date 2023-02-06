@@ -36,19 +36,25 @@ async function run() {
       chalk`npx create-expo-app {cyan <path>} [options]`,
       [
         `-y, --yes             Use the default options for creating a project`,
-        `--no-install          Skip installing npm packages or CocoaPods`,
+        `    --no-install      Skip installing npm packages or CocoaPods`,
         chalk`-t, --template {gray [pkg]}  NPM template to use: blank, tabs, bare-minimum. Default: blank`,
+        chalk`-e, --example {gray [name]}  Example name from {underline https://github.com/expo/examples}.`,
         `-v, --version         Version number`,
         `-h, --help            Usage info`,
       ].join('\n'),
       chalk`
     {gray To choose a template pass in the {bold --template} arg:}
-    
+
     {gray $} npm create expo-app {cyan --template}
+
+    {gray To choose an Expo example pass in the {bold --example} arg:}
+
+    {gray $} npm create expo-app {cyan --example}
+    {gray $} npm create expo-app {cyan --example with-router}
 
     {gray The package manager used for installing}
     {gray node modules is based on how you invoke the CLI:}
-    
+
     {bold  npm:} {cyan npm create expo-app}
     {bold yarn:} {cyan yarn create expo-app}
     {bold pnpm:} {cyan pnpm create expo-app}
@@ -62,7 +68,9 @@ async function run() {
   try {
     const parsed = await resolveStringOrBooleanArgsAsync(argv, rawArgsMap, {
       '--template': Boolean,
+      '--example': Boolean,
       '-t': '--template',
+      '-e': '--example',
     });
 
     debug(`Default args:\n%O`, args);
@@ -72,6 +80,7 @@ async function run() {
     await createAsync(parsed.projectRoot, {
       yes: !!args['--yes'],
       template: parsed.args['--template'],
+      example: parsed.args['--example'],
       install: !args['--no-install'],
     });
 

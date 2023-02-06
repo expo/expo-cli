@@ -1,6 +1,7 @@
 import JsonFile from '@expo/json-file';
 import * as PackageManager from '@expo/package-manager';
 import chalk from 'chalk';
+import fs from 'fs';
 import ora from 'ora';
 import path from 'path';
 
@@ -83,6 +84,25 @@ export async function extractAndPrepareTemplateAppAsync(
     disableCache: type === 'file',
   });
 
+  await sanitizeTemplateAsync(projectRoot);
+
+  return projectRoot;
+}
+
+/**
+ * Sanitize a template (or example) with expected `package.json` properties and files.
+ */
+export async function sanitizeTemplateAsync(projectRoot: string) {
+  const projectName = path.basename(projectRoot);
+
+  debug(`Sanitizing template or example app (projectName: ${projectName})`);
+
+  const templatePath = path.join(__dirname, '../template/gitignore');
+  const ignorePath = path.join(projectRoot, '.gitignore');
+  if (!fs.existsSync(ignorePath)) {
+    await fs.promises.copyFile(templatePath, ignorePath);
+  }
+
   const config: Record<string, any> = {
     expo: {
       name: projectName,
@@ -112,8 +132,6 @@ export async function extractAndPrepareTemplateAppAsync(
   delete packageJson.repository;
 
   await packageFile.writeAsync(packageJson);
-
-  return projectRoot;
 }
 
 export function validateName(name?: string): string | true {
