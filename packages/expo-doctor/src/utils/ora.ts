@@ -2,8 +2,6 @@ import chalk from 'chalk';
 import program from 'commander';
 import oraReal, { Ora } from 'ora';
 
-import Log from './log';
-
 // eslint-disable-next-line no-console
 const logReal = console.log;
 // eslint-disable-next-line no-console
@@ -21,7 +19,7 @@ const errorReal = console.error;
  */
 export function ora(options?: oraReal.Options | string): oraReal.Ora {
   const inputOptions = typeof options === 'string' ? { text: options } : options || {};
-  const disabled = program.nonInteractive || Log.isDebug;
+  const disabled = program.nonInteractive;
   const spinner = oraReal({
     // Ensure our non-interactive mode emulates CI mode.
     isEnabled: !disabled,
@@ -78,9 +76,6 @@ export function ora(options?: oraReal.Options | string): oraReal.Ora {
     resetNativeLogs();
     return result;
   };
-
-  // Always make the central logging module aware of the current spinner
-  Log.setSpinner(spinner);
 
   return spinner;
 }

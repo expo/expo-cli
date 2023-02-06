@@ -8,6 +8,7 @@ import { InstalledDependencyVersionCheck } from './checks/InstalledDependencyVer
 import { SupportPackageVersionCheck } from './checks/SupportPackageVersionCheck';
 import { DoctorCheck, DoctorCheckParams } from './checks/checks.types';
 import { gteSdkVersion } from './utils/gteSdkVersion';
+import { Log } from './utils/log';
 import { logNewSection } from './utils/ora';
 import { warnUponCmdExe } from './warnings/windows';
 
@@ -21,18 +22,18 @@ export async function runCheckAsync(
     if (!result.isSuccessful) {
       ora.fail();
       if (result.issues.length) {
-        console.log(chalk.underline(chalk.yellow(`Issues:`)));
+        Log.log(chalk.underline(chalk.yellow(`Issues:`)));
         console.group();
         for (const issue of result.issues) {
-          console.log(chalk.yellow(`${issue}`));
+          Log.log(chalk.yellow(`${issue}`));
         }
         console.groupEnd();
       }
       if (result.advice.length) {
-        console.log(chalk.underline(chalk.green(`Advice:`)));
+        Log.log(chalk.underline(chalk.green(`Advice:`)));
         console.group();
         for (const advice of result.advice) {
-          console.log(chalk.green(`• ${advice}`));
+          Log.log(chalk.green(`• ${advice}`));
         }
         console.groupEnd();
       }
@@ -43,13 +44,11 @@ export async function runCheckAsync(
     }
   } catch (e: any) {
     if (e.code === 'ENOTFOUND') {
-      console.log(
-        chalk.red(
-          `Error: this check requires a connection to the Expo API. Please check your network connection.`
-        )
+      Log.error(
+        `Error: this check requires a connection to the Expo API. Please check your network connection.`
       );
     } else {
-      console.log(chalk.red(`Error: check could not be completed due to an unexpected error.`));
+      Log.error(`Error: check could not be completed due to an unexpected error.`);
     }
     return false;
   }
@@ -62,11 +61,7 @@ export async function actionAsync(projectRoot: string) {
 
   // expo-doctor relies on versioned CLI, which is only available for 44+
   if (!gteSdkVersion(exp, '44.0.0')) {
-    console.log(
-      chalk.red(
-        `expo-doctor supports Expo SDK +44. Use 'expo-cli doctor' for SDK 43 and lower.`
-      )
-    );
+    Log.error(`expo-doctor supports Expo SDK +44. Use 'expo-cli doctor' for SDK 43 and lower.`);
     process.exitCode = 1;
     return;
   }
@@ -91,13 +86,15 @@ export async function actionAsync(projectRoot: string) {
   }
 
   if (foundSomeIssues) {
-    console.log(
+    Log.log();
+    Log.error(
       chalk.red(
-        `\n✖ Found one or more possible issues with the project. See above logs for issues and advice to resolve.`
+        `✖ Found one or more possible issues with the project. See above logs for issues and advice to resolve.`
       )
     );
     process.exitCode = 1;
   } else {
-    console.log(chalk.green(`\n🎉 Didn't find any issues with the project!`));
+    Log.log();
+    Log.log(chalk.green(`Didn't find any issues with the project!`));
   }
 }
