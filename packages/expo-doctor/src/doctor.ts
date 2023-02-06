@@ -31,29 +31,28 @@ export async function runCheckAsync(
     ora.fail();
     return false;
   }
-  if (!result.isSuccessful) {
-    ora.fail();
-    if (result.issues.length) {
-      Log.log(chalk.underline(chalk.yellow(`Issues:`)));
-      Log.group();
-      for (const issue of result.issues) {
-        Log.log(chalk.yellow(`${issue}`));
-      }
-      Log.groupEnd();
-    }
-    if (result.advice.length) {
-      Log.log(chalk.underline(chalk.green(`Advice:`)));
-      Log.group();
-      for (const advice of result.advice) {
-        Log.log(chalk.green(`• ${advice}`));
-      }
-      Log.groupEnd();
-    }
-    return false;
-  } else {
+  if (result.isSuccessful) {
     ora.succeed();
     return true;
   }
+  ora.fail();
+  if (result.issues.length) {
+    Log.log(chalk.underline(chalk.yellow(`Issues:`)));
+    Log.group();
+    for (const issue of result.issues) {
+      Log.log(chalk.yellow(`${issue}`));
+    }
+    Log.groupEnd();
+  }
+  if (result.advice.length) {
+    Log.log(chalk.underline(chalk.green(`Advice:`)));
+    Log.group();
+    for (const advice of result.advice) {
+      Log.log(chalk.green(`• ${advice}`));
+    }
+    Log.groupEnd();
+  }
+  return false;
 }
 
 export async function actionAsync(projectRoot: string) {
