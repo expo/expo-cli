@@ -14,7 +14,7 @@ function _isNpmVersionWithinRanges(npmVersion: string, ranges: string[]) {
   return ranges.some(range => semver.satisfies(npmVersion, range));
 }
 
-async function _checkNpmVersionAsync(): Promise<string | null> {
+async function checkNpmVersionAsync(): Promise<string | null> {
   try {
     try {
       const yarnVersionResponse = await spawnAsync('yarnpkg', ['--version']);
@@ -40,7 +40,7 @@ async function _checkNpmVersionAsync(): Promise<string | null> {
   return null;
 }
 
-async function _checkWatchmanVersionAsync(): Promise<string | null> {
+async function checkWatchmanVersionAsync(): Promise<string | null> {
   const homebrewInstallNote = `\n\nIf you are using homebrew, try:\nbrew uninstall watchman; brew install watchman`;
 
   let watchmanVersion;
@@ -91,15 +91,15 @@ export class GlobalPrereqsVersionCheck implements DoctorCheck {
   async runAsync({ exp, projectRoot }: DoctorCheckParams): Promise<DoctorCheckResult> {
     const issues: string[] = [];
 
-    const watchmanCheck = await _checkWatchmanVersionAsync();
-    if (watchmanCheck) {
-      issues.push(watchmanCheck);
-    }
-
-    const npmCheck = await _checkNpmVersionAsync();
-    if (npmCheck) {
-      issues.push(npmCheck);
-    }
+    const checkResults = await Promise.all([
+      await checkWatchmanVersionAsync(),
+      await checkNpmVersionAsync(),
+    ]);
+    checkResults.forEach(result => {
+      if (result) {
+        issues.push(result);
+      }
+    });
 
     // Should we check for node LTS? Maybe warn if 18+ but configured for web?
 
