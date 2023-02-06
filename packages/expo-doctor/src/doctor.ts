@@ -61,7 +61,7 @@ export async function actionAsync(projectRoot: string) {
 
   // expo-doctor relies on versioned CLI, which is only available for 44+
   if (!gteSdkVersion(exp, '44.0.0')) {
-    Log.error(`expo-doctor supports Expo SDK +44. Use 'expo-cli doctor' for SDK 43 and lower.`);
+    Log.error(`expo-doctor supports Expo SDK 44+. Use 'expo-cli doctor' for SDK 43 and lower.`);
     process.exitCode = 1;
     return;
   }
