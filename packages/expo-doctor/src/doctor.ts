@@ -60,8 +60,16 @@ export async function actionAsync(projectRoot: string) {
   const { exp, pkg } = getConfig(projectRoot);
 
   // expo-doctor relies on versioned CLI, which is only available for 44+
-  if (ltSdkVersion(exp, '46.0.0')) {
-    Log.error(`expo-doctor supports Expo SDK 46+. Use 'expo-cli doctor' for SDK 45 and lower.`);
+  try {
+    if (ltSdkVersion(exp, '46.0.0')) {
+      Log.error(
+        chalk.red(`expo-doctor supports Expo SDK 46+. Use 'expo-cli doctor' for SDK 45 and lower.`)
+      );
+      process.exitCode = 1;
+      return;
+    }
+  } catch (e: any) {
+    Log.exception(e.message);
     process.exitCode = 1;
     return;
   }

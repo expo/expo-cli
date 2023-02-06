@@ -1,5 +1,7 @@
-// copied from https://github.com/expo/expo/blob/main/packages/%40expo/cli/src/log.ts
+// mostly copied from https://github.com/expo/expo/blob/main/packages/%40expo/cli/src/log.ts
 import chalk from 'chalk';
+
+import { env } from './env';
 
 export function time(label?: string): void {
   console.time(label);
@@ -15,7 +17,6 @@ export function error(...message: string[]): void {
 
 /** Print an error and provide additional info (the stack trace) in debug mode. */
 export function exception(e: Error): void {
-  const { env } = require('./utils/env');
   error(chalk.red(e.toString()) + (env.EXPO_DEBUG ? '\n' + chalk.gray(e.stack) : ''));
 }
 
@@ -29,7 +30,7 @@ export function log(...message: string[]): void {
 
 /** @deprecated use `debug` package with the `expo:` prefix instead.  */
 export function debug(...message: any[]): void {
-  if (require('./utils/env').env.EXPO_DEBUG) console.log(...message);
+  if (env.EXPO_DEBUG) console.log(...message);
 }
 
 /** Clear the terminal of all text. */
@@ -61,7 +62,7 @@ export function group() {
 }
 
 export function groupEnd() {
-  console.group();
+  console.groupEnd();
 }
 
 // The re-export makes auto importing easier.
