@@ -41,8 +41,5 @@
     "@expo/spawn-async": "^1.7.0",
     "chalk": "^4.0.0",
     "semver": "7.3.2"
-  },
-  "devDependencies": {
-    "jest-mock-console": "^2.0.0"
   }
 }

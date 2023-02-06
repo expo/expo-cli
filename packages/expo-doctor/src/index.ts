@@ -1,8 +1,17 @@
 #!/usr/bin/env node
+import Debug from 'debug';
 import { constants, promises as fs } from 'fs';
+import { boolish } from 'getenv';
 import path from 'path';
 
 import { actionAsync } from './doctor';
+
+// Setup before requiring `debug`.
+if (boolish('EXPO_DEBUG', false)) {
+  Debug.enable('expo:*');
+} else if (Debug.enabled('expo:')) {
+  process.env.EXPO_DEBUG = '1';
+}
 
 const packageJson = () => require('../package.json');
 

@@ -48,7 +48,7 @@ export async function runCheckAsync(
         `Error: this check requires a connection to the Expo API. Please check your network connection.`
       );
     } else {
-      Log.error(`Error: check could not be completed due to an unexpected error.`);
+      Log.exception(e);
     }
     return false;
   }
@@ -69,7 +69,7 @@ export async function actionAsync(projectRoot: string) {
       return;
     }
   } catch (e: any) {
-    Log.exception(e.message);
+    Log.exception(e);
     process.exitCode = 1;
     return;
   }
