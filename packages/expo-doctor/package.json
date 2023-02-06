@@ -36,7 +36,7 @@
     "node": "^14.13.1 || >=16.0.0"
   },
   "dependencies": {
-    "@expo/config": "7.0.3",
+    "@expo/config": "6.0.24",
     "@expo/json-file": "~8.2.37",
     "@expo/spawn-async": "^1.7.0",
     "chalk": "^4.0.0",
