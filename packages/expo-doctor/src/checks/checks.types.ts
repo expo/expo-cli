@@ -16,6 +16,6 @@ export interface DoctorCheckResult {
 
 export interface DoctorCheckParams {
   projectRoot: string;
-  exp?: ExpoConfig;
-  pkg?: PackageJSONConfig;
+  exp: ExpoConfig;
+  pkg: PackageJSONConfig;
 }

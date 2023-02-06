@@ -2,6 +2,15 @@ import spawnAsync from '@expo/spawn-async';
 
 import { InstalledDependencyVersionCheck } from '../InstalledDependencyVersionCheck';
 
+// required by runAsync
+const additionalProjectProps = {
+  exp: {
+    name: 'name',
+    slug: 'slug',
+  },
+  pkg: {},
+};
+
 const asMock = <T extends (...args: any[]) => any>(fn: T): jest.MockedFunction<T> =>
   fn as jest.MockedFunction<T>;
 
@@ -12,7 +21,10 @@ describe(InstalledDependencyVersionCheck, () => {
         stdout: '',
       } as any);
       const check = new InstalledDependencyVersionCheck();
-      const result = await check.runAsync({ projectRoot: '/path/to/project' });
+      const result = await check.runAsync({
+        projectRoot: '/path/to/project',
+        ...additionalProjectProps,
+      });
       expect(result.isSuccessful).toBeTruthy();
     });
 
@@ -21,7 +33,7 @@ describe(InstalledDependencyVersionCheck, () => {
         stdout: '',
       } as any);
       const check = new InstalledDependencyVersionCheck();
-      await check.runAsync({ projectRoot: '/path/to/project' });
+      await check.runAsync({ projectRoot: '/path/to/project', ...additionalProjectProps });
       expect(mockSpawnAsync.mock.calls[0][0]).toBe('sh');
       expect(mockSpawnAsync.mock.calls[0][1]).toEqual([
         '-c',
@@ -38,7 +50,10 @@ describe(InstalledDependencyVersionCheck, () => {
         throw error;
       });
       const check = new InstalledDependencyVersionCheck();
-      const result = await check.runAsync({ projectRoot: '/path/to/project' });
+      const result = await check.runAsync({
+        projectRoot: '/path/to/project',
+        ...additionalProjectProps,
+      });
       expect(result.isSuccessful).toBeFalsy();
     });
 
@@ -51,7 +66,10 @@ describe(InstalledDependencyVersionCheck, () => {
         throw error;
       });
       const check = new InstalledDependencyVersionCheck();
-      const result = await check.runAsync({ projectRoot: '/path/to/project' });
+      const result = await check.runAsync({
+        projectRoot: '/path/to/project',
+        ...additionalProjectProps,
+      });
       expect(result.issues).toEqual(['error']);
     });
   });

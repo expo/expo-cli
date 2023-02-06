@@ -7,9 +7,9 @@ import { IllegalPackageCheck } from './checks/IllegalPackageCheck';
 import { InstalledDependencyVersionCheck } from './checks/InstalledDependencyVersionCheck';
 import { SupportPackageVersionCheck } from './checks/SupportPackageVersionCheck';
 import { DoctorCheck, DoctorCheckParams } from './checks/checks.types';
-import { gteSdkVersion } from './utils/gteSdkVersion';
 import { Log } from './utils/log';
 import { logNewSection } from './utils/ora';
+import { ltSdkVersion } from './utils/versions';
 import { warnUponCmdExe } from './warnings/windows';
 
 export async function runCheckAsync(
@@ -60,8 +60,8 @@ export async function actionAsync(projectRoot: string) {
   const { exp, pkg } = getConfig(projectRoot);
 
   // expo-doctor relies on versioned CLI, which is only available for 44+
-  if (!gteSdkVersion(exp, '44.0.0')) {
-    Log.error(`expo-doctor supports Expo SDK 44+. Use 'expo-cli doctor' for SDK 43 and lower.`);
+  if (ltSdkVersion(exp, '46.0.0')) {
+    Log.error(`expo-doctor supports Expo SDK 46+. Use 'expo-cli doctor' for SDK 45 and lower.`);
     process.exitCode = 1;
     return;
   }

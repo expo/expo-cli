@@ -1,10 +1,7 @@
 import { ExpoConfig } from '@expo/config';
 import semver from 'semver';
 
-export function gteSdkVersion(
-  expJson: Pick<ExpoConfig, 'sdkVersion'>,
-  sdkVersion: string
-): boolean {
+export function ltSdkVersion(expJson: Pick<ExpoConfig, 'sdkVersion'>, sdkVersion: string): boolean {
   if (!expJson.sdkVersion) {
     return false;
   }
@@ -12,9 +9,8 @@ export function gteSdkVersion(
   if (expJson.sdkVersion === 'UNVERSIONED') {
     return true;
   }
-
   try {
-    return semver.gte(expJson.sdkVersion, sdkVersion);
+    return semver.lt(expJson.sdkVersion, sdkVersion);
   } catch (e) {
     throw new Error(
       //'INVALID_VERSION',

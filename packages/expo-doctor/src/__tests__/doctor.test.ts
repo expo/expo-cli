@@ -12,6 +12,15 @@ jest.mock('../utils/ora', () => ({
   })),
 }));
 
+// required by runAsync
+const additionalProjectProps = {
+  exp: {
+    name: 'name',
+    slug: 'slug',
+  },
+  pkg: {},
+};
+
 class MockSuccessfulCheck implements DoctorCheck {
   description = 'Mock successful check';
   runAsync = jest.fn(() => Promise.resolve({ isSuccessful: true, issues: [], advice: [] }));
@@ -28,8 +37,7 @@ describe(runCheckAsync, () => {
   it(`returns true if check passes`, async () => {
     const result = await runCheckAsync(new MockSuccessfulCheck(), {
       projectRoot: '',
-      exp: {},
-      pkg: {},
+      ...additionalProjectProps,
     });
     expect(result).toBeTruthy();
   });
@@ -37,8 +45,7 @@ describe(runCheckAsync, () => {
   it(`returns false if check fails`, async () => {
     const result = await runCheckAsync(new MockFailedCheck(), {
       projectRoot: '',
-      exp: {},
-      pkg: {},
+      ...additionalProjectProps,
     });
     expect(result).toBeFalsy();
   });
@@ -46,8 +53,7 @@ describe(runCheckAsync, () => {
   it(`shows issues check fails`, async () => {
     await runCheckAsync(new MockFailedCheck(), {
       projectRoot: '',
-      exp: {},
-      pkg: {},
+      ...additionalProjectProps,
     });
     expect(asMock(Log.log).mock.calls[0][0]).toContain('Issues:');
   });
