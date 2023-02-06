@@ -14,6 +14,10 @@ export const debug = jest.fn();
 
 export const clear = jest.fn();
 
+export const group = jest.fn();
+
+export const groupEnd = jest.fn();
+
 export const exit = jest.fn(() => {
   throw new Error('EXIT_CALLED');
 });
@@ -28,4 +32,6 @@ export const Log = {
   debug,
   clear,
   exit,
+  group,
+  groupEnd,
 };
