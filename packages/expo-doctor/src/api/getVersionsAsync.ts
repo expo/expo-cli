@@ -35,9 +35,7 @@ export type Versions = {
 };
 
 /** Get versions from remote endpoint. */
-export async function getVersionsAsync({
-  skipCache,
-}: { skipCache?: boolean } = {}): Promise<Versions> {
+export async function getVersionsAsync(): Promise<Versions> {
   const results = await fetch(`https://api.expo.dev/v2/versions/latest`);
   const json = await results.json();
   return json.data;
