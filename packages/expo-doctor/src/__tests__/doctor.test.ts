@@ -49,7 +49,6 @@ describe(runCheckAsync, () => {
       exp: {},
       pkg: {},
     });
-    console.log(Log.log);
     expect(asMock(Log.log).mock.calls[0][0]).toContain('Issues:');
   });
 });

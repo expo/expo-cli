@@ -14,6 +14,6 @@ export interface DoctorCheckResult {
 
 export interface DoctorCheckParams {
   projectRoot: string;
-  exp: any;
-  pkg: any;
+  exp?: any;
+  pkg?: any;
 }

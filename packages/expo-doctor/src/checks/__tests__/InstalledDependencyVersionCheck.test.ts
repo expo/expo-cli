@@ -6,15 +6,12 @@ const asMock = <T extends (...args: any[]) => any>(fn: T): jest.MockedFunction<T
   fn as jest.MockedFunction<T>;
 
 describe(InstalledDependencyVersionCheck, () => {
-  let check;
-  beforeEach(() => {
-    check = new InstalledDependencyVersionCheck();
-  });
   describe('runAsync', () => {
     it('returns result with isSuccessful = true if check passes', async () => {
       asMock(spawnAsync).mockResolvedValueOnce({
         stdout: '',
       } as any);
+      const check = new InstalledDependencyVersionCheck();
       const result = await check.runAsync({ projectRoot: '/path/to/project' });
       expect(result.isSuccessful).toBeTruthy();
     });
@@ -23,6 +20,7 @@ describe(InstalledDependencyVersionCheck, () => {
       const mockSpawnAsync = asMock(spawnAsync).mockResolvedValueOnce({
         stdout: '',
       } as any);
+      const check = new InstalledDependencyVersionCheck();
       await check.runAsync({ projectRoot: '/path/to/project' });
       expect(mockSpawnAsync.mock.calls[0][0]).toBe('sh');
       expect(mockSpawnAsync.mock.calls[0][1]).toEqual([
@@ -39,6 +37,7 @@ describe(InstalledDependencyVersionCheck, () => {
         error.status = 1;
         throw error;
       });
+      const check = new InstalledDependencyVersionCheck();
       const result = await check.runAsync({ projectRoot: '/path/to/project' });
       expect(result.isSuccessful).toBeFalsy();
     });
@@ -51,6 +50,7 @@ describe(InstalledDependencyVersionCheck, () => {
         error.status = 1;
         throw error;
       });
+      const check = new InstalledDependencyVersionCheck();
       const result = await check.runAsync({ projectRoot: '/path/to/project' });
       expect(result.issues).toEqual(['error']);
     });
