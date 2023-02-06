@@ -55,6 +55,15 @@ export function exit(message: string | Error, code: number = 1): never {
   process.exit(code);
 }
 
+// added console grouping so all console usages here are fully-mocked
+export function group() {
+  console.group();
+}
+
+export function groupEnd() {
+  console.group();
+}
+
 // The re-export makes auto importing easier.
 export const Log = {
   time,
@@ -66,4 +75,6 @@ export const Log = {
   debug,
   clear,
   exit,
+  group,
+  groupEnd,
 };

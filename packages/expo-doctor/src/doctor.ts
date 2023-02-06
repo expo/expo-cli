@@ -23,19 +23,19 @@ export async function runCheckAsync(
       ora.fail();
       if (result.issues.length) {
         Log.log(chalk.underline(chalk.yellow(`Issues:`)));
-        console.group();
+        Log.group();
         for (const issue of result.issues) {
           Log.log(chalk.yellow(`${issue}`));
         }
-        console.groupEnd();
+        Log.groupEnd();
       }
       if (result.advice.length) {
         Log.log(chalk.underline(chalk.green(`Advice:`)));
-        console.group();
+        Log.group();
         for (const advice of result.advice) {
           Log.log(chalk.green(`• ${advice}`));
         }
-        console.groupEnd();
+        Log.groupEnd();
       }
       return false;
     } else {
