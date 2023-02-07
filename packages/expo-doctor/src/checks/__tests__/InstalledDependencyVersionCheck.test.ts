@@ -1,5 +1,6 @@
 import spawnAsync from '@expo/spawn-async';
 
+import { asMock } from '../../__tests__/asMock';
 import { InstalledDependencyVersionCheck } from '../InstalledDependencyVersionCheck';
 
 // required by runAsync
@@ -10,9 +11,6 @@ const additionalProjectProps = {
   },
   pkg: {},
 };
-
-const asMock = <T extends (...args: any[]) => any>(fn: T): jest.MockedFunction<T> =>
-  fn as jest.MockedFunction<T>;
 
 describe(InstalledDependencyVersionCheck, () => {
   describe('runAsync', () => {
