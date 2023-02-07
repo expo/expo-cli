@@ -51,7 +51,7 @@
     "node-fetch": "^2.6.7",
     "ora": "3.4.0",
     "prompts": "^2.4.2",
-    "tar": "^6.1.11",
+    "tar": "^6.1.13",
     "update-check": "^1.5.4"
   },
   "publishConfig": {
