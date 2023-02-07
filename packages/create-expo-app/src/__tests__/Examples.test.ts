@@ -44,6 +44,8 @@ describe(promptExamplesAsync, () => {
   });
 
   it('prompts examples and return selected example', async () => {
+    // Make this test run in CI
+    const spy = jest.spyOn(env, 'CI', 'get').mockReturnValue(false);
     const examples: GithubContent[] = [
       { name: 'test-1', path: 'test-1', type: 'dir' },
       { name: 'test-2', path: 'test-2', type: 'dir' },
@@ -61,6 +63,8 @@ describe(promptExamplesAsync, () => {
         ]),
       })
     );
+
+    spy.mockRestore();
   });
 });
 
