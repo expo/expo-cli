@@ -60,7 +60,6 @@ async function checkWatchmanVersionAsync(): Promise<string | null> {
     return cannotDetectWatchmanInstallationMessage;
   }
 
-  // If we can't get the watchman version, `getVersionAsync` will return `null`
   if (!watchmanVersion) {
     // watchman is probably just not installed
     return cannotDetectWatchmanInstallationMessage;
