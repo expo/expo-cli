@@ -69,7 +69,7 @@
     "@expo/bunyan": "4.0.0",
     "@expo/config": "6.0.24",
     "@expo/config-plugins": "4.1.5",
-    "@expo/dev-server": "0.1.115",
+    "@expo/dev-server": "0.2.0",
     "@expo/json-file": "8.2.37",
     "@expo/osascript": "2.0.33",
     "@expo/package-manager": "0.0.56",

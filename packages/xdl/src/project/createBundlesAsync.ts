@@ -96,13 +96,10 @@ export async function createBundlesAsync(
   }
 
   const config = getConfig(projectRoot, { skipSDKVersionRequirement: true });
-  const isLegacy = isLegacyImportsEnabled(config.exp);
   const bundles = await bundleAsync(
     projectRoot,
     config.exp,
     {
-      // If not legacy, ignore the target option to prevent warnings from being thrown.
-      target: !isLegacy ? undefined : publishOptions.target,
       resetCache: publishOptions.resetCache,
       maxWorkers: publishOptions.maxWorkers,
       logger: ProjectUtils.getLogger(projectRoot),

@@ -57,8 +57,6 @@ export async function startDevServerAsync(
   const options: MetroDevServerOptions = {
     port,
     logger: ProjectUtils.getLogger(projectRoot),
-    // @deprecated
-    target: startOptions.target,
   };
   if (startOptions.reset) {
     options.resetCache = true;
