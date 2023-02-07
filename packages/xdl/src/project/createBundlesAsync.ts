@@ -1,4 +1,4 @@
-import { getConfig, isLegacyImportsEnabled, Platform } from '@expo/config';
+import { getConfig, Platform } from '@expo/config';
 import { bundleAsync, BundleOutput } from '@expo/dev-server';
 import axios from 'axios';
 import chalk from 'chalk';
