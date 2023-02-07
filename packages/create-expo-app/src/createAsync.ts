@@ -72,6 +72,10 @@ async function setupDependenciesAsync(projectRoot: string, props: Pick<Options, 
 }
 
 export async function createAsync(inputPath: string, options: Options): Promise<void> {
+  if (options.example && options.template) {
+    throw new Error('Cannot use both --example and --template');
+  }
+
   if (options.example) {
     return await createExampleAsync(inputPath, options);
   }
