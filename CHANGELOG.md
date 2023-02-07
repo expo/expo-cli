@@ -4,13 +4,34 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ## main
 
-## [Fri, 27 Jan 2023 11:42:59 -0600](https://github.com/expo/expo-cli/commit/226ac07bd39ec14a97441365af0d2030a8ff0f59)
-
 ### 🛠 Breaking changes
 
 ### 🎉 New features
 
 ### 🧹 Chores
+
+### 🐛 Bug fixes
+
+## [Mon, 6 Feb 2023 20:37:17 -0800](https://github.com/expo/expo-cli/commit/36dbc671d41270885a046fd5848ddd3b039139ed)
+
+### 🎉 New features
+
+- [expo-cli] Bump @expo/dev-server to support the latest React Native release with Hermes sourcemap changes
+
+### 🐛 Bug fixes
+
+- [expo-cli] Bump @expo/apple-utils
+- [next-adapter] drop next-expo script as it causes npm to fail ([#4637](https://github.com/expo/expo-cli/issues/4637))
+
+### 📦 Packages updated
+
+- create-expo-app@1.2.1
+- @expo/dev-tools@0.13.177
+- expo-cli@6.3.0
+- @expo/next-adapter@5.0.2
+- xdl@60.0.2
+
+## [Fri, 27 Jan 2023 11:42:59 -0600](https://github.com/expo/expo-cli/commit/226ac07bd39ec14a97441365af0d2030a8ff0f59)
 
 ### 🐛 Bug fixes
 
