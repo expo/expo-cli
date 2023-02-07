@@ -1,6 +1,6 @@
 {
   "name": "@expo/next-adapter",
-  "version": "5.0.1",
+  "version": "5.0.2",
   "description": "Adapter for using Next.js to bundle Expo web projects",
   "main": "build/index.js",
   "types": "build/index.d.ts",
