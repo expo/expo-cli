@@ -1,3 +1,6 @@
+// copied version check functions from https://github.com/expo/expo-cli/blob/d00319aae4fdcacf1a335af5a8428c45b62fc4d7/packages/xdl/src/project/Doctor.ts
+// minor naming changes only
+
 import spawnAsync from '@expo/spawn-async';
 import { execSync } from 'child_process';
 import semver from 'semver';
