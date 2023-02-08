@@ -1,6 +1,6 @@
 {
   "name": "create-expo-app",
-  "version": "1.3.0",
+  "version": "1.3.1",
   "main": "build",
   "description": "Create universal Expo apps",
   "license": "BSD-3-Clause",
@@ -20,7 +20,8 @@
     "create-expo-app": "./build/index.js"
   },
   "files": [
-    "build"
+    "build",
+    "template"
   ],
   "scripts": {
     "prepare": "yarn run clean && yarn run build:prod",
