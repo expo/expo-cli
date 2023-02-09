@@ -1,5 +1,6 @@
 import { getConfig } from '@expo/config';
 import chalk from 'chalk';
+import semver from 'semver';
 
 import { ExpoConfigSchemaCheck } from './checks/ExpoConfigSchemaCheck';
 import { GlobalPrereqsVersionCheck } from './checks/GlobalPrereqsVersionCheck';
@@ -16,6 +17,14 @@ export async function runCheckAsync(
   check: DoctorCheck,
   checkParams: DoctorCheckParams
 ): Promise<boolean> {
+  // bail if check isn't relevant for SDK version
+  if (
+    checkParams.exp.sdkVersion !== 'UNVERSIONED' &&
+    !semver.satisfies(checkParams.exp.sdkVersion!, check.sdkVersionRange)
+  ) {
+    return true;
+  }
+
   const ora = logNewSection(check.description);
   let result;
   try {

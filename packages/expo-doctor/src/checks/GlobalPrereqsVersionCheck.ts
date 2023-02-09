@@ -90,6 +90,8 @@ async function checkWatchmanVersionAsync(): Promise<string | null> {
 export class GlobalPrereqsVersionCheck implements DoctorCheck {
   description = 'Validating global prerequisites versions';
 
+  sdkVersionRange = '*';
+
   async runAsync({ exp, projectRoot }: DoctorCheckParams): Promise<DoctorCheckResult> {
     const issues: string[] = [];
 

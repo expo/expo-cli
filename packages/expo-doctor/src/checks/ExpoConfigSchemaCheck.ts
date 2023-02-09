@@ -7,6 +7,8 @@ import { DoctorCheck, DoctorCheckParams, DoctorCheckResult } from './checks.type
 export class ExpoConfigSchemaCheck implements DoctorCheck {
   description = 'Validating Expo Config';
 
+  sdkVersionRange = '*';
+
   async runAsync({ exp, projectRoot }: DoctorCheckParams): Promise<DoctorCheckResult> {
     const issues: string[] = [];
 

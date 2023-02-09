@@ -5,6 +5,8 @@ import { DoctorCheck, DoctorCheckParams, DoctorCheckResult } from './checks.type
 export class IllegalPackageCheck implements DoctorCheck {
   description = 'Checking for incompatible packages';
 
+  sdkVersionRange = '>=44.0.0';
+
   async runAsync({ exp, projectRoot }: DoctorCheckParams): Promise<DoctorCheckResult> {
     const issues: string[] = [];
     const advice: string[] = [];

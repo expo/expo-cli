@@ -9,6 +9,8 @@ function isSpawnResult(result: any): result is SpawnResult {
 export class InstalledDependencyVersionCheck implements DoctorCheck {
   description = 'Checking dependency versions for compatibility with the installed Expo SDK';
 
+  sdkVersionRange = '>=46.0.0';
+
   async runAsync({ projectRoot }: DoctorCheckParams): Promise<DoctorCheckResult> {
     const issues: string[] = [];
     const advice: string[] = [];

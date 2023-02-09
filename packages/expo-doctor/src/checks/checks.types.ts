@@ -3,6 +3,8 @@ import { ExpoConfig, PackageJSONConfig } from '@expo/config';
 export interface DoctorCheck {
   // description that will appear as each check is run
   description: string;
+  // semver range of SDK versions that this check is relevant for
+  sdkVersionRange: string;
   runAsync: (params: DoctorCheckParams) => Promise<DoctorCheckResult>;
 }
 

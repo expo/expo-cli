@@ -5,6 +5,8 @@ import { DoctorCheck, DoctorCheckParams, DoctorCheckResult } from './checks.type
 export class SupportPackageVersionCheck implements DoctorCheck {
   description = 'Verifying prebuild support package versions are compatible';
 
+  sdkVersionRange = '>=45.0.0';
+
   async runAsync({ exp, projectRoot }: DoctorCheckParams): Promise<DoctorCheckResult> {
     const advice: string[] = [];
     const issues: string[] = [];
