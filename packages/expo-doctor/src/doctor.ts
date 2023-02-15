@@ -30,6 +30,7 @@ export async function runCheckAsync(
   try {
     result = await check.runAsync(checkParams);
   } catch (e: any) {
+    ora.fail();
     if (e.code === 'ENOTFOUND') {
       Log.error(
         `Error: this check requires a connection to the Expo API. Please check your network connection.`
@@ -37,7 +38,6 @@ export async function runCheckAsync(
     } else {
       Log.exception(e);
     }
-    ora.fail();
     return false;
   }
   if (result.isSuccessful) {
