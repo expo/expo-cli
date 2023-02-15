@@ -1,7 +1,10 @@
 // mostly copied from https://github.com/expo/expo/blob/main/packages/%40expo/cli/src/log.ts
 import chalk from 'chalk';
+import Debug from 'debug';
 
 import { env } from './env';
+
+const debug = Debug('expo:doctor');
 
 export function time(label?: string): void {
   console.time(label);
@@ -26,11 +29,6 @@ export function warn(...message: string[]): void {
 
 export function log(...message: string[]): void {
   console.log(...message);
-}
-
-/** @deprecated use `debug` package with the `expo:` prefix instead.  */
-export function debug(...message: any[]): void {
-  if (env.EXPO_DEBUG) console.log(...message);
 }
 
 /** Clear the terminal of all text. */
