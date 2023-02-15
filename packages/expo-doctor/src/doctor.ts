@@ -46,7 +46,7 @@ export async function runCheckAsync(
   }
   ora.fail();
   if (result.issues.length) {
-    Log.log(chalk.underline(chalk.yellow(`Issues:`)));
+    Log.log(chalk.underline.yellow(`Issues:`));
     Log.group();
     for (const issue of result.issues) {
       Log.log(chalk.yellow(`${issue}`));
