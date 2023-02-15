@@ -72,15 +72,13 @@ export async function actionAsync(projectRoot: string) {
   // expo-doctor relies on versioned CLI, which is only available for 44+
   try {
     if (ltSdkVersion(exp, '46.0.0')) {
-      Log.error(
+      Log.exit(
         chalk.red(`expo-doctor supports Expo SDK 46+. Use 'expo-cli doctor' for SDK 45 and lower.`)
       );
-      process.exitCode = 1;
       return;
     }
   } catch (e: any) {
-    Log.exception(e);
-    process.exitCode = 1;
+    Log.exit(e);
     return;
   }
 
@@ -105,12 +103,11 @@ export async function actionAsync(projectRoot: string) {
 
   if (hasIssues) {
     Log.log();
-    Log.error(
+    Log.exit(
       chalk.red(
         `✖ Found one or more possible issues with the project. See above logs for issues and advice to resolve.`
       )
     );
-    process.exitCode = 1;
   } else {
     Log.log();
     Log.log(chalk.green(`Didn't find any issues with the project!`));
