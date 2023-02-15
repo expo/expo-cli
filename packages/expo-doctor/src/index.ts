@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import chalk from 'chalk';
 import Debug from 'debug';
 import { constants, promises as fs } from 'fs';
 import { boolish } from 'getenv';
@@ -32,7 +33,7 @@ async function run() {
 
   await fs.access(projectRoot, constants.F_OK).catch((err: any) => {
     if (err) {
-      console.error(`\x1b[31mProject directory ${projectRoot} does not exist\x1b[0m`);
+      console.error(chalk.red(`Project directory ${projectRoot} does not exist`));
       process.exit(1);
     }
   });
