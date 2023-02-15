@@ -1,8 +1,6 @@
 {
   "name": "expo-doctor",
   "version": "1.0.0",
-  "type": "module",
-  "preferGlobal": true,
   "keywords": [
     "expo",
     "ios",
