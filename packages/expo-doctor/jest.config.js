@@ -1,12 +1,18 @@
-import fs from 'fs';
-import { dirname, join, resolve } from 'path';
-import { fileURLToPath } from 'url';
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+const path = require('path');
 
-export default {
+const enableE2E = process.env.CI || process.env.E2E;
+
+const roots = ['__mocks__', 'src'];
+
+if (enableE2E) {
+  roots.push('e2e');
+}
+
+module.exports = {
   preset: '../../jest/unit-test-config',
-  rootDir: resolve(__dirname),
-  displayName: JSON.parse(fs.readFileSync(join(__dirname, 'package.json'))).name,
-  extensionsToTreatAsEsm: ['.ts'],
+  rootDir: path.resolve(__dirname),
+  displayName: require('./package').name,
+  roots,
+  testTimeout: 60000,
+  testRunner: 'jest-jasmine2',
 };
