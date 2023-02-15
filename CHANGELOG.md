@@ -12,6 +12,25 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+## [Tue, 14 Feb 2023 18:55:17 -0800](https://github.com/expo/expo-cli/commit/043302f4d0fdd3f13a4bfc928bd45c8c5f501c3a)
+
+### 🎉 New features
+
+- [create-expo-app] add `--example` flag to initialize from example ([#4644](https://github.com/expo/expo-cli/issues/4644))
+- [install-expo-modules] add sdk 48 support ([#4652](https://github.com/expo/expo-cli/issues/4652))
+
+### 🧹 Chores
+
+- [xdl] remove unused import from `createBundlesAsync` ([#4645](https://github.com/expo/expo-cli/issues/4645))
+
+### 📦 Packages updated
+
+- create-expo-app@1.3.2
+- @expo/dev-tools@0.13.178
+- expo-cli@6.3.1
+- install-expo-modules@0.5.0
+- xdl@60.0.3
+
 ## [Mon, 6 Feb 2023 20:37:17 -0800](https://github.com/expo/expo-cli/commit/36dbc671d41270885a046fd5848ddd3b039139ed)
 
 ### 🎉 New features
