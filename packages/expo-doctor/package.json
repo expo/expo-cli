@@ -1,0 +1,43 @@
+{
+  "name": "expo-doctor",
+  "version": "1.0.0",
+  "keywords": [
+    "expo",
+    "ios",
+    "expo-env-info",
+    "android"
+  ],
+  "description": "Check your Expo project for known issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/expo/expo-cli.git",
+    "directory": "packages/expo-doctor"
+  },
+  "author": "Expo <support@expo.dev>",
+  "license": "MIT",
+  "bin": {
+    "expo-doctor": "./build/index.js"
+  },
+  "files": [
+    "build"
+  ],
+  "scripts": {
+    "prepare": "yarn run clean && yarn run build:prod",
+    "lint": "eslint .",
+    "watch": "yarn run build -w",
+    "test": "jest",
+    "build": "ncc build ./src/index.ts -o build/",
+    "build:prod": "ncc build ./src/index.ts -o build/ --minify --no-cache --no-source-map-register",
+    "clean": "rimraf ./build/"
+  },
+  "engines": {
+    "node": "^14.13.1 || >=16.0.0"
+  },
+  "dependencies": {
+    "@expo/config": "6.0.24",
+    "@expo/json-file": "~8.2.37",
+    "@expo/spawn-async": "^1.7.0",
+    "chalk": "^4.0.0",
+    "semver": "7.3.2"
+  }
+}

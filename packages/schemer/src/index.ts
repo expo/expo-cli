@@ -10,6 +10,10 @@ import readChunk from 'read-chunk';
 import { SchemerError, ValidationError } from './Error';
 import { fieldPathToSchema, schemaPointerToFieldPath } from './Util';
 
+function lowerFirst(str: string): string {
+  return str.charAt(0).toLowerCase() + str.slice(1);
+}
+
 type Meta = {
   asset?: boolean;
   dimensions?: {
@@ -165,7 +169,7 @@ export default class Schemer {
         const fieldPath = schemaPointerToFieldPath(jsonPointer);
         assets.push({
           fieldPath,
-          data: get(data, fieldPath),
+          data: get(data, lowerFirst(fieldPath)) || get(data, fieldPath),
           meta: subSchema.meta,
         });
       }
