@@ -6,6 +6,10 @@ import chalk from 'chalk';
 import { Command } from 'commander';
 import prompts from 'prompts';
 
+import {
+  shouldUpdateAgpVersionAsync,
+  withAndroidGradlePluginVersion,
+} from './plugins/android/withAndroidGradles';
 import { withAndroidModules } from './plugins/android/withAndroidModules';
 import {
   shouldUpdateDeployTargetPodfileAsync,
@@ -44,6 +48,31 @@ function getSdkVersionInfo(): VersionInfo {
 }
 
 /**
+ * Show a prompt before upgrading the Android Gradle Plugin version for the target project.
+ *
+ * @returns true if user confirm to update. otherwise, returns false.
+ */
+async function promptUpgradeAgpVersionAsync(projectRoot: string, agpVersion: string) {
+  if (!(await shouldUpdateAgpVersionAsync(projectRoot, agpVersion))) {
+    return true;
+  }
+
+  const deploymentTargetMessage = `The minimum Android Gradle Plugin version for Expo modules is ${agpVersion}. This tool will change your AGP version to ${agpVersion}.`;
+  if (program.nonInteractive) {
+    console.log(chalk.yellow(`⚠️  ${deploymentTargetMessage}`));
+    return true;
+  } else {
+    const { value } = await prompts({
+      type: 'confirm',
+      name: 'value',
+      message: `${deploymentTargetMessage} Do you want to continue?`,
+      initial: true,
+    });
+    return !!value;
+  }
+}
+
+/**
  * Show a prompt before upgrading the iOS deployment target version for the target project.
  *
  * @returns true if user confirm to update. otherwise, returns false.
@@ -71,7 +100,14 @@ async function promptUpgradeIosDeployTargetAsync(projectRoot: string, iosDeploym
 async function runAsync(programName: string) {
   projectRoot = normalizeProjectRoot(projectRoot);
 
-  const { expoSdkVersion: sdkVersion, iosDeploymentTarget } = getSdkVersionInfo();
+  const {
+    expoSdkVersion: sdkVersion,
+    iosDeploymentTarget,
+    androidAgpVersion,
+  } = getSdkVersionInfo();
+  if (androidAgpVersion && !(await promptUpgradeAgpVersionAsync(projectRoot, androidAgpVersion))) {
+    return;
+  }
   if (!(await promptUpgradeIosDeployTargetAsync(projectRoot, iosDeploymentTarget))) {
     return;
   }
@@ -86,6 +122,11 @@ async function runAsync(programName: string) {
   // to get the target sdkVersion easier for config plugins, we fill the target sdkVersion into config.
   config.sdkVersion = sdkVersion;
 
+  if (androidAgpVersion) {
+    config = withAndroidGradlePluginVersion(config, {
+      androidAgpVersion,
+    });
+  }
   config = withAndroidModules(config);
   config = withIosModules(config);
   config = withIosDeploymentTarget(config, {
