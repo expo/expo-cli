@@ -1,6 +1,6 @@
 {
   "name": "@expo/schemer",
-  "version": "1.4.4",
+  "version": "1.4.5",
   "description": "Centralized scheme validation library for Expo",
   "main": "./build/index.js",
   "scripts": {
