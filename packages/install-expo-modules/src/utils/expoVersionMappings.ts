@@ -5,6 +5,7 @@ export interface VersionInfo {
   expoSdkVersion: string;
   iosDeploymentTarget: string;
   reactNativeVersionRange: string;
+  androidAgpVersion?: string;
 }
 
 export const ExpoVersionMappings: VersionInfo[] = [
@@ -13,6 +14,7 @@ export const ExpoVersionMappings: VersionInfo[] = [
     expoSdkVersion: '48.0.0',
     iosDeploymentTarget: '13.0',
     reactNativeVersionRange: '>= 0.71.0',
+    androidAgpVersion: '7.4.1',
   },
   {
     expoSdkVersion: '47.0.0',
