@@ -1,5 +1,8 @@
 # @expo/configure-splash-screen
 
+> **Warning**
+> This package is deprecated in favor of Expo config options. [Learn more](https://docs.expo.dev/versions/latest/sdk/splash-screen/)
+
 This package provides CLI command that helps you configure [`expo-splash-screen`](https://github.com/expo/expo/tree/master/packages/expo-splash-screen) module.
 You can use it to configure your native iOS and Android project according to your needs without opening Xcode or Android Studio.
 
