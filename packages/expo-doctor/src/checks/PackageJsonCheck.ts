@@ -7,11 +7,6 @@ function getDirectPackageInstallErrorMessage(pkg: string): string {
   return `The package "${pkg}" should not be installed directly in your project. It is a dependency of other Expo packages and should be installed automatically.`;
 }
 
-// find if any one of several values is in an array
-const findOne = (haystack: [string], needles: [string]) => {
-  return needles.some(v => haystack.includes(v));
-};
-
 export class PackageJsonCheck implements DoctorCheck {
   description = 'Checking package.json for common issues';
 
