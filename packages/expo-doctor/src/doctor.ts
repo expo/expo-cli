@@ -3,6 +3,7 @@ import chalk from 'chalk';
 import semver from 'semver';
 
 import { ExpoConfigSchemaCheck } from './checks/ExpoConfigSchemaCheck';
+import { GlobalPackageInstalledCheck } from './checks/GlobalPackageInstalledCheck';
 import { GlobalPrereqsVersionCheck } from './checks/GlobalPrereqsVersionCheck';
 import { IllegalPackageCheck } from './checks/IllegalPackageCheck';
 import { InstalledDependencyVersionCheck } from './checks/InstalledDependencyVersionCheck';
@@ -86,6 +87,7 @@ export async function actionAsync(projectRoot: string) {
   const checks = [
     new GlobalPrereqsVersionCheck(),
     new IllegalPackageCheck(),
+    new GlobalPackageInstalledCheck(),
     new SupportPackageVersionCheck(),
     new InstalledDependencyVersionCheck(),
     new ExpoConfigSchemaCheck(),

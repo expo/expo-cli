@@ -42,7 +42,6 @@ describe(createBundlesAsync, () => {
       '/',
       expoConfig,
       {
-        target: 'managed',
         resetCache: false,
         quiet: true,
         logger: mockLogger,
