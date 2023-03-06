@@ -7,6 +7,7 @@ import { GlobalPackageInstalledCheck } from './checks/GlobalPackageInstalledChec
 import { GlobalPrereqsVersionCheck } from './checks/GlobalPrereqsVersionCheck';
 import { IllegalPackageCheck } from './checks/IllegalPackageCheck';
 import { InstalledDependencyVersionCheck } from './checks/InstalledDependencyVersionCheck';
+import { PackageJsonCheck } from './checks/PackageJsonCheck';
 import { SupportPackageVersionCheck } from './checks/SupportPackageVersionCheck';
 import { DoctorCheck, DoctorCheckParams } from './checks/checks.types';
 import { Log } from './utils/log';
@@ -91,6 +92,7 @@ export async function actionAsync(projectRoot: string) {
     new SupportPackageVersionCheck(),
     new InstalledDependencyVersionCheck(),
     new ExpoConfigSchemaCheck(),
+    new PackageJsonCheck(),
   ];
 
   let hasIssues = false;
