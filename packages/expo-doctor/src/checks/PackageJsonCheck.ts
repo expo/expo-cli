@@ -1,26 +1,47 @@
+import fs from 'fs';
+import path from 'path';
+
 import { DoctorCheck, DoctorCheckParams, DoctorCheckResult } from './checks.types';
 
 function getDirectPackageInstallErrorMessage(pkg: string): string {
   return `The package "${pkg}" should not be installed directly in your project. It is a dependency of other Expo packages and should be installed automatically.`;
 }
 
+// find if any one of several values is in an array
+const findOne = (haystack: [string], needles: [string]) => {
+  return needles.some(v => haystack.includes(v));
+};
+
 export class PackageJsonCheck implements DoctorCheck {
   description = 'Checking package.json for common issues';
 
   sdkVersionRange = '*';
 
-  async runAsync({ pkg }: DoctorCheckParams): Promise<DoctorCheckResult> {
+  async runAsync({ pkg, projectRoot }: DoctorCheckParams): Promise<DoctorCheckResult> {
     const advice: string[] = [];
     const issues: string[] = [];
 
-    // check for "expo" in scripts
-    if (pkg.scripts?.['expo']) {
+    // ** check for node_modules/.bin refs in scripts (e.g., can't have "expo" or similar in scripts) **
+
+    const nodeModulesBinPath = path.join(projectRoot, 'node_modules', '.bin');
+    // might be in a monorepo and not have node_modules/.bin, so at least check for most problematic conflicts
+    const bins = fs.existsSync(nodeModulesBinPath)
+      ? fs.readdirSync(nodeModulesBinPath)
+      : ['expo', 'react-native'];
+    const binsThatExistInScripts = pkg.scripts ? bins.filter(value => pkg.scripts[value]) : [];
+    if (binsThatExistInScripts.length) {
       issues.push(
-        'The script "expo" is defined in package.json. This will cause conflicts with the Expo CLI and likely lead to build failures.'
+        `The following scripts in package.json conflict with the contents of node_modules/.bin: ${binsThatExistInScripts.join(
+          ', '
+        )}.` +
+          (pkg.scripts?.['expo']
+            ? ' This will cause conflicts with the Expo CLI and likely lead to build failures.'
+            : '')
       );
     }
 
-    // check for dependencies that should only be transitive
+    // ** check for dependencies that should only be transitive **
+
     if (pkg.dependencies?.['expo-modules-core'] || pkg.devDependencies?.['expo-modules-core']) {
       issues.push(getDirectPackageInstallErrorMessage('expo-modules-core'));
     }
@@ -32,7 +53,8 @@ export class PackageJsonCheck implements DoctorCheck {
       issues.push(getDirectPackageInstallErrorMessage('expo-modules-autolinking'));
     }
 
-    // check for conflicts between package name and installed packages
+    // ** check for conflicts between package name and installed packages **
+
     const installedPackages = Object.keys(pkg.dependencies ?? {}).concat(
       Object.keys(pkg.devDependencies ?? {})
     );

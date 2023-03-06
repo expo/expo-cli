@@ -86,12 +86,12 @@ export async function actionAsync(projectRoot: string) {
 
   // add additional checks here
   const checks = [
-    new GlobalPrereqsVersionCheck(),
-    new IllegalPackageCheck(),
-    new GlobalPackageInstalledCheck(),
-    new SupportPackageVersionCheck(),
-    new InstalledDependencyVersionCheck(),
-    new ExpoConfigSchemaCheck(),
+    // new GlobalPrereqsVersionCheck(),
+    // new IllegalPackageCheck(),
+    // new GlobalPackageInstalledCheck(),
+    // new SupportPackageVersionCheck(),
+    // new InstalledDependencyVersionCheck(),
+    // new ExpoConfigSchemaCheck(),
     new PackageJsonCheck(),
   ];
 

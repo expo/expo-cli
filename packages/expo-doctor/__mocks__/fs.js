@@ -1,5 +1,2 @@
-import { fs, promises } from 'memfs';
-
-const constants = jest.requireActual('fs').constants;
-
-export { fs, promises, constants };
+import { fs } from 'memfs';
+module.exports = fs;
