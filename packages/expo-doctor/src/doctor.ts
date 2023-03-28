@@ -27,14 +27,14 @@ export async function runCheckAsync(
     return true;
   }
 
-  const ora = logNewSection(check.description);
+  const ora = logNewSection(`${check.description}...`);
   let result;
   try {
     result = await check.runAsync(checkParams);
   } catch (e: any) {
-    ora.fail();
+    ora.fail(`${check.description} failed`);
     if (e.code === 'ENOTFOUND') {
-      Log.error(
+      Log.warn(
         `Error: this check requires a connection to the Expo API. Please check your network connection.`
       );
     } else {
@@ -43,15 +43,15 @@ export async function runCheckAsync(
     return false;
   }
   if (result.isSuccessful) {
-    ora.succeed();
+    ora.succeed(`${check.description} passed`);
     return true;
   }
-  ora.fail();
+  ora.fail(`${check.description} failed`);
   if (result.issues.length) {
     Log.log(chalk.underline.yellow(`Issues:`));
     Log.group();
     for (const issue of result.issues) {
-      Log.log(chalk.yellow(`${issue}`));
+      Log.warn(chalk.yellow(`${issue}`));
     }
     Log.groupEnd();
   }
