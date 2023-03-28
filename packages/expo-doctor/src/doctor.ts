@@ -51,7 +51,7 @@ export async function runCheckAsync(
     Log.log(chalk.underline.yellow(`Issues:`));
     Log.group();
     for (const issue of result.issues) {
-      Log.error(chalk.yellow(`${issue}`));
+      Log.warn(chalk.yellow(`${issue}`));
     }
     Log.groupEnd();
   }
