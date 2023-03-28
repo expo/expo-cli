@@ -1,6 +1,8 @@
 import chalk from 'chalk';
-import program from 'commander';
 import oraReal, { Ora } from 'ora';
+
+import { env } from './env';
+import { isInteractive } from './interactive';
 
 // eslint-disable-next-line no-console
 const logReal = console.log;
@@ -19,7 +21,7 @@ const errorReal = console.error;
  */
 export function ora(options?: oraReal.Options | string): oraReal.Ora {
   const inputOptions = typeof options === 'string' ? { text: options } : options || {};
-  const disabled = program.nonInteractive;
+  const disabled = !isInteractive() || env.EXPO_DEBUG;
   const spinner = oraReal({
     // Ensure our non-interactive mode emulates CI mode.
     isEnabled: !disabled,
