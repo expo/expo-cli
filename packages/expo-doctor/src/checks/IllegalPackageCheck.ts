@@ -17,12 +17,16 @@ export class IllegalPackageCheck implements DoctorCheck {
       'react-native-unimodules',
     ];
 
-    for (const pkg of illegalPackages) {
-      const warning = await getDeepDependenciesWarningAsync({ name: pkg }, projectRoot);
-      if (warning) {
-        issues.push(warning);
+    // warn if these packages are installed at all
+    const possibleWarnings = await Promise.all(
+      illegalPackages.map(pkg => getDeepDependenciesWarningAsync({ name: pkg }, projectRoot))
+    );
+
+    possibleWarnings.forEach(possibleWarning => {
+      if (possibleWarning) {
+        issues.push(possibleWarning);
       }
-    }
+    });
 
     if (issues.length) {
       advice.push(
