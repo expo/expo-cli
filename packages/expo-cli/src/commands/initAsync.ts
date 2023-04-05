@@ -44,7 +44,7 @@ const FEATURED_TEMPLATES = [
   {
     shortName: 'tabs (TypeScript)',
     name: 'expo-template-tabs',
-    description: 'several example screens and tabs using react-navigation and TypeScript',
+    description: 'several example screens and tabs using expo-router and TypeScript',
   },
   '----- Bare workflow -----',
   {
