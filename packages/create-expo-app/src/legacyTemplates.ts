@@ -18,7 +18,7 @@ export const LEGACY_TEMPLATES = [
   {
     title: 'Navigation (TypeScript)',
     value: 'expo-template-tabs',
-    description: 'several example screens and tabs using react-navigation and TypeScript',
+    description: 'several example screens and tabs using expo-router and TypeScript',
   },
 
   {
