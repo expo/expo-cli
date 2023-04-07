@@ -56,7 +56,8 @@ function applyWebDefaults(appJSON: AppJSONConfig | ExpoConfig): PWAConfig {
   const buildOutputPath = getWebOutputPath(appJSON);
   const publicPath = sanitizePublicPath(webManifest.publicPath);
   const primaryColor = appManifest.primaryColor;
-  const description = webManifest.description || appManifest.description;
+  const description = appManifest.description;
+  const webDescription = webManifest.description || description;
   // The theme_color sets the color of the tool bar, and may be reflected in the app's preview in task switchers.
   const webThemeColor = webManifest.themeColor || primaryColor;
   const dir = webManifest.dir;
@@ -125,7 +126,7 @@ function applyWebDefaults(appJSON: AppJSONConfig | ExpoConfig): PWAConfig {
       dangerous: webDangerous,
       scope,
       crossorigin,
-      description,
+      description: webDescription,
       preferRelatedApplications,
       relatedApplications,
       startUrl,
