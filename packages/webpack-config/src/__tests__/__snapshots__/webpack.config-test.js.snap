@@ -70,6 +70,9 @@ Object {
       Object {
         "enforce": "pre",
         "exclude": /@babel\\(\\?:\\\\/\\|\\\\\\\\\\{1,2\\}\\)runtime/,
+        "resolve": Object {
+          "fullySpecified": false,
+        },
         "test": /\\\\\\.\\(js\\|mjs\\|jsx\\|ts\\|tsx\\|css\\)\\$/,
         "use": "node_modules/source-map-loader/dist/cjs.js",
       },
@@ -104,6 +107,9 @@ Object {
           },
           Object {
             "include": [Function],
+            "resolve": Object {
+              "fullySpecified": false,
+            },
             "test": /\\\\\\.\\(js\\|mjs\\|jsx\\|ts\\|tsx\\)\\$/,
             "use": Object {
               "loader": "node_modules/babel-loader/lib/index.js",
@@ -260,6 +266,9 @@ Object {
       Object {
         "enforce": "pre",
         "exclude": /@babel\\(\\?:\\\\/\\|\\\\\\\\\\{1,2\\}\\)runtime/,
+        "resolve": Object {
+          "fullySpecified": false,
+        },
         "test": /\\\\\\.\\(js\\|mjs\\|jsx\\|ts\\|tsx\\|css\\)\\$/,
         "use": "node_modules/source-map-loader/dist/cjs.js",
       },
@@ -294,6 +303,9 @@ Object {
           },
           Object {
             "include": [Function],
+            "resolve": Object {
+              "fullySpecified": false,
+            },
             "test": /\\\\\\.\\(js\\|mjs\\|jsx\\|ts\\|tsx\\)\\$/,
             "use": Object {
               "loader": "node_modules/babel-loader/lib/index.js",
