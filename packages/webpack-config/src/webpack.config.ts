@@ -430,6 +430,9 @@ export default async function (env: Environment, argv: Arguments = {}): Promise<
           exclude: /@babel(?:\/|\\{1,2})runtime/,
           test: /\.(js|mjs|jsx|ts|tsx|css)$/,
           use: require.resolve('source-map-loader'),
+          resolve: {
+            fullySpecified: false,
+          },
         },
         {
           oneOf: allLoaders,

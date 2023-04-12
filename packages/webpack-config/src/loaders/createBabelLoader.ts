@@ -239,5 +239,8 @@ export default function createBabelLoader({
       loader: require.resolve('babel-loader'),
       options: presetOptions,
     },
+    resolve: {
+      fullySpecified: false,
+    },
   };
 }
