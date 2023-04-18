@@ -36,6 +36,7 @@
   "dependencies": {
     "@expo/config": "6.0.24",
     "@expo/json-file": "~8.2.37",
+    "@expo/schemer": "1.4.5",
     "@expo/spawn-async": "^1.7.0",
     "chalk": "^4.0.0",
     "semver": "7.3.2"
