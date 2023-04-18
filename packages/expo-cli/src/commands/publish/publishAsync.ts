@@ -19,6 +19,7 @@ import { confirmAsync } from '../../utils/prompts';
 import * as TerminalLink from '../utils/TerminalLink';
 import { formatNamedWarning } from '../utils/logConfigWarnings';
 import * as sendTo from '../utils/sendTo';
+import { printDeprecationNotice } from './deprecationNotice';
 
 const EAS_UPDATE_URL = 'https://u.expo.dev';
 
@@ -37,6 +38,7 @@ export async function actionAsync(
   projectRoot: string,
   options: Options = {}
 ): Promise<Project.PublishedProjectResult> {
+  printDeprecationNotice();
   assertValidReleaseChannel(options.releaseChannel);
 
   const { exp, pkg } = getConfig(projectRoot, {

@@ -1,10 +1,12 @@
 import * as table from '../../commands/utils/cli-table';
 import Log from '../../log';
 import { setPublishToChannelAsync } from '../utils/PublishUtils';
+import { printDeprecationNotice } from './deprecationNotice';
 
 type Options = { releaseChannel?: string; publishId?: string };
 
 export async function actionAsync(projectRoot: string, options: Options): Promise<void> {
+  printDeprecationNotice();
   if (!options.releaseChannel) {
     throw new Error('You must specify a release channel.');
   }

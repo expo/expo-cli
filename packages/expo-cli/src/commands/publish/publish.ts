@@ -1,3 +1,4 @@
+import chalk from 'chalk';
 import type { Command } from 'commander';
 
 import { applyAsyncActionProjectDir } from '../utils/applyAsyncAction';
@@ -7,7 +8,7 @@ export default function (program: Command) {
     program
       .command('publish [path]')
       .alias('p')
-      .description('Deploy a project to Expo hosting')
+      .description(`${chalk.yellow`Superseded`} by ${chalk.bold`eas update`} in eas-cli`)
       .helpGroup('publish')
       .option('-q, --quiet', 'Suppress verbose output from the Metro bundler.')
       .option('-s, --send-to [dest]', 'A phone number or email address to send a link to')
@@ -30,7 +31,7 @@ export default function (program: Command) {
     program
       .command('publish:set [path]')
       .alias('ps')
-      .description('Specify the channel to serve a published release')
+      .description(`${chalk.yellow`Superseded`} by ${chalk.bold`eas update:republish`} in eas-cli`)
       .helpGroup('publish')
       .option(
         '-c, --release-channel <name>',
@@ -48,7 +49,7 @@ export default function (program: Command) {
     program
       .command('publish:rollback [path]')
       .alias('pr')
-      .description('Undo an update to a channel')
+      .description(`${chalk.yellow`Superseded`} by ${chalk.bold`eas update:republish`} in eas-cli`)
       .helpGroup('publish')
       .option('--channel-id <channel-id>', 'This flag is deprecated.')
       .option('-c, --release-channel <name>', 'The channel to rollback from. (Required)')
@@ -62,7 +63,7 @@ export default function (program: Command) {
     program
       .command('publish:history [path]')
       .alias('ph')
-      .description("Log the project's releases")
+      .description(`${chalk.yellow`Superseded`} by ${chalk.bold`eas update:list`} in eas-cli`)
       .helpGroup('publish')
       .option(
         '-c, --release-channel <name>',
@@ -87,7 +88,7 @@ export default function (program: Command) {
     program
       .command('publish:details [path]')
       .alias('pd')
-      .description('Log details of a published release')
+      .description(`${chalk.yellow`Superseded`} by ${chalk.bold`eas update:view`} in eas-cli`)
       .helpGroup('publish')
       .option('--publish-id <publish-id>', 'Publication id. (Required)')
       .option('-r, --raw', 'Produce some raw output.'),

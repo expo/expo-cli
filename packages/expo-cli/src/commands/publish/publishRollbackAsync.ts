@@ -2,6 +2,7 @@ import assert from 'assert';
 
 import CommandError from '../../CommandError';
 import { RollbackOptions, rollbackPublicationFromChannelAsync } from '../utils/PublishUtils';
+import { printDeprecationNotice } from './deprecationNotice';
 import { getUsageAsync } from './getUsageAsync';
 
 type Options = {
@@ -12,6 +13,7 @@ type Options = {
 };
 
 export async function actionAsync(projectRoot: string, options: Options) {
+  printDeprecationNotice();
   assert(
     !options.channelId,
     '--channel-id flag is deprecated and does not do anything. Please use --release-channel and --sdk-version instead.'
