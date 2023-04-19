@@ -59,6 +59,15 @@ export async function actionAsync(projectRoot: string, options: Options) {
   await warnUponCmdExe();
 
   const { exp, pkg } = profileMethod(getConfig)(projectRoot);
+
+  if (Versions.gteSdkVersion(exp, '46.0.0')) {
+    Log.error(
+      `'expo-cli doctor' is not supported for SDK 46 and higher. Use 'npx expo-doctor' instead.`
+    );
+    process.exitCode = 1;
+    return;
+  }
+
   let foundSomeIssues = false;
 
   // Only use the new validation on SDK +45.
