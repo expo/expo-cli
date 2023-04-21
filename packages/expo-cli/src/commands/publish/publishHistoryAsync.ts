@@ -3,12 +3,14 @@ import dateFormat from 'dateformat';
 import Log from '../../log';
 import { getPublishHistoryAsync, HistoryOptions, Publication } from '../utils/PublishUtils';
 import * as table from '../utils/cli-table';
+import { printDeprecationNotice } from './deprecationNotice';
 
 const HORIZ_CELL_WIDTH_SMALL = 15;
 const HORIZ_CELL_WIDTH_MEDIUM = 20;
 const HORIZ_CELL_WIDTH_BIG = 40;
 
 export async function actionAsync(projectRoot: string, options: HistoryOptions) {
+  printDeprecationNotice();
   const result = await getPublishHistoryAsync(projectRoot, options);
 
   if (options.raw) {
