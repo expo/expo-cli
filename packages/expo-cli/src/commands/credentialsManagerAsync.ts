@@ -1,9 +1,4 @@
-import { Context, runCredentialsManagerStandalone } from '../credentials';
-import {
-  SelectAndroidExperience,
-  SelectIosExperience,
-  SelectPlatform,
-} from '../credentials/views/Select';
+import Log from '../log';
 
 type Options = {
   platform?: 'android' | 'ios';
@@ -12,18 +7,6 @@ type Options = {
   };
 };
 
-export async function actionAsync(projectRoot: string, options: Options) {
-  const context = new Context();
-  await context.init(projectRoot, {
-    nonInteractive: options.parent?.nonInteractive,
-  });
-  let mainpage;
-  if (options.platform === 'android') {
-    mainpage = new SelectAndroidExperience();
-  } else if (options.platform === 'ios') {
-    mainpage = new SelectIosExperience();
-  } else {
-    mainpage = new SelectPlatform();
-  }
-  await runCredentialsManagerStandalone(context, mainpage);
+export async function actionAsync(_projectRoot: string, _options: Options) {
+  Log.warn('expo credentials:manager no longer exists. Migrate to eas credentials.');
 }
