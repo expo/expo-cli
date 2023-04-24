@@ -1,3 +1,4 @@
+import chalk from 'chalk';
 import type { Command } from 'commander';
 
 import { applyAsyncActionProjectDir } from './utils/applyAsyncAction';
@@ -6,7 +7,7 @@ export default function (program: Command) {
   applyAsyncActionProjectDir(
     program
       .command('push:android:upload [path]')
-      .description('Upload an FCM key for Android push notifications')
+      .description(`${chalk.yellow`Superseded`} by ${chalk.bold`eas credentials`} in eas-cli`)
       .helpGroup('notifications')
       .option('--api-key [api-key]', 'Server API key for FCM.'),
     () => import('./push/pushAndroidUploadAsync')
@@ -15,7 +16,7 @@ export default function (program: Command) {
   applyAsyncActionProjectDir(
     program
       .command('push:android:show [path]')
-      .description('Log the value currently in use for FCM notifications for this project')
+      .description(`${chalk.yellow`Superseded`} by ${chalk.bold`eas credentials`} in eas-cli`)
       .helpGroup('notifications'),
     () => import('./push/pushAndroidShowAsync')
   );
@@ -23,7 +24,7 @@ export default function (program: Command) {
   applyAsyncActionProjectDir(
     program
       .command('push:android:clear [path]')
-      .description('Delete a previously uploaded FCM credential')
+      .description(`${chalk.yellow`Superseded`} by ${chalk.bold`eas credentials`} in eas-cli`)
       .helpGroup('notifications'),
     () => import('./push/pushAndroidClearAsync')
   );
