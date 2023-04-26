@@ -2,6 +2,7 @@
 import { Spec } from 'arg';
 import chalk from 'chalk';
 
+import { CLI_NAME } from './cmd';
 import { ExitError } from './error';
 import { Log } from './log';
 import { assertWithOptionsArgs, printHelp, resolveStringOrBooleanArgsAsync } from './utils/args';
@@ -33,7 +34,7 @@ async function run() {
   if (args['--help']) {
     printHelp(
       `Creates a new Expo project`,
-      chalk`npx create-expo-app {cyan <path>} [options]`,
+      chalk`npx ${CLI_NAME} {cyan <path>} [options]`,
       [
         `-y, --yes             Use the default options for creating a project`,
         `    --no-install      Skip installing npm packages or CocoaPods`,

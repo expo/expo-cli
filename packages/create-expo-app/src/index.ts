@@ -2,8 +2,10 @@
 import Debug from 'debug';
 import { boolish } from 'getenv';
 
+import { CLI_NAME } from './cmd';
+
 // Set the title of the process
-process.title = 'create-expo-app';
+process.title = CLI_NAME;
 
 // Setup before requiring `debug`.
 if (boolish('EXPO_DEBUG', false)) {

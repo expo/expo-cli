@@ -1,6 +1,8 @@
 import * as PackageManager from '@expo/package-manager';
 import { execSync } from 'child_process';
 
+import { CLI_NAME } from './cmd';
+
 export type PackageManagerName = 'npm' | 'pnpm' | 'yarn';
 
 const debug = require('debug')('expo:init:resolvePackageManager') as typeof console.log;
@@ -49,15 +51,14 @@ export function formatRunCommand(packageManager: PackageManagerName, cmd: string
 }
 
 export function formatSelfCommand() {
-  const name = 'create-expo-app';
   const packageManager = resolvePackageManager();
   switch (packageManager) {
     case 'pnpm':
-      return `pnpx ${name}`;
+      return `pnpx ${CLI_NAME}`;
     case 'yarn':
     case 'npm':
     default:
-      return `npx ${name}`;
+      return `npx ${CLI_NAME}`;
   }
 }
 
