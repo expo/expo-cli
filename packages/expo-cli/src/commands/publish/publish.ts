@@ -9,7 +9,7 @@ export default function (program: Command) {
       .command('publish [path]')
       .alias('p')
       .description(`${chalk.yellow`Superseded`} by ${chalk.bold`eas update`} in eas-cli`)
-      .helpGroup('publish')
+      .helpGroup('deprecated')
       .option('-q, --quiet', 'Suppress verbose output from the Metro bundler.')
       .option('-s, --send-to [dest]', 'A phone number or email address to send a link to')
       .option('-c, --clear', 'Clear the Metro bundler cache')
@@ -32,7 +32,7 @@ export default function (program: Command) {
       .command('publish:set [path]')
       .alias('ps')
       .description(`${chalk.yellow`Superseded`} by ${chalk.bold`eas update:republish`} in eas-cli`)
-      .helpGroup('publish')
+      .helpGroup('deprecated')
       .option(
         '-c, --release-channel <name>',
         'The channel to set the published release. (Required)'
@@ -50,7 +50,7 @@ export default function (program: Command) {
       .command('publish:rollback [path]')
       .alias('pr')
       .description(`${chalk.yellow`Superseded`} by ${chalk.bold`eas update:republish`} in eas-cli`)
-      .helpGroup('publish')
+      .helpGroup('deprecated')
       .option('--channel-id <channel-id>', 'This flag is deprecated.')
       .option('-c, --release-channel <name>', 'The channel to rollback from. (Required)')
       .option('-s, --sdk-version <version>', 'The sdk version to rollback. (Required)')
@@ -64,7 +64,7 @@ export default function (program: Command) {
       .command('publish:history [path]')
       .alias('ph')
       .description(`${chalk.yellow`Superseded`} by ${chalk.bold`eas update:list`} in eas-cli`)
-      .helpGroup('publish')
+      .helpGroup('deprecated')
       .option(
         '-c, --release-channel <name>',
         'Filter by release channel. If this flag is not included, the most recent publications will be shown.'
@@ -89,7 +89,7 @@ export default function (program: Command) {
       .command('publish:details [path]')
       .alias('pd')
       .description(`${chalk.yellow`Superseded`} by ${chalk.bold`eas update:view`} in eas-cli`)
-      .helpGroup('publish')
+      .helpGroup('deprecated')
       .option('--publish-id <publish-id>', 'Publication id. (Required)')
       .option('-r, --raw', 'Produce some raw output.'),
     () => import('./publishDetailsAsync'),

@@ -8,7 +8,7 @@ export default function (program: Command) {
     program
       .command('push:android:upload [path]')
       .description(`${chalk.yellow`Superseded`} by ${chalk.bold`eas credentials`} in eas-cli`)
-      .helpGroup('notifications')
+      .helpGroup('deprecated')
       .option('--api-key [api-key]', 'Server API key for FCM.'),
     () => import('./push/pushAndroidUploadAsync')
   );
@@ -17,7 +17,7 @@ export default function (program: Command) {
     program
       .command('push:android:show [path]')
       .description(`${chalk.yellow`Superseded`} by ${chalk.bold`eas credentials`} in eas-cli`)
-      .helpGroup('notifications'),
+      .helpGroup('deprecated'),
     () => import('./push/pushAndroidShowAsync')
   );
 
@@ -25,7 +25,7 @@ export default function (program: Command) {
     program
       .command('push:android:clear [path]')
       .description(`${chalk.yellow`Superseded`} by ${chalk.bold`eas credentials`} in eas-cli`)
-      .helpGroup('notifications'),
+      .helpGroup('deprecated'),
     () => import('./push/pushAndroidClearAsync')
   );
 }
