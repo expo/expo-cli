@@ -10,7 +10,26 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🧹 Chores
 
+## [Thu, 27 Apr 2023 13:46:02 -0700](https://github.com/expo/expo-cli/commit/80d7d352b476aba692226367a3bb6a8e78bf6294)
+
+### 🧹 Chores
+
+- [cli] cross deploy to create-expo ([#4698](https://github.com/expo/expo-cli/issues/4698))
+- [cli] Add link to new Expo CLI blog post
+- [cli] add deprecated commands to helpgroup ([#4696](https://github.com/expo/expo-cli/issues/4696))
+- [cli] replace deprecated commands with superceded ones ([#4693](https://github.com/expo/expo-cli/issues/4693))
+- [cli] advise to use new doctor on SDK 46+ ([#4689](https://github.com/expo/expo-cli/issues/4689))
+- [cli] deprecate publish:* ([#4685](https://github.com/expo/expo-cli/issues/4685))
+
 ### 🐛 Bug fixes
+
+- [doctor] specify schemer version ([#4687](https://github.com/expo/expo-cli/issues/4687))
+
+### 📦 Packages updated
+
+- create-expo-app@1.3.3
+- expo-cli@6.3.7
+- expo-doctor@1.0.6
 
 ## [Tue, 14 Feb 2023 18:55:17 -0800](https://github.com/expo/expo-cli/commit/043302f4d0fdd3f13a4bfc928bd45c8c5f501c3a)
 
