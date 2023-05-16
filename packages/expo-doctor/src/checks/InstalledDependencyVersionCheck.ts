@@ -1,5 +1,6 @@
 import spawnAsync, { SpawnResult } from '@expo/spawn-async';
 
+import { isWindowsShell } from '../utils/windows';
 import { DoctorCheck, DoctorCheckParams, DoctorCheckResult } from './checks.types';
 
 function isSpawnResult(result: any): result is SpawnResult {
@@ -18,10 +19,14 @@ export class InstalledDependencyVersionCheck implements DoctorCheck {
     try {
       // only way to check dependencies without automatically fixing them is to use interactive prompt
       // In the future, we should add JSON output to npx expo install, check for support, and use that instead
-      await spawnAsync('sh', ['-c', 'echo "n" | npx expo install --check'], {
-        stdio: 'pipe',
-        cwd: projectRoot,
-      });
+      await spawnAsync(
+        isWindowsShell() ? 'powershell' : 'sh',
+        ['-c', 'echo "n" | npx expo install --check'],
+        {
+          stdio: 'pipe',
+          cwd: projectRoot,
+        }
+      );
     } catch (error: any) {
       if (isSpawnResult(error)) {
         issues.push(error.stderr.trim());

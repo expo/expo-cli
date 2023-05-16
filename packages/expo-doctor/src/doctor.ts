@@ -13,7 +13,7 @@ import { DoctorCheck, DoctorCheckParams } from './checks/checks.types';
 import { Log } from './utils/log';
 import { logNewSection } from './utils/ora';
 import { ltSdkVersion } from './utils/versions';
-import { warnUponCmdExe } from './warnings/windows';
+import { isRunningOnCmdExeAsync } from './utils/windows';
 
 export async function runCheckAsync(
   check: DoctorCheck,
@@ -67,7 +67,14 @@ export async function runCheckAsync(
 }
 
 export async function actionAsync(projectRoot: string) {
-  await warnUponCmdExe();
+  if (await isRunningOnCmdExeAsync()) {
+    Log.exit(
+      chalk.red(
+        `Cmd.exe is not supported. Run expo-doctor on Powershell or WSL 2+ when using Windows.`
+      )
+    );
+    return;
+  }
 
   const { exp, pkg } = getConfig(projectRoot);
 
