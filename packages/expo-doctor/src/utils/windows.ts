@@ -1,7 +1,6 @@
 // adapted from https://github.com/expo/expo-cli/blob/d00319aae4fdcacf1a335af5a8428c45b62fc4d7/packages/expo-cli/src/commands/info/doctor/windows.ts
 // modified to return a boolean instead of printing a warning
 
-import { yellow } from 'chalk';
 import { execFile } from 'child_process';
 import { promisify } from 'util';
 

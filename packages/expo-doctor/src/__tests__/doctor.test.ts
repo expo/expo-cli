@@ -1,9 +1,12 @@
 import { asMock } from '../__tests__/asMock';
 import { DoctorCheck } from '../checks/checks.types';
-import { runCheckAsync } from '../doctor';
+import { actionAsync, runCheckAsync } from '../doctor';
 import { Log } from '../utils/log';
+import { isRunningOnCmdExeAsync } from '../utils/windows';
 
 jest.mock(`../utils/log`);
+
+jest.mock(`../utils/windows`);
 
 jest.mock('../utils/ora', () => ({
   logNewSection: jest.fn(() => ({
@@ -43,6 +46,15 @@ class MockFailedCheck implements DoctorCheck {
     Promise.resolve({ isSuccessful: false, issues: ['issue'], advice: ['advice'] })
   );
 }
+
+describe(actionAsync, () => {
+  it('calls Log.exit if running on cmd.exe', async () => {
+    asMock(isRunningOnCmdExeAsync).mockResolvedValueOnce(true);
+    asMock(Log.exit).mockReset();
+    await actionAsync('./');
+    expect(Log.exit).toHaveBeenCalled();
+  });
+});
 
 describe(runCheckAsync, () => {
   it(`returns true if check passes`, async () => {

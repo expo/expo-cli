@@ -1,7 +1,10 @@
 import spawnAsync from '@expo/spawn-async';
 
 import { asMock } from '../../__tests__/asMock';
+import { isWindowsShell } from '../../utils/windows';
 import { InstalledDependencyVersionCheck } from '../InstalledDependencyVersionCheck';
+
+jest.mock(`../../utils/windows`);
 
 // required by runAsync
 const additionalProjectProps = {
@@ -23,6 +26,26 @@ describe('runAsync', () => {
       ...additionalProjectProps,
     });
     expect(result.isSuccessful).toBeTruthy();
+  });
+
+  it('when not running on Windows, uses sh to call npx expo start', async () => {
+    asMock(isWindowsShell).mockReturnValueOnce(false);
+    const mockSpawnAsync = asMock(spawnAsync).mockResolvedValueOnce({
+      stdout: '',
+    } as any);
+    const check = new InstalledDependencyVersionCheck();
+    await check.runAsync({ projectRoot: '/path/to/project', ...additionalProjectProps });
+    expect(mockSpawnAsync.mock.calls[0][0]).toBe('sh');
+  });
+
+  it('when running on Windows, uses powershell to call npx expo start', async () => {
+    asMock(isWindowsShell).mockReturnValueOnce(true);
+    const mockSpawnAsync = asMock(spawnAsync).mockResolvedValueOnce({
+      stdout: '',
+    } as any);
+    const check = new InstalledDependencyVersionCheck();
+    await check.runAsync({ projectRoot: '/path/to/project', ...additionalProjectProps });
+    expect(mockSpawnAsync.mock.calls[0][0]).toBe('powershell');
   });
 
   it('calls npx expo install --check', async () => {
