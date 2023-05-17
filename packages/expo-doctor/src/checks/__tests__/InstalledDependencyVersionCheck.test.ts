@@ -25,14 +25,16 @@ describe('runAsync', () => {
     expect(result.isSuccessful).toBeTruthy();
   });
 
-  it('calls npx expo install --check', async () => {
+  // CI=1 is required to prevent interactive prompt asking to fix the dependencies
+  it('calls npx expo install --check with CI=1 env variable', async () => {
     const mockSpawnAsync = asMock(spawnAsync).mockResolvedValueOnce({
       stdout: '',
     } as any);
     const check = new InstalledDependencyVersionCheck();
     await check.runAsync({ projectRoot: '/path/to/project', ...additionalProjectProps });
-    expect(mockSpawnAsync.mock.calls[0][0]).toBe('sh');
-    expect(mockSpawnAsync.mock.calls[0][1]).toEqual(['-c', 'echo "n" | npx expo install --check']);
+    expect(mockSpawnAsync.mock.calls[0][0]).toBe('npx');
+    expect(mockSpawnAsync.mock.calls[0][1]).toEqual(['expo', 'install', '--check']);
+    expect(mockSpawnAsync.mock.calls[0][2]).toMatchObject({ env: { CI: '1' } });
   });
 
   it('returns result with isSuccessful = false if check fails', async () => {

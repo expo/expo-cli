@@ -18,9 +18,10 @@ export class InstalledDependencyVersionCheck implements DoctorCheck {
     try {
       // only way to check dependencies without automatically fixing them is to use interactive prompt
       // In the future, we should add JSON output to npx expo install, check for support, and use that instead
-      await spawnAsync('sh', ['-c', 'echo "n" | npx expo install --check'], {
+      await spawnAsync('npx', ['expo', 'install', '--check'], {
         stdio: 'pipe',
         cwd: projectRoot,
+        env: { ...process.env, CI: '1' },
       });
     } catch (error: any) {
       if (isSpawnResult(error)) {
