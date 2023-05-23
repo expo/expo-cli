@@ -62,7 +62,6 @@ export class GlobalPrereqsVersionCheck implements DoctorCheck {
       isSuccessful: issues.length === 0,
       issues,
       // advice currently tightly coupled with issues in code copied from doctor
-      advice: [],
     };
   }
 }

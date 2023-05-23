@@ -9,61 +9,74 @@ import { IllegalPackageCheck } from './checks/IllegalPackageCheck';
 import { InstalledDependencyVersionCheck } from './checks/InstalledDependencyVersionCheck';
 import { PackageJsonCheck } from './checks/PackageJsonCheck';
 import { SupportPackageVersionCheck } from './checks/SupportPackageVersionCheck';
-import { DoctorCheck, DoctorCheckParams } from './checks/checks.types';
+import { DoctorCheck, DoctorCheckParams, DoctorCheckResult } from './checks/checks.types';
+import { env } from './utils/env';
+import { isInteractive } from './utils/interactive';
 import { Log } from './utils/log';
 import { logNewSection } from './utils/ora';
+import { endTimer, formatMilliseconds, startTimer } from './utils/timer';
 import { ltSdkVersion } from './utils/versions';
 import { warnUponCmdExe } from './warnings/windows';
+
+interface DoctorCheckRunnerJob {
+  check: DoctorCheck;
+  result?: DoctorCheckResult;
+}
+
+/**
+ * Return ORA for interactive prompt.
+ * Print a simple log for non-interactive prompt and return a mock with a no-op stop function
+ * to avoid ORA console clutter in EAS build logs and other non-interactive environments.
+ */
+function startSpinner(text: string): { stop(): void } {
+  if (isInteractive()) {
+    return logNewSection(text);
+  }
+  Log.log(text);
+  return {
+    stop() {},
+  };
+}
+
+export async function printFailedCheckIssueAndAdvice(checkRunnerJob: DoctorCheckRunnerJob) {
+  const result = checkRunnerJob.result;
+
+  // if the check was successful, don't print anything
+  // if result is null, it failed due to an unexpected error (e.g., network failure, and the error should have already appeared)
+  if (!result || result.isSuccessful) {
+    return;
+  }
+
+  if (result.issues.length) {
+    for (const issue of result.issues) {
+      Log.warn(chalk.yellow(`${issue}`));
+    }
+    if (result.advice) {
+      Log.log(chalk.green(`Advice: ${result.advice}`));
+    }
+    Log.log();
+  }
+}
 
 export async function runCheckAsync(
   check: DoctorCheck,
   checkParams: DoctorCheckParams
-): Promise<boolean> {
-  // bail if check isn't relevant for SDK version
-  if (
-    checkParams.exp.sdkVersion !== 'UNVERSIONED' &&
-    !semver.satisfies(checkParams.exp.sdkVersion!, check.sdkVersionRange)
-  ) {
-    return true;
-  }
-
-  const ora = logNewSection(`${check.description}...`);
+): Promise<DoctorCheckResult> {
   let result;
   try {
     result = await check.runAsync(checkParams);
   } catch (e: any) {
-    ora.fail(`${check.description} failed`);
+    Log.log(`${chalk.red('✖')} ${check.description} failed`);
     if (e.code === 'ENOTFOUND') {
-      Log.warn(
+      throw new Error(
         `Error: this check requires a connection to the Expo API. Please check your network connection.`
       );
     } else {
-      Log.exception(e);
+      throw e;
     }
-    return false;
   }
-  if (result.isSuccessful) {
-    ora.succeed(`${check.description} passed`);
-    return true;
-  }
-  ora.fail(`${check.description} failed`);
-  if (result.issues.length) {
-    Log.log(chalk.underline.yellow(`Issues:`));
-    Log.group();
-    for (const issue of result.issues) {
-      Log.warn(chalk.yellow(`${issue}`));
-    }
-    Log.groupEnd();
-  }
-  if (result.advice.length) {
-    Log.log(chalk.underline(chalk.green(`Advice:`)));
-    Log.group();
-    for (const advice of result.advice) {
-      Log.log(chalk.green(`• ${advice}`));
-    }
-    Log.groupEnd();
-  }
-  return false;
+
+  return result;
 }
 
 export async function actionAsync(projectRoot: string) {
@@ -95,23 +108,44 @@ export async function actionAsync(projectRoot: string) {
     new PackageJsonCheck(),
   ];
 
-  let hasIssues = false;
-
   const checkParams = { exp, pkg, projectRoot };
 
-  for (const check of checks) {
-    if (!(await runCheckAsync(check, checkParams))) {
-      hasIssues = true;
-    }
-  }
+  const filteredChecks = checks.filter(
+    check =>
+      checkParams.exp.sdkVersion === 'UNVERSIONED' ||
+      semver.satisfies(checkParams.exp.sdkVersion!, check.sdkVersionRange)
+  );
 
-  if (hasIssues) {
+  const spinner = startSpinner(`Running ${filteredChecks.length} checks on your project...`);
+
+  const jobs = await Promise.all(
+    filteredChecks.map(check =>
+      (async function () {
+        const job = { check } as DoctorCheckRunnerJob;
+        try {
+          startTimer(check.description);
+          job.result = await runCheckAsync(check, checkParams);
+          const duration = endTimer(check.description);
+          Log.log(
+            `${job.result.isSuccessful ? chalk.green('✔') : chalk.red('✖')} ${check.description}` +
+              (env.EXPO_DEBUG ? ` (${formatMilliseconds(duration)})` : '')
+          );
+        } catch (e: any) {
+          Log.error(`Unexpected error while running '${check.description}' check:`);
+          Log.exception(e);
+        }
+        return job;
+      })()
+    )
+  );
+
+  spinner.stop();
+
+  if (jobs.some(job => !job.result?.isSuccessful)) {
     Log.log();
-    Log.exit(
-      chalk.red(
-        `✖ Found one or more possible issues with the project. See above logs for issues and advice to resolve.`
-      )
-    );
+    Log.error(chalk.red(`✖ Found one or more possible issues with the project:`));
+    jobs.forEach(job => printFailedCheckIssueAndAdvice(job));
+    Log.exit('');
   } else {
     Log.log();
     Log.log(chalk.green(`Didn't find any issues with the project!`));

@@ -8,7 +8,6 @@ export class SupportPackageVersionCheck implements DoctorCheck {
   sdkVersionRange = '>=45.0.0';
 
   async runAsync({ exp, projectRoot }: DoctorCheckParams): Promise<DoctorCheckResult> {
-    const advice: string[] = [];
     const issues: string[] = [];
 
     const versionsForSdk = await getRemoteVersionsForSdkAsync(exp.sdkVersion);
@@ -33,14 +32,12 @@ export class SupportPackageVersionCheck implements DoctorCheck {
       }
     });
 
-    if (issues.length) {
-      advice.push(`Upgrade dependencies that are using the invalid package versions.`);
-    }
-
     return {
       isSuccessful: issues.length === 0,
       issues,
-      advice,
+      advice: issues.length
+        ? 'Upgrade dependencies that are using the invalid package versions.'
+        : undefined,
     };
   }
 }

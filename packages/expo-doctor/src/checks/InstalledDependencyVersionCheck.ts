@@ -13,7 +13,6 @@ export class InstalledDependencyVersionCheck implements DoctorCheck {
 
   async runAsync({ projectRoot }: DoctorCheckParams): Promise<DoctorCheckResult> {
     const issues: string[] = [];
-    const advice: string[] = [];
 
     try {
       // only way to check dependencies without automatically fixing them is to use interactive prompt
@@ -26,7 +25,6 @@ export class InstalledDependencyVersionCheck implements DoctorCheck {
     } catch (error: any) {
       if (isSpawnResult(error)) {
         issues.push(error.stderr.trim());
-        advice.push(`Use npx expo install --check to review and upgrade your dependencies.`);
       } else {
         throw error;
       }
@@ -35,7 +33,9 @@ export class InstalledDependencyVersionCheck implements DoctorCheck {
     return {
       isSuccessful: issues.length === 0,
       issues,
-      advice,
+      advice: issues.length
+        ? `Use npx expo install --check to review and upgrade your dependencies.`
+        : undefined,
     };
   }
 }

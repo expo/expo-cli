@@ -34,8 +34,6 @@ export class ExpoConfigSchemaCheck implements DoctorCheck {
     return {
       isSuccessful: issues.length === 0,
       issues,
-      // kind of redundant with issues, but maybe we could plug the VSCode extension here?
-      advice: [],
     };
   }
 }

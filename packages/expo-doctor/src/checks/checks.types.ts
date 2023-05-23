@@ -12,8 +12,8 @@ export interface DoctorCheckResult {
   isSuccessful: boolean;
   /** many checks currently output their own issues, no need to duplicate */
   issues: string[];
-  // should include at least one bit of actionable advice to fix the issue(s)
-  advice: string[];
+  // Optional: a string with a suggestion to resolve the issue, which will be appended to the issue
+  advice?: string;
 }
 
 export interface DoctorCheckParams {
