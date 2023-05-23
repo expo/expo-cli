@@ -18,9 +18,13 @@ import { endTimer, formatMilliseconds, startTimer } from './utils/timer';
 import { ltSdkVersion } from './utils/versions';
 import { warnUponCmdExe } from './warnings/windows';
 
+type CheckError = Error & { code?: string };
+
 interface DoctorCheckRunnerJob {
   check: DoctorCheck;
-  result?: DoctorCheckResult;
+  result: DoctorCheckResult;
+  duration: number;
+  error?: CheckError;
 }
 
 /**
@@ -58,25 +62,28 @@ export async function printFailedCheckIssueAndAdvice(checkRunnerJob: DoctorCheck
   }
 }
 
-export async function runCheckAsync(
-  check: DoctorCheck,
-  checkParams: DoctorCheckParams
-): Promise<DoctorCheckResult> {
-  let result;
-  try {
-    result = await check.runAsync(checkParams);
-  } catch (e: any) {
-    Log.log(`${chalk.red('✖')} ${check.description} failed`);
-    if (e.code === 'ENOTFOUND') {
-      throw new Error(
-        `Error: this check requires a connection to the Expo API. Please check your network connection.`
-      );
-    } else {
-      throw e;
-    }
-  }
-
-  return result;
+export async function runChecksAsync(
+  checks: DoctorCheck[],
+  checkParams: DoctorCheckParams,
+  onCheckComplete: (checkRunnerJob: DoctorCheckRunnerJob) => void
+): Promise<DoctorCheckRunnerJob[]> {
+  return await Promise.all(
+    checks.map(check =>
+      (async function () {
+        const job = { check } as DoctorCheckRunnerJob;
+        try {
+          startTimer(check.description);
+          job.result = await check.runAsync(checkParams);
+          job.duration = endTimer(check.description);
+        } catch (e: any) {
+          job.error = e;
+          job.result = { isSuccessful: false } as DoctorCheckResult;
+        }
+        onCheckComplete(job);
+        return job;
+      })()
+    )
+  );
 }
 
 export async function actionAsync(projectRoot: string) {
@@ -118,34 +125,36 @@ export async function actionAsync(projectRoot: string) {
 
   const spinner = startSpinner(`Running ${filteredChecks.length} checks on your project...`);
 
-  const jobs = await Promise.all(
-    filteredChecks.map(check =>
-      (async function () {
-        const job = { check } as DoctorCheckRunnerJob;
-        try {
-          startTimer(check.description);
-          job.result = await runCheckAsync(check, checkParams);
-          const duration = endTimer(check.description);
-          Log.log(
-            `${job.result.isSuccessful ? chalk.green('✔') : chalk.red('✖')} ${check.description}` +
-              (env.EXPO_DEBUG ? ` (${formatMilliseconds(duration)})` : '')
-          );
-        } catch (e: any) {
-          Log.error(`Unexpected error while running '${check.description}' check:`);
-          Log.exception(e);
-        }
-        return job;
-      })()
-    )
-  );
+  const jobs = await runChecksAsync(filteredChecks, checkParams, job => {
+    // These will log in order of completion, so they may change from run to run,
+    // but outputting these just in time will make the EAS Build log timestamps for each line representative of the execution time.
+    Log.log(
+      `${job.result?.isSuccessful ? chalk.green('✔') : chalk.red('✖')} ${job.check.description}` +
+        (env.EXPO_DEBUG ? ` (${formatMilliseconds(job.duration)})` : '')
+    );
+    // print unexpected errors inline with check completion
+    if (job.error) {
+      Log.error(`Unexpected error while running '${job.check.description}' check:`);
+      Log.exception(job.error!);
+      if (job.error?.code === 'ENOTFOUND') {
+        Log.error(
+          'This check requires a connection to the Expo API. Please check your network connection.'
+        );
+      }
+    }
+  });
 
   spinner.stop();
 
-  if (jobs.some(job => !job.result?.isSuccessful)) {
-    Log.log();
-    Log.error(chalk.red(`✖ Found one or more possible issues with the project:`));
-    jobs.forEach(job => printFailedCheckIssueAndAdvice(job));
-    Log.exit('');
+  if (jobs.some(job => !job.result.isSuccessful)) {
+    if (jobs.some(job => job.result.issues.length)) {
+      Log.log();
+      Log.log(chalk.underline('Detailed check results:'));
+      Log.log();
+      // actual issues will output in order of the sequence of tests, due to rules of Promise.all()
+      jobs.forEach(job => printFailedCheckIssueAndAdvice(job));
+    }
+    Log.exit(chalk.red('One or more checks failed, indicating possible issues with the project.'));
   } else {
     Log.log();
     Log.log(chalk.green(`Didn't find any issues with the project!`));
