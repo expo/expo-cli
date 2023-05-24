@@ -49,8 +49,8 @@ async function runAsync(): Promise<void> {
       if (isManaged) {
         info(
           chalk.yellow(
-            `In a managed project, 'pod-install' will run automatically as part of the EAS Build process.
-             ${learnMore('https://docs.expo.dev/build-reference/ios-builds/')}`
+            `No 'ios' directory found, skipping installing pods. Pods will be automatically installed when the 'ios' directory is generated with 'expo prebuild'.`
+             ${learnMore('https://docs.expo.dev/workflow/prebuild/')}`
           )
         );
         return;
