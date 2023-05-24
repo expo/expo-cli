@@ -41,7 +41,6 @@
   },
   "dependencies": {
     "@babel/core": "^7.20.2",
-    "@expo/config": "^8.0.2",
     "babel-loader": "^8.3.0",
     "chalk": "^4.0.0",
     "clean-webpack-plugin": "^4.0.0",
@@ -63,6 +62,9 @@
     "webpack": "^5.64.4",
     "webpack-dev-server": "^4.11.1",
     "webpack-manifest-plugin": "^4.1.1"
+  },
+  "peerDependencies": {
+    "@expo/config": "^8.0.2"
   },
   "devDependencies": {
     "@types/copy-webpack-plugin": "^10.1.0",
