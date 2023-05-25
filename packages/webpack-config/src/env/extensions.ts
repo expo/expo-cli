@@ -1,10 +1,4 @@
-// Forked from https://github.com/expo/expo/blob/ae642c8a5e02103d1edbf41d1550759001d0f414/packages/%40expo/config/src/paths/extensions.ts#L1
 import assert from 'assert';
-
-type LanguageOptions = {
-  isTS: boolean;
-  isReact: boolean;
-};
 
 /**
  * Get the platform specific platform extensions in the format that Webpack expects (with a dot prefix).
@@ -18,7 +12,21 @@ export function getModuleFileExtensions(...platforms: string[]): string[] {
   return getBareExtensions(platforms).map(value => `.${value}`);
 }
 
-function getExtensions(platforms: string[], extensions: string[]): string[] {
+export function getNativeModuleFileExtensions(...platforms: string[]): string[] {
+  // Webpack requires a `.` before each value
+  // Disable modern when using `react-native`
+  return getBareExtensions(platforms, { isReact: true, isTS: true, isModern: false }).map(
+    value => `.${value}`
+  );
+}
+
+export type LanguageOptions = {
+  isTS: boolean;
+  isModern: boolean;
+  isReact: boolean;
+};
+
+export function getExtensions(platforms: string[], extensions: string[]): string[] {
   // In the past we used spread operators to collect the values so now we enforce type safety on them.
   assert(Array.isArray(platforms), 'Expected: `platforms: string[]`');
   assert(Array.isArray(extensions), 'Expected: `extensions: string[]`');
@@ -32,17 +40,23 @@ function getExtensions(platforms: string[], extensions: string[]): string[] {
       fileExtensions.push([platform, extension].filter(Boolean).join('.'));
     }
   }
-
   return fileExtensions;
 }
 
-function getLanguageExtensionsInOrder({ isTS, isReact }: LanguageOptions): string[] {
+export function getLanguageExtensionsInOrder({
+  isTS,
+  isModern,
+  isReact,
+}: LanguageOptions): string[] {
   // @ts-ignore: filter removes false type
   const addLanguage = (lang: string): string[] => [lang, isReact && `${lang}x`].filter(Boolean);
 
   // Support JavaScript
   let extensions = addLanguage('js');
 
+  if (isModern) {
+    extensions.unshift('mjs');
+  }
   if (isTS) {
     extensions = [...addLanguage('ts'), ...extensions];
   }
@@ -52,7 +66,7 @@ function getLanguageExtensionsInOrder({ isTS, isReact }: LanguageOptions): strin
 
 export function getBareExtensions(
   platforms: string[],
-  languageOptions: LanguageOptions = { isTS: true, isReact: true }
+  languageOptions: LanguageOptions = { isTS: true, isModern: true, isReact: true }
 ): string[] {
   const fileExtensions = getExtensions(platforms, getLanguageExtensionsInOrder(languageOptions));
   // Always add these last

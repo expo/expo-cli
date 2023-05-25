@@ -75,11 +75,11 @@
     "@types/terser-webpack-plugin": "^5.2.0",
     "@types/webpack-dev-server": "^4.7.2",
     "@types/webpack-manifest-plugin": "^3.0.5",
+    "expo": "^48.0.17",
     "jest-puppeteer": "^4.4.0",
     "metro": "~0.64.0",
     "react-native": "~0.64.3",
     "resize-observer-polyfill": "^1.5.1",
-    "expo": "^48.0.17",
     "serve": "^11.1.0"
   },
   "browserslist": {
