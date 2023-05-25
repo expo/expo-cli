@@ -64,7 +64,7 @@
     "webpack-manifest-plugin": "^4.1.1"
   },
   "peerDependencies": {
-    "@expo/config": "^8.0.2"
+    "expo": "^48.0.17"
   },
   "devDependencies": {
     "@types/copy-webpack-plugin": "^10.1.0",
