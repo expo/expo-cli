@@ -79,6 +79,7 @@
     "metro": "~0.64.0",
     "react-native": "~0.64.3",
     "resize-observer-polyfill": "^1.5.1",
+    "expo": "^48.0.17",
     "serve": "^11.1.0"
   },
   "browserslist": {
