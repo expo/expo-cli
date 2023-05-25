@@ -6,7 +6,8 @@
     "rootDir": "src",
     "declaration": false,
     "composite": false,
-    "module": "es2020"
+    "module": "es2020",
+    "allowSyntheticDefaultImports": true
   },
   "exclude": ["**/__mocks__/*", "**/__tests__/*"]
 }
