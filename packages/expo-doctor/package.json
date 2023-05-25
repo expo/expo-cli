@@ -1,7 +1,7 @@
 {
   "name": "expo-doctor",
-  "version": "1.0.6",
   "main": "build/index.js",
+  "version": "1.0.7",
   "keywords": [
     "expo",
     "ios",
