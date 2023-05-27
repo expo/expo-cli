@@ -41,6 +41,6 @@ describe('runAsync', () => {
       projectRoot: '/path/to/project',
       ...additionalProjectProps,
     });
-    expect(result.advice).toEqual(['Remove expo-cli from your project dependencies.']);
+    expect(result.advice).toEqual('Remove expo-cli from your project dependencies.');
   });
 });

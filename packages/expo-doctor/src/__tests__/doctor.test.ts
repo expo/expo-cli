@@ -1,6 +1,10 @@
 import { asMock } from '../__tests__/asMock';
 import { DoctorCheck } from '../checks/checks.types';
-import { runCheckAsync } from '../doctor';
+import {
+  printCheckResultSummaryOnComplete,
+  printFailedCheckIssueAndAdvice,
+  runChecksAsync,
+} from '../doctor';
 import { Log } from '../utils/log';
 
 jest.mock(`../utils/log`);
@@ -25,78 +29,176 @@ const additionalProjectProps = {
 class MockSuccessfulCheck implements DoctorCheck {
   description = 'Mock successful check';
   sdkVersionRange = '*';
-  runAsync = jest.fn(() => Promise.resolve({ isSuccessful: true, issues: [], advice: [] }));
-}
-
-class MockFailedCheckWithSdkFilter implements DoctorCheck {
-  description = 'Mock failed check with SDK filter';
-  sdkVersionRange = '>=47.0.0';
-  runAsync = jest.fn(() =>
-    Promise.resolve({ isSuccessful: false, issues: ['issue'], advice: ['advice'] })
-  );
+  runAsync = jest.fn(() => Promise.resolve({ isSuccessful: true, issues: [], advice: '' }));
 }
 
 class MockFailedCheck implements DoctorCheck {
   description = 'Mock failed check';
   sdkVersionRange = '*';
   runAsync = jest.fn(() =>
-    Promise.resolve({ isSuccessful: false, issues: ['issue'], advice: ['advice'] })
+    Promise.resolve({ isSuccessful: false, issues: ['issue'], advice: 'advice' })
   );
 }
 
-describe(runCheckAsync, () => {
-  it(`returns true if check passes`, async () => {
-    const result = await runCheckAsync(new MockSuccessfulCheck(), {
+class MockUnexpectedThrowCheck implements DoctorCheck {
+  description = 'Mock failed check';
+  sdkVersionRange = '*';
+  runAsync = jest.fn(() => Promise.reject(new Error('Unexpected error thrown from check.')));
+}
+
+describe(runChecksAsync, () => {
+  it(`returns a DoctorCheckRunnerJob for each check`, async () => {
+    const mockOnComplete = jest.fn();
+    const result = await runChecksAsync(
+      [new MockSuccessfulCheck(), new MockFailedCheck()],
+      {
+        projectRoot: '',
+        ...additionalProjectProps,
+      },
+      mockOnComplete
+    );
+    expect(result.length).toBe(2);
+  });
+
+  it(`calls runAsync on each check with check params`, async () => {
+    const mockOnComplete = jest.fn();
+    const mockCheck = new MockSuccessfulCheck();
+    await runChecksAsync(
+      [mockCheck],
+      {
+        projectRoot: '',
+        ...additionalProjectProps,
+      },
+      mockOnComplete
+    );
+    expect((mockCheck.runAsync.mock.calls as [any])[0][0]).toMatchObject({
       projectRoot: '',
       ...additionalProjectProps,
     });
-    expect(result).toBeTruthy();
   });
 
-  it(`returns false if check fails`, async () => {
-    const result = await runCheckAsync(new MockFailedCheck(), {
-      projectRoot: '',
-      ...additionalProjectProps,
+  it(`calls onComplete with result.isSuccessful = true when a check is successful`, async () => {
+    const mockOnComplete = jest.fn();
+    await runChecksAsync(
+      [new MockSuccessfulCheck()],
+      {
+        projectRoot: '',
+        ...additionalProjectProps,
+      },
+      mockOnComplete
+    );
+    expect(mockOnComplete.mock.calls[0][0]).toMatchObject({
+      result: { isSuccessful: true },
     });
-    expect(result).toBeFalsy();
   });
 
-  it(`shows issues check fails`, async () => {
+  it(`calls onComplete with result.isSuccessful = false when a check is not successful`, async () => {
+    const mockOnComplete = jest.fn();
+    await runChecksAsync(
+      [new MockFailedCheck()],
+      {
+        projectRoot: '',
+        ...additionalProjectProps,
+      },
+      mockOnComplete
+    );
+    expect(mockOnComplete.mock.calls[0][0]).toMatchObject({
+      result: { isSuccessful: false },
+    });
+  });
+
+  it(`calls onComplete with result.isSuccessful = false and an error when a check throws unexpectedly`, async () => {
+    const mockOnComplete = jest.fn();
+    await runChecksAsync(
+      [new MockUnexpectedThrowCheck()],
+      {
+        projectRoot: '',
+        ...additionalProjectProps,
+      },
+      mockOnComplete
+    );
+    expect(mockOnComplete.mock.calls[0][0]).toMatchObject({
+      result: { isSuccessful: false },
+      error: expect.any(Error),
+    });
+  });
+});
+
+describe(printCheckResultSummaryOnComplete, () => {
+  it(`Prints test description with checkmark if test is successful`, () => {
     asMock(Log.log).mockReset();
-    await runCheckAsync(new MockFailedCheck(), {
-      projectRoot: '',
-      ...additionalProjectProps,
+    printCheckResultSummaryOnComplete({
+      result: { isSuccessful: true, issues: [], advice: '' },
+      check: new MockSuccessfulCheck(),
+      duration: 0,
     });
-    expect(asMock(Log.log).mock.calls[0][0]).toContain('Issues:');
+    expect(asMock(Log.log)).toHaveBeenCalledWith('✔ Mock successful check');
   });
 
-  describe('when sdkVersion does not match version range for test', () => {
-    it(`returns true, even for failed test`, async () => {
-      const result = await runCheckAsync(new MockFailedCheckWithSdkFilter(), {
-        projectRoot: '',
-        ...additionalProjectProps,
-      });
-      expect(result).toBeTruthy();
+  it(`Prints test description with x if test is not successful`, () => {
+    asMock(Log.log).mockReset();
+    printCheckResultSummaryOnComplete({
+      result: { isSuccessful: false, issues: [], advice: '' },
+      check: new MockFailedCheck(),
+      duration: 0,
     });
+    expect(asMock(Log.log)).toHaveBeenCalledWith('✖ Mock failed check');
+  });
 
-    it(`does not run the test`, async () => {
-      const check = new MockFailedCheckWithSdkFilter();
-      await runCheckAsync(check, {
-        projectRoot: '',
-        ...additionalProjectProps,
-      });
-      expect(check.runAsync).not.toHaveBeenCalled();
+  it(`Prints error if check throws an unexpected error`, () => {
+    asMock(Log.error).mockReset();
+    asMock(Log.exception).mockReset();
+    printCheckResultSummaryOnComplete({
+      result: { isSuccessful: false, issues: [], advice: '' },
+      check: new MockFailedCheck(),
+      duration: 0,
+      error: new Error('Some error'),
     });
+    expect(asMock(Log.error).mock.calls[0][0]).toContain('Unexpected error while running');
+    expect(asMock(Log.exception).mock.calls[0][0].message).toContain('Some error');
+  });
+});
 
-    // we should probably acknowledge a test has been skipped, but we can consider this more once
-    // we have actual tests that will be skipped
-    it(`does not log to the console`, async () => {
-      asMock(Log.log).mockReset();
-      await runCheckAsync(new MockFailedCheckWithSdkFilter(), {
-        projectRoot: '',
-        ...additionalProjectProps,
-      });
-      expect(asMock(Log.log)).not.toHaveBeenCalled();
+describe(printFailedCheckIssueAndAdvice, () => {
+  it(`Does not print when check is successful`, () => {
+    asMock(Log.log).mockReset();
+    printFailedCheckIssueAndAdvice({
+      result: { isSuccessful: true, issues: [], advice: '' },
+      check: new MockSuccessfulCheck(),
+      duration: 0,
     });
+    expect(asMock(Log.log)).not.toHaveBeenCalled();
+  });
+
+  // these errors print in-line so they're easier to associate with the origianl check
+  it(`Does not print when check throws an error`, () => {
+    asMock(Log.log).mockReset();
+    printFailedCheckIssueAndAdvice({
+      result: { isSuccessful: false, issues: [], advice: '' },
+      check: new MockUnexpectedThrowCheck(),
+      error: new Error('Some error'),
+      duration: 0,
+    });
+    expect(asMock(Log.log)).not.toHaveBeenCalled();
+  });
+
+  it(`Prints issues when check fails`, () => {
+    asMock(Log.warn).mockReset();
+    printFailedCheckIssueAndAdvice({
+      result: { isSuccessful: false, issues: ['issue1', 'issue2'], advice: '' },
+      check: new MockFailedCheck(),
+      duration: 0,
+    });
+    expect(asMock(Log.warn).mock.calls[0][0]).toContain('issue1');
+    expect(asMock(Log.warn).mock.calls[1][0]).toContain('issue2');
+  });
+  it(`Prints advice when check fails if available`, () => {
+    asMock(Log.log).mockReset();
+    printFailedCheckIssueAndAdvice({
+      result: { isSuccessful: false, issues: ['issue1'], advice: 'advice' },
+      check: new MockFailedCheck(),
+      duration: 0,
+    });
+    expect(asMock(Log.log).mock.calls[0][0]).toContain('advice');
   });
 });

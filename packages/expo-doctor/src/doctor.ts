@@ -42,8 +42,27 @@ function startSpinner(text: string): { stop(): void } {
   };
 }
 
-export async function printFailedCheckIssueAndAdvice(checkRunnerJob: DoctorCheckRunnerJob) {
-  const result = checkRunnerJob.result;
+export async function printCheckResultSummaryOnComplete(job: DoctorCheckRunnerJob) {
+  // These will log in order of completion, so they may change from run to run,
+  // but outputting these just in time will make the EAS Build log timestamps for each line representative of the execution time.
+  Log.log(
+    `${job.result?.isSuccessful ? chalk.green('✔') : chalk.red('✖')} ${job.check.description}` +
+      (env.EXPO_DEBUG ? ` (${formatMilliseconds(job.duration)})` : '')
+  );
+  // print unexpected errors inline with check completion
+  if (job.error) {
+    Log.error(`Unexpected error while running '${job.check.description}' check:`);
+    Log.exception(job.error!);
+    if (job.error?.code === 'ENOTFOUND') {
+      Log.error(
+        'This check requires a connection to the Expo API. Please check your network connection.'
+      );
+    }
+  }
+}
+
+export async function printFailedCheckIssueAndAdvice(job: DoctorCheckRunnerJob) {
+  const result = job.result;
 
   // if the check was successful, don't print anything
   // if result is null, it failed due to an unexpected error (e.g., network failure, and the error should have already appeared)
@@ -62,6 +81,13 @@ export async function printFailedCheckIssueAndAdvice(checkRunnerJob: DoctorCheck
   }
 }
 
+/**
+ * Run all commands in parallel. Make a callback as each one finishes.
+ * @param checks list of checks to run (do any filtering beforehand)
+ * @param checkParams parameters to be passed to each check
+ * @param onCheckComplete callback to be called when each check finishes
+ * @returns check with its associated results or exception if it failed unexpectedly
+ */
 export async function runChecksAsync(
   checks: DoctorCheck[],
   checkParams: DoctorCheckParams,
@@ -125,24 +151,7 @@ export async function actionAsync(projectRoot: string) {
 
   const spinner = startSpinner(`Running ${filteredChecks.length} checks on your project...`);
 
-  const jobs = await runChecksAsync(filteredChecks, checkParams, job => {
-    // These will log in order of completion, so they may change from run to run,
-    // but outputting these just in time will make the EAS Build log timestamps for each line representative of the execution time.
-    Log.log(
-      `${job.result?.isSuccessful ? chalk.green('✔') : chalk.red('✖')} ${job.check.description}` +
-        (env.EXPO_DEBUG ? ` (${formatMilliseconds(job.duration)})` : '')
-    );
-    // print unexpected errors inline with check completion
-    if (job.error) {
-      Log.error(`Unexpected error while running '${job.check.description}' check:`);
-      Log.exception(job.error!);
-      if (job.error?.code === 'ENOTFOUND') {
-        Log.error(
-          'This check requires a connection to the Expo API. Please check your network connection.'
-        );
-      }
-    }
-  });
+  const jobs = await runChecksAsync(filteredChecks, checkParams, printCheckResultSummaryOnComplete);
 
   spinner.stop();
 
