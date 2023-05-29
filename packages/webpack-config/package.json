@@ -41,7 +41,7 @@
   },
   "dependencies": {
     "@babel/core": "^7.20.2",
-    "@expo/config": "6.0.20",
+    "@expo/config": "^8.0.2",
     "babel-loader": "^8.3.0",
     "chalk": "^4.0.0",
     "clean-webpack-plugin": "^4.0.0",
