@@ -1,4 +1,4 @@
-const { getBareExtensions } = require('@expo/config/paths');
+const { getBareExtensions } = require('./webpack/env/extensions');
 
 module.exports = function getWebExtensions() {
   return getBareExtensions(['web']);

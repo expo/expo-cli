@@ -1,6 +1,6 @@
 {
   "name": "expo-pwa",
-  "version": "0.0.124",
+  "version": "0.0.125",
   "main": "build",
   "preferGlobal": true,
   "keywords": [
@@ -36,9 +36,6 @@
     "chalk": "^4.0.0",
     "commander": "2.20.0",
     "update-check": "1.5.3"
-  },
-  "devDependencies": {
-    "@expo/config": "6.0.24"
   },
   "peerDependencies": {
     "expo": "*"

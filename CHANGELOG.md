@@ -10,6 +10,30 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🧹 Chores
 
+## [Tue, 30 May 2023 13:01:03 -0500](https://github.com/expo/expo-cli/commit/23cc30b081aabefc2b0d8f7139c001fd286322d8)
+
+### 🛠 Breaking changes
+
+### 🎉 New features
+
+- [doctor] Move dependencies to devDependencies ([#4709](https://github.com/expo/expo-cli/issues/4709))
+- Make `@expo/webpack-config` depend on `expo` ([#4703](https://github.com/expo/expo-cli/issues/4703))
+
+### 🧹 Chores
+
+### 🐛 Bug fixes
+
+- [doctor] remove sh command from dep check for Windows compat ([#4706](https://github.com/expo/expo-cli/issues/4706))
+
+### 📦 Packages updated
+
+- @expo/dev-tools@0.13.184
+- expo-cli@6.3.8
+- expo-doctor@1.1.0
+- expo-pwa@0.0.125
+- @expo/webpack-config@18.1.0
+- xdl@60.0.9
+
 ## [Thu, 27 Apr 2023 13:46:02 -0700](https://github.com/expo/expo-cli/commit/80d7d352b476aba692226367a3bb6a8e78bf6294)
 
 ### 🧹 Chores
@@ -19,7 +43,7 @@ This is the log of notable changes to Expo CLI and related packages.
 - [cli] add deprecated commands to helpgroup ([#4696](https://github.com/expo/expo-cli/issues/4696))
 - [cli] replace deprecated commands with superceded ones ([#4693](https://github.com/expo/expo-cli/issues/4693))
 - [cli] advise to use new doctor on SDK 46+ ([#4689](https://github.com/expo/expo-cli/issues/4689))
-- [cli] deprecate publish:* ([#4685](https://github.com/expo/expo-cli/issues/4685))
+- [cli] deprecate publish:\* ([#4685](https://github.com/expo/expo-cli/issues/4685))
 
 ### 🐛 Bug fixes
 

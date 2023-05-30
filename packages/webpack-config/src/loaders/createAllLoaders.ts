@@ -1,4 +1,4 @@
-import { getPossibleProjectRoot } from '@expo/config/paths';
+import fs from 'fs';
 import { boolish } from 'getenv';
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 import { RuleSetRule } from 'webpack';
@@ -77,6 +77,10 @@ export const styleLoaderRule: RuleSetRule = {
   test: /\.(css)$/,
   use: [require.resolve('style-loader'), require.resolve('css-loader')],
 };
+
+function getPossibleProjectRoot(): string {
+  return fs.realpathSync(process.cwd());
+}
 
 /**
  * Create the fallback loader for parsing any unhandled file type.

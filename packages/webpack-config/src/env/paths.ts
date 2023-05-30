@@ -1,13 +1,30 @@
 /* eslint-env node */
-import { ExpoConfig, getConfig, getWebOutputPath } from '@expo/config';
-import { ensureSlash, getEntryPoint, getPossibleProjectRoot } from '@expo/config/paths';
+import { ExpoConfig, getConfig, getPackageJson, getWebOutputPath } from 'expo/config';
 import findWorkspaceRoot from 'find-yarn-workspace-root';
 import fs from 'fs';
 import path from 'path';
+import resolveFrom from 'resolve-from';
 import url from 'url';
 
 import { Environment, FilePaths, InputEnvironment } from '../types';
+import { getBareExtensions } from './extensions';
 import getMode from './getMode';
+
+// https://github.com/facebook/create-react-app/blob/9750738cce89a967cc71f28390daf5d4311b193c/packages/react-scripts/config/paths.js#L22
+function ensureSlash(inputPath: string, needsSlash: boolean): string {
+  const hasSlash = inputPath.endsWith('/');
+  if (hasSlash && !needsSlash) {
+    return inputPath.substr(0, inputPath.length - 1);
+  } else if (!hasSlash && needsSlash) {
+    return `${inputPath}/`;
+  } else {
+    return inputPath;
+  }
+}
+
+function getPossibleProjectRoot(): string {
+  return fs.realpathSync(process.cwd());
+}
 
 /** Wraps `findYarnOrNpmWorkspaceRoot` and guards against having an empty `package.json` file in an upper directory. */
 function findYarnOrNpmWorkspaceRootSafe(projectRoot: string): string | null {
@@ -232,4 +249,97 @@ export function getProductionPath(projectRoot: string): string {
 export function getAbsolute(projectRoot: string, ...pathComponents: string[]): string {
   const inputProjectRoot = projectRoot || getPossibleProjectRoot();
   return getAbsolutePathWithProjectRoot(inputProjectRoot, ...pathComponents);
+}
+
+// Forked from https://github.com/expo/expo/blob/ae642c8a5e02103d1edbf41d1550759001d0f414/packages/%40expo/config/src/paths/paths.ts#L35
+
+function getEntryPoint(
+  projectRoot: string,
+  entryFiles: string[],
+  platforms: string[]
+): string | null {
+  const extensions = getBareExtensions(platforms);
+  return getEntryPointWithExtensions(projectRoot, entryFiles, extensions);
+}
+
+// Used to resolve the main entry file for a project.
+function getEntryPointWithExtensions(
+  projectRoot: string,
+  entryFiles: string[],
+  extensions: string[]
+): string {
+  const pkg = getPackageJson(projectRoot);
+
+  if (pkg) {
+    // If the config doesn't define a custom entry then we want to look at the `package.json`s `main` field, and try again.
+    const { main } = pkg;
+    if (main && typeof main === 'string') {
+      // Testing the main field against all of the provided extensions - for legacy reasons we can't use node module resolution as the package.json allows you to pass in a file without a relative path and expect it as a relative path.
+      let entry = getFileWithExtensions(projectRoot, main, extensions);
+      if (!entry) {
+        // Allow for paths like: `{ "main": "expo/AppEntry" }`
+        entry = resolveFromSilentWithExtensions(projectRoot, main, extensions);
+        if (!entry)
+          throw new Error(
+            `Cannot resolve entry file: The \`main\` field defined in your \`package.json\` points to a non-existent path.`
+          );
+      }
+      return entry;
+    }
+  }
+
+  // Now we will start looking for a default entry point using the provided `entryFiles` argument.
+  // This will add support for create-react-app (src/index.js) and react-native-cli (index.js) which don't define a main.
+  for (const fileName of entryFiles) {
+    const entry = resolveFromSilentWithExtensions(projectRoot, fileName, extensions);
+    if (entry) return entry;
+  }
+
+  try {
+    // If none of the default files exist then we will attempt to use the main Expo entry point.
+    // This requires `expo` to be installed in the project to work as it will use `node_module/expo/AppEntry.js`
+    // Doing this enables us to create a bare minimum Expo project.
+
+    // TODO(Bacon): We may want to do a check against `./App` and `expo` in the `package.json` `dependencies` as we can more accurately ensure that the project is expo-min without needing the modules installed.
+    return resolveFrom(projectRoot, 'expo/AppEntry');
+  } catch {
+    throw new Error(
+      `The project entry file could not be resolved. Please define it in the \`main\` field of the \`package.json\`, create an \`index.js\`, or install the \`expo\` package.`
+    );
+  }
+}
+
+// Resolve from but with the ability to resolve like a bundler
+function resolveFromSilentWithExtensions(
+  fromDirectory: string,
+  moduleId: string,
+  extensions: string[]
+): string | null {
+  for (const extension of extensions) {
+    const modulePath = resolveFrom.silent(fromDirectory, `${moduleId}.${extension}`);
+    if (modulePath && modulePath.endsWith(extension)) {
+      return modulePath;
+    }
+  }
+  return resolveFrom.silent(fromDirectory, moduleId) || null;
+}
+
+// Statically attempt to resolve a module but with the ability to resolve like a bundler.
+// This won't use node module resolution.
+function getFileWithExtensions(
+  fromDirectory: string,
+  moduleId: string,
+  extensions: string[]
+): string | null {
+  const modulePath = path.join(fromDirectory, moduleId);
+  if (fs.existsSync(modulePath)) {
+    return modulePath;
+  }
+  for (const extension of extensions) {
+    const modulePath = path.join(fromDirectory, `${moduleId}.${extension}`);
+    if (fs.existsSync(modulePath)) {
+      return modulePath;
+    }
+  }
+  return null;
 }
