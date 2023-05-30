@@ -37,9 +37,6 @@
     "commander": "2.20.0",
     "update-check": "1.5.3"
   },
-  "devDependencies": {
-    "@expo/config": "6.0.24"
-  },
   "peerDependencies": {
     "expo": "*"
   }

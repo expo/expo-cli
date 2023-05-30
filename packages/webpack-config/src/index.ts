@@ -1,9 +1,13 @@
-import { getPossibleProjectRoot } from '@expo/config/paths';
+import fs from 'fs';
 import { Configuration } from 'webpack';
 
 import { validateEnvironment } from './env';
 import { Arguments, Environment, InputEnvironment } from './types';
 import webpackConfig from './webpack.config';
+
+function getPossibleProjectRoot(): string {
+  return fs.realpathSync(process.cwd());
+}
 
 /**
  * Create the official Webpack config for loading Expo web apps.

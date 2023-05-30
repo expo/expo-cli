@@ -1,5 +1,4 @@
 import { loadPartialConfig } from '@babel/core';
-import { getPossibleProjectRoot } from '@expo/config/paths';
 import chalk from 'chalk';
 import fs from 'fs';
 import { boolish } from 'getenv';
@@ -36,6 +35,10 @@ const excludedRootPaths = [
   // Prevent transpiling webpack generated files.
   '(webpack)',
 ];
+
+function getPossibleProjectRoot(): string {
+  return fs.realpathSync(process.cwd());
+}
 
 const parsedPackageNames: string[] = [];
 // TODO: Bacon: Support internal packages. ex: react/fbjs
