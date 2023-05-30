@@ -1,6 +1,6 @@
 {
   "name": "expo-pwa",
-  "version": "0.0.124",
+  "version": "0.0.125",
   "main": "build",
   "preferGlobal": true,
   "keywords": [
