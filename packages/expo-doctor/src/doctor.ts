@@ -156,7 +156,7 @@ export async function actionAsync(projectRoot: string) {
   spinner.stop();
 
   if (jobs.some(job => !job.result.isSuccessful)) {
-    if (jobs.some(job => job.result.issues.length)) {
+    if (jobs.some(job => job.result.issues?.length)) {
       Log.log();
       Log.log(chalk.underline('Detailed check results:'));
       Log.log();
