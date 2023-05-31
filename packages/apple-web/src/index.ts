@@ -117,6 +117,12 @@ async function setupAppleCredentialsAsync(
       option: CapabilityTypeOption.ON,
     },
   ]);
+  console.log(
+    chalk.dim(
+      'Bundle ID ready: https://developer.apple.com/account/resources/identifiers/bundleId/edit/' +
+        existing.id
+    )
+  );
 
   let app = await App.findAsync(context, { bundleId: existing.attributes.identifier });
 
@@ -127,6 +133,11 @@ async function setupAppleCredentialsAsync(
       name: await promptForAppNameAsync(projectRoot),
     });
   }
+  console.log(
+    chalk.dim(
+      `App entry ready: https://appstoreconnect.apple.com/apps/${existing.id}/appstore/info`
+    )
+  );
 
   return {
     teamId,
