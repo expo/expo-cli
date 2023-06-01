@@ -5,7 +5,7 @@ import { validateWithSchemaAsync } from '../utils/schema';
 import { DoctorCheck, DoctorCheckParams, DoctorCheckResult } from './checks.types';
 
 export class ExpoConfigSchemaCheck implements DoctorCheck {
-  description = 'Validating Expo Config';
+  description = 'Validate Expo Config';
 
   sdkVersionRange = '*';
 

@@ -3,7 +3,7 @@ import { getRemoteVersionsForSdkAsync } from '../utils/getRemoteVersionsForSdkAs
 import { DoctorCheck, DoctorCheckParams, DoctorCheckResult } from './checks.types';
 
 export class SupportPackageVersionCheck implements DoctorCheck {
-  description = 'Verifying prebuild support package versions are compatible';
+  description = 'Verify prebuild support package versions are compatible';
 
   sdkVersionRange = '>=45.0.0';
 

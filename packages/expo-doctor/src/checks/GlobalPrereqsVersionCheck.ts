@@ -43,7 +43,7 @@ async function checkNpmVersionAsync(): Promise<string | null> {
 }
 
 export class GlobalPrereqsVersionCheck implements DoctorCheck {
-  description = 'Validating global prerequisites versions';
+  description = 'Validate global prerequisites versions';
 
   sdkVersionRange = '*';
 

@@ -3,7 +3,7 @@ import { getDeepDependenciesWarningAsync } from '../utils/explainDependencies';
 import { DoctorCheck, DoctorCheckParams, DoctorCheckResult } from './checks.types';
 
 export class IllegalPackageCheck implements DoctorCheck {
-  description = 'Checking for incompatible packages';
+  description = 'Check for incompatible packages';
 
   sdkVersionRange = '>=44.0.0';
 

@@ -2,7 +2,7 @@ import { getDeepDependenciesWarningAsync } from '../utils/explainDependencies';
 import { DoctorCheck, DoctorCheckParams, DoctorCheckResult } from './checks.types';
 
 export class GlobalPackageInstalledCheck implements DoctorCheck {
-  description = 'Checking for conflicting global packages in project';
+  description = 'Check for conflicting global packages in project';
 
   sdkVersionRange = '>=46.0.0';
 

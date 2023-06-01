@@ -8,7 +8,7 @@ function getDirectPackageInstallErrorMessage(pkg: string): string {
 }
 
 export class PackageJsonCheck implements DoctorCheck {
-  description = 'Checking package.json for common issues';
+  description = 'Check package.json for common issues';
 
   sdkVersionRange = '*';
 
