@@ -7,7 +7,7 @@ function isSpawnResult(result: any): result is SpawnResult {
 }
 
 export class InstalledDependencyVersionCheck implements DoctorCheck {
-  description = 'Check dependency versions for compatibility with the installed Expo SDK';
+  description = 'Check compatible dependency versions for the installed Expo SDK';
 
   sdkVersionRange = '>=46.0.0';
 
