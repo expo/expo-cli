@@ -19,7 +19,14 @@ const debug = require('debug')('expo:init:template') as typeof console.log;
 
 const isMacOS = process.platform === 'darwin';
 
-const FORBIDDEN_NAMES = ['react-native', 'react', 'react-dom', 'react-native-web', 'expo'];
+const FORBIDDEN_NAMES = [
+  'react-native',
+  'react',
+  'react-dom',
+  'react-native-web',
+  'expo',
+  'expo-router',
+];
 
 export function isFolderNameForbidden(folderName: string): boolean {
   return FORBIDDEN_NAMES.includes(folderName);
