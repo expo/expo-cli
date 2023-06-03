@@ -65,14 +65,19 @@ function printCredentialSnippets({
   teamId: string;
   bundleId: string;
 }) {
-  console.log(`Here's your apple-app-site-association file:`);
-
+  console.log(
+    chalk.bold`Here's your {underline public/.well-known/apple-app-site-association} file:`
+  );
+  console.log();
   console.log(JSON.stringify(generateAasaJson([{ bundleId, teamId }]), null, 2));
 
   console.log();
   console.log();
 
-  console.log(`Add the following meta tag to the <head> of your website:`);
+  console.log(
+    chalk.bold`Add the following meta tag to the <head> of your website {dim ({underline app/+html.tsx} in Expo Router)}:`
+  );
+  console.log();
   console.log(`<meta name="apple-itunes-app" content="app-id=${appId}" />`);
 }
 

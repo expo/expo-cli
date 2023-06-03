@@ -1,12 +1,12 @@
 {
-  "name": "apple-web",
+  "name": "setup-safari",
   "version": "0.0.0",
   "main": "build",
   "keywords": [
     "expo",
     "web"
   ],
-  "description": "Setup Apple web credentials for Expo projects",
+  "description": "Setup Safari credentials for Expo projects",
   "repository": {
     "type": "git",
     "url": "https://github.com/expo/expo-cli.git"
@@ -15,7 +15,7 @@
   "author": "Expo <support@expo.dev>",
   "license": "MIT",
   "bin": {
-    "apple-web": "./build/index.js"
+    "setup-safari": "./build/index.js"
   },
   "files": [
     "build"
