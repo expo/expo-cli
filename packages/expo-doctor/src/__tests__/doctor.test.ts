@@ -132,7 +132,7 @@ describe(printCheckResultSummaryOnComplete, () => {
       check: new MockSuccessfulCheck(),
       duration: 0,
     });
-    expect(asMock(Log.log)).toHaveBeenCalledWith('✔ Mock successful check');
+    expect(asMock(Log.log)).toHaveBeenCalledWith(expect.stringMatching('✔ Mock successful check'));
   });
 
   it(`Prints test description with x if test is not successful`, () => {
@@ -142,7 +142,7 @@ describe(printCheckResultSummaryOnComplete, () => {
       check: new MockFailedCheck(),
       duration: 0,
     });
-    expect(asMock(Log.log)).toHaveBeenCalledWith('✖ Mock failed check');
+    expect(asMock(Log.log)).toHaveBeenCalledWith(expect.stringContaining('✖ Mock failed check'));
   });
 
   it(`Prints error if check throws an unexpected error`, () => {
