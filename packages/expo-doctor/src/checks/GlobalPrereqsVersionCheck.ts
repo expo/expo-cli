@@ -43,7 +43,7 @@ async function checkNpmVersionAsync(): Promise<string | null> {
 }
 
 export class GlobalPrereqsVersionCheck implements DoctorCheck {
-  description = 'Validating global prerequisites versions';
+  description = 'Validate global prerequisites versions';
 
   sdkVersionRange = '*';
 
@@ -62,7 +62,6 @@ export class GlobalPrereqsVersionCheck implements DoctorCheck {
       isSuccessful: issues.length === 0,
       issues,
       // advice currently tightly coupled with issues in code copied from doctor
-      advice: [],
     };
   }
 }

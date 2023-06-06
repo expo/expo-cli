@@ -7,13 +7,12 @@ function isSpawnResult(result: any): result is SpawnResult {
 }
 
 export class InstalledDependencyVersionCheck implements DoctorCheck {
-  description = 'Checking dependency versions for compatibility with the installed Expo SDK';
+  description = 'Check compatible dependency versions for the installed Expo SDK';
 
   sdkVersionRange = '>=46.0.0';
 
   async runAsync({ projectRoot }: DoctorCheckParams): Promise<DoctorCheckResult> {
     const issues: string[] = [];
-    const advice: string[] = [];
 
     try {
       // only way to check dependencies without automatically fixing them is to use interactive prompt
@@ -26,7 +25,6 @@ export class InstalledDependencyVersionCheck implements DoctorCheck {
     } catch (error: any) {
       if (isSpawnResult(error)) {
         issues.push(error.stderr.trim());
-        advice.push(`Use npx expo install --check to review and upgrade your dependencies.`);
       } else {
         throw error;
       }
@@ -35,7 +33,9 @@ export class InstalledDependencyVersionCheck implements DoctorCheck {
     return {
       isSuccessful: issues.length === 0,
       issues,
-      advice,
+      advice: issues.length
+        ? `Use 'npx expo install --check' to review and upgrade your dependencies.`
+        : undefined,
     };
   }
 }

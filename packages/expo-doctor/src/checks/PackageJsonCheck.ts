@@ -8,12 +8,11 @@ function getDirectPackageInstallErrorMessage(pkg: string): string {
 }
 
 export class PackageJsonCheck implements DoctorCheck {
-  description = 'Checking package.json for common issues';
+  description = 'Check package.json for common issues';
 
   sdkVersionRange = '*';
 
   async runAsync({ pkg, projectRoot }: DoctorCheckParams): Promise<DoctorCheckResult> {
-    const advice: string[] = [];
     const issues: string[] = [];
 
     // ** check for node_modules/.bin refs in scripts (e.g., can't have "expo" or similar in scripts) **
@@ -63,7 +62,6 @@ export class PackageJsonCheck implements DoctorCheck {
     return {
       isSuccessful: issues.length === 0,
       issues,
-      advice,
     };
   }
 }

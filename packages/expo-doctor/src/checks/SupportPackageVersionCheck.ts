@@ -3,12 +3,11 @@ import { getRemoteVersionsForSdkAsync } from '../utils/getRemoteVersionsForSdkAs
 import { DoctorCheck, DoctorCheckParams, DoctorCheckResult } from './checks.types';
 
 export class SupportPackageVersionCheck implements DoctorCheck {
-  description = 'Verifying prebuild support package versions are compatible';
+  description = 'Verify prebuild support package versions are compatible';
 
   sdkVersionRange = '>=45.0.0';
 
   async runAsync({ exp, projectRoot }: DoctorCheckParams): Promise<DoctorCheckResult> {
-    const advice: string[] = [];
     const issues: string[] = [];
 
     const versionsForSdk = await getRemoteVersionsForSdkAsync(exp.sdkVersion);
@@ -33,14 +32,12 @@ export class SupportPackageVersionCheck implements DoctorCheck {
       }
     });
 
-    if (issues.length) {
-      advice.push(`Upgrade dependencies that are using the invalid package versions.`);
-    }
-
     return {
       isSuccessful: issues.length === 0,
       issues,
-      advice,
+      advice: issues.length
+        ? 'Upgrade dependencies that are using the invalid package versions.'
+        : undefined,
     };
   }
 }

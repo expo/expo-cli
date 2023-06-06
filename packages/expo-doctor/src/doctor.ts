@@ -9,61 +9,107 @@ import { IllegalPackageCheck } from './checks/IllegalPackageCheck';
 import { InstalledDependencyVersionCheck } from './checks/InstalledDependencyVersionCheck';
 import { PackageJsonCheck } from './checks/PackageJsonCheck';
 import { SupportPackageVersionCheck } from './checks/SupportPackageVersionCheck';
-import { DoctorCheck, DoctorCheckParams } from './checks/checks.types';
+import { DoctorCheck, DoctorCheckParams, DoctorCheckResult } from './checks/checks.types';
+import { env } from './utils/env';
+import { isInteractive } from './utils/interactive';
 import { Log } from './utils/log';
 import { logNewSection } from './utils/ora';
+import { endTimer, formatMilliseconds, startTimer } from './utils/timer';
 import { ltSdkVersion } from './utils/versions';
 import { warnUponCmdExe } from './warnings/windows';
 
-export async function runCheckAsync(
-  check: DoctorCheck,
-  checkParams: DoctorCheckParams
-): Promise<boolean> {
-  // bail if check isn't relevant for SDK version
-  if (
-    checkParams.exp.sdkVersion !== 'UNVERSIONED' &&
-    !semver.satisfies(checkParams.exp.sdkVersion!, check.sdkVersionRange)
-  ) {
-    return true;
+type CheckError = Error & { code?: string };
+
+interface DoctorCheckRunnerJob {
+  check: DoctorCheck;
+  result: DoctorCheckResult;
+  duration: number;
+  error?: CheckError;
+}
+
+/**
+ * Return ORA for interactive prompt.
+ * Print a simple log for non-interactive prompt and return a mock with a no-op stop function
+ * to avoid ORA console clutter in EAS build logs and other non-interactive environments.
+ */
+function startSpinner(text: string): { stop(): void } {
+  if (isInteractive()) {
+    return logNewSection(text);
+  }
+  Log.log(text);
+  return {
+    stop() {},
+  };
+}
+
+export async function printCheckResultSummaryOnComplete(job: DoctorCheckRunnerJob) {
+  // These will log in order of completion, so they may change from run to run,
+  // but outputting these just in time will make the EAS Build log timestamps for each line representative of the execution time.
+  Log.log(
+    `${job.result?.isSuccessful ? chalk.green('✔') : chalk.red('✖')} ${job.check.description}` +
+      (env.EXPO_DEBUG ? ` (${formatMilliseconds(job.duration)})` : '')
+  );
+  // print unexpected errors inline with check completion
+  if (job.error) {
+    Log.error(`Unexpected error while running '${job.check.description}' check:`);
+    Log.exception(job.error!);
+    if (job.error?.code === 'ENOTFOUND') {
+      Log.error(
+        'This check requires a connection to the Expo API. Please check your network connection.'
+      );
+    }
+  }
+}
+
+export async function printFailedCheckIssueAndAdvice(job: DoctorCheckRunnerJob) {
+  const result = job.result;
+
+  // if the check was successful, don't print anything
+  // if result is null, it failed due to an unexpected error (e.g., network failure, and the error should have already appeared)
+  if (!result || result.isSuccessful) {
+    return;
   }
 
-  const ora = logNewSection(`${check.description}...`);
-  let result;
-  try {
-    result = await check.runAsync(checkParams);
-  } catch (e: any) {
-    ora.fail(`${check.description} failed`);
-    if (e.code === 'ENOTFOUND') {
-      Log.warn(
-        `Error: this check requires a connection to the Expo API. Please check your network connection.`
-      );
-    } else {
-      Log.exception(e);
-    }
-    return false;
-  }
-  if (result.isSuccessful) {
-    ora.succeed(`${check.description} passed`);
-    return true;
-  }
-  ora.fail(`${check.description} failed`);
   if (result.issues.length) {
-    Log.log(chalk.underline.yellow(`Issues:`));
-    Log.group();
     for (const issue of result.issues) {
       Log.warn(chalk.yellow(`${issue}`));
     }
-    Log.groupEnd();
-  }
-  if (result.advice.length) {
-    Log.log(chalk.underline(chalk.green(`Advice:`)));
-    Log.group();
-    for (const advice of result.advice) {
-      Log.log(chalk.green(`• ${advice}`));
+    if (result.advice) {
+      Log.log(chalk.green(`Advice: ${result.advice}`));
     }
-    Log.groupEnd();
+    Log.log();
   }
-  return false;
+}
+
+/**
+ * Run all commands in parallel. Make a callback as each one finishes.
+ * @param checks list of checks to run (do any filtering beforehand)
+ * @param checkParams parameters to be passed to each check
+ * @param onCheckComplete callback to be called when each check finishes
+ * @returns check with its associated results or exception if it failed unexpectedly
+ */
+export async function runChecksAsync(
+  checks: DoctorCheck[],
+  checkParams: DoctorCheckParams,
+  onCheckComplete: (checkRunnerJob: DoctorCheckRunnerJob) => void
+): Promise<DoctorCheckRunnerJob[]> {
+  return await Promise.all(
+    checks.map(check =>
+      (async function () {
+        const job = { check } as DoctorCheckRunnerJob;
+        try {
+          startTimer(check.description);
+          job.result = await check.runAsync(checkParams);
+          job.duration = endTimer(check.description);
+        } catch (e: any) {
+          job.error = e;
+          job.result = { isSuccessful: false } as DoctorCheckResult;
+        }
+        onCheckComplete(job);
+        return job;
+      })()
+    )
+  );
 }
 
 export async function actionAsync(projectRoot: string) {
@@ -95,23 +141,29 @@ export async function actionAsync(projectRoot: string) {
     new PackageJsonCheck(),
   ];
 
-  let hasIssues = false;
-
   const checkParams = { exp, pkg, projectRoot };
 
-  for (const check of checks) {
-    if (!(await runCheckAsync(check, checkParams))) {
-      hasIssues = true;
-    }
-  }
+  const filteredChecks = checks.filter(
+    check =>
+      checkParams.exp.sdkVersion === 'UNVERSIONED' ||
+      semver.satisfies(checkParams.exp.sdkVersion!, check.sdkVersionRange)
+  );
 
-  if (hasIssues) {
-    Log.log();
-    Log.exit(
-      chalk.red(
-        `✖ Found one or more possible issues with the project. See above logs for issues and advice to resolve.`
-      )
-    );
+  const spinner = startSpinner(`Running ${filteredChecks.length} checks on your project...`);
+
+  const jobs = await runChecksAsync(filteredChecks, checkParams, printCheckResultSummaryOnComplete);
+
+  spinner.stop();
+
+  if (jobs.some(job => !job.result.isSuccessful)) {
+    if (jobs.some(job => job.result.issues?.length)) {
+      Log.log();
+      Log.log(chalk.underline('Detailed check results:'));
+      Log.log();
+      // actual issues will output in order of the sequence of tests, due to rules of Promise.all()
+      jobs.forEach(job => printFailedCheckIssueAndAdvice(job));
+    }
+    Log.exit(chalk.red('One or more checks failed, indicating possible issues with the project.'));
   } else {
     Log.log();
     Log.log(chalk.green(`Didn't find any issues with the project!`));
