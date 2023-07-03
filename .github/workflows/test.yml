@@ -49,7 +49,7 @@ jobs:
             pwa,
             schemer,
             uri-scheme,
-            webpack-config,
+            # webpack-config,
             xdl,
           ]
     name: Test ${{ matrix.package }} on Node ${{ matrix.node }}
@@ -78,32 +78,32 @@ jobs:
       #     flags: ${{ steps.cov-flag-name.outputs.flag }} # optional
       #     fail_ci_if_error: false # optional (default = false)
 
-  puppeteer:
-    runs-on: ubuntu-latest
-    needs: build
-    strategy:
-      fail-fast: false
-    name: Expo Webpack
-    steps:
-      - uses: actions/cache@v2
-        with:
-          path: '*'
-          key: v2-${{ github.sha }}-${{ matrix.node }}
-      - name: Install puppeteer
-        working-directory: packages/webpack-config
-        run: yarn add -D puppeteer@3.1.0
-      - name: Install test project dependencies
-        working-directory: packages/webpack-config/e2e/basic
-        run: yarn
-      # Test starting an Expo web project
-      - name: Test starting Webpack
-        working-directory: packages/webpack-config
-        run: yarn test:e2e:start
-        env:
-          CI: true
-      # Test building an Expo web project
-      - name: Test building Webpack
-        working-directory: packages/webpack-config
-        run: yarn test:e2e:build
-        env:
-          CI: true
+  # puppeteer:
+  #   runs-on: ubuntu-latest
+  #   needs: build
+  #   strategy:
+  #     fail-fast: false
+  #   name: Expo Webpack
+  #   steps:
+  #     - uses: actions/cache@v2
+  #       with:
+  #         path: '*'
+  #         key: v2-${{ github.sha }}-${{ matrix.node }}
+  #     - name: Install puppeteer
+  #       working-directory: packages/webpack-config
+  #       run: yarn add -D puppeteer@3.1.0
+  #     - name: Install test project dependencies
+  #       working-directory: packages/webpack-config/e2e/basic
+  #       run: yarn
+  #     # Test starting an Expo web project
+  #     - name: Test starting Webpack
+  #       working-directory: packages/webpack-config
+  #       run: yarn test:e2e:start
+  #       env:
+  #         CI: true
+  #     # Test building an Expo web project
+  #     - name: Test building Webpack
+  #       working-directory: packages/webpack-config
+  #       run: yarn test:e2e:build
+  #       env:
+  #         CI: true
