@@ -39,7 +39,6 @@ import Log from './log';
 import { handleErrorsAsync } from './utils/handleErrors';
 import { matchFileNameOrURLFromStackTrace } from './utils/matchFileNameOrURLFromStackTrace';
 import { logNewSection, ora } from './utils/ora';
-import update from './utils/update';
 
 // We use require() to exclude package.json from TypeScript's analysis since it lives outside the
 // src directory and would change the directory structure of the emitted files under the build
