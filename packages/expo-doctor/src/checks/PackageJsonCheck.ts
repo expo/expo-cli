@@ -15,7 +15,7 @@ function checkForInvalidDirectInstallPackage(
   packageName: string
 ): string | null {
   if (pkg.dependencies?.[packageName] || pkg.devDependencies?.[packageName]) {
-    return `The package "${packageName}" should not be installed directly in your project. It is a dependency of other Expo packages and should be installed automatically.`;
+    return `The package "${packageName}" should not be installed directly in your project. It is a dependency of other Expo packages, which will install it automatically as needed.`;
   }
   return null;
 }
