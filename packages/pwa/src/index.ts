@@ -1,4 +1,4 @@
-import { ExpoConfig, setCustomConfigPath } from '@expo/config';
+import { ExpoConfig } from '@expo/config';
 import * as Image from '@expo/image-utils';
 import * as path from 'path';
 import { URL } from 'url';
@@ -265,9 +265,6 @@ export async function generateManifestAsync(
   configPath?: string,
   config?: ExpoConfig
 ): Promise<HTMLOutput[]> {
-  if (configPath) {
-    setCustomConfigPath(options.projectRoot, configPath);
-  }
   const manifest = generateManifestJson(options, config);
   return [
     {
