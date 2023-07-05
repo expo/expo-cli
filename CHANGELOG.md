@@ -10,6 +10,31 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🧹 Chores
 
+## [Wed, 5 Jul 2023 12:03:05 -0700](https://github.com/expo/expo-cli/commit/2bc53712a2d0c856b5504a77f402a08e3bef993f)
+
+### 🎉 New features
+
+- [install-expo-modules] add cli integration support ([#4728](https://github.com/expo/expo-cli/issues/4728))
+
+### 🧹 Chores
+
+- [cli] Improve the Expo CLI deprecation message
+- [doctor] clean up check names ([#4727](https://github.com/expo/expo-cli/issues/4727))
+- [github] Remove webpack workflows
+- [pwa] drop custom config path
+
+### 📦 Packages updated
+
+- @expo/babel-preset-cli@0.3.1
+- create-expo@2.0.3
+- @expo/dev-tools@0.13.185
+- expo-cli@6.3.9
+- expo-doctor@1.1.1
+- install-expo-modules@0.6.0
+- expo-pwa@0.0.126
+- @expo/webpack-config@18.1.1
+- xdl@60.0.10
+
 ## [Tue, 30 May 2023 13:01:03 -0500](https://github.com/expo/expo-cli/commit/23cc30b081aabefc2b0d8f7139c001fd286322d8)
 
 ### 🛠 Breaking changes
