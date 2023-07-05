@@ -3,7 +3,8 @@ import { getRemoteVersionsForSdkAsync } from '../utils/getRemoteVersionsForSdkAs
 import { DoctorCheck, DoctorCheckParams, DoctorCheckResult } from './checks.types';
 
 export class SupportPackageVersionCheck implements DoctorCheck {
-  description = 'Verify prebuild support package versions are compatible';
+  description =
+    'Check that native modules use compatible support package versions for installed Expo SDK';
 
   sdkVersionRange = '>=45.0.0';
 
