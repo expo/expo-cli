@@ -1,6 +1,6 @@
 {
   "name": "create-expo",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "bin": {
     "create-expo-app": "./build/index.js"
   },
@@ -19,7 +19,6 @@
     "directory": "packages/create-expo-app"
   },
   "author": "Evan Bacon <bacon@expo.io> (https://github.com/evanbacon)",
-
   "files": [
     "build",
     "template"
