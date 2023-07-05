@@ -10,6 +10,9 @@ vendor
 /packages/config/src/__tests__/fixtures/behavior/syntax-error
 /unlinked-packages/*/build
 
+# Ignore test fixtures
+/packages/install-expo-modules/**/fixtures
+
 # Generated
 .expo
 .history
