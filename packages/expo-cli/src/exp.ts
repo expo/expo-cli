@@ -756,33 +756,20 @@ async function checkCliVersionAsync() {
     return;
   }
 
-  const { updateIsAvailable, current, latest, deprecated } = await update.checkForUpdateAsync();
-  if (updateIsAvailable) {
-    Log.nestedWarn(
-      boxen(
-        chalk.green(`There is a new version of ${packageJSON.name} available (${latest}).
-You are currently using ${packageJSON.name} ${current}
-Install expo-cli globally using the package manager of your choice;
-for example: \`npm install -g ${packageJSON.name}\` to get the latest version`),
-        { borderColor: 'green', padding: 1 }
-      )
-    );
-  }
-
-  if (deprecated) {
-    Log.nestedWarn(
-      boxen(
-        chalk.red(
-          `This version of expo-cli is not supported anymore.
-It's highly recommended to update to the newest version.
-
-The API endpoints used in this version of expo-cli might not exist,
-any interaction with Expo servers may result in unexpected behaviour.`
-        ),
-        { borderColor: 'red', padding: 1 }
-      )
-    );
-  }
+  Log.nestedWarn(
+    boxen(
+      chalk.red(
+        `${chalk.bold(
+          'The global expo-cli package has been deprecated.'
+        )}\n\nThe new Expo CLI is now bundled in your project in the ${chalk.bold(
+          'expo'
+        )} package.\nLearn more: https://blog.expo.dev/the-new-expo-cli-f4250d8e3421.\n\nTo use the local CLI instead (recommended in SDK 46 and higher), run:\n\u203A ${chalk.bold(
+          `npx expo <command>`
+        )}`
+      ),
+      { borderColor: 'red', padding: 1 }
+    )
+  );
 }
 
 function _registerLogs() {
