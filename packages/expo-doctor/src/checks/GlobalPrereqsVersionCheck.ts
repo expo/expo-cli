@@ -43,7 +43,7 @@ async function checkNpmVersionAsync(): Promise<string | null> {
 }
 
 export class GlobalPrereqsVersionCheck implements DoctorCheck {
-  description = 'Validate global prerequisites versions';
+  description = 'Check npm/ yarn versions';
 
   sdkVersionRange = '*';
 
