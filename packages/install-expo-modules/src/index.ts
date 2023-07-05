@@ -11,6 +11,7 @@ import {
   withAndroidGradlePluginVersion,
 } from './plugins/android/withAndroidGradles';
 import { withAndroidModules } from './plugins/android/withAndroidModules';
+import { withCliIntegration } from './plugins/cli/withCliIntegration';
 import {
   shouldUpdateDeployTargetPodfileAsync,
   withIosDeploymentTarget,
@@ -18,6 +19,7 @@ import {
 import { withIosModules } from './plugins/ios/withIosModules';
 import { withXCParseXcodeProjectBaseMod } from './plugins/ios/withXCParseXcodeProject';
 import { getDefaultSdkVersion, getVersionInfo, VersionInfo } from './utils/expoVersionMappings';
+import { learnMore } from './utils/link';
 import { installExpoPackageAsync, installPodsAsync } from './utils/packageInstaller';
 import { normalizeProjectRoot } from './utils/projectRoot';
 
@@ -97,6 +99,31 @@ async function promptUpgradeIosDeployTargetAsync(projectRoot: string, iosDeploym
   }
 }
 
+/**
+ * Show a prompt to ask for adding Expo CLI integration.
+ * @returns true if user confirm to add Expo CLI integration. otherwise, returns false.
+ */
+async function promptCliIntegrationAsync() {
+  const message = `This tool can install Expo CLI integration for your project.
+Using EXPO CLI has some some benefits over the the default CLI in bare React Native projects:
+  - Builtin JavaScript debugger and React DevTools.
+  - Support for Continuous Native Generation (CNG) with \`npx expo prebuild\` for easy upgrades.
+  - Automatic web support with Metro.
+${learnMore('https://docs.expo.dev/bare/using-expo-cli/')}
+Do you want to install Expo CLI integration?`;
+
+  if (program.nonInteractive) {
+    return true;
+  }
+  const { value } = await prompts({
+    type: 'confirm',
+    name: 'value',
+    message,
+    initial: true,
+  });
+  return !!value;
+}
+
 async function runAsync(programName: string) {
   projectRoot = normalizeProjectRoot(projectRoot);
 
@@ -104,6 +131,7 @@ async function runAsync(programName: string) {
     expoSdkVersion: sdkVersion,
     iosDeploymentTarget,
     androidAgpVersion,
+    supportCliIntegration,
   } = getSdkVersionInfo();
   if (androidAgpVersion && !(await promptUpgradeAgpVersionAsync(projectRoot, androidAgpVersion))) {
     return;
@@ -111,6 +139,8 @@ async function runAsync(programName: string) {
   if (!(await promptUpgradeIosDeployTargetAsync(projectRoot, iosDeploymentTarget))) {
     return;
   }
+
+  const cliIntegration = supportCliIntegration && (await promptCliIntegrationAsync());
 
   const platforms: ModPlatform[] = ['android', 'ios'];
   let { exp: config } = getConfig(projectRoot, {
@@ -132,6 +162,10 @@ async function runAsync(programName: string) {
   config = withIosDeploymentTarget(config, {
     deploymentTarget: iosDeploymentTarget,
   });
+
+  if (cliIntegration) {
+    config = withCliIntegration(config);
+  }
 
   // Keeps the base mods last
   config = withXCParseXcodeProjectBaseMod(config);
