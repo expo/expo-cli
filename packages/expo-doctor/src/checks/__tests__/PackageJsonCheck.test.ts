@@ -77,10 +77,15 @@ describe('runAsync', () => {
 
   const dependencyLocations = ['dependencies', 'devDependencies'];
 
-  const transitiveOnlyDependencies = ['expo-modules-core', 'expo-modules-autolinking'];
+  const transitiveOnlyDependencies = [
+    'expo-modules-core',
+    'expo-modules-autolinking',
+    'expo-dev-launcher',
+    'expo-dev-menu',
+  ];
 
   dependencyLocations.forEach(dependencyLocation => {
-    it(`returns result with isSuccessful = true if ${dependencyLocation} does not contain expo-modules-core/ expo-modules-autolinking`, async () => {
+    it(`returns result with isSuccessful = true if ${dependencyLocation} does not contain a dependency that should only be installed by another Expo package`, async () => {
       const check = new PackageJsonCheck();
       const result = await check.runAsync({
         pkg: { name: 'name', version: '1.0.0', [dependencyLocation]: { somethingjs: '17.0.1' } },
