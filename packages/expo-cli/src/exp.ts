@@ -762,7 +762,7 @@ async function checkCliVersionAsync() {
           'The global expo-cli package has been deprecated.'
         )}\n\nThe new Expo CLI is now bundled in your project in the ${chalk.bold(
           'expo'
-        )} package.\nLearn more: https://blog.expo.dev/the-new-expo-cli-f4250d8e3421.\n\nTo use the local CLI instead (recommended in SDK 46 and higher), run:\n\u203A ${chalk.bold(
+        )} package.\nLearn more: https://blog.expo.dev/the-new-expo-cli-f4250d8e3421\n\nTo use the local CLI instead (recommended in SDK 46 and higher), run:\n\u203A ${chalk.bold(
           `npx expo <command>`
         )}`
       ),
