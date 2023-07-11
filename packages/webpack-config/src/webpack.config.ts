@@ -436,7 +436,7 @@ export default async function (env: Environment, argv: Arguments = {}): Promise<
                 filterSourceMappingUrl(url: string, resourcePath: string) {
                   // https://github.com/alewin/useWorker/issues/138
                   if (resourcePath.match(/@koale\/useworker/)) {
-                    return 'skip';
+                    return 'remove';
                   }
                   return true;
                 },
