@@ -17,7 +17,7 @@ export class ProjectSetupCheck implements DoctorCheck {
       exp.plugins?.length
     ) {
       issues.push(
-        'This project has native project folders but is also configured to use Prebuild. EAS Build will not sync your native configuration if the ios or android folders are present. Gitignore these folders intend to use Prebuild (aka "managed" workflow).'
+        'This project has native project folders but is also configured to use Prebuild. EAS Build will not sync your native configuration if the ios or android folders are present. Add these folders to your .gitignore file if you intend to use prebuild (aka "managed" workflow).'
       );
     }
 
