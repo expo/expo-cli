@@ -429,7 +429,21 @@ export default async function (env: Environment, argv: Arguments = {}): Promise<
           enforce: 'pre',
           exclude: /@babel(?:\/|\\{1,2})runtime/,
           test: /\.(js|mjs|jsx|ts|tsx|css)$/,
-          use: require.resolve('source-map-loader'),
+          use: [
+            {
+              loader: require.resolve('source-map-loader'),
+              options: {
+                filterSourceMappingUrl(url: string, resourcePath: string) {
+                  // https://github.com/alewin/useWorker/issues/138
+                  if (resourcePath.match(/@koale\/useworker/)) {
+                    return 'remove';
+                  }
+                  return true;
+                },
+              },
+            },
+          ],
+
           resolve: {
             fullySpecified: false,
           },

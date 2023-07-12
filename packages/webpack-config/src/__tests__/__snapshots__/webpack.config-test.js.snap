@@ -74,7 +74,14 @@ Object {
           "fullySpecified": false,
         },
         "test": /\\\\\\.\\(js\\|mjs\\|jsx\\|ts\\|tsx\\|css\\)\\$/,
-        "use": "node_modules/source-map-loader/dist/cjs.js",
+        "use": Array [
+          Object {
+            "loader": "node_modules/source-map-loader/dist/cjs.js",
+            "options": Object {
+              "filterSourceMappingUrl": [Function],
+            },
+          },
+        ],
       },
       Object {
         "oneOf": Array [
@@ -270,7 +277,14 @@ Object {
           "fullySpecified": false,
         },
         "test": /\\\\\\.\\(js\\|mjs\\|jsx\\|ts\\|tsx\\|css\\)\\$/,
-        "use": "node_modules/source-map-loader/dist/cjs.js",
+        "use": Array [
+          Object {
+            "loader": "node_modules/source-map-loader/dist/cjs.js",
+            "options": Object {
+              "filterSourceMappingUrl": [Function],
+            },
+          },
+        ],
       },
       Object {
         "oneOf": Array [
