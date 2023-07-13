@@ -1,5 +1,5 @@
 /* eslint-env node */
-import { ExpoConfig, getConfig, getPackageJson, getWebOutputPath } from 'expo/config';
+import { ExpoConfig, getConfig, getPackageJson, getWebOutputPath } from '@expo/config';
 import findWorkspaceRoot from 'find-yarn-workspace-root';
 import fs from 'fs';
 import path from 'path';
