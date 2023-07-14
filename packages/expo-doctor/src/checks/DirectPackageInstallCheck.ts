@@ -11,6 +11,12 @@ const baseCheckItem = {
   sdkVersionRange: '*',
 };
 
+const shouldBeInstalledGloballyItem = {
+  getMessage: (packageName: string) =>
+    `The package "${packageName}" should not be installed directly in your project. It may conflict with the globally-installed version.`,
+  sdkVersionRange: '*',
+};
+
 export const directPackageInstallCheckItems: DirectPackageInstallCheckItem[] = [
   {
     packageName: 'expo-modules-core',
@@ -27,6 +33,14 @@ export const directPackageInstallCheckItems: DirectPackageInstallCheckItem[] = [
   {
     packageName: 'expo-dev-menu',
     ...baseCheckItem,
+  },
+  {
+    packageName: 'npm',
+    ...shouldBeInstalledGloballyItem,
+  },
+  {
+    packageName: 'yarn',
+    ...shouldBeInstalledGloballyItem,
   },
   {
     packageName: '@types/react-native',
