@@ -41,6 +41,7 @@
     "@expo/spawn-async": "^1.7.0",
     "chalk": "^4.0.0",
     "ora": "3.4.0",
+    "resolve-from": "^5.0.0",
     "semver": "7.3.2"
   }
 }
