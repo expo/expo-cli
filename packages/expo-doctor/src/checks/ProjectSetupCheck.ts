@@ -1,4 +1,5 @@
 import fs from 'fs';
+import path from 'path';
 
 import { DoctorCheck, DoctorCheckParams, DoctorCheckResult } from './checks.types';
 
@@ -13,7 +14,8 @@ export class ProjectSetupCheck implements DoctorCheck {
     // ** possibly-unintentionally-bare check **
 
     if (
-      (fs.existsSync(path.join(projectRoot, 'ios')) || fs.existsSync(path.join(projectRoot', 'android'))) &&
+      (fs.existsSync(path.join(projectRoot, 'ios')) ||
+        fs.existsSync(path.join(projectRoot, 'android'))) &&
       exp.plugins?.length
     ) {
       issues.push(
