@@ -1,3 +1,2 @@
-import { fs, realpathSync } from 'memfs';
-module.exports = realpathSync;
+import { fs } from 'memfs';
 module.exports = fs;
