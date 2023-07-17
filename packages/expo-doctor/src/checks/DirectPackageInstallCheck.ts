@@ -43,6 +43,10 @@ export const directPackageInstallCheckItems: DirectPackageInstallCheckItem[] = [
     ...shouldBeInstalledGloballyItem,
   },
   {
+    packageName: 'pnpm',
+    ...shouldBeInstalledGloballyItem,
+  },
+  {
     packageName: '@types/react-native',
     getMessage: () =>
       `The package  "@types/react-native" should not be installed directly in your project, as types are included with the "react-native" package.`,
