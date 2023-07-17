@@ -13,7 +13,7 @@ export class ProjectSetupCheck implements DoctorCheck {
     // ** possibly-unintentionally-bare check **
 
     if (
-      (fs.existsSync(`${projectRoot}/ios`) || fs.existsSync(`${projectRoot}/android`)) &&
+      (fs.existsSync(path.join(projectRoot, 'ios')) || fs.existsSync(path.join(projectRoot', 'android'))) &&
       exp.plugins?.length
     ) {
       issues.push(
