@@ -1,5 +1,7 @@
+import spawnAsync from '@expo/spawn-async';
 import { vol } from 'memfs';
 
+import { asMock } from '../../__tests__/asMock';
 import { ProjectSetupCheck } from '../ProjectSetupCheck';
 
 jest.mock('fs');
@@ -38,9 +40,17 @@ describe('runAsync', () => {
     expect(result.isSuccessful).toBeTruthy();
   });
 
-  it('returns result with isSuccessful = false ios/ android folders and config plugins', async () => {
+  it('returns result with isSuccessful = false with ios/ android folders and config plugins present, not in gitignore', async () => {
+    asMock(spawnAsync)
+      .mockResolvedValueOnce({
+        status: 0,
+        stdout: '',
+      } as any)
+      .mockRejectedValueOnce({
+        status: -1,
+      });
     vol.fromJSON({
-      [projectRoot + '/ios/something.pbxproj']: 'test',
+      [projectRoot + '/ios/Podfile']: 'test',
     });
     const check = new ProjectSetupCheck();
     const result = await check.runAsync({
@@ -53,6 +63,32 @@ describe('runAsync', () => {
       },
     });
     expect(result.isSuccessful).toBeFalsy();
+  });
+
+  it('returns result with isSuccessful = true with ios/ android folders and config plugins present, in gitignore', async () => {
+    asMock(spawnAsync)
+      .mockResolvedValueOnce({
+        status: 0,
+        stdout: '',
+      } as any)
+      .mockResolvedValueOnce({
+        status: 0,
+        stdout: '',
+      } as any);
+    vol.fromJSON({
+      [projectRoot + '/ios/Podfile']: 'test',
+    });
+    const check = new ProjectSetupCheck();
+    const result = await check.runAsync({
+      pkg: { name: 'name', version: '1.0.0' },
+      ...additionalProjectProps,
+      exp: {
+        name: 'name',
+        slug: 'slug',
+        plugins: ['expo-something'],
+      },
+    });
+    expect(result.isSuccessful).toBeTruthy();
   });
 
   // multiple lock files

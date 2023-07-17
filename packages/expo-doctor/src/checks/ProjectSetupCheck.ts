@@ -1,3 +1,4 @@
+import spawnAsync from '@expo/spawn-async';
 import fs from 'fs';
 import path from 'path';
 
@@ -14,9 +15,10 @@ export class ProjectSetupCheck implements DoctorCheck {
     // ** possibly-unintentionally-bare check **
 
     if (
-      (fs.existsSync(path.join(projectRoot, 'ios')) ||
-        fs.existsSync(path.join(projectRoot, 'android'))) &&
-      exp.plugins?.length
+      exp.plugins?.length &&
+      // git check-ignore needs a specific file to check gitignore, we choose Podfile
+      ((await existsAndIsNotIgnoredAsync(path.join(projectRoot, 'ios', 'Podfile'))) ||
+        (await existsAndIsNotIgnoredAsync(path.join(projectRoot, 'android', 'Podfile'))))
     ) {
       issues.push(
         'This project has native project folders but is also configured to use Prebuild. EAS Build will not sync your native configuration if the ios or android folders are present. Add these folders to your .gitignore file if you intend to use prebuild (aka "managed" workflow).'
@@ -48,4 +50,23 @@ export class ProjectSetupCheck implements DoctorCheck {
       issues,
     };
   }
+}
+
+async function existsAndIsNotIgnoredAsync(filePath: string): Promise<boolean> {
+  return fs.existsSync(filePath) && !(await isFileIgnoredAsync(filePath));
+}
+
+async function isFileIgnoredAsync(filePath: string): Promise<boolean> {
+  try {
+    await spawnAsync('git', ['check-ignore', '-q', filePath], {
+      cwd: path.normalize(await getRootPathAsync()),
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function getRootPathAsync(): Promise<string> {
+  return (await spawnAsync('git', ['rev-parse', '--show-toplevel'])).stdout.trim();
 }
