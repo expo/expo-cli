@@ -2,6 +2,7 @@ import { getConfig } from '@expo/config';
 import chalk from 'chalk';
 import semver from 'semver';
 
+import { ExpoConfigCommonIssueCheck } from './checks/ExpoConfigCommonIssueCheck';
 import { DirectPackageInstallCheck } from './checks/DirectPackageInstallCheck';
 import { ExpoConfigSchemaCheck } from './checks/ExpoConfigSchemaCheck';
 import { GlobalPackageInstalledCheck } from './checks/GlobalPackageInstalledCheck';
@@ -140,6 +141,7 @@ export async function actionAsync(projectRoot: string) {
     new SupportPackageVersionCheck(),
     new InstalledDependencyVersionCheck(),
     new ExpoConfigSchemaCheck(),
+    new ExpoConfigCommonIssueCheck(),
     new DirectPackageInstallCheck(),
     new PackageJsonCheck(),
     new ProjectSetupCheck(),
