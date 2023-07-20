@@ -3,12 +3,14 @@ import chalk from 'chalk';
 import semver from 'semver';
 
 import { ExpoConfigCommonIssueCheck } from './checks/ExpoConfigCommonIssueCheck';
+import { DirectPackageInstallCheck } from './checks/DirectPackageInstallCheck';
 import { ExpoConfigSchemaCheck } from './checks/ExpoConfigSchemaCheck';
 import { GlobalPackageInstalledCheck } from './checks/GlobalPackageInstalledCheck';
 import { GlobalPrereqsVersionCheck } from './checks/GlobalPrereqsVersionCheck';
 import { IllegalPackageCheck } from './checks/IllegalPackageCheck';
 import { InstalledDependencyVersionCheck } from './checks/InstalledDependencyVersionCheck';
 import { PackageJsonCheck } from './checks/PackageJsonCheck';
+import { ProjectSetupCheck } from './checks/ProjectSetupCheck';
 import { SupportPackageVersionCheck } from './checks/SupportPackageVersionCheck';
 import { DoctorCheck, DoctorCheckParams, DoctorCheckResult } from './checks/checks.types';
 import { env } from './utils/env';
@@ -140,7 +142,9 @@ export async function actionAsync(projectRoot: string) {
     new InstalledDependencyVersionCheck(),
     new ExpoConfigSchemaCheck(),
     new ExpoConfigCommonIssueCheck(),
+    new DirectPackageInstallCheck(),
     new PackageJsonCheck(),
+    new ProjectSetupCheck(),
   ];
 
   const checkParams = { exp, pkg, projectRoot };

@@ -1,24 +1,7 @@
-import { PackageJSONConfig } from '@expo/config';
 import fs from 'fs';
 import path from 'path';
 
 import { DoctorCheck, DoctorCheckParams, DoctorCheckResult } from './checks.types';
-
-/**
- * Checks if a package should not be installed directly in a project.
- * @param pkg package.json config
- * @param packageName name of package to check for
- * @returns string if package should not be installed directly, null otherwise
- */
-function checkForInvalidDirectInstallPackage(
-  pkg: PackageJSONConfig,
-  packageName: string
-): string | null {
-  if (pkg.dependencies?.[packageName] || pkg.devDependencies?.[packageName]) {
-    return `The package "${packageName}" should not be installed directly in your project. It is a dependency of other Expo packages, which will install it automatically as needed.`;
-  }
-  return null;
-}
 
 export class PackageJsonCheck implements DoctorCheck {
   description = 'Check package.json for common issues';
@@ -46,16 +29,6 @@ export class PackageJsonCheck implements DoctorCheck {
             : '')
       );
     }
-
-    // ** check for dependencies that should only be transitive **
-    ['expo-modules-core', 'expo-modules-autolinking', 'expo-dev-launcher', 'expo-dev-menu'].forEach(
-      packageName => {
-        const result = checkForInvalidDirectInstallPackage(pkg, packageName);
-        if (result) {
-          issues.push(result);
-        }
-      }
-    );
 
     // ** check for conflicts between package name and installed packages **
 
