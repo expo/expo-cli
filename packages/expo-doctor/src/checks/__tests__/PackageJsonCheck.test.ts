@@ -73,43 +73,6 @@ describe('runAsync', () => {
     expect(result.isSuccessful).toBeFalsy();
   });
 
-  // transitive-only dependencies sub-check
-
-  const dependencyLocations = ['dependencies', 'devDependencies'];
-
-  const transitiveOnlyDependencies = [
-    'expo-modules-core',
-    'expo-modules-autolinking',
-    'expo-dev-launcher',
-    'expo-dev-menu',
-  ];
-
-  dependencyLocations.forEach(dependencyLocation => {
-    it(`returns result with isSuccessful = true if ${dependencyLocation} does not contain a dependency that should only be installed by another Expo package`, async () => {
-      const check = new PackageJsonCheck();
-      const result = await check.runAsync({
-        pkg: { name: 'name', version: '1.0.0', [dependencyLocation]: { somethingjs: '17.0.1' } },
-        ...additionalProjectProps,
-      });
-      expect(result.isSuccessful).toBeTruthy();
-    });
-
-    transitiveOnlyDependencies.forEach(transitiveOnlyDependency => {
-      it(`returns result with isSuccessful = false if ${dependencyLocation} contains ${transitiveOnlyDependency}`, async () => {
-        const check = new PackageJsonCheck();
-        const result = await check.runAsync({
-          pkg: {
-            name: 'name',
-            version: '1.0.0',
-            [dependencyLocation]: { [transitiveOnlyDependency]: '1.0.0' },
-          },
-          ...additionalProjectProps,
-        });
-        expect(result.isSuccessful).toBeFalsy();
-      });
-    });
-  });
-
   // package name conflicts with installed packages sub-check
   it('returns result with isSuccessful = true if package name does not match dependency', async () => {
     const check = new PackageJsonCheck();
