@@ -1,6 +1,6 @@
 {
   "name": "expo-cli",
-  "version": "6.3.10",
+  "version": "6.3.11",
   "description": "The command-line tool for creating and publishing Expo apps",
   "preferGlobal": true,
   "main": "build/exp.js",
@@ -119,6 +119,6 @@
     "url-join": "4.0.0",
     "uuid": "^8.0.0",
     "wrap-ansi": "^7.0.0",
-    "xdl": "60.0.10"
+    "xdl": "60.0.11"
   }
 }
