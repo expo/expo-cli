@@ -10,6 +10,11 @@ class Env {
   get EXPO_DEBUG() {
     return boolish('EXPO_DEBUG', false);
   }
+
+  /** Enable staging API environment */
+  get EXPO_STAGING() {
+    return boolish('EXPO_STAGING', false);
+  }
 }
 
 export const env = new Env();
