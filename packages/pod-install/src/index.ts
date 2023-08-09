@@ -49,8 +49,8 @@ async function runAsync(): Promise<void> {
       if (hasExpoPackage) {
         info(
           chalk.yellow(
-            `No 'ios' directory found, skipping installing pods. Pods will be automatically installed when the 'ios' directory is generated with 'npx expo prebuild' or 'npx expo run:ios'.`
-             ${learnMore('https://docs.expo.dev/workflow/prebuild/')}`
+            `No 'ios' directory found, skipping installing pods. Pods will be automatically installed when the 'ios' directory is generated with 'npx expo prebuild' or 'npx expo run:ios'.`,
+            learnMore('https://docs.expo.dev/workflow/prebuild/')
           )
         );
         return;

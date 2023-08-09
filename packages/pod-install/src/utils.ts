@@ -7,6 +7,6 @@ import terminalLink from 'terminal-link';
  */
 export function learnMore(url: string): string {
   return terminalLink(chalk.underline('Learn more.'), url, {
-    fallback: (text, url) => `Learn more: ${chalk.underline(url)}`,
+    fallback: (_, url) => `Learn more: ${chalk.underline(url)}`,
   });
 }
