@@ -3,9 +3,11 @@
 import { CocoaPodsPackageManager } from '@expo/package-manager/build/CocoaPodsPackageManager';
 import chalk from 'chalk';
 import { Command } from 'commander';
-import { resolve } from 'path';
+import { existsSync, readFileSync } from 'fs';
+import { join, resolve } from 'path';
 
 import shouldUpdate from './update';
+import { learnMore } from './utils';
 
 const packageJSON = require('../package.json');
 
@@ -29,10 +31,7 @@ const info = (message: string) => {
 };
 
 async function runAsync(): Promise<void> {
-  if (typeof projectRoot === 'string') {
-    projectRoot = projectRoot.trim();
-  }
-  projectRoot = resolve(projectRoot);
+  projectRoot = resolve(projectRoot.trim());
 
   if (process.platform !== 'darwin') {
     info(chalk.red('CocoaPods is only supported on darwin machines'));
@@ -41,6 +40,23 @@ async function runAsync(): Promise<void> {
 
   const possibleProjectRoot = CocoaPodsPackageManager.getPodProjectRoot(projectRoot);
   if (!possibleProjectRoot) {
+    const packageJsonPath = join(projectRoot, 'package.json');
+
+    if (existsSync(packageJsonPath)) {
+      const jsonData = JSON.parse(readFileSync(packageJsonPath).toString());
+      const hasExpoPackage = jsonData.dependencies?.hasOwnProperty('expo');
+
+      if (hasExpoPackage) {
+        info(
+          chalk.yellow(
+            `No 'ios' directory found, skipping installing pods. Pods will be automatically installed when the 'ios' directory is generated with 'npx expo prebuild' or 'npx expo run:ios'.`,
+            learnMore('https://docs.expo.dev/workflow/prebuild/')
+          )
+        );
+        return;
+      }
+    }
+
     info(chalk.yellow('CocoaPods is not supported in this project'));
     return;
   } else {
