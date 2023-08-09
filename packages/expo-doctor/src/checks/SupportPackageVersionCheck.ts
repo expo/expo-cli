@@ -18,6 +18,7 @@ export class SupportPackageVersionCheck implements DoctorCheck {
       'expo-modules-autolinking',
       '@expo/config-plugins',
       '@expo/prebuild-config',
+      '@expo/metro-config',
     ].filter(pkg => versionsForSdk[pkg]);
 
     // check that a specific semver is installed for each package

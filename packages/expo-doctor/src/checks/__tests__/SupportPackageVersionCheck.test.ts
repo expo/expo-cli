@@ -22,6 +22,7 @@ describe('runAsync', () => {
       'expo-modules-autolinking': '1.0.0',
       '@expo/config-plugins': '1.0.0',
       '@expo/prebuild-config': '1.0.0',
+      '@expo/metro-config': '1.0.0',
     });
     asMock(getDeepDependenciesWarningAsync).mockResolvedValueOnce(null);
     const check = new SupportPackageVersionCheck();
@@ -37,6 +38,7 @@ describe('runAsync', () => {
       'expo-modules-autolinking': '1.0.0',
       '@expo/config-plugins': '1.0.0',
       '@expo/prebuild-config': '1.0.0',
+      '@expo/metro-config': '1.0.0',
     });
     asMock(getDeepDependenciesWarningAsync).mockResolvedValueOnce('warning');
     const check = new SupportPackageVersionCheck();

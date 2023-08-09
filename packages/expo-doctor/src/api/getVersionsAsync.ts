@@ -20,7 +20,17 @@ export type Versions = {
 
 /** Get versions from remote endpoint. */
 export async function getVersionsAsync(): Promise<Versions> {
-  const results = await fetch(`https://api.expo.dev/v2/versions/latest`);
+  const results = await fetch(new URL(`/v2/versions/latest`, getExpoApiBaseUrl()).toString());
   const json = await results.json();
   return json.data;
+}
+
+function getExpoApiBaseUrl(): string {
+  if (process.env.EXPO_STAGING) {
+    return `https://staging-api.expo.dev`;
+  } else if (process.env.EXPO_LOCAL) {
+    return `http://127.0.0.1:3000`;
+  } else {
+    return `https://api.expo.dev`;
+  }
 }
