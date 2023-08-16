@@ -32,7 +32,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node: ['14', '16']
+        node: ['16']
         package:
           [
             create-expo-app,
