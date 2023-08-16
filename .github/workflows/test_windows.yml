@@ -9,7 +9,7 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
-        node: ['16', '18']
+        node: ['16']
     name: Build with Node ${{ matrix.node }}
     steps:
       - uses: actions/checkout@v3
