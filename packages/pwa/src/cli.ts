@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { ResizeMode } from '@expo/image-utils';
+import type { ResizeMode } from '@expo/image-utils';
 import chalk from 'chalk';
 import { Command } from 'commander';
 import fs from 'fs';

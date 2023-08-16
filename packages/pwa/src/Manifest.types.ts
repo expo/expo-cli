@@ -1,5 +1,5 @@
-import { ExpoConfig } from '@expo/config';
-import { ImageOptions } from '@expo/image-utils';
+import type { ImageOptions } from '@expo/image-utils';
+import type { ExpoConfig } from 'expo/config';
 
 type ExpoWebConfig = Required<ExpoConfig>['web'];
 
