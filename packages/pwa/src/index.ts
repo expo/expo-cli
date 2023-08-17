@@ -1,5 +1,5 @@
-import { ExpoConfig } from '@expo/config';
 import * as Image from '@expo/image-utils';
+import type { ExpoConfig } from 'expo/config';
 import * as path from 'path';
 import { URL } from 'url';
 

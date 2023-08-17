@@ -4,7 +4,7 @@ import {
   getConfig,
   getNameFromConfig,
   getWebOutputPath,
-} from '@expo/config';
+} from 'expo/config';
 
 import { IconOptions, Manifest, PWAConfig } from './Manifest.types';
 

@@ -46,7 +46,7 @@ export default function App() {
       style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
       <AspectView style={{ aspectRatio: 1, backgroundColor: 'green', width: 40 }} />
       <Text testID="basic-text">Open up App.js to start working on your app!</Text>
-      <Text testID="expo-constants-manifest">{JSON.stringify(Constants.manifest)}</Text>
+      <Text testID="expo-constants-manifest">{JSON.stringify(Constants.expoConfig)}</Text>
       <Text testID="asset-raw-image">{imageAsset}</Text>
       <Text testID="asset-raw-font">{fontAsset}</Text>
       <Text testID="asset-raw-wildcard">{typeof randomAsset}</Text>

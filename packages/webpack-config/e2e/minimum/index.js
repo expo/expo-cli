@@ -1,4 +1,4 @@
-import registerRootComponent from 'expo/build/launch/registerRootComponent';
+import { registerRootComponent } from 'expo';
 import * as React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 

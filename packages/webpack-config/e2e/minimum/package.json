@@ -6,10 +6,11 @@
   "dependencies": {
     "expo": "^43.0.0",
     "react": "17.0.1",
+    "react-native": "0.72.3",
     "react-dom": "17.0.1",
-    "react-native-web": "0.17.1"
+    "react-native-web": "0.19.6"
   },
   "devDependencies": {
-    "@babel/core": "^7.12.9"
+    "@babel/core": "^7.20.0"
   }
 }
