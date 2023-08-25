@@ -1,6 +1,6 @@
 {
   "name": "create-expo",
-  "version": "2.0.3",
+  "version": "2.0.4",
   "bin": {
     "create-expo-app": "./build/index.js"
   },
