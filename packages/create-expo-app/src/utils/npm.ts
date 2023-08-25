@@ -173,14 +173,8 @@ async function npmPackAsync(
 
   try {
     const json = JSON.parse(results);
-    const filename = json[0].filename as string;
-    // Transform filename for scoped packages.
-    // See issue https://github.com/npm/cli/issues/3405
-    if (filename?.startsWith('@') && packageName.startsWith('@')) {
-      json[0].filename = filename.replace(/^@/, '').replace(/\//, '-');
-    }
     if (Array.isArray(json) && json.every(isNpmPackageInfo)) {
-      return json;
+      return json.map(santizeNpmPackageFilename);
     } else {
       throw new Error(`Invalid response from npm: ${results}`);
     }
@@ -238,6 +232,19 @@ function isNpmPackageInfo(item: any): item is NpmPackageInfo {
     'version' in item &&
     'files' in item
   );
+}
+
+/**
+ * Adjust the tar filename in npm package info for `npm@<9.0.0`.
+ *
+ * @see https://github.com/npm/cli/issues/3405
+ */
+function santizeNpmPackageFilename(item: NpmPackageInfo): NpmPackageInfo {
+  if (item.filename.startsWith('@') && item.name.startsWith('@')) {
+    item.filename = item.filename.replace(/^@/, '').replace(/\//, '-')
+  }
+
+  return item;
 }
 
 async function fileExistsAsync(path: string): Promise<boolean> {
