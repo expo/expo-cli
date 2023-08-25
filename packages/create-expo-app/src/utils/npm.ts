@@ -174,7 +174,7 @@ async function npmPackAsync(
   try {
     const json = JSON.parse(results);
     if (Array.isArray(json) && json.every(isNpmPackageInfo)) {
-      return json.map(santizeNpmPackageFilename);
+      return json.map(sanitizeNpmPackageFilename);
     } else {
       throw new Error(`Invalid response from npm: ${results}`);
     }
@@ -239,7 +239,7 @@ function isNpmPackageInfo(item: any): item is NpmPackageInfo {
  *
  * @see https://github.com/npm/cli/issues/3405
  */
-function santizeNpmPackageFilename(item: NpmPackageInfo): NpmPackageInfo {
+function sanitizeNpmPackageFilename(item: NpmPackageInfo): NpmPackageInfo {
   if (item.filename.startsWith('@') && item.name.startsWith('@')) {
     item.filename = item.filename.replace(/^@/, '').replace(/\//, '-')
   }
