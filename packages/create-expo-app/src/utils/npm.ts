@@ -241,7 +241,7 @@ function isNpmPackageInfo(item: any): item is NpmPackageInfo {
  */
 function sanitizeNpmPackageFilename(item: NpmPackageInfo): NpmPackageInfo {
   if (item.filename.startsWith('@') && item.name.startsWith('@')) {
-    item.filename = item.filename.replace(/^@/, '').replace(/\//, '-')
+    item.filename = item.filename.replace(/^@/, '').replace(/\//, '-');
   }
 
   return item;
