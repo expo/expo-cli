@@ -173,6 +173,12 @@ async function npmPackAsync(
 
   try {
     const json = JSON.parse(results);
+    const filename = json[0].filename as string;
+    // Transform filename for scoped packages.
+    // See issue https://github.com/npm/cli/issues/3405
+    if (filename?.startsWith('@') && packageName.startsWith('@')) {
+      json[0].filename = filename.replace(/^@/, '').replace(/\//, '-');
+    }
     if (Array.isArray(json) && json.every(isNpmPackageInfo)) {
       return json;
     } else {
