@@ -3,19 +3,21 @@ import { execSync } from 'child_process';
 
 import { CLI_NAME } from './cmd';
 
-export type PackageManagerName = 'npm' | 'pnpm' | 'yarn';
+export type PackageManagerName = 'npm' | 'pnpm' | 'yarn' | 'bun';
 
 const debug = require('debug')('expo:init:resolvePackageManager') as typeof console.log;
 
 /** Determine which package manager to use for installing dependencies based on how the process was started. */
 export function resolvePackageManager(): PackageManagerName {
-  // Attempt to detect if the user started the command using `yarn` or `pnpm`
+  // Attempt to detect if the user started the command using `yarn` or `pnpm` or `bun`
   const userAgent = process.env.npm_config_user_agent;
   debug('npm_config_user_agent:', userAgent);
   if (userAgent?.startsWith('yarn')) {
     return 'yarn';
   } else if (userAgent?.startsWith('pnpm')) {
     return 'pnpm';
+  } else if (userAgent?.startsWith('bun')) {
+    return 'bun';
   } else if (userAgent?.startsWith('npm')) {
     return 'npm';
   }
@@ -25,6 +27,8 @@ export function resolvePackageManager(): PackageManagerName {
     return 'yarn';
   } else if (isPackageManagerAvailable('pnpm')) {
     return 'pnpm';
+  } else if (isPackageManagerAvailable('bun')) {
+    return 'bun';
   }
 
   return 'npm';
@@ -44,6 +48,8 @@ export function formatRunCommand(packageManager: PackageManagerName, cmd: string
       return `pnpm run ${cmd}`;
     case 'yarn':
       return `yarn ${cmd}`;
+    case 'bun':
+      return `bun run ${cmd}`;
     case 'npm':
     default:
       return `npm run ${cmd}`;
@@ -55,6 +61,8 @@ export function formatSelfCommand() {
   switch (packageManager) {
     case 'pnpm':
       return `pnpx ${CLI_NAME}`;
+    case 'bun':
+      return `bunx ${CLI_NAME}`;
     case 'yarn':
     case 'npm':
     default:
@@ -72,6 +80,8 @@ export async function installDependenciesAsync(
     await new PackageManager.YarnPackageManager(options).installAsync();
   } else if (packageManager === 'pnpm') {
     await new PackageManager.PnpmPackageManager(options).installAsync();
+  } else if (packageManager === 'bun') {
+    await new PackageManager.BunPackageManager(options).installAsync();
   } else {
     await new PackageManager.NpmPackageManager(options).installAsync();
   }

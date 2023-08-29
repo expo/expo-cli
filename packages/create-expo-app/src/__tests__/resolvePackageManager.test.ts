@@ -25,6 +25,10 @@ describe(resolvePackageManager, () => {
     process.env.npm_config_user_agent = 'pnpm';
     expect(resolvePackageManager()).toBe('pnpm');
   });
+  it('should use pnpm due to the user agent', () => {
+    process.env.npm_config_user_agent = 'bun';
+    expect(resolvePackageManager()).toBe('bun');
+  });
   it('should use npm due to the user agent', () => {
     process.env.npm_config_user_agent = 'npm/8.1.0 node/v16.13.0 darwin x64 workspaces/false';
     expect(resolvePackageManager()).toBe('npm');
@@ -45,6 +49,21 @@ describe(resolvePackageManager, () => {
     expect(resolvePackageManager()).toBe('pnpm');
     expect(execSync).toHaveBeenCalledWith('pnpm --version', { stdio: 'ignore' });
   });
+  it('should use bun due to manager being installed', () => {
+    delete process.env.npm_config_user_agent;
+
+    // throw for the first two checks -- yarn, pnpm
+    asMock(execSync)
+      .mockImplementationOnce(() => {
+        throw new Error('foobar');
+      })
+      .mockImplementationOnce(() => {
+        throw new Error('foobar');
+      });
+
+    expect(resolvePackageManager()).toBe('bun');
+    expect(execSync).toHaveBeenCalledWith('bun --version', { stdio: 'ignore' });
+  });
   it('should default to npm when nothing else is available', () => {
     delete process.env.npm_config_user_agent;
 
@@ -56,9 +75,12 @@ describe(resolvePackageManager, () => {
       })
       .mockImplementationOnce(() => {
         throw new Error('foobar');
+      })
+      .mockImplementationOnce(() => {
+        throw new Error('foobar');
       });
 
     expect(resolvePackageManager()).toBe('npm');
-    expect(execSync).toHaveBeenCalledTimes(2);
+    expect(execSync).toHaveBeenCalledTimes(3);
   });
 });
