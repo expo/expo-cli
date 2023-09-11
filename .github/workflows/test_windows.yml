@@ -35,7 +35,6 @@ jobs:
         node: ['16']
         package:
           [
-            create-expo-app,
             dev-tools,
             babel-preset-cli,
             expo-cli,
