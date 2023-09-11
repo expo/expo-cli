@@ -144,6 +144,27 @@ describe('yes', () => {
     extendedTimeout
   );
   it(
+    'uses Bun',
+    async () => {
+      const projectName = 'uses-bun';
+      const results = await execute([projectName, '--no-install'], {
+        // Run: DEBUG=create-expo-app:* bunx create-expo-app
+        npm_config_user_agent: `bun`,
+      });
+
+      // Test that the user was warned about deps
+      expect(results.stdout).toMatch(/make sure you have modules installed/);
+      expect(results.stdout).toMatch(/bun install/);
+
+      expect(fileExists(projectName, 'package.json')).toBeTruthy();
+      expect(fileExists(projectName, 'App.js')).toBeTruthy();
+      expect(fileExists(projectName, '.gitignore')).toBeTruthy();
+      // Check if it skipped install
+      expect(fileExists(projectName, 'node_modules')).not.toBeTruthy();
+    },
+    extendedTimeout
+  );
+  it(
     'uses npm',
     async () => {
       const projectName = 'uses-npm';

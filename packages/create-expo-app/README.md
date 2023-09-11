@@ -40,6 +40,9 @@ yarn create expo-app
 
 # With pnpm
 pnpm create expo-app
+
+# With Bun
+bunx create-expo-app
 ```
 
 Once you're up and running with Create Expo App, visit [this tutorial](https://docs.expo.dev/tutorial/planning/) for more information on building mobile apps with React.
