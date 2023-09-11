@@ -8,6 +8,9 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🎉 New features
 
+- [create-expo] Bump @expo/package-manager for Bun support
+- [create-expo] detect bun package manager ([#4752](https://github.com/expo/expo-cli/issues/4752))
+
 ### 🧹 Chores
 
 ## [Wed Jul 5 17:04:00 2023 -0700](https://github.com/expo/expo-cli/commit/b417540058c85cc7c2b28c37aa2e2ce52b06b03b)
