@@ -217,7 +217,7 @@ export async function compositeImagesAsync({
 
 export async function isValidPng(src: string) {
   try {
-    const res = await parsePng(fs.readFileSync(src));
+    await parsePng(fs.readFileSync(src));
     return true;
   } catch (e) {
     return false;
