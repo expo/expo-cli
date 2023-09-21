@@ -100,6 +100,7 @@
     "@babel/core": "^7.4.5",
     "@expo/ngrok": "4.1.0",
     "@types/concat-stream": "^1.6.0",
+    "@types/debug": "^4.1.8",
     "@types/form-data": "^2.2.0",
     "@types/fs-extra": "^9.0.1",
     "@types/getenv": "^0.7.0",
