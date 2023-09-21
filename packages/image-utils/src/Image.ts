@@ -215,11 +215,13 @@ export async function compositeImagesAsync({
     .toBuffer();
 }
 
-export async function isValidPng(src: string) {
-  try {
-    await parsePng(fs.readFileSync(src));
-    return true;
-  } catch (e) {
-    return false;
-  }
+type PNGInfo = {
+  data: Buffer;
+  width: number;
+  height: number;
+  bpp: number;
+};
+
+export async function getPngInfo(src: string): Promise<PNGInfo> {
+  return await parsePng(fs.readFileSync(src));
 }

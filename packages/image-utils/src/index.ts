@@ -3,7 +3,7 @@ import {
   compositeImagesAsync,
   generateFaviconAsync,
   generateImageAsync,
-  isValidPng,
+  getPngInfo,
 } from './Image';
 import { ImageFormat, ImageOptions, ResizeMode } from './Image.types';
 import { convertFormat, jimpAsync } from './jimp';
@@ -32,7 +32,7 @@ export {
   generateFaviconAsync,
   Cache,
   compositeImagesAsync,
-  isValidPng,
+  getPngInfo,
 };
 
 export { SharpGlobalOptions, SharpCommandOptions, ResizeMode, ImageFormat, ImageOptions };
