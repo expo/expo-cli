@@ -183,7 +183,8 @@ export default class Schemer {
       const filePath = path.resolve(this.rootDir, data);
       try {
         //  This cases on whether filePath is a remote URL or located on the machine
-        const probeResult = fs.existsSync(filePath)
+        const isLocalFile = fs.existsSync(filePath);
+        const probeResult = isLocalFile
           ? await imageProbe(require('fs').createReadStream(filePath))
           : await imageProbe(data, { useElectronNet: false });
 
@@ -195,7 +196,7 @@ export default class Schemer {
 
         const fileExtension = filePath.split('.').pop();
 
-        if (mime !== `image/${fileExtension}`) {
+        if (isLocalFile && mime !== `image/${fileExtension}`) {
           this.manualValidationErrors.push(
             new ValidationError({
               errorCode: 'FILE_EXTENSION_MISMATCH',

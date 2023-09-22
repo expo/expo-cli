@@ -24,11 +24,16 @@ describe('Remote', () => {
   });
 
   it('Remote icon dimensions wrong', async () => {
+    let didError = false;
     const S = new Schemer(
       {
         properties: {
           icon: {
-            meta: { asset: true, dimensions: { width: 101, height: 100 } },
+            meta: {
+              asset: true,
+              dimensions: { width: 101, height: 100 },
+              contentTypePattern: '^image/png$',
+            },
           },
         },
       },
@@ -37,6 +42,7 @@ describe('Remote', () => {
     try {
       await S.validateIcon('https://httpbin.org/image/png');
     } catch (e) {
+      didError = true;
       expect(e).toBeTruthy();
       expect(e.errors.length).toBe(1);
       expect(
@@ -46,5 +52,7 @@ describe('Remote', () => {
         })
       ).toMatchSnapshot();
     }
+
+    expect(didError).toBe(true);
   });
 });
