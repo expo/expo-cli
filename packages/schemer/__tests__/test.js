@@ -23,6 +23,7 @@ const S = new Schemer(schema, { rootDir: './__tests__' });
 const good = require('./files/app.json');
 const bad = require('./files/bad.json');
 const badWithNot = require('./files/badwithnot.json');
+const invalidAppIcon = require('./files/invalidAppIcon.json');
 
 describe('Holistic Unit Test', () => {
   it('good example app.json all', async () => {
@@ -53,6 +54,23 @@ describe('Holistic Unit Test', () => {
   it('bad example app.json schema with field with not', async () => {
     try {
       await S.validateSchemaAsync(badWithNot);
+    } catch (e) {
+      expect(e).toBeInstanceOf(SchemerError);
+      const errors = e.errors;
+      expect(errors.length).toBe(1);
+      expect(
+        errors.map(validationError => {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const { stack, ...rest } = validationError;
+          return rest;
+        })
+      ).toMatchSnapshot();
+    }
+  });
+
+  it('bad example app.json - invalid path for app icon', async () => {
+    try {
+      await S.validateAll(invalidAppIcon);
     } catch (e) {
       expect(e).toBeInstanceOf(SchemerError);
       const errors = e.errors;

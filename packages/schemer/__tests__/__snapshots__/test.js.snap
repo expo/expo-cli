@@ -1,5 +1,24 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`Holistic Unit Test bad example app.json - invalid path for app icon 1`] = `
+Array [
+  Object {
+    "data": "./unknown/path.png",
+    "errorCode": "INVALID_ASSET_URI",
+    "fieldPath": "icon",
+    "message": "cannot access file at './unknown/path.png'",
+    "meta": Object {
+      "asset": true,
+      "bareWorkflow": "To change your app's icon, edit or replace the files in \`ios/<PROJECT-NAME>/Assets.xcassets/AppIcon.appiconset\` (we recommend using Xcode), and \`android/app/src/main/res/mipmap-<RESOLUTION>\`. Be sure to follow the guidelines for each platform ([iOS](https://developer.apple.com/design/human-interface-guidelines/ios/icons-and-images/app-icon/), [Android 7.1 and below](https://material.io/design/iconography/#icon-treatments), and [Android 8+](https://developer.android.com/guide/practices/ui_guidelines/icon_design_adaptive)) and to provide your new icon in each existing size.",
+      "contentTypeHuman": ".png image",
+      "contentTypePattern": "^image/png$",
+      "square": true,
+    },
+    "name": "ValidationError",
+  },
+]
+`;
+
 exports[`Holistic Unit Test bad example app.json schema 1`] = `
 Array [
   Object {
