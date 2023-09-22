@@ -23,6 +23,25 @@ describe('Sanity Tests', () => {
   });
 });
 
+describe('Image Validation', () => {
+  it('errors for webp images', async () => {
+    let didError = false;
+    try {
+      await S.validateAssetsAsync({
+        android: {
+          adaptiveIcon: { foregroundImage: './files/webp.webp' },
+        },
+      });
+    } catch (e) {
+      didError = true;
+      expect(e.errors[0].errorCode).toBe('INVALID_CONTENT_TYPE');
+      expect(e.errors[1].errorCode).toBe('NOT_SQUARE');
+    }
+
+    expect(didError).toBe(true);
+  });
+});
+
 describe('Holistic Unit Test', () => {
   it('good example app.json all', async () => {
     expect(await S.validateAll(good)).toEqual(undefined);

@@ -5,7 +5,6 @@ import traverse from 'json-schema-traverse';
 import get from 'lodash/get';
 import path from 'path';
 import imageProbe from 'probe-image-size';
-import readChunk from 'read-chunk';
 
 import { SchemerError, ValidationError } from './Error';
 import { fieldPathToSchema, schemaPointerToFieldPath } from './Util';
@@ -183,15 +182,11 @@ export default class Schemer {
       // filePath could be an URL
       const filePath = path.resolve(this.rootDir, data);
       try {
-        // NOTE(nikki): The '4100' below should be enough for most file types, though we
-        //              could probably go shorter....
-        //              http://www.garykessler.net/library/file_sigs.html
-        //  The metadata content for .jpgs might be located a lot farther down the file, so this
-        //  may pose problems in the future.
         //  This cases on whether filePath is a remote URL or located on the machine
         const probeResult = fs.existsSync(filePath)
-          ? imageProbe.sync(await readChunk(filePath, 0, 4100))
+          ? await imageProbe(require('fs').createReadStream(filePath))
           : await imageProbe(data, { useElectronNet: false });
+
         if (!probeResult) {
           return;
         }
