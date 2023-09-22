@@ -4,7 +4,7 @@
   "description": "Centralized scheme validation library for Expo",
   "main": "./build/index.js",
   "scripts": {
-    "test": "jest --testPathIgnorePatterns network",
+    "test": "jest --testPathIgnorePatterns __tests__/network-test.ts",
     "test-integration": "jest",
     "watch": "tsc --watch --preserveWatchOutput",
     "build": "tsc",

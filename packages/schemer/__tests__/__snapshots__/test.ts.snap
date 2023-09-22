@@ -94,3 +94,33 @@ Array [
   },
 ]
 `;
+
+exports[`Individual Unit Tests Error when data has an additional property 1`] = `
+Array [
+  Object {
+    "data": Object {
+      "extraProperty": "extra",
+    },
+    "errorCode": "SCHEMA_ADDITIONAL_PROPERTY",
+    "fieldPath": "",
+    "message": "should NOT have additional property 'extraProperty'",
+    "meta": undefined,
+    "name": "ValidationError",
+  },
+]
+`;
+
+exports[`Individual Unit Tests Error when missing Required Property 1`] = `
+Array [
+  Object {
+    "data": Object {
+      "noName": "",
+    },
+    "errorCode": "SCHEMA_MISSING_REQUIRED_PROPERTY",
+    "fieldPath": "",
+    "message": "is missing required property 'name'",
+    "meta": undefined,
+    "name": "ValidationError",
+  },
+]
+`;

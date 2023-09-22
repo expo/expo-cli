@@ -5,11 +5,11 @@ const S = new Schemer(schema, { rootDir: './__tests__' });
 
 describe('Remote', () => {
   it('Icon', async () => {
-    await expect(
-      S.validateIcon(
+    expect(
+      await S.validateIcon(
         'https://upload.wikimedia.org/wikipedia/commons/0/0f/Icon_Pinguin_2_512x512.png'
       )
-    ).resolves;
+    ).toEqual(undefined);
   });
 
   it('Remote icon dimensions correct', async () => {
@@ -20,7 +20,7 @@ describe('Remote', () => {
         },
       },
     });
-    await expect(S.validateIcon('https://httpbin.org/image/png')).resolves;
+    expect(await S.validateIcon('https://httpbin.org/image/png')).toEqual(undefined);
   });
 
   it('Remote icon dimensions wrong', async () => {
@@ -39,6 +39,12 @@ describe('Remote', () => {
     } catch (e) {
       expect(e).toBeTruthy();
       expect(e.errors.length).toBe(1);
+      expect(
+        e.errors.map(validationError => {
+          const { stack, ...rest } = validationError;
+          return rest;
+        })
+      ).toMatchSnapshot();
     }
   });
 });

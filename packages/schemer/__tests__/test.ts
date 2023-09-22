@@ -1,7 +1,12 @@
-/* eslint-disable import/order */
-
 import { ErrorCodes, SchemerError } from '../src/Error';
 import Schemer from '../src/index';
+import good from './files/app.json';
+import bad from './files/bad.json';
+import badWithNot from './files/badwithnot.json';
+import invalidAppIcon from './files/invalidAppIcon.json';
+import schema from './files/schema.json';
+
+const S = new Schemer(schema.schema, { rootDir: './__tests__' });
 
 describe('Sanity Tests', () => {
   it('is a class', () => {
@@ -18,20 +23,13 @@ describe('Sanity Tests', () => {
   });
 });
 
-const schema = require('./files/schema.json').schema;
-const S = new Schemer(schema, { rootDir: './__tests__' });
-const good = require('./files/app.json');
-const bad = require('./files/bad.json');
-const badWithNot = require('./files/badwithnot.json');
-const invalidAppIcon = require('./files/invalidAppIcon.json');
-
 describe('Holistic Unit Test', () => {
   it('good example app.json all', async () => {
-    await expect(S.validateAll(good)).resolves;
+    expect(await S.validateAll(good)).toEqual(undefined);
   });
 
   it('good example app.json schema', async () => {
-    await expect(S.validateSchemaAsync(good)).resolves;
+    expect(await S.validateSchemaAsync(good)).toEqual(undefined);
   });
 
   it('bad example app.json schema', async () => {
@@ -43,7 +41,6 @@ describe('Holistic Unit Test', () => {
       expect(errors.length).toBe(4);
       expect(
         errors.map(validationError => {
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           const { stack, ...rest } = validationError;
           return rest;
         })
@@ -88,7 +85,7 @@ describe('Holistic Unit Test', () => {
 
 describe('Manual Validation Individual Unit Tests', () => {
   it('Local Icon', async () => {
-    await expect(S.validateIcon('./files/check.png')).resolves;
+    expect(await S.validateIcon('./files/check.png')).toEqual(undefined);
   });
 
   it('Local Square Icon correct', async () => {
@@ -96,7 +93,7 @@ describe('Manual Validation Individual Unit Tests', () => {
       { properties: { icon: { meta: { asset: true, square: true } } } },
       { rootDir: './__tests__' }
     );
-    await expect(S.validateIcon('./files/check.png')).resolves;
+    expect(await S.validateIcon('./files/check.png')).toEqual(undefined);
   });
 
   it('Local icon dimensions wrong', async () => {
@@ -112,6 +109,13 @@ describe('Manual Validation Individual Unit Tests', () => {
     } catch (e) {
       expect(e).toBeTruthy();
       expect(e.errors.length).toBe(1);
+      expect(
+        e.map(validationError => {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const { stack, ...rest } = validationError;
+          return rest;
+        })
+      ).toMatchSnapshot();
     }
   });
 });
@@ -129,6 +133,13 @@ describe('Individual Unit Tests', () => {
     } catch (e) {
       expect(e.errors.length).toBe(1);
       expect(e.errors[0].errorCode).toBe(ErrorCodes.SCHEMA_MISSING_REQUIRED_PROPERTY);
+      expect(
+        e.errors.map(validationError => {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const { stack, ...rest } = validationError;
+          return rest;
+        })
+      ).toMatchSnapshot();
     }
   });
 
@@ -139,35 +150,61 @@ describe('Individual Unit Tests', () => {
     } catch (e) {
       expect(e.errors.length).toBe(1);
       expect(e.errors[0].errorCode).toBe(ErrorCodes.SCHEMA_ADDITIONAL_PROPERTY);
+      expect(
+        e.errors.map(validationError => {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const { stack, ...rest } = validationError;
+          return rest;
+        })
+      ).toMatchSnapshot();
     }
   });
 
-  it('Name', async () => {
-    await expect(S.validateName('wilson')).resolves;
-    await expect(S.validateName([1, 2, 3, 4])).rejects.toBeDefined();
-    await expect(S.validateName(23.232332)).rejects.toBeDefined();
-    await expect(S.validateName(/regex.*/)).rejects.toBeDefined();
+  it.each`
+    name            | expectedError
+    ${'wilson'}     | ${undefined}
+    ${[1, 2, 3, 4]} | ${'must be string'}
+    ${23.232332}    | ${'must be string'}
+    ${/regex.*/}    | ${'must be string'}
+  `('validates name: $name', async ({ name, expectedError }) => {
+    try {
+      expect(await S.validateName(name)).toBe(undefined);
+    } catch (e) {
+      expect(e.message).toBe(expectedError);
+    }
   });
 
-  xit('Slug', async () => {
-    await expect(S.validateSlug('wilson')).resolves;
-    await expect(S.validateSlug(12312123123)).rejects.toBeDefined();
-    await expect(S.validateSlug([1, 23])).rejects.toBeDefined();
-
-    await expect(S.validateSlug('wilson123')).resolves;
-    await expect(S.validateSlug('wilson-123')).resolves;
-    await expect(S.validateSlug('wilson/test')).rejects.toBeDefined();
-    await expect(S.validateSlug('wilson-test%')).rejects.toBeDefined();
-    await expect(S.validateSlug('wilson-test-zhao--javascript-is-super-funky')).resolves;
+  it.each`
+    slug                                             | expectedError
+    ${'wilson'}                                      | ${undefined}
+    ${12312123123}                                   | ${'must be string'}
+    ${[1, 23]}                                       | ${'must be string'}
+    ${'wilson123'}                                   | ${undefined}
+    ${'wilson-123'}                                  | ${undefined}
+    ${'wilson/test'}                                 | ${'\'\' must match pattern "^[a-zA-Z0-9_\\-]+$"'}
+    ${'wilson-test%'}                                | ${'\'\' must match pattern "^[a-zA-Z0-9_\\-]+$"'}
+    ${'wilson-test-zhao--javascript-is-super-funky'} | ${undefined}
+  `('validates slug: $slug', async ({ slug, expectedError }) => {
+    try {
+      expect(await S.validateSlug(slug)).toBe(undefined);
+    } catch (e) {
+      expect(e.message).toBe(expectedError);
+    }
   });
 
-  xit('SDK Version', async () => {
-    await expect(S.validateSdkVersion('1.0.0')).resolves;
-    // TODO: is the following allowed?
-    await expect(S.validateSdkVersion('2.0.0.0.1')).rejects.toBeDefined();
-    await expect(S.validateSdkVersion('UNVERSIONED')).resolves;
-    await expect(S.validateSdkVersion('12.2a.3')).rejects.toBeDefined();
-    await expect(S.validateSdkVersion('9,9,9')).rejects.toBeDefined();
-    await expect(S.validateSdkVersion('1.2')).rejects.toBeDefined();
+  it.each`
+    sdkVersion       | expectedError
+    ${'1.0.0'}       | ${undefined}
+    ${'2.0.0.0.1'}   | ${'must be string'}
+    ${'UNVERSIONED'} | ${'must be string'}
+    ${'12.2a.3'}     | ${'\'\' must match pattern "^(\\d+\\.\\d+\\.\\d+)|(UNVERSIONED)$"'}
+    ${'9,9,9'}       | ${'\'\' must match pattern "^(\\d+\\.\\d+\\.\\d+)|(UNVERSIONED)$"'}
+    ${'1.2'}         | ${'\'\' must match pattern "^(\\d+\\.\\d+\\.\\d+)|(UNVERSIONED)$"'}
+  `('validates SDK version: $sdkVersion', async ({ sdkVersion, expectedError }) => {
+    try {
+      expect(await S.validateSdkVersion(sdkVersion)).toBe(undefined);
+    } catch (e) {
+      expect(e.message).toBe(expectedError);
+    }
   });
 });
