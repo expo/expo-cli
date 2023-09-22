@@ -36,6 +36,32 @@ describe('Image Validation', () => {
       didError = true;
       expect(e.errors[0].errorCode).toBe('INVALID_CONTENT_TYPE');
       expect(e.errors[1].errorCode).toBe('NOT_SQUARE');
+      expect(
+        e.errors.map(validationError => {
+          const { stack, ...rest } = validationError;
+          return rest;
+        })
+      ).toMatchSnapshot();
+    }
+
+    expect(didError).toBe(true);
+  });
+
+  it('errors when file extension and content do not match up', async () => {
+    let didError = false;
+    try {
+      await S.validateAssetsAsync({
+        icon: './files/secretlyPng.jpg',
+      });
+    } catch (e) {
+      didError = true;
+      expect(e.errors[0].errorCode).toBe('FILE_EXTENSION_MISMATCH');
+      expect(
+        e.errors.map(validationError => {
+          const { stack, ...rest } = validationError;
+          return rest;
+        })
+      ).toMatchSnapshot();
     }
 
     expect(didError).toBe(true);

@@ -193,6 +193,20 @@ export default class Schemer {
 
         const { width, height, type, mime } = probeResult;
 
+        const fileExtension = filePath.split('.').pop();
+
+        if (mime !== `image/${fileExtension}`) {
+          this.manualValidationErrors.push(
+            new ValidationError({
+              errorCode: 'FILE_EXTENSION_MISMATCH',
+              fieldPath,
+              message: `the file extension should match the content, but the file extension is .${fileExtension} while the file content at '${data}' is of type ${type}`,
+              data,
+              meta,
+            })
+          );
+        }
+
         if (contentTypePattern && !mime.match(new RegExp(contentTypePattern))) {
           this.manualValidationErrors.push(
             new ValidationError({
