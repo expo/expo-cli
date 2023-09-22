@@ -124,3 +124,23 @@ Array [
   },
 ]
 `;
+
+exports[`Manual Validation Individual Unit Tests Local icon dimensions wrong 1`] = `
+Array [
+  Object {
+    "data": "./files/check.png",
+    "errorCode": "INVALID_DIMENSIONS",
+    "fieldPath": "icon",
+    "message": "'icon' should have dimensions 400x401, but the file at './files/check.png' has dimensions 512x512",
+    "meta": Object {
+      "asset": true,
+      "contentTypePattern": "^image/png$",
+      "dimensions": Object {
+        "height": 401,
+        "width": 400,
+      },
+    },
+    "name": "ValidationError",
+  },
+]
+`;
