@@ -21,6 +21,7 @@ This is the log of notable changes to Expo CLI and related packages.
 - [create-expo] Bump @expo/package-manager for Bun support
 - [create-expo] detect bun package manager ([#4752](https://github.com/expo/expo-cli/issues/4752))
 - [webpack]: Bump expo to SDK 49 ([#4747](https://github.com/expo/expo-cli/issues/4747))
+- [schemer]: additional validation for unsupported image formats ([#4764](https://github.com/expo/expo-cli/pull/4764))
 
 ### 🧹 Chores
 

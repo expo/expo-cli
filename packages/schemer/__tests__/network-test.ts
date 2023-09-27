@@ -5,11 +5,11 @@ const S = new Schemer(schema, { rootDir: './__tests__' });
 
 describe('Remote', () => {
   it('Icon', async () => {
-    await expect(
-      S.validateIcon(
+    expect(
+      await S.validateIcon(
         'https://upload.wikimedia.org/wikipedia/commons/0/0f/Icon_Pinguin_2_512x512.png'
       )
-    ).resolves;
+    ).toEqual(undefined);
   });
 
   it('Remote icon dimensions correct', async () => {
@@ -20,15 +20,20 @@ describe('Remote', () => {
         },
       },
     });
-    await expect(S.validateIcon('https://httpbin.org/image/png')).resolves;
+    expect(await S.validateIcon('https://httpbin.org/image/png')).toEqual(undefined);
   });
 
   it('Remote icon dimensions wrong', async () => {
+    let didError = false;
     const S = new Schemer(
       {
         properties: {
           icon: {
-            meta: { asset: true, dimensions: { width: 101, height: 100 } },
+            meta: {
+              asset: true,
+              dimensions: { width: 101, height: 100 },
+              contentTypePattern: '^image/png$',
+            },
           },
         },
       },
@@ -37,8 +42,17 @@ describe('Remote', () => {
     try {
       await S.validateIcon('https://httpbin.org/image/png');
     } catch (e) {
+      didError = true;
       expect(e).toBeTruthy();
       expect(e.errors.length).toBe(1);
+      expect(
+        e.errors.map(validationError => {
+          const { stack, ...rest } = validationError;
+          return rest;
+        })
+      ).toMatchSnapshot();
     }
+
+    expect(didError).toBe(true);
   });
 });
