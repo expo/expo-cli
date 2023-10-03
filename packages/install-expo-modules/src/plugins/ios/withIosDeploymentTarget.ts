@@ -93,21 +93,38 @@ export async function shouldUpdateDeployTargetPodfileAsync(
 export async function lookupReactNativeMinIosVersionSupported(
   projectRoot: string
 ): Promise<string | null> {
+  // [0] Try to parse the default version from **scripts/cocoapods/helpers.rb**
+  const reactNativeCocoaPodsHelper = resolveFrom.silent(
+    projectRoot,
+    'react-native/scripts/cocoapods/helpers.rb'
+  );
+  if (reactNativeCocoaPodsHelper) {
+    try {
+      const content = await fs.promises.readFile(reactNativeCocoaPodsHelper, 'utf-8');
+      const matchRepExp = /^\s*def self\.min_ios_version_supported\n\s*return\s*['"]([\d.]+)['"]/gm;
+      const matchResult = matchRepExp.exec(content);
+      if (matchResult) {
+        return matchResult[1];
+      }
+    } catch {}
+  }
+
+  // [1] Try to parse the default version from **scripts/react_native_pods.rb**
   const reactNativePodsScript = resolveFrom.silent(
     projectRoot,
     'react-native/scripts/react_native_pods.rb'
   );
-  if (!reactNativePodsScript) {
-    return null;
+  if (reactNativePodsScript) {
+    try {
+      const content = await fs.promises.readFile(reactNativePodsScript, 'utf-8');
+      const matchRepExp = /^def min_ios_version_supported\n\s*return\s*['"]([\d.]+)['"]/gm;
+      const matchResult = matchRepExp.exec(content);
+      if (matchResult) {
+        return matchResult[1];
+      }
+    } catch {}
   }
-  try {
-    const content = await fs.promises.readFile(reactNativePodsScript, 'utf-8');
-    const matchRepExp = /^def min_ios_version_supported\n\s*return\s*['"]([\d.]+)['"]/gm;
-    const matchResult = matchRepExp.exec(content);
-    if (matchResult) {
-      return matchResult[1];
-    }
-  } catch {}
+
   return null;
 }
 
