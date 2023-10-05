@@ -16,6 +16,8 @@
 
 ---
 
+> Expo Webpack is in maintenance mode. We are actively working on a universal bundling solution that works for all platforms.
+
 ## [Documentation][docs]
 
 To learn more about how to use this Webpack config, check out the docs here: [Customizing the Webpack config][docs]
