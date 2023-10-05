@@ -10,6 +10,38 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🧹 Chores
 
+## [Sun, 10 Sep 2023 17:56:11 -0700](https://github.com/expo/expo-cli/commit/24eb3415f8e120e82a4f6dc8577d07fbe42ef854)
+
+### 🛠 Breaking changes
+
+### 🎉 New features
+
+- [doctor] @expo/metro-config deep dependency check ([#4742](https://github.com/expo/expo-cli/issues/4742))
+- [pod-install] show alternative message in managed projects ([#4566](https://github.com/expo/expo-cli/issues/4566))
+- [create-expo] Bump @expo/package-manager for Bun support
+- [create-expo] detect bun package manager ([#4752](https://github.com/expo/expo-cli/issues/4752))
+- [webpack]: Bump expo to SDK 49 ([#4747](https://github.com/expo/expo-cli/issues/4747))
+- [schemer]: additional validation for unsupported image formats ([#4764](https://github.com/expo/expo-cli/pull/4764))
+
+### 🧹 Chores
+
+### 🐛 Bug fixes
+
+- [create-expo]: allow scoped template package names ([#4750](https://github.com/expo/expo-cli/issues/4750))
+
+### 📦 Packages updated
+
+- create-expo@2.1.1
+- create-expo-app@2.1.1
+- @expo/dev-tools@0.13.187
+- expo-cli@6.3.12
+- expo-doctor@1.1.3
+- install-expo-modules@0.6.3
+- pod-install@0.1.39
+- expo-pwa@0.0.127
+- @expo/webpack-config@18.1.3
+- xdl@60.0.12
+
 ## [Wed Jul 5 17:04:00 2023 -0700](https://github.com/expo/expo-cli/commit/b417540058c85cc7c2b28c37aa2e2ce52b06b03b)
 
 ### 🧹 Chores

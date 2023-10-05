@@ -1,5 +1,7 @@
 import chalk from 'chalk';
+import fs from 'fs';
 import mime from 'mime';
+import parsePng from 'parse-png';
 
 import * as Cache from './Cache';
 import * as Download from './Download';
@@ -211,4 +213,15 @@ export async function compositeImagesAsync({
   return await sharp(background)
     .composite([{ input: foreground, left: x, top: y }])
     .toBuffer();
+}
+
+type PNGInfo = {
+  data: Buffer;
+  width: number;
+  height: number;
+  bpp: number;
+};
+
+export async function getPngInfo(src: string): Promise<PNGInfo> {
+  return await parsePng(fs.readFileSync(src));
 }

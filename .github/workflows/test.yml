@@ -40,7 +40,6 @@ jobs:
             babel-preset-cli,
             expo-cli,
             expo-doctor,
-            create-expo-app,
             expo-codemod,
             image-utils,
             json-file,
