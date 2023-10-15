@@ -149,6 +149,8 @@ export default function createBabelLoader({
     babelrc: false,
     // Attempt to use local babel.config.js file for compiling project.
     configFile: true,
+    // Enable fast refresh
+    plugins: [!isProduction && require.resolve('react-refresh/babel')].filter(Boolean),
   };
 
   if (

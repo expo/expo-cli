@@ -1,3 +1,4 @@
+import ReactRefreshWebpackPlugin from '@pmmmwh/react-refresh-webpack-plugin';
 import chalk from 'chalk';
 import { CleanWebpackPlugin } from 'clean-webpack-plugin';
 import CopyWebpackPlugin from 'copy-webpack-plugin';
@@ -418,6 +419,9 @@ export default async function (env: Environment, argv: Arguments = {}): Promise<
             minify: isProd ?? false,
           },
         }),
+
+      // Hot refresh
+      isDev && new ReactRefreshWebpackPlugin(),
     ].filter(Boolean),
 
     module: {

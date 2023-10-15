@@ -142,6 +142,8 @@ export function createDevServer(
     allowedHosts: disableFirewall ? ['all'] : ([allowedHost].filter(Boolean) as string[]),
     // Enable gzip compression of generated files.
     compress: true,
+    // Enable hot module reload
+    hot: true,
     static: {
       // By default WebpackDevServer serves physical files from current directory
       // in addition to all the virtual build products that it serves from memory.
