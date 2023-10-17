@@ -105,7 +105,7 @@ async function promptUpgradeIosDeployTargetAsync(projectRoot: string, iosDeploym
  */
 async function promptCliIntegrationAsync() {
   const message = `This tool can install Expo CLI integration for your project.
-Using Expo CLI has some some benefits over the the default CLI in bare React Native projects:
+Using Expo CLI has some benefits over the the default CLI in bare React Native projects:
   - Built-in JavaScript debugger and React Devtools.
   - Support for Continuous Native Generation (CNG) with \`npx expo prebuild\` for easy upgrades.
   - Automatic web support with Metro.
