@@ -1,4 +1,5 @@
 import { readExpRcAsync } from '@expo/config';
+import * as dotenv from 'dotenv';
 import * as path from 'path';
 
 import {
@@ -51,13 +52,16 @@ async function connectToNgrokAsync(
   attempts: number = 0
 ): Promise<string> {
   try {
+    dotenv.config();
     const configPath = getNgrokConfigPath();
     const hostname = await hostnameAsync();
     const url = await ngrok.connect({
-      hostname,
       configPath,
+      hostname: process.env.NGROK_HOSTNAME || hostname,
       onStatusChange: handleStatusChange.bind(null, projectRoot),
       ...args,
+      authtoken:
+        process.env.NGROK_AUTHTOKEN || args.authtoken || NGROK_CONFIG.authToken || undefined,
     });
     return url;
   } catch (e: any) {
