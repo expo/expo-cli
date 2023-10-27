@@ -54,6 +54,10 @@ async function connectToNgrokAsync(
   try {
     dotenv.config();
     const configPath = getNgrokConfigPath();
+    if (process.env.EXPO_TUNNEL_SKIP_CONNECT && process.env.NGROK_HOSTNAME) {
+      const protocol = process.env.EXPO_TUNNEL_USE_HTTPS ? 'https' : 'http';
+      return `${protocol}://${process.env.NGROK_HOSTNAME}`;
+    }
     const hostname = await hostnameAsync();
     const url = await ngrok.connect({
       configPath,
