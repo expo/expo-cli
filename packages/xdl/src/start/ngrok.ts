@@ -66,6 +66,7 @@ async function connectToNgrokAsync(
       ...args,
       authtoken:
         process.env.NGROK_AUTHTOKEN || args.authtoken || NGROK_CONFIG.authToken || undefined,
+      port: process.env.NGROK_PORT || args.port || undefined,
     });
     return url;
   } catch (e: any) {
