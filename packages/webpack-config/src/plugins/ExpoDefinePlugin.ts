@@ -71,7 +71,13 @@ export function createClientEnvironment(
   // Adding the env variables to the Expo manifest is unsafe.
   // This feature is deprecated in SDK 41 forward.
   const isEnvBindingSupported = lteSdkVersion(nativeAppManifest, '40.0.0');
-  const ENV_VAR_REGEX = isEnvBindingSupported ? /^(EXPO_|REACT_NATIVE_|CI$)/i : /^(CI$)/i;
+  // Export env variables starts with EXPO_PUBLIC_ after SDK 49
+  const isPublicEnvBindingSupported = gteSdkVersion(nativeAppManifest, '49.0.0');
+  const ENV_VAR_REGEX = isEnvBindingSupported
+    ? /^(EXPO_|REACT_NATIVE_|CI$)/i
+    : isPublicEnvBindingSupported
+    ? /^(EXPO_PUBLIC_|CI$)/i
+    : /^(CI$)/i;
   const SECRET_REGEX = /(PASSWORD|SECRET|TOKEN)/i;
 
   const shouldDefineKeys = boolish('EXPO_WEBPACK_DEFINE_ENVIRONMENT_AS_KEYS', false);
@@ -183,6 +189,22 @@ function lteSdkVersion(exp: Pick<ExpoConfig, 'sdkVersion'>, sdkVersion: string):
 
   try {
     return semver.lte(exp.sdkVersion, sdkVersion);
+  } catch {
+    return false;
+  }
+}
+
+function gteSdkVersion(exp: Pick<ExpoConfig, 'sdkVersion'>, sdkVersion: string): boolean {
+  if (!exp.sdkVersion) {
+    return false;
+  }
+
+  if (exp.sdkVersion === 'UNVERSIONED') {
+    return false;
+  }
+
+  try {
+    return semver.gte(exp.sdkVersion, sdkVersion);
   } catch {
     return false;
   }
