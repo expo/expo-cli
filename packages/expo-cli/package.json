@@ -108,7 +108,7 @@
     "qrcode-terminal": "0.11.0",
     "read-last-lines": "1.6.0",
     "resolve-from": "^5.0.0",
-    "semver": "7.3.2",
+    "semver": "7.5.4",
     "slugify": "^1.3.4",
     "strip-ansi": "^6.0.0",
     "tar": "^6.0.5",

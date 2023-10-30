@@ -81,7 +81,7 @@
     "prompts": "^2.3.2",
     "requireg": "^0.2.2",
     "resolve-from": "^5.0.0",
-    "semver": "7.3.2",
+    "semver": "7.5.4",
     "serialize-error": "6.0.0",
     "source-map-support": "0.4.18",
     "split": "1.0.1",
