@@ -36,7 +36,6 @@ jobs:
         package:
           [
             dev-tools,
-            babel-preset-cli,
             expo-cli,
             expo-codemod,
             image-utils,
