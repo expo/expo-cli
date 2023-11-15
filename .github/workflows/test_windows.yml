@@ -40,7 +40,6 @@ jobs:
             expo-cli,
             expo-codemod,
             image-utils,
-            json-file,
             pkcs12,
             plist,
             pwa,
