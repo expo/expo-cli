@@ -39,7 +39,6 @@ jobs:
             babel-preset-cli,
             expo-cli,
             expo-codemod,
-            image-utils,
             pkcs12,
             plist,
             pwa,
