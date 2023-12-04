@@ -41,7 +41,6 @@ jobs:
             expo-cli,
             expo-doctor,
             expo-codemod,
-            image-utils,
             pkcs12,
             plist,
             pwa,
