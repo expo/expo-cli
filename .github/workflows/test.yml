@@ -39,7 +39,6 @@ jobs:
             dev-tools,
             babel-preset-cli,
             expo-cli,
-            expo-doctor,
             expo-codemod,
             pkcs12,
             plist,
