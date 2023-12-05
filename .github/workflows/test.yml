@@ -43,7 +43,6 @@ jobs:
             pkcs12,
             plist,
             pwa,
-            schemer,
             uri-scheme,
             # webpack-config,
             xdl,
