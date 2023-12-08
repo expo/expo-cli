@@ -44,7 +44,6 @@ jobs:
             plist,
             pwa,
             schemer,
-            uri-scheme,
             # webpack-config,
             xdl,
           ]
