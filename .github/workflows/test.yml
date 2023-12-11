@@ -40,10 +40,7 @@ jobs:
             babel-preset-cli,
             expo-cli,
             expo-codemod,
-            plist,
             pwa,
-            schemer,
-            uri-scheme,
             # webpack-config,
             xdl,
           ]
