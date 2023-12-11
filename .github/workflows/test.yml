@@ -40,7 +40,6 @@ jobs:
             babel-preset-cli,
             expo-cli,
             expo-codemod,
-            pkcs12,
             pwa,
             # webpack-config,
             xdl,
