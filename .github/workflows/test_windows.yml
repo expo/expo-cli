@@ -40,9 +40,7 @@ jobs:
             expo-cli,
             expo-codemod,
             pkcs12,
-            plist,
             pwa,
-            uri-scheme,
             webpack-config,
             xdl,
           ]
