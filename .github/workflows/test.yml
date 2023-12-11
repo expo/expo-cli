@@ -42,7 +42,6 @@ jobs:
             expo-codemod,
             pkcs12,
             pwa,
-            schemer,
             # webpack-config,
             xdl,
           ]
