@@ -12,7 +12,7 @@ if (major > 16) {
   // eslint-disable-next-line no-console
   console.warn(
     yellow(
-      'WARNING: The legacy expo-cli does not support Node +17. Migrate to the new local Expo CLI: https://blog.expo.dev/the-new-expo-cli-f4250d8e3421.'
+      'WARNING: The legacy expo-cli does not support Node +17. Migrate to the new local Expo CLI: https://blog.expo.dev/the-new-expo-cli-f4250d8e3421'
     )
   );
 }
