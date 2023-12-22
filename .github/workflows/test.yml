@@ -22,7 +22,7 @@ jobs:
           node-version: ${{ matrix.node }}
       - run: yarn install --frozen-lockfile --check-files
       - run: yarn lint --max-warnings=0
-  build:
+  test:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -38,7 +38,7 @@ jobs:
             # webpack-config,
             xdl,
           ]
-    name: Build & Test ${{ matrix.package }} on Node ${{ matrix.node }}
+    name: Test ${{ matrix.package }} on Node ${{ matrix.node }}
     steps:
       - uses: actions/checkout@v3
         with:
