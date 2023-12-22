@@ -1,6 +1,6 @@
 import { ExpoConfig } from '@expo/config';
 import JsonFile from '@expo/json-file';
-import spawnAsync, { SpawnOptions, SpawnResult } from '@expo/spawn-async';
+import spawnAsync, { SpawnOptions, SpawnPromise, SpawnResult } from '@expo/spawn-async';
 import fs from 'fs';
 import path from 'path';
 
@@ -14,8 +14,14 @@ function isSpawnResult(errorOrResult: Error): errorOrResult is Error & SpawnResu
 
 export async function runAsync(args: string[], options?: SpawnOptions): Promise<SpawnResult> {
   const promise = spawnAsync(EXPO_CLI, args, options);
-  promise.child.stdout.pipe(process.stdout);
-  promise.child.stderr.pipe(process.stderr);
+
+  promise.child.stdout?.pipe(process.stdout);
+  promise.child.stderr?.pipe(process.stderr);
+
+  return await handleSpawnResult(promise);
+}
+
+export async function handleSpawnResult(promise: SpawnPromise<SpawnResult>): Promise<SpawnResult> {
   try {
     return await promise;
   } catch (error: any) {
@@ -90,7 +96,10 @@ export async function createMinimalProjectAsync(
 
   // TODO(Bacon): We shouldn't need this
   // Install the packages so eject can infer the versions
-  await spawnAsync('yarn', [], { cwd: projectRoot, stdio: ['ignore', 'inherit', 'inherit'] });
+  spawnAsync('yarn', [], {
+    cwd: projectRoot,
+    stdio: process.env.CI === 'true' ? 'inherit' : ['ignore', 'inherit', 'inherit'],
+  });
 
   return projectRoot;
 }
