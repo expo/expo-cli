@@ -94,12 +94,19 @@ export async function createMinimalProjectAsync(
 
   fs.writeFileSync(path.join(projectRoot, 'App.js'), getBasicAppJs());
 
-  // TODO(Bacon): We shouldn't need this
-  // Install the packages so eject can infer the versions
-  spawnAsync('yarn', [], {
-    cwd: projectRoot,
-    stdio: process.env.CI === 'true' ? 'inherit' : ['ignore', 'inherit', 'inherit'],
-  });
+  try {
+    // TODO(Bacon): We shouldn't need this
+    // Install the packages so eject can infer the versions
+    await spawnAsync('yarn', [], {
+      cwd: projectRoot,
+      stdio: process.env.CI === 'true' ? 'inherit' : ['ignore', 'inherit', 'inherit'],
+    });
+  } catch {
+    await spawnAsync('npm', ['install'], {
+      cwd: projectRoot,
+      stdio: process.env.CI === 'true' ? 'inherit' : ['ignore', 'inherit', 'inherit'],
+    });
+  }
 
   return projectRoot;
 }
