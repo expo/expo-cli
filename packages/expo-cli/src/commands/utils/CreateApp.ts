@@ -200,7 +200,10 @@ export async function installCocoaPodsAsync(projectRoot: string) {
   }
 
   try {
-    await packageManager.installAsync({ spinner: step });
+    await packageManager.installAsync({
+      // @ts-expect-error Multiple versions of `@expo/package-manager` are installed in this repository
+      spinner: step,
+    });
     // Create cached list for later
     await hasPackageJsonDependencyListChangedAsync(projectRoot).catch(() => null);
     step.succeed('Installed pods and initialized Xcode workspace.');

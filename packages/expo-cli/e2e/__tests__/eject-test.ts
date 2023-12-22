@@ -10,6 +10,7 @@ import {
   EXPO_CLI,
   getBasicExpoConfig,
   getBasicPackageJson,
+  handleSpawnResult,
 } from '../TestUtils';
 
 const tempDir = temporary.directory();
@@ -32,16 +33,16 @@ beforeAll(async () => {
 
 function executeDefaultAsync(cwd: string, args: string[]) {
   const promise = spawnAsync(EXPO_CLI, args, { cwd });
-  promise.child.stdout.pipe(process.stdout);
-  promise.child.stderr.pipe(process.stderr);
+  promise.child.stdout?.pipe(process.stdout);
+  promise.child.stderr?.pipe(process.stderr);
 
   // When the test is prompted to use git, skip message
   // TODO(Bacon): this shouldn't be blocking in non-interactive
-  promise.child.stdout.on('data', data => {
+  promise.child.stdout?.on('data', data => {
     const stdout = data.toString();
     // Skip dirty git
     if (/Would you like to proceed/.test(stdout)) {
-      promise.child.stdin.write('\n');
+      promise.child.stdin?.write('\n');
     }
   });
 
@@ -59,7 +60,7 @@ it(`can eject a minimal project`, async () => {
   const res = executeDefaultAsync(projectRoot, ['eject']);
 
   // This shouldn't fail
-  await res;
+  await handleSpawnResult(res);
 
   // Test that native folders were generated
   expect(fileExists(projectName, 'ios/hworld.xcodeproj')).toBe(true);
@@ -74,11 +75,11 @@ it(`can eject a minimal project`, async () => {
   // Remove main
   expect(outputPkgJson.main).toBe(undefined);
   // Scripts should be rewritten to use react-native-community/cli
-  expect(outputPkgJson.scripts['ios']).toBe('expo run:ios');
-  expect(outputPkgJson.scripts['android']).toBe('expo run:android');
-  expect(outputPkgJson.scripts['web']).toBe('expo start --web');
+  expect(outputPkgJson.scripts?.['ios']).toBe('expo run:ios');
+  expect(outputPkgJson.scripts?.['android']).toBe('expo run:android');
+  expect(outputPkgJson.scripts?.['web']).toBe('expo start --web');
   // Ensure the react-native version doesn't change
-  expect(outputPkgJson.dependencies['react-native']).toBe(
+  expect(outputPkgJson.dependencies?.['react-native']).toBe(
     getBasicPackageJson().dependencies['react-native']
   );
 });

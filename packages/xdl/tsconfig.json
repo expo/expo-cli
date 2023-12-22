@@ -11,19 +11,5 @@
   "compilerOptions": {
     "outDir": "build",
     "rootDir": "src"
-  },
-  "references": [
-    {
-      "path": "../image-utils"
-    },
-    {
-      "path": "../json-file"
-    },
-    {
-      "path": "../osascript"
-    },
-    {
-      "path": "../plist"
-    }
-  ]
+  }
 }
