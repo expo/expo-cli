@@ -37,6 +37,7 @@
     "@expo/config-plugins": "4.1.5",
     "@expo/dev-server": "0.2.0",
     "@expo/devcert": "^1.0.0",
+    "@expo/image-utils": "0.3.23",
     "@expo/json-file": "8.2.37",
     "@expo/osascript": "2.0.33",
     "@expo/package-manager": "0.0.56",
