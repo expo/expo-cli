@@ -39,18 +39,18 @@ const FEATURED_TEMPLATES = [
   {
     shortName: 'blank (TypeScript)',
     name: 'expo-template-blank-typescript',
-    description: 'same as blank but with TypeScript configuration',
+    description: 'blank app with TypeScript enabled',
   },
   {
     shortName: 'tabs (TypeScript)',
     name: 'expo-template-tabs',
-    description: 'several example screens and tabs using react-navigation and TypeScript',
+    description: 'File-based routing with TypeScript enabled',
   },
   '----- Bare workflow -----',
   {
     shortName: 'minimal',
     name: 'expo-template-bare-minimum',
-    description: 'bare and minimal, just the essentials to get you started',
+    description: 'blank app with the native code exposed (expo prebuild)',
   },
 ];
 
