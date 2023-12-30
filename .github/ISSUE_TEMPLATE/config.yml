@@ -6,6 +6,9 @@ contact_links:
   - name: Issue with Expo CLI or Expo Config Plugins
     url: https://github.com/expo/expo/issues/new?labels=needs+review%2CCLI&template=bug_report_cli.yml
     about: Report issues related to npx expo and the versioned CLI in the expo/expo repo.
+  - name: Issue with Expo Webpack integrations
+    url: https://github.com/expo/expo-webpack-integrations/issues/new?labels=needs+review%2CCLI&template=bug_report_cli.yml
+    about: Report issues related to `@expo/electron-adapter`, `@expo/next-adapter`, `@expo/webpack-config`, and `expo-pwa` in the expo/expo-webpack-integrations repo.
   - name: Expo Developers Discord
     url: https://chat.expo.dev/
     about: Join other developers in discussions regarding Expo.
