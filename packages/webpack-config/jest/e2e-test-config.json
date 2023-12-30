@@ -1,9 +1,0 @@
-{
-  "roots": ["e2e"],
-  "moduleFileExtensions": ["js", "json", "node"],
-  "resetModules": false,
-  "transform": {
-    "^.+\\.[jt]sx?$": ["babel-jest", { "configFile": "../../jest/babel.config.js" }]
-  },
-  "preset": "jest-puppeteer"
-}
