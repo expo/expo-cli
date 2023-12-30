@@ -34,8 +34,6 @@ jobs:
             babel-preset-cli,
             expo-cli,
             expo-codemod,
-            pwa,
-            # webpack-config,
             xdl,
           ]
     name: Test ${{ matrix.package }} on Node ${{ matrix.node }}
